@@ -1,0 +1,16 @@
+<article class="plan" [class.featured]="isSelected()">
+  @if (plan().featured) {
+    <p class="badge">Most chosen</p>
+  }
+  <h3>{{ plan().name }}</h3>
+  <p class="price">{{ plan().price }} <span>{{ plan().cadence }}</span></p>
+  <p class="desc">{{ plan().description }}</p>
+  <ul>
+    @for (feature of plan().features; track feature) {
+      <li>{{ feature }}</li>
+    }
+  </ul>
+  <button type="button" class="btn" [class.btn-primary]="isSelected()" [class.btn-ghost]="!isSelected()" (click)="selected.emit(plan().name)">
+    {{ plan().cta }}
+  </button>
+</article>

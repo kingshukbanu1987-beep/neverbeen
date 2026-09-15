@@ -1,0 +1,32 @@
+.heading h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.copy {
+  max-width: 36rem;
+  margin: 1rem 0 0;
+  color: var(--ink-soft);
+}
+
+.center {
+  text-align: center;
+}
+
+.center .copy {
+  margin-inline: auto;
+}
+
+.paper h2,
+.paper .copy,
+.paper .eyebrow {
+  color: var(--paper);
+}
+
+.paper .eyebrow {
+  color: var(--gold);
+}

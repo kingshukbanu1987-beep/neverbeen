@@ -1,0 +1,30 @@
+<section class="hero" id="home">
+  <div class="container layout">
+    <div class="copy">
+      <p class="eyebrow">Travel photography, imagined</p>
+      <h1>Go Anywhere. Even Where You've Never Been.</h1>
+      <p class="lede">
+        Create stunning AI vacation photos of yourself in the world's most beautiful destinations.
+      </p>
+      <div class="actions">
+        <a routerLink="/" fragment="contact" class="btn btn-primary">Create My Vacation</a>
+        <a routerLink="/" fragment="gallery" class="btn btn-ghost">Explore Gallery</a>
+      </div>
+    </div>
+    <figure class="frame">
+      <img [src]="destination().image" [alt]="destination().caption" />
+      <nav class="slide-controls" aria-label="Hero destinations">
+        <button type="button" (click)="showPreviousDestination()" aria-label="Show previous destination">
+          Previous
+        </button>
+        <button type="button" (click)="showNextDestination()" aria-label="Show next destination">
+          Next
+        </button>
+      </nav>
+      <figcaption aria-live="polite">
+        <span>{{ destination().place }}</span>
+        <span>{{ destination().caption }}</span>
+      </figcaption>
+    </figure>
+  </div>
+</section>

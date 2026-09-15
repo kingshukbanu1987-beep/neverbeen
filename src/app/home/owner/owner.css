@@ -1,0 +1,92 @@
+.owner {
+  padding: 5.5rem 0;
+  background: #FAFAFA;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.intro {
+  display: grid;
+  gap: 2rem;
+}
+
+.portrait {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  aspect-ratio: 3 / 4;
+}
+
+.portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.story {
+  max-width: 38rem;
+  padding-left: 2rem;
+  border-left: 2px solid var(--gold);
+}
+
+.story p {
+  margin: 0 0 1.25rem;
+  color: var(--ink-soft);
+  font-size: 1.08rem;
+}
+
+.story p:last-child {
+  margin-bottom: 0;
+}
+
+.story .signature {
+  margin-bottom: 1.25rem;
+  color: var(--bronze);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .portrait {
+    max-width: 28rem;
+  }
+
+  .story {
+    padding-left: 1.25rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .owner {
+    padding: 4rem 0;
+  }
+
+  .intro {
+    gap: 1.5rem;
+  }
+
+  .portrait {
+    width: 100%;
+    max-width: none;
+  }
+
+  .story p {
+    font-size: 1rem;
+  }
+}

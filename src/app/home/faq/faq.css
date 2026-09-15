@@ -1,0 +1,39 @@
+.faq {
+  padding: 5rem 0;
+  background: #FAFAFA;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 3rem;
+}
+
+article {
+  border-bottom: 1px solid var(--line);
+}
+
+button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 0;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 1.15rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}

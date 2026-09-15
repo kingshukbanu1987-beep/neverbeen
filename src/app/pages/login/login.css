@@ -1,0 +1,56 @@
+.login {
+  min-height: calc(100vh - 280px);
+  display: grid;
+  place-items: center;
+  padding: 4rem 1.25rem;
+  background:
+    linear-gradient(180deg, rgba(243, 236, 226, 0.4), var(--sand)),
+    url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80')
+      center / cover;
+}
+
+.panel {
+  width: min(460px, 100%);
+  padding: 2.4rem 2rem;
+  background: rgba(250, 246, 240, 0.94);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2.6rem;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.lede,
+.note {
+  color: var(--ink-soft);
+}
+
+form {
+  display: grid;
+  gap: 1rem;
+  margin: 1.6rem 0 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+input {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--sand);
+}
+
+.btn {
+  width: 100%;
+}

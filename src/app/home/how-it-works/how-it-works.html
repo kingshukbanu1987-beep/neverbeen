@@ -1,0 +1,18 @@
+<section class="how" id="how-it-works">
+  <div class="container">
+    <app-section-heading
+      eyebrow="The studio process"
+      title="How It Works"
+      copy="Four quiet steps from a portrait on your phone to a photograph that looks like you left."
+    />
+    <div class="steps">
+      @for (step of steps; track step.number) {
+        <article>
+          <span>{{ step.number }}</span>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.description }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>

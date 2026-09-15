@@ -1,0 +1,85 @@
+.plan {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 2rem 1.6rem;
+  background: #EBEBEB;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+}
+
+.featured {
+  background: #C20000;
+  color: var(--paper);
+  border-color: transparent;
+  transform: translateY(-8px);
+}
+
+.badge {
+  margin: 0 0 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.price {
+  margin: 0.6rem 0 0;
+  font-family: var(--sans);
+  font-size: 2.6rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.price span {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  opacity: 0.72;
+}
+
+.desc {
+  margin: 1rem 0 1.4rem;
+  color: inherit;
+  opacity: 0.82;
+}
+
+ul {
+  margin: 0 0 1.8rem;
+  padding: 0;
+  list-style: none;
+  flex: 1;
+}
+
+li {
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.featured li {
+  border-color: rgba(250, 246, 240, 0.16);
+}
+
+.btn {
+  width: 100%;
+}
+
+.featured .btn-primary {
+  background: var(--gold);
+  color: var(--forest-deep);
+}
+
+@media (max-width: 900px) {
+  .featured {
+    transform: none;
+  }
+}

@@ -1,0 +1,22 @@
+<section class="login">
+  <div class="panel">
+    <p class="eyebrow">Members</p>
+    <h1>Return to your gallery</h1>
+    <p class="lede">Sign in to collections, destination looks, and print files.</p>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        Email
+        <input type="email" formControlName="email" autocomplete="email" />
+      </label>
+      <label>
+        Password
+        <input type="password" formControlName="password" autocomplete="current-password" />
+      </label>
+      <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+    @if (submitted()) {
+      <p class="note">This preview does not connect to an account service yet.</p>
+    }
+    <a routerLink="/" fragment="contact">Need a collection instead?</a>
+  </div>
+</section>

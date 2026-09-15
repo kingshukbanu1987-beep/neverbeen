@@ -1,0 +1,105 @@
+.contact {
+  padding: 5.5rem 0 6rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.8rem;
+  background: #FAFAFA;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.package-field {
+  background: #C2C2C2;
+  color: #fff;
+}
+
+.phone-group {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.phone-group > label {
+  display: block;
+}
+
+.field-error {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: #b00020;
+}
+
+.phone-field {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.9fr) 1.4fr;
+  gap: 0.6rem;
+}
+
+.thanks {
+  margin: 0;
+  color: var(--bronze);
+}
+
+.contact .btn-primary {
+  background: #000;
+  color: #fff;
+}
+
+.contact .btn-primary:hover {
+  background: #1a1a1a;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 440px) {
+  .contact {
+    padding: 4rem 0;
+  }
+
+  form {
+    padding: 1.2rem;
+    border-radius: 18px;
+  }
+
+  .phone-field {
+    grid-template-columns: 1fr;
+  }
+
+  .contact .btn-primary {
+    width: 100%;
+  }
+}

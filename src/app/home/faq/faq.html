@@ -1,0 +1,22 @@
+<section class="faq" id="faq">
+  <div class="container layout">
+    <app-section-heading
+      eyebrow="Before you go"
+      title="FAQ"
+      copy="The practical questions, answered the way a studio would."
+    />
+    <div class="list">
+      @for (item of items; track item.question; let i = $index) {
+        <article>
+          <button type="button" (click)="toggle(i)" [attr.aria-expanded]="openIndex() === i">
+            {{ item.question }}
+            <span>{{ openIndex() === i ? '–' : '+' }}</span>
+          </button>
+          @if (openIndex() === i) {
+            <p>{{ item.answer }}</p>
+          }
+        </article>
+      }
+    </div>
+  </div>
+</section>

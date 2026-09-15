@@ -1,0 +1,57 @@
+.footer {
+  padding: 4rem 0 2rem;
+  background: var(--forest-deep);
+  color: var(--paper);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 2rem;
+}
+
+.logo {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2rem;
+}
+
+.tag,
+.copy {
+  color: rgba(250, 246, 240, 0.68);
+}
+
+.label {
+  margin: 0 0 0.8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.grid a {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.copy {
+  width: min(1160px, calc(100% - 2.5rem));
+  margin: 2.5rem auto 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(250, 246, 240, 0.12);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer {
+    padding-top: 3rem;
+  }
+
+  .copy {
+    width: min(1160px, calc(100% - 1.5rem));
+  }
+}

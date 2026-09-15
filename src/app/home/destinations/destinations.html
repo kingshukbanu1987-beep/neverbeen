@@ -1,0 +1,14 @@
+<section class="dest" id="destinations">
+  <div class="container">
+    <app-section-heading
+      eyebrow="The atlas"
+      title="Popular Destinations"
+      copy="Places people book in their minds long before they book a flight."
+    />
+    <div class="grid" role="region" aria-label="More popular destinations" tabindex="0">
+      @for (place of destinations; track place.name) {
+        <app-destination-card [destination]="place" />
+      }
+    </div>
+  </div>
+</section>

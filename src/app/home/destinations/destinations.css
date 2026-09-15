@@ -1,0 +1,45 @@
+.dest {
+  padding: 5.5rem 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+  max-height: calc(420px * 2 + 1.2rem);
+  overflow-y: auto;
+  margin-top: 2.6rem;
+  background: #F0F0F0;
+  padding-right: 0.5rem;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #A8A8A8 #DCDCDC;
+}
+
+.grid::-webkit-scrollbar {
+  width: 0.55rem;
+}
+
+.grid::-webkit-scrollbar-track {
+  background: #DCDCDC;
+  border-radius: 999px;
+}
+
+.grid::-webkit-scrollbar-thumb {
+  background: #A8A8A8;
+  border-radius: 999px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    max-height: calc(320px * 3 + 2.4rem);
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: 1fr;
+    max-height: calc(300px * 2 + 1.2rem);
+  }
+}

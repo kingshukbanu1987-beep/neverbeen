@@ -1,0 +1,113 @@
+<section class="contact" id="contact">
+  <div class="container layout">
+    <div>
+      <app-section-heading
+        eyebrow="Begin"
+        title="Tell us where you've never been"
+        copy="Share a portrait and a destination. A studio editor will reply with a collection brief."
+      />
+    </div>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        Name
+        <input type="text" formControlName="name" autocomplete="name" />
+      </label>
+      <label>
+        Email
+        <input
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          inputmode="email"
+          placeholder="you@example.com"
+          aria-describedby="email-error"
+        />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <span id="email-error" class="field-error">Enter a valid email address.</span>
+        }
+      </label>
+      <label>
+        Date of Birth
+        <input
+          type="date"
+          formControlName="dateOfBirth"
+          autocomplete="bday"
+          placeholder="DD/MM/YYYY"
+          aria-label="Date of Birth (DD/MM/YYYY)"
+        />
+        @if (form.controls.dateOfBirth.invalid && form.controls.dateOfBirth.touched) {
+          <span class="field-error">Enter a valid date of birth.</span>
+        }
+      </label>
+      <label>
+        Gender
+        <select formControlName="gender">
+          <option value="" disabled>Select gender</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="non-binary">Non-binary</option>
+          <option value="prefer-not-to-say">Prefer not to say</option>
+        </select>
+      </label>
+      <label>
+        Country
+        <input
+          type="text"
+          formControlName="country"
+          list="country-options"
+          autocomplete="country-name"
+          placeholder="Search countries..."
+        />
+        <datalist id="country-options">
+          @for (country of countryOptions; track country.isoCode) {
+            <option [value]="country.name">{{ country.flag }}</option>
+          }
+        </datalist>
+      </label>
+      <label>
+        Package
+        <input class="package-field" type="text" [value]="selectedPackage()" readonly aria-label="Selected package" />
+      </label>
+      <div class="phone-group">
+        <label for="country-code">Contact Number</label>
+        <div class="phone-field">
+          <select id="country-code" formControlName="countryCode" aria-label="Country code">
+            @for (country of countries; track country.isoCode) {
+              <option [value]="country.dialCode">{{ country.flag }} {{ country.dialCode }}</option>
+            }
+          </select>
+          <input
+            type="tel"
+            formControlName="contactNumber"
+            autocomplete="tel"
+            placeholder="Phone number"
+            aria-label="Phone number"
+          />
+        </div>
+      </div>
+      <label>
+        Destination
+        <input
+          type="text"
+          formControlName="destination"
+          list="destination-options"
+          autocomplete="off"
+          placeholder="Search destinations..."
+        />
+        <datalist id="destination-options">
+          @for (destination of destinations; track destination) {
+            <option [value]="destination"></option>
+          }
+        </datalist>
+      </label>
+      <label>
+        A note for the Request
+        <textarea formControlName="note" rows="4" placeholder="Light, wardrobe, season..."></textarea>
+      </label>
+      <button type="submit" class="btn btn-primary">Submit Neverbeen Request</button>
+      @if (sent()) {
+        <p class="thanks">Received. We will write back with your first look.</p>
+      }
+    </form>
+  </div>
+</section>

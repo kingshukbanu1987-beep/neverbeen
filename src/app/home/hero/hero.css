@@ -1,0 +1,139 @@
+.hero {
+  padding: 3.5rem 0 4.5rem;
+}
+
+.hero .container {
+  width: min(1240px, calc(100% - 2.5rem));
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(3rem, 6vw, 5.1rem);
+  font-weight: 500;
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+}
+
+.lede {
+  max-width: 32rem;
+  margin: 1.4rem 0 2rem;
+  font-size: 1.12rem;
+  color: var(--ink-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.frame {
+  margin: 0;
+  position: relative;
+}
+
+.frame img {
+  width: 100%;
+  height: min(72vh, 640px);
+  object-fit: cover;
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+figcaption {
+  position: absolute;
+  left: 1.2rem;
+  right: 1.2rem;
+  bottom: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--paper);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.slide-controls {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.slide-controls button {
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 999px;
+  padding: 0.55rem 0.8rem;
+  color: var(--paper);
+  background: rgb(20 25 23 / 45%);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.slide-controls button:hover,
+.slide-controls button:focus-visible {
+  background: rgb(20 25 23 / 75%);
+}
+
+.slide-controls button:focus-visible {
+  outline: 2px solid var(--paper);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .frame img {
+    height: min(64vw, 420px);
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding: 2.5rem 0 3.5rem;
+  }
+
+  h1 {
+    font-size: clamp(2.6rem, 13vw, 4rem);
+  }
+
+  .lede {
+    font-size: 1rem;
+  }
+
+  .actions .btn {
+    width: 100%;
+  }
+
+  .frame img {
+    height: 360px;
+    border-radius: 20px;
+  }
+
+  figcaption {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .slide-controls {
+    top: 0.8rem;
+    right: 0.8rem;
+  }
+}
