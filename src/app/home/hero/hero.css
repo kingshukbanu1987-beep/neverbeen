@@ -35,6 +35,16 @@ h1 {
   gap: 0.8rem;
 }
 
+.btn-founder {
+  background: #123b68;
+  color: #fff;
+}
+
+.btn-founder:hover,
+.btn-founder:focus-visible {
+  background: #0c2b4d;
+}
+
 .frame {
   margin: 0;
   position: relative;

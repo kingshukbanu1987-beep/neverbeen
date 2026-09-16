@@ -3,6 +3,7 @@ export interface Destination {
   country: string;
   caption: string;
   image: string;
+  images: string[];
 }
 
 export interface GalleryItem {
@@ -32,7 +33,7 @@ export interface HowItWorksStep {
   description: string;
 }
 
-export const destinations: Destination[] = [
+const destinationSeed: Omit<Destination, 'images'>[] = [
   {
     name: 'Paris',
     country: 'France',
@@ -161,6 +162,17 @@ export const destinations: Destination[] = [
   },
 ];
 
+const destinationRotationImages = [
+  'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=85',
+  'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=85',
+];
+
+export const destinations: Destination[] = destinationSeed.map((destination) => ({
+  ...destination,
+  images: [destination.image, ...destinationRotationImages],
+}));
+
 export const contactDestinations = [
   ...destinations.map((destination) => destination.name),
   'Amsterdam', 'Athens', 'Barcelona', 'Berlin', 'Lisbon', 'Madrid', 'Vienna', 'Prague', 'Budapest',
@@ -214,6 +226,54 @@ export const galleryItems: GalleryItem[] = [
     image:
       'https://images.unsplash.com/photo-1547234935-80c7145ec969?auto=format&fit=crop&w=1200&q=80',
   },
+  {
+    title: 'Aria above the valley',
+    location: 'Manali, India',
+    image:
+      'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'Mateo in the color',
+    location: 'Rio de Janeiro, Brazil',
+    image:
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'Two tickets to the coast',
+    location: 'Mallorca, Spain',
+    image:
+      'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'The summer table',
+    location: 'Crete, Greece',
+    image:
+      'https://images.unsplash.com/photo-1504150558240-0b4fd8946624?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'Four friends, one island',
+    location: 'Bali, Indonesia',
+    image:
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'Nia at golden hour',
+    location: 'Nairobi, Kenya',
+    image:
+      'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'A family weekend north',
+    location: 'Banff, Canada',
+    image:
+      'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=85',
+  },
+  {
+    title: 'Luca by the blue hour',
+    location: 'Lisbon, Portugal',
+    image:
+      'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1200&q=85',
+  },
 ];
 
 export const pricingPlans: PricingPlan[] = [
@@ -264,7 +324,7 @@ export const pricingPlans: PricingPlan[] = [
     description: 'The most complete way to see yourself anywhere in the world.',
     featured: false,
     features: [
-      'Unlimited destination looks',
+      '100 destination looks',
       'Portrait & landscape crops',
       'Priority editorial delivery',
       'Dedicated creative direction',
@@ -298,6 +358,58 @@ export const faqItems: FaqItem[] = [
     question: 'How long does a collection take?',
     answer:
       'Postcard collections typically arrive within 48 hours. Wanderer and Atlas include faster editorial queues.',
+  },
+  {
+    question: 'How do I submit my photographs?',
+    answer:
+      'Our team will connect with you using the details you provide, either by email or WhatsApp. You can send your photographs through whichever of those channels is most convenient for you.',
+  },
+  {
+    question: 'How many photographs do I need to send?',
+    answer:
+      'The number depends on what we need to analyse your face and body measurements accurately. Preferably, send one passport-size photograph and one full-body picture.',
+  },
+  {
+    question: 'Can I choose my outfits?',
+    answer:
+      'Yes, you can choose your desired outfit. Higher packages enable more customisation for outfits, accessories, and moments in every scene.',
+  },
+  {
+    question: 'Can I have photographs with celebrities?',
+    answer: 'No. Creating photographs with celebrities is against our policy.',
+  },
+  {
+    question: 'Do I need to sign any documents?',
+    answer:
+      'Yes. You may need to sign a document confirming your approval for us to use your photographs for AI content generation.',
+  },
+  {
+    question: 'Can I choose a revealing outfit or romantic moments?',
+    answer:
+      'This depends on how revealing the outfit is and the sensitivity of the romantic content. We do not support vulgarity, sexuality, or nudity.',
+  },
+  {
+    question: 'Why is ID verification required?',
+    answer:
+      'We verify the photographs and the real person they belong to in order to help prevent identity misuse.',
+  },
+  {
+    question: 'How will ID verification be done?',
+    answer:
+      'Our team will connect with you and request verification through a government ID, a video call, or both, to maintain integrity and security.',
+  },
+  {
+    question: 'Do I need to pay the full amount before delivery?',
+    answer: 'No. Payment is required only at the time of delivery.',
+  },
+  {
+    question: 'Will I get my money back if I am not satisfied with the delivery?',
+    answer:
+      'Yes. We offer a 100% refund if you do not like the delivery. You will only be asked to pay when you are happy with the generated content and want to receive it.',
+  },
+  {
+    question: 'Will NeverBeen store, keep, or use my photographs after the deal?',
+    answer: 'No. We will delete all of your photographs after the contract ends.',
   },
 ];
 

@@ -39,8 +39,19 @@ textarea {
 }
 
 .package-field {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: #C2C2C2;
   color: #fff;
+}
+
+.package-link {
+  display: block;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .phone-group {

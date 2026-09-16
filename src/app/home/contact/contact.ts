@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { SectionHeading } from '../../shared/section-heading/section-heading';
 import { contactDestinations } from '../../models/site-content';
 import { PackageSelectionService } from '../../services/package-selection.service';
@@ -82,7 +83,7 @@ const birthDateValidator: ValidatorFn = (control: AbstractControl): ValidationEr
 
 @Component({
   selector: 'app-contact',
-  imports: [ReactiveFormsModule, SectionHeading],
+  imports: [ReactiveFormsModule, RouterLink, SectionHeading],
   templateUrl: './contact.html',
   styleUrl: './contact.css',
 })

@@ -10,7 +10,7 @@
     <form [formGroup]="form" (ngSubmit)="submit()">
       <label>
         Name
-        <input type="text" formControlName="name" autocomplete="name" />
+        <input type="text" formControlName="name" autocomplete="name" placeholder="Enter your FullName" />
       </label>
       <label>
         Email
@@ -32,7 +32,7 @@
           type="date"
           formControlName="dateOfBirth"
           autocomplete="bday"
-          placeholder="DD/MM/YYYY"
+          placeholder="Select your Date of Birth"
           aria-label="Date of Birth (DD/MM/YYYY)"
         />
         @if (form.controls.dateOfBirth.invalid && form.controls.dateOfBirth.touched) {
@@ -66,7 +66,15 @@
       </label>
       <label>
         Package
-        <input class="package-field" type="text" [value]="selectedPackage()" readonly aria-label="Selected package" />
+        <button
+          type="button"
+          class="package-field package-link"
+          routerLink="/"
+          fragment="pricing"
+          aria-label="Selected package. Go to pricing to change package"
+        >
+          {{ selectedPackage() }}
+        </button>
       </label>
       <div class="phone-group">
         <label for="country-code">Contact Number</label>
