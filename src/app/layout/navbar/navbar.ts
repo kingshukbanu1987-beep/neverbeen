@@ -14,6 +14,7 @@ export class Navbar {
   protected readonly links = [
     { label: 'Home', path: '/', fragment: undefined as string | undefined },
     { label: 'How It Works', path: '/', fragment: 'how-it-works' },
+    { label: 'Audience', path: '/audience', fragment: undefined },
     { label: 'Destinations', path: '/', fragment: 'destinations' },
     { label: 'Pricing', path: '/', fragment: 'pricing' },
     { label: 'Login', path: '/login', fragment: undefined },
