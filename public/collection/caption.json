@@ -1,490 +1,309 @@
 [
   {
-    "uuid": "0d356eed-3f73-4538-b685-b18155e98226",
-    "file": "friends-01-christmas-market-london.jpg",
-    "album": "Friends abroad",
+  "0d356eed-3f73-4538-b685-b18155e98226.jpg": {
     "title": "Mulled wine crew",
     "caption": "Christmas market, London",
     "alt": "A group of friends laughing with paper cups of mulled wine beneath market fairy lights at night"
   },
-  {
-    "uuid": "1ad6bca1-fbb2-4fc4-b8ec-3550917b81b2",
-    "file": "friends-02-louvre-paris.jpg",
-    "album": "Friends abroad",
+  "1ad6bca1-fbb2-4fc4-b8ec-3550917b81b2.jpg": {
     "title": "Pyramid selfies",
     "caption": "The Louvre, Paris",
     "alt": "A group of friends throwing peace signs for a selfie in front of the Louvre pyramid, Paris"
   },
-  {
-    "uuid": "2cb876b0-ae89-4ba7-b26c-2226dbd93b32",
-    "file": "friends-03-dubai-fountain.jpg",
-    "album": "Friends abroad",
+  "2cb876b0-ae89-4ba7-b26c-2226dbd93b32.jpg": {
     "title": "Front row, Dubai Fountain",
     "caption": "Downtown Dubai",
     "alt": "A group of friends posing at night in front of the Burj Khalifa and the dancing Dubai Fountain"
   },
-  {
-    "uuid": "3a1c7f97-420f-4b1a-9627-fefcb1048860",
-    "file": "couples-01-skogafoss-iceland.jpg",
-    "album": "Couples",
+  "3a1c7f97-420f-4b1a-9627-fefcb1048860.jpg": {
     "title": "Soaked at Skógafoss",
     "caption": "South coast, Iceland",
     "alt": "A laughing couple soaked by waterfall spray in front of Skógafoss, Iceland"
   },
-  {
-    "uuid": "4aa38608-8323-42ab-a1a6-a2a5189e32b2",
-    "file": "couples-02-jungfrau-ridge.jpg",
-    "album": "Couples",
+  "4aa38608-8323-42ab-a1a6-a2a5189e32b2.jpg": {
     "title": "Above the cloud line",
     "caption": "Jungfrau region, Switzerland",
     "alt": "A couple in red jackets standing on a snowy ridge facing the Jungfrau massif, Switzerland"
   },
-  {
-    "uuid": "4ce9d602-0409-4452-9b8e-5b9c832a92d2",
-    "file": "couples-03-dubai-marina-seawall.jpg",
-    "album": "Couples",
+  "4ce9d602-0409-4452-9b8e-5b9c832a92d2.jpg": {
     "title": "Marina seawall, midnight",
     "caption": "Dubai",
     "alt": "A couple sitting on a seawall at night with the lit Dubai Marina skyline across the water"
   },
-  {
-    "uuid": "4feccd35-ce61-4569-96d3-f888c14a50c1",
-    "file": "couples-04-dubai-taxi.jpg",
-    "album": "Couples",
+  "4feccd35-ce61-4569-96d3-f888c14a50c1.jpg": {
     "title": "Backseat selfie",
     "caption": "Heading home through Dubai",
     "alt": "A couple taking a selfie in the back seat of a taxi at night, city lights streaking past the window"
   },
-  {
-    "uuid": "6adb45e8-ec90-420d-9c4d-ab891ab2c415",
-    "file": "couples-05-tokyo-matcha-blossom.jpg",
-    "album": "Couples",
+  "6adb45e8-ec90-420d-9c4d-ab891ab2c415.jpg": {
     "title": "Matcha under the blossoms",
     "caption": "Tokyo, cherry blossom season",
     "alt": "A grinning couple sharing a matcha soft-serve cone beneath full cherry blossom, Tokyo"
   },
-  {
-    "uuid": "6d4ad35a-cfed-45d0-8a62-96be78d61226",
-    "file": "couples-06-amsterdam-light-festival.jpg",
-    "album": "Couples",
+  "6d4ad35a-cfed-45d0-8a62-96be78d61226.jpg": {
     "title": "Light festival glow",
     "caption": "Amsterdam Light Festival",
     "alt": "A couple taking a selfie in front of neon light installations reflected in an Amsterdam canal"
   },
-  {
-    "uuid": "6e20a50d-8089-4348-9438-eb4e19905dae",
-    "file": "families-01-dubai-desert-safari.jpg",
-    "album": "Families",
+  "6e20a50d-8089-4348-9438-eb4e19905dae.jpg": {
     "title": "Dune bashing grins",
     "caption": "Dubai desert",
     "alt": "A family laughing in an open jeep mid-dune-bash over red desert sands, Dubai"
   },
-  {
-    "uuid": "7b3b13c7-2d42-458a-970d-a77dc8e3d4f0",
-    "file": "couples-07-camden-market-noodles.jpg",
-    "album": "Couples",
+  "7b3b13c7-2d42-458a-970d-a77dc8e3d4f0.jpg": {
     "title": "Sharing noodles in Camden",
     "caption": "Camden Market, London",
     "alt": "A couple sharing a forkful of noodles from a street-food box in Camden Market, London"
   },
-  {
-    "uuid": "7c2292a0-6ac5-4c85-8890-03d44b20711f",
-    "file": "couples-08-brick-lane-london.jpg",
-    "album": "Couples",
+  "7c2292a0-6ac5-4c85-8890-03d44b20711f.jpg": {
     "title": "Mid-conversation on Brick Lane",
     "caption": "Shoreditch, London",
     "alt": "A couple deep in conversation on a windy Brick Lane street, London"
   },
-  {
-    "uuid": "8d325aef-2f3e-48ee-a678-bdbea638dd43",
-    "file": "couples-09-window-closeup.jpg",
-    "album": "Couples",
+  "8d325aef-2f3e-48ee-a678-bdbea638dd43.jpg": {
     "title": "Foreheads together",
     "caption": "Above the city",
     "alt": "A close-up selfie of a couple pressing their foreheads together beside a bright window"
   },
-  {
-    "uuid": "17cd112b-8382-473c-963f-b366fa5e3f63",
-    "file": "couples-10-amsterdam-canal-night.jpg",
-    "album": "Couples",
+  "17cd112b-8382-473c-963f-b366fa5e3f63.jpg": {
     "title": "Golden canal lights",
     "caption": "Amsterdam",
     "alt": "A couple walking hand in hand along a candle-lit Amsterdam canal at night, bicycles parked beside them"
   },
-  {
-    "uuid": "044d077e-b9e7-4c52-9e16-e1a3616a753f",
-    "file": "golden-years-01-matterhorn-zermatt.jpg",
-    "album": "Golden years",
+  "044d077e-b9e7-4c52-9e16-e1a3616a753f.jpg": {
     "title": "First snow at the Matterhorn",
     "caption": "Zermatt, Switzerland",
     "alt": "A group of older friends in colourful jackets posing in snow with the Matterhorn behind them"
   },
-  {
-    "uuid": "48f68334-d9d5-4c15-b1be-f3eccf2a4f62",
-    "file": "couples-11-snowy-pines.jpg",
-    "album": "Couples",
+  "48f68334-d9d5-4c15-b1be-f3eccf2a4f62.jpg": {
     "title": "Snowball ambush",
     "caption": "Somewhere in the pines",
     "alt": "A playful tilted selfie of a couple laughing among snow-laden pine trees"
   },
-  {
-    "uuid": "61bc42e8-8217-4c7d-83f3-78cef69a1296",
-    "file": "couples-12-south-kensington-station.jpg",
-    "album": "Couples",
+  "61bc42e8-8217-4c7d-83f3-78cef69a1296.jpg": {
     "title": "South Kensington platform",
     "caption": "London Underground",
     "alt": "A couple hugging for a selfie on the tiled platform at South Kensington station, London"
   },
-  {
-    "uuid": "68b45301-9120-47ba-a3e4-3b56913d82b2",
-    "file": "couples-13-jumeirah-beach-dubai.jpg",
-    "album": "Couples",
+  "68b45301-9120-47ba-a3e4-3b56913d82b2.jpg": {
     "title": "Squinting at Jumeirah",
     "caption": "Dubai",
     "alt": "A sun-squinting couple taking a beach selfie with the Burj Al Arab on the horizon, Dubai"
   },
-  {
-    "uuid": "074fdb9e-7586-4f8e-ba61-0f8bb077c3e5",
-    "file": "couples-14-beach-sunscreen.jpg",
-    "album": "Couples",
+  "074fdb9e-7586-4f8e-ba61-0f8bb077c3e5.jpg": {
     "title": "Sunscreen duties",
     "caption": "Beach day",
     "alt": "A laughing couple dabbing sunscreen onto a sunburnt nose on a bright beach"
   },
-  {
-    "uuid": "86ebfe14-fcdc-4371-9777-9e5293716a61",
-    "file": "couples-15-beach-towel.jpg",
-    "album": "Couples",
+  "86ebfe14-fcdc-4371-9777-9e5293716a61.jpg": {
     "title": "One stripe of shade",
     "caption": "Beach day",
     "alt": "An overhead shot of a smiling couple lying head to head on a blue-striped beach towel"
   },
-  {
-    "uuid": "145ea9e4-cd4c-4232-90b6-253880fa1d5d",
-    "file": "families-02-swiss-snowball-fight.jpg",
-    "album": "Families",
+  "145ea9e4-cd4c-4232-90b6-253880fa1d5d.jpg": {
     "title": "Snowball ceasefire, broken",
     "caption": "Swiss Alps",
     "alt": "Children hurling snowballs while their mother laughs behind them in a snowy Swiss village"
   },
-  {
-    "uuid": "192c76aa-ca71-45a8-91c0-88d766177b05",
-    "file": "golden-years-02-eiffel-tower-paris.jpg",
-    "album": "Golden years",
+  "192c76aa-ca71-45a8-91c0-88d766177b05.jpg": {
     "title": "Blue hour, Paris",
     "caption": "Eiffel Tower",
     "alt": "An older couple taking a selfie at dusk with the lit Eiffel Tower rising behind them, Paris"
   },
-  {
-    "uuid": "214ed11d-a943-4e4d-a8bb-66d941263749",
-    "file": "golden-years-03-lake-louise-banff.jpg",
-    "album": "Golden years",
+  "214ed11d-a943-4e4d-a8bb-66d941263749.jpg": {
     "title": "Turquoise at Lake Louise",
     "caption": "Banff, Canada",
     "alt": "An older couple embracing on the shore of turquoise Lake Louise beneath glacier peaks, Canada"
   },
-  {
-    "uuid": "476a77e5-f83a-4c59-b9a7-b78bd9af2093",
-    "file": "couples-16-amsterdam-canal-edge.jpg",
-    "album": "Couples",
+  "476a77e5-f83a-4c59-b9a7-b78bd9af2093.jpg": {
     "title": "Feet over the canal",
     "caption": "Amsterdam",
     "alt": "A couple sitting close together on the stone edge of an Amsterdam canal watching boats go by"
   },
-  {
-    "uuid": "564add3a-710d-4df3-b2cd-7c11a2eb1f2d",
-    "file": "couples-17-london-underground-escalator.jpg",
-    "album": "Couples",
+  "564add3a-710d-4df3-b2cd-7c11a2eb1f2d.jpg": {
     "title": "Mind the gap",
     "caption": "London Underground",
     "alt": "A couple taking a selfie on a London Underground escalator beneath Mind the Gap signs"
   },
-  {
-    "uuid": "619afd7c-3231-4bbb-ade5-67afeb9ef22e",
-    "file": "couples-18-positano-lemon-drinks.jpg",
-    "album": "Couples",
+  "619afd7c-3231-4bbb-ade5-67afeb9ef22e.jpg": {
     "title": "Lemon granita, Positano",
     "caption": "Amalfi Coast, Italy",
     "alt": "A couple toasting with two glasses of lemon granita above the coloured houses of Positano"
   },
-  {
-    "uuid": "777c42fa-0c6b-4a28-a739-122bc4e59c16",
-    "file": "couples-19-venice-bridge.jpg",
-    "album": "Couples",
+  "777c42fa-0c6b-4a28-a739-122bc4e59c16.jpg": {
     "title": "Bridge step, Venice",
     "caption": "Italy",
     "alt": "A smiling couple crossing a small bridge over a quiet Venice canal"
   },
-  {
-    "uuid": "878bf870-06e2-4be5-a56c-ae6fe7f70ff4",
-    "file": "couples-20-london-eye-night.jpg",
-    "album": "Couples",
+  "878bf870-06e2-4be5-a56c-ae6fe7f70ff4.jpg": {
     "title": "String lights and the Eye",
     "caption": "South Bank, London",
     "alt": "A laughing couple taking a selfie at night with the lit London Eye behind them"
   },
-  {
-    "uuid": "974a061b-bac0-4c9c-8564-da90a56c3ca7",
-    "file": "families-03-lauterbrunnen-meadow-hike.jpg",
-    "album": "Families",
+  "974a061b-bac0-4c9c-8564-da90a56c3ca7.jpg": {
     "title": "Meadow trail, Lauterbrunnen",
     "caption": "Switzerland",
     "alt": "A family of four hiking through a wildflower meadow beneath the Lauterbrunnen waterfall, Switzerland"
   },
-  {
-    "uuid": "5891ae07-3060-49d0-9786-83357353bbf1",
-    "file": "friends-04-seine-night-paris.jpg",
-    "album": "Friends abroad",
+  "5891ae07-3060-49d0-9786-83357353bbf1.jpg": {
     "title": "Whole crew on the Seine",
     "caption": "Paris",
     "alt": "A group selfie of friends waving at night along the Seine with the Eiffel Tower lit behind them"
   },
-  {
-    "uuid": "34722ee6-700b-47f6-977f-6bea12cd3c7d",
-    "file": "friends-05-trevi-fountain-rome.jpg",
-    "album": "Friends abroad",
+  "34722ee6-700b-47f6-977f-6bea12cd3c7d.jpg": {
     "title": "Coins in the Trevi",
     "caption": "Rome",
     "alt": "A laughing group of friends piled together in front of the Trevi Fountain, Rome"
   },
-  {
-    "uuid": "59189e74-c22b-4df4-8005-5a329ed31b74",
-    "file": "friends-06-leaning-tower-pisa.jpg",
-    "album": "Friends abroad",
+  "59189e74-c22b-4df4-8005-5a329ed31b74.jpg": {
     "title": "Holding up the tower",
     "caption": "Pisa, Italy",
     "alt": "A line of friends pretending to hold up the Leaning Tower of Pisa on a sunny lawn"
   },
-  {
-    "uuid": "71544b4d-fe36-4711-b317-10c775b56c42",
-    "file": "couples-21-petronas-towers-kuala-lumpur.jpg",
-    "album": "Couples",
+  "71544b4d-fe36-4711-b317-10c775b56c42.jpg": {
     "title": "Under the Petronas Towers",
     "caption": "Kuala Lumpur",
     "alt": "A smiling couple embracing in a park with the Petronas Twin Towers behind them, Kuala Lumpur"
   },
-  {
-    "uuid": "445689fc-283b-4be0-846e-4daec2f0b686",
-    "file": "friends-07-everest-base-camp.jpg",
-    "album": "Friends abroad",
+  "445689fc-283b-4be0-846e-4daec2f0b686.jpg": {
     "title": "Base camp, 5364 m",
     "caption": "Everest Base Camp",
     "alt": "A trekking group cheering with an Indian flag among prayer flags at Everest Base Camp"
   },
-  {
-    "uuid": "472503fa-018b-48a9-8505-96eb3f3fd73f",
-    "file": "friends-08-teahouse-cards-trail.jpg",
-    "album": "Friends abroad",
+  "472503fa-018b-48a9-8505-96eb3f3fd73f.jpg": {
     "title": "Cards and noodle soup",
     "caption": "Teahouse on the trail",
     "alt": "Friends laughing around a wooden table with cards and bowls of noodles inside a trekking lodge"
   },
-  {
-    "uuid": "803084a8-a3fc-40ed-b34a-497d86d32fe9",
-    "file": "couples-22-kuala-lumpur-rooftop-pool.jpg",
-    "album": "Couples",
+  "803084a8-a3fc-40ed-b34a-497d86d32fe9.jpg": {
     "title": "Infinity edge, KL",
     "caption": "Kuala Lumpur at dusk",
     "alt": "A couple standing in a rooftop infinity pool facing the glowing Kuala Lumpur skyline at dusk"
   },
-  {
-    "uuid": "810810a1-c580-44b2-a1fc-1abbccea237a",
-    "file": "couples-23-street-art-mural.jpg",
-    "album": "Couples",
+  "810810a1-c580-44b2-a1fc-1abbccea237a.jpg": {
     "title": "The mural wall",
     "caption": "Street art alley",
     "alt": "A couple posing thumb-up in front of a huge, colourful street-art mural"
   },
-  {
-    "uuid": "2349453a-0525-4939-8f03-85c722d8bb63",
-    "file": "couples-24-singapore-hawker-centre.jpg",
-    "album": "Couples",
+  "2349453a-0525-4939-8f03-85c722d8bb63.jpg": {
     "title": "Chicken rice, Maxwell",
     "caption": "Singapore",
     "alt": "A couple laughing over trays of chicken rice at a busy Singapore hawker centre"
   },
-  {
-    "uuid": "5096071c-c057-4c3e-94ac-cb28aae766f0",
-    "file": "couples-25-lauterbrunnen-trail.jpg",
-    "album": "Couples",
+  "5096071c-c057-4c3e-94ac-cb28aae766f0.jpg": {
     "title": "Trail above the valley",
     "caption": "Lauterbrunnen, Switzerland",
     "alt": "Two hikers walking a flower-lined trail high above the Lauterbrunnen valley, Switzerland"
   },
-  {
-    "uuid": "12897280-32b2-4bdf-bf1e-d976d59f0320",
-    "file": "families-04-hawa-mahal-jaipur.jpg",
-    "album": "Families",
+  "12897280-32b2-4bdf-bf1e-d976d59f0320.jpg": {
     "title": "Twirl at Hawa Mahal",
     "caption": "Jaipur, India",
     "alt": "A young girl in a pink dress twirling in front of the Hawa Mahal palace, Jaipur"
   },
-  {
-    "uuid": "29378516-dd82-4f2e-9180-c8fadc84dfcd",
-    "file": "couples-26-amsterdam-neon-hug.jpg",
-    "album": "Couples",
+  "29378516-dd82-4f2e-9180-c8fadc84dfcd.jpg": {
     "title": "Neon glow, cold hands",
     "caption": "Amsterdam Light Festival",
     "alt": "A couple hugging and grinning on a canal street lit by neon light installations, Amsterdam"
   },
-  {
-    "uuid": "41480202-070b-4ab1-aa6e-af8256acdd6f",
-    "file": "couples-27-lake-brienz-jetty.jpg",
-    "album": "Couples",
+  "41480202-070b-4ab1-aa6e-af8256acdd6f.jpg": {
     "title": "Jetty selfie, Lake Brienz",
     "caption": "Switzerland",
     "alt": "A couple taking a selfie on a wooden jetty above the turquoise water of Lake Brienz, Switzerland"
   },
-  {
-    "uuid": "50703350-df32-4827-8b06-d92792dcd3f5",
-    "file": "couples-28-cafe-alpina-muerren.jpg",
-    "album": "Couples",
+  "50703350-df32-4827-8b06-d92792dcd3f5.jpg": {
     "title": "Hot chocolate at Café Alpina",
     "caption": "Mürren, Switzerland",
     "alt": "A couple in beanies sharing steaming hot chocolate outside a wooden Swiss chalet café"
   },
-  {
-    "uuid": "a8fc59f5-6337-4cd4-85de-d5bcf8b3034c",
-    "file": "couples-29-jungfraujoch-plateau.jpg",
-    "album": "Couples",
+  "a8fc59f5-6337-4cd4-85de-d5bcf8b3034c.jpg": {
     "title": "Glove check at the plateau",
     "caption": "Jungfraujoch, Switzerland",
     "alt": "A couple in long parkas adjusting gloves on a windy, snowy summit plateau"
   },
-  {
-    "uuid": "ab4ad84a-1e40-4405-9d0e-872da3736f8a",
-    "file": "couples-30-santorini-blue-domes.jpg",
-    "album": "Couples",
+  "ab4ad84a-1e40-4405-9d0e-872da3736f8a.jpg": {
     "title": "Blue domes behind us",
     "caption": "Santorini, Greece",
     "alt": "A joyful close-up selfie of a couple with Santorini's blue-domed churches behind them"
   },
-  {
-    "uuid": "abeeeaec-c202-40d3-ad4d-9a7de2f900a9",
-    "file": "couples-31-paris-bridge-night.jpg",
-    "album": "Couples",
+  "abeeeaec-c202-40d3-ad4d-9a7de2f900a9.jpg": {
     "title": "Eiffel sparkles",
     "caption": "Paris",
     "alt": "A couple taking a selfie on a Paris bridge at dusk with the sparkling Eiffel Tower behind them"
   },
-  {
-    "uuid": "ae606393-f3e7-44ab-b835-de0dc79d1eb0",
-    "file": "families-05-amsterdam-light-festival.jpg",
-    "album": "Families",
+  "ae606393-f3e7-44ab-b835-de0dc79d1eb0.jpg": {
     "title": "Light festival with the kids",
     "caption": "Amsterdam",
     "alt": "A family of four in winter coats posing along a canal lit by neon light installations, Amsterdam"
   },
-  {
-    "uuid": "af4b322c-a069-4b64-9c71-eee6ef905a03",
-    "file": "golden-years-04-norway-fjord.jpg",
-    "album": "Golden years",
+  "af4b322c-a069-4b64-9c71-eee6ef905a03.jpg": {
     "title": "Above the fjord",
     "caption": "Norway",
     "alt": "An older couple taking a selfie from a viewpoint high above a Norwegian fjord"
   },
-  {
-    "uuid": "b4c30f26-2fbc-43ac-940e-a7a761780d62",
-    "file": "couples-32-amsterdam-terras-beers.jpg",
-    "album": "Couples",
+  "b4c30f26-2fbc-43ac-940e-a7a761780d62.jpg": {
     "title": "Terras beers",
     "caption": "Amsterdam",
     "alt": "A couple laughing at a pavement café table with two beers as an Amsterdam tram passes behind them"
   },
-  {
-    "uuid": "b8f4dacd-4d4b-41f7-8fa4-537c8581e30e",
-    "file": "golden-years-05-snow-bridge-2011.jpg",
-    "album": "Golden years",
+  "b8f4dacd-4d4b-41f7-8fa4-537c8581e30e.jpg": {
     "title": "The snow bridge, 2011",
     "caption": "Alps",
     "alt": "A group of older relatives lined up on a snowy wooden bridge with white peaks behind them"
   },
-  {
-    "uuid": "b3580aa7-154f-40b6-95eb-f002284027d9",
-    "file": "couples-33-batu-caves-kuala-lumpur.jpg",
-    "album": "Couples",
+  "b3580aa7-154f-40b6-95eb-f002284027d9.jpg": {
     "title": "Before the rainbow steps",
     "caption": "Batu Caves, Kuala Lumpur",
     "alt": "A couple taking a selfie in front of the golden Murugan statue and rainbow steps at Batu Caves"
   },
-  {
-    "uuid": "c1becafc-5ef9-4fdc-9df0-fbe6b5486a87",
-    "file": "couples-34-jungfraujoch-selfie.jpg",
-    "album": "Couples",
+  "c1becafc-5ef9-4fdc-9df0-fbe6b5486a87.jpg": {
     "title": "Sunglasses weather",
     "caption": "Jungfraujoch, Switzerland",
     "alt": "A smiling couple taking a selfie on a snowfield beneath jagged peaks at Jungfraujoch"
   },
-  {
-    "uuid": "c5f8b329-afd2-4964-9429-762e93257136",
-    "file": "couples-35-tokyo-neon-rain.jpg",
-    "album": "Couples",
+  "c5f8b329-afd2-4964-9429-762e93257136.jpg": {
     "title": "One umbrella, all the neon",
     "caption": "Tokyo",
     "alt": "A couple smiling under a clear umbrella lit pink by neon signs in the rain, Tokyo"
   },
-  {
-    "uuid": "ca136df3-a135-4af1-ad9f-6cad88536ab5",
-    "file": "families-06-marina-bay-singapore.jpg",
-    "album": "Families",
+  "ca136df3-a135-4af1-ad9f-6cad88536ab5.jpg": {
     "title": "Marina Bay lights",
     "caption": "Singapore",
     "alt": "A family of four taking a night selfie with Marina Bay Sands and the ArtScience Museum lit behind them"
   },
-  {
-    "uuid": "cd24a8ce-e430-41ec-93fe-4e298d7c77fb",
-    "file": "couples-36-graffiti-wall-selfie.jpg",
-    "album": "Couples",
+  "cd24a8ce-e430-41ec-93fe-4e298d7c77fb.jpg": {
     "title": "Peace signs",
     "caption": "Graffiti wall",
     "alt": "A grinning couple taking a selfie with peace signs in front of a colourful graffiti wall"
   },
-  {
-    "uuid": "d0d34d89-595c-45ad-a231-b59c33b6c490",
-    "file": "friends-09-paris-cafe-croissants.jpg",
-    "album": "Friends abroad",
+  "d0d34d89-595c-45ad-a231-b59c33b6c490.jpg": {
     "title": "Too many coffees",
     "caption": "Paris",
     "alt": "A group of friends squeezed around a small Paris café table loaded with coffees and croissants"
   },
-  {
-    "uuid": "f2b829fd-3241-47e7-9928-2f0fa5f518be",
-    "file": "golden-years-06-cn-tower-toronto.jpg",
-    "album": "Golden years",
+  "f2b829fd-3241-47e7-9928-2f0fa5f518be.jpg": {
     "title": "CN Tower glitter",
     "caption": "Toronto, Canada",
     "alt": "An older couple smiling at night with the lit Toronto skyline and CN Tower across the water"
   },
-  {
-    "uuid": "f6bc0680-02ff-4c01-af33-6346db54a026",
-    "file": "golden-years-07-laughing-in-snow.jpg",
-    "album": "Golden years",
+  "f6bc0680-02ff-4c01-af33-6346db54a026.jpg": {
     "title": "Snow in her hair",
     "caption": "Alps",
     "alt": "A close-up of an older woman laughing with snowflakes caught in her grey hair and blue shawl"
   },
-  {
-    "uuid": "f8a637a5-2428-4b71-a8c7-587f5dca3070",
-    "file": "couples-37-paris-bistro-street.jpg",
-    "album": "Couples",
+  "f8a637a5-2428-4b71-a8c7-587f5dca3070.jpg": {
     "title": "Wine on the bistro street",
     "caption": "Paris",
     "alt": "A laughing couple holding wine glasses on a candle-lit Paris bistro street at night"
   },
-  {
-    "uuid": "f446c16c-6469-454b-82cf-54966bb13494",
-    "file": "couples-38-amsterdam-bicycles.jpg",
-    "album": "Couples",
+  "f446c16c-6469-454b-82cf-54966bb13494.jpg": {
     "title": "Two bikes, one canal",
     "caption": "Amsterdam",
     "alt": "A laughing couple riding bicycles across a bridge over an Amsterdam canal"
   },
-  {
-    "uuid": "fbd32f09-673c-4e0b-92bf-ea7459ba4969",
-    "file": "couples-39-cafe-chalet-hot-chocolate.jpg",
-    "album": "Couples",
+  "fbd32f09-673c-4e0b-92bf-ea7459ba4969.jpg": {
     "title": "Sharing the hot chocolate",
     "caption": "Café Chalet, Switzerland",
     "alt": "A close-up of a couple laughing over a steaming mug of hot chocolate at a Swiss chalet café"
   }
+}
 ]
