@@ -41,6 +41,24 @@ describe('Audience', () => {
     }
   });
 
+  it('styles the secondary calls to action like the primary request button', () => {
+    const element: HTMLElement = create().nativeElement;
+    const linkByText = (label: string) =>
+      Array.from(element.querySelectorAll<HTMLAnchorElement>('a.btn')).find(
+        (link) => link.textContent?.trim() === label,
+      );
+
+    const primary = linkByText('Start your NeverBeen request');
+
+    expect(primary?.classList.contains('btn-gold')).toBe(true);
+    for (const label of ['See how it works', 'See packages', 'Create my vacation']) {
+      const secondary = linkByText(label);
+      expect(secondary).toBeDefined();
+      expect(secondary?.className).toBe(primary?.className);
+    }
+    expect(element.querySelectorAll('a.btn-ghost, a.btn-primary').length).toBe(0);
+  });
+
   it('shows the age note and every privacy promise', () => {
     const element: HTMLElement = create().nativeElement;
 

@@ -72,19 +72,8 @@
   margin-top: 2rem;
 }
 
-.intro .btn-primary {
-  background: var(--gold);
-  color: var(--forest-deep);
-}
-
-.intro .btn-primary:hover {
+.btn-gold:hover {
   background: #d4b481;
-}
-
-.intro .btn-ghost,
-.intro .btn-ghost:hover,
-.closing .btn-ghost:hover {
-  border-color: var(--paper);
 }
 
 .assurances {
