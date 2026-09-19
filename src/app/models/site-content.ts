@@ -657,3 +657,139 @@ export const heroDestinations: HeroDestination[] = [
     image: 'https://images.unsplash.com/photo-1500759285222-a95626b934cb?auto=format&fit=crop&w=1800&q=80',
   },
 ];
+
+export interface AudienceProfile {
+  emoji: string;
+  name: string;
+  tagline: string;
+  description: string;
+  image: string;
+  imageWidth: number;
+  imageHeight: number;
+  alt: string;
+}
+
+export interface PrivacyPromise {
+  number: string;
+  title: string;
+  description: string;
+}
+
+export const audienceProfiles: AudienceProfile[] = [
+  {
+    emoji: '❤️',
+    name: 'Couples',
+    tagline: 'Create the honeymoon you always dreamed of.',
+    description:
+      'Sunset on a Santorini cliff, a slow walk through Rome, a quiet morning on a Maldivian beach. Send two portraits and we compose the two of you together, in the light and the season you imagined — no flights, no leave requests, no compromise.',
+    image: '/audience/couples.jpg',
+    imageWidth: 928,
+    imageHeight: 1152,
+    alt: 'A couple walking hand in hand along a whitewashed Santorini lane at golden hour',
+  },
+  {
+    emoji: '👨‍👩‍👧',
+    name: 'Families',
+    tagline: 'Put the whole family in their dream destination.',
+    description:
+      'Gather every generation into one frame at last: grandparents beside an alpine lake, children meeting snow for the first time, cousins photographed under the same skyline. Each person is composed from a photograph you own, so nobody is left out of the picture.',
+    image: '/audience/families.jpg',
+    imageWidth: 928,
+    imageHeight: 1152,
+    alt: 'A laughing family of four standing on a mountain jetty above turquoise water',
+  },
+  {
+    emoji: '🎁',
+    name: 'Birthday gifts',
+    tagline: 'Give someone a vacation without buying a flight.',
+    description:
+      'The gift that fits in an envelope and still feels like a boarding pass. Present the birthday person in the place they have pinned for years — Tokyo, Cape Town, a desert camp beneath the stars — ready for the reveal, the party wall, or the moment they open it.',
+    image: '/audience/birthday.jpg',
+    imageWidth: 928,
+    imageHeight: 1152,
+    alt: 'A smiling woman holding a pastel wrapped birthday gift with balloons behind her',
+  },
+  {
+    emoji: '📱',
+    name: 'Social media show-offs',
+    tagline: 'Create extraordinary travel content from ordinary photographs.',
+    description:
+      'Your grid, upgraded. Turn the photographs already on your phone into a scroll-stopping travel series — Milan at blue hour, Iceland beneath the aurora, a balcony above the Aegean — with the colour, styling, and framing of editorial travel magazines. Post a new city every week.',
+    image: '/audience/social.jpg',
+    imageWidth: 928,
+    imageHeight: 1152,
+    alt: 'A traveller photographing herself on a phone on a European street at dusk',
+  },
+  {
+    emoji: '🌎',
+    name: 'Dream destinations',
+    tagline: 'See yourself anywhere in the world.',
+    description:
+      'Somewhere has been waiting for you: the fjord, the desert road, the temple terrace, the iceberg. Choose the place you have never stood and NeverBeen places you in its weather, its light, and its hour — a photograph of a destination you can finally picture yourself in.',
+    image: '/audience/dream-destinations.jpg',
+    imageWidth: 928,
+    imageHeight: 1152,
+    alt: 'A lone traveller on a cliff top looking over a misty fjord at dawn',
+  },
+  {
+    emoji: '🎬',
+    name: 'Content creators',
+    tagline: 'Create characters and photos for your content.',
+    description:
+      'Build a cast, not just a portfolio. Design characters with a consistent face, wardrobe, and world across every post, story, and reel — plus destination backdrops for thumbnails, covers, and brand campaigns. Original, documented, and cleared for commercial use.',
+    image: '/audience/creators.jpg',
+    imageWidth: 928,
+    imageHeight: 1152,
+    alt: 'A content creator editing character artwork in a bright home studio',
+  },
+  {
+    emoji: '🧓',
+    name: 'Old folks',
+    tagline: 'Travel without the airport queues — whatever your age.',
+    description:
+      'A veranda above the Mediterranean, the rim of the Grand Canyon, the city where you first fell in love. You choose the view, our editors do all the work, and your photographs arrive print-ready for the mantelpiece, the album, and the family group chat.',
+    image: '/audience/golden-years.jpg',
+    imageWidth: 1376,
+    imageHeight: 768,
+    alt: 'An older couple laughing together on a sunlit Mediterranean terrace above the sea',
+  },
+];
+
+export const privacyPromises: PrivacyPromise[] = [
+  {
+    number: '01',
+    title: 'Only photographs you own or may use',
+    description:
+      'We create images only from photographs you provide, or from photographs you have documented permission to use.',
+  },
+  {
+    number: '02',
+    title: 'No deceptive documents, no impersonation',
+    description:
+      'NeverBeen does not produce fake documents, IDs, or passports, and we will not place you in scenes built to impersonate someone else or mislead anyone.',
+  },
+  {
+    number: '03',
+    title: 'Handled only for the service you request',
+    description:
+      'Your photographs are used to build your collection and nothing else. No resale, no side projects, and no training our own models on your face.',
+  },
+  {
+    number: '04',
+    title: 'You remain in control of your images',
+    description:
+      'You decide what is composed, what is shared, and what is deleted. Ask us to remove your files at any time and we will confirm once it is done.',
+  },
+  {
+    number: '05',
+    title: 'Every photograph is verified before use',
+    description:
+      'Before a single scene is composed, our editors verify that the person in the photograph matches the request and the identification you provided.',
+  },
+  {
+    number: '06',
+    title: 'A model contract permission is signed',
+    description:
+      'Every engagement is covered by a signed model release and usage agreement, so permission is written down, dated, and clear on both sides.',
+  },
+];

@@ -44,6 +44,15 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ng test
 ```
 
+## Routes
+
+| Path        | Page     | Notes                                                        |
+| ----------- | -------- | ------------------------------------------------------------ |
+| `/`         | Home     | Hero, how it works, destinations, gallery, pricing, FAQ, contact |
+| `/audience` | Audience | Who NeverBeen is for, age note, destination list, privacy promises |
+| `/founder`  | Founder  | Founder profile and expertise                                 |
+| `/login`    | Login    | Sign-in form                                                  |
+
 ## Deploying to Cloudflare Pages
 
 Create a Pages project connected to this repository with these settings:

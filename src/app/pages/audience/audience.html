@@ -1,0 +1,197 @@
+<main class="audience-page">
+  <section class="intro" aria-labelledby="audience-title">
+    <div class="container intro-layout">
+      <div class="intro-copy">
+        <a class="back-link" routerLink="/">Back to NeverBeen</a>
+        <p class="eyebrow">Who is NeverBeen for?</p>
+        <h1 id="audience-title">Made for moments that matter</h1>
+        <p class="lede">
+          NeverBeen exists for the trip that keeps getting postponed — the honeymoon, the family
+          reunion, the birthday surprise, the photograph you always meant to take. Send us a
+          portrait you already own, tell us where you have never been, and we compose the moment in
+          editorial travel light.
+        </p>
+        <div class="actions">
+          <a class="btn btn-primary" routerLink="/" fragment="contact">Start your NeverBeen request</a>
+          <a class="btn btn-ghost" routerLink="/" fragment="how-it-works">See how it works</a>
+        </div>
+        <ul class="assurances" aria-label="What is included">
+          <li>No flights, no visas</li>
+          <li>Print-ready photographs</li>
+          <li>Your permission, in writing</li>
+        </ul>
+      </div>
+
+      <aside class="age-note" aria-label="About age">
+        <p class="age-label">Any age, any horizon</p>
+        <p class="age-title">Your age doesn't matter.</p>
+        <p class="age-copy">
+          You can still roam around the world virtually. Whether you are nine and dreaming of
+          Antarctica or ninety and homesick for the town you grew up in, the passport here is
+          imagination — and the journey takes minutes, not airports.
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="showcase" aria-labelledby="showcase-title">
+    <div class="container">
+      <header class="showcase-heading">
+        <p class="eyebrow">Seven reasons people come to NeverBeen</p>
+        <h2 id="showcase-title">Whose story are we telling?</h2>
+        <p class="showcase-copy">
+          Choose the moment that sounds like you. Every collection is built the same way: your
+          photographs, your permission, and a destination composed around the person you already
+          are.
+        </p>
+      </header>
+
+      <div class="cards">
+        @for (profile of profiles; track profile.name; let index = $index) {
+          <article
+            class="card"
+            [class.feature]="index === 0"
+            [class.wide]="index === profiles.length - 1"
+          >
+            <figure class="media">
+              <img
+                [ngSrc]="profile.image"
+                [width]="profile.imageWidth"
+                [height]="profile.imageHeight"
+                [priority]="index === 0"
+                [alt]="profile.alt"
+              />
+              <button
+                type="button"
+                class="expand"
+                (click)="openPortrait(profile)"
+                [attr.aria-label]="'View larger image for ' + profile.name"
+              >
+                View
+              </button>
+            </figure>
+
+            <div class="body">
+              <p class="role">
+                <span class="emoji" aria-hidden="true">{{ profile.emoji }}</span>
+                <span class="name">{{ profile.name }}</span>
+              </p>
+              <h3>{{ profile.tagline }}</h3>
+              <p class="detail">{{ profile.description }}</p>
+            </div>
+          </article>
+        }
+
+        <article class="card invite">
+          <div class="body">
+            <p class="role">
+              <span class="emoji" aria-hidden="true">✨</span>
+              <span class="name">Anyone else</span>
+            </p>
+            <h3>Tell us where you have never been.</h3>
+            <p class="detail">
+              A pilgrimage, a reunion, a retirement trip, a place you only know from a photograph
+              on someone's wall. If you can describe it, our editors can compose you into it.
+            </p>
+            <a class="btn btn-gold" routerLink="/" fragment="contact">Start your NeverBeen request</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="places" aria-labelledby="places-title">
+    <div class="container">
+      <header class="places-heading">
+        <p class="eyebrow">Dream destinations</p>
+        <h2 id="places-title">See yourself anywhere in the world</h2>
+        <p class="places-copy">
+          These are the places our editors compose most often. If your somewhere is missing, simply
+          name it in your request — a fishing village, a stadium, a street you remember.
+        </p>
+      </header>
+      <ul class="chips" aria-label="Popular destinations">
+        @for (place of places; track place.place) {
+          <li>{{ place.place }}</li>
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="privacy" aria-labelledby="privacy-title">
+    <div class="container privacy-layout">
+      <div class="privacy-media">
+        <figure>
+          <img
+            ngSrc="/audience/privacy.jpg"
+            width="1024"
+            height="1024"
+            alt="Hands holding printed travel photographs beside a signed permission letter"
+          />
+        </figure>
+        <p class="seal">Your photographs. Your permission. Your privacy.</p>
+      </div>
+
+      <div class="privacy-body">
+        <p class="eyebrow">Handled with care</p>
+        <h2 id="privacy-title">Six promises we put in writing</h2>
+        <p class="privacy-copy">
+          Creating a photograph of someone is a matter of trust. These are the rules our studio
+          works by — every request, every time.
+        </p>
+
+        <ol class="promises">
+          @for (promise of promises; track promise.number) {
+            <li>
+              <span class="number">{{ promise.number }}</span>
+              <div>
+                <h3>{{ promise.title }}</h3>
+                <p>{{ promise.description }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing" aria-labelledby="closing-title">
+    <div class="container closing-inner">
+      <p class="eyebrow">Your turn</p>
+      <h2 id="closing-title">Where have you never been?</h2>
+      <p>
+        Tell us the place, send a photograph you own, and let the studio build the moment around
+        you. Payment is due only when you love the delivery — and your photographs are deleted when
+        the story ends.
+      </p>
+      <div class="closing-actions">
+        <a class="btn btn-gold" routerLink="/" fragment="contact">Create my vacation</a>
+        <a class="btn btn-ghost light" routerLink="/" fragment="pricing">See packages</a>
+      </div>
+    </div>
+  </section>
+
+  @if (activePortrait(); as profile) {
+    <div
+      class="lightbox"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="profile.name + ': ' + profile.tagline"
+      (click)="closePortrait()"
+    >
+      <button type="button" class="lightbox-close" (click)="closePortrait()">Close</button>
+      <figure (click)="$event.stopPropagation()">
+        <img
+          [ngSrc]="profile.image"
+          [width]="profile.imageWidth"
+          [height]="profile.imageHeight"
+          [alt]="profile.alt"
+        />
+        <figcaption>
+          <strong>{{ profile.emoji }} {{ profile.name }}</strong>
+          <span>{{ profile.tagline }}</span>
+        </figcaption>
+      </figure>
+    </div>
+  }
+</main>
