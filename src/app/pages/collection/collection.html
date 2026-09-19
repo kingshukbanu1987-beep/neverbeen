@@ -1,0 +1,119 @@
+<main class="collection-page">
+  <section class="intro" aria-labelledby="collection-title">
+    <div class="container intro-layout">
+      <div class="intro-copy">
+        <a class="back-link" routerLink="/">Back to NeverBeen</a>
+        <p class="eyebrow">The Collection</p>
+        <h1 id="collection-title">Every place we have never been</h1>
+        <p class="lede">
+          This is the NeverBeen album — honeymoons, reunions, birthdays and horizons composed for
+          people who have never stood where they are standing in these frames. The photographs sit
+          the way they sit in your phone's gallery: a wall of moments you can scroll.
+        </p>
+        <p class="hint">
+          <span class="hint-dot" aria-hidden="true"></span>
+          Tap a photograph to enlarge it · tap anywhere outside to put it back
+        </p>
+      </div>
+
+      <aside class="counter" aria-label="Collection size">
+        <p class="counter-number">{{ photos.length }}</p>
+        <p class="counter-label">photographs in the collection</p>
+        <p class="counter-note">New frames are added every week.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="library" aria-labelledby="library-title">
+    <h2 id="library-title" class="visually-hidden">Photograph gallery</h2>
+
+    @for (album of albums; track album.name) {
+      <div class="album">
+        @if (album.name) {
+          <header class="album-heading">
+            <h3>{{ album.name }}</h3>
+            <span class="album-count">{{ album.items.length }}</span>
+          </header>
+        }
+
+        <ul class="photo-grid">
+          @for (item of album.items; track item.photo.src) {
+            <li class="photo-cell">
+              <button
+                type="button"
+                class="tile"
+                (click)="open(item.index)"
+                [attr.aria-label]="'Enlarge photograph: ' + item.photo.title"
+                [attr.aria-haspopup]="'dialog'"
+              >
+                <img
+                  [src]="item.photo.src"
+                  [alt]="item.photo.alt"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span class="tile-label">{{ item.photo.title }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+
+  <section class="closing" aria-labelledby="closing-title">
+    <div class="container closing-inner">
+      <p class="eyebrow">Your turn</p>
+      <h2 id="closing-title">Your photograph belongs in this collection</h2>
+      <p>
+        Tell us the place you have never been, send a photograph you own, and our editors will
+        compose the moment around you — print-ready, private, and yours to keep.
+      </p>
+      <div class="closing-actions">
+        <a class="btn btn-gold" routerLink="/" fragment="contact">Create my vacation</a>
+        <a class="btn btn-gold" routerLink="/audience">See who it is for</a>
+      </div>
+    </div>
+  </section>
+
+  @if (activePhoto(); as photo) {
+    <div
+      class="lightbox"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="photo.title"
+      (click)="close()"
+    >
+      <div class="lightbox-bar">
+        <span class="lightbox-position">{{ position() }}</span>
+        <button #lightboxClose type="button" class="lightbox-close" (click)="close()">Close</button>
+      </div>
+
+      <button
+        type="button"
+        class="lightbox-arrow previous"
+        (click)="showPrevious($event)"
+        aria-label="Previous photograph"
+      >
+        ‹
+      </button>
+
+      <figure (click)="$event.stopPropagation()">
+        <img [src]="photo.src" [alt]="photo.alt" />
+        <figcaption>
+          <strong>{{ photo.title }}</strong>
+          <span>{{ photo.caption }}</span>
+        </figcaption>
+      </figure>
+
+      <button
+        type="button"
+        class="lightbox-arrow next"
+        (click)="showNext($event)"
+        aria-label="Next photograph"
+      >
+        ›
+      </button>
+    </div>
+  }
+</main>

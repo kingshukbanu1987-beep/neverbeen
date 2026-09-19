@@ -3,8 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prestart": "node scripts/generate-collection.mjs",
     "start": "ng serve",
+    "prebuild": "node scripts/generate-collection.mjs",
     "build": "ng build",
+    "generate:collection": "node scripts/generate-collection.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
