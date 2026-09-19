@@ -8,6 +8,7 @@
     "prebuild": "node scripts/generate-collection.mjs",
     "build": "ng build",
     "generate:collection": "node scripts/generate-collection.mjs",
+    "ingest:collection": "node scripts/ingest-collection-uploads.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

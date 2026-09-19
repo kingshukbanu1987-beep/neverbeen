@@ -9,6 +9,10 @@ Photographs placed in this folder are shown on the **Collection** page (`/collec
 2. Run `npm run generate:collection` (or simply `npm start` / `npm run build`, which run it
    first). This rewrites `src/app/pages/collection/collection-photos.ts`.
 
+Photographs attached in Arena chat are saved to `/home/user/uploads` with UUID file names; run
+`npm run ingest:collection` to copy them in here with readable names, captions and albums taken
+from `scripts/collection-ingest-map.json`, and to regenerate the manifest automatically.
+
 Titles are derived from the file names — `santorini-sunset.jpg` becomes "Santorini Sunset".
 
 ## Optional captions
