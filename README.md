@@ -46,12 +46,40 @@ ng test
 
 ## Routes
 
-| Path        | Page     | Notes                                                        |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `/`         | Home     | Hero, how it works, destinations, gallery, pricing, FAQ, contact |
-| `/audience` | Audience | Who NeverBeen is for, age note, destination list, privacy promises |
-| `/founder`  | Founder  | Founder profile and expertise                                 |
-| `/login`    | Login    | Sign-in form                                                  |
+| Path          | Page       | Notes                                                                                                |
+| ------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| `/`           | Home       | Hero, how it works, destinations, gallery, pricing, FAQ, contact                                     |
+| `/audience`   | Audience   | Who NeverBeen is for, age note, destination list, privacy promises                                   |
+| `/collection` | Collection | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
+| `/founder`    | Founder    | Founder profile and expertise                                                                        |
+| `/login`      | Login      | Sign-in form                                                                                         |
+
+## The Collection page
+
+Photographs shown on `/collection` live in `public/collection`. Drop image files (`jpg`, `jpeg`,
+`png`, `webp`, `avif`, `gif`) into that folder — sub-folders become album headings — then run:
+
+```bash
+npm run generate:collection
+```
+
+This rewrites the generated manifest `src/app/pages/collection/collection-photos.ts`. `npm start`
+and `npm run build` run the generator automatically, so photographs added to the folder appear on
+the page without any further wiring. Titles are derived from the file names and can be overridden with
+an optional `public/collection/captions.json` (see `public/collection/README.md`).
+
+Photographs attached in Arena chat land in `/home/user/uploads` as UUID-named files. Run
+
+```bash
+npm run ingest:collection
+```
+
+to copy them into `public/collection` with readable names and captions
+(`scripts/collection-ingest-map.json` holds the name/caption/album for each attachment) and
+regenerate the manifest in one step.
+
+While `public/collection` is empty, the page shows the sample studio photographs from
+`public/audience` so it is never blank.
 
 ## Deploying to Cloudflare Pages
 
