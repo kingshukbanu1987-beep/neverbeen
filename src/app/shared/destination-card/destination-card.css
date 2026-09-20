@@ -1,4 +1,5 @@
 .card {
+  display: block;
   position: relative;
   overflow: hidden;
   min-height: clamp(300px, 30vw, 420px);
@@ -44,4 +45,24 @@ h3 {
 
 p {
   margin: 0.25rem 0 0;
+}
+
+.cta {
+  margin-top: 0.7rem !important;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+  opacity: 0.85;
+}
+
+.card:hover .cta,
+.card:focus-visible .cta {
+  opacity: 1;
+  color: var(--gold);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
 }

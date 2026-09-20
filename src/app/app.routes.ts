@@ -17,6 +17,12 @@ export const routes: Routes = [
     title: 'Audience — NeverBeen',
   },
   {
+    path: 'destinations/:slug',
+    loadComponent: () =>
+      import('./pages/destination/destination').then((m) => m.DestinationPageView),
+    title: 'Destination guide — NeverBeen',
+  },
+  {
     path: 'collection',
     loadComponent: () => import('./pages/collection/collection').then((m) => m.Collection),
     title: 'Collection — NeverBeen',
