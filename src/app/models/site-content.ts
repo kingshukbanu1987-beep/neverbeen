@@ -446,21 +446,113 @@ export const destinations: Destination[] = destinationSeed.map((destination) => 
   images: [destination.image, ...(destinationRotationImages[destination.name] ?? [])].slice(0, 4),
 }));
 
-export const contactDestinations = [
+const contactDestinationOptions: string[] = [
   ...destinations.map((destination) => destination.name),
-  'Amsterdam', 'Athens', 'Barcelona', 'Berlin', 'Lisbon', 'Madrid', 'Vienna', 'Prague', 'Budapest',
-  'Copenhagen', 'Dublin', 'Edinburgh', 'Florence', 'Venice', 'Milan', 'Naples', 'Nice', 'Brussels',
-  'Zurich', 'Geneva', 'Lucerne', 'Zermatt', 'Interlaken', 'Salzburg', 'Munich', 'Oslo', 'Stockholm',
-  'Helsinki', 'Tallinn', 'Riga', 'Vilnius', 'Warsaw', 'Krakow', 'Bucharest', 'Sofia', 'Belgrade',
-  'Dubrovnik', 'Split', 'Ljubljana', 'Sarajevo', 'Cairo', 'Luxor', 'Casablanca', 'Tunis', 'Algiers',
-  'Dakar', 'Accra', 'Lagos', 'Kigali', 'Windhoek', 'Gaborone', 'Maputo', 'Mauritius', 'Seychelles',
-  'Doha', 'Abu Dhabi', 'Muscat', 'Riyadh', 'Jeddah', 'Jerusalem', 'Amman', 'Beirut', 'Tehran', 'Baku',
-  'Tbilisi', 'Yerevan', 'Delhi', 'Mumbai', 'Jaipur', 'Goa', 'Bengaluru', 'Kathmandu', 'Colombo',
-  'Bangkok', 'Phuket', 'Singapore', 'Kuala Lumpur', 'Hanoi', 'Ho Chi Minh City', 'Hong Kong', 'Shanghai',
-  'Beijing', 'Taipei', 'Osaka', 'Nara', 'Busan', 'Jeju', 'Manila', 'Palawan', 'Perth', 'Melbourne',
-  'Brisbane', 'Auckland', 'Queenstown', 'Honolulu', 'Vancouver', 'Toronto', 'Montreal', 'Mexico City',
-  'Cancun', 'Others',
-] as const;
+  'Amsterdam',
+  'Athens',
+  'Barcelona',
+  'Berlin',
+  'Lisbon',
+  'Madrid',
+  'Vienna',
+  'Prague',
+  'Budapest',
+  'Copenhagen',
+  'Dublin',
+  'Edinburgh',
+  'Florence',
+  'Venice',
+  'Milan',
+  'Naples',
+  'Nice',
+  'Brussels',
+  'Zurich',
+  'Geneva',
+  'Lucerne',
+  'Zermatt',
+  'Interlaken',
+  'Salzburg',
+  'Munich',
+  'Oslo',
+  'Stockholm',
+  'Helsinki',
+  'Tallinn',
+  'Riga',
+  'Vilnius',
+  'Warsaw',
+  'Krakow',
+  'Bucharest',
+  'Sofia',
+  'Belgrade',
+  'Dubrovnik',
+  'Split',
+  'Ljubljana',
+  'Sarajevo',
+  'Cairo',
+  'Luxor',
+  'Casablanca',
+  'Tunis',
+  'Algiers',
+  'Dakar',
+  'Accra',
+  'Lagos',
+  'Kigali',
+  'Windhoek',
+  'Gaborone',
+  'Maputo',
+  'Mauritius',
+  'Seychelles',
+  'Doha',
+  'Abu Dhabi',
+  'Muscat',
+  'Riyadh',
+  'Jeddah',
+  'Jerusalem',
+  'Amman',
+  'Beirut',
+  'Tehran',
+  'Baku',
+  'Tbilisi',
+  'Yerevan',
+  'Delhi',
+  'Mumbai',
+  'Jaipur',
+  'Goa',
+  'Bengaluru',
+  'Kathmandu',
+  'Colombo',
+  'Bangkok',
+  'Phuket',
+  'Singapore',
+  'Kuala Lumpur',
+  'Hanoi',
+  'Ho Chi Minh City',
+  'Hong Kong',
+  'Shanghai',
+  'Beijing',
+  'Taipei',
+  'Osaka',
+  'Nara',
+  'Busan',
+  'Jeju',
+  'Manila',
+  'Palawan',
+  'Perth',
+  'Melbourne',
+  'Brisbane',
+  'Auckland',
+  'Queenstown',
+  'Honolulu',
+  'Vancouver',
+  'Toronto',
+  'Montreal',
+  'Mexico City',
+  'Cancun',
+  'Others',
+];
+
+/** Every place name offered in the contact form, without duplicates. */
+export const contactDestinations = Array.from(new Set(contactDestinationOptions));
 
 export const galleryItems: GalleryItem[] = [
   {
@@ -557,7 +649,12 @@ export const pricingPlans: PricingPlan[] = [
     cadence: 'one collection',
     description: 'A first trip, finished like a studio portrait.',
     featured: false,
-    features: ['3 destination looks', 'Print-ready 4K files', 'Natural color grading', '48-hour delivery'],
+    features: [
+      '3 destination looks',
+      'Print-ready 4K files',
+      'Natural color grading',
+      '48-hour delivery',
+    ],
   },
   {
     name: 'Economy Class',
@@ -690,22 +787,26 @@ export const howItWorksSteps: HowItWorksStep[] = [
   {
     number: '01',
     title: 'Submit Neverbeen Request',
-    description: 'Complete the request form with your details, destination preferences, and the package you selected.',
+    description:
+      'Complete the request form with your details, destination preferences, and the package you selected.',
   },
   {
     number: '02',
     title: 'Submit Photos and ID for Verification',
-    description: 'Share a clear photo and valid ID so our team can verify your request and prepare your personalized experience.',
+    description:
+      'Share a clear photo and valid ID so our team can verify your request and prepare your personalized experience.',
   },
   {
     number: '03',
     title: 'Let AI create your vacation',
-    description: 'Our studio model places you in destination light, wardrobe, and atmosphere—then an editor refines the still.',
+    description:
+      'Our studio model places you in destination light, wardrobe, and atmosphere—then an editor refines the still.',
   },
   {
     number: '04',
     title: 'Download and share',
-    description: 'Receive print-ready photographs for albums, frames, and the trip you always meant to take.',
+    description:
+      'Receive print-ready photographs for albums, frames, and the trip you always meant to take.',
   },
 ];
 
@@ -719,127 +820,152 @@ export const heroDestinations: HeroDestination[] = [
   {
     place: 'Paris, France',
     caption: 'The Eiffel Tower at golden hour',
-    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Lake Brienz, Switzerland',
     caption: 'Turquoise water beneath the Alps',
-    image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Mount Everest, India',
     caption: 'Above the clouds in the Himalayas',
-    image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Antarctica',
     caption: 'Penguins on the edge of the world',
-    image: 'https://images.unsplash.com/photo-1517783999520-f068d7431a60?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1517783999520-f068d7431a60?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Santorini, Greece',
     caption: 'White walls above the Aegean',
-    image: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Tokyo, Japan',
     caption: 'Neon streets after rain',
-    image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Kyoto, Japan',
     caption: 'A quiet terrace beneath maple leaves',
-    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'New York, United States',
     caption: 'City lights after dusk',
-    image: 'https://images.unsplash.com/photo-1485875437342-9b39470b3d95?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1485875437342-9b39470b3d95?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Bali, Indonesia',
     caption: 'Temple mist among the rice terraces',
-    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Amalfi Coast, Italy',
     caption: 'Morning light on the Mediterranean',
-    image: 'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Sahara, Morocco',
     caption: 'Desert light after the rain',
-    image: 'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Fjords, Norway',
     caption: 'Blue dusk between quiet peaks',
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Bora Bora, French Polynesia',
     caption: 'Lagoon water under a wide sky',
-    image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Wadi Rum, Jordan',
     caption: 'A camp beneath the desert stars',
-    image: 'https://images.unsplash.com/photo-1547234935-80c7145ec969?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1547234935-80c7145ec969?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'London, United Kingdom',
     caption: 'Evening beside the River Thames',
-    image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Rome, Italy',
     caption: 'Ancient stone beneath the Roman sun',
-    image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Dubai, United Arab Emirates',
     caption: 'A skyline rising from the desert',
-    image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Rio de Janeiro, Brazil',
     caption: 'Mountain, ocean, and city below',
-    image: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Machu Picchu, Peru',
     caption: 'Ruins above the cloud forest',
-    image: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Serengeti, Tanzania',
     caption: 'Open grassland beneath a vast sky',
-    image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Great Barrier Reef, Australia',
     caption: 'A blue world beneath the surface',
-    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Reykjavik, Iceland',
     caption: 'Northern light over volcanic ground',
-    image: 'https://images.unsplash.com/photo-1504829857797-ddff29c27927?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1504829857797-ddff29c27927?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Cappadocia, Turkey',
     caption: 'Balloons floating over the valleys',
-    image: 'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Prague, Czech Republic',
     caption: 'Old-world rooftops at first light',
-    image: 'https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=1800&q=80',
   },
   {
     place: 'Havana, Cuba',
     caption: 'Color and music along the old streets',
-    image: 'https://images.unsplash.com/photo-1500759285222-a95626b934cb?auto=format&fit=crop&w=1800&q=80',
+    image:
+      'https://images.unsplash.com/photo-1500759285222-a95626b934cb?auto=format&fit=crop&w=1800&q=80',
   },
 ];
 
