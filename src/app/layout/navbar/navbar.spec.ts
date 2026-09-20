@@ -33,6 +33,16 @@ describe('Navbar', () => {
     expect(audience?.getAttribute('href')).toBe('/audience');
   });
 
+  it('links the FAQ option, placed after Pricing, to the "Before you go" FAQ section', () => {
+    const links = navLinks();
+    const labels = links.map((link) => link.textContent?.trim());
+    const faq = links[labels.indexOf('FAQ')];
+
+    expect(labels.indexOf('FAQ')).toBe(labels.indexOf('Pricing') + 1);
+    expect(faq.getAttribute('href')).toBe('/#faq');
+    expect(faq.querySelector('svg.icon use')?.getAttribute('href')).toBe('#nb-icon-help-circle');
+  });
+
   it('routes /audience to the Audience page component', async () => {
     const { Audience } = await import('../../pages/audience/audience');
     const audienceRoute = routes.find((route) => route.path === 'audience');

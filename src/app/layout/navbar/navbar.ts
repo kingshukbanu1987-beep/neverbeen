@@ -18,6 +18,7 @@ export class Navbar {
     { label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
     { label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
     { label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },
+    { label: 'FAQ', path: '/', fragment: 'faq', icon: 'help-circle' },
     { label: 'Login', path: '/login', fragment: undefined, icon: 'log-in' },
     { label: 'Founder', path: '/', fragment: 'owner', icon: 'user' },
     { label: 'Contact', path: '/', fragment: 'contact', icon: 'mail' },
