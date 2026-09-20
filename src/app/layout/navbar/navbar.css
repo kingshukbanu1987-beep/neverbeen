@@ -54,6 +54,31 @@ nav a.active {
   color: var(--ink);
 }
 
+/* Live menu - green animated dot */
+a:has(use[href='#nb-icon-live']) {
+  color: #1f7a12;
+  font-weight: 700;
+}
+
+a:has(use[href='#nb-icon-live']) .icon {
+  color: #25d366;
+  filter: drop-shadow(0 0 6px rgba(37, 211, 102, 0.6));
+}
+
+.icon-live {
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
 .login {
   padding: 0.45rem 0.95rem;
   border: 1px solid var(--line);

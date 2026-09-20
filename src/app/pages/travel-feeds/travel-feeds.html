@@ -134,18 +134,30 @@
       }
 
       @if (feed.articles.length) {
-        <section class="feed-block">
+        <section class="feed-block" aria-labelledby="feeds-saying-title">
           <header class="block-head">
-            <h3>What the feeds are saying</h3>
+            <h3 id="feeds-saying-title">What the feeds are saying about {{ feed.place.name }}</h3>
+            <p>Only showing feeds strictly for <strong>{{ feed.place.name }}</strong> — Travel, Weather, News, Sports, Culture and Local guides. No word-matching, only location-based.</p>
+            <div class="feed-categories">
+              <span class="feed-cat feed-cat-travel">✈️ Travel</span>
+              <span class="feed-cat feed-cat-weather">🌤️ Weather</span>
+              <span class="feed-cat feed-cat-news">📰 News</span>
+              <span class="feed-cat feed-cat-sports">⚽ Sports</span>
+              <span class="feed-cat feed-cat-culture">🏛️ Culture</span>
+              <span class="feed-cat feed-cat-local">🍜 Local</span>
+            </div>
           </header>
           <ul class="feed-list">
             @for (article of feed.articles; track article.url; let i = $index) {
-              <li class="feed-item" [style.animation-delay.ms]="i * 45">
+              <li class="feed-item {{ feedCategoryClass(article.source) }}" [style.animation-delay.ms]="i * 45">
                 <a [href]="article.url" target="_blank" rel="noopener">
-                  <span class="feed-source">{{ article.source }}</span>
+                  <span class="feed-source">
+                    <span class="feed-source-icon">{{ feedIcon(article.source) }}</span>
+                    {{ article.source }} · {{ feed.place.name }} only
+                  </span>
                   <h4>{{ article.title }}</h4>
                   <p>{{ article.extract }}</p>
-                  <span class="feed-open">Open<span aria-hidden="true"> ↗</span></span>
+                  <span class="feed-open">Open {{ article.source }} feed<span aria-hidden="true"> ↗</span></span>
                 </a>
               </li>
             }
@@ -304,7 +316,6 @@
           <h2 id="plan-trip-title">Plan your trip</h2>
           <p>Find flights and stays — quick search in modals</p>
         </div>
-        <span class="live-badge">Budget friendly</span>
       </header>
 
       <div class="plan-trip-grid">

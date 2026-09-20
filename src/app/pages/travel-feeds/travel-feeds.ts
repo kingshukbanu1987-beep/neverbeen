@@ -274,6 +274,30 @@ export class TravelFeedsPage implements OnInit, OnDestroy {
     return `badge badge-${source.status}`;
   }
 
+  protected feedIcon(source: string): string {
+    const s = source.toLowerCase();
+    if (s.includes('weather')) return '🌤️';
+    if (s.includes('news')) return '📰';
+    if (s.includes('sport')) return '⚽';
+    if (s.includes('travel')) return '✈️';
+    if (s.includes('culture')) return '🏛️';
+    if (s.includes('food') || s.includes('local')) return '🍜';
+    if (s.includes('wikipedia')) return '📚';
+    if (s.includes('google')) return '📍';
+    return '🌍';
+  }
+
+  protected feedCategoryClass(source: string): string {
+    const s = source.toLowerCase();
+    if (s.includes('weather')) return 'feed-cat-weather';
+    if (s.includes('news')) return 'feed-cat-news';
+    if (s.includes('sport')) return 'feed-cat-sports';
+    if (s.includes('travel')) return 'feed-cat-travel';
+    if (s.includes('culture')) return 'feed-cat-culture';
+    if (s.includes('local')) return 'feed-cat-local';
+    return 'feed-cat-default';
+  }
+
   protected views(value: number): string {
     return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value);
   }

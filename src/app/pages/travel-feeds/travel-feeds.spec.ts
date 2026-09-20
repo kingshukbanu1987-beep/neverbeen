@@ -96,6 +96,15 @@ const weatherPayload = {
   timezone: 'Asia/Tokyo',
 };
 
+const geosearchPayload = {
+  query: {
+    geosearch: [
+      { title: 'Kyoto', dist: 0, lat: 35.0116, lon: 135.7681 },
+      { title: 'Fushimi Inari-taisha', dist: 1200, lat: 34.9671, lon: 135.7727 },
+    ],
+  },
+};
+
 interface SourceLog {
   url: string;
 }
@@ -111,17 +120,23 @@ function stubFeeds(options: { fail?: boolean } = {}): SourceLog[] {
         throw new Error('feed unreachable');
       }
 
-      const body = url.includes('pageviews')
-        ? pageviews([
-            1200, 1500, 1750, 1600, 2100, 2400, 2600, 2300, 2000, 1900, 2200, 2500, 2700, 2900,
-          ])
-        : url.includes('commons.wikimedia.org')
-          ? commonsPayload
-          : url.includes('nominatim')
-            ? nominatimPayload
-            : url.includes('open-meteo')
-              ? weatherPayload
-              : wikiSearchPayload;
+      let body: unknown;
+      if (url.includes('pageviews')) {
+        body = pageviews([
+          1200, 1500, 1750, 1600, 2100, 2400, 2600, 2300, 2000, 1900, 2200, 2500, 2700, 2900,
+        ]);
+      } else if (url.includes('commons.wikimedia.org')) {
+        body = commonsPayload;
+      } else if (url.includes('nominatim')) {
+        body = nominatimPayload;
+      } else if (url.includes('open-meteo')) {
+        body = weatherPayload;
+      } else if (url.includes('geosearch')) {
+        body = geosearchPayload;
+      } else {
+        // For exactArticle, summaries, and any other Wikipedia queries
+        body = wikiSearchPayload;
+      }
 
       return new Response(JSON.stringify(body), {
         status: 200,
@@ -281,7 +296,7 @@ describe('TravelFeedsPage', () => {
     expect(element.querySelectorAll('.badge-failed').length).toBeGreaterThan(0);
   });
 
-  it('tells the visitor when a search matches nothing', async () => {
+  it('shows only location-specific feeds for a searched destination, never word-matching', async () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [TravelFeedsPage],
@@ -313,7 +328,17 @@ describe('TravelFeedsPage', () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
     fixture.detectChanges();
 
-    expect(element.textContent).toContain('The public feeds had nothing for “Atlantis”');
+    const text = element.textContent ?? '';
+    // Should show location-specific feeds for Atlantis, not empty word-match
+    expect(text).toContain('What the feeds are saying about Atlantis');
+    expect(text).toContain('Only showing feeds strictly for Atlantis');
+    expect(text).toContain('Travel');
+    expect(text).toContain('News');
+    expect(text).toContain('Sports');
+    // Should NOT show the old empty message, now we show synthetic location feeds
+    expect(text).not.toContain('The public feeds had nothing for');
+    // Should show that feeds are only for this location
+    expect(text).toContain('Atlantis only');
   });
 
   it('lets a suggestion chip run a search without typing', async () => {
