@@ -344,18 +344,38 @@ export class TravelFeeds {
    * The trending destinations board: public interest across the curated
    * destinations, ranked by last week's readership, each enriched with a
    * photograph and current weather.
+   *
+   * Supports pagination via offset/limit so the board can auto-rotate through
+   * all seeds. The ranking is global, but only the requested window is
+   * enriched with photos/weather to keep network usage low.
    */
-  async trending(seeds: TrendingSeed[] = trendingSeeds): Promise<TrendingDestination[]> {
+  async trending(
+    offset = 0,
+    limit = 3,
+    seeds: TrendingSeed[] = trendingSeeds,
+  ): Promise<TrendingDestination[]> {
     const trends = await Promise.all(seeds.map((seed) => this.trend(seed.article)));
 
     const ranked = seeds
       .map((seed, index) => ({ seed, trend: trends[index] }))
       .sort((a, b) => (b.trend?.weeklyViews ?? 0) - (a.trend?.weeklyViews ?? 0));
 
-    const featured = ranked.slice(0, 3);
+    if (!ranked.length) {
+      return [];
+    }
+
+    // Normalise offset to wrap around.
+    const safeOffset = ((offset % ranked.length) + ranked.length) % ranked.length;
+
+    // Build a window that wraps around the end of the list.
+    const windowed: typeof ranked = [];
+    for (let i = 0; i < Math.min(limit, ranked.length); i++) {
+      windowed.push(ranked[(safeOffset + i) % ranked.length]);
+    }
 
     const enriched = await Promise.all(
-      featured.map(async (entry, index) => {
+      windowed.map(async (entry, windowIndex) => {
+        const globalRank = ((safeOffset + windowIndex) % ranked.length) + 1;
         const [photos, weather] = await Promise.all([
           this.photos(entry.seed.photoQuery, 1),
           this.weather(entry.seed.coordinates.lat, entry.seed.coordinates.lon),
@@ -365,7 +385,7 @@ export class TravelFeeds {
           country: entry.seed.country,
           caption: entry.seed.caption,
           photo: photos[0]?.url ?? '',
-          rank: index + 1,
+          rank: globalRank,
           trend: entry.trend,
           weather,
         } satisfies TrendingDestination;
@@ -373,6 +393,11 @@ export class TravelFeeds {
     );
 
     return enriched;
+  }
+
+  /** Total number of seeds available for trending — used for pagination. */
+  trendingTotal(seeds: TrendingSeed[] = trendingSeeds): number {
+    return seeds.length;
   }
 
   /** Everything the page needs for one searched destination. */

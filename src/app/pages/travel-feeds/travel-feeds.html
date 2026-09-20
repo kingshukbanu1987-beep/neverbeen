@@ -218,15 +218,31 @@
         <div>
           <p class="eyebrow">What the world is reading</p>
           <h2 id="trending-title">Trending destinations right now</h2>
+          <p class="board-copy">
+            Auto-refreshes every 30 seconds · Showing {{ trendingRange() }} ·
+            Page {{ trendingPage() }} of {{ trendingTotalPages() }}
+            @if (trendsState() !== 'loading') {
+              <span class="auto-refresh-hint">· Next refresh in {{ autoRefreshCountdown() }}s</span>
+            }
+          </p>
         </div>
-        <button
-          type="button"
-          class="btn-ghost"
-          (click)="loadTrending()"
-          [disabled]="trendsState() === 'loading'"
-        >
-          {{ trendsState() === 'loading' ? 'Refreshing…' : 'Refresh' }}
-        </button>
+        <div class="board-actions">
+          <span class="refresh-indicator" aria-live="polite">
+            @if (trendsState() === 'loading') {
+              <span class="spinner small" aria-hidden="true"></span> Updating…
+            } @else {
+              Live · auto-updating
+            }
+          </span>
+          <button
+            type="button"
+            class="btn-ghost"
+            (click)="loadTrending(true)"
+            [disabled]="trendsState() === 'loading'"
+          >
+            {{ trendsState() === 'loading' ? 'Refreshing…' : 'Refresh ↻' }}
+          </button>
+        </div>
       </header>
 
       @if (trendsState() === 'loading') {
@@ -279,12 +295,334 @@
           can still search any destination above.
         </p>
       }
-
-      <p class="cross-link">
-        Ranking comes from Wikimedia readership; photographs and conditions are credited on each
-        destination search. Google Places, Instagram and Facebook are wired in but switched off —
-        add keys in <code>src/app/models/travel-feeds.ts</code>.
-      </p>
     </section>
   }
+
+  <!-- Flight Search Section - Skyscanner style -->
+  <section class="container section travel-search-section" aria-labelledby="flight-search-title">
+    <div class="travel-search-header">
+      <div class="travel-search-title-group">
+        <span class="travel-icon" aria-hidden="true">✈️</span>
+        <div>
+          <h2 id="flight-search-title">Search flights</h2>
+          <p>Find the best flight deals — Skyscanner-style search</p>
+        </div>
+      </div>
+      <span class="live-badge">Live prices</span>
+    </div>
+
+    <form class="skyscanner-form flight-form" [formGroup]="flightForm" (ngSubmit)="searchFlights(true)">
+      <div class="skyscanner-row">
+        <div class="sky-field">
+          <label for="flight-from">From</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">🛫</span>
+            <input id="flight-from" type="text" formControlName="from" placeholder="London" />
+          </div>
+        </div>
+        <button type="button" class="swap-btn" aria-label="Swap from and to" (click)="swapFlightLocations()">⇄</button>
+        <div class="sky-field">
+          <label for="flight-to">To</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">🛬</span>
+            <input id="flight-to" type="text" formControlName="to" placeholder="Tokyo" />
+          </div>
+        </div>
+        <div class="sky-field">
+          <label for="flight-depart">Depart</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">📅</span>
+            <input id="flight-depart" type="date" formControlName="departDate" />
+          </div>
+        </div>
+        <div class="sky-field">
+          <label for="flight-return">Return</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">📅</span>
+            <input id="flight-return" type="date" formControlName="returnDate" />
+          </div>
+        </div>
+        <div class="sky-field small">
+          <label for="flight-passengers">Passengers</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">👤</span>
+            <select id="flight-passengers" formControlName="passengers">
+              @for (n of [1,2,3,4,5,6,7,8,9]; track n) {
+                <option [value]="n">{{ n }} {{ n === 1 ? 'adult' : 'adults' }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="skyscanner-row second-row">
+        <div class="sky-field small">
+          <label for="flight-trip">Trip</label>
+          <div class="sky-input-wrap">
+            <select id="flight-trip" formControlName="tripType">
+              <option value="round-trip">Round trip</option>
+              <option value="one-way">One way</option>
+            </select>
+          </div>
+        </div>
+        <div class="sky-field small">
+          <label for="flight-cabin">Cabin</label>
+          <div class="sky-input-wrap">
+            <select id="flight-cabin" formControlName="cabinClass">
+              <option value="economy">Economy</option>
+              <option value="premium">Premium economy</option>
+              <option value="business">Business</option>
+              <option value="first">First</option>
+            </select>
+          </div>
+        </div>
+        <div class="sky-actions">
+          <button type="button" class="btn-ghost" (click)="clearFlightSearch()">Clear</button>
+          <button type="submit" class="btn-sky-search" [disabled]="flightState() === 'loading'">
+            @if (flightState() === 'loading') {
+              <span class="spinner" aria-hidden="true"></span> Searching flights
+            } @else {
+              Search flights →
+            }
+          </button>
+        </div>
+      </div>
+    </form>
+
+    @if (flightState() === 'loading') {
+      <div class="skeletons flight-skeletons">
+        @for (row of [1,2,3]; track $index) {
+          <div class="skeleton-card flight-skeleton">
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (flightState() === 'ready' && flightResults().length) {
+      <div class="flight-results" aria-live="polite">
+        <header class="results-header">
+          <h3>Latest flight options · {{ flightResults().length }} found</h3>
+          <p>
+            {{ flightForm.controls.from.value }} → {{ flightForm.controls.to.value }} ·
+            {{ flightForm.controls.departDate.value }} ·
+            {{ flightForm.controls.passengers.value }} {{ flightForm.controls.passengers.value === 1 ? 'passenger' : 'passengers' }} ·
+            {{ flightForm.controls.cabinClass.value }}
+          </p>
+        </header>
+
+        <ul class="flight-list">
+          @for (flight of flightResults(); track flight.id) {
+            <li class="flight-card">
+              <div class="flight-airline">
+                <span class="airline-logo">{{ flight.logo }}</span>
+                <div>
+                  <strong>{{ flight.airline }}</strong>
+                  <span>{{ flight.flightNumber }} · {{ flight.cabin }}</span>
+                </div>
+              </div>
+
+              <div class="flight-route">
+                <div class="flight-time">
+                  <strong>{{ flight.departure }}</strong>
+                  <span>{{ flight.from }}</span>
+                </div>
+                <div class="flight-path">
+                  <span class="flight-duration">{{ flight.duration }}</span>
+                  <div class="path-line">
+                    <span class="dot"></span>
+                    <span class="line"></span>
+                    @if (flight.stops > 0) {
+                      <span class="stop-dot"></span>
+                    }
+                    <span class="dot end"></span>
+                  </div>
+                  <span class="flight-stops">
+                    @if (flight.isDirect) {
+                      Direct
+                    } @else {
+                      {{ flight.stops }} stop{{ flight.stops > 1 ? 's' : '' }} · {{ flight.stopCities.join(', ') }}
+                    }
+                  </span>
+                </div>
+                <div class="flight-time">
+                  <strong>{{ flight.arrival }}</strong>
+                  <span>{{ flight.to }}</span>
+                </div>
+              </div>
+
+              <div class="flight-meta">
+                <span class="baggage">{{ flight.baggage }}</span>
+                @if (flight.returnDate) {
+                  <span class="return-date">Return {{ flight.returnDate }}</span>
+                }
+              </div>
+
+              <div class="flight-price">
+                <strong>{{ formatPrice(flight.price) }}</strong>
+                <span>per passenger</span>
+                <button type="button" class="btn-select-flight">Select →</button>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (flightState() === 'ready' && !flightResults().length && flightSearched()) {
+      <p class="notice">No flights found for this route. Try different cities or dates.</p>
+    }
+  </section>
+
+  <!-- Hotel Search Section - Skyscanner style -->
+  <section class="container section travel-search-section" aria-labelledby="hotel-search-title">
+    <div class="travel-search-header">
+      <div class="travel-search-title-group">
+        <span class="travel-icon" aria-hidden="true">🏨</span>
+        <div>
+          <h2 id="hotel-search-title">Search hotels</h2>
+          <p>Compare hotel stays and find your perfect place</p>
+        </div>
+      </div>
+      <span class="live-badge hotels">Best rates</span>
+    </div>
+
+    <form class="skyscanner-form hotel-form" [formGroup]="hotelForm" (ngSubmit)="searchHotels(true)">
+      <div class="skyscanner-row">
+        <div class="sky-field wide">
+          <label for="hotel-destination">Destination</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">📍</span>
+            <input id="hotel-destination" type="text" formControlName="destination" placeholder="Kyoto, Japan" />
+          </div>
+        </div>
+        <div class="sky-field">
+          <label for="hotel-checkin">Check-in</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">📅</span>
+            <input id="hotel-checkin" type="date" formControlName="checkIn" />
+          </div>
+        </div>
+        <div class="sky-field">
+          <label for="hotel-checkout">Check-out</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">📅</span>
+            <input id="hotel-checkout" type="date" formControlName="checkOut" />
+          </div>
+        </div>
+        <div class="sky-field small">
+          <label for="hotel-guests">Guests</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">👥</span>
+            <select id="hotel-guests" formControlName="guests">
+              @for (n of [1,2,3,4,5,6,7,8,9,10]; track n) {
+                <option [value]="n">{{ n }} guest{{ n > 1 ? 's' : '' }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="sky-field small">
+          <label for="hotel-rooms">Rooms</label>
+          <div class="sky-input-wrap">
+            <span class="sky-icon">🛏️</span>
+            <select id="hotel-rooms" formControlName="rooms">
+              @for (n of [1,2,3,4,5]; track n) {
+                <option [value]="n">{{ n }} room{{ n > 1 ? 's' : '' }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="skyscanner-row second-row">
+        <div class="sky-actions full">
+          <button type="button" class="btn-ghost" (click)="clearHotelSearch()">Clear</button>
+          <button type="submit" class="btn-sky-search hotel" [disabled]="hotelState() === 'loading'">
+            @if (hotelState() === 'loading') {
+              <span class="spinner" aria-hidden="true"></span> Searching hotels
+            } @else {
+              Search hotels →
+            }
+          </button>
+        </div>
+      </div>
+    </form>
+
+    @if (hotelState() === 'loading') {
+      <div class="skeletons hotel-skeletons">
+        @for (row of [1,2,3,4]; track $index) {
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-photo"></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (hotelState() === 'ready' && hotelResults().length) {
+      <div class="hotel-results" aria-live="polite">
+        <header class="results-header">
+          <h3>Latest hotel options · {{ hotelResults().length }} stays</h3>
+          <p>
+            {{ hotelForm.controls.destination.value }} ·
+            {{ hotelForm.controls.checkIn.value }} → {{ hotelForm.controls.checkOut.value }} ·
+            {{ hotelForm.controls.guests.value }} guests · {{ hotelForm.controls.rooms.value }} room{{ hotelForm.controls.rooms.value > 1 ? 's' : '' }} ·
+            {{ hotelResults()[0].nights }} night{{ hotelResults()[0].nights > 1 ? 's' : '' }}
+          </p>
+        </header>
+
+        <ul class="hotel-grid">
+          @for (hotel of hotelResults(); track hotel.id) {
+            <li class="hotel-card">
+              <div class="hotel-image">
+                <img [src]="hotel.image" [alt]="hotel.name" loading="lazy" />
+                <span class="hotel-type">{{ hotel.type }}</span>
+                @if (hotel.freeCancellation) {
+                  <span class="hotel-badge free">Free cancellation</span>
+                }
+              </div>
+              <div class="hotel-content">
+                <div class="hotel-top">
+                  <h4>{{ hotel.name }}</h4>
+                  <span class="hotel-location">{{ hotel.location }}</span>
+                </div>
+
+                <div class="hotel-rating">
+                  <span class="rating-score">{{ hotel.rating }}</span>
+                  <span class="rating-label">
+                    {{ hotel.rating >= 4.5 ? 'Excellent' : hotel.rating >= 4.0 ? 'Very good' : 'Good' }}
+                  </span>
+                  <span class="rating-count">· {{ hotel.reviews }} reviews</span>
+                </div>
+
+                <div class="hotel-amenities">
+                  @for (amenity of hotel.amenities; track amenity) {
+                    <span class="amenity">{{ amenity }}</span>
+                  }
+                  @if (hotel.breakfastIncluded) {
+                    <span class="amenity breakfast">Breakfast included</span>
+                  }
+                </div>
+
+                <div class="hotel-bottom">
+                  <div class="hotel-price">
+                    <strong>{{ formatPrice(hotel.pricePerNight) }}</strong>
+                    <span>per night</span>
+                    <small>{{ formatPrice(hotel.totalPrice) }} total · {{ hotel.nights }} night{{ hotel.nights > 1 ? 's' : '' }}</small>
+                  </div>
+                  <button type="button" class="btn-select-hotel">View deal →</button>
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (hotelState() === 'ready' && !hotelResults().length && hotelSearched()) {
+      <p class="notice">No hotels found for this destination. Try a different location or dates.</p>
+    }
+  </section>
 </main>

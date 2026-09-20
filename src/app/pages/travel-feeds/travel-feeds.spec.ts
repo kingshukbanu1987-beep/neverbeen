@@ -28,7 +28,7 @@ const commonsPayload = {
             descriptionurl: 'https://commons.wikimedia.org/wiki/File:Kyoto_temple_at_dusk.jpg',
             mime: 'image/jpeg',
             extmetadata: {
-              Artist: { value: '<a href="#">Mika Tanaka</a>' },
+              Artist: { value: '<a href=\"#\">Mika Tanaka</a>' },
               LicenseShortName: { value: 'CC BY-SA 4.0' },
             },
           },
@@ -164,10 +164,12 @@ describe('TravelFeedsPage', () => {
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Trending Destinations News');
     expect(element.querySelector('#destination-search')).not.toBeNull();
-    expect(element.querySelector('button[type="submit"]')?.textContent).toContain('Submit');
-    expect(element.querySelector('.cross-link')?.textContent).toContain(
-      'wired in but switched off',
-    );
+    expect(element.querySelector('button[type=\"submit\"]')?.textContent).toContain('Submit');
+    // Updated: ranking line removed per requirements, but new Skyscanner-like sections should exist
+    const text = element.textContent ?? '';
+    expect(text).toContain('Search flights');
+    expect(text).toContain('Search hotels');
+    expect(text).toContain('Auto-refreshes every 30 seconds');
   });
 
   it('is reachable from its own route', async () => {
@@ -340,5 +342,51 @@ describe('TravelFeedsPage', () => {
 
     expect(element.textContent).not.toContain('Live feed for');
     expect(fixture.componentInstance['form'].controls.destination.touched).toBe(true);
+  });
+
+  it('shows flight and hotel search sections with Skyscanner-like forms', async () => {
+    const fixture = await create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.querySelector('#flight-from')).not.toBeNull();
+    expect(element.querySelector('#flight-to')).not.toBeNull();
+    expect(element.querySelector('#flight-depart')).not.toBeNull();
+    expect(element.querySelector('#hotel-destination')).not.toBeNull();
+    expect(element.querySelector('#hotel-checkin')).not.toBeNull();
+    // Initially shows loading, then results
+    expect(element.textContent).toContain('Search flights');
+    expect(element.textContent).toContain('Search hotels');
+
+    // Wait for mock flight/hotel results to load
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    fixture.detectChanges();
+
+    const textAfterLoad = element.textContent ?? '';
+    expect(textAfterLoad).toContain('Latest flight options');
+    expect(textAfterLoad).toContain('Latest hotel options');
+  });
+
+  it('auto-refreshes trending destinations and supports manual refresh for next batch', async () => {
+    const fixture = await create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Initial board should show first page
+    expect(element.textContent).toContain('Page 1 of 4');
+    expect(element.textContent).toContain('1-3 of 12');
+
+    // Simulate clicking Refresh to get next batch
+    const refreshBtn = element.querySelector<HTMLButtonElement>('.board-head .btn-ghost')!;
+    const initialCards = Array.from(element.querySelectorAll('.board-card')).map(
+      (c) => c.textContent,
+    );
+
+    refreshBtn.click();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    fixture.detectChanges();
+
+    // After refresh, should show page 2
+    expect(element.textContent).toContain('Page 2 of 4');
+    expect(element.textContent).toContain('4-6 of 12');
   });
 });
