@@ -143,6 +143,10 @@ export class TravelFeedsPage implements OnInit, OnDestroy {
   protected readonly hotelResults = signal<HotelOption[]>([]);
   protected readonly hotelSearched = signal(false);
 
+  // Modals - short page, compact UI
+  protected readonly showFlightModal = signal(false);
+  protected readonly showHotelModal = signal(false);
+
   protected readonly liveSources = computed(
     () => this.result()?.sources.filter((source) => source.status === 'live') ?? [],
   );
@@ -162,6 +166,9 @@ export class TravelFeedsPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopAutoRefresh();
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
   }
 
   private startAutoRefresh(): void {
@@ -488,6 +495,41 @@ export class TravelFeedsPage implements OnInit, OnDestroy {
     this.hotelResults.set([]);
     this.hotelSearched.set(false);
     this.hotelState.set('idle');
+  }
+
+  protected openFlightModal(): void {
+    this.showFlightModal.set(true);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  protected closeFlightModal(): void {
+    this.showFlightModal.set(false);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  protected openHotelModal(): void {
+    this.showHotelModal.set(true);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  protected closeHotelModal(): void {
+    this.showHotelModal.set(false);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  protected onModalBackdropClick(event: MouseEvent, type: 'flight' | 'hotel'): void {
+    if ((event.target as HTMLElement).classList.contains('modal-backdrop')) {
+      if (type === 'flight') this.closeFlightModal();
+      else this.closeHotelModal();
+    }
   }
 
   protected formatPrice(price: number): string {
