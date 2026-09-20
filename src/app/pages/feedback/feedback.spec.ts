@@ -60,6 +60,14 @@ describe('Feedback page', () => {
     expect(intro.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('tells the visitor their message opens in WhatsApp addressed to the team', () => {
+    const element: HTMLElement = create().nativeElement;
+    const note = element.querySelector('.submit-note')?.textContent?.replace(/\s+/g, ' ').trim();
+
+    expect(note).toContain('Opens WhatsApp to The Neverbeen Team with your message filled in.');
+    expect(note).toContain('Nothing is posted publicly, and no account is created.');
+  });
+
   it('offers all four required fields and every feedback type', () => {
     const element: HTMLElement = create().nativeElement;
 

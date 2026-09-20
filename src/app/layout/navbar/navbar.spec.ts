@@ -21,10 +21,19 @@ describe('Navbar', () => {
     return Array.from(create().nativeElement.querySelectorAll('nav a')) as HTMLAnchorElement[];
   }
 
-  it('places the Audience link directly after How It Works', () => {
+  it('places the Audience link directly after the How option', () => {
     const labels = navLinks().map((link) => link.textContent?.trim());
 
-    expect(labels.indexOf('Audience')).toBe(labels.indexOf('How It Works') + 1);
+    expect(labels.indexOf('Audience')).toBe(labels.indexOf('How') + 1);
+  });
+
+  it('labels the how-it-works option "How" and still points at the section', () => {
+    const links = navLinks();
+    const how = links.find((link) => link.textContent?.trim() === 'How');
+
+    expect(how).toBeDefined();
+    expect(how!.getAttribute('href')).toBe('/#how-it-works');
+    expect(how!.querySelector('svg.icon use')?.getAttribute('href')).toBe('#nb-icon-cog');
   });
 
   it('points the Audience link at the audience route', () => {

@@ -13,7 +13,7 @@ export class Navbar {
 
   protected readonly links = [
     { label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },
-    { label: 'How It Works', path: '/', fragment: 'how-it-works', icon: 'cog' },
+    { label: 'How', path: '/', fragment: 'how-it-works', icon: 'cog' },
     { label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
     { label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
     { label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
