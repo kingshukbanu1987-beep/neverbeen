@@ -563,6 +563,57 @@ a.aside-value {
   justify-self: start;
 }
 
+.founder-brief {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0.45rem 0 0;
+}
+
+.founder-photo {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 8px 18px rgba(24, 36, 30, 0.18);
+}
+
+.founder-name {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.founder-role {
+  margin: 0.15rem 0 0;
+  font-size: 0.83rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.founder-facts {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.founder-facts dt {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.founder-facts dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
 .aside-foot {
   margin: 1.2rem 0 0;
   font-size: 0.86rem;

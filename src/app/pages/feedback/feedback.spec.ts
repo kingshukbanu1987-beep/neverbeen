@@ -111,6 +111,52 @@ describe('Feedback page', () => {
     expect(opened).toEqual([]);
   });
 
+  it('asks for a full name of at least two words', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const name = element.querySelector<HTMLInputElement>('#feedback-name')!;
+
+    type(name, 'Asha');
+    type(element.querySelector<HTMLInputElement>('#feedback-email')!, 'asha@example.com');
+    choose(element.querySelector<HTMLSelectElement>('#feedback-type')!, 'Testimonials');
+    type(element.querySelector('textarea')!, 'The Bali set looked exactly like us.');
+    fixture.detectChanges();
+
+    submit(element);
+    fixture.detectChanges();
+
+    // A single word is not a full name: the message says so and nothing is sent.
+    expect(element.textContent).toContain('Please tell us your name (at least 2 words).');
+    expect(opened).toEqual([]);
+
+    // Two words are accepted, extra spaces and all, and the message goes away.
+    type(name, '  Asha   Menon  ');
+    fixture.detectChanges();
+    expect(element.textContent).not.toContain('Please tell us your name (at least 2 words).');
+
+    submit(element);
+    fixture.detectChanges();
+    expect(opened.length).toBe(1);
+  });
+
+  it('names the founder and his details, sourced from the founder page', () => {
+    const element: HTMLElement = create().nativeElement;
+    const founder = element.querySelector('.aside-list li:last-child')!;
+
+    expect(founder.textContent).toContain('Kingshuk');
+    expect(founder.textContent).toContain('Senior Software Engineer and founder of NeverBeen');
+    expect(founder.textContent).toContain('Indian');
+    expect(founder.textContent).toContain('Heritage Institute of Technology, Kolkata');
+    expect(founder.textContent).toContain('Continental AG');
+    expect(founder.querySelector('img')?.getAttribute('alt')).toBe(
+      'Kingshuk, founder of NeverBeen',
+    );
+
+    const link = founder.querySelector<HTMLAnchorElement>('a')!;
+    expect(link.textContent?.trim()).toBe('Meet the founder');
+    expect(link.getAttribute('href')).toBe('/founder');
+  });
+
   it('validates the email address format', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;

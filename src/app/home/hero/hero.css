@@ -55,16 +55,6 @@ h1 {
   background: #4a9a1c;
 }
 
-.btn-collection {
-  background: #c20000;
-  color: #fff;
-}
-
-.btn-collection:hover,
-.btn-collection:focus-visible {
-  background: #9a0000;
-}
-
 .frame {
   margin: 0;
   position: relative;

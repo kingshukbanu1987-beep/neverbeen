@@ -55,7 +55,7 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "host": "0.0.0.0",
-            "allowedHosts": ["4200-ijpkhmar9zooj9ko8uh9a.e2b.app"]
+            "allowedHosts": true
           },
           "configurations": {
             "production": {

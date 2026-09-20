@@ -913,4 +913,482 @@ export const europeGuides: DestinationGuide[] = [
     coordinates: { lat: 41.0082, lon: 28.9784 },
     wikipedia: 'Istanbul',
   },
+  {
+    slug: 'netherlands',
+    name: 'Netherlands',
+    country: 'Netherlands',
+    region: 'North and South Holland, plus the Zeeland delta',
+    tagline: 'Canals, bicycles and gabled houses',
+    bestTime: 'April to May for the bulb fields, or September for quiet canals',
+    overview: [
+      'The Netherlands is a country you experience at bicycle speed. Amsterdam’s canal ring is still the best first impression — narrow gabled houses leaning over black water, houseboats with geraniums on the roof, and the flat clatter of bikes on cobbles — but Leiden, Utrecht, Delft and Haarlem hold the same picture on a smaller, quieter scale.',
+      'Beyond the old towns the country is a working landscape of polders, dykes, windmills and greenhouses, and almost all of it is engineered. Around a quarter of the land sits below sea level, and the Dutch have been holding back the North Sea since the thirteenth century. Trains cross the whole country in a couple of hours, so the coast, the bulb fields and the delta islands are easy day trips.',
+    ],
+    eat: [
+      {
+        name: 'Bruin cafés',
+        description:
+          'Brown cafés, named for their smoke-darkened wooden interiors, serve beer, bitterballen and plain good bar food — the social heart of most neighbourhoods.',
+      },
+      {
+        name: 'Stroopwafel and poffertjes',
+        description:
+          'Warm syrup waffles pressed to order at market stalls, and tiny buttered pancakes dusted with icing sugar and served with butter.',
+      },
+      {
+        name: 'Rijsttafel',
+        description:
+          'The Dutch–Indonesian rice table: a dozen small dishes with rice, sambal and satay, a colonial legacy that became a national favourite.',
+      },
+      {
+        name: 'Haring stalls',
+        description:
+          'Raw herring with onions and pickles, or kibbeling — battered fish bites with garlic sauce — eaten standing at harbour and market stands.',
+      },
+      {
+        name: 'Albert Cuyp and Noordermarkt',
+        description:
+          'Amsterdam’s daily street market and its Saturday farmers’ market for cheese, bread, bulbs and flowers straight from the growers.',
+      },
+    ],
+    attractions: [
+      {
+        name: 'Amsterdam canal ring',
+        description:
+          'The seventeenth-century girdle of waterways, best seen by boat at dusk or on foot through the Jordaan and the Nine Streets.',
+      },
+      {
+        name: 'Rijksmuseum and Van Gogh Museum',
+        description:
+          'The Dutch Golden Age and the largest Van Gogh collection anywhere, side by side on Museumplein. Timed tickets are essential.',
+      },
+      {
+        name: 'Anne Frank House',
+        description:
+          'The canal-side hiding place, now a museum. Tickets are released online only, weeks ahead, for a specific time slot.',
+      },
+      {
+        name: 'Keukenhof and the bulb fields',
+        description:
+          'Open from roughly late March to mid-May, when the fields around Lisse are striped with tulips, hyacinths and daffodils.',
+      },
+      {
+        name: 'Kinderdijk windmills',
+        description:
+          'Nineteen eighteenth-century windmills standing in one polder, a UNESCO site about 25 km from Rotterdam and reachable by waterbus.',
+      },
+      {
+        name: 'De Hoge Veluwe National Park',
+        description:
+          'Sand drifts, heath and pine woods, with the Kröller-Müller Museum and its Van Goghs in the middle of the park.',
+      },
+    ],
+    history: [
+      'The Low Countries were a patchwork of counties and duchies until the Dutch Revolt against Spain in the late sixteenth century; the Dutch Republic that followed became the world’s first great trading power, and the canal ring of Amsterdam was dug during that boom in the 1600s.',
+      'The nineteenth century added railways, canals and huge drainage works, and the twentieth brought the Zuiderzee Works and the Delta Works after the North Sea flood of 1953. The Netherlands was occupied during the Second World War, and the postwar years saw it become a founding member of what is now the European Union.',
+    ],
+    geography: [
+      'The country is flat, low and shaped by rivers. The Rhine, Maas and Scheldt meet the sea in a shared delta, and long dune barriers run down the North Sea coast, protecting polders that are pumped dry by a national network of dykes, canals and pumping stations.',
+      'The west is the most densely built — Amsterdam, Rotterdam, The Hague and Utrecht form one urban region — while the north and east are farmland, heath and the shallow Wadden Sea, whose tidal islands are a UNESCO site.',
+    ],
+    culture: [
+      'Dutch life runs on directness and planning: appointments are kept, agendas are consulted, and a bicycle has right of way in most situations. Greet shopkeepers on entering and leave a small tip in cafés rather than a large one.',
+      'There is a strong tradition of gezelligheid — cosy togetherness — which explains the crowded terraces, the candlelit brown cafés and the national enthusiasm for sitting by water with coffee and cake.',
+    ],
+    seasons: [
+      {
+        label: 'Spring',
+        note: 'Tulips, blossom and unpredictable showers; the busiest month is April.',
+      },
+      {
+        label: 'Summer',
+        note: 'Mild and long, with festivals, terraces and open-air swimming in the canals.',
+      },
+      { label: 'Autumn', note: 'Grey skies, golden parks and fewer queues at the big museums.' },
+      {
+        label: 'Winter',
+        note: 'Cold, damp and quiet, with Sinterklaas lights and occasional ice-skating.',
+      },
+    ],
+    gettingAround:
+      'The train network is fast, frequent and covers every city worth seeing; buy a contactless card or use a tap-in, tap-out bank card. Amsterdam is small enough to walk, and rental bikes — with hand brakes — are the local way to travel. Trams fill the gaps in the larger cities.',
+    practical: [
+      { label: 'Language', value: 'Dutch; almost everyone speaks fluent English.' },
+      { label: 'Currency', value: 'Euro (EUR)' },
+      { label: 'Plugs', value: 'Type C/F, 230 V, two round pins.' },
+      { label: 'Tipping', value: 'Not expected — round up or leave 5–10% in restaurants.' },
+      { label: 'Tap water', value: 'Clean and excellent; cafés will provide it free on request.' },
+      {
+        label: 'Getting in',
+        value: 'Schengen area — check your visa-free allowance before booking.',
+      },
+    ],
+    facts: [
+      'About a quarter of the Netherlands lies below sea level, and Schiphol Airport sits on land that was once a lake.',
+      'The Netherlands has more bicycles than people — roughly 23 million of them.',
+      'There are over 4,000 kilometres of cycle paths in the country.',
+      'Amsterdam’s canal houses lean forward on purpose so goods could be hoisted to the top floors without hitting the façade.',
+    ],
+    currency: { code: 'EUR', name: 'Euro', symbol: '€', approximatePerUsd: 0.92 },
+    timezone: 'Europe/Amsterdam',
+    coordinates: { lat: 52.3676, lon: 4.9041 },
+    wikipedia: 'Netherlands',
+  },
+  {
+    slug: 'austria',
+    name: 'Austria',
+    country: 'Austria',
+    region: 'Vienna, the Salzkammergut lakes and the Tyrol',
+    tagline: 'A lakeside village beneath the Alps',
+    bestTime: 'May to June for green valleys, or September to early October for clear light',
+    overview: [
+      'Austria packs an opera house, a string of imperial palaces and a full mountain range into a country the size of Bavaria. Vienna is the grandest of its cities — coffee houses, Jugendstil metro stations and the Hofburg — while Salzburg, Innsbruck and Graz are more walkable and no less beautiful.',
+      'The Salzkammergut lakes and the Tyrol are where the postcard image comes from: wooden houses, church spires, water you can drink and meadows that turn yellow with gentian in June. In winter the same valleys become some of the most reliable ski country in the Alps.',
+    ],
+    eat: [
+      {
+        name: 'Wiener schnitzel',
+        description:
+          'Veal pounded thin, breaded and fried in butter — always served with a slice of lemon, and best in a traditional Beisl.',
+      },
+      {
+        name: 'Coffee houses',
+        description:
+          'Viennese cafés where a melange comes with a glass of water on a silver tray and the newspaper is meant to be read slowly.',
+      },
+      {
+        name: 'Sachertorte and strudel',
+        description:
+          'The famous chocolate torte with apricot jam, plus apple or curd strudel served warm with whipped cream.',
+      },
+      {
+        name: 'Alpine mountain huts',
+        description:
+          'Hütten above the tree line serving dumplings, goulash soup and board of speck to anyone who walked up for them.',
+      },
+      {
+        name: 'Heuriger wine taverns',
+        description:
+          'On the edges of Vienna, family wine growers open their doors to serve young wine with cold platters and bread spreads.',
+      },
+    ],
+    attractions: [
+      {
+        name: 'Vienna’s Hofburg and Museumsquartier',
+        description:
+          'The imperial apartments, the Spanish Riding School and the Kunsthistorisches Museum, all within a short walk.',
+      },
+      {
+        name: 'Schönbrunn Palace',
+        description:
+          'The Habsburg summer residence, with 1,441 rooms, formal gardens, the Gloriette and a zoo that dates from 1752.',
+      },
+      {
+        name: 'Hallstatt and the Salzkammergut',
+        description:
+          'A village on a lake between mountains, with a salt mine above it and the Dachstein glacier beyond. Go early.',
+      },
+      {
+        name: 'Salzburg’s old town',
+        description:
+          'Mozart’s birthplace, the fortress Hohensalzburg and the Mirabell gardens, all protected as a UNESCO site.',
+      },
+      {
+        name: 'Innsbruck and the Nordkette',
+        description:
+          'A cable car rises from the city centre to a 2,300 m ridge with a view over the whole Inn valley.',
+      },
+      {
+        name: 'Grossglockner High Alpine Road',
+        description:
+          'Thirty-six hairpin bends up Austria’s highest mountain, open in summer and worth the toll in good weather.',
+      },
+    ],
+    history: [
+      'Austria began as a border march of the Frankish empire, grew rich on salt and silver, and by the fifteenth century the Habsburgs were marrying their way across Europe. For centuries Vienna was the capital of an empire that stretched from the Netherlands to Transylvania.',
+      'The empire collapsed in 1918, and the first republic gave way to annexation by Nazi Germany in 1938 and occupation until 1955, when Austria declared permanent neutrality. It joined the European Union in 1995.',
+    ],
+    geography: [
+      'Roughly two thirds of the country is mountainous. The Alps run in ridges from the Rhine valley in the west to the Danube in the east, with the highest peaks in the Hohe Tauern and the Tyrol. Valleys such as the Inn, the Danube and the Mur hold most of the cities and almost all the farmland.',
+      'The east opens into the Pannonian plain: vineyards, reed lakes and warmer, drier weather than the alpine west.',
+    ],
+    culture: [
+      'Austrian life is formal but warm: greet people on entering a shop or a lift, and say goodbye when leaving. Coffee house culture rewards patience — nobody will bring you the bill until you ask for it.',
+      'Music is treated as civic infrastructure rather than decoration: Vienna’s opera and concert halls are subsidised, and the city holds a ball season that runs from November to February.',
+    ],
+    seasons: [
+      { label: 'Spring', note: 'Green valleys, blossom and changeable weather in the mountains.' },
+      {
+        label: 'Summer',
+        note: 'Warm and long, with lakes warm enough to swim and mountain huts open.',
+      },
+      { label: 'Autumn', note: 'Clear light, golden larch and the grape harvest in the east.' },
+      { label: 'Winter', note: 'Reliable snow, Christmas markets and the Viennese ball season.' },
+    ],
+    gettingAround:
+      'Trains run on time and reach almost every valley — the ÖBB network plus regional lines is the simplest way to travel. Vienna’s metro, tram and bus network is cheap and dense, and most of the old towns are pedestrian. A rental car only pays off for remote alpine roads.',
+    practical: [
+      {
+        label: 'Language',
+        value: 'German; English is widely spoken in cities and tourist regions.',
+      },
+      { label: 'Currency', value: 'Euro (EUR)' },
+      { label: 'Plugs', value: 'Type F, 230 V.' },
+      {
+        label: 'Tipping',
+        value: 'Around 5–10%, rounded up, and stated with the total when you pay.',
+      },
+      {
+        label: 'Tap water',
+        value: 'Excellent, and free — a glass of Hochquellwasser is a Vienna institution.',
+      },
+      { label: 'Getting in', value: 'Schengen area; motorway driving needs a vignette.' },
+    ],
+    facts: [
+      'Austria is one of the most mountainous countries in Europe — about 62% of its area is alpine.',
+      'Vienna’s drinking water arrives by gravity through pipelines from springs in the Alps.',
+      'The Vienna Philharmonic’s New Year’s Concert is broadcast to more than 90 countries.',
+      'Grossglockner, the highest peak at 3,798 m, has its own high alpine road with 36 bends.',
+    ],
+    currency: { code: 'EUR', name: 'Euro', symbol: '€', approximatePerUsd: 0.92 },
+    timezone: 'Europe/Vienna',
+    coordinates: { lat: 48.2082, lon: 16.3738 },
+    wikipedia: 'Austria',
+  },
+  {
+    slug: 'denmark',
+    name: 'Denmark',
+    country: 'Denmark',
+    region: 'Copenhagen and the Øresund coast',
+    tagline: 'Nyhavn in the long summer light',
+    bestTime: 'May to August for long evenings, or December for Christmas markets',
+    overview: [
+      'Denmark is small, flat and extremely easy to like. Copenhagen holds most of the clichés worth having — the painted houses of Nyhavn, the Little Mermaid, bikes streaming over the harbour bridges — and it is compact enough to cross on foot or by bicycle in an afternoon.',
+      'Away from the capital the country turns rural fast: thatched farmhouses, beech woods, Viking burial mounds and wide empty beaches on the North Sea coast. Everywhere is within a few hours of everywhere else, which makes the whole country a plausible long weekend.',
+    ],
+    eat: [
+      {
+        name: 'Smørrebrød',
+        description:
+          'Open sandwiches on dense rye bread, topped with pickled herring, shrimp, egg and dill, and eaten with a knife and fork.',
+      },
+      {
+        name: 'New Nordic kitchens',
+        description:
+          'Copenhagen’s restaurant scene made local, seasonal and foraged cooking famous worldwide; many of its kitchens take walk-ins at lunch.',
+      },
+      {
+        name: 'Torvehallerne and Reffen',
+        description:
+          'The city’s food halls for cheese, pastries and coffee, and the street-food yard at Refshaleøen for everything cooked outdoors.',
+      },
+      {
+        name: 'Hot dogs and wienerbrød',
+        description:
+          'Street pølser with pickles and fried onion, and proper Danish pastry — not sweet, and best with an espresso.',
+      },
+      {
+        name: 'Harbour swimming and bakeries',
+        description:
+          'A morning swim in the clean harbour baths followed by a cardamom bun is a genuine Copenhagen routine.',
+      },
+    ],
+    attractions: [
+      {
+        name: 'Nyhavn',
+        description:
+          'The seventeenth-century canal with 17th- and 18th-century townhouses in ochre and blue; take a boat rather than paying for a table.',
+      },
+      {
+        name: 'Tivoli Gardens',
+        description:
+          'A pleasure garden from 1843 with wooden roller coasters, lantern-lit lanes and evening concerts in summer.',
+      },
+      {
+        name: 'Christiansborg and Rosenborg castles',
+        description:
+          'Parliament above the ruins of a medieval fortress, and the crown jewels in a Renaissance palace in the park.',
+      },
+      {
+        name: 'Louisiana Museum of Modern Art',
+        description:
+          'Modern art in a garden by the Øresund, 35 minutes north of the city, with the sea on three sides.',
+      },
+      {
+        name: 'Roskilde and the Viking ships',
+        description:
+          'A UNESCO cathedral and the Viking Ship Museum, where five ninth-century vessels were raised from the fjord.',
+      },
+      {
+        name: 'North Zealand beaches',
+        description:
+          'Wide sand beaches at Tisvildeleje and Hornbæk, reachable by train, with summer houses in the beech woods behind them.',
+      },
+    ],
+    history: [
+      'Denmark was a Viking kingdom by the tenth century and later ruled Norway, Iceland and parts of Sweden from Copenhagen. The Kalmar Union and the Reformation reshaped the region, and defeats in the seventeenth century shrank the kingdom to roughly its present shape.',
+      'The nineteenth century brought a constitution, a farming revival and the cooperative movement, and the twentieth made Denmark a welfare state and, in 1973, a member of what became the European Union.',
+    ],
+    geography: [
+      'The country is a peninsula and more than 400 islands, none of them more than about 170 m above sea level. The highest point, Møllehøj, is a rounded hill of just 171 m, and much of the landscape was shaped by ice sheets that left fertile moraine in the east and sandy heath in the west.',
+      'The coastline runs for over 7,000 km, with broad tidal flats on the Wadden Sea side and long beaches on the North Sea, where the wind is a permanent feature.',
+    ],
+    culture: [
+      'Danish design, cycling and hygge are exports, but they are also just how the country works: town halls are glass boxes, half of Copenhagen cycles to work, and evenings are spent indoors with candles and friends.',
+      'Informality is genuine — students call professors by first names — and trust is high, which is why bicycles are parked unlocked on city streets.',
+    ],
+    seasons: [
+      {
+        label: 'Spring',
+        note: 'Late and sudden; beech trees leaf out in May and the city fills with bicycles.',
+      },
+      {
+        label: 'Summer',
+        note: 'Long bright evenings, harbour swimming, festivals and almost no darkness in late June.',
+      },
+      { label: 'Autumn', note: 'Windy and golden, with fewer visitors and open museums.' },
+      {
+        label: 'Winter',
+        note: 'Short, grey and cold, brightened by Christmas markets and Tivoli’s lights.',
+      },
+    ],
+    gettingAround:
+      'Copenhagen is a bicycle city: rent one and use the separated paths, which have their own traffic lights. The metro runs all night and the S-tog covers the suburbs, while trains reach the rest of the country in a few hours. The Øresund bridge links the city to Malmö in Sweden in 35 minutes.',
+    practical: [
+      { label: 'Language', value: 'Danish; nearly everyone speaks excellent English.' },
+      { label: 'Currency', value: 'Danish krone (DKK) — most places take cards, cash is rare.' },
+      { label: 'Plugs', value: 'Type C/F (K), 230 V.' },
+      { label: 'Tipping', value: 'Service is included and tips are genuinely optional.' },
+      { label: 'Tap water', value: 'Clean, free and served by default in restaurants.' },
+      { label: 'Getting in', value: 'Schengen area — check your visa-free allowance.' },
+    ],
+    facts: [
+      'The Danish word hygge is roughly “cosy”, and it explains a national obsession with candles and blankets.',
+      'Denmark has more than 7,000 km of coastline for a country of just under six million people.',
+      'Copenhagen’s harbour is clean enough to swim in, with public baths in the middle of the city.',
+      'The Øresund Bridge between Denmark and Sweden is roughly 16 km long and carries both cars and trains.',
+    ],
+    currency: { code: 'DKK', name: 'Danish krone', symbol: 'kr', approximatePerUsd: 6.9 },
+    timezone: 'Europe/Copenhagen',
+    coordinates: { lat: 55.6761, lon: 12.5683 },
+    wikipedia: 'Denmark',
+  },
+  {
+    slug: 'finland',
+    name: 'Finland',
+    country: 'Finland',
+    region: 'Helsinki and Finnish Lapland',
+    tagline: 'Aurora over a Lapland road',
+    bestTime: 'September to March for the aurora, or June to July for the midnight sun',
+    overview: [
+      'Finland is a country of forests, lakes and long light. Helsinki is small, design-minded and walkable, with a sea fortress offshore, a working sauna on a Ferris wheel and ferries leaving for Stockholm and Tallinn from the harbour.',
+      'Most of what people imagine about Finland is further north: pine and birch forest, villages of wooden houses, huskies, reindeer and the aurora, which appears on roughly 150 nights a year in Lapland. In summer the sun simply refuses to set, and the same lakes are warm enough to swim in at midnight.',
+    ],
+    eat: [
+      {
+        name: 'Market halls and kauppahalli',
+        description:
+          'Helsinki’s Old Market Hall for salmon soup, rye bread and cinnamon buns, eaten at a counter with the harbour outside.',
+      },
+      {
+        name: 'Karelian pasties and salmon soup',
+        description:
+          'Rye-crust pasties with rice or potato filling, and lohikeitto — a creamy salmon soup that appears on every lunch menu.',
+      },
+      {
+        name: 'Reindeer and game',
+        description:
+          'In Lapland: sautéed reindeer with mashed potato and lingonberry, plus elk, whitefish and cloudberry desserts.',
+      },
+      {
+        name: 'Berry season',
+        description:
+          'Everyman’s right lets anyone pick bilberries, lingonberries and cloudberries in the forest, and markets fill with them in late summer.',
+      },
+      {
+        name: 'Coffee and korvapuusti',
+        description:
+          'Finland drinks more coffee per person than almost anywhere; the cardamom bun is the standard accompaniment.',
+      },
+    ],
+    attractions: [
+      {
+        name: 'Suomenlinna sea fortress',
+        description:
+          'An eighteenth-century fortress on islands 15 minutes by ferry from Helsinki’s market square, now a UNESCO site with a village on it.',
+      },
+      {
+        name: 'Helsinki design district and Temppeliaukio',
+        description:
+          'Design shops, the Rock Church carved into granite, and the Ateneum and Amos Rex galleries.',
+      },
+      {
+        name: 'Finnish sauna',
+        description:
+          'More saunas than cars: public ones such as Löyly and Kotiharju, then a plunge into the Baltic or a lake.',
+      },
+      {
+        name: 'Rovaniemi and the Arctic Circle',
+        description:
+          'The official Santa Claus village, husky and reindeer farms, and the Arktikum museum on the polar night.',
+      },
+      {
+        name: 'Aurora hunting in Lapland',
+        description:
+          'Inari, Saariselkä and Kilpisjärvi are among the best places on earth to watch the northern lights from September to March.',
+      },
+      {
+        name: 'Finnish Lakeland',
+        description:
+          'Saimaa’s islands, canal cruises and summer cottages, with the world’s rarest seal living in the same water.',
+      },
+    ],
+    history: [
+      'Finland was part of Sweden for six centuries and then an autonomous grand duchy of Russia from 1809, a period in which Helsinki was rebuilt in neoclassical style and Finnish language and culture were deliberately cultivated.',
+      'Independence came in 1917. Finland fought the Winter War and Continuation War against the Soviet Union, then rebuilt as a Nordic welfare state, joining the European Union in 1995 and NATO in 2023.',
+    ],
+    geography: [
+      'Finland has around 188,000 lakes and roughly 70% of its land under forest, most of it pine, spruce and birch. The south is relatively flat and fertile; the north rises into fells, treeless rounded hills that are the last foothills of the Scandinavian range.',
+      'Lapland lies mostly above the Arctic Circle, where the polar night lasts for weeks in December and the midnight sun for weeks in June.',
+    ],
+    culture: [
+      'Finnish social life is quiet and deliberate: personal space is respected, small talk is optional and a sauna is where serious conversation happens. Everyone observes Everyman’s right, which allows walking, skiing and foraging on almost any land.',
+      'Design and functionalism are national values — Marimekko, Iittala and Aalto are household names — and public libraries, including Helsinki’s Oodi, are treated as civic living rooms.',
+    ],
+    seasons: [
+      { label: 'Spring', note: 'Snow melts late in the north; the south turns green in May.' },
+      {
+        label: 'Summer',
+        note: 'Long light, warm lakes, festivals and the midnight sun above the Arctic Circle.',
+      },
+      {
+        label: 'Autumn',
+        note: 'Ruska colours — red and gold forests — and the aurora season begins.',
+      },
+      {
+        label: 'Winter',
+        note: 'Snow, silence and the best northern lights; temperatures can fall below −30 °C in Lapland.',
+      },
+    ],
+    gettingAround:
+      'Helsinki’s tram and metro network is simple and reliable, and the archipelago is served by ferries. Overnight trains with car transporters run from Helsinki to Rovaniemi and Kolari, and long-distance buses fill in the rest. In winter, drive only with proper studded tyres and a block heater.',
+    practical: [
+      { label: 'Language', value: 'Finnish and Swedish; English is spoken almost everywhere.' },
+      { label: 'Currency', value: 'Euro (EUR) — card payments are universal.' },
+      { label: 'Plugs', value: 'Type C/F, 230 V.' },
+      { label: 'Tipping', value: 'Not expected; service is included in the bill.' },
+      { label: 'Tap water', value: 'Among the cleanest in the world and always free.' },
+      { label: 'Getting in', value: 'Schengen area; winter travel needs serious clothing.' },
+    ],
+    facts: [
+      'Finland has around 3.3 million saunas for 5.6 million people.',
+      'In Lapland the aurora is visible on roughly 150 nights a year.',
+      'Everyman’s right allows anyone to walk, ski, camp briefly and pick berries on private land.',
+      'The sun does not set in northernmost Finland for about 70 days each summer.',
+    ],
+    currency: { code: 'EUR', name: 'Euro', symbol: '€', approximatePerUsd: 0.92 },
+    timezone: 'Europe/Helsinki',
+    coordinates: { lat: 60.1699, lon: 24.9384 },
+    wikipedia: 'Finland',
+  },
 ];
