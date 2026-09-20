@@ -22,6 +22,7 @@ export class Navbar {
     { label: 'Login', path: '/login', fragment: undefined, icon: 'log-in' },
     { label: 'Founder', path: '/', fragment: 'owner', icon: 'user' },
     { label: 'Contact', path: '/', fragment: 'contact', icon: 'mail' },
+    { label: 'Feedback', path: '/feedback', fragment: undefined, icon: 'message-square' },
   ];
 
   toggle(): void {

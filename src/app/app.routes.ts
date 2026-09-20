@@ -23,6 +23,11 @@ export const routes: Routes = [
     title: 'Destination guide — NeverBeen',
   },
   {
+    path: 'feedback',
+    loadComponent: () => import('./pages/feedback/feedback').then((m) => m.Feedback),
+    title: 'Feedback & suggestions — NeverBeen',
+  },
+  {
     path: 'collection',
     loadComponent: () => import('./pages/collection/collection').then((m) => m.Collection),
     title: 'Collection — NeverBeen',

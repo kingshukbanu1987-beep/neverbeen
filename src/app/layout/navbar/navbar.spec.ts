@@ -85,6 +85,17 @@ describe('Navbar', () => {
     expect(nav.classList.contains('open')).toBe(false);
   });
 
+  it('links the Feedback option to the feedback page with its own icon', () => {
+    const links = navLinks();
+    const feedback = links.find((link) => link.textContent?.trim() === 'Feedback');
+
+    expect(feedback).toBeDefined();
+    expect(feedback!.getAttribute('href')).toBe('/feedback');
+    expect(feedback!.querySelector('svg.icon use')?.getAttribute('href')).toBe(
+      '#nb-icon-message-square',
+    );
+  });
+
   it('puts a distinct decorative icon to the left of every menu option', () => {
     const element: HTMLElement = create().nativeElement;
     const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav a'));
