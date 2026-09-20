@@ -23,6 +23,11 @@ export const routes: Routes = [
     title: 'Destination guide — NeverBeen',
   },
   {
+    path: 'travel-feeds',
+    loadComponent: () => import('./pages/travel-feeds/travel-feeds').then((m) => m.TravelFeedsPage),
+    title: 'Trending Destinations News — NeverBeen',
+  },
+  {
     path: 'feedback',
     loadComponent: () => import('./pages/feedback/feedback').then((m) => m.Feedback),
     title: 'Feedback & suggestions — NeverBeen',

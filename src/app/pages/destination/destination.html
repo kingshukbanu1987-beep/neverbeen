@@ -226,7 +226,7 @@
             <p class="eyebrow">The short version</p>
             <h2 id="overview-title">Overview</h2>
           </header>
-          @for (paragraph of p.guide.overview; track paragraph) {
+          @for (paragraph of p.guide.overview; track $index) {
             <p class="prose">{{ paragraph }}</p>
           }
 
@@ -334,7 +334,7 @@
             <p class="eyebrow">How it came to be</p>
             <h2 id="history-title">History</h2>
           </header>
-          @for (paragraph of p.guide.history; track paragraph) {
+          @for (paragraph of p.guide.history; track $index) {
             <p class="prose">{{ paragraph }}</p>
           }
         </div>
@@ -343,7 +343,7 @@
             <p class="eyebrow">The land itself</p>
             <h2 id="geography-title">Geography</h2>
           </header>
-          @for (paragraph of p.guide.geography; track paragraph) {
+          @for (paragraph of p.guide.geography; track $index) {
             <p class="prose">{{ paragraph }}</p>
           }
         </div>
@@ -407,7 +407,7 @@
         <div class="plan-grid">
           <article>
             <h3>Culture &amp; people</h3>
-            @for (paragraph of p.guide.culture; track paragraph) {
+            @for (paragraph of p.guide.culture; track $index) {
               <p>{{ paragraph }}</p>
             }
           </article>
@@ -442,7 +442,7 @@
         <aside class="did-you-know" aria-labelledby="facts-title">
           <h3 id="facts-title">Did you know?</h3>
           <ul>
-            @for (fact of p.guide.facts; track fact) {
+            @for (fact of p.guide.facts; track $index) {
               <li>{{ fact }}</li>
             }
           </ul>
@@ -461,7 +461,7 @@
           </p>
         </header>
         <ul class="gallery">
-          @for (photo of p.photos; track photo; let i = $index) {
+          @for (photo of p.photos; track $index; let i = $index) {
             <li [class.wide]="i % 3 === 0">
               <img
                 [src]="photo"
