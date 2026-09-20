@@ -190,7 +190,7 @@ const destinationSeed: Omit<Destination, 'images' | 'slug'>[] = [
     country: 'United States of America',
     caption: 'City lights and endless horizons',
     image:
-      'https://images.unsplash.com/photo-1485738422979-b5b79d8491e8?auto=format&fit=crop&w=1400&q=80',
+      'https://1.bp.blogspot.com/-klHXHFbBkcg/Vh_oH8aFeyI/AAAAAAAADkI/WvdVpR4LWTc/s1600/CORT-NYC-StudyUSA07.jpg?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Maldives',
@@ -239,7 +239,7 @@ const destinationSeed: Omit<Destination, 'images' | 'slug'>[] = [
     country: 'Denmark',
     caption: 'Harbour colours and Nordic calm',
     image:
-      'https://images.unsplash.com/photo-1513622790541-b874313bd645?auto=format&fit=crop&w=1400&q=80',
+      'https://media.bookmundi.com/travel-guides/great-denmark-itineraries-how-many-days-to-spend/banner-image.jpg?format=auto&quality=90&width=1920?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Finland',
@@ -260,7 +260,7 @@ const destinationSeed: Omit<Destination, 'images' | 'slug'>[] = [
     country: 'South Korea',
     caption: 'Palaces beneath modern skylines',
     image:
-      'https://images.unsplash.com/photo-1538485399081-7c897a5d0c3b?auto=format&fit=crop&w=1400&q=80',
+      'https://www.realholidays.co.uk/wp-content/uploads/2025/12/AdobeStock_151235300-scaled.jpeg?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Brazil',
