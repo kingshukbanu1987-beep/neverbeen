@@ -32,17 +32,24 @@ describe('Hero', () => {
     expect(getComputedStyle(dream).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('places a red Collection button right after Create My Vacation that links to the collection page', () => {
+  it('places a Neverbeen Collection button styled like Explore Gallery right after Create My Vacation', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
     const labels = buttons.map((link) => link.textContent?.trim());
 
     const createIndex = labels.indexOf('Create My Vacation');
     expect(createIndex).toBeGreaterThan(-1);
-    expect(labels[createIndex + 1]).toBe('Collection');
+    expect(labels[createIndex + 1]).toBe('Neverbeen Collection');
 
     const collection = buttons[createIndex + 1];
+    const gallery = buttons.find((b) => b.textContent?.trim() === 'Explore Gallery')!;
+
     expect(collection.getAttribute('href')).toBe('/collection');
-    expect(collection.classList.contains('btn-collection')).toBe(true);
+    // Should have same background/foreground as Explore Gallery (ghost style)
+    expect(collection.classList.contains('btn-ghost')).toBe(true);
+    const collectionStyle = getComputedStyle(collection);
+    const galleryStyle = getComputedStyle(gallery);
+    expect(collectionStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
+    expect(collectionStyle.color).toBe(galleryStyle.color);
   });
 });

@@ -18,18 +18,10 @@ import { describeWeather, weatherGlyph } from './destination-live';
 /**
  * Travel Feeds service.
  *
- * Two kinds of source feed this page:
- *
- *  1. Public, keyless feeds that work from any browser — Wikimedia Pageviews
- *     (what travellers are reading this week), Wikipedia, Wikimedia Commons
- *     photographs, Open-Meteo weather and OpenStreetMap Nominatim geocoding.
- *     These are live today and need no setup.
- *
- *  2. Key-based feeds — Google Places, Instagram and Facebook. Their APIs
- *     require a key or access token and cannot be called anonymously, so they
- *     are wired up but switched off until credentials are added to
- *     `feedSourceCredentials` in src/app/models/travel-feeds.ts. The page
- *     reports the state of every source, so it is always clear what is live.
+ * Public, keyless feeds that work from any browser — Wikimedia Pageviews
+ * (what travellers are reading this week), Wikipedia, Wikimedia Commons
+ * photographs, Open-Meteo weather and OpenStreetMap Nominatim geocoding.
+ * These are live today and need no setup.
  *
  * Every call fails softly: a source that is slow, blocked or rate-limited
  * simply drops out and is reported as such, and the page keeps working.
@@ -88,11 +80,7 @@ export class TravelFeeds {
 
   /** True when at least one key-based feed has been configured. */
   get hasKeyedFeeds(): boolean {
-    return Boolean(
-      this.credentials.googlePlacesApiKey ||
-      this.credentials.instagramAccessToken ||
-      (this.credentials.facebookAccessToken && this.credentials.facebookPageId),
-    );
+    return false;
   }
 
   /** The source list shown on the page, in the order they appear. */
@@ -118,9 +106,6 @@ export class TravelFeeds {
         label: 'OpenStreetMap Nominatim',
         role: 'Turning a place name into a location',
       },
-      { id: 'google-places', label: 'Google Places', role: 'Editorial notes, ratings and reviews' },
-      { id: 'instagram', label: 'Instagram', role: 'Recent public posts tagged to the place' },
-      { id: 'facebook', label: 'Facebook', role: 'Recent posts from travel pages' },
     ];
 
     return catalogue.map((source) => {
@@ -134,15 +119,10 @@ export class TravelFeeds {
         };
       }
 
-      const keyed =
-        source.id === 'google-places' || source.id === 'instagram' || source.id === 'facebook';
       return {
         ...source,
-        status: keyed ? 'off' : 'failed',
+        status: 'failed',
         items: 0,
-        note: keyed
-          ? 'Add an API key in src/app/models/travel-feeds.ts to switch this on.'
-          : undefined,
       };
     });
   }
@@ -567,12 +547,11 @@ export class TravelFeeds {
     const place = await this.locate(term);
     const coordinates = place?.coordinates ?? null;
 
-    const [photos, weather, exactArticles, nearbyArticles, keyed, trendBase] = await Promise.all([
+    const [photos, weather, exactArticles, nearbyArticles, trendBase] = await Promise.all([
       this.photos(term, 6),
       coordinates ? this.weather(coordinates.lat, coordinates.lon) : Promise.resolve(null),
       this.exactArticle(term),
       coordinates ? this.nearbyArticles(coordinates.lat, coordinates.lon, 8) : Promise.resolve([] as FeedArticle[]),
-      this.keyedFeeds(term),
       this.trend(term),
     ]);
 
@@ -600,7 +579,6 @@ export class TravelFeeds {
       status: locationFeeds.length ? 'live' : 'failed',
       items: locationFeeds.length,
     });
-    contributions.push(...keyed.reports);
 
     contributions.push({
       id: 'open-meteo',
@@ -621,7 +599,7 @@ export class TravelFeeds {
       sourceUrl: `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(term)}`,
     };
 
-    const allArticles = [...keyed.articles, ...locationFeeds];
+    const allArticles = [...locationFeeds];
 
     return {
       place: resolvedPlace,
@@ -632,178 +610,5 @@ export class TravelFeeds {
       sources: this.sourceReports(contributions),
       empty: allArticles.length === 0 && photos.length === 0,
     };
-  }
-
-  /**
-   * The key-based feeds. Each runs only when its credential is present, and a
-   * failure is reported rather than thrown, so the page never depends on them.
-   */
-  private async keyedFeeds(term: string): Promise<{
-    articles: FeedArticle[];
-    reports: { id: string; status: FeedSourceReport['status']; items: number; note?: string }[];
-  }> {
-    const articles: FeedArticle[] = [];
-    const reports: {
-      id: string;
-      status: FeedSourceReport['status'];
-      items: number;
-      note?: string;
-    }[] = [];
-
-    const [places, instagram, facebook] = await Promise.all([
-      this.googlePlaces(term),
-      this.instagram(term),
-      this.facebook(term),
-    ]);
-
-    for (const [id, result] of [
-      ['google-places', places],
-      ['instagram', instagram],
-      ['facebook', facebook],
-    ] as const) {
-      reports.push({ id, status: result.status, items: result.items.length, note: result.note });
-      articles.push(...result.items);
-    }
-
-    return { articles, reports };
-  }
-
-  private async googlePlaces(term: string): Promise<{
-    status: FeedSourceReport['status'];
-    items: FeedArticle[];
-    note?: string;
-  }> {
-    const key = this.credentials.googlePlacesApiKey;
-    if (!key) {
-      return { status: 'off', items: [], note: 'Add a Google Places API key to switch this on.' };
-    }
-
-    const data = await getJson<{
-      places?: {
-        displayName?: { text?: string };
-        formattedAddress?: string;
-        editorialSummary?: { text?: string };
-        rating?: number;
-        userRatingCount?: number;
-        googleMapsUri?: string;
-      }[];
-    }>('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'X-Goog-Api-Key': key,
-        'X-Goog-FieldMask':
-          'places.displayName,places.formattedAddress,places.editorialSummary,places.rating,places.userRatingCount,places.googleMapsUri',
-      },
-      body: JSON.stringify({ textQuery: term, maxResultCount: 6 }),
-    });
-
-    if (!data?.places) {
-      return {
-        status: 'failed',
-        items: [],
-        note: 'Google Places did not answer — check the key and billing.',
-      };
-    }
-
-    const items = data.places.map((place) => ({
-      title: place.displayName?.text ?? term,
-      extract: [
-        place.editorialSummary?.text,
-        place.formattedAddress,
-        place.rating ? `Rated ${place.rating}/5 by ${place.userRatingCount ?? 0} visitors.` : '',
-      ]
-        .filter(Boolean)
-        .join(' · '),
-      url: place.googleMapsUri ?? `https://www.google.com/maps/search/${encodeURIComponent(term)}`,
-      source: 'Google Places',
-    }));
-
-    return { status: items.length ? 'live' : 'failed', items };
-  }
-
-  private async instagram(term: string): Promise<{
-    status: FeedSourceReport['status'];
-    items: FeedArticle[];
-    note?: string;
-  }> {
-    const token = this.credentials.instagramAccessToken;
-    if (!token) {
-      return {
-        status: 'off',
-        items: [],
-        note: 'Add an Instagram Graph API token to switch this on.',
-      };
-    }
-
-    const data = await getJson<{
-      data?: { id?: string; caption?: string; permalink?: string; media_url?: string }[];
-    }>(
-      `https://graph.instagram.com/me/media?fields=id,caption,permalink,media_url&limit=8&access_token=${encodeURIComponent(token)}`,
-    );
-
-    if (!data?.data) {
-      return {
-        status: 'failed',
-        items: [],
-        note: 'Instagram did not answer — the token may have expired.',
-      };
-    }
-
-    const items = data.data
-      .filter((post) =>
-        (post.caption ?? '').toLowerCase().includes(term.toLowerCase().split(' ')[0]),
-      )
-      .map((post) => ({
-        title: 'Instagram post',
-        extract: (post.caption ?? '').slice(0, 240),
-        url: post.permalink ?? 'https://www.instagram.com/',
-        source: 'Instagram',
-      }));
-
-    return { status: items.length ? 'live' : 'failed', items };
-  }
-
-  private async facebook(term: string): Promise<{
-    status: FeedSourceReport['status'];
-    items: FeedArticle[];
-    note?: string;
-  }> {
-    const { facebookAccessToken: token, facebookPageId: pageId } = this.credentials;
-    if (!token || !pageId) {
-      return {
-        status: 'off',
-        items: [],
-        note: 'Add a Facebook page token and page id to switch this on.',
-      };
-    }
-
-    const data = await getJson<{
-      data?: { message?: string; permalink_url?: string; created_time?: string }[];
-    }>(
-      `https://graph.facebook.com/v21.0/${encodeURIComponent(pageId)}/posts` +
-        `?fields=message,permalink_url,created_time&limit=8&access_token=${encodeURIComponent(token)}`,
-    );
-
-    if (!data?.data) {
-      return {
-        status: 'failed',
-        items: [],
-        note: 'Facebook did not answer — the token may have expired.',
-      };
-    }
-
-    const items = data.data
-      .filter((post) =>
-        (post.message ?? '').toLowerCase().includes(term.toLowerCase().split(' ')[0]),
-      )
-      .map((post) => ({
-        title: 'Facebook post',
-        extract: (post.message ?? '').slice(0, 240),
-        url: post.permalink_url ?? 'https://www.facebook.com/',
-        source: 'Facebook',
-      }));
-
-    return { status: items.length ? 'live' : 'failed', items };
   }
 }

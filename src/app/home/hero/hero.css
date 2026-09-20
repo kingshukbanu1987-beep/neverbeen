@@ -56,13 +56,16 @@ h1 {
 }
 
 .btn-collection {
-  background: #c20000;
-  color: #fff;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid rgba(29, 25, 20, 0.22);
 }
 
 .btn-collection:hover,
 .btn-collection:focus-visible {
-  background: #9a0000;
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink);
 }
 
 .frame {

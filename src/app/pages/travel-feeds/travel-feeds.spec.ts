@@ -245,7 +245,7 @@ describe('TravelFeedsPage', () => {
     expect(element.querySelectorAll('.badge-live').length).toBeGreaterThanOrEqual(4);
   });
 
-  it('marks the key-based feeds as switched off until credentials exist', async () => {
+  it('does not show Google Places, Instagram and Facebook in sources', async () => {
     const fixture = await create();
     const element: HTMLElement = fixture.nativeElement;
     const input = element.querySelector<HTMLInputElement>('#destination-search')!;
@@ -257,13 +257,14 @@ describe('TravelFeedsPage', () => {
     fixture.detectChanges();
 
     const text = element.textContent ?? '';
-    expect(text).toContain('Google Places');
-    expect(text).toContain('Instagram');
-    expect(text).toContain('Facebook');
-    expect(text).toContain('Add a Google Places API key to switch this on.');
-    expect(text).toContain('Add an Instagram Graph API token to switch this on.');
-    expect(text).toContain('Add a Facebook page token and page id to switch this on.');
-    expect(element.querySelectorAll('.badge-off').length).toBe(3);
+    expect(text).not.toContain('Google Places');
+    expect(text).not.toContain('Instagram');
+    expect(text).not.toContain('Facebook');
+    expect(text).toContain('Wikimedia Commons');
+    expect(text).toContain('Open-Meteo');
+    expect(text).toContain('OpenStreetMap Nominatim');
+    // Should only have live/failed badges, no off badges for deleted sources
+    expect(element.querySelectorAll('.badge-off').length).toBe(0);
   });
 
   it('keeps the page usable when every feed is unreachable', async () => {

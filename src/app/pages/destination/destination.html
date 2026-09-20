@@ -39,7 +39,7 @@
     <nav class="jump" aria-label="Sections of this guide">
       <div class="container jump-inner">
         @for (item of sections; track item.id) {
-          <a [href]="'#' + item.id">{{ item.label }}</a>
+          <a [href]="'#' + item.id" (click)="scrollTo(item.id, $event)">{{ item.label }}</a>
         }
       </div>
     </nav>

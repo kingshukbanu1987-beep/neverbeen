@@ -300,6 +300,25 @@ export class DestinationPageView {
     return this.googleSearch(`${name} travel photographs`, '2');
   }
 
+  protected scrollTo(id: string, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    if (typeof document === 'undefined') {
+      return;
+    }
+    const target = document.getElementById(id);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Update URL fragment without causing a full navigation
+      try {
+        history.replaceState(null, '', `#${id}`);
+      } catch {
+        // ignore if history not available
+      }
+    }
+  }
+
   protected googleSearch(query: string, vertical?: string): string {
     const suffix = vertical ? `&udm=${vertical}` : '';
     return `https://www.google.com/search?q=${encodeURIComponent(query)}${suffix}`;
