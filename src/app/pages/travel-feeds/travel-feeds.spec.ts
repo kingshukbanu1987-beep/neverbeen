@@ -28,7 +28,7 @@ const commonsPayload = {
             descriptionurl: 'https://commons.wikimedia.org/wiki/File:Kyoto_temple_at_dusk.jpg',
             mime: 'image/jpeg',
             extmetadata: {
-              Artist: { value: '<a href="#">Mika Tanaka</a>' },
+              Artist: { value: '<a href=\"#\">Mika Tanaka</a>' },
               LicenseShortName: { value: 'CC BY-SA 4.0' },
             },
           },
@@ -96,6 +96,15 @@ const weatherPayload = {
   timezone: 'Asia/Tokyo',
 };
 
+const geosearchPayload = {
+  query: {
+    geosearch: [
+      { title: 'Kyoto', dist: 0, lat: 35.0116, lon: 135.7681 },
+      { title: 'Fushimi Inari-taisha', dist: 1200, lat: 34.9671, lon: 135.7727 },
+    ],
+  },
+};
+
 interface SourceLog {
   url: string;
 }
@@ -111,17 +120,23 @@ function stubFeeds(options: { fail?: boolean } = {}): SourceLog[] {
         throw new Error('feed unreachable');
       }
 
-      const body = url.includes('pageviews')
-        ? pageviews([
-            1200, 1500, 1750, 1600, 2100, 2400, 2600, 2300, 2000, 1900, 2200, 2500, 2700, 2900,
-          ])
-        : url.includes('commons.wikimedia.org')
-          ? commonsPayload
-          : url.includes('nominatim')
-            ? nominatimPayload
-            : url.includes('open-meteo')
-              ? weatherPayload
-              : wikiSearchPayload;
+      let body: unknown;
+      if (url.includes('pageviews')) {
+        body = pageviews([
+          1200, 1500, 1750, 1600, 2100, 2400, 2600, 2300, 2000, 1900, 2200, 2500, 2700, 2900,
+        ]);
+      } else if (url.includes('commons.wikimedia.org')) {
+        body = commonsPayload;
+      } else if (url.includes('nominatim')) {
+        body = nominatimPayload;
+      } else if (url.includes('open-meteo')) {
+        body = weatherPayload;
+      } else if (url.includes('geosearch')) {
+        body = geosearchPayload;
+      } else {
+        // For exactArticle, summaries, and any other Wikipedia queries
+        body = wikiSearchPayload;
+      }
 
       return new Response(JSON.stringify(body), {
         status: 200,
@@ -164,10 +179,12 @@ describe('TravelFeedsPage', () => {
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Trending Destinations News');
     expect(element.querySelector('#destination-search')).not.toBeNull();
-    expect(element.querySelector('button[type="submit"]')?.textContent).toContain('Submit');
-    expect(element.querySelector('.cross-link')?.textContent).toContain(
-      'wired in but switched off',
-    );
+    expect(element.querySelector('button[type=\"submit\"]')?.textContent).toContain('Submit');
+    // Updated: ranking line removed per requirements, but new Skyscanner-like sections should exist
+    const text = element.textContent ?? '';
+    expect(text).toContain('Search flights');
+    expect(text).toContain('Search hotels');
+    expect(text).toContain('Auto-refreshes every 30 seconds');
   });
 
   it('is reachable from its own route', async () => {
@@ -228,7 +245,7 @@ describe('TravelFeedsPage', () => {
     expect(element.querySelectorAll('.badge-live').length).toBeGreaterThanOrEqual(4);
   });
 
-  it('marks the key-based feeds as switched off until credentials exist', async () => {
+  it('does not show Google Places, Instagram and Facebook in sources', async () => {
     const fixture = await create();
     const element: HTMLElement = fixture.nativeElement;
     const input = element.querySelector<HTMLInputElement>('#destination-search')!;
@@ -240,13 +257,14 @@ describe('TravelFeedsPage', () => {
     fixture.detectChanges();
 
     const text = element.textContent ?? '';
-    expect(text).toContain('Google Places');
-    expect(text).toContain('Instagram');
-    expect(text).toContain('Facebook');
-    expect(text).toContain('Add a Google Places API key to switch this on.');
-    expect(text).toContain('Add an Instagram Graph API token to switch this on.');
-    expect(text).toContain('Add a Facebook page token and page id to switch this on.');
-    expect(element.querySelectorAll('.badge-off').length).toBe(3);
+    expect(text).not.toContain('Google Places');
+    expect(text).not.toContain('Instagram');
+    expect(text).not.toContain('Facebook');
+    expect(text).toContain('Wikimedia Commons');
+    expect(text).toContain('Open-Meteo');
+    expect(text).toContain('OpenStreetMap Nominatim');
+    // Should only have live/failed badges, no off badges for deleted sources
+    expect(element.querySelectorAll('.badge-off').length).toBe(0);
   });
 
   it('keeps the page usable when every feed is unreachable', async () => {
@@ -279,7 +297,7 @@ describe('TravelFeedsPage', () => {
     expect(element.querySelectorAll('.badge-failed').length).toBeGreaterThan(0);
   });
 
-  it('tells the visitor when a search matches nothing', async () => {
+  it('shows only location-specific feeds for a searched destination, never word-matching', async () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [TravelFeedsPage],
@@ -311,7 +329,17 @@ describe('TravelFeedsPage', () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
     fixture.detectChanges();
 
-    expect(element.textContent).toContain('The public feeds had nothing for “Atlantis”');
+    const text = element.textContent ?? '';
+    // Should show location-specific feeds for Atlantis, not empty word-match
+    expect(text).toContain('What the feeds are saying about Atlantis');
+    expect(text).toContain('Only showing feeds strictly for Atlantis');
+    expect(text).toContain('Travel');
+    expect(text).toContain('News');
+    expect(text).toContain('Sports');
+    // Should NOT show the old empty message, now we show synthetic location feeds
+    expect(text).not.toContain('The public feeds had nothing for');
+    // Should show that feeds are only for this location
+    expect(text).toContain('Atlantis only');
   });
 
   it('lets a suggestion chip run a search without typing', async () => {
@@ -340,5 +368,51 @@ describe('TravelFeedsPage', () => {
 
     expect(element.textContent).not.toContain('Live feed for');
     expect(fixture.componentInstance['form'].controls.destination.touched).toBe(true);
+  });
+
+  it('shows flight and hotel search sections with Skyscanner-like forms', async () => {
+    const fixture = await create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.querySelector('#flight-from')).not.toBeNull();
+    expect(element.querySelector('#flight-to')).not.toBeNull();
+    expect(element.querySelector('#flight-depart')).not.toBeNull();
+    expect(element.querySelector('#hotel-destination')).not.toBeNull();
+    expect(element.querySelector('#hotel-checkin')).not.toBeNull();
+    // Initially shows loading, then results
+    expect(element.textContent).toContain('Search flights');
+    expect(element.textContent).toContain('Search hotels');
+
+    // Wait for mock flight/hotel results to load
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    fixture.detectChanges();
+
+    const textAfterLoad = element.textContent ?? '';
+    expect(textAfterLoad).toContain('Latest flight options');
+    expect(textAfterLoad).toContain('Latest hotel options');
+  });
+
+  it('auto-refreshes trending destinations and supports manual refresh for next batch', async () => {
+    const fixture = await create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Initial board should show first page
+    expect(element.textContent).toContain('Page 1 of 4');
+    expect(element.textContent).toContain('1-3 of 12');
+
+    // Simulate clicking Refresh to get next batch
+    const refreshBtn = element.querySelector<HTMLButtonElement>('.board-head .btn-ghost')!;
+    const initialCards = Array.from(element.querySelectorAll('.board-card')).map(
+      (c) => c.textContent,
+    );
+
+    refreshBtn.click();
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    fixture.detectChanges();
+
+    // After refresh, should show page 2
+    expect(element.textContent).toContain('Page 2 of 4');
+    expect(element.textContent).toContain('4-6 of 12');
   });
 });

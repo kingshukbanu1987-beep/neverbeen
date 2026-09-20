@@ -17,7 +17,7 @@ export class Navbar {
     { label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
     { label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
     { label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
-    { label: 'Feeds', path: '/travel-feeds', fragment: undefined, icon: 'globe' },
+    { label: 'Live', path: '/travel-feeds', fragment: undefined, icon: 'live' },
     { label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },
     { label: 'FAQ', path: '/', fragment: 'faq', icon: 'help-circle' },
     { label: 'Login', path: '/login', fragment: undefined, icon: 'log-in' },

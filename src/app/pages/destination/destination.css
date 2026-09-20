@@ -128,9 +128,12 @@ h1 {
 /* JUMP NAV -------------------------------------------------------------- */
 
 .jump {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: var(--forest);
   border-top: 1px solid rgba(250, 246, 240, 0.12);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
 .jump-inner {
@@ -161,11 +164,13 @@ h1 {
 
 /* SECTIONS -------------------------------------------------------------- */
 
-/* Jump chips scroll their section to the top of the viewport, so keep it clear of
-   the sticky site header (its height is clamped the same way in the navbar). */
+html {
+  scroll-behavior: smooth;
+}
+
 .section,
 #geography {
-  scroll-margin-top: calc(clamp(110px, 13vw, 170px) + 0.75rem);
+  scroll-margin-top: 72px;
 }
 
 .section {

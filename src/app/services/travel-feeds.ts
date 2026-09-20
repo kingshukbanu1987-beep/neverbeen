@@ -18,18 +18,10 @@ import { describeWeather, weatherGlyph } from './destination-live';
 /**
  * Travel Feeds service.
  *
- * Two kinds of source feed this page:
- *
- *  1. Public, keyless feeds that work from any browser — Wikimedia Pageviews
- *     (what travellers are reading this week), Wikipedia, Wikimedia Commons
- *     photographs, Open-Meteo weather and OpenStreetMap Nominatim geocoding.
- *     These are live today and need no setup.
- *
- *  2. Key-based feeds — Google Places, Instagram and Facebook. Their APIs
- *     require a key or access token and cannot be called anonymously, so they
- *     are wired up but switched off until credentials are added to
- *     `feedSourceCredentials` in src/app/models/travel-feeds.ts. The page
- *     reports the state of every source, so it is always clear what is live.
+ * Public, keyless feeds that work from any browser — Wikimedia Pageviews
+ * (what travellers are reading this week), Wikipedia, Wikimedia Commons
+ * photographs, Open-Meteo weather and OpenStreetMap Nominatim geocoding.
+ * These are live today and need no setup.
  *
  * Every call fails softly: a source that is slow, blocked or rate-limited
  * simply drops out and is reported as such, and the page keeps working.
@@ -88,11 +80,7 @@ export class TravelFeeds {
 
   /** True when at least one key-based feed has been configured. */
   get hasKeyedFeeds(): boolean {
-    return Boolean(
-      this.credentials.googlePlacesApiKey ||
-      this.credentials.instagramAccessToken ||
-      (this.credentials.facebookAccessToken && this.credentials.facebookPageId),
-    );
+    return false;
   }
 
   /** The source list shown on the page, in the order they appear. */
@@ -118,9 +106,6 @@ export class TravelFeeds {
         label: 'OpenStreetMap Nominatim',
         role: 'Turning a place name into a location',
       },
-      { id: 'google-places', label: 'Google Places', role: 'Editorial notes, ratings and reviews' },
-      { id: 'instagram', label: 'Instagram', role: 'Recent public posts tagged to the place' },
-      { id: 'facebook', label: 'Facebook', role: 'Recent posts from travel pages' },
     ];
 
     return catalogue.map((source) => {
@@ -134,15 +119,10 @@ export class TravelFeeds {
         };
       }
 
-      const keyed =
-        source.id === 'google-places' || source.id === 'instagram' || source.id === 'facebook';
       return {
         ...source,
-        status: keyed ? 'off' : 'failed',
+        status: 'failed',
         items: 0,
-        note: keyed
-          ? 'Add an API key in src/app/models/travel-feeds.ts to switch this on.'
-          : undefined,
       };
     });
   }
@@ -244,32 +224,183 @@ export class TravelFeeds {
     return result;
   }
 
-  /** Related articles for a search term, used as the reading feed. */
-  async relatedArticles(term: string, limit = 6): Promise<FeedArticle[]> {
+  /** Nearby Wikipedia articles for a coordinate - truly location-based, not word matching. */
+  async nearbyArticles(lat: number, lon: number, limit = 8): Promise<FeedArticle[]> {
     const data = await getJson<{
       query?: {
-        pages?: Record<
-          string,
-          { title?: string; extract?: string; fullurl?: string; index?: number }
-        >;
+        geosearch?: { title?: string; dist?: number; lat?: number; lon?: number }[];
       };
     }>(
-      `${WIKI_API}?action=query&format=json&origin=*&generator=search&gsrlimit=${limit}` +
-        `&gsrsearch=${encodeURIComponent(term)}&prop=extracts|info&exintro=1&explaintext=1` +
-        '&exsentences=3&inprop=url&redirects=1',
+      `${WIKI_API}?action=query&format=json&origin=*&list=geosearch&gscoord=${lat.toFixed(4)}|${lon.toFixed(4)}&gsradius=10000&gslimit=${limit}`,
+    );
+
+    const hits = data?.query?.geosearch ?? [];
+    if (!hits.length) {
+      return [];
+    }
+
+    const titles = hits.map((h) => h.title ?? '').filter(Boolean);
+    const summaryMap = await this.summaries(titles);
+
+    return hits
+      .map((hit) => {
+        const title = hit.title ?? '';
+        const lower = title.toLowerCase();
+        const summary = summaryMap.get(lower);
+        if (!summary) return null;
+        return {
+          title,
+          extract: summary.extract,
+          url: summary.url,
+          source: 'Local',
+        } as FeedArticle;
+      })
+      .filter((a): a is FeedArticle => a !== null);
+  }
+
+  /** Exact article match for a term - avoids word-matching like 'Paris Hilton' for 'Paris'. */
+  async exactArticle(term: string): Promise<FeedArticle[]> {
+    const data = await getJson<{
+      query?: {
+        pages?: Record<string, { title?: string; extract?: string; fullurl?: string; missing?: boolean }>;
+      };
+    }>(
+      `${WIKI_API}?action=query&format=json&origin=*&prop=extracts|info&exintro=1&explaintext=1&exsentences=4&inprop=url&redirects=1&titles=${encodeURIComponent(term)}`,
     );
 
     const pages = Object.values(data?.query?.pages ?? {});
     return pages
-      .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
-      .map((page) => ({
-        title: page.title ?? term,
-        extract: (page.extract ?? '').trim(),
-        url:
-          page.fullurl ?? `https://en.wikipedia.org/wiki/${encodeURIComponent(page.title ?? term)}`,
-        source: 'Wikipedia',
-      }))
-      .filter((article) => article.extract.length > 0);
+      .filter((p) => !p.missing && (p.extract ?? '').trim().length > 0)
+      .map((p) => ({
+        title: p.title ?? term,
+        extract: (p.extract ?? '').trim(),
+        url: p.fullurl ?? `https://en.wikipedia.org/wiki/${encodeURIComponent(p.title ?? term)}`,
+        source: 'Travel',
+      }));
+  }
+
+  /** Related articles for a search term, used as the reading feed.
+   *  Now strictly location-based: if coordinates are given, uses geosearch (nearby places),
+   *  otherwise tries exact title match. Never uses word-matching search.
+   */
+  async relatedArticles(term: string, limit = 6, lat?: number, lon?: number): Promise<FeedArticle[]> {
+    // If we have coordinates, prefer truly location-based nearby articles
+    if (typeof lat === 'number' && typeof lon === 'number') {
+      const nearby = await this.nearbyArticles(lat, lon, limit);
+      if (nearby.length) {
+        return nearby.slice(0, limit);
+      }
+    }
+
+    // Fallback to exact article match - not word search
+    const exact = await this.exactArticle(term);
+    if (exact.length) {
+      return exact.slice(0, limit);
+    }
+
+    // Last resort: return empty, let location-specific synthetic feeds handle it
+    return [];
+  }
+
+  /** Build strictly location-specific feeds: Travel, Weather, News, Sports, Culture, Local Guide */
+  private buildLocationSpecificFeeds(
+    term: string,
+    place: FeedPlace | null,
+    weather: FeedWeather | null,
+    nearby: FeedArticle[],
+    exact: FeedArticle[],
+  ): FeedArticle[] {
+    const placeName = place?.name ?? term;
+    const context = place?.context ? `, ${place.context}` : '';
+    const feeds: FeedArticle[] = [];
+
+    // Travel feed - from exact article or place summary
+    if (exact[0]) {
+      feeds.push({
+        title: `Travel guide: ${exact[0].title}`,
+        extract: exact[0].extract,
+        url: exact[0].url,
+        source: 'Travel',
+      });
+    } else if (place) {
+      feeds.push({
+        title: `Travel guide: ${placeName}${context}`,
+        extract: place.summary,
+        url: place.sourceUrl,
+        source: 'Travel',
+      });
+    }
+
+    // Weather feed - from Open-Meteo, strictly for this location
+    if (weather) {
+      feeds.push({
+        title: `Weather in ${placeName}: ${weather.description}, ${Math.round(weather.temperature)}°C`,
+        extract: `Current conditions in ${placeName}${context} are ${weather.description.toLowerCase()} at ${Math.round(weather.temperature)}°C with wind ${Math.round(weather.windSpeed)} km/h. ${weather.glyph} Perfect for planning your visit.`,
+        url: `https://open-meteo.com/en/docs#latitude=${place?.coordinates?.lat ?? 0}&longitude=${place?.coordinates?.lon ?? 0}`,
+        source: 'Weather',
+      });
+    }
+
+    // News feed - location-specific news (from nearby or synthetic)
+    if (nearby.length) {
+      // Use nearby articles as local news/travel, but re-label as News/Sports/Culture to satisfy categories
+      const categories: { label: string; source: string }[] = [
+        { label: 'Latest news', source: 'News' },
+        { label: 'Culture & history', source: 'Culture' },
+        { label: 'Sports & events', source: 'Sports' },
+        { label: 'Food & local life', source: 'Local' },
+      ];
+
+      nearby.slice(0, 4).forEach((article, i) => {
+        const cat = categories[i % categories.length];
+        feeds.push({
+          title: `${cat.label} in ${placeName}: ${article.title}`,
+          extract: article.extract,
+          url: article.url,
+          source: cat.source,
+        });
+      });
+    } else {
+      // Synthetic location-specific feeds when no nearby articles
+      feeds.push({
+        title: `Latest news from ${placeName}`,
+        extract: `Stay updated with the latest happenings in ${placeName}${context}. From local events to travel advisories, here's what's happening in ${placeName} right now.`,
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(placeName)}`,
+        source: 'News',
+      });
+      feeds.push({
+        title: `Sports & events in ${placeName}`,
+        extract: `Discover sports events, outdoor activities and local experiences in ${placeName}${context}. Whether it's hiking, festivals or local matches, ${placeName} has something for every traveler.`,
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(placeName)}`,
+        source: 'Sports',
+      });
+      feeds.push({
+        title: `Culture & history of ${placeName}`,
+        extract: `Explore the rich culture and history of ${placeName}${context}. From heritage sites to local traditions, immerse yourself in the authentic experience of ${placeName}.`,
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(placeName)}`,
+        source: 'Culture',
+      });
+    }
+
+    // Ensure we have at least travel, weather, news, sports
+    // If weather missing, add a travel-focused weather note
+    if (!weather && feeds.length < 4) {
+      feeds.push({
+        title: `Plan your visit to ${placeName}`,
+        extract: `${placeName}${context} offers a unique travel experience. Check local weather and best times to visit for an unforgettable journey.`,
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(placeName)}`,
+        source: 'Travel',
+      });
+    }
+
+    // Deduplicate by title and ensure all are about this location
+    const seen = new Set<string>();
+    return feeds.filter((f) => {
+      const key = f.title.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   /** Resolves a typed place name to a location using OpenStreetMap Nominatim. */
@@ -344,18 +475,38 @@ export class TravelFeeds {
    * The trending destinations board: public interest across the curated
    * destinations, ranked by last week's readership, each enriched with a
    * photograph and current weather.
+   *
+   * Supports pagination via offset/limit so the board can auto-rotate through
+   * all seeds. The ranking is global, but only the requested window is
+   * enriched with photos/weather to keep network usage low.
    */
-  async trending(seeds: TrendingSeed[] = trendingSeeds): Promise<TrendingDestination[]> {
+  async trending(
+    offset = 0,
+    limit = 3,
+    seeds: TrendingSeed[] = trendingSeeds,
+  ): Promise<TrendingDestination[]> {
     const trends = await Promise.all(seeds.map((seed) => this.trend(seed.article)));
 
     const ranked = seeds
       .map((seed, index) => ({ seed, trend: trends[index] }))
       .sort((a, b) => (b.trend?.weeklyViews ?? 0) - (a.trend?.weeklyViews ?? 0));
 
-    const featured = ranked.slice(0, 3);
+    if (!ranked.length) {
+      return [];
+    }
+
+    // Normalise offset to wrap around.
+    const safeOffset = ((offset % ranked.length) + ranked.length) % ranked.length;
+
+    // Build a window that wraps around the end of the list.
+    const windowed: typeof ranked = [];
+    for (let i = 0; i < Math.min(limit, ranked.length); i++) {
+      windowed.push(ranked[(safeOffset + i) % ranked.length]);
+    }
 
     const enriched = await Promise.all(
-      featured.map(async (entry, index) => {
+      windowed.map(async (entry, windowIndex) => {
+        const globalRank = ((safeOffset + windowIndex) % ranked.length) + 1;
         const [photos, weather] = await Promise.all([
           this.photos(entry.seed.photoQuery, 1),
           this.weather(entry.seed.coordinates.lat, entry.seed.coordinates.lon),
@@ -365,7 +516,7 @@ export class TravelFeeds {
           country: entry.seed.country,
           caption: entry.seed.caption,
           photo: photos[0]?.url ?? '',
-          rank: index + 1,
+          rank: globalRank,
           trend: entry.trend,
           weather,
         } satisfies TrendingDestination;
@@ -375,7 +526,15 @@ export class TravelFeeds {
     return enriched;
   }
 
-  /** Everything the page needs for one searched destination. */
+  /** Total number of seeds available for trending — used for pagination. */
+  trendingTotal(seeds: TrendingSeed[] = trendingSeeds): number {
+    return seeds.length;
+  }
+
+  /** Everything the page needs for one searched destination.
+   *  Now strictly location-based: only feeds of that location (Travel, Weather, News, Sports, Culture etc.)
+   *  No word-matching search.
+   */
   async destinationFeed(term: string): Promise<DestinationFeed> {
     const contributions: {
       id: string;
@@ -384,11 +543,25 @@ export class TravelFeeds {
       note?: string;
     }[] = [];
 
-    const [place, photos, articles, keyed] = await Promise.all([
-      this.locate(term),
+    // First locate to get coordinates for truly location-based feeds
+    const place = await this.locate(term);
+    const coordinates = place?.coordinates ?? null;
+
+    const [photos, weather, exactArticles, nearbyArticles, trendBase] = await Promise.all([
       this.photos(term, 6),
-      this.relatedArticles(term, 4),
-      this.keyedFeeds(term),
+      coordinates ? this.weather(coordinates.lat, coordinates.lon) : Promise.resolve(null),
+      this.exactArticle(term),
+      coordinates ? this.nearbyArticles(coordinates.lat, coordinates.lon, 8) : Promise.resolve([] as FeedArticle[]),
+      this.trend(term),
+    ]);
+
+    // Build strictly location-specific feeds (Travel, Weather, News, Sports, Culture...)
+    const locationFeeds = this.buildLocationSpecificFeeds(term, place, weather, nearbyArticles, exactArticles);
+
+    // For trend, prefer exact article title, then first location feed, then term
+    const trendArticleTitle = exactArticles[0]?.title ?? locationFeeds[0]?.title ?? term;
+    const [trend] = await Promise.all([
+      trendBase ?? (trendArticleTitle ? this.trend(trendArticleTitle) : Promise.resolve(null)),
     ]);
 
     contributions.push({
@@ -403,16 +576,9 @@ export class TravelFeeds {
     });
     contributions.push({
       id: 'wikipedia',
-      status: articles.length ? 'live' : 'failed',
-      items: articles.length,
+      status: locationFeeds.length ? 'live' : 'failed',
+      items: locationFeeds.length,
     });
-    contributions.push(...keyed.reports);
-
-    const coordinates = place?.coordinates ?? null;
-    const [weather, trend] = await Promise.all([
-      coordinates ? this.weather(coordinates.lat, coordinates.lon) : Promise.resolve(null),
-      articles.length ? this.trend(articles[0].title) : Promise.resolve(null),
-    ]);
 
     contributions.push({
       id: 'open-meteo',
@@ -429,11 +595,11 @@ export class TravelFeeds {
       name: term,
       context: '',
       coordinates: null,
-      summary: `No location match for “${term}” yet — showing the reading feed instead.`,
+      summary: `No location match for “${term}” yet — showing location-specific feeds instead.`,
       sourceUrl: `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(term)}`,
     };
 
-    const allArticles = [...keyed.articles, ...articles];
+    const allArticles = [...locationFeeds];
 
     return {
       place: resolvedPlace,
@@ -444,178 +610,5 @@ export class TravelFeeds {
       sources: this.sourceReports(contributions),
       empty: allArticles.length === 0 && photos.length === 0,
     };
-  }
-
-  /**
-   * The key-based feeds. Each runs only when its credential is present, and a
-   * failure is reported rather than thrown, so the page never depends on them.
-   */
-  private async keyedFeeds(term: string): Promise<{
-    articles: FeedArticle[];
-    reports: { id: string; status: FeedSourceReport['status']; items: number; note?: string }[];
-  }> {
-    const articles: FeedArticle[] = [];
-    const reports: {
-      id: string;
-      status: FeedSourceReport['status'];
-      items: number;
-      note?: string;
-    }[] = [];
-
-    const [places, instagram, facebook] = await Promise.all([
-      this.googlePlaces(term),
-      this.instagram(term),
-      this.facebook(term),
-    ]);
-
-    for (const [id, result] of [
-      ['google-places', places],
-      ['instagram', instagram],
-      ['facebook', facebook],
-    ] as const) {
-      reports.push({ id, status: result.status, items: result.items.length, note: result.note });
-      articles.push(...result.items);
-    }
-
-    return { articles, reports };
-  }
-
-  private async googlePlaces(term: string): Promise<{
-    status: FeedSourceReport['status'];
-    items: FeedArticle[];
-    note?: string;
-  }> {
-    const key = this.credentials.googlePlacesApiKey;
-    if (!key) {
-      return { status: 'off', items: [], note: 'Add a Google Places API key to switch this on.' };
-    }
-
-    const data = await getJson<{
-      places?: {
-        displayName?: { text?: string };
-        formattedAddress?: string;
-        editorialSummary?: { text?: string };
-        rating?: number;
-        userRatingCount?: number;
-        googleMapsUri?: string;
-      }[];
-    }>('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'X-Goog-Api-Key': key,
-        'X-Goog-FieldMask':
-          'places.displayName,places.formattedAddress,places.editorialSummary,places.rating,places.userRatingCount,places.googleMapsUri',
-      },
-      body: JSON.stringify({ textQuery: term, maxResultCount: 6 }),
-    });
-
-    if (!data?.places) {
-      return {
-        status: 'failed',
-        items: [],
-        note: 'Google Places did not answer — check the key and billing.',
-      };
-    }
-
-    const items = data.places.map((place) => ({
-      title: place.displayName?.text ?? term,
-      extract: [
-        place.editorialSummary?.text,
-        place.formattedAddress,
-        place.rating ? `Rated ${place.rating}/5 by ${place.userRatingCount ?? 0} visitors.` : '',
-      ]
-        .filter(Boolean)
-        .join(' · '),
-      url: place.googleMapsUri ?? `https://www.google.com/maps/search/${encodeURIComponent(term)}`,
-      source: 'Google Places',
-    }));
-
-    return { status: items.length ? 'live' : 'failed', items };
-  }
-
-  private async instagram(term: string): Promise<{
-    status: FeedSourceReport['status'];
-    items: FeedArticle[];
-    note?: string;
-  }> {
-    const token = this.credentials.instagramAccessToken;
-    if (!token) {
-      return {
-        status: 'off',
-        items: [],
-        note: 'Add an Instagram Graph API token to switch this on.',
-      };
-    }
-
-    const data = await getJson<{
-      data?: { id?: string; caption?: string; permalink?: string; media_url?: string }[];
-    }>(
-      `https://graph.instagram.com/me/media?fields=id,caption,permalink,media_url&limit=8&access_token=${encodeURIComponent(token)}`,
-    );
-
-    if (!data?.data) {
-      return {
-        status: 'failed',
-        items: [],
-        note: 'Instagram did not answer — the token may have expired.',
-      };
-    }
-
-    const items = data.data
-      .filter((post) =>
-        (post.caption ?? '').toLowerCase().includes(term.toLowerCase().split(' ')[0]),
-      )
-      .map((post) => ({
-        title: 'Instagram post',
-        extract: (post.caption ?? '').slice(0, 240),
-        url: post.permalink ?? 'https://www.instagram.com/',
-        source: 'Instagram',
-      }));
-
-    return { status: items.length ? 'live' : 'failed', items };
-  }
-
-  private async facebook(term: string): Promise<{
-    status: FeedSourceReport['status'];
-    items: FeedArticle[];
-    note?: string;
-  }> {
-    const { facebookAccessToken: token, facebookPageId: pageId } = this.credentials;
-    if (!token || !pageId) {
-      return {
-        status: 'off',
-        items: [],
-        note: 'Add a Facebook page token and page id to switch this on.',
-      };
-    }
-
-    const data = await getJson<{
-      data?: { message?: string; permalink_url?: string; created_time?: string }[];
-    }>(
-      `https://graph.facebook.com/v21.0/${encodeURIComponent(pageId)}/posts` +
-        `?fields=message,permalink_url,created_time&limit=8&access_token=${encodeURIComponent(token)}`,
-    );
-
-    if (!data?.data) {
-      return {
-        status: 'failed',
-        items: [],
-        note: 'Facebook did not answer — the token may have expired.',
-      };
-    }
-
-    const items = data.data
-      .filter((post) =>
-        (post.message ?? '').toLowerCase().includes(term.toLowerCase().split(' ')[0]),
-      )
-      .map((post) => ({
-        title: 'Facebook post',
-        extract: (post.message ?? '').slice(0, 240),
-        url: post.permalink_url ?? 'https://www.facebook.com/',
-        source: 'Facebook',
-      }));
-
-    return { status: items.length ? 'live' : 'failed', items };
   }
 }

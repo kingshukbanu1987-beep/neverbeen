@@ -645,247 +645,124 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'canada',
     name: 'Canada',
     country: 'Canada',
-    region: 'Banff and the Canadian Rockies, with the big cities beyond',
-    tagline: 'Mountain town mornings in Banff',
-    bestTime: 'June to September for hiking, or January to March for snow',
+    region: 'Banff and Rocky Mountains, Alberta',
+    tagline: 'Turquoise lakes and mountain wilderness',
+    bestTime: 'June to September for hiking, December to March for skiing',
     overview: [
-      'Canada is a country built at two scales at once. Toronto, Montreal and Vancouver are dense, cosmopolitan and easy to travel without a car, while the Rockies, the prairies and the far north are measured in days of driving and weeks of silence.',
-      'Banff, in Alberta, is the classic first stop: a small town in a national park, ringed by peaks, with turquoise lakes an hour away in every direction. From there the Icefields Parkway runs north through the mountains to Jasper, one of the great drives on earth.',
+      'Canada is vast, with wilderness that dwarfs its cities. The Rocky Mountains hold turquoise glacial lakes like Lake Louise and Moraine Lake, while Banff and Jasper National Parks offer bear sightings, hot springs and alpine trails.',
+      'Beyond the mountains are vibrant cities — Vancouver on the Pacific, Toronto on Lake Ontario, Montreal with French heritage — and experiences from Niagara Falls to northern lights in Yukon.',
     ],
     eat: [
-      {
-        name: 'Poutine',
-        description:
-          'Fries, cheese curds and hot gravy — the Quebec invention that became a national dish, best from a roadside diner.',
-      },
-      {
-        name: 'Butter tarts and Nanaimo bars',
-        description:
-          'Two sweet national institutions: runny butter tarts from Ontario and the layered chocolate-custard bar named after a Vancouver Island city.',
-      },
-      {
-        name: 'Pacific salmon and seafood',
-        description:
-          'Sockeye, halibut and spot prawns in Vancouver and on Vancouver Island, grilled or as fish and chips on the dock.',
-      },
-      {
-        name: 'Sugar shacks',
-        description:
-          'In Quebec in early spring, cabanes à sucre serve maple syrup poured over snow, ham, eggs and beans.',
-      },
-      {
-        name: 'Markets and food halls',
-        description:
-          'Toronto’s St Lawrence Market, Montreal’s Jean-Talon and Vancouver’s Granville Island for cheese, bread and smoked meat.',
-      },
+      { name: 'Poutine', description: 'Fries topped with cheese curds and gravy, the Quebec classic.' },
+      { name: 'Maple syrup and pancakes', description: 'Breakfast with pure maple syrup from Quebec forests.' },
+      { name: 'Pacific salmon', description: 'Wild salmon grilled on cedar planks in British Columbia.' },
+      { name: 'Butter tarts', description: 'Sweet pastry tarts with raisins, a Canadian bakery staple.' },
     ],
     attractions: [
-      {
-        name: 'Banff and Lake Louise',
-        description:
-          'A national park town with hot springs, a gondola up Sulphur Mountain and the glacier-fed lake an hour up the valley.',
-      },
-      {
-        name: 'Icefields Parkway',
-        description:
-          'The 230 km drive from Lake Louise to Jasper, past glaciers, waterfalls and the Columbia Icefield.',
-      },
-      {
-        name: 'Niagara Falls',
-        description:
-          'Three waterfalls on the US border, an easy day trip from Toronto; the boat ride into the mist is worth the raincoat.',
-      },
-      {
-        name: 'Vancouver and Stanley Park',
-        description:
-          'Rainforest, seawall and mountains within a city of glass towers, with Whistler two hours north.',
-      },
-      {
-        name: 'Old Québec and Montreal',
-        description:
-          'A walled French-speaking city on a cliff, and Canada’s most European metropolis an hour away.',
-      },
-      {
-        name: 'Yukon and the northern lights',
-        description:
-          'Whitehorse and Dawson City in winter, with aurora season running from late August to mid-April.',
-      },
+      { name: 'Banff and Lake Louise', description: 'Turquoise glacial lakes and gondola views above the Rockies.' },
+      { name: 'Niagara Falls', description: 'Three waterfalls on the US border, best seen by boat and at night.' },
+      { name: 'Vancouver and Stanley Park', description: 'Seawall cycling and mountain views minutes from downtown.' },
+      { name: 'Old Quebec City', description: 'Walled French colonial streets and Château Frontenac.' },
+      { name: 'CN Tower and Toronto Islands', description: 'City panorama and beach escape across the harbour.' },
+      { name: 'Northern lights in Yukon', description: 'Aurora viewing in Whitehorse and wilderness lodges.' },
     ],
     history: [
-      'Indigenous peoples have lived across what is now Canada for thousands of years, and their languages, treaties and land claims shape the country today. French and British colonies followed from the sixteenth century, and the two powers fought over the territory until Britain took Quebec in 1759.',
-      'Confederation in 1867 joined four provinces into a self-governing dominion, and the transcontinental railway pulled the rest together over the following decades. Canada became fully independent in law in 1982, and today it is officially bilingual and among the most multicultural countries in the world.',
+      'Canada was inhabited by Indigenous peoples for millennia before French and British colonization. Confederation in 1867 united colonies into a dominion.',
+      'It became fully independent with the Constitution Act of 1982 and is now a bilingual, multicultural federation known for politeness and natural resources.',
     ],
     geography: [
-      'Canada is the second-largest country by area. The Canadian Shield, a vast expanse of ancient rock and lake, covers much of the centre and north; the prairies run down the middle; the Rockies and Coast Mountains wall off the Pacific; and the Arctic archipelago reaches to the pole.',
-      'It holds more lakes than the rest of the world combined, and the longest coastline of any country — over 200,000 km including islands.',
+      'Canada is the world’s second-largest country by area, spanning six time zones from Atlantic to Pacific to Arctic. The Rocky Mountains run along the west.',
+      'Forests cover 38% of the land, and it holds 20% of the world’s fresh water, with the Great Lakes and countless glacial lakes.',
     ],
     culture: [
-      'Bilingualism is real: French is the first language of Quebec and is protected by law, and signs, services and schools are mirrored across the country. Politeness is not a myth either — “sorry” is reflexive, and queues form without being asked.',
-      'Hockey functions as a shared second language in winter, and the country’s self-image leans on wildness: the cottage, the canoe and the long drive over the mountains.',
+      'Multiculturalism is official policy, with English and French as official languages. Ice hockey is a national obsession.',
+      'Politeness, queuing and saying sorry are stereotypically Canadian, and Indigenous heritage is increasingly recognized.',
     ],
     seasons: [
-      {
-        label: 'Spring',
-        note: 'Late and wet in most of the country; ski season runs into May in the Rockies.',
-      },
-      {
-        label: 'Summer',
-        note: 'Long, warm and crowded in the parks; daylight stretches past 10 pm.',
-      },
-      {
-        label: 'Autumn',
-        note: 'Maple colour from late September, sharp light and fewer visitors.',
-      },
-      {
-        label: 'Winter',
-        note: 'Serious cold in the east, powder and aurora in the west and north.',
-      },
+      { label: 'Spring', note: 'Snowmelt, maple syrup season and cherry blossoms in Vancouver.' },
+      { label: 'Summer', note: 'Warm, long days perfect for hiking and lake swimming.' },
+      { label: 'Autumn', note: 'Spectacular maple colours, especially in Quebec and Ontario.' },
+      { label: 'Winter', note: 'Ski season, ice hotels and northern lights — cold but magical.' },
     ],
     gettingAround:
-      'Distances are continental, so most trips mix flights with a rental car. In the cities, Toronto, Montreal and Vancouver have clean, safe metro systems. VIA Rail’s corridor service links Toronto, Ottawa and Montreal, and the Rocky Mountaineer and the Canadian cross the west by rail.',
+      'VIA Rail connects Quebec City to Windsor, and domestic flights cover long distances. Driving is best for Rockies, with winter tyres essential. City transit is good in Vancouver, Toronto and Montreal.',
     practical: [
-      { label: 'Language', value: 'English and French; French dominates in Quebec.' },
-      { label: 'Currency', value: 'Canadian dollar (CAD) — cards accepted almost everywhere.' },
-      { label: 'Plugs', value: 'Type A/B, 120 V — bring an adapter for European plugs.' },
-      { label: 'Tipping', value: 'Expected: 15–20% in restaurants and for taxis.' },
-      { label: 'Tap water', value: 'Safe to drink everywhere, including in the parks.' },
-      {
-        label: 'Getting in',
-        value: 'Visa or eTA depending on nationality; national park passes are separate.',
-      },
+      { label: 'Languages', value: 'English and French.' },
+      { label: 'Currency', value: 'Canadian dollar (CAD)' },
+      { label: 'Plugs', value: 'Type A/B, 120 V.' },
+      { label: 'Tipping', value: '15-20% in restaurants, expected.' },
+      { label: 'Tap water', value: 'Safe to drink everywhere.' },
+      { label: 'Getting in', value: 'eTA required for visa-free visitors; very safe.' },
     ],
     facts: [
-      'Canada has the longest coastline of any country — more than 200,000 km.',
-      'It contains more lakes than every other country in the world combined.',
-      'Almost half the country is forest, and most Canadians live within 300 km of the US border.',
-      'Banff, founded in 1885, was Canada’s first national park and only the third in the world.',
+      'Canada has more lakes than the rest of the world combined.',
+      'The CN Tower was the world’s tallest free-standing structure until 2007.',
+      'Canada has the longest coastline in the world at 202,080 km.',
+      'Banff National Park is Canada’s oldest national park, founded in 1885.',
     ],
-    currency: { code: 'CAD', name: 'Canadian dollar', symbol: 'C$', approximatePerUsd: 1.37 },
-    timezone: 'America/Edmonton',
+    currency: { code: 'CAD', name: 'Canadian dollar', symbol: '$', approximatePerUsd: 1.35 },
+    timezone: 'America/Toronto',
     coordinates: { lat: 51.1784, lon: -115.5708 },
     wikipedia: 'Canada',
   },
   {
-    slug: 'united-states-of-america',
-    name: 'United States of America',
+    slug: 'united-states',
+    name: 'United States',
     country: 'United States of America',
-    region: 'New York City, the national parks and the Pacific coast',
-    tagline: 'Bridge lights and the Manhattan skyline',
-    bestTime: 'April to June and September to October in most of the country',
+    region: 'New York, California and the Grand Canyon',
+    tagline: 'City lights and endless horizons',
+    bestTime: 'April to June and September to October for mild weather',
     overview: [
-      'The United States rewards choosing a shape for your trip rather than trying to see the whole thing. New York is the easiest city to arrive in: walkable, loud and dense, with the skyline, the bridges and a different neighbourhood every twenty blocks.',
-      'From there the country opens out. The national parks of the west — Grand Canyon, Yellowstone, Yosemite — are best done by road, with long drives between them, and the Pacific coast from San Francisco to Seattle is one of the great coastal roads.',
+      'The United States spans a continent of deserts, forests, mountains and megacities. New York’s skyline, the Grand Canyon’s vastness, California’s beaches and Yellowstone’s geysers all belong to the same country.',
+      'Road trips are the classic way to see it — Route 66, Pacific Coast Highway, Blue Ridge Parkway — with national parks, diners and small towns in between. Each region feels like a different country.',
     ],
     eat: [
-      {
-        name: 'Diners and breakfast',
-        description:
-          'Pancakes, eggs over easy and bottomless coffee, served all day in a booth — the most American meal there is.',
-      },
-      {
-        name: 'Barbecue',
-        description:
-          'Regional and serious: brisket and sausage in Texas, pulled pork and vinegar sauce in the Carolinas, ribs and burnt ends in Kansas City.',
-      },
-      {
-        name: 'Pizza by the slice',
-        description:
-          'A New York slice eaten standing up, or Chicago’s deep dish — a long-running argument best settled by trying both.',
-      },
-      {
-        name: 'Food trucks and taco trucks',
-        description:
-          'Korean-Mexican fusion in Los Angeles, birria and al pastor anywhere in the south-west, lobster rolls in New England.',
-      },
-      {
-        name: 'Southern and soul food',
-        description:
-          'Fried chicken, gumbo, shrimp and grits, collard greens and cornbread across Louisiana, Georgia and the Carolinas.',
-      },
+      { name: 'Burgers and BBQ', description: 'Regional barbecue styles from Texas brisket to Carolina pulled pork.' },
+      { name: 'Diner breakfast', description: 'Pancakes, eggs and coffee in 24-hour diners.' },
+      { name: 'New York pizza and bagels', description: 'Thin foldable slices and chewy bagels with lox.' },
+      { name: 'Cajun and soul food', description: 'Gumbo, jambalaya and fried chicken from Louisiana and the South.' },
     ],
     attractions: [
-      {
-        name: 'New York City',
-        description:
-          'The Brooklyn Bridge at sunrise, the Met, Central Park, and views from the Empire State Building outside rush hour.',
-      },
-      {
-        name: 'Grand Canyon',
-        description:
-          'Twenty-nine kilometres of canyon in Arizona, best at sunrise from the South Rim or from a raft on the river.',
-      },
-      {
-        name: 'Yellowstone and Grand Teton',
-        description:
-          'Geysers, hot springs, bison and grizzly country in Wyoming, linked by a short drive over the pass.',
-      },
-      {
-        name: 'Yosemite',
-        description:
-          'Granite walls and waterfalls in California, an easy drive from San Francisco and busiest from May to September.',
-      },
-      {
-        name: 'Washington, D.C.',
-        description:
-          'The National Mall, the Smithsonian museums — most of them free — and the monuments lit up after dark.',
-      },
-      {
-        name: 'Pacific Coast Highway',
-        description:
-          'The Big Sur stretch between San Francisco and Los Angeles, with elephant seals, redwoods and constant ocean views.',
-      },
+      { name: 'Grand Canyon', description: '277-mile canyon carved by the Colorado River, best at sunrise.' },
+      { name: 'New York City', description: 'Times Square, Central Park, Statue of Liberty and Broadway.' },
+      { name: 'Yellowstone and Yosemite', description: 'Geysers, waterfalls and granite cliffs in first national parks.' },
+      { name: 'Golden Gate Bridge', description: 'Iconic suspension bridge and foggy bay views in San Francisco.' },
+      { name: 'Las Vegas Strip', description: 'Neon lights, shows and desert escape.' },
+      { name: 'Hawaii beaches', description: 'Volcanoes and surf on islands in the Pacific.' },
     ],
     history: [
-      'Indigenous nations had lived across the continent for millennia before European colonisation, and thirteen British colonies declared independence in 1776. The constitution of 1787 created a federal republic, and the nineteenth century expanded it across the continent through purchase, war and settlement.',
-      'A civil war between 1861 and 1865 ended slavery, and the twentieth century saw mass immigration, industrial power and the civil rights movement. The United States remains a federal union of fifty states, each with its own laws.',
+      'Inhabited for millennia by Indigenous peoples, colonized by Europeans from 1607, independence declared in 1776. Westward expansion, civil war and immigration shaped the modern nation.',
+      'The 20th century brought it to superpower status after two world wars, with cultural exports of jazz, Hollywood and technology influencing the world.',
     ],
     geography: [
-      'The lower forty-eight states run from the Atlantic coastal plain to the Appalachian mountains, across the Mississippi basin and the Great Plains, up to the Rockies and down to the deserts and Pacific coast. Alaska adds glaciers and tundra; Hawaii adds tropical volcanoes.',
-      'The scale is the point: California is roughly the size of Germany, and driving from New York to Los Angeles takes about four days.',
+      'The US spans from Atlantic to Pacific, with Alaska separated by Canada and Hawaii in the Pacific. The Rockies, Appalachians, Great Plains and deserts define regions.',
+      'It has 63 national parks, from arctic tundra in Alaska to tropical reefs in Florida, and the Grand Canyon exposes two billion years of geology.',
     ],
     culture: [
-      'American friendliness is genuine and relatively unguarded — strangers will ask how you are and mean it loosely. Tipping is not optional: 15–20% at table service, and a dollar or two per drink at a bar.',
-      'Regional identity is strong, from Southern hospitality to Pacific Northwest coffee culture, and road trips, diners and college sports bind the country loosely together.',
+      'Melting pot of cultures with regional identities — New England, South, Midwest, West Coast. Tipping is expected and small talk is common.',
+      'National parks, baseball and road trips are cultural staples, and diversity is celebrated in food and festivals.',
     ],
     seasons: [
-      {
-        label: 'Spring',
-        note: 'Blossom in the east, wildflower desert in the south-west, still snowy in the high parks.',
-      },
-      {
-        label: 'Summer',
-        note: 'Hot and heavily booked; national parks fill up and reserving is essential.',
-      },
-      {
-        label: 'Autumn',
-        note: 'New England foliage and clear desert weather — the best all-round month.',
-      },
-      {
-        label: 'Winter',
-        note: 'Skiing in the Rockies and New England; mild in Florida and the south-west.',
-      },
+      { label: 'Spring', note: 'Mild, blossom in Washington DC, good for city trips.' },
+      { label: 'Summer', note: 'Hot, busy national parks and beach season.' },
+      { label: 'Autumn', note: 'Fall colours in New England and mild weather nationwide.' },
+      { label: 'Winter', note: 'Ski season in Colorado and festive lights in New York.' },
     ],
     gettingAround:
-      'Flying is the default between regions, and Amtrak works well in the north-east corridor. A car is essential in the west and for national parks — book early, as one-way rentals are common. New York, Chicago, Washington and Boston have good subway systems; almost everywhere else expects you to drive.',
+      'Domestic flights are essential for long distances. Amtrak covers some corridors, but driving is best for national parks. Car rental is cheap, and interstates are well-maintained.',
     practical: [
-      {
-        label: 'Language',
-        value: 'English; Spanish is widely spoken in the south-west and Florida.',
-      },
+      { label: 'Language', value: 'English; Spanish widely spoken.' },
       { label: 'Currency', value: 'US dollar (USD)' },
-      { label: 'Plugs', value: 'Type A/B, 120 V, 60 Hz.' },
-      { label: 'Tipping', value: 'Expected — 15–20% in restaurants, plus tax added at the till.' },
-      { label: 'Tap water', value: 'Safe to drink almost everywhere.' },
-      {
-        label: 'Getting in',
-        value: 'Visa or ESTA; national park entry often needs a timed reservation.',
-      },
+      { label: 'Plugs', value: 'Type A/B, 120 V.' },
+      { label: 'Tipping', value: '15-20% expected in restaurants, bars and taxis.' },
+      { label: 'Tap water', value: 'Safe to drink in most places.' },
+      { label: 'Getting in', value: 'ESTA for visa-free nationals; very large country.' },
     ],
     facts: [
-      'The national park system covers more than 400 sites, including 63 designated national parks.',
-      'Yellowstone, established in 1872, was the world’s first national park.',
-      'Around 40% of Americans live within 100 km of a coastline.',
-      'Route 66, opened in 1926, once ran over 3,900 km from Chicago to Santa Monica.',
+      'The US has 63 national parks covering 85 million acres.',
+      'Route 66 originally ran 2,448 miles from Chicago to Santa Monica.',
+      'The Grand Canyon is 277 miles long and up to 18 miles wide.',
+      'The US has the world’s largest economy by nominal GDP.',
     ],
     currency: { code: 'USD', name: 'US dollar', symbol: '$', approximatePerUsd: 1 },
     timezone: 'America/New_York',
@@ -896,117 +773,60 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'maldives',
     name: 'Maldives',
     country: 'Maldives',
-    region: 'Malé, the atolls and the resort islands',
-    tagline: 'Lagoon water in every shade of blue',
-    bestTime: 'November to April, the north-east monsoon and the dry season',
+    region: 'Indian Ocean, south of India',
+    tagline: 'Overwater villas above turquoise lagoons',
+    bestTime: 'November to April for dry season and clear water',
     overview: [
-      'The Maldives is 1,192 coral islands spread across 26 atolls, and just about 200 of them are inhabited. Resorts occupy their own islands, which means the standard day is unusually simple: reef, lagoon, sandbank, dinner, stars.',
-      'Above the water the country is flatter than almost anywhere on earth — the highest natural point is under three metres — and the light does most of the work. Under the water it is one of the best diving destinations in the world, with manta rays, whale sharks and coral gardens on the atoll edges.',
+      'The Maldives is 1,192 coral islands grouped into 26 atolls in the Indian Ocean, where overwater bungalows sit above lagoons so clear you can count fish from the deck. It is the lowest country on Earth, averaging 1.5 m above sea level.',
+      'Days are spent snorkelling with manta rays, diving with whale sharks, and watching sunsets that turn the water pink. Each resort occupies its own island, so privacy and barefoot luxury are the norm.',
     ],
     eat: [
-      {
-        name: 'Mas huni and roshi',
-        description:
-          'The classic Maldivian breakfast: shredded smoked tuna with coconut, onion and chilli, wrapped in a flatbread.',
-      },
-      {
-        name: 'Garudhiya',
-        description:
-          'A clear fish broth served with rice, lime and chilli; the everyday dish of the islands and usually the best thing on the table.',
-      },
-      {
-        name: 'Hedhikaa',
-        description:
-          'Short eats sold from small cafés — deep-fried fish balls, tuna rolls and sweet coconut parcels — best with black tea.',
-      },
-      {
-        name: 'Reef fish',
-        description:
-          'Tuna, snapper and jobfish, grilled with lime and chilli. Fishing is still the second pillar of the economy after tourism.',
-      },
-      {
-        name: 'Resort dining',
-        description:
-          'Island resorts run buffets and overwater restaurants, often with a sandbank picnic or a private dinner on the beach.',
-      },
+      { name: 'Mas huni and roshi', description: 'Tuna, coconut, onion and chilli breakfast with flatbread.' },
+      { name: 'Garudhiya', description: 'Fragrant tuna soup with rice, lime and chilli.' },
+      { name: 'Resort seafood grills', description: 'Fresh reef fish and lobster grilled over coconut husks.' },
+      { name: 'Bajiya and hedhikaa', description: 'Savoury pastries and short eats for afternoon tea.' },
     ],
     attractions: [
-      {
-        name: 'Overwater villas',
-        description:
-          'The signature stay: rooms on stilts above the lagoon with a ladder into the water and glass panels in the floor.',
-      },
-      {
-        name: 'Snorkelling and diving',
-        description:
-          'House reefs are swimmable from shore; boat dives reach channels where mantas and whale sharks feed on plankton.',
-      },
-      {
-        name: 'South Ari atoll',
-        description:
-          'One of the few places where whale sharks are resident all year, making sightings very likely.',
-      },
-      {
-        name: 'Malé',
-        description:
-          'The crowded, colourful capital with a fish market, the seventeenth-century Old Friday Mosque and the artificial beach.',
-      },
-      {
-        name: 'Sandbanks and picnic islands',
-        description:
-          'Bare white sandbanks that appear at low tide, plus local islands with guesthouses and public beaches.',
-      },
-      {
-        name: 'Seaplane atolls',
-        description:
-          'Flying between atolls at low altitude is the best sightseeing in the country, and often the only way to reach a resort.',
-      },
+      { name: 'Overwater villas', description: 'Private decks with direct lagoon access and glass floors.' },
+      { name: 'Manta and whale shark dives', description: 'Hanifaru Bay and South Ari Atoll for seasonal gatherings.' },
+      { name: 'Bioluminescent beaches', description: 'Vaadhoo Island glows with phytoplankton at night.' },
+      { name: 'Sandbank picnics', description: 'Private lunches on disappearing strips of white sand.' },
+      { name: 'Underwater restaurants', description: 'Glass dining rooms surrounded by reef fish.' },
+      { name: 'Local island visits', description: 'Maafushi and fishing villages for authentic Maldivian life.' },
     ],
     history: [
-      'The islands were settled over two thousand years ago from South Asia and became Buddhist, before converting to Islam in the twelfth century. A sultanate ruled for centuries, with Portuguese, Dutch and finally British influence arriving through the colonial era.',
-      'The Maldives became a British protectorate and then, in 1965, an independent sultanate, followed by a republic in 1968. Tourism began in 1972 with one resort, and the industry has since transformed the country’s economy.',
+      'The Maldives was a Buddhist kingdom before converting to Islam in 1153. It was a trading hub for cowrie shells and coir rope on Indian Ocean routes.',
+      'A British protectorate from 1887 to 1965, it became a republic and then a luxury tourism destination from the 1970s, now facing sea-level rise challenges.',
     ],
     geography: [
-      'The archipelago is a double chain of coral atolls running north to south for about 870 km, built on the tops of ancient volcanic ridges. Each atoll is a ring of reef and islands around a lagoon, averaging little more than a metre above sea level.',
-      'Because the islands are so low, tides, monsoon swell and sea-level rise are existential concerns, and the country has been among the loudest voices in international climate negotiations.',
+      'The islands are coral atolls built on ancient volcanoes, with lagoons and reefs protecting them. The highest natural point is only 2.4 m above sea level.',
+      'The Indian Ocean is warm year-round at 28-30°C, with monsoons shaping seasons — northeast dry and southwest wet.',
     ],
     culture: [
-      'The Maldives is a Muslim country: alcohol is served in resorts but not on inhabited local islands, and conservative dress is expected in villages and in Malé.',
-      'Dhivehi, the local language, uses its own script, and the culture is carried by fishing, boat-building and the rhythms of the monsoon. Island life is unhurried, and hospitality is taken seriously.',
+      'Maldivian culture is Islamic, with Friday prayers and modest dress on local islands. Resort islands are more relaxed.',
+      'Bodu Beru drumming and lacquerwork are traditional arts, and fishing remains central to life.',
     ],
     seasons: [
-      {
-        label: 'North-east monsoon',
-        note: 'November to April: dry, sunny and calm — the peak and most expensive season.',
-      },
-      {
-        label: 'South-west monsoon',
-        note: 'May to October: wetter and windier, lower prices, and the best manta and whale-shark plankton blooms.',
-      },
-      {
-        label: 'Shoulder months',
-        note: 'April and November bring the best balance of weather and value.',
-      },
-      { label: 'Temperature', note: 'Close to 30 °C year round, with warm water and humidity.' },
+      { label: 'Dry season', note: 'Nov-Apr — best visibility, calm seas, peak prices.' },
+      { label: 'Wet season', note: 'May-Oct — lush, cheaper, with occasional rain and surf.' },
+      { label: 'Manta season', note: 'Jun-Nov in Hanifaru Bay — plankton brings hundreds of mantas.' },
+      { label: 'Whale shark season', note: 'Year-round in South Ari Atoll, best Aug-Nov.' },
     ],
     gettingAround:
-      'Inter-island travel is by seaplane, domestic flight, speedboat or the public dhoni ferries that link local islands. Resorts arrange transfers to match flight arrivals, and seaplane transfers operate in daylight only. Within an island, everything is walkable or a short buggy ride.',
+      'Seaplanes and speedboats transfer to resorts from Malé. Local ferries connect inhabited islands cheaply but slowly. Private yachts offer liveaboard diving.',
     practical: [
-      { label: 'Language', value: 'Dhivehi; English is widely spoken in tourism.' },
-      { label: 'Currency', value: 'Maldivian rufiyaa (MVR); US dollars are accepted at resorts.' },
-      { label: 'Plugs', value: 'Type D/G, 230 V — most resorts also have universal sockets.' },
-      {
-        label: 'Tipping',
-        value: 'Around 10% in resorts, plus a small note for transfers and housekeeping.',
-      },
-      { label: 'Tap water', value: 'Desalinated or rain-fed; bottled water is the norm.' },
-      { label: 'Getting in', value: 'Thirty-day free visa on arrival for most nationalities.' },
+      { label: 'Language', value: 'Dhivehi; English widely spoken in resorts.' },
+      { label: 'Currency', value: 'Maldivian rufiyaa (MVR) — USD accepted in resorts.' },
+      { label: 'Plugs', value: 'Type D/G, 230 V.' },
+      { label: 'Tipping', value: 'Not expected but appreciated; service charge included.' },
+      { label: 'Tap water', value: 'Desalinated — drink bottled water.' },
+      { label: 'Getting in', value: 'Free 30-day visa on arrival for most nationalities.' },
     ],
     facts: [
-      'The Maldives is the world’s lowest-lying country, with a highest natural point of about 2.4 m.',
-      'Around 99% of the country is water and just 0.3% of its area is land.',
-      'In 2009 the government held a cabinet meeting underwater in scuba gear to highlight sea-level rise.',
-      'The country has grown its population from about 100,000 in 1965 to over 500,000 today.',
+      'The Maldives is the lowest country in the world by average elevation.',
+      'It has 1,192 islands, of which about 200 are inhabited.',
+      'The Maldives was the first country to hold an underwater cabinet meeting.',
+      'Bioluminescent beaches glow due to dinoflagellate plankton.',
     ],
     currency: { code: 'MVR', name: 'Maldivian rufiyaa', symbol: 'Rf', approximatePerUsd: 15.4 },
     timezone: 'Indian/Maldives',
@@ -1017,125 +837,62 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'thailand',
     name: 'Thailand',
     country: 'Thailand',
-    region: 'Bangkok, the northern temples and the Andaman coast',
-    tagline: 'Temple roofs and river light',
-    bestTime: 'November to February, the cool dry season',
+    region: 'Bangkok and Chiang Mai, Southeast Asia',
+    tagline: 'Golden temples and tropical light',
+    bestTime: 'November to February for cool dry season',
     overview: [
-      'Thailand is the classic first trip to Southeast Asia, and it still lives up to the reputation. Bangkok is loud, hot and wonderful, with golden temples along a working river, a canal network, and street food that is among the best in the world.',
-      'North of the capital the country becomes cooler and calmer: Chiang Mai and the old kingdom of Lanna, elephants, rice terraces and mountain roads. South, the peninsula splits into the Gulf and the Andaman coast, where limestone islands rise straight out of green water.',
+      'Thailand blends gilded temples, jungle mountains and tropical islands. Bangkok’s Grand Palace and floating markets contrast with Chiang Mai’s old city and the limestone karsts of Krabi.',
+      'Street food is a way of life — pad thai, mango sticky rice and boat noodles from carts — and hospitality is famously warm. It is easy to travel, affordable and endlessly photogenic.',
     ],
     eat: [
-      {
-        name: 'Street food',
-        description:
-          'Grills, noodle carts and woks on every corner; Bangkok and Chiang Mai both run famous night markets where a full meal costs very little.',
-      },
-      {
-        name: 'Pad thai and som tam',
-        description:
-          'Rice noodles with tamarind and peanuts, and green papaya salad pounded with lime, chilli and fish sauce.',
-      },
-      {
-        name: 'Curries',
-        description:
-          'Green, red, massaman and the northern curry khao soi — coconut broth, egg noodles and pickles.',
-      },
-      {
-        name: 'Northern cooking',
-        description:
-          'Sai ua sausage, nam prik dips and sticky rice in Chiang Mai, served in bamboo baskets with the fingers.',
-      },
-      {
-        name: 'Mango sticky rice',
-        description:
-          'Glutinous rice, coconut cream and ripe mango in season from April to May, and often year round in markets.',
-      },
+      { name: 'Pad Thai and Som Tum', description: 'Stir-fried noodles and green papaya salad with lime and peanuts.' },
+      { name: 'Tom Yum and curries', description: 'Hot and sour soup and coconut curries — green, red and massaman.' },
+      { name: 'Mango sticky rice', description: 'Sweet coconut rice with ripe mango, a national dessert.' },
+      { name: 'Street satay', description: 'Grilled skewers with peanut sauce from night markets.' },
     ],
     attractions: [
-      {
-        name: 'Grand Palace and Wat Phra Kaew',
-        description:
-          'The royal compound and the Emerald Buddha in Bangkok; go at opening time to beat the heat and the crowds.',
-      },
-      {
-        name: 'Wat Pho and Wat Arun',
-        description:
-          'The reclining Buddha and the riverside Temple of Dawn, best crossed by the orange-flag ferry for a few baht.',
-      },
-      {
-        name: 'Ayutthaya',
-        description:
-          'The ruined capital of a kingdom that ruled for four centuries, an hour north of Bangkok and easily cycled.',
-      },
-      {
-        name: 'Chiang Mai',
-        description:
-          'A walled old town of temples and cafés, with Doi Suthep on the mountain above it and markets every night.',
-      },
-      {
-        name: 'Andaman islands',
-        description:
-          'Phang Nga Bay’s limestone towers, Phi Phi’s beaches and the quieter diving islands of Ko Lanta and Ko Lipe.',
-      },
-      {
-        name: 'Khao Yai and Khao Sok',
-        description:
-          'National parks with gibbons, hornbills and, at Khao Sok, a lake of drowned mountains and floating huts.',
-      },
+      { name: 'Grand Palace Bangkok', description: 'Gold-spired royal palace and Wat Phra Kaew with Emerald Buddha.' },
+      { name: 'Chiang Mai old city', description: 'Temples, night bazaar and elephant sanctuaries in the north.' },
+      { name: 'Phi Phi and Krabi islands', description: 'Limestone cliffs, turquoise water and long-tail boats.' },
+      { name: 'Ayutthaya ruins', description: 'Ancient capital with Buddha heads entwined in tree roots.' },
+      { name: 'Floating markets', description: 'Damnoen Saduak and Amphawa — boats piled with fruit and noodles.' },
+      { name: 'Night markets', description: 'Chiang Mai and Bangkok markets for food, crafts and vintage.' },
     ],
     history: [
-      'Thai history runs through the kingdoms of Sukhothai and Ayutthaya, which traded with China, India and Europe and left behind the country’s defining temple styles. Ayutthaya fell to Burma in 1767, and the capital moved to Bangkok shortly afterwards.',
-      'Thailand was never colonised, which it regards as a point of national pride. The absolute monarchy ended in 1932, and the country has alternated between elected governments and military rule ever since, with the monarchy still central to public life.',
+      'Thailand was never colonized, with Sukhothai and Ayutthaya kingdoms before Bangkok became capital in 1782. It is the only Southeast Asian nation to avoid European rule.',
+      'A constitutional monarchy since 1932, it balances tradition with rapid modernization and tourism.',
     ],
     geography: [
-      'Thailand has four natural regions: the northern mountains, the central plain of the Chao Phraya river, the dry north-eastern plateau of Isan, and the long southern peninsula between the Gulf of Thailand and the Andaman Sea.',
-      'The peninsula narrows to the Isthmus of Kra and carries rainforest, rubber plantations and the limestone karsts that give the Andaman coast its shape.',
+      'Thailand stretches from mountains in the north to islands in the south, with Bangkok on the Chao Phraya River delta.',
+      'Monsoons shape climate — cool dry Nov-Feb, hot Mar-May, wet Jun-Oct — and islands differ between Andaman and Gulf coasts.',
     ],
     culture: [
-      'The wai — palms pressed together with a slight bow — is the standard greeting, and the head and feet carry symbolic weight: do not touch either. Shoes come off in temples and homes, and shoulders and knees should be covered at religious sites.',
-      'The monarchy is deeply revered and protected by law, so keep comment neutral. Beyond the formalities Thai social life is famously relaxed: sanuk (fun) and sabai (comfortable) are treated as legitimate goals.',
+      'Buddhism shapes daily life — wai greeting, temple etiquette and respect for the monarchy. Removing shoes and modest dress are important.',
+      'Sanuk — fun — is a cultural value, and street food, festivals and markets are social centres.',
     ],
     seasons: [
-      {
-        label: 'Cool season',
-        note: 'November to February: dry, comfortable and busy — the best time to travel.',
-      },
-      {
-        label: 'Hot season',
-        note: 'March to May: temperatures above 35 °C, with Songkran water festival in April.',
-      },
-      {
-        label: 'Green season',
-        note: 'June to October: rain in short heavy bursts, lush landscapes and lower prices.',
-      },
-      {
-        label: 'Coasts differ',
-        note: 'The Gulf and Andaman monsoons peak at different times, so one coast is usually workable.',
-      },
+      { label: 'Cool dry', note: 'Nov-Feb — best weather, busy and festive.' },
+      { label: 'Hot', note: 'Mar-May — very hot, good for islands early.' },
+      { label: 'Rainy', note: 'Jun-Oct — lush, cheaper, with afternoon downpours.' },
+      { label: 'Festivals', note: 'Songkran in April and Loy Krathong in November.' },
     ],
     gettingAround:
-      'Bangkok’s BTS Skytrain and MRT metro avoid the worst traffic; elsewhere use the meter or a ride-hailing app rather than negotiating with tuk-tuks. Domestic flights are cheap and quick, overnight trains reach Chiang Mai, and ferries and speedboats link the islands; on the Andaman coast, check sea conditions in the monsoon.',
+      'BTS Skytrain and MRT metro in Bangkok, tuk-tuks for short hops. Domestic flights to islands are cheap. Trains to Chiang Mai and Ayutthaya are scenic.',
     practical: [
-      { label: 'Language', value: 'Thai; English works in hotels and tourist areas.' },
+      { label: 'Language', value: 'Thai; English in tourist areas.' },
       { label: 'Currency', value: 'Thai baht (THB)' },
-      { label: 'Plugs', value: 'Type A/B/C, 230 V — adapters are easy to buy locally.' },
-      {
-        label: 'Tipping',
-        value: 'Not expected; rounding up or 10% in restaurants is appreciated.',
-      },
-      {
-        label: 'Tap water',
-        value: 'Not recommended — bottled or filtered water is cheap and universal.',
-      },
-      { label: 'Getting in', value: 'Visa exemption or visa on arrival depending on nationality.' },
+      { label: 'Plugs', value: 'Type A/B/C/O, 230 V.' },
+      { label: 'Tipping', value: 'Not expected but appreciated; 10% in nice restaurants.' },
+      { label: 'Tap water', value: 'Do not drink; bottled water everywhere.' },
+      { label: 'Getting in', value: 'Visa-free for many nationalities for 30-60 days.' },
     ],
     facts: [
-      'Thailand means “land of the free” and is the only Southeast Asian country never colonised.',
-      'Bangkok’s full ceremonial name is the longest place name in the world.',
-      'There are more than 40,000 Buddhist temples in the country.',
-      'Songkran, the April new year festival, has become the world’s largest water fight.',
+      'Bangkok’s full ceremonial name is the longest city name in the world.',
+      'Thailand has over 40,000 temples.',
+      'Thailand is the world’s largest exporter of rice and orchids.',
+      'The tuk-tuk was originally imported from Japan.',
     ],
-    currency: { code: 'THB', name: 'Thai baht', symbol: '฿', approximatePerUsd: 35 },
+    currency: { code: 'THB', name: 'Thai baht', symbol: '฿', approximatePerUsd: 36 },
     timezone: 'Asia/Bangkok',
     coordinates: { lat: 13.7563, lon: 100.5018 },
     wikipedia: 'Thailand',
@@ -1144,128 +901,62 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'malaysia',
     name: 'Malaysia',
     country: 'Malaysia',
-    region: 'Kuala Lumpur, Penang and Malaysian Borneo',
-    tagline: 'Twin towers above a green city',
-    bestTime: 'February to April, or June to September',
+    region: 'Kuala Lumpur and Borneo, Southeast Asia',
+    tagline: 'Twin towers above vibrant streets',
+    bestTime: 'March to October for west coast, May to September for east',
     overview: [
-      'Malaysia splits into two halves: the peninsula, where Kuala Lumpur’s skyline sits an hour from colonial hill towns and beaches, and Borneo, where the rainforest is older than the Amazon and orangutans still live wild.',
-      'It is also the easiest place in Southeast Asia to eat well cheaply. Hawker centres and mamak stalls run late into the night, Chinese, Malay and Indian kitchens sit side by side, and the food is arguably the main reason to come.',
+      'Malaysia mixes Malay, Chinese and Indian cultures with rainforest and islands. Kuala Lumpur’s Petronas Towers rise above street-food stalls, while Borneo holds orangutans, tea plantations and dive sites.',
+      'It is affordable, easy to travel and famous for food — laksa, satay and roti canai from hawker stalls — with British colonial architecture beside mosques and temples.',
     ],
     eat: [
-      {
-        name: 'Nasi lemak',
-        description:
-          'Rice cooked in coconut milk with sambal, anchovies, peanuts and egg — the national breakfast, wrapped in banana leaf.',
-      },
-      {
-        name: 'Hawker centres',
-        description:
-          'Open-air food courts where each stall specialises in one dish; pick a table, order drinks and eat from several stalls.',
-      },
-      {
-        name: 'Penang street food',
-        description:
-          'Char kway teow, assam laksa and cendol in George Town, widely considered the best food city in the country.',
-      },
-      {
-        name: 'Mamak stalls',
-        description:
-          'Indian-Muslim cafés open around the clock for roti canai, teh tarik and nasi kandar, and the default late-night stop.',
-      },
-      {
-        name: 'Durian season',
-        description:
-          'From June to August, roadside stalls sell the famously pungent fruit, including the prized Musang King variety.',
-      },
+      { name: 'Nasi lemak', description: 'Coconut rice with sambal, anchovies and egg — national dish.' },
+      { name: 'Laksa and char kway teow', description: 'Spicy noodle soups and wok-fried flat noodles with prawns.' },
+      { name: 'Roti canai', description: 'Flaky flatbread with dhal curry, best at mamak stalls.' },
+      { name: 'Satay', description: 'Grilled meat skewers with peanut sauce and ketupat rice cakes.' },
     ],
     attractions: [
-      {
-        name: 'Petronas Twin Towers',
-        description:
-          'The 452 m towers in Kuala Lumpur, joined by a skybridge; the observation deck needs a timed ticket.',
-      },
-      {
-        name: 'Batu Caves',
-        description:
-          'A limestone cave temple reached by 272 painted steps, 13 km north of the city and busiest at Thaipusam.',
-      },
-      {
-        name: 'George Town, Penang',
-        description:
-          'A UNESCO heritage city of shophouses, clan jetties, street art and food courts on every corner.',
-      },
-      {
-        name: 'Langkawi and the west coast',
-        description:
-          'Duty-free island with cable car, mangroves and quiet beaches, reachable by ferry or a short flight.',
-      },
-      {
-        name: 'Cameron Highlands',
-        description:
-          'Tea plantations and cloud forest at 1,500 m, cool enough for strawberries and a break from the humidity.',
-      },
-      {
-        name: 'Sabah and Sarawak',
-        description:
-          'Mount Kinabalu, the Sepilok orangutan centre and the caves of Mulu in Malaysian Borneo.',
-      },
+      { name: 'Petronas Towers', description: '88-storey twin towers with skybridge and city views.' },
+      { name: 'Batu Caves', description: 'Hindu shrine in limestone caves with 272 colourful steps.' },
+      { name: 'Georgetown Penang', description: 'UNESCO street art, clan jetties and hawker food.' },
+      { name: 'Borneo rainforest', description: 'Orangutans in Sepilok and diving in Sipadan.' },
+      { name: 'Langkawi islands', description: 'Beaches, cable car and mangrove tours.' },
+      { name: 'Cameron Highlands', description: 'Tea plantations and strawberry farms in cool hills.' },
     ],
     history: [
-      'Indian and Chinese traders shaped the peninsula for centuries, and the Malacca Sultanate made the strait a global trading hub before the Portuguese, Dutch and British took it in turn. British rule reorganised the region around tin and rubber.',
-      'Independence came in 1957, and the federation of Malaysia was formed in 1963 with Sabah, Sarawak and briefly Singapore. The country has since industrialised rapidly while keeping a constitutional monarchy and a parliamentary system.',
+      'Malaysia was a British colony and trading hub for tin and rubber, gaining independence in 1957. It formed as a federation including Sabah and Sarawak on Borneo.',
+      'Kuala Lumpur grew from tin mining to a modern capital, hosting the 1998 Commonwealth Games and building the Petronas Towers as a symbol of progress.',
     ],
     geography: [
-      'Peninsular Malaysia runs south from Thailand to Singapore, divided by the Titiwangsa range, with rainforest, tin-mining valleys and mangrove coasts on both sides. The east coast faces the South China Sea, and the west the Malacca Strait.',
-      'Borneo Malaysia — Sabah and Sarawak — holds some of the oldest rainforest on earth, along with Mount Kinabalu at 4,095 m and the limestone caves of Mulu.',
+      'Malaysia is split into Peninsular Malaysia and East Malaysia on Borneo, separated by the South China Sea. Rainforest covers 60% of the land.',
+      'Mount Kinabalu at 4,095 m is the highest peak in Southeast Asia between Himalayas and New Guinea.',
     ],
     culture: [
-      'Malaysia is officially Muslim, with significant Chinese, Indian and indigenous populations. That means Ramadan bazaars, Chinese New Year, Deepavali and Gawai are all public celebrations, and “open house” during festivals genuinely means anyone may visit.',
-      'Everyday customs vary by community: shoes off in homes and temples, right hand for eating and giving, and dress that is modest in rural areas and on the east coast.',
+      'Multicultural — Malay, Chinese, Indian — with Islam as official religion but freedom of worship. Festivals like Hari Raya, Chinese New Year and Deepavali are all public holidays.',
+      'Hawker culture is central, and shopping malls are social centres with air conditioning.',
     ],
     seasons: [
-      {
-        label: 'Dry west coast',
-        note: 'December to March is the best window for Langkawi, Penang and Kuala Lumpur.',
-      },
-      {
-        label: 'Dry east coast',
-        note: 'April to October suits the Perhentian islands and the South China Sea side.',
-      },
-      {
-        label: 'Borneo',
-        note: 'Rain year round; the driest months are March to April and September.',
-      },
-      {
-        label: 'Heat',
-        note: 'Hot and humid all year, with heavy afternoon downpours possible in any month.',
-      },
+      { label: 'West coast', note: 'Dec-Apr wet, May-Nov drier — best for Penang and Langkawi.' },
+      { label: 'East coast', note: 'Mar-Oct dry for Perhentian and Redang islands.' },
+      { label: 'Borneo', note: 'Mar-Oct drier for wildlife and diving.' },
+      { label: 'Highlands', note: 'Cool year-round, good for tea and hiking.' },
     ],
     gettingAround:
-      'Kuala Lumpur is well served by the LRT, MRT and monorail, and the KLIA Ekspres links the airport in 28 minutes; Grab works across the country. Buses and ferries run to Penang and Langkawi, and cheap domestic flights are the practical way to reach Borneo.',
+      'KL has LRT, MRT and monorail; Grab ride-hailing is cheap and reliable. Domestic flights to Borneo and islands are frequent. Buses cover the peninsula.',
     practical: [
-      {
-        label: 'Language',
-        value: 'Malay; English is widely spoken, with Chinese and Tamil communities too.',
-      },
+      { label: 'Languages', value: 'Malay, English, Chinese, Tamil.' },
       { label: 'Currency', value: 'Malaysian ringgit (MYR)' },
-      { label: 'Plugs', value: 'Type G, 240 V — the same three-pin plugs as the UK.' },
-      {
-        label: 'Tipping',
-        value: 'Not expected; service charges appear on hotel and restaurant bills.',
-      },
-      { label: 'Tap water', value: 'Boil or filter it; bottled water is cheap.' },
-      {
-        label: 'Getting in',
-        value: 'Visa-free entry for many nationalities; check the limit for yours.',
-      },
+      { label: 'Plugs', value: 'Type G (three-pin), 240 V.' },
+      { label: 'Tipping', value: 'Not expected; service charge often included.' },
+      { label: 'Tap water', value: 'Boil or drink bottled water.' },
+      { label: 'Getting in', value: 'Visa-free for many nationalities for 90 days.' },
     ],
     facts: [
-      'The Petronas Twin Towers were the world’s tallest buildings from 1998 to 2004.',
-      'Malaysian Borneo’s rainforest is estimated at around 130 million years old, older than the Amazon.',
-      'The country is one of the world’s largest producers of palm oil and rubber.',
-      'Mount Kinabalu, at 4,095 m, is one of the highest peaks in Southeast Asia and climbable in two days.',
+      'The Petronas Towers were the world’s tallest buildings from 1998-2004.',
+      'Malaysia has one of the oldest rainforests in the world at 130 million years.',
+      'Borneo is the third-largest island in the world.',
+      'Malaysia’s flag has 14 stripes for 13 states and federal territories.',
     ],
-    currency: { code: 'MYR', name: 'Malaysian ringgit', symbol: 'RM', approximatePerUsd: 4.4 },
+    currency: { code: 'MYR', name: 'Malaysian ringgit', symbol: 'RM', approximatePerUsd: 4.6 },
     timezone: 'Asia/Kuala_Lumpur',
     coordinates: { lat: 3.139, lon: 101.6869 },
     wikipedia: 'Malaysia',
@@ -1274,125 +965,62 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'singapore',
     name: 'Singapore',
     country: 'Singapore',
-    region: 'Marina Bay, the historic districts and the nature reserves',
-    tagline: 'Marina Bay glowing at dusk',
-    bestTime: 'Year round; February to April is usually the driest',
+    region: 'Marina Bay and Gardens by the Bay',
+    tagline: 'Future city by the bay',
+    bestTime: 'February to April for drier weather, year-round tropical',
     overview: [
-      'Singapore is a city-state, an island and, in practice, a single continuous garden. It is small enough to cross in forty minutes by metro, immaculately run, and unexpectedly green — rainforest reserves, tree-lined expressways and a botanic garden that is a UNESCO site.',
-      'The centre divides neatly: colonial-era riverfront and Marina Bay with its light show, and the historic quarters of Chinatown, Little India and Kampong Glam, each with its own temples, mosques and food. Almost everything worth seeing is on the metro.',
+      'Singapore is a city-state where futuristic gardens, hawker centres and colonial shophouses coexist. Marina Bay Sands, Gardens by the Bay and the Merlion sit minutes from Little India and Chinatown.',
+      'It is spotlessly clean, efficient and green — 47% green cover — with street food that has Michelin stars and a skyline that glows at night. It is small enough to see by MRT in a day.',
     ],
     eat: [
-      {
-        name: 'Hawker centres',
-        description:
-          'The city’s collective canteen, and the cheapest good food anywhere: Maxwell, Old Airport Road and Tekka are all worth a detour.',
-      },
-      {
-        name: 'Hainanese chicken rice',
-        description:
-          'Poached chicken, fragrant rice and chilli sauce — the national dish, and the one Singaporeans argue about most.',
-      },
-      {
-        name: 'Chilli crab',
-        description:
-          'Whole crab in a sweet, sour, egg-thickened sauce, eaten with fried mantou buns and far too many napkins.',
-      },
-      {
-        name: 'Laksa and bak chor mee',
-        description:
-          'Coconut curry noodle soup and minced pork noodles — two of the dishes that draw queues across the island.',
-      },
-      {
-        name: 'Kaya toast and kopi',
-        description:
-          'Breakfast of coconut jam on thin toast with soft-boiled eggs and strong local coffee, served in old-school coffee shops.',
-      },
+      { name: 'Chilli crab', description: 'Sweet and spicy crab with mantou buns for mopping sauce.' },
+      { name: 'Hainanese chicken rice', description: 'Poached chicken with fragrant rice and chilli sauce — national dish.' },
+      { name: 'Laksa', description: 'Coconut curry noodle soup with prawns and fish cake.' },
+      { name: 'Hawker stalls', description: 'Michelin-starred Liao Fan soya chicken and endless satay.' },
     ],
     attractions: [
-      {
-        name: 'Gardens by the Bay',
-        description:
-          'The Supertree grove and the cooled glass conservatories beside Marina Bay, best at dusk when the light show starts.',
-      },
-      {
-        name: 'Marina Bay Sands',
-        description:
-          'The boat-shaped skyline icon, with the observation deck, a light and water show below and the ArtScience Museum next door.',
-      },
-      {
-        name: 'Singapore Botanic Gardens',
-        description:
-          'A UNESCO site with the National Orchid Garden inside; free to enter and open from early morning.',
-      },
-      {
-        name: 'Chinatown, Little India and Kampong Glam',
-        description:
-          'Three heritage districts with temples, mosques and shophouses, all within a few metro stops of each other.',
-      },
-      {
-        name: 'Sentosa and the southern islands',
-        description:
-          'Beaches, cable car and theme parks for families, with quieter stretches on Lazarus and St John islands.',
-      },
-      {
-        name: 'Night Safari and MacRitchie',
-        description:
-          'The world’s first nocturnal wildlife park, and a treetop walk through primary rainforest in the city centre.',
-      },
+      { name: 'Marina Bay Sands and Gardens', description: 'Infinity pool and Supertree light show at night.' },
+      { name: 'Hawker centres', description: 'Lau Pa Sat, Maxwell and Old Airport Road for $5 meals.' },
+      { name: 'Sentosa Island', description: 'Beaches, Universal Studios and aquarium.' },
+      { name: 'Chinatown and Little India', description: 'Temples, mosques and colourful shophouses.' },
+      { name: 'Botanic Gardens', description: 'UNESCO World Heritage orchid garden and swan lake.' },
+      { name: 'Clarke Quay', description: 'Riverside nightlife with boat rides.' },
     ],
     history: [
-      'Singapore was a fishing village and trading post for centuries before Stamford Raffles established a British free port there in 1819. Its position on the Malacca Strait made it a hub for tin, rubber and shipping, and waves of migration created today’s multi-ethnic society.',
-      'The island was occupied during the Second World War and then merged briefly with Malaysia before becoming fully independent in 1965. From there, industrial policy, public housing and a raw port turned it into one of the world’s wealthiest countries per head.',
+      'Founded as a British trading post by Stamford Raffles in 1819, occupied by Japan in WWII, independent in 1965 under Lee Kuan Yew who turned it into a financial hub.',
+      'It grew from swamp to skyscraper in 50 years, with public housing, strict laws and a focus on education and trade.',
     ],
     geography: [
-      'Singapore is one main island and around 60 smaller ones, with a land area that has grown by about a quarter through reclamation since independence. It sits just north of the equator, warm and humid all year, with no true dry season.',
-      'Four water catchments and a network of reservoirs supply much of its water, alongside desalination and imported supplies and recycled NEWater.',
+      'Singapore is one island plus 62 islets at the tip of Peninsular Malaysia, just 1 degree north of the equator. It is 50 km east-west and 27 km north-south.',
+      'It has reclaimed 25% of its land from the sea and aims to be a City in Nature with parks and reservoirs everywhere.',
     ],
     culture: [
-      'Four official languages — English, Malay, Mandarin and Tamil — and a habit of mixing them in the same sentence. Harmony is managed deliberately: rules are clear, fines are real and enforcement is consistent.',
-      'Hawker culture was added to UNESCO’s intangible heritage list in 2020, which is fitting: the food centres are where the country’s different communities actually eat together.',
+      'Multicultural — Chinese, Malay, Indian, Eurasian — with four official languages and hawker culture UNESCO-listed. Cleanliness and order are enforced.',
+      'Shopping and eating are national pastimes, and Singlish — English with Malay and Hokkien — is the informal language.',
     ],
     seasons: [
-      {
-        label: 'February to April',
-        note: 'Driest stretch, with clearer skies and slightly less humidity.',
-      },
-      {
-        label: 'May to September',
-        note: 'Warm and humid with short downpours and occasional haze.',
-      },
-      {
-        label: 'November to January',
-        note: 'The wet north-east monsoon — heavy showers, but rarely all day.',
-      },
-      {
-        label: 'Temperature',
-        note: 'Around 26–32 °C all year; pack light clothes and expect air conditioning.',
-      },
+      { label: 'Dry', note: 'Feb-Apr — slightly less rain and haze.' },
+      { label: 'Wet', note: 'Nov-Jan monsoon with afternoon showers.' },
+      { label: 'Hot', note: 'Year-round 30-33°C and humid.' },
+      { label: 'Festivals', note: 'Chinese New Year, Hari Raya and Deepavali all celebrated.' },
     ],
     gettingAround:
-      'The MRT is fast, cheap and air-conditioned, and covers almost everywhere worth visiting; use a contactless card or phone, or the Singapore Tourist Pass. Buses fill the gaps, taxis and ride-hailing are metered and reliable, and the downtown areas are genuinely walkable if you accept the heat.',
+      'MRT metro is fast, cheap and covers the island. Buses and Grab are easy. Walking is possible but hot — use sheltered walkways. Changi Airport is world’s best many times.',
     practical: [
-      {
-        label: 'Language',
-        value: 'English is the working language, alongside Malay, Mandarin and Tamil.',
-      },
+      { label: 'Languages', value: 'English, Mandarin, Malay, Tamil.' },
       { label: 'Currency', value: 'Singapore dollar (SGD)' },
       { label: 'Plugs', value: 'Type G, 230 V.' },
-      { label: 'Tipping', value: 'Not expected — a 10% service charge usually appears on bills.' },
-      { label: 'Tap water', value: 'Safe to drink.' },
-      {
-        label: 'Getting in',
-        value: 'Visa-free for most nationalities; drugs laws are extremely strict.',
-      },
+      { label: 'Tipping', value: 'Not expected; service charge included.' },
+      { label: 'Tap water', value: 'Safe to drink — very clean.' },
+      { label: 'Getting in', value: 'Visa-free for many nationalities; strict laws.' },
     ],
     facts: [
-      'Singapore is one of only three surviving city-states, along with Monaco and the Vatican.',
-      'The Botanic Gardens became the country’s first UNESCO World Heritage Site in 2015.',
-      'Hawker culture joined UNESCO’s intangible heritage list in 2020.',
-      'About 47% of the island is covered by greenery, including rooftop gardens and vertical planting.',
+      'Singapore has the world’s highest percentage of millionaires per capita.',
+      'It has a Michelin-starred street-food stall.',
+      'Changi Airport has a rooftop pool and indoor waterfall.',
+      'Chewing gum is banned except for dental gum.',
     ],
-    currency: { code: 'SGD', name: 'Singapore dollar', symbol: 'S$', approximatePerUsd: 1.33 },
+    currency: { code: 'SGD', name: 'Singapore dollar', symbol: '$', approximatePerUsd: 1.33 },
     timezone: 'Asia/Singapore',
     coordinates: { lat: 1.3521, lon: 103.8198 },
     wikipedia: 'Singapore',
@@ -1401,126 +1029,63 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'indonesia',
     name: 'Indonesia',
     country: 'Indonesia',
-    region: 'Bali, Java and the wider archipelago',
-    tagline: 'Rice terraces north of Ubud',
-    bestTime: 'May to September, the dry season in most of the country',
+    region: 'Bali and Java, Southeast Asia',
+    tagline: 'Temple mist among rice terraces',
+    bestTime: 'May to September for dry season',
     overview: [
-      'Indonesia is the largest archipelago in the world — over 17,000 islands strung across 5,000 km — and the most rewarding way to approach it is one island at a time. Bali is the familiar entry point: rice terraces, temples, surf beaches and a café culture that has made Ubud a destination in itself.',
-      'Java holds the crowds and the monuments, from the Buddhist stupas of Borobudur to the sunrise volcanoes at Bromo and Ijen. Further east, Komodo has dragons and pink beaches, Sulawesi has reef diving around Bunaken, and Raja Ampat has the richest coral biodiversity on the planet.',
+      'Indonesia is 17,000 islands of volcanoes, temples and jungle. Bali’s rice terraces and temples, Java’s Borobudur and Bromo volcano, and Komodo’s dragons all belong to one country.',
+      'It is diverse — 700 languages — with Hindu Bali, Muslim Java and tribal Papua each distinct. Surfing, diving and temple ceremonies shape daily life.',
     ],
     eat: [
-      {
-        name: 'Nasi goreng and mie goreng',
-        description:
-          'Fried rice and fried noodles, the everyday staple, best from a street warung with a fried egg on top and crackers on the side.',
-      },
-      {
-        name: 'Rendang',
-        description:
-          'Beef slow-cooked in coconut milk and spices until nearly dry — from West Sumatra, and repeatedly voted among the world’s best dishes.',
-      },
-      {
-        name: 'Balinese cooking',
-        description:
-          'Babi guling (spit-roast pork), lawar and sate lilit, with the island’s own Hindu offering-based food culture behind it.',
-      },
-      {
-        name: 'Warungs',
-        description:
-          'Small family restaurants where a full plate costs a very small amount; the freshest, cheapest and most local option.',
-      },
-      {
-        name: 'Kopi and jamu',
-        description:
-          'Strong sweet coffee from Java and Sumatra, and jamu — turmeric, ginger and tamarind tonics sold in bottles on the street.',
-      },
+      { name: 'Nasi goreng', description: 'Fried rice with egg, chicken and sweet soy sauce.' },
+      { name: 'Satay and rendang', description: 'Grilled skewers and slow-cooked dry curry from Padang.' },
+      { name: 'Babi guling Bali', description: 'Suckling pig with crispy skin and sambal, a Balinese ceremony dish.' },
+      { name: 'Gado-gado', description: 'Vegetables with peanut sauce and krupuk crackers.' },
     ],
     attractions: [
-      {
-        name: 'Tegallalang and Ubud',
-        description:
-          'The terraced rice paddies north of Ubud, with the Sacred Monkey Forest and the morning market in town.',
-      },
-      {
-        name: 'Borobudur and Prambanan',
-        description:
-          'The world’s largest Buddhist temple and a vast Hindu complex, both near Yogyakarta and best at sunrise.',
-      },
-      {
-        name: 'Mount Bromo',
-        description:
-          'A sunrise over a volcanic caldera on Java, reached by jeep from Cemoro Lawang in the early hours.',
-      },
-      {
-        name: 'Komodo National Park',
-        description:
-          'The only place on earth with wild Komodo dragons, plus Padar island viewpoints and manta dives.',
-      },
-      {
-        name: 'Balinese temples',
-        description:
-          'Tanah Lot at sunset, Uluwatu above the surf, and the water temples of the interior with their purification pools.',
-      },
-      {
-        name: 'Raja Ampat',
-        description:
-          'Remote West Papuan reefs with more recorded coral species than anywhere else; reached via Sorong and a liveaboard.',
-      },
+      { name: 'Bali rice terraces', description: 'Tegallalang and Jatiluwih UNESCO terraces at sunrise.' },
+      { name: 'Borobudur', description: '9th-century Buddhist temple, largest in the world, at sunrise.' },
+      { name: 'Mount Bromo', description: 'Jeep ride and horse trek to volcano viewpoint for sunrise.' },
+      { name: 'Komodo dragons', description: 'Boat trip to see giant lizards on Komodo and Rinca islands.' },
+      { name: 'Ubud art and temples', description: 'Monkey forest, art galleries and water temples.' },
+      { name: 'Gili Islands', description: 'Car-free islands with turtles and beach bars.' },
     ],
     history: [
-      'Hindu and Buddhist kingdoms traded across the archipelago for more than a thousand years, and the Majapahit empire of Java controlled much of the region in the fourteenth century. Islam arrived through traders, and it gradually replaced Hinduism across most of the islands — Bali being the exception.',
-      'The Dutch East India Company took control of the spice trade and then the territory, ruling until the Second World War and the Japanese occupation. Independence was declared in 1945 and recognised in 1949, and the republic has since grown into the world’s fourth most populous country.',
+      'Indonesia was a Hindu-Buddhist kingdom with Borobudur and Prambanan, then Islamic sultanates and a Dutch colony for 350 years. Independence declared in 1945 under Sukarno.',
+      'It is now the world’s largest archipelago nation and fourth most populous, with rapid growth and volcanic activity.',
     ],
     geography: [
-      'Indonesia sits on the Ring of Fire, where the Indo-Australian plate meets the Eurasian plate, giving it around 130 active volcanoes and frequent earthquakes. The archipelago has three time zones and spans the width of the United States.',
-      'Rainforest covers much of Sumatra, Borneo and Papua, while the islands around Nusa Tenggara are drier and more sparsely vegetated, with savannah and scrub.',
+      'Indonesia straddles the equator with 17,508 islands, of which about 6,000 are inhabited. The Ring of Fire gives it 130 active volcanoes.',
+      'Bali is Hindu, Java is volcanic and crowded, Borneo and Papua hold rainforest and tribes, and Wallace Line divides Asian and Australian fauna.',
     ],
     culture: [
-      'More than 700 languages are spoken across the country, and nearly every island has its own customs. Balinese Hinduism is visible in daily offerings, temple ceremonies and cremation processions; Java is largely Muslim with a strong tradition of tolerance and mysticism.',
-      'Small courtesies matter: pass things with the right hand, dress modestly at temples with a sarong and sash, and never step on the offerings left on the pavement in Bali.',
+      'Gotong royong — mutual assistance — is central, with village ceremonies and gamelan music. Bali’s daily offerings of flowers and incense are everywhere.',
+      'Respect for elders and modest dress at temples matter, and Ramadan changes hours in Muslim areas.',
     ],
     seasons: [
-      {
-        label: 'Dry season',
-        note: 'May to September across Java and Bali: blue skies, low humidity, and the peak months of July and August.',
-      },
-      {
-        label: 'Wet season',
-        note: 'November to March: heavy afternoon rain, greener landscapes and lower prices.',
-      },
-      {
-        label: 'Surf season',
-        note: 'April to October brings the best swell to Bali’s west coast and Uluwatu.',
-      },
-      {
-        label: 'Diving',
-        note: 'Komodo and Raja Ampat are best between October and April, when visibility peaks.',
-      },
+      { label: 'Dry', note: 'May-Sep — best for Bali, Bromo and Borobudur.' },
+      { label: 'Wet', note: 'Oct-Apr — rain, lush rice terraces and fewer tourists.' },
+      { label: 'Surf', note: 'Apr-Oct best swell on Bali’s west coast.' },
+      { label: 'Dive', note: 'Year-round, best Apr-Nov for Komodo and Raja Ampat.' },
     ],
     gettingAround:
-      'Domestic flights connect the main islands in an hour or two, and fast boats link Bali to the Gilis and Lombok. On Bali and in major cities, use Grab or Gojek apps for cars and scooters — a scooter is the local transport, but you need an international driving permit and a helmet. Traffic in Jakarta and southern Bali is legendary.',
+      'Domestic flights connect islands cheaply via Lion Air and Garuda. Ferries are slow but scenic. In Bali, scooters are common but traffic is chaotic — Grab is safer.',
     practical: [
-      {
-        label: 'Language',
-        value: 'Indonesian (Bahasa Indonesia); English is common in tourist areas.',
-      },
+      { label: 'Language', value: 'Indonesian (Bahasa); English in Bali and tourist areas.' },
       { label: 'Currency', value: 'Indonesian rupiah (IDR)' },
-      { label: 'Plugs', value: 'Type C/F, 230 V — bring an adapter.' },
-      { label: 'Tipping', value: 'Around 5–10% is welcome in restaurants and for drivers.' },
-      {
-        label: 'Tap water',
-        value: 'Not safe to drink; bottled water everywhere, and beware ice outside tourist areas.',
-      },
-      { label: 'Getting in', value: 'Visa on arrival or e-visa for most nationalities.' },
+      { label: 'Plugs', value: 'Type C/F, 230 V.' },
+      { label: 'Tipping', value: 'Not expected but appreciated; 10% in restaurants.' },
+      { label: 'Tap water', value: 'Do not drink; bottled water everywhere.' },
+      { label: 'Getting in', value: 'Visa on arrival or e-visa for 30 days for many nationalities.' },
     ],
     facts: [
-      'Indonesia is the world’s largest archipelago, with more than 17,000 islands.',
-      'Borobudur is the largest Buddhist temple in the world, built in the ninth century.',
-      'The country sits on the Ring of Fire and has around 130 active volcanoes.',
-      'Komodo dragons live wild only in Komodo National Park and on a few nearby islands.',
+      'Indonesia is the world’s largest island country with 17,000+ islands.',
+      'Borobudur is the largest Buddhist temple in the world.',
+      'Indonesia has 130 active volcanoes, most of any country.',
+      'Bali has a Day of Silence Nyepi where the whole island shuts down.',
     ],
-    currency: { code: 'IDR', name: 'Indonesian rupiah', symbol: 'Rp', approximatePerUsd: 15800 },
-    timezone: 'Asia/Makassar',
+    currency: { code: 'IDR', name: 'Indonesian rupiah', symbol: 'Rp', approximatePerUsd: 15500 },
+    timezone: 'Asia/Jakarta',
     coordinates: { lat: -8.4095, lon: 115.1889 },
     wikipedia: 'Indonesia',
   },
@@ -1528,122 +1093,62 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'australia',
     name: 'Australia',
     country: 'Australia',
-    region: 'Sydney, the east coast and the Outback',
-    tagline: 'Harbour sails and Sydney light',
-    bestTime: 'September to November, and March to May',
+    region: 'Sydney and Great Barrier Reef, Oceania',
+    tagline: 'Harbour sails beneath summer sun',
+    bestTime: 'September to November and March to May for mild weather',
     overview: [
-      'Australia is a continent-sized country where almost everything lives on the edges. Sydney is the showpiece — a harbour you can cross by ferry, beaches inside the city and the Opera House lit up on the water — with Melbourne, Brisbane and Cairns offering very different versions of the same relaxed, outdoor life.',
-      'Inland, the country empties out fast. The Outback runs from the Blue Mountains to Uluru and beyond: red dirt, empty roads, and distances measured in hours between fuel stops. Further north the Great Barrier Reef and the rainforests of Queensland turn the coast tropical.',
+      'Australia is a continent of beaches, reefs and outback. Sydney’s Opera House and harbour, the Great Barrier Reef’s underwater world, Uluru’s red desert and Melbourne’s laneways all fit in one trip with domestic flights.',
+      'It is laid-back and outdoors-focused, with barbecues, surfing and coffee culture. Wildlife — kangaroos, koalas and platypus — is a major draw.',
     ],
     eat: [
-      {
-        name: 'Coffee and brunch',
-        description:
-          'Australia takes coffee seriously — the flat white and the long black were invented here — and weekend brunch is a national ritual.',
-      },
-      {
-        name: 'Rock oysters and seafood',
-        description:
-          'Sydney rock oysters, Queensland prawns and barramundi, best eaten at a fish market or a beachside takeaway.',
-      },
-      {
-        name: 'Meat pies and sausage rolls',
-        description:
-          'The standard road-trip lunch, with tomato sauce; bakeries in country towns do them best.',
-      },
-      {
-        name: 'Multicultural food cities',
-        description:
-          'Vietnamese in Sydney’s Cabramatta and Melbourne’s Richmond, Greek in Melbourne, Lebanese in Sydney — a legacy of postwar migration.',
-      },
-      {
-        name: 'Barbecues',
-        description:
-          'Free electric and gas barbecues sit in most public parks and beaches, and locals use them constantly.',
-      },
+      { name: 'Avocado toast and flat white', description: 'Café breakfast that Australia exported to the world.' },
+      { name: 'Barbecue and meat pies', description: 'Sausage sizzle and meat pies with tomato sauce.' },
+      { name: 'Seafood and barramundi', description: 'Fresh fish, prawns and barramundi from tropical waters.' },
+      { name: 'Tim Tam and Vegemite', description: 'Chocolate biscuits and salty yeast spread — try both.' },
     ],
     attractions: [
-      {
-        name: 'Sydney Opera House and Harbour Bridge',
-        description:
-          'The two icons on the same water; walk the harbour foreshore at dusk or climb the bridge for the view back.',
-      },
-      {
-        name: 'Bondi to Coogee walk',
-        description:
-          'A six-kilometre coastal path past beaches, cliffs and ocean pools, one of the best short walks in the country.',
-      },
-      {
-        name: 'Great Barrier Reef',
-        description:
-          'The largest living structure on earth, reached from Cairns or the Whitsundays, with diving and snorkelling from the outer reefs.',
-      },
-      {
-        name: 'Uluru and Kata Tjuta',
-        description:
-          'Sacred Anangu sites in the red centre, where the light changes the rock from ochre to scarlet at sunset.',
-      },
-      {
-        name: 'Great Ocean Road',
-        description:
-          'The Twelve Apostles, rainforest and surf coast on a 240 km drive west of Melbourne.',
-      },
-      {
-        name: 'Kakadu and Daintree',
-        description:
-          'Wetlands with crocodiles and rock art of enormous age, and the oldest tropical rainforest on earth.',
-      },
+      { name: 'Sydney Opera House', description: 'Sails on the harbour and coastal walk to Bondi Beach.' },
+      { name: 'Great Barrier Reef', description: 'Snorkelling and diving on the world’s largest reef system.' },
+      { name: 'Uluru', description: 'Sacred red rock in the desert, best at sunrise and sunset.' },
+      { name: 'Melbourne laneways', description: 'Coffee, street art and hidden bars.' },
+      { name: 'Great Ocean Road', description: 'Coastal drive with Twelve Apostles sea stacks.' },
+      { name: 'Tasmania wilderness', description: 'Cradle Mountain and white-sand beaches.' },
     ],
     history: [
-      'Aboriginal and Torres Strait Islander peoples have lived on the continent for at least 65,000 years, with cultures, languages and land management practices that are the oldest continuous traditions on earth.',
-      'The First Fleet arrived in 1788, and the following century brought convict settlements, pastoral expansion, a gold rush and, in 1901, federation into a single nation. Postwar migration from Europe and then Asia reshaped the country into one of the most multicultural societies in the world.',
+      'Aboriginal peoples lived here for 65,000 years before British colonization in 1788 as a penal colony. Gold rushes in the 1850s built cities.',
+      'Federation in 1901 created modern Australia, which is now multicultural with immigration from Europe and Asia.',
     ],
     geography: [
-      'Australia is the world’s sixth-largest country and the only one covering an entire continent. The Great Dividing Range runs down the east coast, separating a narrow green strip from the vast inland plains and the arid centre, where rainfall is minimal and summer temperatures soar.',
-      'The north is tropical, with monsoonal wet and dry seasons; the south-east and south-west have four temperate seasons; and Tasmania, across Bass Strait, is cooler and wetter than anywhere on the mainland.',
+      'Australia is the world’s sixth-largest country and only island continent, with desert covering 70% of it. The Great Barrier Reef is 2,300 km long.',
+      'The east coast is green and populated, the centre is red desert, and the north is tropical with crocodiles and rainforest.',
     ],
     culture: [
-      'Australian social style is informal and direct — first names immediately, self-deprecation expected, and an unwritten rule against taking yourself too seriously. Sport, beaches and the outdoors organise much of public life.',
-      'Aboriginal and Torres Strait Islander cultures are central to national identity, and visiting country respectfully — engaging Indigenous-owned tours and operators — is the best way to understand the landscape.',
+      'No worries attitude, barbecues and beach life. Coffee culture is serious — Melbourne has world-class baristas.',
+      'Aboriginal culture is 65,000 years old with dot painting and Dreamtime stories, and mateship is valued.',
     ],
     seasons: [
-      {
-        label: 'Spring',
-        note: 'September to November: wildflowers, warm days and the best all-round conditions.',
-      },
-      {
-        label: 'Summer',
-        note: 'December to February: hot, crowded and, in the south-east, a serious bushfire season.',
-      },
-      {
-        label: 'Autumn',
-        note: 'March to May: mild, dry and ideal for the Outback and the southern cities.',
-      },
-      {
-        label: 'Winter',
-        note: 'June to August: cool in the south, dry and sunny in the north — the best time for the Top End.',
-      },
+      { label: 'Spring', note: 'Sep-Nov — mild, wildflowers and good for Sydney and Melbourne.' },
+      { label: 'Summer', note: 'Dec-Feb — hot, beach season and festive.' },
+      { label: 'Autumn', note: 'Mar-May — mild and less humid, good for reef and outback.' },
+      { label: 'Winter', note: 'Jun-Aug — ski season in Snowy Mountains and whale watching.' },
     ],
     gettingAround:
-      'Domestic flights are the practical way between cities, since distances are enormous. In Sydney, use the Opal card on trains, ferries and buses — the ferry to Manly is a cheap harbour cruise. Driving long distances in the Outback requires planning for fuel, water and wildlife at dusk; trains such as the Ghan and Indian Pacific cover the great inland routes.',
+      'Domestic flights are essential — distances are huge. Greyhound buses and trains cover east coast. Driving is on left side. City transit is good in Sydney and Melbourne.',
     practical: [
-      { label: 'Language', value: 'English, with a fast-moving local idiom and slang.' },
+      { label: 'Language', value: 'English.' },
       { label: 'Currency', value: 'Australian dollar (AUD)' },
-      { label: 'Plugs', value: 'Type I, 230 V — the angled two-pin plug.' },
-      { label: 'Tipping', value: 'Optional; 10% is generous and cafés often have a tip jar.' },
+      { label: 'Plugs', value: 'Type I, 230 V.' },
+      { label: 'Tipping', value: 'Not expected; rounding up is polite.' },
       { label: 'Tap water', value: 'Safe to drink everywhere.' },
-      {
-        label: 'Getting in',
-        value: 'ETA or eVisitor visa; sunscreen and a hat are non-negotiable.',
-      },
+      { label: 'Getting in', value: 'eVisitor or ETA required for most nationalities.' },
     ],
     facts: [
-      'The Great Barrier Reef is the largest living structure on earth and visible from space.',
-      'Aboriginal and Torres Strait Islander cultures are the oldest continuous cultures on the planet.',
-      'About 85% of Australians live within 50 km of the coast.',
-      'Uluru is roughly 3.6 km long and extends several kilometres underground.',
+      'Australia has 10,685 beaches — you could visit one a day for 29 years.',
+      'The Great Barrier Reef is visible from space.',
+      'Australia has more kangaroos than people.',
+      'Uluru is 348 m high and 9.4 km around.',
     ],
-    currency: { code: 'AUD', name: 'Australian dollar', symbol: 'A$', approximatePerUsd: 1.5 },
+    currency: { code: 'AUD', name: 'Australian dollar', symbol: '$', approximatePerUsd: 1.5 },
     timezone: 'Australia/Sydney',
     coordinates: { lat: -33.8688, lon: 151.2093 },
     wikipedia: 'Australia',
@@ -1652,123 +1157,60 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'japan',
     name: 'Japan',
     country: 'Japan',
-    region: 'Tokyo, Kyoto and the Japan Alps between them',
-    tagline: 'Mount Fuji above the still water',
-    bestTime: 'Late March to May for cherry blossom, or October to November for autumn colour',
+    region: 'Tokyo, Kyoto and Mount Fuji, East Asia',
+    tagline: 'Mount Fuji in morning mist',
+    bestTime: 'March to May for cherry blossom, October to November for autumn',
     overview: [
-      'Japan is a country of contrasts that fit together surprisingly well: neon Tokyo and silent mountain shrines, convenience-store precision and centuries-old craft, crowded commuter trains and moss gardens where nobody speaks.',
-      'The classic first route runs between Tokyo and Kyoto, with Mount Fuji somewhere in the middle. Add a night in a ryokan, a few temple days in Nara or Nikko, and the country opens up: the Japanese Alps, Hokkaido’s powder snow, and the islands of the Inland Sea.',
+      'Japan blends ancient temples with neon cities. Tokyo’s crossing, Kyoto’s shrines, Mount Fuji’s perfect cone and Hiroshima’s peace park all show different faces of the same meticulous culture.',
+      'It is famous for politeness, bullet trains that run to the second, and food that ranges from $2 convenience store onigiri to $300 sushi counters. Cherry blossom and autumn colours are national events.',
     ],
     eat: [
-      {
-        name: 'Sushi and sashimi',
-        description:
-          'From conveyor-belt chains to counter seats in a market — the fish comes daily and the rice is taken seriously.',
-      },
-      {
-        name: 'Ramen',
-        description:
-          'Regional and fiercely debated: Sapporo miso, Tokyo shoyu, Hakata tonkotsu; order from a ticket machine and eat standing.',
-      },
-      {
-        name: 'Izakaya',
-        description:
-          'Japanese pubs for small plates, sake and beer after work — the most enjoyable way to eat widely without a big bill.',
-      },
-      {
-        name: 'Konbini food',
-        description:
-          'Convenience-store onigiri, egg sandwiches and hot snacks that are genuinely good, open all night on every corner.',
-      },
-      {
-        name: 'Kaiseki and regional specialities',
-        description:
-          'Seasonal multi-course dinners in Kyoto, wagyu in Kobe or Matsusaka, soba and apples in Nagano, seafood in Hokkaido.',
-      },
+      { name: 'Sushi and ramen', description: 'From conveyor belts to Michelin counters, plus tonkotsu ramen.' },
+      { name: 'Tempura and kaiseki', description: 'Light battered vegetables and multi-course imperial cuisine.' },
+      { name: 'Takoyaki and okonomiyaki', description: 'Osaka street snacks — octopus balls and savoury pancakes.' },
+      { name: 'Convenience store snacks', description: 'Onigiri, melon pan and egg sandwiches — surprisingly excellent.' },
     ],
     attractions: [
-      {
-        name: 'Tokyo',
-        description:
-          'Shibuya crossing, Senso-ji temple in Asakusa, the teamLab digital museums and the fish market at Toyosu.',
-      },
-      {
-        name: 'Kyoto',
-        description:
-          'Fushimi Inari’s thousand gates, Kinkaku-ji’s golden pavilion and the bamboo grove at Arashiyama — early mornings are essential.',
-      },
-      {
-        name: 'Mount Fuji',
-        description:
-          'The Chureito Pagoda at Fujiyoshida, the lakes of Fuji Five Lakes, and the official climbing season in July and August.',
-      },
-      {
-        name: 'Nara',
-        description:
-          'Free-roaming deer, the colossal bronze Buddha of Todai-ji and one of Japan’s oldest capitals, an easy day trip from Kyoto.',
-      },
-      {
-        name: 'Hiroshima and Miyajima',
-        description:
-          'The Peace Memorial Park, and the floating torii of Itsukushima shrine at high tide.',
-      },
-      {
-        name: 'Hokkaido',
-        description:
-          'World-class powder snow in Niseko and Furano, lavender fields in July, and seafood in Sapporo.',
-      },
+      { name: 'Mount Fuji', description: 'Climb in summer or view from Hakone and Kawaguchiko lakes.' },
+      { name: 'Kyoto temples', description: 'Fushimi Inari gates, Golden Pavilion and bamboo grove.' },
+      { name: 'Tokyo crossing and shrines', description: 'Shibuya scramble and Meiji Shrine forest in one day.' },
+      { name: 'Hiroshima and Miyajima', description: 'Peace museum and floating torii gate at high tide.' },
+      { name: 'Osaka food streets', description: 'Dotonbori neon and takoyaki stalls.' },
+      { name: 'Bullet train rides', description: 'Shinkansen at 320 km/h with Mount Fuji views.' },
     ],
     history: [
-      'Japan’s imperial line is traditionally dated to 660 BC, and for centuries power sat with shoguns and samurai rather than the court. The Edo period brought more than 200 years of enforced isolation, during which cities, theatre and a distinctly urban culture flourished.',
-      'The arrival of American ships in 1853 ended that seclusion, and the Meiji Restoration of 1868 launched rapid industrialisation and imperial expansion. Defeat in 1945 was followed by occupation and an economic transformation so complete that Japan became the world’s second-largest economy by the 1980s.',
+      'Japan was isolated under Tokugawa shoguns from 1603-1868, then modernized rapidly in Meiji Restoration, becoming an industrial power by 1900.',
+      'Devastated in WWII, it rebuilt into a technology powerhouse with Sony, Toyota and Nintendo, while keeping shrines and tea ceremony.',
     ],
     geography: [
-      'Japan is an archipelago of around 14,000 islands, though four of them hold almost all the population. Roughly three quarters of the land is mountainous, which is why cities are dense and the coast is so heavily developed.',
-      'The islands sit on the Pacific Ring of Fire, with more than a hundred active volcanoes and thousands of earthquakes a year, plus the hot springs that come with them. The climate runs from subarctic Hokkaido to subtropical Okinawa.',
+      'Japan is four main islands — Honshu, Hokkaido, Kyushu, Shikoku — plus 6,800 smaller ones, 70% mountainous and volcanic with 111 active volcanoes.',
+      'Mount Fuji at 3,776 m is sacred and climbs are popular in July-August. Cherry blossom moves north like a wave in spring.',
     ],
     culture: [
-      'Manners are careful and specific: do not tip, do not eat while walking, queue where marked, and take your shoes off in homes, ryokan and some restaurants. On escalators, stand left in Tokyo and right in Osaka.',
-      'Onsen etiquette matters too — wash thoroughly before entering the bath, tie long hair up, and keep towels out of the water. Politeness is a form of respect rather than distance, and small attempts at Japanese are warmly received.',
+      'Omotenashi — selfless hospitality — shapes service, with bows, quiet trains and no tipping. Onsen hot springs are social and healing.',
+      'Matsuri festivals, anime and tea ceremony coexist, and respect for seasons shows in food and gardens.',
     ],
     seasons: [
-      {
-        label: 'Spring',
-        note: 'Cherry blossom moves north from late March to early May; the busiest travel season.',
-      },
-      {
-        label: 'Summer',
-        note: 'Hot and humid, with festivals, fireworks and the Fuji climbing season in July and August.',
-      },
-      {
-        label: 'Autumn',
-        note: 'October to November: maple colour, clear air and the best all-round weather.',
-      },
-      {
-        label: 'Winter',
-        note: 'Cold and dry on the Pacific side, heavy snow on the Japan Sea and in Hokkaido.',
-      },
+      { label: 'Spring', note: 'Cherry blossom Mar-May — beautiful and very crowded.' },
+      { label: 'Summer', note: 'Hot, humid and festival-filled with fireworks.' },
+      { label: 'Autumn', note: 'Clear, colourful and arguably best weather.' },
+      { label: 'Winter', note: 'Snow in Hokkaido, illuminations and quiet temples.' },
     ],
     gettingAround:
-      'The Shinkansen bullet trains are fast, punctual and the best way to travel between cities; a Japan Rail Pass pays off on long routes. In cities, IC cards such as Suica work on trains, buses and in shops, and the metro systems are bilingual and easy to navigate. Buses cover the countryside, and luggage forwarding between hotels is normal.',
+      'Shinkansen bullet trains link Tokyo, Kyoto, Osaka and Hiroshima fast. Suica card works on trains, metro and shops. Buses reach mountain areas.',
     practical: [
-      {
-        label: 'Language',
-        value: 'Japanese; English signage is common but spoken English less so.',
-      },
-      {
-        label: 'Currency',
-        value: 'Japanese yen (JPY) — carry some cash, many places are still cash-only.',
-      },
-      { label: 'Plugs', value: 'Type A/B, 100 V — the lowest voltage in the developed world.' },
-      { label: 'Tipping', value: 'Not customary and can cause confusion; service is included.' },
-      { label: 'Tap water', value: 'Safe and pleasant to drink.' },
-      { label: 'Getting in', value: 'Visa-free for most nationalities for up to 90 days.' },
+      { label: 'Language', value: 'Japanese; English signage in cities, limited spoken English.' },
+      { label: 'Currency', value: 'Japanese yen (JPY) — cash still important.' },
+      { label: 'Plugs', value: 'Type A/B, 100 V.' },
+      { label: 'Tipping', value: 'Not done; can cause confusion.' },
+      { label: 'Tap water', value: 'Safe to drink.' },
+      { label: 'Getting in', value: 'Visa-free for many nationalities for 90 days.' },
     ],
     facts: [
-      'Japan consists of around 14,000 islands, though most people live on four of them.',
-      'The Shinkansen has carried passengers since 1964 with no derailment or collision fatalities.',
-      'There are more than 25,000 hot springs used as onsen across the country.',
-      'Tokyo is the world’s largest metropolitan area, with around 37 million people.',
+      'Japan has over 1,500 earthquakes a year.',
+      'Mount Fuji was first climbed by a monk in 663 AD.',
+      'Tokyo has more Michelin stars than any city.',
+      'Japan has 6,852 islands, of which 430 are inhabited.',
     ],
     currency: { code: 'JPY', name: 'Japanese yen', symbol: '¥', approximatePerUsd: 150 },
     timezone: 'Asia/Tokyo',
@@ -1779,125 +1221,62 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'korea',
     name: 'Korea',
     country: 'South Korea',
-    region: 'Seoul, with Jeju and Busan beyond',
-    tagline: 'Palaces and skylines in Seoul',
-    bestTime: 'April to June, or September to November',
+    region: 'Seoul and Jeju Island, East Asia',
+    tagline: 'Palaces beneath modern skylines',
+    bestTime: 'April for cherry blossom, October for autumn colours',
     overview: [
-      'South Korea is a country of mountains and megacities, where a five-hundred-year-old palace stands at the end of a metro line and a hiking trail starts inside the city limits. Seoul holds most of it: hanbok-clad visitors at Gyeongbokgung, night markets, and a food scene that runs from temple kitchens to 3 a.m. fried chicken.',
-      'Outside the capital, Busan has beaches and a giant fish market, Gyeongju is an open-air museum of the Silla kingdom, and Jeju island — volcanic, green and ringed by lava tubes — is a short flight away and feels like a different country.',
+      'Korea mixes ancient palaces with K-pop and high tech. Seoul’s Gyeongbokgung Palace sits beneath glass towers, while Jeju Island offers volcanic craters and beaches.',
+      'Food, skincare and music export worldwide, but hiking, temple stays and street markets remain daily life. It is compact, fast and very photogenic.',
     ],
     eat: [
-      {
-        name: 'Korean barbecue',
-        description:
-          'Grilled pork belly and beef with lettuce, garlic and ssamjang, cooked at the table and shared, with unlimited side dishes.',
-      },
-      {
-        name: 'Bibimbap',
-        description:
-          'Rice with vegetables, egg and gochujang, served in a hot stone bowl in Jeonju — the dish most often named as the national favourite.',
-      },
-      {
-        name: 'Street food',
-        description:
-          'Tteokbokki, hotteok, tornado potatoes and fish cake soup from market stalls, especially at Gwangjang market in Seoul.',
-      },
-      {
-        name: 'Jjigae and banchan',
-        description:
-          'Bubbling stews — kimchi, soybean and seafood — served with a table full of small side dishes that refill without asking.',
-      },
-      {
-        name: 'Chimaek',
-        description:
-          'Fried chicken with cold beer, eaten late at night on a plastic stool by the river — a genuine national institution.',
-      },
+      { name: 'Bibimbap and kimchi', description: 'Rice bowls with vegetables and fermented spicy cabbage with every meal.' },
+      { name: 'Korean BBQ', description: 'Pork belly grilled at the table with lettuce wraps and soju.' },
+      { name: 'Tteokbokki and street toast', description: 'Spicy rice cakes and egg toast from street carts.' },
+      { name: 'Fried chicken and beer', description: 'Chimaek — double-fried chicken with cold beer.' },
     ],
     attractions: [
-      {
-        name: 'Gyeongbokgung Palace',
-        description:
-          'Seoul’s main royal palace, with a guard-changing ceremony and free entry for anyone wearing a rented hanbok.',
-      },
-      {
-        name: 'Bukchon Hanok Village',
-        description:
-          'Traditional tiled houses on the hill between the palaces, still lived in — keep quiet and respect residents.',
-      },
-      {
-        name: 'Jeju Island',
-        description:
-          'A volcanic island with the Seongsan Ilchulbong crater, lava tubes, mandarin groves and black-stone walls.',
-      },
-      {
-        name: 'Busan',
-        description:
-          'Haeundae beach, the colourful hillside village of Gamcheon and Jagalchi, the country’s largest seafood market.',
-      },
-      {
-        name: 'Gyeongju',
-        description:
-          'The ancient Silla capital, with royal tombs, Bulguksa temple and the Seokguram grotto.',
-      },
-      {
-        name: 'Seoraksan and the national parks',
-        description:
-          'Granite peaks, autumn colour and hiking within reach of Seoul by bus; Korea is 70% mountains.',
-      },
+      { name: 'Gyeongbokgung Palace', description: 'Joseon palace with guard-changing ceremony and hanbok rental.' },
+      { name: 'Bukchon Hanok Village', description: 'Traditional houses between palaces with city views.' },
+      { name: 'Jeju Island', description: 'Volcanic island with waterfalls, lava tubes and beaches.' },
+      { name: 'N Seoul Tower', description: 'Mountain-top tower with city panorama.' },
+      { name: 'DMZ tour', description: 'Border with North Korea, tunnels and observation posts.' },
+      { name: 'Hongdae and Gangnam', description: 'Street music, shopping and nightlife.' },
     ],
     history: [
-      'The Joseon dynasty ruled from 1392 to 1897 and left the country its palaces, Confucian academies and much of its social etiquette. Japan annexed Korea in 1910, and the colonial period lasted until 1945, followed by division and the Korean War from 1950 to 1953.',
-      'The decades after the war mixed rapid industrialisation with authoritarian rule, until protests in 1987 brought democratic elections. South Korea is now an industrial and cultural power, exporting everything from semiconductors to films and music.',
+      'Korea has 5,000 years of history with Joseon dynasty ruling from 1392-1910. Hangul alphabet invented in 1443 under King Sejong.',
+      'Occupied by Japan 1910-45, divided after WWII into North and South, with Korean War 1950-53. South Korea then became a technology powerhouse.',
     ],
     geography: [
-      'The Korean peninsula is roughly 70% mountainous, with the Taebaek range running down the east coast and the flatter west giving way to rice plains and mudflats. Seoul sits near the west coast behind the Han river, which divides the city in half.',
-      'Jeju, 85 km south of the mainland, is a volcanic island with a lava plateau, more than 350 parasitic cones and a network of lava tubes listed by UNESCO.',
+      'South Korea is mountainous peninsula with 70% mountains, plus Jeju volcanic island. Four distinct seasons with monsoon in summer.',
+      'Seoul sits on Han River with mountains inside city limits, making hiking an everyday activity.',
     ],
     culture: [
-      'Confucian habits persist: respect for elders, a question or two about age and work when you meet someone, and alcohol poured for others rather than yourself. Shoes come off in homes and many restaurants, and both hands are used when giving or receiving.',
-      'Modern Korean culture moves fast — PC bangs, norae-bang, convenience-store dinners, coffee shops on every block — and the country’s pop culture has made the language and food familiar far beyond Asia.',
+      'Confucian hierarchy and age respect matter, with bowing and formal speech. K-pop, K-drama and esports are global exports.',
+      'Hanbok traditional dress, kimchi making and temple stays continue alongside modern life.',
     ],
     seasons: [
-      {
-        label: 'Spring',
-        note: 'Cherry blossom late March to mid-April, then clean, warm days into June.',
-      },
-      {
-        label: 'Summer',
-        note: 'Hot, humid and rainy from late June to July, with typhoons possible in late summer.',
-      },
-      {
-        label: 'Autumn',
-        note: 'September to November: dry, clear and the most beautiful season, with maple colour in the mountains.',
-      },
-      {
-        label: 'Winter',
-        note: 'Cold and dry, with snow in the mountains and skiing at Pyeongchang and Yongpyong.',
-      },
+      { label: 'Spring', note: 'Cherry blossom April — mild and clear.' },
+      { label: 'Summer', note: 'Hot, humid monsoon late June-July.' },
+      { label: 'Autumn', note: 'Cool, colourful and best for hiking.' },
+      { label: 'Winter', note: 'Cold, dry and festive with ski resorts.' },
     ],
     gettingAround:
-      'Seoul’s subway is one of the largest and cheapest in the world, with English signage throughout; a T-money card covers bus and metro. The KTX high-speed rail crosses the country in two to three hours, and domestic flights reach Jeju in under an hour. Kakao Taxi is the local ride-hailing app.',
+      'Seoul metro is world-class with T-money card for subway, bus and taxis. KTX bullet train to Busan in 2.5 hours. Buses cover country.',
     practical: [
-      { label: 'Language', value: 'Korean; English is limited outside Seoul and tourist areas.' },
-      {
-        label: 'Currency',
-        value: 'South Korean won (KRW) — cards are accepted almost everywhere.',
-      },
-      { label: 'Plugs', value: 'Type C/F, 220 V, two round pins.' },
-      { label: 'Tipping', value: 'Not expected and not practised.' },
-      {
-        label: 'Tap water',
-        value: 'Generally safe, though most people drink filtered or bottled water.',
-      },
-      { label: 'Getting in', value: 'Visa-free entry or K-ETA depending on nationality.' },
+      { label: 'Language', value: 'Korean; English signage widespread.' },
+      { label: 'Currency', value: 'South Korean won (KRW)' },
+      { label: 'Plugs', value: 'Type C/F, 220 V.' },
+      { label: 'Tipping', value: 'Not expected.' },
+      { label: 'Tap water', value: 'Safe but locals prefer filtered.' },
+      { label: 'Getting in', value: 'K-ETA for visa-free visitors.' },
     ],
     facts: [
-      'About 70% of South Korea is mountainous, and hiking is a mainstream weekend activity.',
-      'Jeju’s lava tubes are a UNESCO World Heritage Site and among the longest in the world.',
-      'The country has around 200 recorded varieties of kimchi.',
-      'Seoul’s subway system is one of the longest and busiest in the world.',
+      'South Korea has the fastest internet in the world on average.',
+      'Seoul has over 100 museums and 1,000 hiking trails.',
+      'Korea invented metal movable type before Gutenberg.',
+      'Jeju Island has a matriarchal diving culture with haenyeo women divers.',
     ],
-    currency: { code: 'KRW', name: 'South Korean won', symbol: '₩', approximatePerUsd: 1330 },
+    currency: { code: 'KRW', name: 'South Korean won', symbol: '₩', approximatePerUsd: 1350 },
     timezone: 'Asia/Seoul',
     coordinates: { lat: 37.5665, lon: 126.978 },
     wikipedia: 'South Korea',
@@ -1906,131 +1285,65 @@ export const asiaPacificAmericasGuides: DestinationGuide[] = [
     slug: 'brazil',
     name: 'Brazil',
     country: 'Brazil',
-    region: 'Rio de Janeiro and the wider country',
-    tagline: 'Sugarloaf, sea and sunset',
-    bestTime: 'May to September, Rio’s dry season',
+    region: 'Rio de Janeiro and Amazon, South America',
+    tagline: 'Mountain, ocean and city below',
+    bestTime: 'December to March for Rio summer, June to September for Amazon dry',
     overview: [
-      'Brazil is a continent pretending to be a country: the Amazon basin in the north, the wetlands of the Pantanal in the centre, the waterfalls of Iguaçu in the south and Rio de Janeiro, improbably beautiful, on the Atlantic coast.',
-      'Rio is where most trips begin and end. Mountains drop straight into the sea, neighbourhoods climb the hills, and the daily rhythm runs between the beach, the bakery and the sunset. From there, the rest of the country is a set of flights and long bus rides away.',
+      'Brazil is continent-sized with rainforest, beaches and megacities. Rio’s Christ the Redeemer above Copacabana, the Amazon’s river and jungle, Iguazu’s waterfalls and Salvador’s colonial colours all belong to one country.',
+      'It is famous for carnival, football and music, with churrasco barbecue and caipirinha. Portuguese heritage mixes with African and Indigenous influences.',
     ],
     eat: [
-      {
-        name: 'Feijoada',
-        description:
-          'The national dish: black bean stew with pork, served with rice, farofa, kale and orange slices, traditionally on a Saturday.',
-      },
-      {
-        name: 'Churrasco',
-        description:
-          'Southern Brazilian barbecue, where waiters bring skewers of beef, lamb and sausage to the table until you surrender.',
-      },
-      {
-        name: 'Pão de queijo and tapioca',
-        description:
-          'Warm cheese bread from Minas Gerais, and tapioca crêpes filled sweet or savoury — the standard snack at any time of day.',
-      },
-      {
-        name: 'Açaí and fruit',
-        description:
-          'Açaí bowls with granola and banana, plus mango, papaya and passion fruit that taste nothing like the exported versions.',
-      },
-      {
-        name: 'Kilo restaurants',
-        description:
-          'Buffet restaurants where you fill a plate and pay by weight — the cheapest way to eat a varied lunch anywhere in the country.',
-      },
+      { name: 'Feijoada and churrasco', description: 'Black bean stew and barbecue with chimichurri.' },
+      { name: 'Açaí and pão de queijo', description: 'Açaí bowls and cheese bread from Minas Gerais.' },
+      { name: 'Caipirinha', description: 'Lime, sugar and cachaça cocktail — national drink.' },
+      { name: 'Moqueca', description: 'Bahian fish stew with coconut milk and dendê oil.' },
     ],
     attractions: [
-      {
-        name: 'Christ the Redeemer',
-        description:
-          'The 30 m statue on Corcovado, reached by the cog train through Tijuca forest; go early for clear skies.',
-      },
-      {
-        name: 'Sugarloaf Mountain',
-        description:
-          'Two cable cars to the top of the granite peak, with the best view of the bay, Botafogo and the beaches.',
-      },
-      {
-        name: 'Copacabana and Ipanema',
-        description:
-          'Rio’s famous beaches, busy with football, vendors and sunset applause; stay aware of your belongings.',
-      },
-      {
-        name: 'Iguaçu Falls',
-        description:
-          'A horseshoe of 275 waterfalls on the Argentine border, best seen from the Brazilian side for the panorama.',
-      },
-      {
-        name: 'The Amazon',
-        description:
-          'River trips and jungle lodges from Manaus, with pink river dolphins and the meeting of the waters.',
-      },
-      {
-        name: 'The Pantanal',
-        description:
-          'The world’s largest tropical wetland and the best place in Brazil to see jaguars, caimans and macaws.',
-      },
+      { name: 'Christ the Redeemer Rio', description: 'Art Deco statue with city and bay panorama.' },
+      { name: 'Iguazu Falls', description: '275 waterfalls on Brazil-Argentina border, taller than Niagara.' },
+      { name: 'Amazon rainforest', description: 'River cruises and jungle lodges from Manaus.' },
+      { name: 'Copacabana and Ipanema', description: 'Beaches, samba and sunset at Arpoador.' },
+      { name: 'Salvador Pelourinho', description: 'Colonial old town with Afro-Brazilian culture.' },
+      { name: 'Fernando de Noronha', description: 'Protected islands with diving and spinner dolphins.' },
     ],
     history: [
-      'Millions of Indigenous people lived across the territory before Portuguese arrival in 1500, and their descendants still make up hundreds of distinct peoples. The colony grew rich on sugar, then on gold from Minas Gerais, and on the labour of enslaved Africans — Brazil was the last country in the Americas to abolish slavery, in 1888.',
-      'Independence from Portugal came in 1822, followed by an empire and then a republic in 1889. The twentieth century brought industrialisation, a capital built from scratch in Brasília, and two decades of military rule from 1964 to 1985, since when the country has been a democracy.',
+      'Brazil was Portuguese colony from 1500, with sugar, gold and coffee booms using enslaved African labour. Independence in 1822 under Emperor Pedro I.',
+      'It became a republic in 1889 and is now the largest country in South America and fifth in world, with carnival and football as cultural exports.',
     ],
     geography: [
-      'Brazil is the fifth-largest country in the world and covers almost half of South America. The Amazon basin occupies the north, the Pantanal wetlands sit in the centre-west, the highlands run down the south-east, and the Atlantic coastline stretches for more than 7,000 km.',
-      'The Amazon rainforest covers roughly 60% of the country and is the most biodiverse place on earth, holding around a tenth of all known species.',
+      'Brazil is fifth-largest country, covering 47% of South America with Amazon rainforest holding 10% of world’s species. The Amazon River is 6,400 km long.',
+      'The coastline is 7,491 km with beaches, while the interior has highlands, wetlands Pantanal and Iguaçu falls.',
     ],
     culture: [
-      'Brazilian social life is warm and physical: people greet with hugs and kisses, and lunch and dinner run long. Football is a shared language, and the beach is a genuine public square.',
-      'Carnival is the obvious expression of the country’s musical culture, but samba, bossa nova and forró are played somewhere in every city all year. In Rio, safety is a practical matter: use registered taxis at night, carry little and take local advice.',
+      'Samba, carnival and football are national passions. Portuguese is official language, with diverse regional accents.',
+      'Jeitinho — creative workaround — and warmth shape social life, with beach and barbecue as weekend rituals.',
     ],
     seasons: [
-      {
-        label: 'Dry season',
-        note: 'May to September: mild, sunny days in Rio and the best time for the Pantanal.',
-      },
-      {
-        label: 'Summer',
-        note: 'December to March: hot and wet, with Carnival in February and New Year on Copacabana beach.',
-      },
-      {
-        label: 'Amazon',
-        note: 'Wet season from December to May floods the forest; the dry months are easier for hiking.',
-      },
-      {
-        label: 'South',
-        note: 'Iguaçu and the southern states are cooler and can be cold in winter from June to August.',
-      },
+      { label: 'Summer', note: 'Dec-Mar — hot, carnival in Feb, beach season.' },
+      { label: 'Winter', note: 'Jun-Sep — mild in Rio, dry in Amazon and good for Iguazu.' },
+      { label: 'Spring', note: 'Sep-Nov — blooming and good for Pantanal wildlife.' },
+      { label: 'Autumn', note: 'Mar-May — shoulder season with fewer crowds.' },
     ],
     gettingAround:
-      'Brazil is the size of a continent, so long-haul travel means flying — domestic fares are high, so book early. In Rio and São Paulo the metro and suburban trains are the safest ways to move, and Uber works well. Long-distance buses are comfortable and overnight services cover routes of 12 hours or more.',
+      'Domestic flights essential for long distances — country is huge. Buses cover regions. In Rio, metro and taxis are easy. Amazon boats are classic.',
     practical: [
-      { label: 'Language', value: 'Portuguese — Spanish will get you only so far.' },
+      { label: 'Language', value: 'Portuguese; English limited outside tourist areas.' },
       { label: 'Currency', value: 'Brazilian real (BRL)' },
-      {
-        label: 'Plugs',
-        value: 'Type N/C, 127–220 V depending on the city — check before plugging in.',
-      },
-      { label: 'Tipping', value: 'Usually a 10% service charge is already on the bill.' },
-      {
-        label: 'Tap water',
-        value: 'Safe in most cities but widely avoided; bottled or filtered water is the norm.',
-      },
-      {
-        label: 'Getting in',
-        value:
-          'Visa-free or e-visa depending on nationality; yellow fever vaccination may be required.',
-      },
+      { label: 'Plugs', value: 'Type N/C, 127/220 V — voltage varies.' },
+      { label: 'Tipping', value: '10% service charge often included.' },
+      { label: 'Tap water', value: 'Do not drink; bottled water.' },
+      { label: 'Getting in', value: 'Visa-free for many nationalities; yellow fever vaccine recommended.' },
     ],
     facts: [
-      'Brazil is the fifth-largest country in the world and shares a border with every South American country except Chile and Ecuador.',
-      'It has won the football World Cup five times, more than any other nation.',
-      'The Amazon covers around 60% of Brazil and holds roughly a tenth of all known species.',
-      'Portuguese is spoken by more than 200 million people in Brazil alone.',
+      'Brazil has 60% of the Amazon rainforest.',
+      'Rio’s carnival is the largest carnival in the world.',
+      'Brazil has won the FIFA World Cup 5 times, most of any country.',
+      'The Amazon River has over 3,000 species of fish.',
     ],
-    currency: { code: 'BRL', name: 'Brazilian real', symbol: 'R$', approximatePerUsd: 5.4 },
+    currency: { code: 'BRL', name: 'Brazilian real', symbol: 'R$', approximatePerUsd: 5.2 },
     timezone: 'America/Sao_Paulo',
     coordinates: { lat: -22.9068, lon: -43.1729 },
     wikipedia: 'Brazil',
   },
 ];
+

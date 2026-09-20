@@ -119,7 +119,7 @@
                 />
                 @if (invalid(name)) {
                   <span id="feedback-name-error" class="field-error">
-                    Please tell us your name (at least 2 words).
+                    Please tell us your name (at least 2 word).
                   </span>
                 }
               </div>
@@ -256,45 +256,40 @@
           </li>
           <li>
             <span class="aside-label">Who is behind it</span>
-            <div class="founder-brief">
-              <img
-                class="founder-photo"
-                src="/author.jpeg"
-                width="112"
-                height="112"
-                alt="Kingshuk, founder of NeverBeen"
-              />
-              <div>
-                <p class="founder-name">Kingshuk</p>
-                <p class="founder-role">Senior Software Engineer and founder of NeverBeen</p>
-              </div>
-            </div>
-            <dl class="founder-facts">
-              <div>
-                <dt>Nationality</dt>
-                <dd>Indian</dd>
-              </div>
-              <div>
-                <dt>Education</dt>
-                <dd>
-                  B.Tech in Computer Science and Engineering, Heritage Institute of Technology,
-                  Kolkata
-                </dd>
-              </div>
-              <div>
-                <dt>Worked with</dt>
-                <dd>Continental AG, Intel and E&amp;Y</dd>
-              </div>
-              <div>
-                <dt>Focus</dt>
-                <dd>
-                  Software development, application architecture design and customer-facing delivery
-                </dd>
-              </div>
-            </dl>
             <a class="aside-value" routerLink="/founder">Meet the founder</a>
           </li>
         </ul>
+
+        <div class="founder-highlight" aria-label="Meet the founder">
+          <h3>Meet the founder — Kingshuk</h3>
+          <p class="founder-role">Senior Software Engineer and founder of NeverBeen</p>
+          <p class="founder-intro">
+            I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest
+            believe in me, I will deliver above your expectations.
+          </p>
+          <p>
+            Kingshuk is a Senior Software Engineer with vast IT experience, specializing in software
+            development, requirements modelling, database modelling, application architecture design,
+            and customer-facing delivery within Manufacturing &amp; Intelligence Services. He has
+            worked with world-leading companies like Continental AG, Intel, E&amp;Y, and others.
+          </p>
+          <dl class="founder-facts">
+            <div>
+              <dt>Nationality</dt>
+              <dd>Indian</dd>
+            </div>
+            <div>
+              <dt>Date of Birth</dt>
+              <dd>02 July 1987</dd>
+            </div>
+            <div>
+              <dt>Education</dt>
+              <dd>B.Tech in Computer Science and Engineering, Heritage Institute of Technology, Kolkata</dd>
+            </div>
+          </dl>
+          <a class="btn-link founder-link" routerLink="/founder">Read full founder story →</a>
+        </div>
+
         <p class="aside-foot">
           We read everything, including the hard parts. Honest feedback is what keeps the
           photographs — and the studio — getting better.

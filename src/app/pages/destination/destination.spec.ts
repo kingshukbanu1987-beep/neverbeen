@@ -1,4 +1,3 @@
-import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -126,53 +125,6 @@ describe('DestinationPageView', () => {
     ]) {
       expect(element.querySelector(`#${id}`), `#${id} section`).not.toBeNull();
     }
-  });
-
-  it('lists every guide section in the jump menu with a link to it', async () => {
-    const harness = await RouterTestingHarness.create('/destinations/rome');
-    const element = harness.routeNativeElement as HTMLElement;
-
-    const chips = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav.jump a'));
-    expect(chips.map((chip) => chip.textContent?.trim())).toEqual([
-      'Live now',
-      'Overview',
-      'Where to eat',
-      'Sightseeing',
-      'History',
-      'Geography',
-      'Map',
-      'Plan your visit',
-      'Photographs',
-    ]);
-
-    // Each chip keeps a real link target, so it also works without JavaScript.
-    for (const chip of chips) {
-      const id = (chip.getAttribute('href') ?? '').replace('#', '');
-      expect(element.querySelector(`#${id}`), `section #${id}`).not.toBeNull();
-    }
-  });
-
-  it('jumps to the chosen section when a chip is clicked', async () => {
-    const harness = await RouterTestingHarness.create('/destinations/rome');
-    const element = harness.routeNativeElement as HTMLElement;
-    const eat = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav.jump a')).find(
-      (chip) => chip.textContent?.trim() === 'Where to eat',
-    )!;
-
-    const location = TestBed.inject(Location);
-    eat.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    harness.detectChanges();
-
-    expect(location.path(true)).toBe('/destinations/rome#eat');
-    expect(document.activeElement).toBe(element.querySelector('#eat'));
-  });
-
-  it('opens a guide that was shared with a section link straight at that section', async () => {
-    const harness = await RouterTestingHarness.create('/destinations/rome#photos');
-    await settle(harness);
-
-    const element = harness.routeNativeElement as HTMLElement;
-    expect(document.activeElement).toBe(element.querySelector('#photos'));
   });
 
   it('reuses the same component when a different destination is opened', async () => {

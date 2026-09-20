@@ -5,11 +5,9 @@ import {
   computed,
   inject,
   signal,
-  afterNextRender,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Title } from '@angular/platform-browser';
-import { Location } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   DestinationPage,
@@ -146,7 +144,6 @@ export class DestinationPageView {
   private readonly live = inject(DestinationLive);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly title = inject(Title);
-  private readonly location = inject(Location);
   private readonly destroyRef = inject(DestroyRef);
 
   /** undefined while the slug is being resolved, null when no guide exists. */
@@ -256,60 +253,10 @@ export class DestinationPageView {
       this.load(params.get('slug') ?? ''),
     );
 
-    // A guide opened with a fragment (for example /destinations/japan#eat) should
-    // start at that section, once the guide has actually rendered.
-    afterNextRender(() => {
-      const fragment = this.route.snapshot.fragment;
-      if (fragment) {
-        this.scrollToSection(fragment);
-      }
-    });
-
     this.destroyRef.onDestroy(() => {
       clearInterval(timer);
       subscription.unsubscribe();
     });
-  }
-
-  /**
-   * Jumps to one of the guide's sections when a chip in the sticky menu is clicked.
-   *
-   * The chips stay ordinary links, so they still work without JavaScript and can be
-   * opened in a new tab; this only takes over the in-page jump so the section lands
-   * clear of the sticky site header instead of underneath it.
-   */
-  protected goToSection(id: string, event: Event): void {
-    if (!document.getElementById(id)) {
-      return;
-    }
-
-    event.preventDefault();
-    this.location.go(this.sectionUrl(id));
-    this.scrollToSection(id);
-  }
-
-  /** The current guide's URL with `id` as its fragment. */
-  private sectionUrl(id: string): string {
-    const path = this.location.path(true).split('#')[0];
-    return `${path}#${id}`;
-  }
-
-  /** Scrolls a section into view and leaves focus there for keyboard and screen readers. */
-  private scrollToSection(id: string): void {
-    const target = document.getElementById(id);
-    if (!target) {
-      return;
-    }
-
-    // jsdom, used by the unit tests, has no scrollIntoView implementation.
-    if (typeof target.scrollIntoView === 'function') {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    if (!target.hasAttribute('tabindex')) {
-      target.setAttribute('tabindex', '-1');
-    }
-    target.focus({ preventScroll: true });
   }
 
   protected glyph(conditionCode: number, isDay: boolean): string {
@@ -351,6 +298,25 @@ export class DestinationPageView {
   /** Image search for a place — a quick way to see more travel photography. */
   protected photosOnGoogle(name: string): string {
     return this.googleSearch(`${name} travel photographs`, '2');
+  }
+
+  protected scrollTo(id: string, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    if (typeof document === 'undefined') {
+      return;
+    }
+    const target = document.getElementById(id);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Update URL fragment without causing a full navigation
+      try {
+        history.replaceState(null, '', `#${id}`);
+      } catch {
+        // ignore if history not available
+      }
+    }
   }
 
   protected googleSearch(query: string, vertical?: string): string {

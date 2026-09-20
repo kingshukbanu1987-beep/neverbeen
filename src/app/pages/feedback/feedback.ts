@@ -5,7 +5,6 @@ import {
   FormBuilder,
   ReactiveFormsModule,
   ValidationErrors,
-  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -30,21 +29,16 @@ export const feedbackWhatsAppDial = '919051888116';
 /** Longest feedback note we accept. */
 export const feedbackNotesLimit = 2500;
 
-/** Fewest words we accept as a name, so a nickname on its own is not enough. */
-export const feedbackNameWords = 2;
-
-/** Requires at least `count` words, ignoring extra spaces between them. */
-export function minWords(count: number): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    const words = String(control.value ?? '')
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word.length > 0);
-
-    return words.length >= count
-      ? null
-      : { minWords: { requiredWords: count, actualWords: words.length } };
-  };
+function atLeastTwoWordsValidator(control: AbstractControl): ValidationErrors | null {
+  const raw = (control.value ?? '').toString().trim();
+  if (!raw) {
+    return { required: true };
+  }
+  const words = raw.split(/\s+/).filter((w: string) => w.length > 0);
+  if (words.length >= 2) {
+    return null;
+  }
+  return { minWords: { requiredWords: 2, actualWords: words.length } };
 }
 
 @Component({
@@ -65,7 +59,7 @@ export class Feedback {
   protected readonly whatsappLink = signal('');
 
   protected readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required, minWords(feedbackNameWords), Validators.maxLength(80)]],
+    name: ['', [Validators.required, atLeastTwoWordsValidator, Validators.maxLength(80)]],
     email: [
       '',
       [
