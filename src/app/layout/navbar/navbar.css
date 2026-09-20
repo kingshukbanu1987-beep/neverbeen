@@ -1,4 +1,6 @@
 .nav {
+  --nav-icon: #000;
+
   position: sticky;
   top: 0;
   z-index: 20;
@@ -40,6 +42,9 @@ nav {
 }
 
 nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-size: 0.92rem;
   color: var(--ink-soft);
 }
@@ -56,16 +61,71 @@ nav a.active {
   color: var(--ink) !important;
 }
 
+/* Small black line icon to the left of each menu option (shown in the collapsed menu). */
+.icon {
+  display: none;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--nav-icon);
+}
+
+/* The sprite only holds <symbol> definitions; keep it out of layout without display:none,
+   which would stop <use> references from rendering in some browsers. */
+.icon-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Hamburger toggle: three parallel lines that fold into a cross when the menu is open. */
 .menu {
   display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   background: none;
   border: 0;
+  border-radius: 8px;
   cursor: pointer;
+}
+
+.menu:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.line {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--nav-icon);
+  border-radius: 2px;
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease;
+}
+
+.menu.is-open .line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menu.is-open .line:nth-child(2) {
+  opacity: 0;
+}
+
+.menu.is-open .line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 @media (max-width: 860px) {
   .menu {
-    display: block;
+    display: flex;
   }
 
   nav {
@@ -84,6 +144,10 @@ nav a.active {
   nav.open {
     display: flex;
   }
+
+  .icon {
+    display: block;
+  }
 }
 
 @media (max-width: 560px) {
@@ -98,5 +162,11 @@ nav a.active {
 
   nav {
     top: 110px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    transition: none;
   }
 }

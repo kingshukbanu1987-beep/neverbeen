@@ -11,10 +11,14 @@ describe('Navbar', () => {
     }).compileComponents();
   });
 
-  function navLinks(): HTMLAnchorElement[] {
+  function create() {
     const fixture = TestBed.createComponent(Navbar);
     fixture.detectChanges();
-    return Array.from(fixture.nativeElement.querySelectorAll('nav a')) as HTMLAnchorElement[];
+    return fixture;
+  }
+
+  function navLinks(): HTMLAnchorElement[] {
+    return Array.from(create().nativeElement.querySelectorAll('nav a')) as HTMLAnchorElement[];
   }
 
   it('places the Audience link directly after How It Works', () => {
@@ -37,5 +41,58 @@ describe('Navbar', () => {
     const loaded = await (audienceRoute!.loadComponent as () => Promise<unknown>)();
 
     expect(loaded).toBe(Audience);
+  });
+
+  it('shows the menu toggle as three lines with no visible "Menu" text', () => {
+    const button = create().nativeElement.querySelector('button.menu') as HTMLButtonElement;
+
+    expect(button.textContent?.trim()).toBe('');
+    expect(button.querySelectorAll('.line').length).toBe(3);
+    expect(button.getAttribute('aria-label')).toBe('Open menu');
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(button.getAttribute('aria-controls')).toBe('site-nav');
+  });
+
+  it('opens and closes the navigation from the hamburger button', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const button = element.querySelector('button.menu') as HTMLButtonElement;
+    const nav = element.querySelector('nav#site-nav') as HTMLElement;
+
+    button.click();
+    fixture.detectChanges();
+
+    expect(button.classList.contains('is-open')).toBe(true);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.getAttribute('aria-label')).toBe('Close menu');
+    expect(nav.classList.contains('open')).toBe(true);
+
+    button.click();
+    fixture.detectChanges();
+
+    expect(button.classList.contains('is-open')).toBe(false);
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(nav.classList.contains('open')).toBe(false);
+  });
+
+  it('puts a distinct decorative icon to the left of every menu option', () => {
+    const element: HTMLElement = create().nativeElement;
+    const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav a'));
+    const references = new Set<string>();
+
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      const icon = link.firstElementChild;
+
+      expect(icon?.tagName.toLowerCase()).toBe('svg');
+      expect(icon?.classList.contains('icon')).toBe(true);
+      expect(icon?.getAttribute('aria-hidden')).toBe('true');
+
+      const reference = icon?.querySelector('use')?.getAttribute('href') ?? '';
+      expect(reference.startsWith('#nb-icon-')).toBe(true);
+      expect(element.querySelector(`.icon-sprite symbol${reference}`)).not.toBeNull();
+      references.add(reference);
+    }
+    expect(references.size).toBe(links.length);
   });
 });
