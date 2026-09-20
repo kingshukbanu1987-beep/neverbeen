@@ -16,6 +16,22 @@ describe('Hero', () => {
     return fixture;
   }
 
+  it('places a green Dream Destinations button right after Know the Founder that links to the destinations section', () => {
+    const element: HTMLElement = create().nativeElement;
+    const buttons = Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
+    const labels = buttons.map((link) => link.textContent?.trim());
+
+    const founderIndex = labels.indexOf('Know the Founder');
+    expect(founderIndex).toBeGreaterThan(-1);
+    expect(labels[founderIndex + 1]).toBe('Dream Destinations');
+
+    const dream = buttons[founderIndex + 1];
+    expect(dream.getAttribute('href')).toBe('/#destinations');
+    expect(dream.classList.contains('btn-dream')).toBe(true);
+    expect(getComputedStyle(dream).backgroundColor).toBe('rgb(91, 181, 35)');
+    expect(getComputedStyle(dream).color).toBe('rgb(255, 255, 255)');
+  });
+
   it('places a red Collection button right after Create My Vacation that links to the collection page', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
