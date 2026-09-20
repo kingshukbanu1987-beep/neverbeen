@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 /** The kinds of feedback a visitor can choose from. */
@@ -23,6 +29,18 @@ export const feedbackWhatsAppDial = '919051888116';
 /** Longest feedback note we accept. */
 export const feedbackNotesLimit = 2500;
 
+function atLeastTwoWordsValidator(control: AbstractControl): ValidationErrors | null {
+  const raw = (control.value ?? '').toString().trim();
+  if (!raw) {
+    return { required: true };
+  }
+  const words = raw.split(/\s+/).filter((w: string) => w.length > 0);
+  if (words.length >= 2) {
+    return null;
+  }
+  return { minWords: { requiredWords: 2, actualWords: words.length } };
+}
+
 @Component({
   selector: 'app-feedback',
   imports: [ReactiveFormsModule, RouterLink],
@@ -41,7 +59,7 @@ export class Feedback {
   protected readonly whatsappLink = signal('');
 
   protected readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(80)]],
+    name: ['', [Validators.required, atLeastTwoWordsValidator, Validators.maxLength(80)]],
     email: [
       '',
       [

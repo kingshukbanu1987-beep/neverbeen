@@ -164,6 +164,111 @@ const destinationSeed: Omit<Destination, 'images' | 'slug'>[] = [
     image:
       'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1400&q=80',
   },
+  {
+    name: 'Netherlands',
+    country: 'Netherlands',
+    caption: 'Canals and tulip fields in soft light',
+    image:
+      'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Austria',
+    country: 'Austria',
+    caption: 'Alpine lakes beneath snow-capped peaks',
+    image:
+      'https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Canada',
+    country: 'Canada',
+    caption: 'Turquoise lakes and mountain wilderness',
+    image:
+      'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'United States',
+    country: 'United States of America',
+    caption: 'City lights and endless horizons',
+    image:
+      'https://images.unsplash.com/photo-1485738422979-b5b79d8491e8?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Maldives',
+    country: 'Maldives',
+    caption: 'Overwater villas above turquoise lagoons',
+    image:
+      'https://images.unsplash.com/photo-1514282401047-d79a71a5906e?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Thailand',
+    country: 'Thailand',
+    caption: 'Golden temples and tropical light',
+    image:
+      'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Malaysia',
+    country: 'Malaysia',
+    caption: 'Twin towers above vibrant streets',
+    image:
+      'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Singapore',
+    country: 'Singapore',
+    caption: 'Future city by the bay',
+    image:
+      'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Indonesia',
+    country: 'Indonesia',
+    caption: 'Temple mist among rice terraces',
+    image:
+      'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Australia',
+    country: 'Australia',
+    caption: 'Harbour sails beneath summer sun',
+    image:
+      'https://images.unsplash.com/photo-1523428096881-5bd79d043006?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Denmark',
+    country: 'Denmark',
+    caption: 'Harbour colours and Nordic calm',
+    image:
+      'https://images.unsplash.com/photo-1513622790541-b874313bd645?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Finland',
+    country: 'Finland',
+    caption: 'Northern lights over silent lakes',
+    image:
+      'https://images.unsplash.com/photo-1520769945061-0a448c463865?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Japan',
+    country: 'Japan',
+    caption: 'Mount Fuji in morning mist',
+    image:
+      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Korea',
+    country: 'South Korea',
+    caption: 'Palaces beneath modern skylines',
+    image:
+      'https://images.unsplash.com/photo-1538485399081-7c897a5d0c3b?auto=format&fit=crop&w=1400&q=80',
+  },
+  {
+    name: 'Brazil',
+    country: 'Brazil',
+    caption: 'Mountain, ocean and city below',
+    image:
+      'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1400&q=80',
+  },
 ];
 
 const destinationRotationImages: Record<string, string[]> = {
@@ -257,6 +362,81 @@ const destinationRotationImages: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=1400&q=85',
     'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&w=1400&q=85',
     'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Netherlands: [
+    'https://images.unsplash.com/photo-1534351590666-13e3e96b5017?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Austria: [
+    'https://images.unsplash.com/photo-1491557345352-11d52307057d?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Canada: [
+    'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?auto=format&fit=crop&w=1400&q=85',
+  ],
+  'United States': [
+    'https://images.unsplash.com/photo-1485738422979-b5b79d8491e8?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Maldives: [
+    'https://images.unsplash.com/photo-1514282401047-d79a71a5906e?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Thailand: [
+    'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1506665531195-3566af2b4dfa?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Malaysia: [
+    'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Singapore: [
+    'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1538485399081-7c897a5d0c3b?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Indonesia: [
+    'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1555400038-63f5ba517a47?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Australia: [
+    'https://images.unsplash.com/photo-1523428096881-5bd79d043006?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Denmark: [
+    'https://images.unsplash.com/photo-1513622790541-b874313bd645?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1491557345352-11d52307057d?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Finland: [
+    'https://images.unsplash.com/photo-1520769945061-0a448c463865?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Japan: [
+    'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Korea: [
+    'https://images.unsplash.com/photo-1538485399081-7c897a5d0c3b?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1546874177-9e664107314e?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=85',
+  ],
+  Brazil: [
+    'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1400&q=85',
+    'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&w=1400&q=85',
   ],
 };
 
