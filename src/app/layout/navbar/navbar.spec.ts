@@ -94,12 +94,12 @@ describe('Navbar', () => {
     expect(nav.classList.contains('open')).toBe(false);
   });
 
-  it('links the Travel Feeds option, placed before Pricing, to its page', () => {
+  it('links the Feeds option, placed before Pricing, to its page', () => {
     const links = navLinks();
     const labels = links.map((link) => link.textContent?.trim());
-    const feeds = links[labels.indexOf('Travel Feeds')];
+    const feeds = links[labels.indexOf('Feeds')];
 
-    expect(labels.indexOf('Travel Feeds')).toBe(labels.indexOf('Pricing') - 1);
+    expect(labels.indexOf('Feeds')).toBe(labels.indexOf('Pricing') - 1);
     expect(feeds.getAttribute('href')).toBe('/travel-feeds');
     expect(feeds.querySelector('svg.icon use')?.getAttribute('href')).toBe('#nb-icon-globe');
   });
