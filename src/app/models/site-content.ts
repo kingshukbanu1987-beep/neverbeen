@@ -197,7 +197,7 @@ const destinationSeed: Omit<Destination, 'images' | 'slug'>[] = [
     country: 'Maldives',
     caption: 'Overwater villas above turquoise lagoons',
     image:
-      'https://images.unsplash.com/photo-1514282401047-d79a71a5906e?auto=format&fit=crop&w=1400&q=80',
+      'https://www.thetravelmagazine.net/wp-content/uploads/Bodu.jpg?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Thailand',
