@@ -352,7 +352,7 @@ export class TravelFeeds {
       .map((seed, index) => ({ seed, trend: trends[index] }))
       .sort((a, b) => (b.trend?.weeklyViews ?? 0) - (a.trend?.weeklyViews ?? 0));
 
-    const featured = ranked.slice(0, 6);
+    const featured = ranked.slice(0, 3);
 
     const enriched = await Promise.all(
       featured.map(async (entry, index) => {
@@ -386,8 +386,8 @@ export class TravelFeeds {
 
     const [place, photos, articles, keyed] = await Promise.all([
       this.locate(term),
-      this.photos(term, 9),
-      this.relatedArticles(term, 6),
+      this.photos(term, 6),
+      this.relatedArticles(term, 4),
       this.keyedFeeds(term),
     ]);
 

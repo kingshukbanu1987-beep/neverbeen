@@ -165,8 +165,8 @@ describe('TravelFeedsPage', () => {
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Trending Destinations News');
     expect(element.querySelector('#destination-search')).not.toBeNull();
     expect(element.querySelector('button[type="submit"]')?.textContent).toContain('Submit');
-    expect(element.querySelector('.notice-soft')?.textContent).toContain(
-      'Google Places, Instagram and Facebook are currently switched off',
+    expect(element.querySelector('.cross-link')?.textContent).toContain(
+      'wired in but switched off',
     );
   });
 
@@ -186,13 +186,13 @@ describe('TravelFeedsPage', () => {
     const element: HTMLElement = fixture.nativeElement;
     const cards = Array.from(element.querySelectorAll('.board-card'));
 
-    expect(cards.length).toBeGreaterThan(1);
+    expect(cards.length).toBe(3);
     const text = element.textContent ?? '';
     expect(text).toContain('Trending destinations right now');
     expect(text).toContain('16.5k reads'); // last seven days of the stubbed feed
     expect(text).toContain('Kyoto');
     expect(element.querySelector('.board-card img')).not.toBeNull();
-    expect(element.querySelector('.spark-line')?.getAttribute('d')).toContain('M0');
+    expect(element.querySelector('.board-caption')).toBeNull(); // kept short
   });
 
   it('retrieves and displays the feed for a searched destination', async () => {
@@ -221,6 +221,8 @@ describe('TravelFeedsPage', () => {
     expect(element.querySelectorAll('.photo-grid img').length).toBe(2);
     expect(text).toContain('Mika Tanaka');
     expect(text).toContain('CC BY-SA 4.0');
+    // readership sparkline for the searched destination
+    expect(element.querySelector('.spark-line')?.getAttribute('d')).toContain('M0');
     // sources are reported honestly
     expect(text).toContain('Wikimedia Commons');
     expect(element.querySelectorAll('.badge-live').length).toBeGreaterThanOrEqual(4);

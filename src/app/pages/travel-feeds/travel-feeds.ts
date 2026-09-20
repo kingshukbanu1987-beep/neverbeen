@@ -8,7 +8,7 @@ import { TravelFeeds } from '../../services/travel-feeds';
 type LoadState = 'idle' | 'loading' | 'ready' | 'error';
 
 /** Quick searches offered under the search box. */
-const SUGGESTIONS = ['Kyoto', 'Iceland', 'Lisbon', 'Maldives', 'Banff', 'Victoria Falls', 'Hanoi'];
+const SUGGESTIONS = ['Kyoto', 'Iceland', 'Maldives', 'Hanoi'];
 
 @Component({
   selector: 'app-travel-feeds',
