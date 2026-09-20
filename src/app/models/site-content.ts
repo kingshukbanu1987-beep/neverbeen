@@ -1,4 +1,8 @@
+import { slugify } from './slug';
+
 export interface Destination {
+  /** URL segment for the destination guide page, e.g. "machu-picchu". */
+  slug: string;
   name: string;
   country: string;
   caption: string;
@@ -33,7 +37,7 @@ export interface HowItWorksStep {
   description: string;
 }
 
-const destinationSeed: Omit<Destination, 'images'>[] = [
+const destinationSeed: Omit<Destination, 'images' | 'slug'>[] = [
   {
     name: 'Paris',
     country: 'France',
@@ -258,6 +262,7 @@ const destinationRotationImages: Record<string, string[]> = {
 
 export const destinations: Destination[] = destinationSeed.map((destination) => ({
   ...destination,
+  slug: slugify(destination.name),
   images: [destination.image, ...(destinationRotationImages[destination.name] ?? [])].slice(0, 4),
 }));
 

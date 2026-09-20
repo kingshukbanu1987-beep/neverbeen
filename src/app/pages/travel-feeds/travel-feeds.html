@@ -1,0 +1,290 @@
+<main class="feeds-page">
+  <section class="masthead">
+    <div class="mesh" aria-hidden="true">
+      <span class="blob blob-one"></span>
+      <span class="blob blob-two"></span>
+      <div class="grid-lines"></div>
+    </div>
+
+    <div class="container masthead-inner">
+      <a class="back-link" routerLink="/">← Back to NeverBeen</a>
+      <p class="eyebrow">
+        <span class="live-dot" aria-hidden="true"></span>
+        Live public travel feeds
+      </p>
+      <h1>Trending Destinations News</h1>
+      <p class="lede">
+        Search a destination and see what the public feeds are saying about it right now.
+      </p>
+
+      <form class="search" [formGroup]="form" (ngSubmit)="search()" role="search">
+        <div class="search-field">
+          <span class="search-icon" aria-hidden="true">🔎</span>
+          <label class="sr-only" for="destination-search">Search a destination</label>
+          <input
+            id="destination-search"
+            type="search"
+            formControlName="destination"
+            autocomplete="off"
+            placeholder="Search a destination — try Kyoto or Iceland"
+            [attr.aria-invalid]="
+              form.controls.destination.invalid && form.controls.destination.touched
+            "
+          />
+        </div>
+        <button type="submit" class="btn-search" [disabled]="searchState() === 'loading'">
+          @if (searchState() === 'loading') {
+            <span class="spinner" aria-hidden="true"></span>
+            Searching
+          } @else {
+            Submit
+          }
+        </button>
+      </form>
+
+      <div class="suggestions">
+        <span class="suggestions-label">Popular</span>
+        @for (item of suggestions; track item) {
+          <button type="button" class="chip" (click)="search(item)">{{ item }}</button>
+        }
+      </div>
+
+      @if (result(); as feed) {
+        <p class="result-line" aria-live="polite">
+          Live feed for <strong>{{ searchedTerm() }}</strong> · {{ liveSources().length }} sources
+          <button type="button" class="clear-link" (click)="clear()">Clear</button>
+        </p>
+      }
+    </div>
+  </section>
+
+  @if (searchState() === 'loading') {
+    <section class="container section" aria-live="polite" aria-busy="true">
+      <p class="status-line">Gathering the latest feeds about {{ searchedTerm() }}…</p>
+      <div class="skeletons">
+        @for (row of [1, 2]; track $index) {
+          <div class="skeleton-card">
+            <div class="skeleton skeleton-photo"></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line short"></div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  @if (result(); as feed) {
+    <section class="container section result" aria-labelledby="result-title">
+      <article class="place-card">
+        <div class="place-copy">
+          <p class="eyebrow">Destination profile</p>
+          <h2 id="result-title">{{ feed.place.name }}</h2>
+          @if (feed.place.context) {
+            <p class="place-context">{{ feed.place.context }}</p>
+          }
+          <p class="place-summary">{{ feed.place.summary }}</p>
+
+          <div class="place-meta">
+            @if (feed.weather; as weather) {
+              <span class="meta-pill weather-pill">
+                <span aria-hidden="true">{{ weather.glyph }}</span>
+                {{ weather.temperature | number: '1.0-0' }}°C · {{ weather.description }}
+              </span>
+            }
+            @if (feed.trend; as trend) {
+              <span class="meta-pill">
+                {{ views(trend.weeklyViews) }} reads this week
+                @if (trend.changePercent !== null) {
+                  <strong
+                    [class.up]="trend.changePercent >= 0"
+                    [class.down]="trend.changePercent < 0"
+                  >
+                    {{ trend.changePercent >= 0 ? '▲' : '▼' }}{{ trend.changePercent }}%
+                  </strong>
+                }
+              </span>
+            }
+          </div>
+
+          @if (feed.trend; as trend) {
+            <svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+              <path class="spark-area" [attr.d]="sparkArea(trend.spark)"></path>
+              <path class="spark-line" [attr.d]="sparkPath(trend.spark)"></path>
+            </svg>
+            <p class="spark-caption">Daily reads over the last seven days</p>
+          }
+        </div>
+
+        @if (feed.photos[0]; as hero) {
+          <figure class="place-hero">
+            <img [src]="hero.url" [alt]="hero.title" loading="lazy" />
+            <figcaption>
+              {{ hero.author }} · {{ hero.license }} ·
+              <a [href]="hero.page" target="_blank" rel="noopener">Commons</a>
+            </figcaption>
+          </figure>
+        }
+      </article>
+
+      @if (feed.empty) {
+        <p class="notice">
+          The public feeds had nothing for “{{ searchedTerm() }}”. Check the spelling, try a nearby
+          city, or search in English.
+        </p>
+      }
+
+      @if (feed.articles.length) {
+        <section class="feed-block" aria-labelledby="reading-title">
+          <header class="block-head">
+            <h3 id="reading-title">What the feeds are saying</h3>
+          </header>
+          <ul class="feed-list">
+            @for (article of feed.articles; track article.url; let i = $index) {
+              <li class="feed-item" [style.animation-delay.ms]="i * 45">
+                <a [href]="article.url" target="_blank" rel="noopener">
+                  <span class="feed-source">{{ article.source }}</span>
+                  <h4>{{ article.title }}</h4>
+                  <p>{{ article.extract }}</p>
+                  <span class="feed-open">Open<span aria-hidden="true"> ↗</span></span>
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (feed.photos.length > 1) {
+        <section class="feed-block" aria-labelledby="photos-title">
+          <header class="block-head">
+            <h3 id="photos-title">Travel photography</h3>
+            <p>Freely licensed, from Wikimedia Commons.</p>
+          </header>
+          <ul class="photo-grid">
+            @for (photo of feed.photos; track photo.url) {
+              <li>
+                <figure>
+                  <img [src]="photo.url" [alt]="photo.title" loading="lazy" />
+                  <figcaption>
+                    <a [href]="photo.page" target="_blank" rel="noopener">{{ photo.author }}</a>
+                    <span>{{ photo.license }}</span>
+                  </figcaption>
+                </figure>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="feed-block" aria-labelledby="sources-title">
+        <header class="block-head">
+          <h3 id="sources-title">Sources for this search</h3>
+          <p>What answered, and what is switched off. Nothing is stored by NeverBeen.</p>
+        </header>
+        <ul class="source-list">
+          @for (source of feed.sources; track source.id) {
+            <li>
+              <span [class]="sourceBadgeClass(source)">{{ source.status }}</span>
+              <div>
+                <p class="source-name">{{ source.label }}</p>
+                @if (source.note) {
+                  <p class="source-note">{{ source.note }}</p>
+                }
+              </div>
+              <span class="source-count">{{ source.items }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <p class="cross-link">
+        Google Places, Instagram and Facebook need API keys a public page cannot hold, so they are
+        wired in but off. Full guides for the same places live under
+        <a routerLink="/" fragment="destinations">destinations</a>.
+      </p>
+    </section>
+  }
+
+  @if (searchState() === 'error') {
+    <section class="container section">
+      <p class="notice">
+        The feeds could not be reached just now. Check your connection and submit again.
+      </p>
+    </section>
+  }
+
+  @if (searchState() === 'idle') {
+    <section class="container section" aria-labelledby="trending-title">
+      <header class="board-head">
+        <div>
+          <p class="eyebrow">What the world is reading</p>
+          <h2 id="trending-title">Trending destinations right now</h2>
+        </div>
+        <button
+          type="button"
+          class="btn-ghost"
+          (click)="loadTrending()"
+          [disabled]="trendsState() === 'loading'"
+        >
+          {{ trendsState() === 'loading' ? 'Refreshing…' : 'Refresh' }}
+        </button>
+      </header>
+
+      @if (trendsState() === 'loading') {
+        <div class="skeletons">
+          @for (row of [1, 2, 3]; track $index) {
+            <div class="skeleton-card">
+              <div class="skeleton skeleton-photo"></div>
+              <div class="skeleton skeleton-line"></div>
+            </div>
+          }
+        </div>
+      } @else if (trending().length) {
+        <ol class="board">
+          @for (place of trending(); track place.name; let i = $index) {
+            <li class="board-card" [style.animation-delay.ms]="i * 60">
+              <button type="button" class="board-button" (click)="search(place.name)">
+                <span class="rank">#{{ place.rank }}</span>
+                @if (place.photo) {
+                  <img [src]="place.photo" [alt]="place.name" loading="lazy" />
+                } @else {
+                  <span class="photo-fallback" aria-hidden="true">🌍</span>
+                }
+                <span class="board-copy-column">
+                  <span class="board-country">{{ place.country }}</span>
+                  <span class="board-name">{{ place.name }}</span>
+                  <span class="board-stats">
+                    @if (place.trend; as trend) {
+                      {{ views(trend.weeklyViews) }} reads
+                      @if (trend.changePercent !== null) {
+                        <strong
+                          [class.up]="trend.changePercent >= 0"
+                          [class.down]="trend.changePercent < 0"
+                        >
+                          {{ trend.changePercent >= 0 ? '▲' : '▼' }}{{ trend.changePercent }}%
+                        </strong>
+                      }
+                    }
+                    @if (place.weather; as weather) {
+                      · {{ weather.glyph }} {{ weather.temperature | number: '1.0-0' }}°C
+                    }
+                  </span>
+                </span>
+              </button>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="notice">
+          The trending board is unavailable right now — the public feed could not be reached. You
+          can still search any destination above.
+        </p>
+      }
+
+      <p class="cross-link">
+        Ranking comes from Wikimedia readership; photographs and conditions are credited on each
+        destination search. Google Places, Instagram and Facebook are wired in but switched off —
+        add keys in <code>src/app/models/travel-feeds.ts</code>.
+      </p>
+    </section>
+  }
+</main>

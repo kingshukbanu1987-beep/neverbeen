@@ -1,0 +1,532 @@
+@if (page(); as p) {
+  <article class="guide">
+    <header class="hero">
+      <img
+        class="hero-image"
+        [src]="p.destination.image"
+        [alt]="p.guide.name + ' travel photograph'"
+      />
+      <div class="hero-veil"></div>
+      <div class="container hero-inner">
+        <a class="back-link" routerLink="/" fragment="destinations">← All destinations</a>
+        <p class="eyebrow">Destination guide · {{ p.guide.country }}</p>
+        <h1>{{ p.guide.name }}</h1>
+        <p class="tagline">{{ p.guide.tagline }}</p>
+        <p class="region">{{ p.guide.region }}</p>
+        <ul class="chips">
+          <li>
+            <span class="chip-label">Local time</span>
+            <span class="chip-value">{{ localTimeShort() }}</span>
+          </li>
+          <li>
+            <span class="chip-label">Time zone</span>
+            <span class="chip-value">{{ p.guide.timezone }}</span>
+          </li>
+          <li>
+            <span class="chip-label">Currency</span>
+            <span class="chip-value"
+              >{{ p.guide.currency.code }} {{ p.guide.currency.symbol }}</span
+            >
+          </li>
+          <li>
+            <span class="chip-label">Best time</span>
+            <span class="chip-value">{{ p.guide.bestTime }}</span>
+          </li>
+        </ul>
+      </div>
+    </header>
+
+    <nav class="jump" aria-label="Sections of this guide">
+      <div class="container jump-inner">
+        @for (item of sections; track item.id) {
+          <a [href]="'#' + item.id">{{ item.label }}</a>
+        }
+      </div>
+    </nav>
+
+    <section class="section" id="live" aria-labelledby="live-title">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Right now</p>
+          <h2 id="live-title">Live from {{ p.guide.name }}</h2>
+          <p class="section-copy">
+            Current conditions, the local clock and the money in your pocket — pulled from live
+            sources when this page loads.
+          </p>
+        </header>
+
+        <div class="live-grid">
+          <article class="card weather" aria-labelledby="weather-title">
+            <h3 id="weather-title">Current weather</h3>
+
+            @switch (weatherState()) {
+              @case ('loading') {
+                <p class="status">Checking the sky over {{ p.guide.name }}…</p>
+              }
+              @case ('unavailable') {
+                <p class="status">
+                  Live weather is unavailable right now. The seasonal notes in
+                  <a href="#plan">Plan your visit</a> still apply, and
+                  <a [href]="photosOnGoogle(p.guide.name)">Google</a> has the current forecast.
+                </p>
+              }
+              @default {
+                @if (weather(); as w) {
+                  <div class="weather-now">
+                    <p class="weather-glyph" aria-hidden="true">{{ glyph(w.code, w.isDay) }}</p>
+                    <p class="weather-temp">{{ rate(w.temperature, 0) }}<span>°C</span></p>
+                    <div>
+                      <p class="weather-desc">{{ w.description }}</p>
+                      <p class="weather-sub">
+                        Feels like {{ rate(w.apparent, 0) }}°C ·
+                        {{ w.isDay ? 'Daytime' : 'Night' }} in {{ p.guide.name }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <dl class="stat-grid">
+                    <div>
+                      <dt>Humidity</dt>
+                      <dd>{{ rate(w.humidity, 0) }}%</dd>
+                    </div>
+                    <div>
+                      <dt>Wind</dt>
+                      <dd>{{ rate(w.windSpeed, 0) }} km/h {{ compass(w.windDirection) }}</dd>
+                    </div>
+                    <div>
+                      <dt>Cloud cover</dt>
+                      <dd>{{ rate(w.cloudCover, 0) }}%</dd>
+                    </div>
+                    <div>
+                      <dt>Rain now</dt>
+                      <dd>{{ rate(w.precipitation, 1) }} mm</dd>
+                    </div>
+                    <div>
+                      <dt>Pressure</dt>
+                      <dd>{{ rate(w.pressure, 0) }} hPa</dd>
+                    </div>
+                    <div>
+                      <dt>Sun</dt>
+                      <dd>{{ sunriseLabel() }} / {{ sunsetLabel() }}</dd>
+                    </div>
+                  </dl>
+
+                  @if (w.forecast.length) {
+                    <h4>Next few days</h4>
+                    <ul class="forecast">
+                      @for (day of w.forecast; track day.date) {
+                        <li>
+                          <span class="forecast-day">{{ dayLabelOf(day.date) }}</span>
+                          <span class="forecast-glyph" aria-hidden="true">{{
+                            glyph(day.code, true)
+                          }}</span>
+                          <span class="forecast-temp"
+                            >{{ rate(day.max, 0) }}° / {{ rate(day.min, 0) }}°</span
+                          >
+                          <span class="forecast-rain"
+                            >{{ rate(day.precipitationChance, 0) }}% rain</span
+                          >
+                        </li>
+                      }
+                    </ul>
+                  }
+
+                  <p class="source">
+                    Live data from
+                    <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>,
+                    reported for {{ w.timezone || p.guide.timezone }}.
+                  </p>
+                }
+              }
+            }
+          </article>
+
+          <article class="card clock" aria-labelledby="clock-title">
+            <h3 id="clock-title">Local time</h3>
+            <p class="clock-time">{{ localTime() }}</p>
+            <p class="clock-date">{{ localDate() }}</p>
+            <dl class="stat-grid">
+              <div>
+                <dt>Time zone</dt>
+                <dd>{{ p.guide.timezone }}</dd>
+              </div>
+              <div>
+                <dt>Offset</dt>
+                <dd>{{ localOffset() }}</dd>
+              </div>
+              <div>
+                <dt>Compared with you</dt>
+                <dd>{{ timeDifference() }}</dd>
+              </div>
+              <div>
+                <dt>Right now</dt>
+                <dd>{{ isNight() ? 'Night hours' : 'Daylight hours' }}</dd>
+              </div>
+            </dl>
+            <p class="source">
+              Local time is calculated from the {{ p.guide.timezone }} zone, including daylight
+              saving, so it stays correct while you read.
+            </p>
+          </article>
+
+          <article class="card money" aria-labelledby="money-title">
+            <h3 id="money-title">Local currency</h3>
+            <p class="money-name">
+              {{ p.guide.currency.name }}
+              <span class="money-code">{{ p.guide.currency.code }}</span>
+            </p>
+            <p class="money-symbol">Symbol {{ p.guide.currency.symbol }}</p>
+
+            @if (currency(); as c) {
+              <p class="money-rate">
+                <strong
+                  >1 USD ≈ {{ rate(c.perUsd, c.perUsd > 100 ? 0 : 2) }}
+                  {{ p.guide.currency.code }}</strong
+                >
+                <span class="money-flag">
+                  {{ c.live ? 'live reference rate' : 'approximate — live rate unavailable' }}
+                </span>
+              </p>
+              @if (c.crossRates.length) {
+                <ul class="cross-rates">
+                  @for (item of c.crossRates; track item.code) {
+                    <li>
+                      <span class="cross-code">{{ item.code }}</span>
+                      <span class="cross-value">
+                        {{ rate(item.rate, item.rate > 50 ? 1 : 4) }} {{ p.guide.currency.code }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+              }
+              <p class="source">
+                Rates from
+                <a href="https://frankfurter.dev/" target="_blank" rel="noopener">Frankfurter</a>
+                (European Central Bank reference rates){{ c.asOf ? ', dated ' + c.asOf : '' }}.
+                Cards are widely accepted, but carry some cash — see
+                <a
+                  [href]="googleSearch('cost of travel in ' + p.guide.name)"
+                  target="_blank"
+                  rel="noopener"
+                  >typical costs on Google</a
+                >.
+              </p>
+            } @else {
+              <p class="status">Checking exchange rates…</p>
+            }
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section paper" id="overview" aria-labelledby="overview-title">
+      <div class="container split">
+        <div>
+          <header class="section-head">
+            <p class="eyebrow">The short version</p>
+            <h2 id="overview-title">Overview</h2>
+          </header>
+          @for (paragraph of p.guide.overview; track $index) {
+            <p class="prose">{{ paragraph }}</p>
+          }
+
+          @if (summary(); as s) {
+            <aside class="wiki" aria-label="Background reading from Wikipedia">
+              <p class="wiki-label">Background reading · Wikipedia</p>
+              <p>{{ s.extract }}</p>
+              <a class="wiki-link" [href]="s.url" target="_blank" rel="noopener">
+                Read the full {{ p.guide.wikipedia }} article on Wikipedia →
+              </a>
+            </aside>
+          }
+        </div>
+
+        <aside class="glance" aria-labelledby="glance-title">
+          <h3 id="glance-title">At a glance</h3>
+          <dl>
+            <div>
+              <dt>Country</dt>
+              <dd>{{ p.guide.country }}</dd>
+            </div>
+            <div>
+              <dt>Region</dt>
+              <dd>{{ p.guide.region }}</dd>
+            </div>
+            <div>
+              <dt>Best time to go</dt>
+              <dd>{{ p.guide.bestTime }}</dd>
+            </div>
+            <div>
+              <dt>Local time zone</dt>
+              <dd>{{ p.guide.timezone }} ({{ localOffset() }})</dd>
+            </div>
+            <div>
+              <dt>Currency</dt>
+              <dd>{{ p.guide.currency.name }} ({{ p.guide.currency.code }})</dd>
+            </div>
+            <div>
+              <dt>Coordinates</dt>
+              <dd>
+                {{ p.guide.coordinates.lat.toFixed(4) }}, {{ p.guide.coordinates.lon.toFixed(4) }}
+              </dd>
+            </div>
+            @for (fact of p.guide.practical; track fact.label) {
+              <div>
+                <dt>{{ fact.label }}</dt>
+                <dd>{{ fact.value }}</dd>
+              </div>
+            }
+          </dl>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="eat" aria-labelledby="eat-title">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">At the table</p>
+          <h2 id="eat-title">Where to eat</h2>
+          <p class="section-copy">
+            What to look for, what to order, and the corners of {{ p.guide.name }} worth planning a
+            meal around.
+          </p>
+        </header>
+        <ul class="cards">
+          @for (entry of p.guide.eat; track entry.name; let i = $index) {
+            <li class="entry">
+              <p class="entry-index">{{ i + 1 < 10 ? '0' + (i + 1) : i + 1 }}</p>
+              <h3>{{ entry.name }}</h3>
+              <p>{{ entry.description }}</p>
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="section paper" id="see" aria-labelledby="see-title">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">What to see</p>
+          <h2 id="see-title">Sightseeing and top attractions</h2>
+          <p class="section-copy">
+            The landmarks, plus the walks and day trips that make a visit to {{ p.guide.name }} feel
+            complete.
+          </p>
+        </header>
+        <ol class="attractions">
+          @for (entry of p.guide.attractions; track entry.name; let i = $index) {
+            <li>
+              <span class="attraction-index" aria-hidden="true">{{ i + 1 }}</span>
+              <div>
+                <h3>{{ entry.name }}</h3>
+                <p>{{ entry.description }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="history" aria-labelledby="history-title">
+      <div class="container split narrow">
+        <div>
+          <header class="section-head">
+            <p class="eyebrow">How it came to be</p>
+            <h2 id="history-title">History</h2>
+          </header>
+          @for (paragraph of p.guide.history; track $index) {
+            <p class="prose">{{ paragraph }}</p>
+          }
+        </div>
+        <div id="geography">
+          <header class="section-head">
+            <p class="eyebrow">The land itself</p>
+            <h2 id="geography-title">Geography</h2>
+          </header>
+          @for (paragraph of p.guide.geography; track $index) {
+            <p class="prose">{{ paragraph }}</p>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section paper" id="map" aria-labelledby="map-title">
+      <div class="container split map-split">
+        <div>
+          <header class="section-head">
+            <p class="eyebrow">Find your bearings</p>
+            <h2 id="map-title">Map</h2>
+            <p class="section-copy">
+              {{ p.guide.name }} sits at {{ p.guide.coordinates.lat.toFixed(3) }},
+              {{ p.guide.coordinates.lon.toFixed(3) }}.
+            </p>
+          </header>
+          <div class="map-actions">
+            <a
+              class="btn btn-gold"
+              [href]="googleMapsUrl(p.guide.name, p.guide.coordinates.lat, p.guide.coordinates.lon)"
+              target="_blank"
+              rel="noopener"
+              >Open in Google Maps</a
+            >
+            <a
+              class="btn btn-gold"
+              [href]="photosOnGoogle(p.guide.name)"
+              target="_blank"
+              rel="noopener"
+              >Photographs on Google</a
+            >
+          </div>
+          <ul class="nearby">
+            <li><strong>Country</strong> {{ p.guide.country }}</li>
+            <li><strong>Region</strong> {{ p.guide.region }}</li>
+            <li>
+              <strong>Coordinates</strong> {{ p.guide.coordinates.lat }},
+              {{ p.guide.coordinates.lon }}
+            </li>
+          </ul>
+        </div>
+        <div class="map-frame">
+          <iframe
+            [src]="mapSrc()"
+            [title]="'Map of ' + p.guide.name"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="plan" aria-labelledby="plan-title">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Before you go</p>
+          <h2 id="plan-title">Planning your visit</h2>
+        </header>
+
+        <div class="plan-grid">
+          <article>
+            <h3>Culture &amp; people</h3>
+            @for (paragraph of p.guide.culture; track $index) {
+              <p>{{ paragraph }}</p>
+            }
+          </article>
+
+          <article>
+            <h3>When to go</h3>
+            <ul class="seasons">
+              @for (season of p.guide.seasons; track season.label) {
+                <li>
+                  <span class="season-label">{{ season.label }}</span>
+                  <span class="season-note">{{ season.note }}</span>
+                </li>
+              }
+            </ul>
+            <h4>Getting around</h4>
+            <p>{{ p.guide.gettingAround }}</p>
+          </article>
+
+          <article>
+            <h3>Good to know</h3>
+            <dl class="practical">
+              @for (fact of p.guide.practical; track fact.label) {
+                <div>
+                  <dt>{{ fact.label }}</dt>
+                  <dd>{{ fact.value }}</dd>
+                </div>
+              }
+            </dl>
+          </article>
+        </div>
+
+        <aside class="did-you-know" aria-labelledby="facts-title">
+          <h3 id="facts-title">Did you know?</h3>
+          <ul>
+            @for (fact of p.guide.facts; track $index) {
+              <li>{{ fact }}</li>
+            }
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section paper" id="photos" aria-labelledby="photos-title">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Travel photographs</p>
+          <h2 id="photos-title">{{ p.guide.name }} in pictures</h2>
+          <p class="section-copy">
+            The light, colour and texture of {{ p.guide.name }} — the kind of travel photography we
+            compose for NeverBeen portraits.
+          </p>
+        </header>
+        <ul class="gallery">
+          @for (photo of p.photos; track $index; let i = $index) {
+            <li [class.wide]="i % 3 === 0">
+              <img
+                [src]="photo"
+                [alt]="p.guide.name + ' travel photograph ' + (i + 1)"
+                loading="lazy"
+              />
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="more-title">
+      <div class="container">
+        <header class="section-head">
+          <p class="eyebrow">Keep exploring</p>
+          <h2 id="more-title">More destinations</h2>
+        </header>
+        <div class="more-grid">
+          @for (place of p.related; track place.slug) {
+            <app-destination-card [destination]="place" />
+          }
+        </div>
+        <p class="more-link">
+          <a routerLink="/" fragment="destinations">See all destinations →</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="cta-band" aria-labelledby="cta-title">
+      <div class="container cta-inner">
+        <div>
+          <p class="eyebrow">NeverBeen</p>
+          <h2 id="cta-title">Never been to {{ p.guide.name }}?</h2>
+          <p class="cta-copy">
+            Send us a portrait you already own and we will compose you into {{ p.guide.name }} —
+            {{ p.guide.tagline }} — in editorial travel light.
+          </p>
+        </div>
+        <div class="cta-actions">
+          <a class="btn btn-gold" routerLink="/" fragment="contact">Start your NeverBeen request</a>
+          <a class="btn btn-gold" routerLink="/collection">See the Collection</a>
+        </div>
+      </div>
+    </section>
+  </article>
+} @else if (page() === null) {
+  <section class="not-found container" aria-labelledby="missing-title">
+    <p class="eyebrow">Off the map</p>
+    <h1 id="missing-title">We do not have a guide for that destination yet</h1>
+    <p>
+      Pick one of the places below, or
+      <a routerLink="/" fragment="destinations">browse every destination</a>.
+    </p>
+    <ul class="not-found-list">
+      @for (guide of allGuides; track guide.slug) {
+        <li>
+          <a [routerLink]="['/destinations', guide.slug]">{{ guide.name }}</a>
+        </li>
+      }
+    </ul>
+  </section>
+} @else {
+  <section class="loading container" aria-live="polite">
+    <p class="eyebrow">Loading</p>
+    <h1>Preparing your destination guide…</h1>
+  </section>
+}

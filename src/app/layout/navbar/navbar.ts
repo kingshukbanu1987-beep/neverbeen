@@ -12,15 +12,18 @@ export class Navbar {
   protected readonly open = signal(false);
 
   protected readonly links = [
-    { label: 'Home', path: '/', fragment: undefined as string | undefined },
-    { label: 'How It Works', path: '/', fragment: 'how-it-works' },
-    { label: 'Audience', path: '/audience', fragment: undefined },
-    { label: 'Collection', path: '/collection', fragment: undefined },
-    { label: 'Destinations', path: '/', fragment: 'destinations' },
-    { label: 'Pricing', path: '/', fragment: 'pricing' },
-    { label: 'Login', path: '/login', fragment: undefined },
-    { label: 'Founder', path: '/', fragment: 'owner' },
-    { label: 'Contact', path: '/', fragment: 'contact' },
+    { label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },
+    { label: 'How', path: '/', fragment: 'how-it-works', icon: 'cog' },
+    { label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
+    { label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
+    { label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
+    { label: 'Travel Feeds', path: '/travel-feeds', fragment: undefined, icon: 'globe' },
+    { label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },
+    { label: 'FAQ', path: '/', fragment: 'faq', icon: 'help-circle' },
+    { label: 'Login', path: '/login', fragment: undefined, icon: 'log-in' },
+    { label: 'Founder', path: '/', fragment: 'owner', icon: 'user' },
+    { label: 'Contact', path: '/', fragment: 'contact', icon: 'mail' },
+    { label: 'Feedback', path: '/feedback', fragment: undefined, icon: 'message-square' },
   ];
 
   toggle(): void {

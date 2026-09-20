@@ -45,6 +45,26 @@ h1 {
   background: #0c2b4d;
 }
 
+.btn-dream {
+  background: #5bb523;
+  color: #fff;
+}
+
+.btn-dream:hover,
+.btn-dream:focus-visible {
+  background: #4a9a1c;
+}
+
+.btn-collection {
+  background: #c20000;
+  color: #fff;
+}
+
+.btn-collection:hover,
+.btn-collection:focus-visible {
+  background: #9a0000;
+}
+
 .frame {
   margin: 0;
   position: relative;

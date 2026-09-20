@@ -1,0 +1,269 @@
+<main class="feedback-page">
+  <section class="intro" aria-labelledby="feedback-title">
+    <div class="aurora" aria-hidden="true">
+      <span class="orb orb-one"></span>
+      <span class="orb orb-two"></span>
+      <span class="orb orb-three"></span>
+    </div>
+
+    <div class="container intro-inner">
+      <a class="back-link" routerLink="/">← Back to NeverBeen</a>
+      <p class="eyebrow">Feedback &amp; suggestions</p>
+      <h1 id="feedback-title">Tell us how NeverBeen can be better</h1>
+      <p class="lede">
+        NeverBeen is a small studio, and every message lands with the people who build and run it —
+        not in a ticket queue. If something delighted you, say so. If something fell short, say that
+        too. Both are how the service improves.
+      </p>
+
+      <div class="pillars">
+        <article>
+          <p class="pillar-icon" aria-hidden="true">✍️</p>
+          <h2>What you can share</h2>
+          <p>
+            Appreciation, testimonials, improvement ideas, general or urgent queries, grievances and
+            reviews — about a request, a photograph, pricing, delivery times or anything you think
+            we should do differently.
+          </p>
+        </article>
+        <article>
+          <p class="pillar-icon" aria-hidden="true">📲</p>
+          <h2>Where it goes</h2>
+          <p>
+            Straight to our studio WhatsApp, {{ whatsappDisplay }}, as a message written in your own
+            words. Nothing is stored on this site and no account is needed.
+          </p>
+        </article>
+        <article>
+          <p class="pillar-icon" aria-hidden="true">💬</p>
+          <h2>What happens next</h2>
+          <p>
+            Urgent queries and grievances are answered first, usually within a working day.
+            Improvement ideas are logged and revisited as the studio grows, and you will always get
+            a reply on the same channel.
+          </p>
+        </article>
+      </div>
+
+      <p class="intake-note">
+        Handy to include: your request reference or order date, the destination or package, and a
+        screenshot if something looks wrong — it helps us help you faster.
+      </p>
+    </div>
+  </section>
+
+  <section class="form-section" aria-labelledby="form-title">
+    <div class="container form-grid">
+      <div class="form-card">
+        <header class="form-head">
+          <h2 id="form-title">Post your feedback</h2>
+          <p>
+            Every field is required. When you submit, your message opens in WhatsApp ready to send —
+            type it once, and press send.
+          </p>
+        </header>
+
+        @if (sent()) {
+          <div class="sent-panel" role="status" aria-live="polite">
+            <p class="sent-mark" aria-hidden="true">✓</p>
+            <h3>Your message is ready in WhatsApp</h3>
+            <p>
+              A new tab should have opened with your feedback addressed to
+              <strong>{{ whatsappDisplay }}</strong
+              >. Press <em>send</em> there and it reaches the studio.
+            </p>
+            <dl class="sent-summary">
+              <div>
+                <dt>Name</dt>
+                <dd>{{ form.controls.name.value }}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{{ form.controls.email.value }}</dd>
+              </div>
+              <div>
+                <dt>Type</dt>
+                <dd>{{ form.controls.type.value }}</dd>
+              </div>
+            </dl>
+            <div class="sent-actions">
+              <button type="button" class="btn-minimal" (click)="openWhatsApp()">
+                Open WhatsApp again
+              </button>
+              <button type="button" class="btn-link" (click)="writeAnother()">
+                Write another message
+              </button>
+            </div>
+            <p class="sent-help">
+              Nothing opened? Your browser may have blocked the new tab — use
+              <a [href]="whatsappLink()" target="_blank" rel="noopener">this direct WhatsApp link</a
+              >, or write to us from the
+              <a routerLink="/" fragment="contact">contact form</a> instead.
+            </p>
+          </div>
+        } @else {
+          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="field-row">
+              <div class="field">
+                <label for="feedback-name"
+                  >Name <span class="required" aria-hidden="true">*</span></label
+                >
+                <input
+                  id="feedback-name"
+                  type="text"
+                  formControlName="name"
+                  autocomplete="name"
+                  placeholder="Your full name"
+                  [attr.aria-invalid]="invalid(name)"
+                  aria-describedby="feedback-name-error"
+                />
+                @if (invalid(name)) {
+                  <span id="feedback-name-error" class="field-error">
+                    Please tell us your name (at least 2 letters).
+                  </span>
+                }
+              </div>
+
+              <div class="field">
+                <label for="feedback-email"
+                  >Email <span class="required" aria-hidden="true">*</span></label
+                >
+                <input
+                  id="feedback-email"
+                  type="email"
+                  formControlName="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  placeholder="you@example.com"
+                  [attr.aria-invalid]="invalid(email)"
+                  aria-describedby="feedback-email-error"
+                />
+                @if (invalid(email)) {
+                  <span id="feedback-email-error" class="field-error">
+                    Enter a valid email address, like you@example.com.
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="feedback-type">
+                Type of feedback <span class="required" aria-hidden="true">*</span>
+              </label>
+              <div class="select-wrap">
+                <select
+                  id="feedback-type"
+                  formControlName="type"
+                  [attr.aria-invalid]="invalid(form.controls.type)"
+                  aria-describedby="feedback-type-hint"
+                >
+                  <option value="" disabled>Choose a type of feedback</option>
+                  @for (type of types; track type) {
+                    <option [value]="type">{{ type }}</option>
+                  }
+                </select>
+              </div>
+              <p id="feedback-type-hint" class="field-hint">
+                @if (selectedType()) {
+                  Sending as <strong>{{ selectedType() }}</strong> — that tells us how to route it.
+                } @else {
+                  Appreciation, testimonial, improvement idea, query, grievance or review.
+                }
+              </p>
+              @if (invalid(form.controls.type)) {
+                <span class="field-error">Please choose a type of feedback.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="feedback-notes">
+                Feedback notes <span class="required" aria-hidden="true">*</span>
+              </label>
+              <textarea
+                id="feedback-notes"
+                formControlName="notes"
+                rows="8"
+                placeholder="Write your feedback, suggestion, query or grievance here…"
+                [attr.aria-invalid]="invalid(notes)"
+                aria-describedby="feedback-notes-counter"
+              ></textarea>
+
+              <div
+                class="counter"
+                id="feedback-notes-counter"
+                [class.warn]="notesLength() > notesLimit * 0.8 && !notesOverLimit()"
+                [class.over]="notesOverLimit()"
+                role="status"
+                aria-live="polite"
+              >
+                <div class="counter-track" aria-hidden="true">
+                  <span [style.width.%]="counterPercent()"></span>
+                </div>
+                <p class="counter-text">
+                  @if (notesOverLimit()) {
+                    <strong>{{ notesLength() }} characters</strong> — that is
+                    {{ notesLength() - notesLimit }} over the {{ notesLimit }} limit.
+                  } @else {
+                    {{ notesLength() }} / {{ notesLimit }} characters
+                    @if (notesRemaining() <= 200) {
+                      <span class="counter-warn">· {{ notesRemaining() }} left</span>
+                    }
+                  }
+                </p>
+              </div>
+
+              @if (notesOverLimit()) {
+                <span class="field-error">
+                  Please shorten your notes to {{ notesLimit }} characters or fewer, then send.
+                </span>
+              } @else if (invalid(notes)) {
+                <span class="field-error">Please write your feedback before sending.</span>
+              }
+            </div>
+
+            <div class="submit-row">
+              <button type="submit" class="btn-send" [disabled]="notesOverLimit()">
+                <span aria-hidden="true">💬</span>
+                Send to WhatsApp
+              </button>
+              <p class="submit-note">
+                Opens WhatsApp to <strong>The Neverbeen Team</strong> with your message filled in.
+                Nothing is posted publicly, and no account is created.
+              </p>
+            </div>
+          </form>
+        }
+      </div>
+
+      <aside class="aside-card" aria-label="Other ways to reach us">
+        <h2>Prefer another channel?</h2>
+        <p>
+          Feedback can also go through the home page contact form, or straight to the studio on
+          WhatsApp if you would rather start the conversation yourself.
+        </p>
+        <ul class="aside-list">
+          <li>
+            <span class="aside-label">Studio WhatsApp</span>
+            <span class="aside-value">{{ whatsappDisplay }}</span>
+          </li>
+          <li>
+            <span class="aside-label">Full service request</span>
+            <a class="aside-value" routerLink="/" fragment="contact">Use the contact form</a>
+          </li>
+          <li>
+            <span class="aside-label">Common questions</span>
+            <a class="aside-value" routerLink="/" fragment="faq">Read the FAQ</a>
+          </li>
+          <li>
+            <span class="aside-label">Who is behind it</span>
+            <a class="aside-value" routerLink="/founder">Meet the founder</a>
+          </li>
+        </ul>
+        <p class="aside-foot">
+          We read everything, including the hard parts. Honest feedback is what keeps the
+          photographs — and the studio — getting better.
+        </p>
+      </aside>
+    </div>
+  </section>
+</main>

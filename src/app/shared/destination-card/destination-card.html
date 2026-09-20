@@ -1,8 +1,9 @@
-<article class="card">
+<a class="card" [routerLink]="link()">
   <img [src]="destination().image" [alt]="destination().name + ' travel photograph'" />
   <div class="meta">
     <p class="country">{{ destination().country }}</p>
     <h3>{{ destination().name }}</h3>
     <p>{{ destination().caption }}</p>
+    <p class="cta">Explore the guide<span aria-hidden="true"> →</span></p>
   </div>
-</article>
+</a>
