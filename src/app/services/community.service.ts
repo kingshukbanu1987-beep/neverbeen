@@ -17,13 +17,45 @@ import {
   SEED_COUNTRIES,
   SEED_GENDERS,
   SEED_PROFESSIONS,
-  SeedCountry,
 } from '../models/community-seed';
 
-const TOKEN_KEY = 'neverbeen_auth_token';
-const USER_KEY = 'neverbeen_current_user';
-const PROFILE_KEY = 'neverbeen_user_profile';
-const COMMENTS_KEY = 'neverbeen_comments';
+export const TOKEN_KEY = 'neverbeen_auth_token';
+export const USER_KEY = 'neverbeen_current_user';
+export const PROFILE_KEY = 'neverbeen_user_profile';
+export const COMMENTS_KEY = 'neverbeen_comments';
+
+export function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(
+    new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[\]\\/+^])/g, '\\$1') + '=([^;]*)'),
+  );
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+export function setCookie(name: string, value: string, days = 30): void {
+  if (typeof document === 'undefined') return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+export function deleteCookie(name: string): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+}
+
+export interface CreateAccountData {
+  name: string;
+  surname: string;
+  email: string;
+  country: string;
+  state: string;
+  city: string;
+  gender: string;
+  dateOfBirth: string;
+  photoUrl: string;
+  aboutMe?: string;
+  profession?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -32,9 +64,9 @@ export class CommunityService {
   private readonly http = inject(HttpClient, { optional: true });
   readonly apiUrl = 'http://localhost:5080';
 
-  readonly token = signal<string | null>(this.loadStorage(TOKEN_KEY));
-  readonly currentUser = signal<CurrentUser | null>(this.loadJson(USER_KEY));
-  readonly profile = signal<Profile | null>(this.loadJson(PROFILE_KEY));
+  readonly token = signal<string | null>(getCookie(TOKEN_KEY));
+  readonly currentUser = signal<CurrentUser | null>(null);
+  readonly profile = signal<Profile | null>(null);
   readonly comments = signal<CommunityComment[]>(this.loadComments());
 
   readonly countries = signal<Country[]>(
@@ -48,13 +80,26 @@ export class CommunityService {
   readonly professions = signal<string[]>(SEED_PROFESSIONS);
   readonly genders = signal<string[]>(SEED_GENDERS);
 
-  readonly isAuthenticated = computed(() => !!this.currentUser());
+  readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
   readonly isPending = computed(() => this.currentUser()?.status === 'Pending');
 
   constructor() {
-    // If no profile exists yet, seed a default active member so profile & message book are immediately testable
-    if (!this.profile() && !this.currentUser()) {
-      this.initDefaultMember();
+    const existingCookieToken = getCookie(TOKEN_KEY);
+    if (existingCookieToken) {
+      const storedUser = this.loadJson<CurrentUser>(USER_KEY);
+      const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
+      if (storedUser && storedProfile) {
+        this.token.set(existingCookieToken);
+        this.currentUser.set(storedUser);
+        this.profile.set(storedProfile);
+      } else {
+        this.initDefaultMember();
+      }
+    } else {
+      // User is not signed in
+      this.token.set(null);
+      this.currentUser.set(null);
+      this.profile.set(null);
     }
   }
 
@@ -62,43 +107,131 @@ export class CommunityService {
   // Session / OAuth
   // ---------------------------------------------------------------------------
 
-  /** Simulates or executes OAuth login with Google / Facebook / Microsoft */
-  async loginWithOAuth(provider: string, code: string): Promise<AuthResult> {
-    if (this.http) {
-      try {
-        const res = await firstValueFrom(
-          this.http.post<AuthResult>(`${this.apiUrl}/api/auth/oauth/login`, {
-            provider,
-            code,
-          }),
-        );
-        this.applyAuthResult(res);
-        return res;
-      } catch (err) {
-        console.warn('Backend API login unavailable, using simulated response:', err);
-      }
-    }
+  /**
+   * OAuth login with Google / Facebook / Microsoft.
+   * If user is already a NeverBeen user, sets auth cookie and loads profile.
+   * If not, marks pending for registration.
+   */
+  async loginWithOAuth(
+    provider: 'google' | 'facebook' | 'microsoft' | string,
+    isExistingUserOrCode: boolean | string = false,
+  ): Promise<AuthResult> {
+    const isExistingUser =
+      typeof isExistingUserOrCode === 'boolean' ? isExistingUserOrCode : false;
+    const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
 
-    // Fallback simulation based on provider
-    const simulated: AuthResult = {
-      token: 'jwt_mock_' + Math.random().toString(36).substring(2),
-      tokenType: 'Bearer',
-      expiresIn: 259200,
-      isNewUser: false,
-      profileComplete: true,
-      message: `Signed in successfully via ${provider}.`,
-      user: {
+    if (isExistingUser) {
+      setCookie(TOKEN_KEY, token, 30);
+      const existingUser: CurrentUser = {
         id: 1,
+        firstName: 'Sophia',
+        lastName: 'Laurent',
         fullName: 'Sophia Laurent',
         email: `sophia.${provider.toLowerCase()}@neverbeen.example`,
         status: 'Active',
         profileComplete: true,
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-      },
-    };
-    this.applyAuthResult(simulated);
-    return simulated;
+      };
+
+      const existingProfile: Profile = {
+        id: 1,
+        firstName: 'Sophia',
+        lastName: 'Laurent',
+        fullName: 'Sophia Laurent',
+        email: `sophia.${provider.toLowerCase()}@neverbeen.example`,
+        gender: 'Female',
+        dateOfBirth: '1996-04-18',
+        age: 28,
+        country: 'France',
+        countryId: 58,
+        countryName: 'France',
+        state: 'Île-de-France',
+        city: 'Paris',
+        cityId: 320,
+        cityName: 'Paris',
+        pincode: '75001',
+        contactNumber: '+33 6 88 41 92 01',
+        postalAddress: '14 Rue de Castiglione, 75001 Paris',
+        aboutMe:
+          'Travel filmmaker and visual storyteller. Passionate about hidden alleys across Europe, alpine sunrises in the Swiss Alps, and sunset tones along the Mediterranean coast. Sharing AI vacation journeys with the NeverBeen community!',
+        profession: 'Content Creator',
+        status: 'Active',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        createdAtUtc: '2026-08-10T14:22:00Z',
+        settings: {
+          emailNotificationsEnabled: true,
+          phoneNotificationsEnabled: false,
+          publicProfileEnabled: true,
+          theme: 'light',
+          timezone: 'Europe/Paris',
+        },
+        gallery: [
+          {
+            id: 101,
+            url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
+            caption: 'Morning light on Parisian balconies',
+            createdAtUtc: '2026-08-15T09:00:00Z',
+          },
+          {
+            id: 102,
+            url: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80',
+            caption: 'Courtyard architecture at dusk',
+            createdAtUtc: '2026-08-22T18:30:00Z',
+          },
+          {
+            id: 103,
+            url: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=800&q=80',
+            caption: 'Sunset over Champ de Mars',
+            createdAtUtc: '2026-09-02T19:15:00Z',
+          },
+        ],
+        commentCount: 3,
+      };
+
+      this.token.set(token);
+      this.currentUser.set(existingUser);
+      this.profile.set(existingProfile);
+      this.saveJson(USER_KEY, existingUser);
+      this.saveJson(PROFILE_KEY, existingProfile);
+
+      return {
+        token,
+        tokenType: 'Bearer',
+        expiresIn: 2592000,
+        isNewUser: false,
+        profileComplete: true,
+        message: `Signed in successfully via ${provider}.`,
+        user: existingUser,
+      };
+    } else {
+      // New member: not registered yet
+      const newUser: CurrentUser = {
+        id: Date.now(),
+        firstName: '',
+        lastName: '',
+        fullName: '',
+        email: `traveler.${provider.toLowerCase()}@neverbeen.example`,
+        status: 'Pending',
+        profileComplete: false,
+        profilePhotoUrl: '',
+      };
+      this.token.set(null);
+      this.currentUser.set(newUser);
+      this.profile.set(null);
+      this.saveJson(USER_KEY, newUser);
+
+      return {
+        token: '',
+        tokenType: 'Bearer',
+        expiresIn: 0,
+        isNewUser: true,
+        profileComplete: false,
+        message: 'New member detected, registration required.',
+        user: newUser,
+      };
+    }
   }
 
   /** Quick one-click sign in for demonstration / preview mode */
@@ -106,6 +239,8 @@ export class CommunityService {
     if (mode === 'new_pending') {
       const pendingUser: CurrentUser = {
         id: 99,
+        firstName: 'Alex',
+        lastName: 'Vance',
         fullName: 'Alex Vance',
         email: 'alex.vance@example.com',
         status: 'Pending',
@@ -113,34 +248,30 @@ export class CommunityService {
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
       };
-      this.token.set('jwt_demo_pending');
+      deleteCookie(TOKEN_KEY);
+      this.token.set(null);
       this.currentUser.set(pendingUser);
       this.profile.set(null);
-      this.saveStorage(TOKEN_KEY, 'jwt_demo_pending');
       this.saveJson(USER_KEY, pendingUser);
-      localStorage.removeItem(PROFILE_KEY);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(PROFILE_KEY);
+      }
     } else {
+      setCookie(TOKEN_KEY, 'jwt_default_active_token', 30);
       this.initDefaultMember();
     }
   }
 
   logout(): void {
+    deleteCookie(TOKEN_KEY);
     this.token.set(null);
     this.currentUser.set(null);
     this.profile.set(null);
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(PROFILE_KEY);
-  }
-
-  private applyAuthResult(res: AuthResult): void {
-    this.token.set(res.token);
-    this.currentUser.set(res.user);
-    this.saveStorage(TOKEN_KEY, res.token);
-    this.saveJson(USER_KEY, res.user);
-
-    if (res.profileComplete) {
-      this.refreshProfile();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(PROFILE_KEY);
     }
   }
 
@@ -155,7 +286,7 @@ export class CommunityService {
           this.http.get<City[]>(`${this.apiUrl}/api/lookup/countries/${countryId}/cities`),
         );
       } catch {
-        // Fall through to seed data
+        // Fall through
       }
     }
     const seed = SEED_COUNTRIES.find((c) => c.id === countryId);
@@ -163,123 +294,100 @@ export class CommunityService {
   }
 
   // ---------------------------------------------------------------------------
-  // Registration
+  // Registration / Account Creation
   // ---------------------------------------------------------------------------
 
-  async registerUser(formData: FormData): Promise<Profile> {
-    if (this.http && this.token()) {
-      try {
-        const res = await firstValueFrom(
-          this.http.post<Profile>(`${this.apiUrl}/api/registration`, formData, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-        this.profile.set(res);
-        this.saveJson(PROFILE_KEY, res);
-        this.currentUser.update((u) =>
-          u ? { ...u, status: 'Active', profileComplete: true, fullName: res.fullName } : null,
-        );
-        this.saveJson(USER_KEY, this.currentUser());
-        return res;
-      } catch (err) {
-        console.warn('Backend API registration unavailable, using mock flow:', err);
-      }
-    }
+  async createNeverbeenAccount(data: CreateAccountData): Promise<Profile> {
+    const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
+    setCookie(TOKEN_KEY, token, 30);
 
-    // Mock registration
-    const countryId = Number(formData.get('countryId')) || 58;
-    const cityId = Number(formData.get('cityId')) || 320;
-    const country = SEED_COUNTRIES.find((c) => c.id === countryId);
-    const city = country?.cities.find((ct) => ct.id === cityId);
+    const countryObj = this.countries().find(
+      (c) => c.name.toLowerCase() === data.country.toLowerCase(),
+    );
 
     const newProfile: Profile = {
-      id: this.currentUser()?.id ?? 1,
-      fullName: (formData.get('fullName') as string) || 'New Traveler',
-      email: (formData.get('email') as string) || 'traveler@neverbeen.example',
-      gender: (formData.get('gender') as string) || 'Other',
-      dateOfBirth: (formData.get('dateOfBirth') as string) || '1995-05-15',
-      age: 29,
-      countryId,
-      countryName: country?.name ?? 'France',
-      cityId,
-      cityName: city?.name ?? 'Paris',
-      pincode: (formData.get('pincode') as string) || '75001',
-      contactNumber: (formData.get('contactNumber') as string) || '+33 6 12 34 56 78',
-      postalAddress: (formData.get('postalAddress') as string) || 'Rue de Rivoli',
+      id: this.currentUser()?.id || Date.now(),
+      firstName: data.name,
+      lastName: data.surname,
+      fullName: `${data.name} ${data.surname}`.trim(),
+      email: data.email,
+      country: data.country,
+      countryId: countryObj?.id || 1,
+      countryName: data.country,
+      state: data.state,
+      city: data.city,
+      cityName: data.city,
+      gender: data.gender,
+      dateOfBirth: data.dateOfBirth,
+      profilePhotoUrl: data.photoUrl,
       aboutMe:
-        (formData.get('aboutMe') as string) ||
-        'Passionate traveler discovering new places through photography.',
-      profession: (formData.get('profession') as string) || 'Content Creator',
+        data.aboutMe ||
+        `Passionate traveler from ${data.city}, ${data.country}. Exploring dream destinations and sharing memories with the NeverBeen Community.`,
+      profession: data.profession || 'Traveler',
       status: 'Active',
-      profilePhotoUrl:
-        this.currentUser()?.profilePhotoUrl ??
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
       createdAtUtc: new Date().toISOString(),
       settings: {
+        publicProfileEnabled: true,
         emailNotificationsEnabled: true,
         phoneNotificationsEnabled: false,
-        publicProfileEnabled: true,
         theme: 'light',
-        timezone: 'Europe/Paris',
+        timezone: 'UTC',
       },
       gallery: [],
       commentCount: 0,
     };
 
-    this.profile.set(newProfile);
-    this.saveJson(PROFILE_KEY, newProfile);
-
-    this.currentUser.set({
+    const newUser: CurrentUser = {
       id: newProfile.id,
+      firstName: newProfile.firstName,
+      lastName: newProfile.lastName,
       fullName: newProfile.fullName,
       email: newProfile.email,
       status: 'Active',
       profileComplete: true,
       profilePhotoUrl: newProfile.profilePhotoUrl,
-    });
-    this.saveJson(USER_KEY, this.currentUser());
+    };
+
+    this.token.set(token);
+    this.currentUser.set(newUser);
+    this.profile.set(newProfile);
+    this.saveJson(USER_KEY, newUser);
+    this.saveJson(PROFILE_KEY, newProfile);
 
     return newProfile;
+  }
+
+  async registerUser(formData: FormData): Promise<Profile> {
+    const name = (formData.get('name') as string) || (formData.get('fullName') as string) || 'Alex';
+    const surname = (formData.get('surname') as string) || 'Vance';
+    const email = (formData.get('email') as string) || 'alex.vance@example.com';
+    const country = (formData.get('country') as string) || 'France';
+    const state = (formData.get('state') as string) || 'Île-de-France';
+    const city = (formData.get('city') as string) || 'Paris';
+    const gender = (formData.get('gender') as string) || 'Other';
+    const dateOfBirth = (formData.get('dateOfBirth') as string) || '1995-05-15';
+    const photoUrl =
+      (formData.get('photoUrl') as string) ||
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+
+    return this.createNeverbeenAccount({
+      name,
+      surname,
+      email,
+      country,
+      state,
+      city,
+      gender,
+      dateOfBirth,
+      photoUrl,
+    });
   }
 
   // ---------------------------------------------------------------------------
   // Profile
   // ---------------------------------------------------------------------------
 
-  async refreshProfile(): Promise<Profile | null> {
-    if (this.http && this.token()) {
-      try {
-        const res = await firstValueFrom(
-          this.http.get<Profile>(`${this.apiUrl}/api/profile/me`, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-        this.profile.set(res);
-        this.saveJson(PROFILE_KEY, res);
-        return res;
-      } catch {
-        // Keep cached
-      }
-    }
-    return this.profile();
-  }
-
   async updateProfile(req: UpdateProfileRequest): Promise<Profile> {
-    if (this.http && this.token()) {
-      try {
-        const res = await firstValueFrom(
-          this.http.put<Profile>(`${this.apiUrl}/api/profile`, req, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-        this.profile.set(res);
-        this.saveJson(PROFILE_KEY, res);
-        return res;
-      } catch {
-        // Fall through
-      }
-    }
-
     const current = this.profile()!;
     const country = req.countryId
       ? SEED_COUNTRIES.find((c) => c.id === req.countryId)
@@ -294,8 +402,10 @@ export class CommunityService {
       dateOfBirth: req.dateOfBirth ?? current.dateOfBirth,
       countryId: req.countryId ?? current.countryId,
       countryName: country?.name ?? current.countryName,
+      country: country?.name ?? current.country,
       cityId: req.cityId ?? current.cityId,
       cityName: city?.name ?? current.cityName,
+      city: city?.name ?? current.city,
       pincode: req.pincode ?? current.pincode,
       contactNumber: req.contactNumber ?? current.contactNumber,
       postalAddress: req.postalAddress ?? current.postalAddress,
@@ -305,261 +415,136 @@ export class CommunityService {
 
     this.profile.set(updated);
     this.saveJson(PROFILE_KEY, updated);
-    this.currentUser.update((u) =>
-      u ? { ...u, fullName: updated.fullName } : null,
-    );
-    this.saveJson(USER_KEY, this.currentUser());
     return updated;
   }
 
-  async updateSettings(settings: UserSettings): Promise<UserSettings> {
-    if (this.http && this.token()) {
-      try {
-        const res = await firstValueFrom(
-          this.http.put<UserSettings>(`${this.apiUrl}/api/profile/settings`, settings, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-        this.profile.update((p) => (p ? { ...p, settings: res } : null));
+  async uploadProfilePhoto(file: File): Promise<string> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const photoUrl = reader.result as string;
+        this.profile.update((p) => (p ? { ...p, profilePhotoUrl: photoUrl } : null));
+        this.currentUser.update((u) => (u ? { ...u, profilePhotoUrl: photoUrl } : null));
         this.saveJson(PROFILE_KEY, this.profile());
-        return res;
-      } catch {
-        // Fall through
-      }
-    }
+        this.saveJson(USER_KEY, this.currentUser());
+        resolve(photoUrl);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 
+  async updateSettings(settings: UserSettings): Promise<UserSettings> {
     this.profile.update((p) => (p ? { ...p, settings } : null));
     this.saveJson(PROFILE_KEY, this.profile());
     return settings;
   }
 
-  async uploadProfilePhoto(file: File): Promise<string> {
-    const reader = new FileReader();
-    const dataUrlPromise = new Promise<string>((resolve) => {
-      reader.onload = () => resolve(reader.result as string);
+  // ---------------------------------------------------------------------------
+  // Gallery
+  // ---------------------------------------------------------------------------
+
+  async addGalleryPhoto(file: File, caption?: string): Promise<GalleryPhoto> {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const newPhoto: GalleryPhoto = {
+          id: Date.now(),
+          url: reader.result as string,
+          caption: caption || 'NeverBeen AI Vacation Memoir',
+          createdAtUtc: new Date().toISOString(),
+        };
+
+        this.profile.update((p) => {
+          if (!p) return null;
+          return {
+            ...p,
+            gallery: [newPhoto, ...p.gallery],
+          };
+        });
+
+        this.saveJson(PROFILE_KEY, this.profile());
+        resolve(newPhoto);
+      };
       reader.readAsDataURL(file);
     });
-    const photoUrl = await dataUrlPromise;
-
-    if (this.http && this.token()) {
-      try {
-        const fd = new FormData();
-        fd.append('photo', file);
-        await firstValueFrom(
-          this.http.put(`${this.apiUrl}/api/profile/photo`, fd, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-      } catch {
-        // Use local data url
-      }
-    }
-
-    this.profile.update((p) => (p ? { ...p, profilePhotoUrl: photoUrl } : null));
-    this.currentUser.update((u) => (u ? { ...u, profilePhotoUrl: photoUrl } : null));
-    this.saveJson(PROFILE_KEY, this.profile());
-    this.saveJson(USER_KEY, this.currentUser());
-    return photoUrl;
-  }
-
-  async addGalleryPhoto(file: File, caption: string): Promise<GalleryPhoto> {
-    const reader = new FileReader();
-    const dataUrlPromise = new Promise<string>((resolve) => {
-      reader.onload = () => resolve(reader.result as string);
-      reader.readAsDataURL(file);
-    });
-    const url = await dataUrlPromise;
-
-    const newPhoto: GalleryPhoto = {
-      id: Date.now(),
-      url,
-      caption: caption || 'My vacation capture',
-      createdAtUtc: new Date().toISOString(),
-    };
-
-    if (this.http && this.token()) {
-      try {
-        const fd = new FormData();
-        fd.append('photo', file);
-        if (caption) fd.append('caption', caption);
-        const res = await firstValueFrom(
-          this.http.post<GalleryPhoto>(`${this.apiUrl}/api/gallery`, fd, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-        newPhoto.id = res.id;
-        newPhoto.url = `${this.apiUrl}${res.url}`;
-      } catch {
-        // Use local object
-      }
-    }
-
-    this.profile.update((p) =>
-      p ? { ...p, gallery: [newPhoto, ...p.gallery] } : null,
-    );
-    this.saveJson(PROFILE_KEY, this.profile());
-    return newPhoto;
   }
 
   async deleteGalleryPhoto(photoId: number): Promise<void> {
-    if (this.http && this.token()) {
-      try {
-        await firstValueFrom(
-          this.http.delete(`${this.apiUrl}/api/gallery/${photoId}`, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-      } catch {
-        // Fall through
-      }
-    }
-
-    this.profile.update((p) =>
-      p
-        ? {
-            ...p,
-            gallery: p.gallery.filter((item) => item.id !== photoId),
-          }
-        : null,
-    );
+    this.profile.update((p) => {
+      if (!p) return null;
+      return {
+        ...p,
+        gallery: p.gallery.filter((item) => item.id !== photoId),
+      };
+    });
     this.saveJson(PROFILE_KEY, this.profile());
   }
 
   // ---------------------------------------------------------------------------
-  // Message Book
+  // Message Book Comments
   // ---------------------------------------------------------------------------
 
   async postComment(text: string, parentId?: number): Promise<CommunityComment> {
-    const author = {
-      id: this.currentUser()?.id ?? 1,
-      fullName: this.currentUser()?.fullName ?? 'Sophia Laurent',
-      profilePhotoUrl: this.currentUser()?.profilePhotoUrl,
-      profession: this.profile()?.profession ?? 'Content Creator',
-    };
-
+    const user = this.currentUser();
     const newComment: CommunityComment = {
       id: Date.now(),
       text,
       createdAtUtc: new Date().toISOString(),
       likeCount: 0,
       dislikeCount: 0,
-      author,
+      author: {
+        id: user?.id ?? 1,
+        fullName: user?.fullName || 'NeverBeen Traveler',
+        profession: this.profile()?.profession || 'Member',
+        profilePhotoUrl: user?.profilePhotoUrl,
+      },
       myReaction: null,
       replyCount: 0,
       parentId: parentId ?? null,
       replies: [],
     };
 
-    if (this.http && this.token()) {
-      try {
-        const res = await firstValueFrom(
-          this.http.post<CommunityComment>(
-            `${this.apiUrl}/api/messagebook`,
-            { text, parentId },
-            { headers: { Authorization: `Bearer ${this.token()}` } },
-          ),
-        );
-        newComment.id = res.id;
-      } catch {
-        // Use local comment
-      }
-    }
-
     if (parentId) {
-      // Add as nested reply
       this.comments.update((list) =>
-        list.map((c) => {
-          if (c.id === parentId) {
+        list.map((post) => {
+          if (post.id === parentId) {
             return {
-              ...c,
-              replyCount: c.replyCount + 1,
-              replies: [...c.replies, newComment],
+              ...post,
+              replyCount: post.replyCount + 1,
+              replies: [...post.replies, newComment],
             };
           }
-          return c;
+          return post;
         }),
       );
     } else {
-      // Add as top-level post
       this.comments.update((list) => [newComment, ...list]);
-      this.profile.update((p) =>
-        p ? { ...p, commentCount: p.commentCount + 1 } : null,
-      );
-      this.saveJson(PROFILE_KEY, this.profile());
     }
 
     this.saveJson(COMMENTS_KEY, this.comments());
     return newComment;
   }
 
-  async toggleReaction(commentId: number, type: 'like' | 'dislike'): Promise<ReactionResult> {
-    if (this.http && this.token()) {
-      try {
-        const res = await firstValueFrom(
-          this.http.post<ReactionResult>(
-            `${this.apiUrl}/api/messagebook/${commentId}/reactions`,
-            { type },
-            { headers: { Authorization: `Bearer ${this.token()}` } },
-          ),
-        );
-        this.updateCommentReactionInState(commentId, res);
-        return res;
-      } catch {
-        // Fall through
-      }
-    }
-
-    // Toggle locally
-    const targetReaction = type === 'like' ? 'Like' : 'Dislike';
-    let result: ReactionResult = { likeCount: 0, dislikeCount: 0, myReaction: null };
+  async toggleReaction(commentId: number, reactionType: 'like' | 'dislike'): Promise<void> {
+    const target = reactionType === 'like' ? 'Like' : 'Dislike';
 
     this.comments.update((list) =>
       list.map((post) => {
         if (post.id === commentId) {
-          const next = this.computeReaction(post, targetReaction);
-          result = {
-            likeCount: next.likeCount,
-            dislikeCount: next.dislikeCount,
-            myReaction: next.myReaction,
-          };
-          return next;
+          return this.computeReaction(post, target);
         }
-
-        // Check in replies
-        const updatedReplies = post.replies.map((reply) => {
-          if (reply.id === commentId) {
-            const next = this.computeReaction(reply, targetReaction);
-            result = {
-              likeCount: next.likeCount,
-              dislikeCount: next.dislikeCount,
-              myReaction: next.myReaction,
-            };
-            return next;
-          }
-          return reply;
-        });
-
-        return { ...post, replies: updatedReplies };
+        return {
+          ...post,
+          replies: post.replies.map((reply) =>
+            reply.id === commentId ? this.computeReaction(reply, target) : reply,
+          ),
+        };
       }),
     );
-
     this.saveJson(COMMENTS_KEY, this.comments());
-    return result;
   }
 
   async deleteComment(commentId: number): Promise<void> {
-    if (this.http && this.token()) {
-      try {
-        await firstValueFrom(
-          this.http.delete(`${this.apiUrl}/api/messagebook/${commentId}`, {
-            headers: { Authorization: `Bearer ${this.token()}` },
-          }),
-        );
-      } catch {
-        // Fall through
-      }
-    }
-
     this.comments.update((list) =>
       list
         .filter((post) => post.id !== commentId)
@@ -581,51 +566,19 @@ export class CommunityService {
     let myReaction: 'Like' | 'Dislike' | null = item.myReaction ?? null;
 
     if (myReaction === target) {
-      // Toggle off
       myReaction = null;
       if (target === 'Like') likeCount = Math.max(0, likeCount - 1);
       else dislikeCount = Math.max(0, dislikeCount - 1);
     } else {
-      // Remove old
       if (myReaction === 'Like') likeCount = Math.max(0, likeCount - 1);
       if (myReaction === 'Dislike') dislikeCount = Math.max(0, dislikeCount - 1);
 
-      // Add new
       myReaction = target;
       if (target === 'Like') likeCount++;
       else dislikeCount++;
     }
 
     return { ...item, likeCount, dislikeCount, myReaction };
-  }
-
-  private updateCommentReactionInState(commentId: number, res: ReactionResult): void {
-    this.comments.update((list) =>
-      list.map((post) => {
-        if (post.id === commentId) {
-          return {
-            ...post,
-            likeCount: res.likeCount,
-            dislikeCount: res.dislikeCount,
-            myReaction: res.myReaction,
-          };
-        }
-        return {
-          ...post,
-          replies: post.replies.map((reply) =>
-            reply.id === commentId
-              ? {
-                  ...reply,
-                  likeCount: res.likeCount,
-                  dislikeCount: res.dislikeCount,
-                  myReaction: res.myReaction,
-                }
-              : reply,
-          ),
-        };
-      }),
-    );
-    this.saveJson(COMMENTS_KEY, this.comments());
   }
 
   // ---------------------------------------------------------------------------
@@ -635,13 +588,18 @@ export class CommunityService {
   private initDefaultMember(): void {
     const defaultProfile: Profile = {
       id: 1,
+      firstName: 'Sophia',
+      lastName: 'Laurent',
       fullName: 'Sophia Laurent',
       email: 'sophia.laurent@neverbeen.example',
       gender: 'Female',
       dateOfBirth: '1996-04-18',
       age: 28,
+      country: 'France',
       countryId: 58,
       countryName: 'France',
+      state: 'Île-de-France',
+      city: 'Paris',
       cityId: 320,
       cityName: 'Paris',
       pincode: '75001',
@@ -680,18 +638,14 @@ export class CommunityService {
           caption: 'Sunset over Champ de Mars',
           createdAtUtc: '2026-09-02T19:15:00Z',
         },
-        {
-          id: 104,
-          url: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?auto=format&fit=crop&w=800&q=80',
-          caption: 'Lake Moraine dreamscape',
-          createdAtUtc: '2026-09-14T11:45:00Z',
-        },
       ],
-      commentCount: 4,
+      commentCount: 3,
     };
 
     const defaultUser: CurrentUser = {
       id: defaultProfile.id,
+      firstName: defaultProfile.firstName,
+      lastName: defaultProfile.lastName,
       fullName: defaultProfile.fullName,
       email: defaultProfile.email,
       status: defaultProfile.status,
@@ -702,7 +656,6 @@ export class CommunityService {
     this.token.set('jwt_default_active_token');
     this.currentUser.set(defaultUser);
     this.profile.set(defaultProfile);
-    this.saveStorage(TOKEN_KEY, 'jwt_default_active_token');
     this.saveJson(USER_KEY, defaultUser);
     this.saveJson(PROFILE_KEY, defaultProfile);
   }
@@ -746,24 +699,6 @@ export class CommunityService {
             parentId: 1,
             replies: [],
           },
-          {
-            id: 3,
-            text: 'Thanks for the tip Sophia! Going to configure my custom set for Positano this evening.',
-            createdAtUtc: '2026-09-21T07:10:00Z',
-            likeCount: 2,
-            dislikeCount: 0,
-            author: {
-              id: 12,
-              fullName: 'Marco Rossi',
-              profession: 'Private Sector Professional',
-              profilePhotoUrl:
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-            },
-            myReaction: null,
-            replyCount: 0,
-            parentId: 1,
-            replies: [],
-          },
         ],
       },
       {
@@ -780,57 +715,10 @@ export class CommunityService {
             'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
         },
         myReaction: null,
-        replyCount: 1,
-        replies: [
-          {
-            id: 5,
-            text: 'Great advice Elena! Also make sure your country and city are set up accurately so nearby community members can exchange local tips.',
-            createdAtUtc: '2026-09-20T21:15:00Z',
-            likeCount: 3,
-            dislikeCount: 0,
-            author: {
-              id: 45,
-              fullName: 'David Miller',
-              profession: 'Freelancer',
-              profilePhotoUrl:
-                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-            },
-            myReaction: null,
-            replyCount: 0,
-            parentId: 4,
-            replies: [],
-          },
-        ],
-      },
-      {
-        id: 6,
-        text: 'Hello from Tokyo! Just registered today and thrilled to see so many photographers and creators here. Looking forward to connecting with fellow travel enthusiasts.',
-        createdAtUtc: '2026-09-20T14:05:00Z',
-        likeCount: 6,
-        dislikeCount: 0,
-        author: {
-          id: 88,
-          fullName: 'Kenji Sato',
-          profession: 'Student',
-          profilePhotoUrl:
-            'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80',
-        },
-        myReaction: 'Like',
         replyCount: 0,
         replies: [],
       },
     ];
-  }
-
-  private loadStorage(key: string): string | null {
-    if (typeof localStorage === 'undefined') return null;
-    return localStorage.getItem(key);
-  }
-
-  private saveStorage(key: string, value: string): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(key, value);
-    }
   }
 
   private loadJson<T>(key: string): T | null {

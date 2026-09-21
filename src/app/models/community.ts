@@ -1,5 +1,7 @@
 export interface CurrentUser {
   id: number;
+  firstName?: string;
+  lastName?: string;
   fullName?: string;
   email: string;
   status: 'Pending' | 'Active' | string;
@@ -34,13 +36,18 @@ export interface GalleryPhoto {
 
 export interface Profile {
   id: number;
+  firstName?: string;
+  lastName?: string;
   fullName?: string;
   email: string;
   gender?: string;
   dateOfBirth?: string;
   age?: number;
+  country?: string;
   countryId?: number;
   countryName?: string;
+  state?: string;
+  city?: string;
   cityId?: number;
   cityName?: string;
   pincode?: string;

@@ -2,13 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityConnect } from './connect';
-import { CommunityService } from '../../../services/community.service';
+import { CommunityService, setCookie, deleteCookie, TOKEN_KEY } from '../../../services/community.service';
 
 describe('CommunityConnect', () => {
   let router: Router;
   let service: CommunityService;
 
   beforeEach(async () => {
+    deleteCookie(TOKEN_KEY);
+
     await TestBed.configureTestingModule({
       imports: [CommunityConnect],
       providers: [provideRouter([])],
@@ -25,66 +27,44 @@ describe('CommunityConnect', () => {
     return fixture;
   }
 
-  it('renders OAuth login buttons for Google, Facebook, and Microsoft', () => {
+  it('renders the 3 OAuth login options in the middle of the page in a card box design', () => {
     const element: HTMLElement = create().nativeElement;
-    const buttons = Array.from(element.querySelectorAll<HTMLButtonElement>('.btn-provider'));
-    const text = buttons.map((b) => b.textContent?.trim());
+    const cardBox = element.querySelector('.oauth-card-box');
+    expect(cardBox).toBeTruthy();
 
-    expect(text.some((t) => t?.includes('Continue with Google'))).toBe(true);
-    expect(text.some((t) => t?.includes('Continue with Facebook'))).toBe(true);
-    expect(text.some((t) => t?.includes('Continue with Microsoft'))).toBe(true);
+    const buttons = Array.from(cardBox!.querySelectorAll<HTMLButtonElement>('.oauth-btn'));
+    const labels = buttons.map((b) => b.textContent?.trim());
+
+    expect(labels.some((l) => l?.includes('Sign in with Google'))).toBe(true);
+    expect(labels.some((l) => l?.includes('Sign in with Facebook'))).toBe(true);
+    expect(labels.some((l) => l?.includes('Sign in with Microsoft'))).toBe(true);
   });
 
-  it('navigates to register if OAuth returns pending status', async () => {
+  it('redirects to user profile page if already authenticated on open', () => {
+    service.loginAsDemoUser('active_member');
+    expect(service.isAuthenticated()).toBe(true);
+
     const fixture = TestBed.createComponent(CommunityConnect);
-    const component = fixture.componentInstance;
-    vi.spyOn(service, 'loginWithOAuth').mockResolvedValue({
-      token: 'fake',
-      tokenType: 'Bearer',
-      expiresIn: 3600,
-      isNewUser: true,
-      profileComplete: false,
-      message: 'New user',
-      user: {
-        id: 1,
-        email: 'test@example.com',
-        status: 'Pending',
-        profileComplete: false,
-      },
-    });
+    fixture.detectChanges();
 
-    await component.connectWith('google');
-    expect(router.navigate).toHaveBeenCalledWith(['/community/register']);
-  });
-
-  it('navigates to profile if OAuth returns profileComplete true', async () => {
-    const fixture = TestBed.createComponent(CommunityConnect);
-    const component = fixture.componentInstance;
-    vi.spyOn(service, 'loginWithOAuth').mockResolvedValue({
-      token: 'fake',
-      tokenType: 'Bearer',
-      expiresIn: 3600,
-      isNewUser: false,
-      profileComplete: true,
-      message: 'Existing user',
-      user: {
-        id: 1,
-        email: 'test@example.com',
-        status: 'Active',
-        profileComplete: true,
-      },
-    });
-
-    await component.connectWith('google');
     expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
   });
 
-  it('provides quick demo sandbox buttons for reviewers', () => {
+  it('redirects new users to the registration form after OAuth', async () => {
     const fixture = TestBed.createComponent(CommunityConnect);
     const component = fixture.componentInstance;
+    component.setSimulationMode(false); // New member mode
 
-    component.demoLogin('active_member');
-    expect(service.currentUser()?.fullName).toBe('Sophia Laurent');
+    await component.signInWith('google');
+    expect(router.navigate).toHaveBeenCalledWith(['/community/register']);
+  });
+
+  it('redirects existing users to user profile page after OAuth', async () => {
+    const fixture = TestBed.createComponent(CommunityConnect);
+    const component = fixture.componentInstance;
+    component.setSimulationMode(true); // Existing member mode
+
+    await component.signInWith('google');
     expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
   });
 });

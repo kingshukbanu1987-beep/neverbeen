@@ -2,13 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityRegister } from './register';
-import { CommunityService } from '../../../services/community.service';
+import { CommunityService, getCookie, TOKEN_KEY, deleteCookie } from '../../../services/community.service';
 
 describe('CommunityRegister', () => {
   let router: Router;
   let service: CommunityService;
 
   beforeEach(async () => {
+    deleteCookie(TOKEN_KEY);
+
     await TestBed.configureTestingModule({
       imports: [CommunityRegister],
       providers: [provideRouter([])],
@@ -25,52 +27,67 @@ describe('CommunityRegister', () => {
     return fixture;
   }
 
-  it('renders all required form controls from RegistrationRequest DTO', () => {
+  it('renders all mandatory basic detail fields and photo uploader', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
 
-    expect(element.querySelector('#fullName')).toBeTruthy();
+    expect(element.querySelector('#name')).toBeTruthy();
+    expect(element.querySelector('#surname')).toBeTruthy();
     expect(element.querySelector('#email')).toBeTruthy();
+    expect(element.querySelector('#country')).toBeTruthy();
+    expect(element.querySelector('#state')).toBeTruthy();
+    expect(element.querySelector('#city')).toBeTruthy();
     expect(element.querySelector('#gender')).toBeTruthy();
     expect(element.querySelector('#dateOfBirth')).toBeTruthy();
-    expect(element.querySelector('#profession')).toBeTruthy();
-    expect(element.querySelector('#country')).toBeTruthy();
-    expect(element.querySelector('#city')).toBeTruthy();
-    expect(element.querySelector('#pincode')).toBeTruthy();
-    expect(element.querySelector('#contactNumber')).toBeTruthy();
-    expect(element.querySelector('#postalAddress')).toBeTruthy();
-    expect(element.querySelector('#aboutMe')).toBeTruthy();
+    expect(element.querySelector('#photoInput')).toBeTruthy();
+    expect(element.querySelector('.btn-create-account')?.textContent?.trim()).toContain('Create Neverbeen Account');
   });
 
-  it('validates required fields before submitting', async () => {
+  it('validates mandatory fields and blocks submission if invalid', async () => {
     const fixture = create();
     const component = fixture.componentInstance;
+    const createAccountSpy = vi.spyOn(service, 'createNeverbeenAccount');
+
     component['form'].patchValue({
-      fullName: '',
+      name: '',
+      surname: '',
       email: '',
+      country: '',
+      state: '',
+      city: '',
       gender: '',
-      profession: '',
+      dateOfBirth: '',
     });
 
-    const registerSpy = vi.spyOn(service, 'registerUser').mockResolvedValue({} as any);
     await component.submit();
 
     expect(component['form'].invalid).toBe(true);
-    expect(registerSpy).not.toHaveBeenCalled();
+    expect(createAccountSpy).not.toHaveBeenCalled();
+    expect(component['photoError']()).toBeTruthy();
   });
 
-  it('cascades city selection on country change', async () => {
+  it('creates profile and redirects to user profile page on clicking Create Neverbeen Account', async () => {
     const fixture = create();
     const component = fixture.componentInstance;
-    await fixture.whenStable();
 
-    // Change country to 88 (Japan)
-    component['form'].patchValue({ countryId: 88 });
-    await component.onCountryChange();
-    fixture.detectChanges();
+    component['form'].patchValue({
+      name: 'Elena',
+      surname: 'Rostova',
+      email: 'elena.rostova@example.com',
+      country: 'France',
+      state: 'Île-de-France',
+      city: 'Paris',
+      gender: 'Female',
+      dateOfBirth: '1995-06-12',
+    });
+    component['photoPreview'].set('data:image/jpeg;base64,sampleportrait');
 
-    const cities = component['citiesList']();
-    expect(cities.length).toBeGreaterThan(0);
-    expect(cities.some((c) => c.name === 'Tokyo' || c.name === 'Kyoto')).toBe(true);
+    await component.submit();
+
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.profile()?.fullName).toBe('Elena Rostova');
+    expect(service.profile()?.cityName).toBe('Paris');
+    expect(getCookie(TOKEN_KEY)).toBeTruthy();
+    expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
   });
 });
