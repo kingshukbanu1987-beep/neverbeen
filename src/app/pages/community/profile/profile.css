@@ -4525,23 +4525,31 @@
 }
 
 .visitor-avatar-showcase {
-  width: 140px;
-  height: 140px;
+  width: 150px;
+  height: 150px;
   border-radius: 16px;
   border: 4px solid #ffffff;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   background: #ffffff;
   position: relative;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .visitor-fully-visible-avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   border-radius: 12px;
   display: block;
   cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.visitor-avatar-showcase:hover .visitor-fully-visible-avatar {
+  transform: scale(1.02);
+  filter: brightness(1.03);
 }
 
 .visitor-avatar-status-dot {

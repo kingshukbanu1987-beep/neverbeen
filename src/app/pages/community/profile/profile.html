@@ -72,7 +72,7 @@
                       <span class="mini-lock-pill" title="Profile is locked">🔒</span>
                     }
                   </strong>
-                  <span>📍 {{ t.city }}, {{ t.country }} • {{ t.profession }}</span>
+                  <span><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ t.city }}, {{ t.country }} • {{ t.profession }}</span>
                 </div>
                 <div class="res-action">
                   @if (t.status === 'connected') {
@@ -1412,7 +1412,7 @@
                           </span>
                         </div>
                         <div class="work-location-line">
-                          📍 {{ work.city }}{{ work.town ? ', ' + work.town : '' }}, {{ work.country }}
+                          <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ work.city }}{{ work.town ? ', ' + work.town : '' }}, {{ work.country }}
                         </div>
                         @if (work.description) {
                           <p class="work-description-text">{{ work.description }}</p>
@@ -1902,7 +1902,7 @@
                         }
                       </strong>
                       <span class="companion-role">{{ c.profession }}</span>
-                      <span class="companion-loc">📍 {{ c.city }}, {{ c.country }}</span>
+                      <span class="companion-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ c.city }}, {{ c.country }}</span>
                       <span class="companion-mutual">{{ c.mutualCompanionsCount }} mutual companions</span>
                     </div>
                     <div class="card-actions">
@@ -2967,7 +2967,7 @@
                           <strong>{{ w.company }}</strong>
                           <span>{{ w.yearFrom }} – {{ w.currentlyWorkHere ? 'Present' : (w.yearTo || 'Present') }}</span>
                         </div>
-                        <span class="visitor-work-loc">📍 {{ w.city }}, {{ w.country }}</span>
+                        <span class="visitor-work-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ w.city }}, {{ w.country }}</span>
                         @if (w.description) {
                           <p class="visitor-work-desc">{{ w.description }}</p>
                         }
