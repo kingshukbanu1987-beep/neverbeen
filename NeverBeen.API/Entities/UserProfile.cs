@@ -1,0 +1,81 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace NeverBeen.API.Entities;
+
+/// <summary>
+/// A NeverBeen community member. Created automatically on the first OAuth (SSO) login;
+/// the profile is completed through the registration flow, which flips <see cref="Status"/>
+/// from "Pending" to "Active".
+/// </summary>
+[Table("Users")]
+public class UserProfile
+{
+    public int Id { get; set; }
+
+    /// <summary>Full name as typed on the registration page (or from the OAuth account before registration).</summary>
+    [MaxLength(200)]
+    public string? FullName { get; set; }
+
+    /// <summary>Login email - by default the OAuth (Google / Facebook / Outlook) email address.</summary>
+    [MaxLength(256)]
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>One of: Male, Female, Other.</summary>
+    [MaxLength(20)]
+    public string? Gender { get; set; }
+
+    public DateTime? DateOfBirth { get; set; }
+
+    public int? CountryId { get; set; }
+    public Country? Country { get; set; }
+
+    public int? CityId { get; set; }
+    public City? City { get; set; }
+
+    [MaxLength(20)]
+    public string? Pincode { get; set; }
+
+    /// <summary>Optional contact number.</summary>
+    [MaxLength(30)]
+    public string? ContactNumber { get; set; }
+
+    /// <summary>Optional full postal address.</summary>
+    [MaxLength(500)]
+    public string? PostalAddress { get; set; }
+
+    /// <summary>Optional "About Me" text.</summary>
+    [MaxLength(2000)]
+    public string? AboutMe { get; set; }
+
+    /// <summary>Selected from the fixed profession drop-down list.</summary>
+    [MaxLength(60)]
+    public string? Profession { get; set; }
+
+    /// <summary>"Pending" = signed in via SSO but registration not finished; "Active" = registered profile.</summary>
+    [MaxLength(20)]
+    public string Status { get; set; } = UserProfileStatus.Pending;
+
+    /// <summary>Profile picture URL supplied by the OAuth provider (e.g. Google photo). Used as a fallback before the user uploads a photo.</summary>
+    [MaxLength(1024)]
+    public string? ExternalProfilePictureUrl { get; set; }
+
+    /// <summary>Profile picture uploaded by the user (stored in the database).</summary>
+    public byte[]? ProfilePhotoData { get; set; }
+
+    [MaxLength(64)]
+    public string? ProfilePhotoMimeType { get; set; }
+
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    public ICollection<ExternalIdentity> Identities { get; set; } = new List<ExternalIdentity>();
+    public UserSettings? Settings { get; set; }
+    public ICollection<GalleryPhoto> GalleryPhotos { get; set; } = new List<GalleryPhoto>();
+    public ICollection<CommunityComment> Comments { get; set; } = new List<CommunityComment>();
+}
+
+public static class UserProfileStatus
+{
+    public const string Pending = "Pending";
+    public const string Active = "Active";
+}
