@@ -1,0 +1,3611 @@
+diff --git a/NeverBeen.API/Common/AppConstants.cs b/NeverBeen.API/Common/AppConstants.cs
+new file mode 100644
+index 0000000..17cbb78
+--- /dev/null
++++ b/NeverBeen.API/Common/AppConstants.cs
+@@ -0,0 +1,40 @@
++namespace NeverBeen.API.Common;
++
++public static class AppConstants
++{
++    public static readonly string[] Genders =
++    {
++        "Male", "Female", "Other"
++    };
++
++    /// <summary>Fixed profession drop-down list used on the registration page.</summary>
++    public static readonly string[] Professions =
++    {
++        "Student",
++        "Homemaker",
++        "Govt. Service Professional",
++        "Private Sector Professional",
++        "Business",
++        "Retired",
++        "Freelancer",
++        "Looking for a Job",
++        "Blogger",
++        "Content Creator",
++        "Influencer",
++        "Teacher",
++        "Others"
++    };
++
++    public static readonly string[] Themes =
++    {
++        "light", "dark", "system"
++    };
++
++    public const int MaxProfilePhotoBytes = 5 * 1024 * 1024;   // 5 MB
++    public const int MaxGalleryPhotoBytes = 8 * 1024 * 1024;   // 8 MB
++
++    public static readonly string[] AllowedImageTypes =
++    {
++        "image/jpeg", "image/png", "image/webp", "image/gif"
++    };
++}
+diff --git a/NeverBeen.API/Common/ImageValidation.cs b/NeverBeen.API/Common/ImageValidation.cs
+new file mode 100644
+index 0000000..ab4fc0b
+--- /dev/null
++++ b/NeverBeen.API/Common/ImageValidation.cs
+@@ -0,0 +1,33 @@
++using Microsoft.AspNetCore.Http;
++
++namespace NeverBeen.API.Common;
++
++/// <summary>Shared upload validation for profile pictures and gallery photos.</summary>
++public static class ImageValidation
++{
++    public static string? ValidateRequired(IFormFile? file, int maxBytes)
++    {
++        if (file == null || file.Length == 0)
++            return "A photo file is required.";
++        return ValidateContent(file, maxBytes);
++    }
++
++    public static string? ValidateOptional(IFormFile? file, int maxBytes)
++    {
++        if (file == null || file.Length == 0)
++            return null;
++        return ValidateContent(file, maxBytes);
++    }
++
++    private static string? ValidateContent(IFormFile file, int maxBytes)
++    {
++        if (file.Length > maxBytes)
++            return $"Photo is too large. The maximum allowed size is {maxBytes / (1024 * 1024)} MB.";
++
++        var contentType = (file.ContentType ?? string.Empty).ToLowerInvariant();
++        if (!AppConstants.AllowedImageTypes.Contains(contentType))
++            return "Unsupported photo format. Please upload a JPEG, PNG, WebP or GIF image.";
++
++        return null;
++    }
++}
+diff --git a/NeverBeen.API/Common/OauthException.cs b/NeverBeen.API/Common/OauthException.cs
+new file mode 100644
+index 0000000..f70a8fb
+--- /dev/null
++++ b/NeverBeen.API/Common/OauthException.cs
+@@ -0,0 +1,9 @@
++namespace NeverBeen.API.Common;
++
++/// <summary>Raised when an OAuth code exchange or profile fetch fails for a known reason (bad code, missing config, ...).</summary>
++public class OauthException : Exception
++{
++    public OauthException(string message) : base(message)
++    {
++    }
++}
+diff --git a/NeverBeen.API/Common/UserPrincipalExtensions.cs b/NeverBeen.API/Common/UserPrincipalExtensions.cs
+new file mode 100644
+index 0000000..8f2d285
+--- /dev/null
++++ b/NeverBeen.API/Common/UserPrincipalExtensions.cs
+@@ -0,0 +1,14 @@
++using System.Security.Claims;
++
++namespace NeverBeen.API.Common;
++
++public static class UserPrincipalExtensions
++{
++    /// <summary>Reads the user id claim written by <c>JwtTokenService</c>.</summary>
++    public static int GetUserId(this ClaimsPrincipal principal)
++    {
++        var raw = principal.FindFirstValue(ClaimTypes.NameIdentifier)
++            ?? throw new InvalidOperationException("The authenticated request does not carry a user identifier claim.");
++        return int.Parse(raw);
++    }
++}
+diff --git a/NeverBeen.API/Controllers/AuthController.cs b/NeverBeen.API/Controllers/AuthController.cs
+new file mode 100644
+index 0000000..73b99e3
+--- /dev/null
++++ b/NeverBeen.API/Controllers/AuthController.cs
+@@ -0,0 +1,196 @@
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Common;
++using NeverBeen.API.Data;
++using NeverBeen.API.Dtos;
++using NeverBeen.API.Entities;
++using NeverBeen.API.Services;
++
++namespace NeverBeen.API.Controllers;
++
++/// <summary>
++/// OAuth (SSO) entry point. The Angular "Connect to NeverBeen Community" page redirects
++/// the user to Google / Facebook / Microsoft; after consent the provider redirects back
++/// to the frontend with an authorization "code", which the frontend sends here.
++///
++/// The API then:
++///  1. exchanges the code for an access token (client secret stays on the server),
++///  2. reads the external account (email, name, picture),
++///  3. looks the user up by email / provider key - creating a "Pending" user when new,
++///  4. returns a JWT plus flags telling the frontend where to navigate:
++///       - new / pending user  -> Registration Page
++///       - existing active user -> User Profile (home) page
++/// </summary>
++[ApiController]
++[Route("api/auth")]
++public class AuthController : ControllerBase
++{
++    private readonly AppDbContext _db;
++    private readonly JwtTokenService _jwt;
++    private readonly IReadOnlyList<IOauthLoginProvider> _providers;
++    private readonly ILogger<AuthController> _logger;
++
++    public AuthController(
++        AppDbContext db,
++        JwtTokenService jwt,
++        IEnumerable<IOauthLoginProvider> providers,
++        ILogger<AuthController> logger)
++    {
++        _db = db;
++        _jwt = jwt;
++        _providers = providers.ToList();
++        _logger = logger;
++    }
++
++    /// <summary>Exchanges an OAuth authorization code and returns a JWT for the (possibly new) user.</summary>
++    [HttpPost("oauth/login")]
++    [ProducesResponseType(typeof(AuthResultDto), StatusCodes.Status200OK)]
++    [ProducesResponseType(StatusCodes.Status400BadRequest)]
++    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
++    public async Task<ActionResult<AuthResultDto>> OauthLogin([FromBody] OAuthLoginRequest request, CancellationToken cancellationToken)
++    {
++        if (string.IsNullOrWhiteSpace(request.Provider) || string.IsNullOrWhiteSpace(request.Code))
++            return BadRequest(new { error = "Both 'provider' and 'code' are required." });
++
++        var provider = _providers
++            .FirstOrDefault(p => p.ProviderName.Equals(request.Provider.Trim(), StringComparison.OrdinalIgnoreCase));
++        if (provider == null)
++            return BadRequest(new
++            {
++                error = $"Unsupported OAuth provider '{request.Provider}'. Supported providers: {string.Join(", ", _providers.Select(p => p.ProviderName))}."
++            });
++
++        ExternalUserProfile external;
++        try
++        {
++            external = await provider.GetExternalUserAsync(request.Code.Trim(), cancellationToken);
++        }
++        catch (OauthException ex)
++        {
++            _logger.LogWarning(ex, "OAuth login failed for provider {Provider}", request.Provider);
++            return Unauthorized(new { error = ex.Message });
++        }
++        catch (Exception ex)
++        {
++            _logger.LogError(ex, "Unexpected OAuth failure for provider {Provider}", request.Provider);
++            return StatusCode(502, new { error = "Unexpected error while contacting the OAuth provider." });
++        }
++
++        if (string.IsNullOrWhiteSpace(external.Email))
++            return Unauthorized(new
++            {
++                error = "The OAuth account did not provide an email address. Make sure the OAuth application has the 'email' scope enabled and the user granted it on the consent screen."
++            });
++
++        var email = external.Email.Trim();
++
++        var user = await _db.Users
++            .Include(u => u.Identities)
++            .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
++
++        if (user == null)
++        {
++            // The email on the provider account may have changed - fall back to the stable provider key.
++            var identityByProviderKey = await _db.ExternalIdentities
++                .FirstOrDefaultAsync(i => i.Provider == provider.ProviderName && i.ProviderKey == external.ProviderKey, cancellationToken);
++            if (identityByProviderKey != null)
++                user = await _db.Users
++                    .Include(u => u.Identities)
++                    .FirstOrDefaultAsync(u => u.Id == identityByProviderKey.UserId, cancellationToken);
++        }
++
++        var isNewUser = user == null;
++
++        if (isNewUser)
++        {
++            user = new UserProfile
++            {
++                Email = email,
++                FullName = string.IsNullOrWhiteSpace(external.FullName)
++                    ? email.Split('@')[0]
++                    : external.FullName.Trim(),
++                ExternalProfilePictureUrl = external.PictureUrl,
++                Status = UserProfileStatus.Pending,
++                CreatedAtUtc = DateTime.UtcNow,
++                UpdatedAtUtc = DateTime.UtcNow
++            };
++            user.Identities.Add(new ExternalIdentity
++            {
++                Provider = provider.ProviderName,
++                ProviderKey = external.ProviderKey,
++                Email = email,
++                CreatedAtUtc = DateTime.UtcNow
++            });
++            _db.Users.Add(user);
++        }
++        else
++        {
++            var existingIdentity = user.Identities
++                .FirstOrDefault(i => i.Provider == provider.ProviderName);
++            if (existingIdentity != null)
++            {
++                existingIdentity.ProviderKey = external.ProviderKey;
++                existingIdentity.Email = email;
++            }
++            else
++            {
++                // Same email, a different provider this time - link the new identity to the same account.
++                user.Identities.Add(new ExternalIdentity
++                {
++                    Provider = provider.ProviderName,
++                    ProviderKey = external.ProviderKey,
++                    Email = email,
++                    CreatedAtUtc = DateTime.UtcNow
++                });
++            }
++
++            if (user.Email != email)
++                user.Email = email;
++
++            user.UpdatedAtUtc = DateTime.UtcNow;
++        }
++
++        await _db.SaveChangesAsync(cancellationToken);
++
++        var (token, expiresIn) = _jwt.CreateToken(user);
++
++        return Ok(new AuthResultDto
++        {
++            Token = token,
++            ExpiresIn = expiresIn,
++            IsNewUser = isNewUser,
++            ProfileComplete = user.Status == UserProfileStatus.Active,
++            Message = isNewUser
++                ? "New NeverBeen community member. Please complete your registration."
++                : "Welcome back to the NeverBeen community.",
++            User = MapCurrentUser(user)
++        });
++    }
++
++    /// <summary>Returns the signed-in user from the JWT (used by the Angular app to restore sessions).</summary>
++    [Authorize]
++    [HttpGet("me")]
++    public async Task<ActionResult<CurrentUserDto>> Me(CancellationToken cancellationToken)
++    {
++        var user = await _db.Users
++            .AsNoTracking()
++            .FirstOrDefaultAsync(u => u.Id == User.GetUserId(), cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        return Ok(MapCurrentUser(user));
++    }
++
++    private static CurrentUserDto MapCurrentUser(UserProfile user) => new()
++    {
++        Id = user.Id,
++        FullName = user.FullName,
++        Email = user.Email,
++        Status = user.Status,
++        ProfileComplete = user.Status == UserProfileStatus.Active,
++        ProfilePhotoUrl = user.ProfilePhotoData != null
++            ? $"/api/profile/{user.Id}/photo"
++            : user.ExternalProfilePictureUrl
++    };
++}
+diff --git a/NeverBeen.API/Controllers/GalleryController.cs b/NeverBeen.API/Controllers/GalleryController.cs
+new file mode 100644
+index 0000000..4346dff
+--- /dev/null
++++ b/NeverBeen.API/Controllers/GalleryController.cs
+@@ -0,0 +1,155 @@
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Common;
++using NeverBeen.API.Data;
++using NeverBeen.API.Dtos;
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Controllers;
++
++/// <summary>
++/// Photo gallery endpoints (the "Gallery" section of the profile page).
++/// Photos are stored in the database; GET /api/gallery/{id} serves the image bytes.
++/// </summary>
++[ApiController]
++[Route("api/gallery")]
++[Authorize]
++public class GalleryController : ControllerBase
++{
++    private readonly AppDbContext _db;
++    private readonly ILogger<GalleryController> _logger;
++
++    public GalleryController(AppDbContext db, ILogger<GalleryController> logger)
++    {
++        _db = db;
++        _logger = logger;
++    }
++
++    /// <summary>The signed-in user's gallery photos.</summary>
++    [HttpGet]
++    public async Task<ActionResult<List<GalleryPhotoDto>>> Mine(CancellationToken cancellationToken)
++    {
++        var userId = User.GetUserId();
++        return Ok(await QueryGalleryAsync(userId, cancellationToken));
++    }
++
++    /// <summary>Adds a photo to the signed-in user's gallery (multipart: "photo" file + optional "caption").</summary>
++    [HttpPost]
++    [Consumes("multipart/form-data")]
++    [ProducesResponseType(typeof(GalleryPhotoDto), StatusCodes.Status201Created)]
++    public async Task<ActionResult<GalleryPhotoDto>> Add([FromForm] IFormFile photo, [FromForm] string? caption, CancellationToken cancellationToken)
++    {
++        var error = ImageValidation.ValidateRequired(photo, AppConstants.MaxGalleryPhotoBytes);
++        if (error != null)
++            return BadRequest(new { error });
++
++        using var memory = new MemoryStream();
++        await photo.CopyToAsync(memory, cancellationToken);
++
++        var entity = new GalleryPhoto
++        {
++            UserId = User.GetUserId(),
++            PhotoData = memory.ToArray(),
++            MimeType = photo.ContentType ?? "image/jpeg",
++            Caption = string.IsNullOrWhiteSpace(caption) ? null : caption.Trim(),
++            CreatedAtUtc = DateTime.UtcNow
++        };
++        _db.GalleryPhotos.Add(entity);
++        await _db.SaveChangesAsync(cancellationToken);
++
++        return CreatedAtAction(nameof(GetPhoto), new { id = entity.Id }, Map(entity.Id, entity.Caption, entity.CreatedAtUtc));
++    }
++
++    /// <summary>Deletes one of the signed-in user's photos.</summary>
++    [HttpDelete("{id:int}")]
++    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
++    {
++        var photo = await _db.GalleryPhotos
++            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
++        if (photo == null)
++            return NotFound();
++        if (photo.UserId != User.GetUserId())
++            return Forbid();
++
++        _db.GalleryPhotos.Remove(photo);
++        await _db.SaveChangesAsync(cancellationToken);
++        return NoContent();
++    }
++
++    /// <summary>Serves a gallery photo as an image (public when the owner allows a public profile).</summary>
++    [AllowAnonymous]
++    [HttpGet("{id:int}")]
++    public async Task<IActionResult> GetPhoto(int id, CancellationToken cancellationToken)
++    {
++        var photo = await _db.GalleryPhotos
++            .AsNoTracking()
++            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
++        if (photo == null)
++            return NotFound();
++
++        var requesterId = User.Identity?.IsAuthenticated == true ? User.GetUserId() : null;
++        if (requesterId != photo.UserId)
++        {
++            var isPublic = await _db.UserSettings
++                .AsNoTracking()
++                .Where(s => s.UserId == photo.UserId)
++                .Select(s => (bool?)s.PublicProfileEnabled)
++                .FirstOrDefaultAsync(cancellationToken) ?? true;
++            if (!isPublic)
++                return Forbid();
++        }
++
++        return File(photo.PhotoData, photo.MimeType, $"photo-{id}{GetExtension(photo.MimeType)}");
++    }
++
++    /// <summary>List of another member's gallery photos (public when the owner allows it).</summary>
++    [AllowAnonymous]
++    [HttpGet("users/{userId:int}")]
++    public async Task<ActionResult<List<GalleryPhotoDto>>> ForUser(int userId, CancellationToken cancellationToken)
++    {
++        var user = await _db.Users
++            .AsNoTracking()
++            .Include(u => u.Settings)
++            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        var requesterId = User.Identity?.IsAuthenticated == true ? User.GetUserId() : null;
++        if (requesterId != userId && user.Settings?.PublicProfileEnabled == false)
++            return Forbid();
++
++        return Ok(await QueryGalleryAsync(userId, cancellationToken));
++    }
++
++    private async Task<List<GalleryPhotoDto>> QueryGalleryAsync(int userId, CancellationToken cancellationToken)
++    {
++        var rows = await _db.GalleryPhotos
++            .AsNoTracking()
++            .Where(g => g.UserId == userId)
++            .OrderByDescending(g => g.CreatedAtUtc)
++            .Select(g => new { g.Id, g.Caption, g.CreatedAtUtc })
++            .ToListAsync(cancellationToken);
++
++        return rows
++            .Select(g => Map(g.Id, g.Caption, g.CreatedAtUtc))
++            .ToList();
++    }
++
++    private static GalleryPhotoDto Map(int id, string? caption, DateTime createdAtUtc) => new()
++    {
++        Id = id,
++        Url = $"/api/gallery/{id}",
++        Caption = caption,
++        CreatedAtUtc = createdAtUtc
++    };
++
++    private static string GetExtension(string? mimeType) => (mimeType ?? string.Empty).ToLowerInvariant() switch
++    {
++        "image/jpeg" => ".jpg",
++        "image/png" => ".png",
++        "image/gif" => ".gif",
++        "image/webp" => ".webp",
++        _ => ".bin"
++    };
++}
+diff --git a/NeverBeen.API/Controllers/LookupController.cs b/NeverBeen.API/Controllers/LookupController.cs
+new file mode 100644
+index 0000000..052a829
+--- /dev/null
++++ b/NeverBeen.API/Controllers/LookupController.cs
+@@ -0,0 +1,72 @@
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Common;
++using NeverBeen.API.Data;
++using NeverBeen.API.Dtos;
++
++namespace NeverBeen.API.Controllers;
++
++/// <summary>
++/// Drop-down data for the registration and profile pages:
++/// countries, cities (based on the selected country) and the fixed
++/// profession / gender option lists.
++/// </summary>
++[ApiController]
++[Route("api/lookup")]
++public class LookupController : ControllerBase
++{
++    private readonly AppDbContext _db;
++
++    public LookupController(AppDbContext db)
++    {
++        _db = db;
++    }
++
++    /// <summary>All countries, alphabetically.</summary>
++    [HttpGet("countries")]
++    public async Task<ActionResult<List<CountryDto>>> Countries(CancellationToken cancellationToken)
++    {
++        return Ok(await _db.Countries
++            .AsNoTracking()
++            .OrderBy(c => c.Name)
++            .Select(c => new CountryDto
++            {
++                Id = c.Id,
++                IsoCode2 = c.IsoCode2,
++                Name = c.Name,
++                PhoneCode = c.PhoneCode
++            })
++            .ToListAsync(cancellationToken));
++    }
++
++    /// <summary>
++    /// Cities of the selected country (optionally filtered with ?search=).
++    /// Use this to fill the City drop-down after the user picks a Country.
++    /// </summary>
++    [HttpGet("countries/{id:int}/cities")]
++    public async Task<ActionResult<List<CityDto>>> Cities(int id, [FromQuery] string? search, CancellationToken cancellationToken)
++    {
++        var country = await _db.Countries
++            .AsNoTracking()
++            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
++        if (country == null)
++            return NotFound();
++
++        var query = _db.Cities.AsNoTracking().Where(c => c.CountryId == id);
++        if (!string.IsNullOrWhiteSpace(search))
++            query = query.Where(c => c.Name.ToLower().Contains(search.ToLower()));
++
++        return Ok(await query
++            .OrderBy(c => c.Name)
++            .Select(c => new CityDto { Id = c.Id, Name = c.Name })
++            .ToListAsync(cancellationToken));
++    }
++
++    /// <summary>Fixed profession drop-down options.</summary>
++    [HttpGet("professions")]
++    public ActionResult<List<string>> Professions() => Ok(AppConstants.Professions.ToList());
++
++    /// <summary>Fixed gender drop-down options.</summary>
++    [HttpGet("genders")]
++    public ActionResult<List<string>> Genders() => Ok(AppConstants.Genders.ToList());
++}
+diff --git a/NeverBeen.API/Controllers/MessageBookController.cs b/NeverBeen.API/Controllers/MessageBookController.cs
+new file mode 100644
+index 0000000..b3b165b
+--- /dev/null
++++ b/NeverBeen.API/Controllers/MessageBookController.cs
+@@ -0,0 +1,286 @@
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Common;
++using NeverBeen.API.Data;
++using NeverBeen.API.Dtos;
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Controllers;
++
++/// <summary>
++/// The NeverBeen Community Message Book:
++///  - every member can post a text comment (top-level post),
++///  - the poster's details (name, photo, profession) are shown with the comment,
++///  - other members can reply to a post (one level of nesting),
++///  - members can like or dislike any comment (toggle behaviour).
++/// Reading is open; posting, reacting and deleting require a JWT.
++/// </summary>
++[ApiController]
++[Route("api/messagebook")]
++public class MessageBookController : ControllerBase
++{
++    private readonly AppDbContext _db;
++    private readonly ILogger<MessageBookController> _logger;
++
++    public MessageBookController(AppDbContext db, ILogger<MessageBookController> logger)
++    {
++        _db = db;
++        _logger = logger;
++    }
++
++    /// <summary>
++    /// Paged list of top-level posts, newest first, with replies and the current
++    /// visitor's reactions included.
++    /// </summary>
++    [HttpGet]
++    public async Task<ActionResult<PagedResult<CommentDto>>> List(
++        [FromQuery] int page = 1,
++        [FromQuery] int pageSize = 20,
++        [FromQuery] bool includeReplies = true,
++        CancellationToken cancellationToken = default)
++    {
++        if (page < 1) page = 1;
++        if (pageSize < 1) pageSize = 20;
++        if (pageSize > 100) pageSize = 100;
++
++        var topLevel = await _db.CommunityComments
++            .AsNoTracking()
++            .Where(c => c.ParentId == null)
++            .Include(c => c.Author)
++            .OrderByDescending(c => c.CreatedAtUtc)
++            .Skip((page - 1) * pageSize)
++            .Take(pageSize)
++            .ToListAsync(cancellationToken);
++
++        var totalCount = await _db.CommunityComments
++            .CountAsync(c => c.ParentId == null, cancellationToken);
++
++        var commentIds = topLevel.Select(c => c.Id).ToList();
++        var myReactions = new Dictionary<int, int>();
++        var replyLookup = new Dictionary<int, List<CommunityComment>>();
++
++        if (commentIds.Count > 0)
++        {
++            var replies = await _db.CommunityComments
++                .AsNoTracking()
++                .Where(c => c.ParentId != null && commentIds.Contains(c.ParentId.Value))
++                .Include(c => c.Author)
++                .OrderBy(c => c.CreatedAtUtc)
++                .ToListAsync(cancellationToken);
++
++            replyLookup = replies
++                .GroupBy(r => r.ParentId!.Value)
++                .ToDictionary(g => g.Key, g => g.ToList());
++
++            var allIds = commentIds.Concat(replies.Select(r => r.Id)).ToList();
++            myReactions = await LoadMyReactionsAsync(allIds, cancellationToken);
++        }
++
++        var items = topLevel.Select(comment =>
++        {
++            var dto = CommentMapper.Map(comment, myReactions);
++            dto.ReplyCount = replyLookup.TryGetValue(comment.Id, out var replyList) ? replyList.Count : 0;
++            if (includeReplies && replyLookup.TryGetValue(comment.Id, out var list))
++                dto.Replies = list.Select(r => CommentMapper.Map(r, myReactions)).ToList();
++            return dto;
++        }).ToList();
++
++        return Ok(new PagedResult<CommentDto>
++        {
++            Items = items,
++            TotalCount = totalCount,
++            Page = page,
++            PageSize = pageSize,
++            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
++        });
++    }
++
++    /// <summary>A single top-level post with all of its replies.</summary>
++    [HttpGet("{id:int}")]
++    public async Task<ActionResult<CommentDto>> Get(int id, CancellationToken cancellationToken)
++    {
++        var comment = await _db.CommunityComments
++            .AsNoTracking()
++            .Include(c => c.Author)
++            .FirstOrDefaultAsync(c => c.Id == id && c.ParentId == null, cancellationToken);
++        if (comment == null)
++            return NotFound();
++
++        var replies = await _db.CommunityComments
++            .AsNoTracking()
++            .Where(c => c.ParentId == id)
++            .Include(c => c.Author)
++            .OrderBy(c => c.CreatedAtUtc)
++            .ToListAsync(cancellationToken);
++
++        var myReactions = await LoadMyReactionsAsync(
++            new List<int> { comment.Id }.Concat(replies.Select(r => r.Id)).ToList(),
++            cancellationToken);
++
++        var dto = CommentMapper.Map(comment, myReactions);
++        dto.ReplyCount = replies.Count;
++        dto.Replies = replies.Select(r => CommentMapper.Map(r, myReactions)).ToList();
++        return Ok(dto);
++    }
++
++    /// <summary>Creates a new top-level post, or a reply when ParentId is supplied.</summary>
++    [Authorize]
++    [HttpPost]
++    [ProducesResponseType(typeof(CommentDto), StatusCodes.Status201Created)]
++    public async Task<ActionResult<CommentDto>> Create([FromBody] CommentCreateRequest request, CancellationToken cancellationToken)
++    {
++        var userId = User.GetUserId();
++
++        if (request.ParentId.HasValue)
++        {
++            var parent = await _db.CommunityComments
++                .FirstOrDefaultAsync(c => c.Id == request.ParentId.Value, cancellationToken);
++            if (parent == null)
++                return NotFound(new { error = "The parent comment was not found." });
++            if (parent.ParentId.HasValue)
++                return BadRequest(new { error = "Replies to replies are not supported. Post your comment at the top level of the message book." });
++        }
++
++        var comment = new CommunityComment
++        {
++            Text = request.Text.Trim(),
++            AuthorId = userId,
++            ParentId = request.ParentId,
++            CreatedAtUtc = DateTime.UtcNow
++        };
++        _db.CommunityComments.Add(comment);
++        await _db.SaveChangesAsync(cancellationToken);
++
++        var created = await _db.CommunityComments
++            .AsNoTracking()
++            .Include(c => c.Author)
++            .FirstAsync(c => c.Id == comment.Id, cancellationToken);
++
++        return CreatedAtAction(nameof(Get), new { id = comment.Id },
++            CommentMapper.Map(created, new Dictionary<int, int>()));
++    }
++
++    /// <summary>
++    /// Likes or dislikes a comment. Sending the same type again removes the reaction
++    /// (toggle); sending the opposite type switches it.
++    /// </summary>
++    [Authorize]
++    [HttpPost("{id:int}/reactions")]
++    public async Task<ActionResult<ReactionResultDto>> React(int id, [FromBody] ReactionRequest request, CancellationToken cancellationToken)
++    {
++        var userId = User.GetUserId();
++
++        int type;
++        if (string.Equals(request.Type, "like", StringComparison.OrdinalIgnoreCase))
++            type = ReactionTypes.Like;
++        else if (string.Equals(request.Type, "dislike", StringComparison.OrdinalIgnoreCase))
++            type = ReactionTypes.Dislike;
++        else
++            return BadRequest(new { error = "'type' must be 'like' or 'dislike'." });
++
++        var comment = await _db.CommunityComments
++            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
++        if (comment == null)
++            return NotFound();
++
++        var existing = await _db.CommentReactions
++            .FirstOrDefaultAsync(r => r.CommentId == id && r.UserId == userId, cancellationToken);
++
++        string? myReactionAfter;
++        if (existing == null)
++        {
++            _db.CommentReactions.Add(new CommentReaction
++            {
++                CommentId = id,
++                UserId = userId,
++                ReactionType = type,
++                CreatedAtUtc = DateTime.UtcNow
++            });
++            if (type == ReactionTypes.Like) comment.LikeCount += 1; else comment.DislikeCount += 1;
++            myReactionAfter = type == ReactionTypes.Like ? "Like" : "Dislike";
++        }
++        else if (existing.ReactionType == type)
++        {
++            // Same reaction again -> toggle off.
++            _db.CommentReactions.Remove(existing);
++            if (type == ReactionTypes.Like) comment.LikeCount -= 1; else comment.DislikeCount -= 1;
++            myReactionAfter = null;
++        }
++        else
++        {
++            // Switch like <-> dislike.
++            existing.ReactionType = type;
++            if (type == ReactionTypes.Like)
++            {
++                comment.LikeCount += 1;
++                comment.DislikeCount -= 1;
++            }
++            else
++            {
++                comment.DislikeCount += 1;
++                comment.LikeCount -= 1;
++            }
++            myReactionAfter = type == ReactionTypes.Like ? "Like" : "Dislike";
++        }
++
++        await _db.SaveChangesAsync(cancellationToken);
++
++        return Ok(new ReactionResultDto
++        {
++            LikeCount = comment.LikeCount,
++            DislikeCount = comment.DislikeCount,
++            MyReaction = myReactionAfter
++        });
++    }
++
++    /// <summary>Deletes the signed-in user's own comment (replies and reactions are removed with it).</summary>
++    [Authorize]
++    [HttpDelete("{id:int}")]
++    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
++    {
++        var userId = User.GetUserId();
++        var comment = await _db.CommunityComments
++            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
++        if (comment == null)
++            return NotFound();
++        if (comment.AuthorId != userId)
++            return Forbid();
++
++        var replyIds = await _db.CommunityComments
++            .Where(r => r.ParentId == id)
++            .Select(r => r.Id)
++            .ToListAsync(cancellationToken);
++
++        var allIds = new List<int> { id };
++        allIds.AddRange(replyIds);
++
++        await _db.CommentReactions
++            .Where(r => allIds.Contains(r.CommentId))
++            .ExecuteDeleteAsync(cancellationToken);
++
++        if (replyIds.Count > 0)
++            await _db.CommunityComments
++                .Where(r => replyIds.Contains(r.Id))
++                .ExecuteDeleteAsync(cancellationToken);
++
++        _db.CommunityComments.Remove(comment);
++        await _db.SaveChangesAsync(cancellationToken);
++        return NoContent();
++    }
++
++    private async Task<Dictionary<int, int>> LoadMyReactionsAsync(List<int> commentIds, CancellationToken cancellationToken)
++    {
++        if (commentIds.Count == 0)
++            return new Dictionary<int, int>();
++
++        if (User.Identity?.IsAuthenticated != true)
++            return new Dictionary<int, int>();
++
++        var userId = User.GetUserId();
++        return await _db.CommentReactions
++            .AsNoTracking()
++            .Where(r => r.UserId == userId && commentIds.Contains(r.CommentId))
++            .ToDictionaryAsync(r => r.CommentId, r => r.ReactionType, cancellationToken);
++    }
++}
+diff --git a/NeverBeen.API/Controllers/ProfileController.cs b/NeverBeen.API/Controllers/ProfileController.cs
+new file mode 100644
+index 0000000..f4800a4
+--- /dev/null
++++ b/NeverBeen.API/Controllers/ProfileController.cs
+@@ -0,0 +1,245 @@
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Common;
++using NeverBeen.API.Data;
++using NeverBeen.API.Dtos;
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Controllers;
++
++/// <summary>
++/// User profile endpoints - backing the profile page with its Side Panel
++/// (About Me, Details, Gallery, Settings) and the main panel.
++/// GET /api/profile/{id} is public (respecting the user's "public profile" setting);
++/// all mutations require the user's JWT.
++/// </summary>
++[ApiController]
++[Route("api/profile")]
++public class ProfileController : ControllerBase
++{
++    private readonly AppDbContext _db;
++    private readonly ILogger<ProfileController> _logger;
++
++    public ProfileController(AppDbContext db, ILogger<ProfileController> logger)
++    {
++        _db = db;
++        _logger = logger;
++    }
++
++    /// <summary>Full profile of the signed-in user (About Me + Details + Gallery + Settings).</summary>
++    [Authorize]
++    [HttpGet("me")]
++    public async Task<ActionResult<ProfileDto>> Me(CancellationToken cancellationToken)
++    {
++        var user = await LoadFullUserAsync(User.GetUserId(), cancellationToken);
++        if (user == null)
++            return NotFound();
++        return Ok(await BuildDtoAsync(user, cancellationToken));
++    }
++
++    /// <summary>Public profile of any member (used to view another member's profile page).</summary>
++    [HttpGet("{id:int}")]
++    public async Task<ActionResult<ProfileDto>> Get(int id, CancellationToken cancellationToken)
++    {
++        var user = await LoadFullUserAsync(id, cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        var requesterId = User.Identity?.IsAuthenticated == true ? User.GetUserId() : null;
++        if (requesterId != id && user.Settings?.PublicProfileEnabled == false)
++            return Forbid();
++
++        return Ok(await BuildDtoAsync(user, cancellationToken));
++    }
++
++    /// <summary>Updates editable details of the signed-in user. Omitted (null) fields keep their current value.</summary>
++    [Authorize]
++    [HttpPut]
++    public async Task<ActionResult<ProfileDto>> Update([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
++    {
++        var user = await _db.Users
++            .Include(u => u.Settings)
++            .FirstOrDefaultAsync(u => u.Id == User.GetUserId(), cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        if (request.Gender != null && !AppConstants.Genders.Contains(request.Gender, StringComparer.OrdinalIgnoreCase))
++            return BadRequest(new { error = $"Gender must be one of: {string.Join(", ", AppConstants.Genders)}." });
++
++        if (request.Profession != null && !AppConstants.Professions.Contains(request.Profession, StringComparer.Ordinal))
++            return BadRequest(new { error = $"Profession must be one of: {string.Join(", ", AppConstants.Professions)}." });
++
++        if (request.DateOfBirth.HasValue && request.DateOfBirth.Value.Date >= DateTime.Today)
++            return BadRequest(new { error = "Date of birth must be in the past." });
++
++        if (request.CountryId.HasValue || request.CityId.HasValue)
++        {
++            var countryId = request.CountryId ?? user.CountryId;
++            var cityId = request.CityId ?? user.CityId;
++            if (countryId == null || cityId == null)
++                return BadRequest(new { error = "Both Country and City are required." });
++
++            var city = await _db.Cities.FindAsync(new object[] { cityId }, cancellationToken);
++            if (city == null || city.CountryId != countryId)
++                return BadRequest(new { error = "The selected city does not belong to the selected country." });
++        }
++
++        if (!string.IsNullOrWhiteSpace(request.FullName))
++            user.FullName = request.FullName.Trim();
++        if (request.Gender != null)
++            user.Gender = request.Gender;
++        if (request.DateOfBirth.HasValue)
++            user.DateOfBirth = request.DateOfBirth.Value.Date;
++        if (request.CountryId.HasValue)
++            user.CountryId = request.CountryId;
++        if (request.CityId.HasValue)
++            user.CityId = request.CityId;
++        if (request.Pincode != null)
++            user.Pincode = request.Pincode.Trim();
++        if (request.ContactNumber != null)
++            user.ContactNumber = request.ContactNumber.Trim();
++        if (request.PostalAddress != null)
++            user.PostalAddress = request.PostalAddress.Trim();
++        if (request.AboutMe != null)
++            user.AboutMe = request.AboutMe.Trim();
++        if (request.Profession != null)
++            user.Profession = request.Profession;
++
++        user.UpdatedAtUtc = DateTime.UtcNow;
++        await _db.SaveChangesAsync(cancellationToken);
++
++        var updated = await LoadFullUserAsync(user.Id, cancellationToken);
++        return Ok(await BuildDtoAsync(updated!, cancellationToken));
++    }
++
++    /// <summary>Uploads a new profile photograph (multipart, field name "photo").</summary>
++    [Authorize]
++    [HttpPut("photo")]
++    [Consumes("multipart/form-data")]
++    public async Task<ActionResult<ProfileDto>> UploadPhoto([FromForm] IFormFile photo, CancellationToken cancellationToken)
++    {
++        var user = await _db.Users
++            .FirstOrDefaultAsync(u => u.Id == User.GetUserId(), cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        var error = ImageValidation.ValidateRequired(photo, AppConstants.MaxProfilePhotoBytes);
++        if (error != null)
++            return BadRequest(new { error });
++
++        using var memory = new MemoryStream();
++        await photo.CopyToAsync(memory, cancellationToken);
++        user.ProfilePhotoData = memory.ToArray();
++        user.ProfilePhotoMimeType = photo.ContentType ?? "image/jpeg";
++        user.UpdatedAtUtc = DateTime.UtcNow;
++        await _db.SaveChangesAsync(cancellationToken);
++
++        var updated = await LoadFullUserAsync(user.Id, cancellationToken);
++        return Ok(await BuildDtoAsync(updated!, cancellationToken));
++    }
++
++    /// <summary>Removes the uploaded profile photograph (the OAuth provider picture becomes the fallback).</summary>
++    [Authorize]
++    [HttpDelete("photo")]
++    public async Task<IActionResult> DeletePhoto(CancellationToken cancellationToken)
++    {
++        var user = await _db.Users
++            .FirstOrDefaultAsync(u => u.Id == User.GetUserId(), cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        user.ProfilePhotoData = null;
++        user.ProfilePhotoMimeType = null;
++        user.UpdatedAtUtc = DateTime.UtcNow;
++        await _db.SaveChangesAsync(cancellationToken);
++        return NoContent();
++    }
++
++    /// <summary>Updates the signed-in user's Settings section.</summary>
++    [Authorize]
++    [HttpPut("settings")]
++    public async Task<ActionResult<SettingsDto>> UpdateSettings([FromBody] SettingsDto request, CancellationToken cancellationToken)
++    {
++        var user = await _db.Users
++            .Include(u => u.Settings)
++            .FirstOrDefaultAsync(u => u.Id == User.GetUserId(), cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        if (request.Theme != null && !AppConstants.Themes.Contains(request.Theme, StringComparer.OrdinalIgnoreCase))
++            return BadRequest(new { error = $"Theme must be one of: {string.Join(", ", AppConstants.Themes)}." });
++
++        if (user.Settings == null)
++            user.Settings = new UserSettings { UserId = user.Id };
++
++        user.Settings.EmailNotificationsEnabled = request.EmailNotificationsEnabled;
++        user.Settings.PhoneNotificationsEnabled = request.PhoneNotificationsEnabled;
++        user.Settings.PublicProfileEnabled = request.PublicProfileEnabled;
++        if (request.Theme != null)
++            user.Settings.Theme = request.Theme;
++        user.Settings.Timezone = string.IsNullOrWhiteSpace(request.Timezone) ? null : request.Timezone.Trim();
++        user.Settings.UpdatedAtUtc = DateTime.UtcNow;
++        await _db.SaveChangesAsync(cancellationToken);
++
++        return Ok(new SettingsDto
++        {
++            EmailNotificationsEnabled = user.Settings.EmailNotificationsEnabled,
++            PhoneNotificationsEnabled = user.Settings.PhoneNotificationsEnabled,
++            PublicProfileEnabled = user.Settings.PublicProfileEnabled,
++            Theme = user.Settings.Theme,
++            Timezone = user.Settings.Timezone
++        });
++    }
++
++    /// <summary>Serves the profile photograph as an image (used by &lt;img&gt; tags across the app).</summary>
++    [HttpGet("{id:int}/photo")]
++    public async Task<IActionResult> GetPhoto(int id, CancellationToken cancellationToken)
++    {
++        var user = await _db.Users
++            .AsNoTracking()
++            .Include(u => u.Settings)
++            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
++        if (user == null || user.ProfilePhotoData == null)
++            return NotFound();
++
++        var requesterId = User.Identity?.IsAuthenticated == true ? User.GetUserId() : null;
++        if (requesterId != id && user.Settings?.PublicProfileEnabled == false)
++            return Forbid();
++
++        return File(user.ProfilePhotoData, user.ProfilePhotoMimeType ?? "image/jpeg");
++    }
++
++    private async Task<UserProfile?> LoadFullUserAsync(int id, CancellationToken cancellationToken)
++        => await _db.Users
++            .AsNoTracking()
++            .Include(u => u.Country)
++            .Include(u => u.City)
++            .Include(u => u.Settings)
++            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
++
++    private async Task<ProfileDto> BuildDtoAsync(UserProfile user, CancellationToken cancellationToken)
++    {
++        var gallery = await _db.GalleryPhotos
++            .AsNoTracking()
++            .Where(g => g.UserId == user.Id)
++            .OrderByDescending(g => g.CreatedAtUtc)
++            .Select(g => new { g.Id, g.Caption, g.CreatedAtUtc })
++            .ToListAsync(cancellationToken);
++
++        var commentCount = await _db.CommunityComments
++            .CountAsync(c => c.AuthorId == user.Id, cancellationToken);
++
++        var galleryDtos = gallery
++            .Select(g => new GalleryPhotoDto
++            {
++                Id = g.Id,
++                Url = $"/api/gallery/{g.Id}",
++                Caption = g.Caption,
++                CreatedAtUtc = g.CreatedAtUtc
++            })
++            .ToList();
++
++        return ProfileMapper.ToDto(user, galleryDtos, commentCount);
++    }
++}
+diff --git a/NeverBeen.API/Controllers/RegistrationController.cs b/NeverBeen.API/Controllers/RegistrationController.cs
+new file mode 100644
+index 0000000..0234731
+--- /dev/null
++++ b/NeverBeen.API/Controllers/RegistrationController.cs
+@@ -0,0 +1,135 @@
++using Microsoft.AspNetCore.Authorization;
++using Microsoft.AspNetCore.Mvc;
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Common;
++using NeverBeen.API.Data;
++using NeverBeen.API.Dtos;
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Controllers;
++
++/// <summary>
++/// Completes the registration of a user who signed in via OAuth with a "Pending" status
++/// (the Registration Page shown to new members). Accepts multipart/form-data:
++/// the form fields plus an optional "photo" file. On success the profile becomes
++/// "Active" and the frontend is redirected to the user profile page.
++/// </summary>
++[ApiController]
++[Route("api/registration")]
++[Authorize]
++public class RegistrationController : ControllerBase
++{
++    private readonly AppDbContext _db;
++    private readonly ILogger<RegistrationController> _logger;
++
++    public RegistrationController(AppDbContext db, ILogger<RegistrationController> logger)
++    {
++        _db = db;
++        _logger = logger;
++    }
++
++    [HttpPost]
++    [Consumes("multipart/form-data")]
++    [ProducesResponseType(typeof(ProfileDto), StatusCodes.Status200OK)]
++    [ProducesResponseType(StatusCodes.Status400BadRequest)]
++    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
++    [ProducesResponseType(StatusCodes.Status404NotFound)]
++    [ProducesResponseType(StatusCodes.Status409Conflict)]
++    public async Task<ActionResult<ProfileDto>> Complete([FromForm] RegistrationRequest request, CancellationToken cancellationToken)
++    {
++        var userId = User.GetUserId();
++        var user = await _db.Users
++            .Include(u => u.Settings)
++            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
++        if (user == null)
++            return NotFound();
++
++        if (user.Status == UserProfileStatus.Active)
++            return Conflict(new { error = "This account already has a complete profile. Use PUT /api/profile to update it." });
++
++        // ---- business rules beyond attribute validation -------------------------
++        if (!AppConstants.Genders.Contains(request.Gender, StringComparer.OrdinalIgnoreCase))
++            return BadRequest(new { error = $"Gender must be one of: {string.Join(", ", AppConstants.Genders)}." });
++
++        if (!AppConstants.Professions.Contains(request.Profession, StringComparer.Ordinal))
++            return BadRequest(new { error = $"Profession must be one of: {string.Join(", ", AppConstants.Professions)}." });
++
++        if (request.DateOfBirth.Date >= DateTime.Today)
++            return BadRequest(new { error = "Date of birth must be in the past." });
++
++        var age = DateTime.Today.Year - request.DateOfBirth.Year;
++        if (request.DateOfBirth.Date > DateTime.Today.AddYears(-age))
++            age--;
++        if (age < 13 || age > 120)
++            return BadRequest(new { error = "Date of birth must be between 13 and 120 years ago." });
++
++        if (request.CountryId <= 0 || request.CityId <= 0)
++            return BadRequest(new { error = "Country and City are required." });
++
++        var city = await _db.Cities.FindAsync(new object[] { request.CityId }, cancellationToken);
++        if (city == null || city.CountryId != request.CountryId)
++            return BadRequest(new { error = "The selected city does not belong to the selected country." });
++
++        // ---- email ----------------------------------------------------------------
++        var newEmail = request.Email.Trim();
++        if (!newEmail.Equals(user.Email, StringComparison.OrdinalIgnoreCase))
++        {
++            var emailTaken = await _db.Users
++                .AnyAsync(u => u.Email.ToLower() == newEmail.ToLower() && u.Id != userId, cancellationToken);
++            if (emailTaken)
++                return Conflict(new { error = "The email address is already registered to another community member." });
++        }
++
++        // ---- optional photograph ----------------------------------------------------
++        var photoError = ImageValidation.ValidateOptional(request.Photo, AppConstants.MaxProfilePhotoBytes);
++        if (photoError != null)
++            return BadRequest(new { error = photoError });
++
++        if (request.Photo != null && request.Photo.Length > 0)
++        {
++            using var memory = new MemoryStream();
++            await request.Photo.CopyToAsync(memory, cancellationToken);
++            user.ProfilePhotoData = memory.ToArray();
++            user.ProfilePhotoMimeType = request.Photo.ContentType ?? "image/jpeg";
++        }
++
++        // ---- write the profile --------------------------------------------------------
++        user.FullName = request.FullName.Trim();
++        user.Email = newEmail;
++        user.Gender = request.Gender;
++        user.DateOfBirth = request.DateOfBirth.Date;
++        user.CountryId = request.CountryId;
++        user.CityId = request.CityId;
++        user.Pincode = string.IsNullOrWhiteSpace(request.Pincode) ? null : request.Pincode.Trim();
++        user.ContactNumber = string.IsNullOrWhiteSpace(request.ContactNumber) ? null : request.ContactNumber.Trim();
++        user.PostalAddress = string.IsNullOrWhiteSpace(request.PostalAddress) ? null : request.PostalAddress.Trim();
++        user.AboutMe = string.IsNullOrWhiteSpace(request.AboutMe) ? null : request.AboutMe.Trim();
++        user.Profession = request.Profession;
++        user.Status = UserProfileStatus.Active;
++        user.UpdatedAtUtc = DateTime.UtcNow;
++
++        if (user.Settings == null)
++            user.Settings = new UserSettings { UserId = userId };
++
++        await _db.SaveChangesAsync(cancellationToken);
++        _logger.LogInformation("User {UserId} completed registration as {Email}", userId, newEmail);
++
++        var fresh = await LoadFullUserAsync(userId, cancellationToken);
++        return Ok(await BuildDtoAsync(fresh!, cancellationToken));
++    }
++
++    private async Task<UserProfile?> LoadFullUserAsync(int id, CancellationToken cancellationToken)
++        => await _db.Users
++            .AsNoTracking()
++            .Include(u => u.Country)
++            .Include(u => u.City)
++            .Include(u => u.Settings)
++            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
++
++    private async Task<ProfileDto> BuildDtoAsync(UserProfile user, CancellationToken cancellationToken)
++    {
++        var commentCount = await _db.CommunityComments
++            .CountAsync(c => c.AuthorId == user.Id, cancellationToken);
++        return ProfileMapper.ToDto(user, new List<GalleryPhotoDto>(), commentCount);
++    }
++}
+diff --git a/NeverBeen.API/Controllers/WeatherForecastController.cs b/NeverBeen.API/Controllers/WeatherForecastController.cs
+deleted file mode 100644
+index 321700f..0000000
+--- a/NeverBeen.API/Controllers/WeatherForecastController.cs
++++ /dev/null
+@@ -1,33 +0,0 @@
+-using Microsoft.AspNetCore.Mvc;
+-
+-namespace NeverBeen.API.Controllers
+-{
+-    [ApiController]
+-    [Route("[controller]")]
+-    public class WeatherForecastController : ControllerBase
+-    {
+-        private static readonly string[] Summaries = new[]
+-        {
+-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+-    };
+-
+-        private readonly ILogger<WeatherForecastController> _logger;
+-
+-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+-        {
+-            _logger = logger;
+-        }
+-
+-        [HttpGet(Name = "GetWeatherForecast")]
+-        public IEnumerable<WeatherForecast> Get()
+-        {
+-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+-            {
+-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+-                TemperatureC = Random.Shared.Next(-20, 55),
+-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+-            })
+-            .ToArray();
+-        }
+-    }
+-}
+\ No newline at end of file
+diff --git a/NeverBeen.API/Data/AppDbContext.cs b/NeverBeen.API/Data/AppDbContext.cs
+new file mode 100644
+index 0000000..a864bbd
+--- /dev/null
++++ b/NeverBeen.API/Data/AppDbContext.cs
+@@ -0,0 +1,106 @@
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Data;
++
++public class AppDbContext : DbContext
++{
++    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
++    {
++    }
++
++    public DbSet<UserProfile> Users => Set<UserProfile>();
++    public DbSet<ExternalIdentity> ExternalIdentities => Set<ExternalIdentity>();
++    public DbSet<UserSettings> UserSettings => Set<UserSettings>();
++    public DbSet<Country> Countries => Set<Country>();
++    public DbSet<City> Cities => Set<City>();
++    public DbSet<GalleryPhoto> GalleryPhotos => Set<GalleryPhoto>();
++    public DbSet<CommunityComment> CommunityComments => Set<CommunityComment>();
++    public DbSet<CommentReaction> CommentReactions => Set<CommentReaction>();
++
++    protected override void OnModelCreating(ModelBuilder modelBuilder)
++    {
++        modelBuilder.Entity<UserProfile>(entity =>
++        {
++            entity.HasIndex(u => u.Email).IsUnique();
++
++            entity.HasOne(u => u.Country)
++                .WithMany()
++                .HasForeignKey(u => u.CountryId)
++                .OnDelete(DeleteBehavior.ClientSetNull);
++
++            entity.HasOne(u => u.City)
++                .WithMany()
++                .HasForeignKey(u => u.CityId)
++                .OnDelete(DeleteBehavior.ClientSetNull);
++
++            entity.HasOne(u => u.Settings)
++                .WithOne(s => s.User)
++                .HasForeignKey<UserSettings>(s => s.UserId)
++                .OnDelete(DeleteBehavior.Cascade);
++        });
++
++        modelBuilder.Entity<ExternalIdentity>(entity =>
++        {
++            entity.HasIndex(i => new { i.Provider, i.ProviderKey }).IsUnique();
++
++            entity.HasOne(i => i.User)
++                .WithMany(u => u.Identities)
++                .HasForeignKey(i => i.UserId)
++                .OnDelete(DeleteBehavior.Cascade);
++        });
++
++        modelBuilder.Entity<Country>(entity =>
++        {
++            entity.HasIndex(c => c.IsoCode2).IsUnique();
++        });
++
++        modelBuilder.Entity<City>(entity =>
++        {
++            entity.HasIndex(c => new { c.CountryId, c.Name }).IsUnique();
++
++            entity.HasOne(c => c.Country)
++                .WithMany(c => c.Cities)
++                .HasForeignKey(c => c.CountryId)
++                .OnDelete(DeleteBehavior.Cascade);
++        });
++
++        modelBuilder.Entity<GalleryPhoto>(entity =>
++        {
++            entity.HasOne(g => g.User)
++                .WithMany(u => u.GalleryPhotos)
++                .HasForeignKey(g => g.UserId)
++                .OnDelete(DeleteBehavior.Cascade);
++        });
++
++        modelBuilder.Entity<CommunityComment>(entity =>
++        {
++            entity.HasOne(c => c.Author)
++                .WithMany(u => u.Comments)
++                .HasForeignKey(c => c.AuthorId)
++                .OnDelete(DeleteBehavior.Cascade);
++
++            // Replies are removed explicitly in the service layer before a top-level
++            // comment is deleted, so the self-reference uses Restrict.
++            entity.HasOne(c => c.Parent)
++                .WithMany(c => c.Replies)
++                .HasForeignKey(c => c.ParentId)
++                .OnDelete(DeleteBehavior.Restrict);
++        });
++
++        modelBuilder.Entity<CommentReaction>(entity =>
++        {
++            entity.HasIndex(r => new { r.CommentId, r.UserId }).IsUnique();
++
++            entity.HasOne(r => r.Comment)
++                .WithMany()
++                .HasForeignKey(r => r.CommentId)
++                .OnDelete(DeleteBehavior.Cascade);
++
++            entity.HasOne(r => r.User)
++                .WithMany()
++                .HasForeignKey(r => r.UserId)
++                .OnDelete(DeleteBehavior.Cascade);
++        });
++    }
++}
+diff --git a/NeverBeen.API/Data/DbInitializer.cs b/NeverBeen.API/Data/DbInitializer.cs
+new file mode 100644
+index 0000000..6115066
+--- /dev/null
++++ b/NeverBeen.API/Data/DbInitializer.cs
+@@ -0,0 +1,62 @@
++using Microsoft.EntityFrameworkCore;
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Data;
++
++public interface IDbInitializer
++{
++    Task InitializeAsync();
++}
++
++/// <summary>
++/// Runs once at startup:
++///  1. Creates the database schema. If EF migrations exist for this context they are
++///     applied with <c>MigrateAsync()</c>; otherwise <c>EnsureCreated()</c> creates the
++///     full schema in one go (works directly against Azure SQL).
++///  2. Seeds the Countries/Cities lookup tables used by the registration drop-downs.
++/// </summary>
++public class DbInitializer : IDbInitializer
++{
++    private readonly AppDbContext _db;
++    private readonly ILogger<DbInitializer> _logger;
++
++    public DbInitializer(AppDbContext db, ILogger<DbInitializer> logger)
++    {
++        _db = db;
++        _logger = logger;
++    }
++
++    public async Task InitializeAsync()
++    {
++        if (_db.Database.GetMigrations().Any())
++        {
++            _logger.LogInformation("Applying EF Core migrations...");
++            await _db.Database.MigrateAsync();
++        }
++        else
++        {
++            _logger.LogInformation("No migrations found - creating the database schema with EnsureCreated...");
++            await _db.Database.EnsureCreatedAsync();
++        }
++
++        if (!await _db.Countries.AnyAsync())
++        {
++            var seed = GeoSeedData.GetCountries();
++            foreach (var country in seed)
++            {
++                var entity = new Country
++                {
++                    IsoCode2 = country.IsoCode2,
++                    Name = country.Name,
++                    PhoneCode = country.PhoneCode
++                };
++                foreach (var city in country.Cities)
++                    entity.Cities.Add(new City { Name = city });
++                _db.Countries.Add(entity);
++            }
++
++            await _db.SaveChangesAsync();
++            _logger.LogInformation("Seeded {CountryCount} countries and their cities.", seed.Count);
++        }
++    }
++}
+diff --git a/NeverBeen.API/Data/GeoSeedData.cs b/NeverBeen.API/Data/GeoSeedData.cs
+new file mode 100644
+index 0000000..402d540
+--- /dev/null
++++ b/NeverBeen.API/Data/GeoSeedData.cs
+@@ -0,0 +1,240 @@
++using System.Text.Json;
++
++namespace NeverBeen.API.Data;
++
++/// <summary>
++/// Seed data for the Country drop-down and the City drop-down (cities are loaded
++/// based on the selected country). The list is embedded as JSON so it can be extended
++/// without code changes - just add more entries to <see cref="GeoJson"/>.
++/// </summary>
++public static class GeoSeedData
++{
++    private static readonly Lazy<IReadOnlyList<CountrySeed>> Data = new(Load);
++
++    public static IReadOnlyList<CountrySeed> GetCountries() => Data.Value;
++
++    public class CountrySeed
++    {
++        public string IsoCode2 { get; set; } = string.Empty;
++        public string Name { get; set; } = string.Empty;
++        public string? PhoneCode { get; set; }
++        public List<string> Cities { get; set; } = new();
++    }
++
++    private static List<CountrySeed> Load()
++    {
++        using var doc = JsonDocument.Parse(GeoJson);
++        var list = new List<CountrySeed>();
++        foreach (var element in doc.RootElement.EnumerateArray())
++        {
++            var cities = new List<string>();
++            if (element.TryGetProperty("cities", out var cityArray) && cityArray.ValueKind == JsonValueKind.Array)
++            {
++                foreach (var city in cityArray.EnumerateArray())
++                {
++                    var name = city.GetString();
++                    if (!string.IsNullOrWhiteSpace(name))
++                        cities.Add(name);
++                }
++            }
++
++            list.Add(new CountrySeed
++            {
++                IsoCode2 = element.GetProperty("iso2").GetString() ?? string.Empty,
++                Name = element.GetProperty("name").GetString() ?? string.Empty,
++                PhoneCode = element.TryGetProperty("phone", out var phone) ? phone.GetString() : null,
++                Cities = cities
++            });
++        }
++        return list;
++    }
++
++    private const string GeoJson = """
++    [
++      { "iso2": "AD", "name": "Andorra", "phone": "+376", "cities": ["Andorra la Vella", "Encamp", "La Massana"] },
++      { "iso2": "AE", "name": "United Arab Emirates", "phone": "+971", "cities": ["Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Al Ain", "Fujairah", "Ras Al Khaimah", "Umm Al Quwain"] },
++      { "iso2": "AF", "name": "Afghanistan", "phone": "+93", "cities": ["Kabul", "Kandahar", "Herat", "Mazar-i-Sharif", "Jalalabad"] },
++      { "iso2": "AG", "name": "Antigua and Barbuda", "phone": "+1", "cities": ["Saint John's", "Bolans"] },
++      { "iso2": "AL", "name": "Albania", "phone": "+355", "cities": ["Tirana", "Durres", "Vlore", "Shkoder", "Fier"] },
++      { "iso2": "AM", "name": "Armenia", "phone": "+374", "cities": ["Yerevan", "Gyumri", "Vanadzor", "Hrazdan"] },
++      { "iso2": "AO", "name": "Angola", "phone": "+244", "cities": ["Luanda", "Huambo", "Lobito", "Benguela", "Namibe"] },
++      { "iso2": "AR", "name": "Argentina", "phone": "+54", "cities": ["Buenos Aires", "Cordoba", "Rosario", "Mendoza", "Mar del Plata", "La Plata", "San Miguel de Tucuman", "Salta", "Neuquen"] },
++      { "iso2": "AT", "name": "Austria", "phone": "+43", "cities": ["Vienna", "Graz", "Linz", "Salzburg", "Innsbruck", "Klagenfurt", "St. Polten"] },
++      { "iso2": "AU", "name": "Australia", "phone": "+61", "cities": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Canberra", "Newcastle", "Gold Coast", "Hobart", "Darwin", "Cairns", "Ballarat"] },
++      { "iso2": "AZ", "name": "Azerbaijan", "phone": "+994", "cities": ["Baku", "Sumqayit", "Ganja", "Mingachevir"] },
++      { "iso2": "BA", "name": "Bosnia and Herzegovina", "phone": "+387", "cities": ["Sarajevo", "Banja Luka", "Tuzla", "Zenica", "Mostar"] },
++      { "iso2": "BB", "name": "Barbados", "phone": "+1", "cities": ["Bridgetown", "Speightstown"] },
++      { "iso2": "BD", "name": "Bangladesh", "phone": "+880", "cities": ["Dhaka", "Chittagong", "Khulna", "Rajshahi", "Sylhet", "Barishal", "Narayanganj", "Gazipur", "Comilla"] },
++      { "iso2": "BE", "name": "Belgium", "phone": "+32", "cities": ["Brussels", "Antwerp", "Ghent", "Liege", "Bruges", "Charleroi", "Namur"] },
++      { "iso2": "BF", "name": "Burkina Faso", "phone": "+226", "cities": ["Ouagadougou", "Bobo-Dioulasso", "Koudougou"] },
++      { "iso2": "BG", "name": "Bulgaria", "phone": "+359", "cities": ["Sofia", "Plovdiv", "Varna", "Burgas", "Stara Zagora", "Ruse"] },
++      { "iso2": "BH", "name": "Bahrain", "phone": "+973", "cities": ["Manama", "Muharraq", "Riffa"] },
++      { "iso2": "BI", "name": "Burundi", "phone": "+257", "cities": ["Bujumbura", "Gitega", "Ngozi"] },
++      { "iso2": "BJ", "name": "Benin", "phone": "+229", "cities": ["Cotonou", "Porto-Novo", "Parakou", "Abomey"] },
++      { "iso2": "BL", "name": "Saint Barthelemy", "phone": "+590", "cities": ["Gustavia"] },
++      { "iso2": "BM", "name": "Bermuda", "phone": "+1", "cities": ["Hamilton", "Paget", "St. George's"] },
++      { "iso2": "BN", "name": "Brunei", "phone": "+673", "cities": ["Bandar Seri Begawan", "Seria", "Kuala Belait"] },
++      { "iso2": "BO", "name": "Bolivia", "phone": "+591", "cities": ["La Paz", "Santa Cruz de la Sierra", "Cochabamba", "Sucre", "Oruro"] },
++      { "iso2": "BR", "name": "Brazil", "phone": "+55", "cities": ["Sao Paulo", "Rio de Janeiro", "Brasilia", "Salvador", "Fortaleza", "Belo Horizonte", "Curitiba", "Recife", "Manaus", "Goiania", "Belem", "Porto Alegre"] },
++      { "iso2": "BS", "name": "Bahamas", "phone": "+1", "cities": ["Nassau", "Freeport", "George Town"] },
++      { "iso2": "BT", "name": "Bhutan", "phone": "+975", "cities": ["Thimphu", "Paro", "Punakha", "Gelephu"] },
++      { "iso2": "BW", "name": "Botswana", "phone": "+267", "cities": ["Gaborone", "Francistown", "Maun", "Molepolole", "Mochudi"] },
++      { "iso2": "BY", "name": "Belarus", "phone": "+375", "cities": ["Minsk", "Gomel", "Brest", "Vitebsk", "Grodno"] },
++      { "iso2": "BZ", "name": "Belize", "phone": "+501", "cities": ["Belmopan", "Belize City", "San Ignacio"] },
++      { "iso2": "CA", "name": "Canada", "phone": "+1", "cities": ["Toronto", "Montreal", "Vancouver", "Calgary", "Ottawa", "Edmonton", "Winnipeg", "Quebec City", "Hamilton", "Mississauga", "London", "Kitchener", "Markham", "Surrey", "Victoria", "Oshawa", "St. Catharines"] },
++      { "iso2": "CD", "name": "Democratic Republic of the Congo", "phone": "+243", "cities": ["Kinshasa", "Lubumbashi", "Mbuji-Mayi", "Goma"] },
++      { "iso2": "CF", "name": "Central African Republic", "phone": "+236", "cities": ["Bangui", "Bimbo", "Bouar"] },
++      { "iso2": "CG", "name": "Republic of the Congo", "phone": "+242", "cities": ["Brazzaville", "Pointe-Noire", "Owando"] },
++      { "iso2": "CH", "name": "Switzerland", "phone": "+41", "cities": ["Zurich", "Geneva", "Basel", "Lausanne", "Bern", "Lugano", "St. Gallen"] },
++      { "iso2": "CI", "name": "Cote d'Ivoire", "phone": "+225", "cities": ["Abidjan", "Bouake", "Yamoussoukro", "Korhogo", "San-Pedro"] },
++      { "iso2": "CL", "name": "Chile", "phone": "+56", "cities": ["Santiago", "Valparaiso", "Concepcion", "Antofagasta", "Puerto Montt", "Vina del Mar", "Temuco"] },
++      { "iso2": "CM", "name": "Cameroon", "phone": "+237", "cities": ["Douala", "Yaounde", "Bamenda", "Garoua", "Maroua"] },
++      { "iso2": "CN", "name": "China", "phone": "+86", "cities": ["Beijing", "Shanghai", "Guangzhou", "Shenzhen", "Chengdu", "Hangzhou", "Wuhan", "Nanjing", "Tianjin", "Chongqing", "Xi'an", "Suzhou", "Qingdao", "Dalian"] },
++      { "iso2": "CO", "name": "Colombia", "phone": "+57", "cities": ["Bogota", "Medellin", "Cali", "Cartagena", "Barranquilla", "Bucaramanga", "Pereira"] },
++      { "iso2": "CR", "name": "Costa Rica", "phone": "+506", "cities": ["San Jose", "Alajuela", "Heredia", "Limon", "Escazu"] },
++      { "iso2": "CU", "name": "Cuba", "phone": "+53", "cities": ["Havana", "Santiago de Cuba", "Camaguey", "Holguin", "Varadero"] },
++      { "iso2": "CV", "name": "Cape Verde", "phone": "+238", "cities": ["Praia", "Mindelo"] },
++      { "iso2": "CY", "name": "Cyprus", "phone": "+357", "cities": ["Nicosia", "Limassol", "Paphos", "Larnaca", "Famagusta"] },
++      { "iso2": "CZ", "name": "Czech Republic", "phone": "+420", "cities": ["Prague", "Brno", "Ostrava", "Plzen", "Olomouc", "Liberec"] },
++      { "iso2": "DE", "name": "Germany", "phone": "+49", "cities": ["Berlin", "Munich", "Hamburg", "Cologne", "Frankfurt am Main", "Stuttgart", "Dusseldorf", "Leipzig", "Dortmund", "Essen", "Bremen", "Dresden", "Nuremberg", "Hanover"] },
++      { "iso2": "DJ", "name": "Djibouti", "phone": "+253", "cities": ["Djibouti City", "Tadjoura"] },
++      { "iso2": "DK", "name": "Denmark", "phone": "+45", "cities": ["Copenhagen", "Aarhus", "Odense", "Aalborg", "Esbjerg"] },
++      { "iso2": "DM", "name": "Dominica", "phone": "+1", "cities": ["Roseau", "Saint Joseph"] },
++      { "iso2": "DO", "name": "Dominican Republic", "phone": "+1", "cities": ["Santo Domingo", "Santiago de los Caballeros", "La Romana", "Puerto Plata"] },
++      { "iso2": "DZ", "name": "Algeria", "phone": "+213", "cities": ["Algiers", "Oran", "Constantine", "Annaba", "Blida"] },
++      { "iso2": "EC", "name": "Ecuador", "phone": "+593", "cities": ["Quito", "Guayaquil", "Cuenca", "Ambato", "Riobamba"] },
++      { "iso2": "EE", "name": "Estonia", "phone": "+372", "cities": ["Tallinn", "Tartu", "Parnu", "Narva"] },
++      { "iso2": "EG", "name": "Egypt", "phone": "+20", "cities": ["Cairo", "Alexandria", "Giza", "Luxor", "Aswan", "Mansoura", "Tanta"] },
++      { "iso2": "ER", "name": "Eritrea", "phone": "+291", "cities": ["Asmara", "Keren", "Massawa"] },
++      { "iso2": "ES", "name": "Spain", "phone": "+34", "cities": ["Madrid", "Barcelona", "Valencia", "Seville", "Bilbao", "Malaga", "Zaragoza", "Murcia", "Palma de Mallorca", "Alicante", "Valladolid"] },
++      { "iso2": "ET", "name": "Ethiopia", "phone": "+251", "cities": ["Addis Ababa", "Dire Dawa", "Mekele", "Hawassa"] },
++      { "iso2": "FJ", "name": "Fiji", "phone": "+679", "cities": ["Suva", "Nadi", "Lautoka"] },
++      { "iso2": "FI", "name": "Finland", "phone": "+358", "cities": ["Helsinki", "Espoo", "Tampere", "Turku", "Oulu", "Lahti"] },
++      { "iso2": "FR", "name": "France", "phone": "+33", "cities": ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille", "Rennes", "Saint-Etienne"] },
++      { "iso2": "GA", "name": "Gabon", "phone": "+241", "cities": ["Libreville", "Port-Gentil", "Franceville"] },
++      { "iso2": "GB", "name": "United Kingdom", "phone": "+44", "cities": ["London", "Manchester", "Birmingham", "Glasgow", "Liverpool", "Leeds", "Bristol", "Sheffield", "Edinburgh", "Newcastle upon Tyne", "Nottingham", "Leicester", "Cardiff", "Belfast", "Brighton", "Aberdeen", "Southampton", "Derby", "Coventry", "Wolverhampton", "Norwich", "Exeter", "Reading", "Swansea"] },
++      { "iso2": "GE", "name": "Georgia", "phone": "+995", "cities": ["Tbilisi", "Batumi", "Kutaisi", "Rustavi"] },
++      { "iso2": "GH", "name": "Ghana", "phone": "+233", "cities": ["Accra", "Kumasi", "Takoradi", "Tamale", "Cape Coast", "Koforidua"] },
++      { "iso2": "GD", "name": "Grenada", "phone": "+1", "cities": ["St. George's", "Gouyave"] },
++      { "iso2": "GN", "name": "Guinea", "phone": "+224", "cities": ["Conakry", "Kankan", "Labe"] },
++      { "iso2": "GQ", "name": "Equatorial Guinea", "phone": "+240", "cities": ["Malabo", "Bata"] },
++      { "iso2": "GR", "name": "Greece", "phone": "+30", "cities": ["Athens", "Thessaloniki", "Patras", "Heraklion", "Larissa", "Volos"] },
++      { "iso2": "GT", "name": "Guatemala", "phone": "+502", "cities": ["Guatemala City", "Quetzaltenango", "Antigua", "Escuintla"] },
++      { "iso2": "GM", "name": "Gambia", "phone": "+220", "cities": ["Banjul", "Serekunda", "Brikama"] },
++      { "iso2": "GW", "name": "Guinea-Bissau", "phone": "+245", "cities": ["Bissau", "Bafata"] },
++      { "iso2": "GY", "name": "Guyana", "phone": "+592", "cities": ["Georgetown", "Linden", "Corriverton"] },
++      { "iso2": "HK", "name": "Hong Kong", "phone": "+852", "cities": ["Hong Kong Island", "Kowloon", "New Territories"] },
++      { "iso2": "HN", "name": "Honduras", "phone": "+504", "cities": ["Tegucigalpa", "San Pedro Sula", "La Ceiba", "Choluteca"] },
++      { "iso2": "HR", "name": "Croatia", "phone": "+385", "cities": ["Zagreb", "Split", "Dubrovnik", "Rijeka", "Osijek", "Zadar"] },
++      { "iso2": "HT", "name": "Haiti", "phone": "+509", "cities": ["Port-au-Prince", "Cap-Haitien", "Gonaives"] },
++      { "iso2": "HU", "name": "Hungary", "phone": "+36", "cities": ["Budapest", "Debrecen", "Szeged", "Miskolc", "Pecs", "Gyor"] },
++      { "iso2": "ID", "name": "Indonesia", "phone": "+62", "cities": ["Jakarta", "Surabaya", "Bandung", "Medan", "Semarang", "Makassar", "Denpasar", "Yogyakarta", "Palembang", "Bekasi"] },
++      { "iso2": "IE", "name": "Ireland", "phone": "+353", "cities": ["Dublin", "Cork", "Galway", "Limerick", "Waterford", "Kilkenny"] },
++      { "iso2": "IL", "name": "Israel", "phone": "+972", "cities": ["Jerusalem", "Tel Aviv", "Haifa", "Beersheba", "Rishon LeZion"] },
++      { "iso2": "IN", "name": "India", "phone": "+91", "cities": ["Mumbai", "Delhi", "Bengaluru", "Hyderabad", "Chennai", "Kolkata", "Ahmedabad", "Pune", "Jaipur", "Surat", "Lucknow", "Kanpur", "Nagpur", "Indore", "Bhopal", "Ludhiana", "Vadodara", "Nashik", "Agra", "Navi Mumbai", "Patna", "Faridabad", "Meerut", "Kochi", "Thiruvananthapuram", "Guwahati", "Chandigarh", "Dehradun", "Coimbatore", "Madurai", "Visakhapatnam", "Rajkot", "Amritsar", "Varanasi", "Prayagraj", "Raipur", "Jodhpur", "Udaipur", "Mysuru", "Mangaluru"] },
++      { "iso2": "IQ", "name": "Iraq", "phone": "+964", "cities": ["Baghdad", "Basra", "Erbil", "Mosul", "Najaf", "Kirkuk"] },
++      { "iso2": "IR", "name": "Iran", "phone": "+98", "cities": ["Tehran", "Mashhad", "Isfahan", "Shiraz", "Tabriz", "Karaj", "Qom"] },
++      { "iso2": "IS", "name": "Iceland", "phone": "+354", "cities": ["Reykjavik", "Keflavik", "Akureyri"] },
++      { "iso2": "IT", "name": "Italy", "phone": "+39", "cities": ["Rome", "Milan", "Naples", "Turin", "Florence", "Bologna", "Venice", "Genoa", "Palermo", "Verona", "Bari", "Catania"] },
++      { "iso2": "JM", "name": "Jamaica", "phone": "+1", "cities": ["Kingston", "Montego Bay", "Port Antonio", "Ocho Rios"] },
++      { "iso2": "JO", "name": "Jordan", "phone": "+962", "cities": ["Amman", "Zarqa", "Irbid", "Aqaba", "Salt"] },
++      { "iso2": "JP", "name": "Japan", "phone": "+81", "cities": ["Tokyo", "Osaka", "Yokohama", "Nagoya", "Sapporo", "Kobe", "Kyoto", "Fukuoka", "Sendai", "Hiroshima"] },
++      { "iso2": "KE", "name": "Kenya", "phone": "+254", "cities": ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Garissa"] },
++      { "iso2": "KG", "name": "Kyrgyzstan", "phone": "+996", "cities": ["Bishkek", "Osh", "Naryn"] },
++      { "iso2": "KH", "name": "Cambodia", "phone": "+855", "cities": ["Phnom Penh", "Siem Reap", "Sihanoukville", "Battambang"] },
++      { "iso2": "KM", "name": "Comoros", "phone": "+269", "cities": ["Moroni", "Mutsamudu", "Fomboni"] },
++      { "iso2": "KP", "name": "North Korea", "phone": "+850", "cities": ["Pyongyang", "Hamhung", "Chongjin", "Wonsan"] },
++      { "iso2": "KR", "name": "South Korea", "phone": "+82", "cities": ["Seoul", "Busan", "Incheon", "Daegu", "Daejeon", "Gwangju", "Ulsan"] },
++      { "iso2": "KW", "name": "Kuwait", "phone": "+965", "cities": ["Kuwait City", "Hawalli", "Salmiya"] },
++      { "iso2": "KZ", "name": "Kazakhstan", "phone": "+7", "cities": ["Astana", "Almaty", "Shymkent", "Karaganda", "Atyrau"] },
++      { "iso2": "LA", "name": "Laos", "phone": "+856", "cities": ["Vientiane", "Luang Prabang", "Pakse", "Savannakhet"] },
++      { "iso2": "LB", "name": "Lebanon", "phone": "+961", "cities": ["Beirut", "Tripoli", "Sidon", "Tyre", "Zahle"] },
++      { "iso2": "LI", "name": "Liechtenstein", "phone": "+423", "cities": ["Vaduz", "Schaan", "Balzers"] },
++      { "iso2": "LK", "name": "Sri Lanka", "phone": "+94", "cities": ["Colombo", "Kandy", "Galle", "Negombo", "Jaffna", "Gampaha", "Kurunegala"] },
++      { "iso2": "LR", "name": "Liberia", "phone": "+231", "cities": ["Monrovia", "Gbarnga", "Buchanan"] },
++      { "iso2": "LS", "name": "Lesotho", "phone": "+266", "cities": ["Maseru", "Hlotse", "Teyateyaneng"] },
++      { "iso2": "LT", "name": "Lithuania", "phone": "+370", "cities": ["Vilnius", "Kaunas", "Klaipeda", "Panevezys"] },
++      { "iso2": "LU", "name": "Luxembourg", "phone": "+352", "cities": ["Luxembourg City", "Esch-sur-Alzette", "Differdange"] },
++      { "iso2": "LV", "name": "Latvia", "phone": "+371", "cities": ["Riga", "Daugavpils", "Liepaja", "Jelgava"] },
++      { "iso2": "LY", "name": "Libya", "phone": "+218", "cities": ["Tripoli", "Benghazi", "Misrata", "Zawiya"] },
++      { "iso2": "MA", "name": "Morocco", "phone": "+212", "cities": ["Casablanca", "Rabat", "Marrakesh", "Fez", "Tangier", "Agadir", "Meknes"] },
++      { "iso2": "MC", "name": "Monaco", "phone": "+377", "cities": ["Monaco", "Monte-Carlo", "La Condamine"] },
++      { "iso2": "MD", "name": "Moldova", "phone": "+373", "cities": ["Chisinau", "Balti", "Benders", "Tiraspol"] },
++      { "iso2": "ME", "name": "Montenegro", "phone": "+382", "cities": ["Podgorica", "Niksic", "Bar", "Herceg Novi"] },
++      { "iso2": "MG", "name": "Madagascar", "phone": "+261", "cities": ["Antananarivo", "Toamasina", "Mahajanga", "Toliara"] },
++      { "iso2": "MK", "name": "North Macedonia", "phone": "+389", "cities": ["Skopje", "Bitola", "Kumanovo"] },
++      { "iso2": "ML", "name": "Mali", "phone": "+223", "cities": ["Bamako", "Segou", "Sikasso"] },
++      { "iso2": "MM", "name": "Myanmar", "phone": "+95", "cities": ["Yangon", "Mandalay", "Naypyitaw", "Bago", "Mawlamyine"] },
++      { "iso2": "MN", "name": "Mongolia", "phone": "+976", "cities": ["Ulaanbaatar", "Erdenet", "Darhan", "Choibalsan"] },
++      { "iso2": "MR", "name": "Mauritania", "phone": "+222", "cities": ["Nouakchott", "Nouadhibou", "Rosso"] },
++      { "iso2": "MT", "name": "Malta", "phone": "+356", "cities": ["Valletta", "Sliema", "Birkirkara", "Mosta"] },
++      { "iso2": "MV", "name": "Maldives", "phone": "+960", "cities": ["Male", "Addu City"] },
++      { "iso2": "MW", "name": "Malawi", "phone": "+265", "cities": ["Lilongwe", "Blantyre", "Mzuzu", "Zomba"] },
++      { "iso2": "MX", "name": "Mexico", "phone": "+52", "cities": ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana", "Cancun", "Merida", "Queretaro", "Toluca", "Tampico"] },
++      { "iso2": "MY", "name": "Malaysia", "phone": "+60", "cities": ["Kuala Lumpur", "George Town", "Johor Bahru", "Ipoh", "Shah Alam", "Kuantan", "Kota Kinabalu", "Kuching"] },
++      { "iso2": "MZ", "name": "Mozambique", "phone": "+258", "cities": ["Maputo", "Beira", "Nampula", "Matola", "Chimoio"] },
++      { "iso2": "NA", "name": "Namibia", "phone": "+264", "cities": ["Windhoek", "Walvis Bay", "Swakopmund", "Oshakati"] },
++      { "iso2": "NE", "name": "Niger", "phone": "+227", "cities": ["Niamey", "Zinder", "Maradi", "Dosso"] },
++      { "iso2": "NG", "name": "Nigeria", "phone": "+234", "cities": ["Lagos", "Abuja", "Kano", "Ibadan", "Port Harcourt", "Benin City", "Enugu", "Kaduna"] },
++      { "iso2": "NI", "name": "Nicaragua", "phone": "+505", "cities": ["Managua", "Leon", "Granada", "Masaya"] },
++      { "iso2": "NL", "name": "Netherlands", "phone": "+31", "cities": ["Amsterdam", "Rotterdam", "The Hague", "Utrecht", "Eindhoven", "Groningen", "Tilburg", "Almere"] },
++      { "iso2": "NO", "name": "Norway", "phone": "+47", "cities": ["Oslo", "Bergen", "Trondheim", "Stavanger", "Tromso", "Alesund"] },
++      { "iso2": "NP", "name": "Nepal", "phone": "+977", "cities": ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur", "Biratnagar", "Butwal"] },
++      { "iso2": "NZ", "name": "New Zealand", "phone": "+64", "cities": ["Auckland", "Wellington", "Christchurch", "Hamilton", "Dunedin", "Napier", "Tauranga"] },
++      { "iso2": "OM", "name": "Oman", "phone": "+968", "cities": ["Muscat", "Salalah", "Sohar", "Nizwa", "Sur"] },
++      { "iso2": "PA", "name": "Panama", "phone": "+507", "cities": ["Panama City", "David", "Colon", "Boquete"] },
++      { "iso2": "PE", "name": "Peru", "phone": "+51", "cities": ["Lima", "Arequipa", "Cusco", "Trujillo", "Chiclayo", "Piura", "Iquitos"] },
++      { "iso2": "PG", "name": "Papua New Guinea", "phone": "+675", "cities": ["Port Moresby", "Lae", "Madang", "Goroka"] },
++      { "iso2": "PH", "name": "Philippines", "phone": "+63", "cities": ["Manila", "Quezon City", "Cebu City", "Davao City", "Bacoor", "Muntinlupa", "Baguio"] },
++      { "iso2": "PK", "name": "Pakistan", "phone": "+92", "cities": ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Peshawar", "Multan", "Quetta", "Hyderabad", "Sialkot", "Gujranwala"] },
++      { "iso2": "PL", "name": "Poland", "phone": "+48", "cities": ["Warsaw", "Krakow", "Lodz", "Wroclaw", "Poznan", "Gdansk", "Katowice", "Szczecin", "Lublin"] },
++      { "iso2": "PT", "name": "Portugal", "phone": "+351", "cities": ["Lisbon", "Porto", "Coimbra", "Braga", "Faro", "Setubal"] },
++      { "iso2": "PY", "name": "Paraguay", "phone": "+595", "cities": ["Asuncion", "Ciudad del Este", "Encarnacion", "Concepcion"] },
++      { "iso2": "QA", "name": "Qatar", "phone": "+974", "cities": ["Doha", "Al Rayyan", "Al Wakrah", "Al Khor"] },
++      { "iso2": "RO", "name": "Romania", "phone": "+40", "cities": ["Bucharest", "Cluj-Napoca", "Timisoara", "Iasi", "Constanta", "Brasov", "Craiova"] },
++      { "iso2": "RS", "name": "Serbia", "phone": "+381", "cities": ["Belgrade", "Novi Sad", "Nis", "Kragujevac", "Subotica"] },
++      { "iso2": "RU", "name": "Russia", "phone": "+7", "cities": ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Nizhny Novgorod", "Samara", "Rostov-on-Don"] },
++      { "iso2": "RW", "name": "Rwanda", "phone": "+256", "cities": ["Kigali", "Butare", "Gitarama", "Rwamagana"] },
++      { "iso2": "SA", "name": "Saudi Arabia", "phone": "+966", "cities": ["Riyadh", "Jeddah", "Mecca", "Medina", "Dammam", "Khobar", "Taif"] },
++      { "iso2": "SC", "name": "Seychelles", "phone": "+248", "cities": ["Victoria", "Bel Ombre"] },
++      { "iso2": "SD", "name": "Sudan", "phone": "+249", "cities": ["Khartoum", "Omdurman", "Port Sudan", "Kassala"] },
++      { "iso2": "SE", "name": "Sweden", "phone": "+46", "cities": ["Stockholm", "Gothenburg", "Malmo", "Uppsala", "Linkoping", "Sundsvall"] },
++      { "iso2": "SG", "name": "Singapore", "phone": "+65", "cities": ["Singapore"] },
++      { "iso2": "SI", "name": "Slovenia", "phone": "+386", "cities": ["Ljubljana", "Maribor", "Celje", "Koper"] },
++      { "iso2": "SK", "name": "Slovakia", "phone": "+421", "cities": ["Bratislava", "Kosice", "Nitra", "Zilina", "Presov"] },
++      { "iso2": "SL", "name": "Sierra Leone", "phone": "+232", "cities": ["Freetown", "Bo", "Kenema"] },
++      { "iso2": "SN", "name": "Senegal", "phone": "+221", "cities": ["Dakar", "Thies", "Saint-Louis", "Ziguinchor"] },
++      { "iso2": "SO", "name": "Somalia", "phone": "+252", "cities": ["Mogadishu", "Hargeisa", "Kismayo", "Bosaso"] },
++      { "iso2": "SR", "name": "Suriname", "phone": "+597", "cities": ["Paramaribo", "Nickerie", "Lelydorp"] },
++      { "iso2": "SS", "name": "South Sudan", "phone": "+211", "cities": ["Juba", "Malakal", "Wau"] },
++      { "iso2": "SV", "name": "El Salvador", "phone": "+503", "cities": ["San Salvador", "Santa Ana", "San Miguel", "Sonsonate"] },
++      { "iso2": "SZ", "name": "Eswatini", "phone": "+268", "cities": ["Mbabane", "Lobamba", "Manzini"] },
++      { "iso2": "SY", "name": "Syria", "phone": "+963", "cities": ["Damascus", "Aleppo", "Homs", "Latakia", "Hama"] },
++      { "iso2": "TD", "name": "Chad", "phone": "+235", "cities": ["N'Djamena", "Moundou", "Sarh"] },
++      { "iso2": "TG", "name": "Togo", "phone": "+228", "cities": ["Lome", "Sokode", "Kpalime"] },
++      { "iso2": "TH", "name": "Thailand", "phone": "+66", "cities": ["Bangkok", "Chiang Mai", "Phuket", "Pattaya", "Songkhla", "Nakhon Ratchasima", "Khon Kaen"] },
++      { "iso2": "TJ", "name": "Tajikistan", "phone": "+992", "cities": ["Dushanbe", "Khujand", "Kulob"] },
++      { "iso2": "TL", "name": "Timor-Leste", "phone": "+670", "cities": ["Dili", "Baucau", "Suai"] },
++      { "iso2": "TM", "name": "Turkmenistan", "phone": "+993", "cities": ["Ashgabat", "Mary", "Turkmenabat"] },
++      { "iso2": "TN", "name": "Tunisia", "phone": "+216", "cities": ["Tunis", "Sfax", "Sousse", "Bizerte", "Gabes"] },
++      { "iso2": "TO", "name": "Tonga", "phone": "+676", "cities": ["Nuku'alofa", "Neiafu"] },
++      { "iso2": "TR", "name": "Turkey", "phone": "+90", "cities": ["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya", "Adana", "Konya", "Gaziantep"] },
++      { "iso2": "TT", "name": "Trinidad and Tobago", "phone": "+1", "cities": ["Port of Spain", "Chaguanas", "Arima"] },
++      { "iso2": "TW", "name": "Taiwan", "phone": "+886", "cities": ["Taipei", "Kaohsiung", "Taichung", "New Taipei", "Taoyuan"] },
++      { "iso2": "TZ", "name": "Tanzania", "phone": "+255", "cities": ["Dar es Salaam", "Arusha", "Mwanza", "Dodoma", "Zanzibar City", "Morogoro"] },
++      { "iso2": "UA", "name": "Ukraine", "phone": "+380", "cities": ["Kyiv", "Kharkiv", "Odesa", "Lviv", "Dnipro", "Vinnytsia", "Poltava"] },
++      { "iso2": "UG", "name": "Uganda", "phone": "+256", "cities": ["Kampala", "Entebbe", "Jinja", "Gulu", "Mbarara"] },
++      { "iso2": "US", "name": "United States", "phone": "+1", "cities": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "Austin", "Jacksonville", "Fort Worth", "San Jose", "Columbus", "Indianapolis", "Charlotte", "San Francisco", "Seattle", "Denver", "Washington", "Boston", "Detroit", "Nashville", "El Paso", "Portland", "Memphis", "Las Vegas", "Louisville", "Baltimore", "Oklahoma City", "Miami", "Atlanta", "New Orleans", "Raleigh", "Tucson"] },
++      { "iso2": "UY", "name": "Uruguay", "phone": "+598", "cities": ["Montevideo", "Salto", "Paysandu", "Punta del Este"] },
++      { "iso2": "UZ", "name": "Uzbekistan", "phone": "+998", "cities": ["Tashkent", "Samarkand", "Bukhara", "Nukus", "Fergana"] },
++      { "iso2": "VE", "name": "Venezuela", "phone": "+58", "cities": ["Caracas", "Maracaibo", "Valencia", "Barquisimeto", "Ciudad Guayana"] },
++      { "iso2": "VN", "name": "Vietnam", "phone": "+84", "cities": ["Hanoi", "Ho Chi Minh City", "Da Nang", "Hai Phong", "Can Tho", "Hue"] },
++      { "iso2": "VU", "name": "Vanuatu", "phone": "+678", "cities": ["Port Vila", "Luganville", "Tanna"] },
++      { "iso2": "WS", "name": "Samoa", "phone": "+685", "cities": ["Apia", "Vailele", "Salelologa"] },
++      { "iso2": "YE", "name": "Yemen", "phone": "+967", "cities": ["Sanaa", "Aden", "Taiz", "Hodeidah", "Mukalla"] },
++      { "iso2": "ZA", "name": "South Africa", "phone": "+27", "cities": ["Johannesburg", "Cape Town", "Durban", "Pretoria", "Port Elizabeth", "Bloemfontein", "Pietermaritzburg"] },
++      { "iso2": "ZM", "name": "Zambia", "phone": "+260", "cities": ["Lusaka", "Ndola", "Kitwe", "Livingstone"] },
++      { "iso2": "ZW", "name": "Zimbabwe", "phone": "+263", "cities": ["Harare", "Bulawayo", "Mutare", "Gweru"] }
++    ]
++    """;
++}
+diff --git a/NeverBeen.API/Dtos/AuthDtos.cs b/NeverBeen.API/Dtos/AuthDtos.cs
+new file mode 100644
+index 0000000..57c38f1
+--- /dev/null
++++ b/NeverBeen.API/Dtos/AuthDtos.cs
+@@ -0,0 +1,50 @@
++using System.ComponentModel.DataAnnotations;
++
++namespace NeverBeen.API.Dtos;
++
++/// <summary>
++/// Body of POST /api/auth/oauth/login. The Angular app starts the OAuth flow with the
++/// provider (redirecting to the frontend callback URL) and sends the authorization
++/// <c>code</c> here; the API exchanges it for a token using the shared client secret.
++/// </summary>
++public class OAuthLoginRequest
++{
++    /// <summary>"Google", "Facebook" or "Microsoft".</summary>
++    [Required]
++    [MaxLength(20)]
++    public string Provider { get; set; } = string.Empty;
++
++    [Required]
++    [MinLength(5)]
++    public string Code { get; set; } = string.Empty;
++}
++
++public class AuthResultDto
++{
++    public string Token { get; set; } = string.Empty;
++    public string TokenType { get; set; } = "Bearer";
++    public long ExpiresIn { get; set; }
++
++    /// <summary>True when this email/key was not a NeverBeen member before this login.</summary>
++    public bool IsNewUser { get; set; }
++
++    /// <summary>False when the user must complete the registration page first.</summary>
++    public bool ProfileComplete { get; set; }
++
++    public string Message { get; set; } = string.Empty;
++    public CurrentUserDto User { get; set; } = new();
++}
++
++public class CurrentUserDto
++{
++    public int Id { get; set; }
++    public string? FullName { get; set; }
++    public string Email { get; set; } = string.Empty;
++
++    /// <summary>"Pending" (registration not finished) or "Active".</summary>
++    public string Status { get; set; } = string.Empty;
++    public bool ProfileComplete { get; set; }
++
++    /// <summary>Relative API URL of the uploaded profile picture, or the OAuth provider picture URL as fallback.</summary>
++    public string? ProfilePhotoUrl { get; set; }
++}
+diff --git a/NeverBeen.API/Dtos/GalleryDtos.cs b/NeverBeen.API/Dtos/GalleryDtos.cs
+new file mode 100644
+index 0000000..85c9567
+--- /dev/null
++++ b/NeverBeen.API/Dtos/GalleryDtos.cs
+@@ -0,0 +1,12 @@
++namespace NeverBeen.API.Dtos;
++
++public class GalleryPhotoDto
++{
++    public int Id { get; set; }
++
++    /// <summary>Relative API URL to download the image, e.g. "/api/gallery/12".</summary>
++    public string Url { get; set; } = string.Empty;
++
++    public string? Caption { get; set; }
++    public DateTime CreatedAtUtc { get; set; }
++}
+diff --git a/NeverBeen.API/Dtos/LookupDtos.cs b/NeverBeen.API/Dtos/LookupDtos.cs
+new file mode 100644
+index 0000000..8a7a697
+--- /dev/null
++++ b/NeverBeen.API/Dtos/LookupDtos.cs
+@@ -0,0 +1,15 @@
++namespace NeverBeen.API.Dtos;
++
++public class CountryDto
++{
++    public int Id { get; set; }
++    public string IsoCode2 { get; set; } = string.Empty;
++    public string Name { get; set; } = string.Empty;
++    public string? PhoneCode { get; set; }
++}
++
++public class CityDto
++{
++    public int Id { get; set; }
++    public string Name { get; set; } = string.Empty;
++}
+diff --git a/NeverBeen.API/Dtos/Mappers.cs b/NeverBeen.API/Dtos/Mappers.cs
+new file mode 100644
+index 0000000..4635bf7
+--- /dev/null
++++ b/NeverBeen.API/Dtos/Mappers.cs
+@@ -0,0 +1,85 @@
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Dtos;
++
++public static class ProfileMapper
++{
++    public static ProfileDto ToDto(UserProfile user, List<GalleryPhotoDto> gallery, int commentCount)
++    {
++        return new ProfileDto
++        {
++            Id = user.Id,
++            FullName = user.FullName,
++            Email = user.Email,
++            Gender = user.Gender,
++            DateOfBirth = user.DateOfBirth,
++            Age = CalculateAge(user.DateOfBirth),
++            CountryId = user.CountryId,
++            CountryName = user.Country?.Name,
++            CityId = user.CityId,
++            CityName = user.City?.Name,
++            Pincode = user.Pincode,
++            ContactNumber = user.ContactNumber,
++            PostalAddress = user.PostalAddress,
++            AboutMe = user.AboutMe,
++            Profession = user.Profession,
++            Status = user.Status,
++            ProfilePhotoUrl = user.ProfilePhotoData != null
++                ? $"/api/profile/{user.Id}/photo"
++                : user.ExternalProfilePictureUrl,
++            ExternalProfilePictureUrl = user.ExternalProfilePictureUrl,
++            CreatedAtUtc = user.CreatedAtUtc,
++            Settings = user.Settings == null
++                ? new SettingsDto()
++                : new SettingsDto
++                {
++                    EmailNotificationsEnabled = user.Settings.EmailNotificationsEnabled,
++                    PhoneNotificationsEnabled = user.Settings.PhoneNotificationsEnabled,
++                    PublicProfileEnabled = user.Settings.PublicProfileEnabled,
++                    Theme = user.Settings.Theme,
++                    Timezone = user.Settings.Timezone
++                },
++            Gallery = gallery,
++            CommentCount = commentCount
++        };
++    }
++
++    public static int? CalculateAge(DateTime? dateOfBirth)
++    {
++        if (dateOfBirth == null)
++            return null;
++
++        var today = DateTime.Today;
++        var age = today.Year - dateOfBirth.Value.Year;
++        if (dateOfBirth.Value.Date > today.AddYears(-age))
++            age--;
++        return age;
++    }
++}
++
++public static class CommentMapper
++{
++    public static CommentDto Map(CommunityComment comment, Dictionary<int, int> myReactions)
++    {
++        return new CommentDto
++        {
++            Id = comment.Id,
++            Text = comment.Text,
++            CreatedAtUtc = comment.CreatedAtUtc,
++            LikeCount = comment.LikeCount,
++            DislikeCount = comment.DislikeCount,
++            Author = new AuthorInfoDto
++            {
++                Id = comment.Author.Id,
++                FullName = comment.Author.FullName,
++                ProfilePhotoUrl = comment.Author.ProfilePhotoData != null
++                    ? $"/api/profile/{comment.Author.Id}/photo"
++                    : comment.Author.ExternalProfilePictureUrl,
++                Profession = comment.Author.Profession
++            },
++            MyReaction = myReactions.TryGetValue(comment.Id, out var reaction)
++                ? (reaction == ReactionTypes.Like ? "Like" : "Dislike")
++                : null
++        };
++    }
++}
+diff --git a/NeverBeen.API/Dtos/MessageBookDtos.cs b/NeverBeen.API/Dtos/MessageBookDtos.cs
+new file mode 100644
+index 0000000..0275347
+--- /dev/null
++++ b/NeverBeen.API/Dtos/MessageBookDtos.cs
+@@ -0,0 +1,68 @@
++namespace NeverBeen.API.Dtos;
++
++/// <summary>Body of POST /api/messagebook (new post) or a reply when ParentId is set.</summary>
++public class CommentCreateRequest
++{
++    [System.ComponentModel.DataAnnotations.Required]
++    [System.ComponentModel.DataAnnotations.MaxLength(2000)]
++    public string Text { get; set; } = string.Empty;
++
++    /// <summary>Id of the top-level comment this is a reply to (omit for a new top-level post).</summary>
++    public int? ParentId { get; set; }
++}
++
++/// <summary>Body of POST /api/messagebook/{id}/reactions.</summary>
++public class ReactionRequest
++{
++    /// <summary>"like" or "dislike".</summary>
++    [System.ComponentModel.DataAnnotations.Required]
++    public string Type { get; set; } = string.Empty;
++}
++
++public class ReactionResultDto
++{
++    public int LikeCount { get; set; }
++    public int DislikeCount { get; set; }
++
++    /// <summary>"Like", "Dislike" or null (when the user's previous reaction was toggled off).</summary>
++    public string? MyReaction { get; set; }
++}
++
++public class CommentDto
++{
++    public int Id { get; set; }
++    public string Text { get; set; } = string.Empty;
++    public DateTime CreatedAtUtc { get; set; }
++    public int LikeCount { get; set; }
++    public int DislikeCount { get; set; }
++
++    /// <summary>Poster details shown next to the comment.</summary>
++    public AuthorInfoDto Author { get; set; } = new();
++
++    /// <summary>The current visitor's reaction to this comment ("Like"/"Dislike") or null.</summary>
++    public string? MyReaction { get; set; }
++
++    public int ReplyCount { get; set; }
++
++    /// <summary>Replies (only populated for top-level comments when includeReplies is requested).</summary>
++    public List<CommentDto> Replies { get; set; } = new();
++}
++
++public class AuthorInfoDto
++{
++    public int Id { get; set; }
++    public string? FullName { get; set; }
++
++    /// <summary>Relative API URL of the profile picture, or the OAuth provider picture URL as fallback.</summary>
++    public string? ProfilePhotoUrl { get; set; }
++    public string? Profession { get; set; }
++}
++
++public class PagedResult<T>
++{
++    public List<T> Items { get; set; } = new();
++    public int TotalCount { get; set; }
++    public int Page { get; set; }
++    public int PageSize { get; set; }
++    public int TotalPages { get; set; }
++}
+diff --git a/NeverBeen.API/Dtos/ProfileDtos.cs b/NeverBeen.API/Dtos/ProfileDtos.cs
+new file mode 100644
+index 0000000..3404cdb
+--- /dev/null
++++ b/NeverBeen.API/Dtos/ProfileDtos.cs
+@@ -0,0 +1,89 @@
++namespace NeverBeen.API.Dtos;
++
++/// <summary>
++/// Full user profile - backs the profile page with its sections
++/// (About Me, Details, Gallery, Settings).
++/// </summary>
++public class ProfileDto
++{
++    public int Id { get; set; }
++    public string? FullName { get; set; }
++    public string Email { get; set; } = string.Empty;
++    public string? Gender { get; set; }
++    public DateTime? DateOfBirth { get; set; }
++    public int? Age { get; set; }
++
++    // Details section
++    public int? CountryId { get; set; }
++    public string? CountryName { get; set; }
++    public int? CityId { get; set; }
++    public string? CityName { get; set; }
++    public string? Pincode { get; set; }
++    public string? ContactNumber { get; set; }
++    public string? PostalAddress { get; set; }
++
++    // About Me section
++    public string? AboutMe { get; set; }
++    public string? Profession { get; set; }
++
++    public string Status { get; set; } = string.Empty;
++
++    /// <summary>Relative API URL of the uploaded profile picture, or the OAuth provider picture URL as fallback.</summary>
++    public string? ProfilePhotoUrl { get; set; }
++    public string? ExternalProfilePictureUrl { get; set; }
++
++    public DateTime CreatedAtUtc { get; set; }
++
++    // Settings section
++    public SettingsDto Settings { get; set; } = new();
++
++    // Gallery section
++    public List<GalleryPhotoDto> Gallery { get; set; } = new();
++
++    public int CommentCount { get; set; }
++}
++
++public class SettingsDto
++{
++    public bool EmailNotificationsEnabled { get; set; } = true;
++    public bool PhoneNotificationsEnabled { get; set; }
++    public bool PublicProfileEnabled { get; set; } = true;
++
++    /// <summary>"light", "dark" or "system".</summary>
++    public string Theme { get; set; } = "light";
++    public string? Timezone { get; set; }
++}
++
++/// <summary>
++/// Body of PUT /api/profile. All fields are optional; a field that is omitted (null)
++/// keeps its current value. The email address is not changeable here - it is the
++/// OAuth account email.
++/// </summary>
++public class UpdateProfileRequest
++{
++    [System.ComponentModel.DataAnnotations.MaxLength(200)]
++    public string? FullName { get; set; }
++
++    [System.ComponentModel.DataAnnotations.MaxLength(20)]
++    public string? Gender { get; set; }
++
++    public DateTime? DateOfBirth { get; set; }
++
++    public int? CountryId { get; set; }
++    public int? CityId { get; set; }
++
++    [System.ComponentModel.DataAnnotations.MaxLength(20)]
++    public string? Pincode { get; set; }
++
++    [System.ComponentModel.DataAnnotations.MaxLength(30)]
++    public string? ContactNumber { get; set; }
++
++    [System.ComponentModel.DataAnnotations.MaxLength(500)]
++    public string? PostalAddress { get; set; }
++
++    [System.ComponentModel.DataAnnotations.MaxLength(2000)]
++    public string? AboutMe { get; set; }
++
++    [System.ComponentModel.DataAnnotations.MaxLength(60)]
++    public string? Profession { get; set; }
++}
+diff --git a/NeverBeen.API/Dtos/RegistrationDtos.cs b/NeverBeen.API/Dtos/RegistrationDtos.cs
+new file mode 100644
+index 0000000..32898a6
+--- /dev/null
++++ b/NeverBeen.API/Dtos/RegistrationDtos.cs
+@@ -0,0 +1,60 @@
++using Microsoft.AspNetCore.Http;
++
++namespace NeverBeen.API.Dtos;
++
++/// <summary>
++/// Body of POST /api/registration (multipart/form-data). Sent by the Registration Page
++/// after a new user signed in via OAuth. Form field names must match the property names
++/// (full-name is sent as "fullName" - form binding is case-insensitive).
++/// </summary>
++public class RegistrationRequest
++{
++    [System.ComponentModel.DataAnnotations.Required]
++    [System.ComponentModel.DataAnnotations.MaxLength(200)]
++    public string FullName { get; set; } = string.Empty;
++
++    /// <summary>Male / Female / Other.</summary>
++    [System.ComponentModel.DataAnnotations.Required]
++    [System.ComponentModel.DataAnnotations.MaxLength(20)]
++    public string Gender { get; set; } = string.Empty;
++
++    /// <summary>Picked from a calendar control; expected as "yyyy-MM-dd".</summary>
++    [System.ComponentModel.DataAnnotations.Required]
++    public DateTime DateOfBirth { get; set; }
++
++    /// <summary>Id from GET /api/lookup/countries.</summary>
++    [System.ComponentModel.DataAnnotations.Required]
++    public int CountryId { get; set; }
++
++    /// <summary>Id from GET /api/lookup/countries/{id}/cities (must belong to CountryId).</summary>
++    [System.ComponentModel.DataAnnotations.Required]
++    public int CityId { get; set; }
++
++    [System.ComponentModel.DataAnnotations.MaxLength(20)]
++    public string? Pincode { get; set; }
++
++    /// <summary>Optional contact number.</summary>
++    [System.ComponentModel.DataAnnotations.MaxLength(30)]
++    public string? ContactNumber { get; set; }
++
++    /// <summary>Optional full postal address.</summary>
++    [System.ComponentModel.DataAnnotations.MaxLength(500)]
++    public string? PostalAddress { get; set; }
++
++    /// <summary>Optional "About Me".</summary>
++    [System.ComponentModel.DataAnnotations.MaxLength(2000)]
++    public string? AboutMe { get; set; }
++
++    [System.ComponentModel.DataAnnotations.Required]
++    [System.ComponentModel.DataAnnotations.EmailAddress]
++    [System.ComponentModel.DataAnnotations.MaxLength(256)]
++    public string Email { get; set; } = string.Empty;
++
++    /// <summary>One of the values from GET /api/lookup/professions.</summary>
++    [System.ComponentModel.DataAnnotations.Required]
++    [System.ComponentModel.DataAnnotations.MaxLength(60)]
++    public string Profession { get; set; } = string.Empty;
++
++    /// <summary>Optional profile photograph (JPEG/PNG/WebP/GIF, max 5 MB).</summary>
++    public IFormFile? Photo { get; set; }
++}
+diff --git a/NeverBeen.API/Entities/City.cs b/NeverBeen.API/Entities/City.cs
+new file mode 100644
+index 0000000..eac17c3
+--- /dev/null
++++ b/NeverBeen.API/Entities/City.cs
+@@ -0,0 +1,15 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++[Table("Cities")]
++public class City
++{
++    public int Id { get; set; }
++
++    public int CountryId { get; set; }
++    public Country? Country { get; set; }
++
++    [MaxLength(100)]
++    public string Name { get; set; } = string.Empty;
++}
+diff --git a/NeverBeen.API/Entities/CommentReaction.cs b/NeverBeen.API/Entities/CommentReaction.cs
+new file mode 100644
+index 0000000..26479da
+--- /dev/null
++++ b/NeverBeen.API/Entities/CommentReaction.cs
+@@ -0,0 +1,30 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++/// <summary>
++/// A like or dislike of a message-book comment. One reaction per user per comment
++/// (unique on CommentId + UserId); re-submitting the same reaction removes it (toggle).
++/// </summary>
++[Table("CommentReactions")]
++public class CommentReaction
++{
++    public long Id { get; set; }
++
++    public int CommentId { get; set; }
++    public CommunityComment? Comment { get; set; }
++
++    public int UserId { get; set; }
++    public UserProfile? User { get; set; }
++
++    /// <summary><see cref="ReactionTypes.Like"/> (1) or <see cref="ReactionTypes.Dislike"/> (-1).</summary>
++    public int ReactionType { get; set; }
++
++    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
++}
++
++public static class ReactionTypes
++{
++    public const int Like = 1;
++    public const int Dislike = -1;
++}
+diff --git a/NeverBeen.API/Entities/CommunityComment.cs b/NeverBeen.API/Entities/CommunityComment.cs
+new file mode 100644
+index 0000000..8e6be7e
+--- /dev/null
++++ b/NeverBeen.API/Entities/CommunityComment.cs
+@@ -0,0 +1,32 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++/// <summary>
++/// An entry in the NeverBeen Community Message Book.
++/// A comment with <see cref="ParentId"/> == null is a top-level post;
++/// a comment with a <see cref="ParentId"/> is a reply to that post (one level of nesting).
++/// </summary>
++[Table("CommunityComments")]
++public class CommunityComment
++{
++    public int Id { get; set; }
++
++    /// <summary>The comment text.</summary>
++    [MaxLength(2000)]
++    public string Text { get; set; } = string.Empty;
++
++    public int AuthorId { get; set; }
++    public UserProfile? Author { get; set; }
++
++    /// <summary>Id of the top-level comment this entry replies to (null for top-level posts).</summary>
++    public int? ParentId { get; set; }
++    public CommunityComment? Parent { get; set; }
++    public ICollection<CommunityComment> Replies { get; set; } = new List<CommunityComment>();
++
++    /// <summary>Denormalized counters maintained with each reaction (like/dislike).</summary>
++    public int LikeCount { get; set; }
++    public int DislikeCount { get; set; }
++
++    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
++}
+diff --git a/NeverBeen.API/Entities/Country.cs b/NeverBeen.API/Entities/Country.cs
+new file mode 100644
+index 0000000..93e725e
+--- /dev/null
++++ b/NeverBeen.API/Entities/Country.cs
+@@ -0,0 +1,22 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++[Table("Countries")]
++public class Country
++{
++    public int Id { get; set; }
++
++    /// <summary>ISO 3166-1 alpha-2 code (e.g. "IN").</summary>
++    [MaxLength(2)]
++    public string IsoCode2 { get; set; } = string.Empty;
++
++    [MaxLength(100)]
++    public string Name { get; set; } = string.Empty;
++
++    /// <summary>International dial code, e.g. "+91".</summary>
++    [MaxLength(8)]
++    public string? PhoneCode { get; set; }
++
++    public ICollection<City> Cities { get; set; } = new List<City>();
++}
+diff --git a/NeverBeen.API/Entities/ExternalIdentity.cs b/NeverBeen.API/Entities/ExternalIdentity.cs
+new file mode 100644
+index 0000000..0aad300
+--- /dev/null
++++ b/NeverBeen.API/Entities/ExternalIdentity.cs
+@@ -0,0 +1,30 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++/// <summary>
++/// Links a user to an external OAuth account (Google / Facebook / Microsoft).
++/// A user can sign in with any of the linked identities.
++/// </summary>
++[Table("ExternalIdentities")]
++public class ExternalIdentity
++{
++    public int Id { get; set; }
++
++    public int UserId { get; set; }
++    public UserProfile? User { get; set; }
++
++    /// <summary>"Google", "Facebook" or "Microsoft".</summary>
++    [MaxLength(20)]
++    public string Provider { get; set; } = string.Empty;
++
++    /// <summary>Stable provider-side user id (Google "sub", Facebook "id", Microsoft Graph "id").</summary>
++    [MaxLength(256)]
++    public string ProviderKey { get; set; } = string.Empty;
++
++    /// <summary>Email address reported by the provider at login time.</summary>
++    [MaxLength(256)]
++    public string? Email { get; set; }
++
++    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
++}
+diff --git a/NeverBeen.API/Entities/GalleryPhoto.cs b/NeverBeen.API/Entities/GalleryPhoto.cs
+new file mode 100644
+index 0000000..0be1aef
+--- /dev/null
++++ b/NeverBeen.API/Entities/GalleryPhoto.cs
+@@ -0,0 +1,24 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++/// <summary>A photo in a user's gallery (the "Gallery" section of the profile page).</summary>
++[Table("GalleryPhotos")]
++public class GalleryPhoto
++{
++    public int Id { get; set; }
++
++    public int UserId { get; set; }
++    public UserProfile? User { get; set; }
++
++    /// <summary>Image bytes (JPEG / PNG / WebP / GIF).</summary>
++    public byte[] PhotoData { get; set; } = Array.Empty<byte>();
++
++    [MaxLength(64)]
++    public string MimeType { get; set; } = "image/jpeg";
++
++    [MaxLength(300)]
++    public string? Caption { get; set; }
++
++    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
++}
+diff --git a/NeverBeen.API/Entities/UserProfile.cs b/NeverBeen.API/Entities/UserProfile.cs
+new file mode 100644
+index 0000000..8708524
+--- /dev/null
++++ b/NeverBeen.API/Entities/UserProfile.cs
+@@ -0,0 +1,81 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++/// <summary>
++/// A NeverBeen community member. Created automatically on the first OAuth (SSO) login;
++/// the profile is completed through the registration flow, which flips <see cref="Status"/>
++/// from "Pending" to "Active".
++/// </summary>
++[Table("Users")]
++public class UserProfile
++{
++    public int Id { get; set; }
++
++    /// <summary>Full name as typed on the registration page (or from the OAuth account before registration).</summary>
++    [MaxLength(200)]
++    public string? FullName { get; set; }
++
++    /// <summary>Login email - by default the OAuth (Google / Facebook / Outlook) email address.</summary>
++    [MaxLength(256)]
++    public string Email { get; set; } = string.Empty;
++
++    /// <summary>One of: Male, Female, Other.</summary>
++    [MaxLength(20)]
++    public string? Gender { get; set; }
++
++    public DateTime? DateOfBirth { get; set; }
++
++    public int? CountryId { get; set; }
++    public Country? Country { get; set; }
++
++    public int? CityId { get; set; }
++    public City? City { get; set; }
++
++    [MaxLength(20)]
++    public string? Pincode { get; set; }
++
++    /// <summary>Optional contact number.</summary>
++    [MaxLength(30)]
++    public string? ContactNumber { get; set; }
++
++    /// <summary>Optional full postal address.</summary>
++    [MaxLength(500)]
++    public string? PostalAddress { get; set; }
++
++    /// <summary>Optional "About Me" text.</summary>
++    [MaxLength(2000)]
++    public string? AboutMe { get; set; }
++
++    /// <summary>Selected from the fixed profession drop-down list.</summary>
++    [MaxLength(60)]
++    public string? Profession { get; set; }
++
++    /// <summary>"Pending" = signed in via SSO but registration not finished; "Active" = registered profile.</summary>
++    [MaxLength(20)]
++    public string Status { get; set; } = UserProfileStatus.Pending;
++
++    /// <summary>Profile picture URL supplied by the OAuth provider (e.g. Google photo). Used as a fallback before the user uploads a photo.</summary>
++    [MaxLength(1024)]
++    public string? ExternalProfilePictureUrl { get; set; }
++
++    /// <summary>Profile picture uploaded by the user (stored in the database).</summary>
++    public byte[]? ProfilePhotoData { get; set; }
++
++    [MaxLength(64)]
++    public string? ProfilePhotoMimeType { get; set; }
++
++    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
++    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
++
++    public ICollection<ExternalIdentity> Identities { get; set; } = new List<ExternalIdentity>();
++    public UserSettings? Settings { get; set; }
++    public ICollection<GalleryPhoto> GalleryPhotos { get; set; } = new List<GalleryPhoto>();
++    public ICollection<CommunityComment> Comments { get; set; } = new List<CommunityComment>();
++}
++
++public static class UserProfileStatus
++{
++    public const string Pending = "Pending";
++    public const string Active = "Active";
++}
+diff --git a/NeverBeen.API/Entities/UserSettings.cs b/NeverBeen.API/Entities/UserSettings.cs
+new file mode 100644
+index 0000000..1084b13
+--- /dev/null
++++ b/NeverBeen.API/Entities/UserSettings.cs
+@@ -0,0 +1,32 @@
++using System.ComponentModel.DataAnnotations.Schema;
++
++namespace NeverBeen.API.Entities;
++
++/// <summary>
++/// Per-user settings, backing the "Settings" section of the user profile page.
++/// One row per user (1:1 with <see cref="UserProfile"/>).
++/// </summary>
++[Table("UserSettings")]
++public class UserSettings
++{
++    public int Id { get; set; }
++
++    public int UserId { get; set; }
++    public UserProfile? User { get; set; }
++
++    public bool EmailNotificationsEnabled { get; set; } = true;
++    public bool PhoneNotificationsEnabled { get; set; }
++
++    /// <summary>When false the profile (and photo) is only visible to the user themselves.</summary>
++    public bool PublicProfileEnabled { get; set; } = true;
++
++    /// <summary>"light", "dark" or "system".</summary>
++    [MaxLength(20)]
++    public string Theme { get; set; } = "light";
++
++    [MaxLength(64)]
++    public string? Timezone { get; set; }
++
++    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
++    public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
++}
+diff --git a/NeverBeen.API/Middleware/ExceptionHandlingMiddleware.cs b/NeverBeen.API/Middleware/ExceptionHandlingMiddleware.cs
+new file mode 100644
+index 0000000..899297d
+--- /dev/null
++++ b/NeverBeen.API/Middleware/ExceptionHandlingMiddleware.cs
+@@ -0,0 +1,47 @@
++using System.Text.Json;
++
++namespace NeverBeen.API.Middleware;
++
++/// <summary>
++/// Catches unhandled exceptions and returns a ProblemDetails-style JSON error
++/// instead of an HTML error page, so the Angular app always gets a parseable body.
++/// </summary>
++public class ExceptionHandlingMiddleware
++{
++    private readonly RequestDelegate _next;
++    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
++
++    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
++    {
++        _next = next;
++        _logger = logger;
++    }
++
++    public async Task InvokeAsync(HttpContext context)
++    {
++        try
++        {
++            await _next(context);
++        }
++        catch (Exception ex)
++        {
++            _logger.LogError(ex, "Unhandled exception processing {Method} {Path}", context.Request.Method, context.Request.Path);
++
++            if (context.Response.HasStarted)
++                throw;
++
++            context.Response.Clear();
++            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
++            context.Response.ContentType = "application/problem+json";
++
++            var problem = new
++            {
++                type = "https://httpstatuses.io/500",
++                title = "Internal server error",
++                status = 500,
++                detail = "An unexpected error occurred. Please try again."
++            };
++            await context.Response.WriteAsync(JsonSerializer.Serialize(problem), context.RequestAborted);
++        }
++    }
++}
+diff --git a/NeverBeen.API/NeverBeen.API.csproj b/NeverBeen.API/NeverBeen.API.csproj
+index 4f05066..29520a5 100644
+--- a/NeverBeen.API/NeverBeen.API.csproj
++++ b/NeverBeen.API/NeverBeen.API.csproj
+@@ -7,9 +7,13 @@
+   </PropertyGroup>
+ 
+   <ItemGroup>
+-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.20" />
+-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.20" />
+-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
++    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.20" />
++    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.20">
++      <PrivateAssets>all</PrivateAssets>
++      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
++    </PackageReference>
++    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.20" />
++    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.20" />
+     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+   </ItemGroup>
+ 
+diff --git a/NeverBeen.API/Program.cs b/NeverBeen.API/Program.cs
+index 48863a6..4e31702 100644
+--- a/NeverBeen.API/Program.cs
++++ b/NeverBeen.API/Program.cs
+@@ -1,25 +1,159 @@
++using Microsoft.AspNetCore.Authentication.JwtBearer;
++using Microsoft.EntityFrameworkCore;
++using Microsoft.Extensions.Diagnostics.HealthChecks;
++using Microsoft.IdentityModel.Tokens;
++using Microsoft.OpenApi.Models;
++using NeverBeen.API.Data;
++using NeverBeen.API.Middleware;
++using NeverBeen.API.Services;
++using System.Text;
++
+ var builder = WebApplication.CreateBuilder(args);
+ 
+-// Add services to the container.
++// ---------------------------------------------------------------------------
++// Database.
++// Default provider is Azure SQL Server (Microsoft.EntityFrameworkCore.SqlServer).
++// Set Database:Provider to "Sqlite" for quick local development without SQL Server
++// (see appsettings.Development.json).
++// ---------------------------------------------------------------------------
++var dbProvider = builder.Configuration["Database:Provider"] ?? "SqlServer";
++var connectionString = builder.Configuration.GetConnectionString("NeverBeen")
++    ?? "Server=localhost;Database=NeverBeen;User Id=sa;Password=ChangeMe;TrustServerCertificate=True;";
++
++builder.Services.AddDbContext<AppDbContext>(options =>
++{
++    if (dbProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
++        options.UseSqlite(connectionString);
++    else
++        options.UseSqlServer(connectionString);
++});
++
++// ---------------------------------------------------------------------------
++// Authentication (JWT issued after the OAuth login) and authorization.
++// ---------------------------------------------------------------------------
++var jwtSection = builder.Configuration.GetSection("Jwt");
++var signingKey = jwtSection["SigningKey"] ?? string.Empty;
++if (Encoding.UTF8.GetByteCount(signingKey) < 32)
++    throw new InvalidOperationException(
++        "Jwt:SigningKey is not configured or is too short. Set a strong secret of at least 32 characters " +
++        "(e.g. via user secrets or Azure App Configuration / Key Vault).");
++
++builder.Services
++    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
++    .AddJwtBearer(options =>
++    {
++        options.TokenValidationParameters = new TokenValidationParameters
++        {
++            ValidateIssuer = true,
++            ValidIssuer = jwtSection["Issuer"] ?? "NeverBeen.API",
++            ValidateAudience = true,
++            ValidAudience = jwtSection["Audience"] ?? "NeverBeen.Web",
++            ValidateIssuerSigningKey = true,
++            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
++            ValidateLifetime = true,
++            ClockSkew = TimeSpan.FromMinutes(5)
++        };
++    });
++
++builder.Services.AddAuthorization();
+ 
++// ---------------------------------------------------------------------------
++// Controllers + Swagger UI (available under /swagger in Development).
++// ---------------------------------------------------------------------------
+ builder.Services.AddControllers();
+-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+ builder.Services.AddEndpointsApiExplorer();
+-builder.Services.AddSwaggerGen();
++builder.Services.AddSwaggerGen(options =>
++{
++    options.SwaggerDoc("v1", new OpenApiInfo
++    {
++        Title = "NeverBeen Community API",
++        Version = "v1",
++        Description = "OAuth (Google / Facebook / Microsoft) SSO login, registration, user profiles, photo galleries and the NeverBeen Community Message Book."
++    });
++
++    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
++    {
++        Name = "Authorization",
++        Type = SecuritySchemeType.Http,
++        Scheme = "bearer",
++        BearerFormat = "JWT",
++        In = ParameterLocation.Header,
++        Description = "Paste the JWT returned by POST /api/auth/oauth/login (e.g. \"Bearer eyJ...\")"
++    });
++
++    options.AddSecurityRequirement(new OpenApiSecurityRequirement
++    {
++        {
++            new OpenApiSecurityScheme
++            {
++                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
++            },
++            Array.Empty<string>()
++        }
++    });
++});
++
++// ---------------------------------------------------------------------------
++// OAuth login providers (Google, Facebook, Microsoft).
++// ---------------------------------------------------------------------------
++builder.Services.Configure<OauthOptions>(builder.Configuration.GetSection("OAuth"));
++builder.Services.AddHttpClient();
++builder.Services.AddScoped<IOauthLoginProvider, GoogleOauthLoginProvider>();
++builder.Services.AddScoped<IOauthLoginProvider, FacebookOauthLoginProvider>();
++builder.Services.AddScoped<IOauthLoginProvider, MicrosoftOauthLoginProvider>();
++
++builder.Services.AddSingleton<JwtTokenService>();
++
++// ---------------------------------------------------------------------------
++// CORS for the Angular frontend. List the allowed origins (comma separated)
++// in Cors:AllowedOrigins. When the list is empty any origin is allowed -
++// only use this during local development.
++// ---------------------------------------------------------------------------
++var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? string.Empty)
++    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
++
++builder.Services.AddCors(options =>
++{
++    options.AddDefaultPolicy(policy =>
++    {
++        if (corsOrigins.Length == 0)
++            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
++        else
++            policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();
++    });
++});
++
++// ---------------------------------------------------------------------------
++// Health check (GET /health) including a database connectivity check.
++// ---------------------------------------------------------------------------
++builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>("neverbeen-db");
++
++// ---------------------------------------------------------------------------
++// Database initializer: creates the schema and seeds countries/cities.
++// ---------------------------------------------------------------------------
++builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+ 
+ var app = builder.Build();
+ 
+-// Configure the HTTP request pipeline.
++using (var scope = app.Services.CreateScope())
++{
++    var initializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
++    await initializer.InitializeAsync();
++}
++
++app.UseMiddleware<ExceptionHandlingMiddleware>();
++
+ if (app.Environment.IsDevelopment())
+ {
+     app.UseSwagger();
+     app.UseSwaggerUI();
+ }
+ 
+-app.UseHttpsRedirection();
+-
++app.UseCors();
++app.UseAuthentication();
+ app.UseAuthorization();
+ 
+ app.MapControllers();
++app.MapHealthChecks("/health");
+ 
+ app.Run();
+diff --git a/NeverBeen.API/Properties/launchSettings.json b/NeverBeen.API/Properties/launchSettings.json
+index 0240198..b24caf6 100644
+--- a/NeverBeen.API/Properties/launchSettings.json
++++ b/NeverBeen.API/Properties/launchSettings.json
+@@ -1,20 +1,12 @@
+-﻿{
++{
+   "$schema": "https://json.schemastore.org/launchsettings.json",
+-  "iisSettings": {
+-    "windowsAuthentication": false,
+-    "anonymousAuthentication": true,
+-    "iisExpress": {
+-      "applicationUrl": "http://localhost:8455",
+-      "sslPort": 44356
+-    }
+-  },
+   "profiles": {
+     "http": {
+       "commandName": "Project",
+       "dotnetRunMessages": true,
+       "launchBrowser": true,
+       "launchUrl": "swagger",
+-      "applicationUrl": "http://localhost:5076",
++      "applicationUrl": "http://localhost:5080",
+       "environmentVariables": {
+         "ASPNETCORE_ENVIRONMENT": "Development"
+       }
+@@ -24,15 +16,7 @@
+       "dotnetRunMessages": true,
+       "launchBrowser": true,
+       "launchUrl": "swagger",
+-      "applicationUrl": "https://localhost:7063;http://localhost:5076",
+-      "environmentVariables": {
+-        "ASPNETCORE_ENVIRONMENT": "Development"
+-      }
+-    },
+-    "IIS Express": {
+-      "commandName": "IISExpress",
+-      "launchBrowser": true,
+-      "launchUrl": "swagger",
++      "applicationUrl": "https://localhost:7080;http://localhost:5080",
+       "environmentVariables": {
+         "ASPNETCORE_ENVIRONMENT": "Development"
+       }
+diff --git a/NeverBeen.API/Services/FacebookOauthLoginProvider.cs b/NeverBeen.API/Services/FacebookOauthLoginProvider.cs
+new file mode 100644
+index 0000000..8bebf56
+--- /dev/null
++++ b/NeverBeen.API/Services/FacebookOauthLoginProvider.cs
+@@ -0,0 +1,69 @@
++using System.Text.Json;
++
++namespace NeverBeen.API.Services;
++
++/// <summary>
++/// Facebook OAuth (authorization code flow). The frontend redirects to
++/// https://www.facebook.com/v19.0/dialog/oauth with scopes "email public_profile";
++/// this provider exchanges the code and reads the profile from the Graph API.
++/// </summary>
++public class FacebookOauthLoginProvider : OauthLoginProviderBase
++{
++    public FacebookOauthLoginProvider(IHttpClientFactory httpClientFactory, Microsoft.Extensions.Options.IOptions<OauthOptions> options)
++        : base(httpClientFactory, options)
++    {
++    }
++
++    public override string ProviderName => "Facebook";
++
++    protected override ProviderOptions GetProviderOptions() => _options.Facebook;
++
++    protected override async Task<ExternalUserProfile> ExchangeCodeForUserAsync(string code, CancellationToken cancellationToken)
++    {
++        var provider = GetProviderOptions();
++        EnsureConfigured(provider);
++
++        var client = _httpClientFactory.CreateClient();
++
++        using var tokenDoc = await PostFormAsync(client, "https://graph.facebook.com/v19.0/oauth/access_token", new Dictionary<string, string>
++        {
++            ["code"] = code,
++            ["client_id"] = provider.ClientId,
++            ["client_secret"] = provider.ClientSecret,
++            ["redirect_uri"] = EffectiveRedirectUri(provider),
++            ["grant_type"] = "authorization_code"
++        }, cancellationToken);
++
++        var accessToken = GetString(tokenDoc.RootElement, "access_token")
++            ?? throw new OauthException("Facebook token response did not include an access_token.");
++
++        using var meDoc = await GetJsonAsync(
++            client,
++            "https://graph.facebook.com/v19.0/me?fields=id,name,email,first_name,last_name,picture.type(large)",
++            accessToken,
++            cancellationToken);
++
++        var root = meDoc.RootElement;
++
++        var providerKey = GetString(root, "id")
++            ?? throw new OauthException("Facebook profile did not include a stable user id.");
++
++        string? pictureUrl = null;
++        if (root.TryGetProperty("picture", out var picture)
++            && picture.ValueKind == JsonValueKind.Object
++            && picture.TryGetProperty("data", out var pictureData))
++        {
++            pictureUrl = GetString(pictureData, "url");
++        }
++
++        return new ExternalUserProfile
++        {
++            ProviderKey = providerKey,
++            Email = GetString(root, "email") ?? string.Empty,
++            FullName = GetString(root, "name"),
++            FirstName = GetString(root, "first_name"),
++            LastName = GetString(root, "last_name"),
++            PictureUrl = pictureUrl
++        };
++    }
++}
+diff --git a/NeverBeen.API/Services/GoogleOauthLoginProvider.cs b/NeverBeen.API/Services/GoogleOauthLoginProvider.cs
+new file mode 100644
+index 0000000..c430c6f
+--- /dev/null
++++ b/NeverBeen.API/Services/GoogleOauthLoginProvider.cs
+@@ -0,0 +1,57 @@
++using System.Text.Json;
++
++namespace NeverBeen.API.Services;
++
++/// <summary>
++/// Google OAuth (authorization code flow). The frontend redirects to
++/// https://accounts.google.com/o/oauth2/v2/auth with scopes "openid email profile";
++/// this provider exchanges the code and reads the user info from the OpenID endpoint.
++/// </summary>
++public class GoogleOauthLoginProvider : OauthLoginProviderBase
++{
++    public GoogleOauthLoginProvider(IHttpClientFactory httpClientFactory, Microsoft.Extensions.Options.IOptions<OauthOptions> options)
++        : base(httpClientFactory, options)
++    {
++    }
++
++    public override string ProviderName => "Google";
++
++    protected override ProviderOptions GetProviderOptions() => _options.Google;
++
++    protected override async Task<ExternalUserProfile> ExchangeCodeForUserAsync(string code, CancellationToken cancellationToken)
++    {
++        var provider = GetProviderOptions();
++        EnsureConfigured(provider);
++
++        var client = _httpClientFactory.CreateClient();
++
++        using var tokenDoc = await PostFormAsync(client, "https://oauth2.googleapis.com/token", new Dictionary<string, string>
++        {
++            ["code"] = code,
++            ["client_id"] = provider.ClientId,
++            ["client_secret"] = provider.ClientSecret,
++            ["redirect_uri"] = EffectiveRedirectUri(provider),
++            ["grant_type"] = "authorization_code"
++        }, cancellationToken);
++
++        var accessToken = GetString(tokenDoc.RootElement, "access_token")
++            ?? throw new OauthException("Google token response did not include an access_token.");
++
++        using var userDoc = await GetJsonAsync(client, "https://openidconnect.googleapis.com/v1/userinfo", accessToken, cancellationToken);
++        var root = userDoc.RootElement;
++
++        var providerKey = GetString(root, "sub")
++            ?? throw new OauthException("Google profile did not include a stable user id (\"sub\").");
++
++        return new ExternalUserProfile
++        {
++            ProviderKey = providerKey,
++            Email = GetString(root, "email") ?? string.Empty,
++            FullName = GetString(root, "name"),
++            FirstName = GetString(root, "given_name"),
++            LastName = GetString(root, "family_name"),
++            PictureUrl = GetString(root, "picture"),
++            EmailVerified = root.TryGetProperty("email_verified", out var emailVerified) && emailVerified.ValueKind == JsonValueKind.True
++        };
++    }
++}
+diff --git a/NeverBeen.API/Services/JwtTokenService.cs b/NeverBeen.API/Services/JwtTokenService.cs
+new file mode 100644
+index 0000000..483dbee
+--- /dev/null
++++ b/NeverBeen.API/Services/JwtTokenService.cs
+@@ -0,0 +1,56 @@
++using System.Globalization;
++using System.IdentityModel.Tokens.Jwt;
++using System.Security.Claims;
++using System.Text;
++using Microsoft.IdentityModel.Tokens;
++using NeverBeen.API.Entities;
++
++namespace NeverBeen.API.Services;
++
++/// <summary>Creates the JWT returned after an OAuth login; the Angular app stores it and sends it as a Bearer token.</summary>
++public class JwtTokenService
++{
++    private readonly IConfiguration _configuration;
++
++    public JwtTokenService(IConfiguration configuration)
++    {
++        _configuration = configuration;
++    }
++
++    public (string Token, long ExpiresInSeconds) CreateToken(UserProfile user)
++    {
++        var keyBytes = Encoding.UTF8.GetBytes(_configuration["Jwt:SigningKey"] ?? string.Empty);
++        var signingCredentials = new SigningCredentials(
++            new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256);
++
++        var expiresHours = ParseExpiresHours(_configuration["Jwt:ExpiresInHours"]);
++        var notBefore = DateTime.UtcNow;
++        var expires = notBefore.AddHours(expiresHours);
++
++        var claims = new List<Claim>
++        {
++            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
++            new(ClaimTypes.Email, user.Email),
++            new(ClaimTypes.Name, user.FullName ?? user.Email),
++            new("nb_status", user.Status)
++        };
++
++        var token = new JwtSecurityToken(
++            issuer: _configuration["Jwt:Issuer"] ?? "NeverBeen.API",
++            audience: _configuration["Jwt:Audience"] ?? "NeverBeen.Web",
++            claims: claims,
++            notBefore: notBefore,
++            expires: expires,
++            signingCredentials: signingCredentials);
++
++        var handler = new JwtSecurityTokenHandler();
++        return (handler.WriteToken(token), (long)expiresHours * 3600);
++    }
++
++    private static double ParseExpiresHours(string? raw)
++    {
++        if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var hours) && hours > 0)
++            return hours;
++        return 72;
++    }
++}
+diff --git a/NeverBeen.API/Services/MicrosoftOauthLoginProvider.cs b/NeverBeen.API/Services/MicrosoftOauthLoginProvider.cs
+new file mode 100644
+index 0000000..75da3f6
+--- /dev/null
++++ b/NeverBeen.API/Services/MicrosoftOauthLoginProvider.cs
+@@ -0,0 +1,62 @@
++using System.Text.Json;
++
++namespace NeverBeen.API.Services;
++
++/// <summary>
++/// Microsoft OAuth (authorization code flow) for Outlook / Microsoft 365 / personal
++/// Microsoft accounts. The frontend redirects to
++/// https://login.microsoftonline.com/common/oauth2/v2.0/authorize with scopes
++/// "openid email profile User.Read"; this provider exchanges the code and reads the
++/// profile from Microsoft Graph.
++/// </summary>
++public class MicrosoftOauthLoginProvider : OauthLoginProviderBase
++{
++    public MicrosoftOauthLoginProvider(IHttpClientFactory httpClientFactory, Microsoft.Extensions.Options.IOptions<OauthOptions> options)
++        : base(httpClientFactory, options)
++    {
++    }
++
++    public override string ProviderName => "Microsoft";
++
++    protected override ProviderOptions GetProviderOptions() => _options.Microsoft;
++
++    protected override async Task<ExternalUserProfile> ExchangeCodeForUserAsync(string code, CancellationToken cancellationToken)
++    {
++        var provider = GetProviderOptions();
++        EnsureConfigured(provider);
++
++        var client = _httpClientFactory.CreateClient();
++
++        using var tokenDoc = await PostFormAsync(client, "https://login.microsoftonline.com/common/oauth2/v2.0/token", new Dictionary<string, string>
++        {
++            ["code"] = code,
++            ["client_id"] = provider.ClientId,
++            ["client_secret"] = provider.ClientSecret,
++            ["redirect_uri"] = EffectiveRedirectUri(provider),
++            ["grant_type"] = "authorization_code",
++            ["scope"] = "openid email profile User.Read"
++        }, cancellationToken);
++
++        var accessToken = GetString(tokenDoc.RootElement, "access_token")
++            ?? throw new OauthException("Microsoft token response did not include an access_token.");
++
++        using var meDoc = await GetJsonAsync(client, "https://graph.microsoft.com/v1.0/me", accessToken, cancellationToken);
++        var root = meDoc.RootElement;
++
++        var providerKey = GetString(root, "id")
++            ?? throw new OauthException("Microsoft Graph profile did not include a stable user id.");
++
++        return new ExternalUserProfile
++        {
++            ProviderKey = providerKey,
++            Email = GetString(root, "mail")
++                   ?? GetString(root, "userPrincipalName")
++                   ?? GetString(root, "userPersonalEmail")
++                   ?? string.Empty,
++            FullName = GetString(root, "displayName"),
++            FirstName = GetString(root, "givenName"),
++            LastName = GetString(root, "surname"),
++            PictureUrl = null // Graph photos require an extra authenticated request; the user uploads a photo on the registration page
++        };
++    }
++}
+diff --git a/NeverBeen.API/Services/OauthLoginProviderBase.cs b/NeverBeen.API/Services/OauthLoginProviderBase.cs
+new file mode 100644
+index 0000000..0a2a589
+--- /dev/null
++++ b/NeverBeen.API/Services/OauthLoginProviderBase.cs
+@@ -0,0 +1,108 @@
++using System.Net.Http.Headers;
++using System.Text.Json;
++using NeverBeen.API.Common;
++
++namespace NeverBeen.API.Services;
++
++public interface IOauthLoginProvider
++{
++    /// <summary>Canonical provider name: "Google", "Facebook" or "Microsoft".</summary>
++    string ProviderName { get; }
++
++    /// <summary>Exchanges an OAuth authorization code for the external account profile.</summary>
++    Task<ExternalUserProfile> GetExternalUserAsync(string code, CancellationToken cancellationToken = default);
++}
++
++/// <summary>Profile returned by the provider's user-info endpoint.</summary>
++public class ExternalUserProfile
++{
++    public string ProviderKey { get; set; } = string.Empty;
++    public string Email { get; set; } = string.Empty;
++    public string? FullName { get; set; }
++    public string? FirstName { get; set; }
++    public string? LastName { get; set; }
++    public string? PictureUrl { get; set; }
++    public bool EmailVerified { get; set; }
++}
++
++public abstract class OauthLoginProviderBase : IOauthLoginProvider
++{
++    protected readonly IHttpClientFactory _httpClientFactory;
++    protected readonly OauthOptions _options;
++
++    protected OauthLoginProviderBase(IHttpClientFactory httpClientFactory, Microsoft.Extensions.Options.IOptions<OauthOptions> options)
++    {
++        _httpClientFactory = httpClientFactory;
++        _options = options.Value;
++    }
++
++    public abstract string ProviderName { get; }
++
++    protected abstract ProviderOptions GetProviderOptions();
++
++    public async Task<ExternalUserProfile> GetExternalUserAsync(string code, CancellationToken cancellationToken = default)
++    {
++        try
++        {
++            return await ExchangeCodeForUserAsync(code, cancellationToken);
++        }
++        catch (OauthException)
++        {
++            throw;
++        }
++        catch (HttpRequestException ex)
++        {
++            throw new OauthException($"Could not reach the {ProviderName} OAuth service: {ex.Message}");
++        }
++        catch (JsonException ex)
++        {
++            throw new OauthException($"The {ProviderName} OAuth service returned an unexpected response: {ex.Message}");
++        }
++    }
++
++    protected abstract Task<ExternalUserProfile> ExchangeCodeForUserAsync(string code, CancellationToken cancellationToken);
++
++    protected void EnsureConfigured(ProviderOptions provider)
++    {
++        if (string.IsNullOrWhiteSpace(provider.ClientId) || string.IsNullOrWhiteSpace(provider.ClientSecret))
++            throw new OauthException(
++                $"The {ProviderName} OAuth application is not configured on the API. " +
++                $"Set OAuth:{ProviderName}:ClientId and OAuth:{ProviderName}:ClientSecret in your configuration (or user secrets).");
++
++        if (string.IsNullOrWhiteSpace(EffectiveRedirectUri(provider)))
++            throw new OauthException(
++                "OAuth:FrontendRedirectUri is not configured. It must be the frontend callback URL " +
++                "(e.g. http://localhost:4200/auth/callback) that is also registered with the OAuth application.");
++    }
++
++    protected string EffectiveRedirectUri(ProviderOptions provider)
++        => string.IsNullOrWhiteSpace(provider.RedirectUri) ? _options.FrontendRedirectUri : provider.RedirectUri;
++
++    protected async Task<JsonDocument> PostFormAsync(HttpClient client, string url, IEnumerable<KeyValuePair<string, string>> fields, CancellationToken cancellationToken)
++    {
++        using var content = new FormUrlEncodedContent(fields);
++        using var response = await client.PostAsync(url, content, cancellationToken);
++        var body = await response.Content.ReadAsStringAsync(cancellationToken);
++        if (!response.IsSuccessStatusCode)
++            throw new OauthException($"{ProviderName} token exchange failed with HTTP {(int)response.StatusCode}: {Truncate(body)}");
++        return JsonDocument.Parse(body);
++    }
++
++    protected async Task<JsonDocument> GetJsonAsync(HttpClient client, string url, string accessToken, CancellationToken cancellationToken)
++    {
++        using var request = new HttpRequestMessage(HttpMethod.Get, url);
++        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
++        using var response = await client.SendAsync(request, cancellationToken);
++        var body = await response.Content.ReadAsStringAsync(cancellationToken);
++        if (!response.IsSuccessStatusCode)
++            throw new OauthException($"{ProviderName} profile request failed with HTTP {(int)response.StatusCode}: {Truncate(body)}");
++        return JsonDocument.Parse(body);
++    }
++
++    protected static string? GetString(JsonElement element, string name)
++        => element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
++            ? value.GetString()
++            : null;
++
++    private static string Truncate(string value) => value.Length <= 500 ? value : value[..500];
++}
+diff --git a/NeverBeen.API/Services/OauthOptions.cs b/NeverBeen.API/Services/OauthOptions.cs
+new file mode 100644
+index 0000000..b31b3ec
+--- /dev/null
++++ b/NeverBeen.API/Services/OauthOptions.cs
+@@ -0,0 +1,26 @@
++namespace NeverBeen.API.Services;
++
++/// <summary>Binds the "OAuth" section of appsettings.json.</summary>
++public class OauthOptions
++{
++    /// <summary>
++    /// The frontend callback URL the Angular app redirects back to after the provider
++    /// consent screen, e.g. "http://localhost:4200/auth/callback". This is the exact
++    /// redirect URI that must be registered with each OAuth application AND the one
++    /// sent back to the provider during the code exchange.
++    /// </summary>
++    public string FrontendRedirectUri { get; set; } = string.Empty;
++
++    public ProviderOptions Google { get; set; } = new();
++    public ProviderOptions Facebook { get; set; } = new();
++    public ProviderOptions Microsoft { get; set; } = new();
++}
++
++public class ProviderOptions
++{
++    public string ClientId { get; set; } = string.Empty;
++    public string ClientSecret { get; set; } = string.Empty;
++
++    /// <summary>Defaults to <see cref="OauthOptions.FrontendRedirectUri"/> when empty.</summary>
++    public string RedirectUri { get; set; } = string.Empty;
++}
+diff --git a/NeverBeen.API/WeatherForecast.cs b/NeverBeen.API/WeatherForecast.cs
+deleted file mode 100644
+index e539d58..0000000
+--- a/NeverBeen.API/WeatherForecast.cs
++++ /dev/null
+@@ -1,13 +0,0 @@
+-namespace NeverBeen.API
+-{
+-    public class WeatherForecast
+-    {
+-        public DateOnly Date { get; set; }
+-
+-        public int TemperatureC { get; set; }
+-
+-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+-
+-        public string? Summary { get; set; }
+-    }
+-}
+\ No newline at end of file
+diff --git a/NeverBeen.API/appsettings.Development.json b/NeverBeen.API/appsettings.Development.json
+index 0c208ae..dd813de 100644
+--- a/NeverBeen.API/appsettings.Development.json
++++ b/NeverBeen.API/appsettings.Development.json
+@@ -2,7 +2,14 @@
+   "Logging": {
+     "LogLevel": {
+       "Default": "Information",
+-      "Microsoft.AspNetCore": "Warning"
++      "Microsoft.AspNetCore": "Warning",
++      "Microsoft.EntityFrameworkCore": "Warning"
+     }
++  },
++  "Database": {
++    "Provider": "Sqlite"
++  },
++  "ConnectionStrings": {
++    "NeverBeen": "Data Source=neverbeen.db"
+   }
+ }
+diff --git a/NeverBeen.API/appsettings.json b/NeverBeen.API/appsettings.json
+index 10f68b8..c1df847 100644
+--- a/NeverBeen.API/appsettings.json
++++ b/NeverBeen.API/appsettings.json
+@@ -5,5 +5,38 @@
+       "Microsoft.AspNetCore": "Warning"
+     }
+   },
+-  "AllowedHosts": "*"
++  "AllowedHosts": "*",
++  "ConnectionStrings": {
++    "NeverBeen": "Server=tcp:yourserver.database.windows.net,1433;Initial Catalog=NeverBeen;User ID=youradmin;Password=YourPassword;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
++  },
++  "Database": {
++    "Provider": "SqlServer"
++  },
++  "Jwt": {
++    "Issuer": "NeverBeen.API",
++    "Audience": "NeverBeen.Web",
++    "SigningKey": "REPLACE_WITH_A_LONG_RANDOM_SECRET_OF_AT_LEAST_32_CHARACTERS",
++    "ExpiresInHours": "72"
++  },
++  "Cors": {
++    "AllowedOrigins": "http://localhost:4200,https://localhost:4200"
++  },
++  "OAuth": {
++    "FrontendRedirectUri": "http://localhost:4200/auth/callback",
++    "Google": {
++      "ClientId": "",
++      "ClientSecret": "",
++      "RedirectUri": ""
++    },
++    "Facebook": {
++      "ClientId": "",
++      "ClientSecret": "",
++      "RedirectUri": ""
++    },
++    "Microsoft": {
++      "ClientId": "",
++      "ClientSecret": "",
++      "RedirectUri": ""
++    }
++  }
+ }
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..f77713f
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,373 @@
++# NeverBeen Community API
++
++.NET 7 Web API (ASP.NET Core + EF Core) for the **NeverBeen** community website. It provides:
++
++- **OAuth (SSO) authentication** with **Google**, **Facebook** and **Microsoft Outlook** accounts,
++- **Registration** of new community members (the Angular "Connect to NeverBeen Community" flow),
++- **User profiles** with the four sections of the profile page: **About Me, Details, Gallery, Settings**,
++- **Profile photograph + user photo gallery** storage (images stored in the database),
++- The **NeverBeen Community Message Book** – text posts by any member (with the poster's details shown),
++  replies to posts, and **like / dislike** reactions,
++- **Lookup data**: all countries and cities (city list depends on the selected country) and the fixed
++  profession / gender option lists,
++- **Azure SQL Database** as the persistence store (with a Sqlite mode for quick local development).
++
++---
++
++## Solution layout
++
++```
++NeverBeen.API/
++└── NeverBeen.API/                     (the Web API project)
++    ├── Controllers/
++    │   ├── AuthController.cs          OAuth (SSO) login + /me
++    │   ├── RegistrationController.cs  completes a new member's profile
++    │   ├── ProfileController.cs       profile page: About Me / Details / Gallery / Settings
++    │   ├── GalleryController.cs       user photo gallery
++    │   ├── MessageBookController.cs   community message book (posts, replies, like/dislike)
++    │   └── LookupController.cs        countries, cities, professions, genders
++    ├── Data/
++    │   ├── AppDbContext.cs            EF Core model + indexes/relationships
++    │   ├── DbInitializer.cs           creates schema + seeds countries/cities at startup
++    │   └── GeoSeedData.cs             embedded seed data (184 countries, 1000+ cities)
++    ├── Entities/                      UserProfile, ExternalIdentity, UserSettings,
++    │                                  Country, City, GalleryPhoto,
++    │                                  CommunityComment, CommentReaction
++    ├── Dtos/                          request/response models + mappers
++    ├── Services/                      JwtTokenService, OAuth providers (Google/Facebook/Microsoft)
++    ├── Common/                        constants, validation, helpers
++    └── Middleware/                    JSON error handling middleware
++```
++
++### Data model
++
++| Table | Purpose |
++|---|---|
++| `Users` | Member profile (name, email, gender, DOB, country/city, pincode, contact, address, about me, profession, status, profile photo bytes) |
++| `ExternalIdentities` | Links a user to each OAuth account (Provider + stable ProviderKey), unique per provider key |
++| `UserSettings` | 1:1 settings (notifications, public-profile toggle, theme, timezone) |
++| `Countries` / `Cities` | Drop-down lookup data (seeded at first start) |
++| `GalleryPhotos` | Gallery images (bytes + caption) per user |
++| `CommunityComments` | Message-book posts; `ParentId` makes it a reply to a post |
++| `CommentReactions` | Like (1) / dislike (-1), one per user per comment (toggle) |
++
++`Users.Status` is `Pending` right after the first SSO login and becomes `Active` once the
++registration page is submitted.
++
++---
++
++## 1. Create the Azure SQL database
++
++1. In the Azure Portal create a **SQL Server** (logical server) and an Azure **SQL Database**, e.g.
++   server `neverbeensql.database.windows.net`, database `NeverBeen`.
++2. On the server, under **Networking**, allow access from your dev machine / CI address
++   (or "Allow all" temporarily), and create a login, e.g. `neverbeenadmin` with a strong password.
++3. Create the database schema – **nothing manual is required**: on first start the API runs
++   `EnsureCreated` and seeds all countries/cities automatically. (If you prefer migrations,
++   generate one – see [Switching to EF migrations](#switching-to-ef-migrations).)
++
++## 2. Configure the API
++
++Configuration lives in `appsettings.json` (overridable with user secrets / environment
++variables / Azure App Configuration). Set your values, for example:
++
++```bash
++# run from the NeverBeen.API folder
++dotnet user-secrets init
++dotnet user-secrets set "ConnectionStrings:NeverBeen" "Server=tcp:neverbeensql.database.windows.net,1433;Initial Catalog=NeverBeen;User ID=neverbeenadmin;Password=YourP@ssw0rd;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
++dotnet user-secrets set "Jwt:SigningKey" "some-long-random-value-with-at-least-32-characters"
++dotnet user-secrets set "Cors:AllowedOrigins" "http://localhost:4200,https://neverbeen.example.com"
++```
++
++### OAuth (SSO) applications
++
++Register **one** OAuth (authorization-code) app per provider and add the **frontend callback URL**
++(the URL of the Angular page that receives the `code`, e.g. `http://localhost:4200/auth/callback`)
++as its redirect URI. The same client id is used by the browser redirect *and* by the API's token
++exchange, so the client **secret stays only on the API**.
++
++| Provider | Registration | Scopes to request | Client id / secret |
++|---|---|---|---|
++| Google | [Google Cloud Console → OAuth consent + Credentials](https://console.cloud.google.com/apis/credentials) – "OAuth client ID" of type *Web application* | `openid email profile` | `OAuth:Google:ClientId` / `ClientSecret` |
++| Facebook | [Meta for Developers → Apps → Facebook Login](https://developers.facebook.com/apps) | `email public_profile` | `OAuth:Facebook:ClientId` / `ClientSecret` |
++| Microsoft (Outlook) | [Azure Portal → App registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) → API permissions: *Graph* `User.Read` (delegated) + OpenID `email profile`; add the frontend callback as a **Mobile & desktop / Web** redirect (SPA) | `openid email profile User.Read` | `OAuth:Microsoft:ClientId` / `ClientSecret` (Certificates & secrets) |
++
++```bash
++dotnet user-secrets set "OAuth:FrontendRedirectUri" "http://localhost:4200/auth/callback"
++dotnet user-secrets set "OAuth:Google:ClientId" "..."
++dotnet user-secrets set "OAuth:Google:ClientSecret" "..."
++dotnet user-secrets set "OAuth:Facebook:ClientId" "..."
++dotnet user-secrets set "OAuth:Facebook:ClientSecret" "..."
++dotnet user-secrets set "OAuth:Microsoft:ClientId" "..."
++dotnet user-secrets set "OAuth:Microsoft:ClientSecret" "..."
++```
++
++> Production: replace the localhost origin in `Cors:AllowedOrigins` and
++> `OAuth:FrontendRedirectUri` with the deployed frontend URL (https).
++> For production secrets prefer **Azure Key Vault / App Configuration** or
++> environment variables on the host.
++
++## 3. Run
++
++```bash
++cd NeverBeen.API
++dotnet run            # http://localhost:5080  →  Swagger UI at /swagger
++```
++
++`appsettings.Development.json` defaults to **Sqlite** (`Data Source=neverbeen.db`) so you can run
++and exercise every endpoint without SQL Server. To develop against Azure SQL instead, set:
++
++```bash
++dotnet user-secrets set "Database:Provider" "SqlServer"
++```
++
++Useful checks:
++
++- `GET /health` – API + database health
++- `GET /api/lookup/countries` – seeded countries
++- `GET /api/messagebook` – message book (public read)
++
++---
++
++## API reference
++
++Base URL (local): `http://localhost:5080`. Authenticated calls send
++`Authorization: Bearer <token>`.
++
++### Authentication
++
++| Method | Route | Description |
++|---|---|---|
++| POST | `/api/auth/oauth/login` | Exchange an OAuth code → JWT. Body: `{ "provider": "google"\|"facebook"\|"microsoft", "code": "..." }` |
++| GET | `/api/auth/me` | Signed-in user (validates the JWT, restores sessions) |
++
++`POST /api/auth/oauth/login` response:
++
++```json
++{
++  "token": "eyJ0eXAiOiJKV1QiLC...",
++  "tokenType": "Bearer",
++  "expiresIn": 259200,
++  "isNewUser": true,
++  "profileComplete": false,
++  "message": "New NeverBeen community member. Please complete your registration.",
++  "user": { "id": 1, "fullName": "John", "email": "john@gmail.com", "status": "Pending", "profileComplete": false, "profilePhotoUrl": "https://lh3.googleusercontent.com/..." }
++}
++```
++
++The frontend logic: `profileComplete == false` → go to the **Registration Page**,
++otherwise → go to the **User Profile (home) page**.
++
++### Registration
++
++| Method | Route | Description |
++|---|---|---|
++| POST | `/api/registration` | `multipart/form-data` (auth required, user must be `Pending`). Form fields: `fullName`, `gender`, `dateOfBirth` (`yyyy-MM-dd`), `countryId`, `cityId`, `pincode`, `contactNumber`, `postalAddress`, `aboutMe`, `email`, `profession`, `photo` (file, optional). Returns the full `ProfileDto`. |
++
++### Profile (About Me / Details / Gallery / Settings)
++
++| Method | Route | Description |
++|---|---|---|
++| GET | `/api/profile/me` | Own full profile (auth) |
++| GET | `/api/profile/{id}` | Public profile of a member (respects the "public profile" setting) |
++| PUT | `/api/profile` | Update details (`UpdateProfileRequest`, null = keep) |
++| PUT | `/api/profile/photo` | Upload profile photo (`multipart`, field `photo`) |
++| DELETE | `/api/profile/photo` | Remove uploaded profile photo |
++| PUT | `/api/profile/settings` | Update settings (notifications, public profile, theme, timezone) |
++| GET | `/api/profile/{id}/photo` | Image bytes for `<img src>` |
++
++### Gallery
++
++| Method | Route | Description |
++|---|---|---|
++| GET | `/api/gallery` | Own gallery (auth) |
++| POST | `/api/gallery` | Add photo (`multipart`: `photo` + optional `caption`) |
++| DELETE | `/api/gallery/{id}` | Delete own photo (auth) |
++| GET | `/api/gallery/{id}` | Image bytes |
++| GET | `/api/gallery/users/{userId}` | Another member's gallery (public) |
++
++### Community Message Book
++
++| Method | Route | Description |
++|---|---|---|
++| GET | `/api/messagebook?page=1&pageSize=20&includeReplies=true` | Paged posts with author details, replies, counts, and the visitor's reaction |
++| GET | `/api/messagebook/{id}` | One post with all replies |
++| POST | `/api/messagebook` | New post `{ "text": "..." }` or reply `{ "text": "...", "parentId": 12 }` (auth) |
++| POST | `/api/messagebook/{id}/reactions` | `{ "type": "like" \| "dislike" }` – toggles/switches (auth) |
++| DELETE | `/api/messagebook/{id}` | Delete own post (removes its replies + reactions) (auth) |
++
++Example post item:
++
++```json
++{
++  "id": 12,
++  "text": "Just joined NeverBeen! Excited to meet everyone.",
++  "createdAtUtc": "2026-09-21T10:15:30Z",
++  "likeCount": 3,
++  "dislikeCount": 0,
++  "author": { "id": 1, "fullName": "John Doe", "profilePhotoUrl": "/api/profile/1/photo", "profession": "Freelancer" },
++  "myReaction": "Like",
++  "replyCount": 1,
++  "replies": [
++    { "id": 13, "text": "Welcome aboard!", "createdAtUtc": "2026-09-21T11:00:00Z", "likeCount": 1, "dislikeCount": 0,
++      "author": { "id": 2, "fullName": "Sara Ali", "profilePhotoUrl": "/api/profile/2/photo", "profession": "Teacher" },
++      "myReaction": null, "replyCount": 0, "replies": [] }
++  ]
++}
++```
++
++### Lookup
++
++| Method | Route | Description |
++|---|---|---|
++| GET | `/api/lookup/countries` | All countries `[{ id, isoCode2, name, phoneCode }]` |
++| GET | `/api/lookup/countries/{id}/cities?search=` | Cities of the selected country |
++| GET | `/api/lookup/professions` | The 13 fixed profession options |
++| GET | `/api/lookup/genders` | `["Male", "Female", "Other"]` |
++
++---
++
++## 4. Angular integration guide
++
++The Angular app stores the returned JWT (e.g. `localStorage`) and sends it in the
++`Authorization` header; an `HTTP_INTERCEPTOR` makes this automatic.
++
++### "Connect to NeverBeen Community" page
++
++```typescript
++// auth.service.ts (excerpt)
++const API = environment.apiUrl;            // e.g. "http://localhost:5080"
++private readonly clientId: Record<string, string> = {
++  google: "GOOGLE_CLIENT_ID.apps.googleusercontent.com",   // public id, safe in the browser
++  facebook: "FACEBOOK_CLIENT_ID",
++  microsoft: "MICROSOFT_CLIENT_ID"
++};
++private get redirectUri() { return `${location.origin}/auth/callback`; }
++
++connectWith(provider: 'google' | 'facebook' | 'microsoft') {
++  const scopes: Record<string, string> = {
++    google:    'openid email profile',
++    facebook:  'email public_profile',
++    microsoft: 'openid email profile User.Read'
++  };
++  const authEndpoints: Record<string, string> = {
++    google:    'https://accounts.google.com/o/oauth2/v2/auth',
++    facebook:  'https://www.facebook.com/v19.0/dialog/oauth',
++    microsoft: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize'
++  };
++  const p = new URLSearchParams({
++    client_id: this.clientId[provider],
++    redirect_uri: this.redirectUri,
++    response_type: 'code',
++    scope: scopes[provider],
++    state: provider
++  });
++  window.location.href = `${authEndpoints[provider]}?${p.toString()}`;
++}
++```
++
++### Callback page (`/auth/callback`)
++
++```typescript
++// auth-callback.component.ts (excerpt)
++ngOnInit() {
++  const params = new URLSearchParams(location.search);
++  const provider = params.get('state') ?? 'google';
++  const code = params.get('code');
++  if (!code) { this.error = 'Missing code'; return; }
++
++  this.http.post(`${API}/api/auth/oauth/login`, { provider, code }).subscribe({
++    next: (res: any) => {
++      this.storeToken(res.token);                       // keep for all later calls
++      if (res.profileComplete) this.router.navigate(['/profile']);   // existing user → home page
++      else this.router.navigate(['/register']);                          // new user → registration
++    },
++    error: e => this.error = e.error?.error ?? 'Login failed'
++  });
++}
++```
++
++### Registration page
++
++```typescript
++// registration component (excerpt) – one FormData POST creates the profile
++submit() {
++  const fd = new FormData();
++  fd.append('fullName', this.form.fullName);
++  fd.append('gender', this.form.gender);
++  fd.append('dateOfBirth', this.form.dateOfBirth);      // from the date picker, yyyy-MM-dd
++  fd.append('countryId', this.form.countryId);
++  fd.append('cityId', this.form.cityId);                // loaded from /api/lookup/countries/{id}/cities
++  fd.append('pincode', this.form.pincode ?? '');
++  fd.append('contactNumber', this.form.contactNumber ?? '');
++  fd.append('postalAddress', this.form.postalAddress ?? '');
++  fd.append('aboutMe', this.form.aboutMe ?? '');
++  fd.append('email', this.form.email);
++  fd.append('profession', this.form.profession);        // from /api/lookup/professions
++  if (this.file) fd.append('photo', this.file, this.file.name);
++
++  this.http.post(`${API}/api/registration`, fd, { headers: this.authHeaders() }).subscribe({
++    next: profile => this.router.navigate(['/profile']),        // → user profile page
++    error: e => this.showError(e)
++  });
++}
++```
++
++### Profile page
++
++- `GET /api/profile/me` returns **all four sections in one payload** (`aboutMe`,
++  details fields, `settings`, `gallery[]`) – perfect for a side panel + main panel layout.
++- Profile picture: `profilePhotoUrl` is a relative API URL → render as
++  `<img [src]="apiUrl + profile.profilePhotoUrl">`.
++- Settings changes: `PUT /api/profile/settings`; details: `PUT /api/profile`;
++  photo: `PUT /api/profile/photo`; gallery: `POST /api/gallery`.
++
++### Message Book
++
++```typescript
++// load posts
++this.http.get(`${API}/api/messagebook`, { params: { page: this.page, pageSize: 20 } }).subscribe(...);
++
++// post / reply
++this.http.post(`${API}/api/messagebook`, { text, parentId: replyTo ?? undefined },
++  { headers: this.authHeaders() }).subscribe(...);
++
++// like / dislike (toggle)
++this.http.post(`${API}/api/messagebook/${id}/reactions`, { type: 'like' },
++  { headers: this.authHeaders() }).subscribe(res => this.applyReaction(id, res));
++```
++
++---
++
++## Notes & next steps
++
++- **Image storage** – profile/gallery photos are stored as `varbinary(max)` in Azure SQL
++  (5 MB / 8 MB limits enforced by the API). For very large galleries, swap the byte storage
++  for **Azure Blob Storage** – the controller/mapper boundaries (`GalleryController`,
++  `ProfileController.UploadPhoto`) are the only places that change.
++- **Like/dislike concurrency** – counters are updated in the same EF transaction as the
++  reaction write; under heavy concurrent load consider a DB-level constraint or periodic recount.
++- **Adding more countries/cities** – extend the JSON in `Data/GeoSeedData.cs` and restart
++  (or run a one-off seeding script); no schema change needed.
++- **Facebook Graph version** – the provider uses `v19.0`; bump the version string in
++  `Services/FacebookOauthLoginProvider.cs` to the current Graph API version if Meta deprecates it.
++
++### Switching to EF migrations
++
++The app currently creates the schema with `EnsureCreated` (simplest for v1) and will
++automatically use `Migrate()` as soon as migrations exist. To adopt migrations:
++
++```bash
++dotnet tool install --global dotnet-ef
++cd NeverBeen.API
++dotnet ef migrations add InitialCreate
++```
++
++then change `DbInitializer` behavior is already handled – `MigrateAsync` takes over, and you
++can drop the Sqlite dev database and start fresh.
++
++### Upgrading the .NET version
++
++The project targets `net7.0` to match this repository. To move to .NET 8/10 later, change
++`TargetFramework` in `NeverBeen.API.csproj` and bump the `Microsoft.*` package versions
++(e.g. `Microsoft.EntityFrameworkCore.SqlServer` to `8.0.x`/`10.0.x`) – no code changes needed.
