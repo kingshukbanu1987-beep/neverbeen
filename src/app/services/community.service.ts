@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
+  AboutMeDetails,
   AbuseReport,
   ActiveChatBox,
   AuthorInfo,
@@ -19,8 +20,11 @@ import {
   NotificationItem,
   Profile,
   ReactionResult,
+  ReactionType,
+  REACTION_ICONS,
   UpdateProfileRequest,
   UserActiveStatus,
+  UserReaction,
   UserSettings,
 } from '../models/community';
 import {
@@ -524,11 +528,19 @@ export class CommunityService {
       postalAddress: req.postalAddress ?? current.postalAddress,
       aboutMe: req.aboutMe ?? current.aboutMe,
       profession: req.profession ?? current.profession,
+      aboutMeDetails: req.aboutMeDetails ?? current.aboutMeDetails,
     };
 
     this.profile.set(updated);
     this.saveJson(PROFILE_KEY, updated);
     return updated;
+  }
+
+  updateAboutMeDetails(details: AboutMeDetails): void {
+    this.profile.update((p) => (p ? { ...p, aboutMeDetails: details } : null));
+    this.currentUser.update((u) => (u ? { ...u, aboutMeDetails: details } : null));
+    this.saveJson(PROFILE_KEY, this.profile());
+    this.saveJson(USER_KEY, this.currentUser());
   }
 
   readonly MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100 KB limit (Requirement A)
@@ -623,7 +635,12 @@ export class CommunityService {
   // Message Book Comments
   // ---------------------------------------------------------------------------
 
-  async postComment(text: string, parentId?: number, imageUrl?: string): Promise<CommunityComment> {
+  async postComment(
+    text: string,
+    parentId?: number,
+    imageUrl?: string,
+    taggedCompanions?: AuthorInfo[],
+  ): Promise<CommunityComment> {
     const user = this.currentUser();
     const newComment: CommunityComment = {
       id: generateUniqueId(),
@@ -639,6 +656,8 @@ export class CommunityService {
         profilePhotoUrl: user?.profilePhotoUrl,
       },
       myReaction: null,
+      reactions: [],
+      taggedCompanions: taggedCompanions && taggedCompanions.length > 0 ? taggedCompanions : undefined,
       replyCount: 0,
       parentId: parentId ?? null,
       replies: [],
@@ -679,8 +698,9 @@ export class CommunityService {
     });
   }
 
-  async toggleReaction(commentId: number, reactionType: 'like' | 'dislike'): Promise<void> {
-    const target = reactionType === 'like' ? 'Like' : 'Dislike';
+  async toggleReaction(commentId: number, reactionType: 'like' | 'dislike' | ReactionType): Promise<void> {
+    const target: ReactionType =
+      reactionType === 'like' ? 'Heart' : reactionType === 'dislike' ? 'Dislike' : reactionType;
 
     this.comments.update((list) =>
       list.map((post) => {
@@ -698,6 +718,10 @@ export class CommunityService {
     this.saveJson(COMMENTS_KEY, this.comments());
   }
 
+  reactToComment(commentId: number, reaction: ReactionType): void {
+    this.toggleReaction(commentId, reaction);
+  }
+
   async deleteComment(commentId: number): Promise<void> {
     this.comments.update((list) =>
       list
@@ -713,26 +737,39 @@ export class CommunityService {
 
   private computeReaction(
     item: CommunityComment,
-    target: 'Like' | 'Dislike',
+    target: ReactionType,
   ): CommunityComment {
-    let likeCount = item.likeCount;
-    let dislikeCount = item.dislikeCount;
-    let myReaction: 'Like' | 'Dislike' | null = item.myReaction ?? null;
+    let likeCount = item.likeCount || 0;
+    let dislikeCount = item.dislikeCount || 0;
+    let myReaction: ReactionType | null = item.myReaction ?? null;
+    let reactions: UserReaction[] = item.reactions ? [...item.reactions] : [];
+
+    const user = this.currentUser();
+    const currentAuthor: AuthorInfo = {
+      id: user?.id ?? 1,
+      fullName: user?.fullName || 'Sophia Laurent',
+      profession: this.profile()?.profession || 'Travel Creator',
+      profilePhotoUrl: user?.profilePhotoUrl,
+    };
 
     if (myReaction === target) {
       myReaction = null;
-      if (target === 'Like') likeCount = Math.max(0, likeCount - 1);
-      else dislikeCount = Math.max(0, dislikeCount - 1);
+      reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+      if (target === 'Dislike') dislikeCount = Math.max(0, dislikeCount - 1);
+      else likeCount = Math.max(0, likeCount - 1);
     } else {
-      if (myReaction === 'Like') likeCount = Math.max(0, likeCount - 1);
       if (myReaction === 'Dislike') dislikeCount = Math.max(0, dislikeCount - 1);
+      else if (myReaction) likeCount = Math.max(0, likeCount - 1);
 
       myReaction = target;
-      if (target === 'Like') likeCount++;
-      else dislikeCount++;
+      if (target === 'Dislike') dislikeCount++;
+      else likeCount++;
+
+      reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+      reactions.unshift({ user: currentAuthor, type: target, reactedAtUtc: new Date().toISOString() });
     }
 
-    return { ...item, likeCount, dislikeCount, myReaction };
+    return { ...item, likeCount, dislikeCount, myReaction, reactions };
   }
 
   // ---------------------------------------------------------------------------
@@ -741,7 +778,14 @@ export class CommunityService {
 
   readonly MAX_COMPANIONS = 500;
 
-  createJourneyPost(text: string, mood?: string, location?: string, placeId?: string, imageUrl?: string): JourneyPost {
+  createJourneyPost(
+    text: string,
+    mood?: string,
+    location?: string,
+    placeId?: string,
+    imageUrl?: string,
+    taggedCompanions?: AuthorInfo[],
+  ): JourneyPost {
     const user = this.currentUser();
     const profile = this.profile();
     const newPost: JourneyPost = {
@@ -761,6 +805,8 @@ export class CommunityService {
       isLiked: false,
       shareCount: 0,
       comments: [],
+      reactions: [],
+      taggedCompanions: taggedCompanions && taggedCompanions.length > 0 ? taggedCompanions : undefined,
       mood: mood || undefined,
       location: location || (profile?.cityName ? `${profile.cityName}, ${profile.countryName || ''}` : undefined),
       placeId: placeId || undefined,
@@ -810,6 +856,10 @@ export class CommunityService {
   }
 
   toggleJourneyLike(postId: number): void {
+    this.reactToJourneyPost(postId, 'Heart');
+  }
+
+  reactToJourneyPost(postId: number, reaction: ReactionType): void {
     const user = this.currentUser();
     const currentAuthor: AuthorInfo = {
       id: user?.id ?? 1,
@@ -823,17 +873,30 @@ export class CommunityService {
     this.journeyPosts.update((list) =>
       list.map((post) => {
         if (post.id === postId) {
-          const isLiked = !post.isLiked;
-          const likeCount = isLiked ? post.likeCount + 1 : Math.max(0, post.likeCount - 1);
-          let likers = post.likers ? [...post.likers] : [];
-          if (isLiked) {
-            if (!likers.some((l) => l.id === currentAuthor.id)) {
-              likers = [currentAuthor, ...likers];
-            }
+          let reactions: UserReaction[] = post.reactions ? [...post.reactions] : [];
+          const existing = reactions.find((r) => r.user.id === currentAuthor.id);
+          let myReaction: ReactionType | null = post.myReaction ?? null;
+          let isLiked = post.isLiked ?? false;
+          let likeCount = post.likeCount || 0;
+
+          if (existing && existing.type === reaction) {
+            // Toggle off
+            reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+            myReaction = null;
+            isLiked = false;
+            likeCount = Math.max(0, likeCount - 1);
           } else {
-            likers = likers.filter((l) => l.id !== currentAuthor.id);
+            reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+            reactions.unshift({ user: currentAuthor, type: reaction, reactedAtUtc: new Date().toISOString() });
+            if (!existing) {
+              likeCount++;
+            }
+            myReaction = reaction;
+            isLiked = reaction !== 'Dislike';
           }
-          return { ...post, isLiked, likeCount, likers };
+
+          const likers = reactions.map((r) => r.user);
+          return { ...post, reactions, myReaction, isLiked, likeCount, likers };
         }
         return post;
       }),
@@ -841,7 +904,13 @@ export class CommunityService {
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
   }
 
-  addJourneyComment(postId: number, text: string, parentCommentId?: number, imageUrl?: string): void {
+  addJourneyComment(
+    postId: number,
+    text: string,
+    parentCommentId?: number,
+    imageUrl?: string,
+    taggedCompanions?: AuthorInfo[],
+  ): void {
     const user = this.currentUser();
     const newComment: JourneyComment = {
       id: generateUniqueId(),
@@ -857,6 +926,7 @@ export class CommunityService {
       parentId: parentCommentId ?? null,
       likeCount: 0,
       isLiked: false,
+      reactions: [],
       replies: [],
     };
 
@@ -903,12 +973,24 @@ export class CommunityService {
   }
 
   toggleJourneyCommentLike(postId: number, commentId: number): void {
+    this.reactToJourneyComment(postId, commentId, 'Heart');
+  }
+
+  reactToJourneyComment(postId: number, commentId: number, reaction: ReactionType): void {
+    const user = this.currentUser();
+    const currentAuthor: AuthorInfo = {
+      id: user?.id ?? 1,
+      fullName: user?.fullName || 'Sophia Laurent',
+      profession: this.profile()?.profession || 'Member',
+      profilePhotoUrl: user?.profilePhotoUrl,
+    };
+
     this.journeyPosts.update((list) =>
       list.map((post) => {
         if (post.id === postId) {
           return {
             ...post,
-            comments: this.toggleNestedCommentLike(post.comments, commentId),
+            comments: this.applyCommentReactionRecursive(post.comments, commentId, reaction, currentAuthor),
           };
         }
         return post;
@@ -917,20 +999,42 @@ export class CommunityService {
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
   }
 
-  private toggleNestedCommentLike(
+  private applyCommentReactionRecursive(
     comments: JourneyComment[],
     targetId: number,
+    reaction: ReactionType,
+    currentAuthor: AuthorInfo,
   ): JourneyComment[] {
     return comments.map((c) => {
       if (c.id === targetId) {
-        const isLiked = !c.isLiked;
-        const likeCount = isLiked ? (c.likeCount || 0) + 1 : Math.max(0, (c.likeCount || 0) - 1);
-        return { ...c, isLiked, likeCount };
+        let reactions: UserReaction[] = c.reactions ? [...c.reactions] : [];
+        const existing = reactions.find((r) => r.user.id === currentAuthor.id);
+        let myReaction: ReactionType | null = c.myReaction ?? null;
+        let isLiked = c.isLiked ?? false;
+        let likeCount = c.likeCount || 0;
+
+        if (existing && existing.type === reaction) {
+          // Toggle off
+          reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+          myReaction = null;
+          isLiked = false;
+          likeCount = Math.max(0, likeCount - 1);
+        } else {
+          reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+          reactions.unshift({ user: currentAuthor, type: reaction, reactedAtUtc: new Date().toISOString() });
+          if (!existing) {
+            likeCount++;
+          }
+          myReaction = reaction;
+          isLiked = reaction !== 'Dislike';
+        }
+
+        return { ...c, reactions, myReaction, isLiked, likeCount };
       }
       if (c.replies && c.replies.length > 0) {
         return {
           ...c,
-          replies: this.toggleNestedCommentLike(c.replies, targetId),
+          replies: this.applyCommentReactionRecursive(c.replies, targetId, reaction, currentAuthor),
         };
       }
       return c;
@@ -1203,6 +1307,98 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   private initDefaultMember(): void {
+    const defaultAboutMeDetails: AboutMeDetails = {
+      intro:
+        'Visual storyteller & travel documentary creator roaming hidden valleys, vintage cafes, and mountain peaks.',
+      gender: 'Female',
+      dateOfBirth: '1996-04-18',
+      location: 'Paris, France',
+      hometown: 'Lyon, France',
+      relationshipStatus: 'Exploring solo',
+      languagesKnown: ['English', 'French', 'Italian', 'Spanish'],
+      workExperience: [
+        {
+          id: 1,
+          company: 'WanderLust Media Studio',
+          yearFrom: '2022',
+          yearTo: '',
+          currentlyWorkHere: true,
+          country: 'France',
+          city: 'Paris',
+          town: '1st Arrondissement',
+          description:
+            'Lead visual director producing AI-enhanced travel memoirs and landscape editorial series.',
+        },
+        {
+          id: 2,
+          company: 'Alpine Cinema Productions',
+          yearFrom: '2019',
+          yearTo: '2022',
+          currentlyWorkHere: false,
+          country: 'Switzerland',
+          city: 'Zurich',
+          town: 'Altstadt',
+          description:
+            'Assistant cinematographer capturing high-altitude mountaineering documentaries.',
+        },
+      ],
+      education: [
+        {
+          id: 1,
+          institutionName: 'Sorbonne University',
+          level: 'University',
+          courseOrDegree: 'Master of Fine Arts in Cinematography',
+          yearFrom: '2017',
+          yearTo: '2019',
+          currentlyStudying: false,
+        },
+        {
+          id: 2,
+          institutionName: 'Lycée Condorcet',
+          level: 'High School',
+          courseOrDegree: 'Literature & Visual Arts Diploma',
+          yearFrom: '2014',
+          yearTo: '2017',
+          currentlyStudying: false,
+        },
+        {
+          id: 3,
+          institutionName: 'École Primaire Victor Hugo',
+          level: 'Primary School',
+          courseOrDegree: 'Primary Education Certificate',
+          yearFrom: '2008',
+          yearTo: '2014',
+          currentlyStudying: false,
+        },
+      ],
+      hobbies: [
+        'Photography',
+        'Alpine Hiking',
+        'Coffee Brewing',
+        'Scuba Diving',
+        'Journaling',
+        'Vinyl Records',
+        'Skiing',
+      ],
+      interests: [
+        'Architecture',
+        'Historical Heritage',
+        'Sunset Chasing',
+        'Train Journeys',
+        'Street Food',
+        'Glacier Trails',
+      ],
+      contactEmail: 'sophia.laurent@neverbeen.example',
+      contactPhone: '+33 6 88 41 92 01',
+      socialLinks: [
+        { platform: 'Instagram', urlOrHandle: '@sophia.in.the.wild' },
+        { platform: 'Facebook', urlOrHandle: 'facebook.com/sophialaurent.travel' },
+        { platform: 'X', urlOrHandle: '@sophia_visuals' },
+      ],
+      aboutThePerson:
+        'I fell in love with storytelling while crossing the Swiss viaducts as a teenager. Today, I travel with a lightweight camera kit and an open heart, seeking authentic human connections, vibrant morning markets, and silent alpine dawns across Europe and beyond.',
+    };
+
     const defaultProfile: Profile = {
       id: 1,
       firstName: 'Sophia',
@@ -1234,6 +1430,7 @@ export class CommunityService {
       activeStatus: 'Active',
       customStatusText: '',
       isProfileLocked: false,
+      aboutMeDetails: defaultAboutMeDetails,
       settings: {
         emailNotificationsEnabled: true,
         phoneNotificationsEnabled: false,
@@ -1285,6 +1482,7 @@ export class CommunityService {
       activeStatus: 'Active',
       customStatusText: '',
       isProfileLocked: false,
+      aboutMeDetails: defaultAboutMeDetails,
     };
 
     this.token.set('jwt_default_active_token');
@@ -1298,6 +1496,28 @@ export class CommunityService {
     const saved = this.loadJson<CommunityComment[]>(COMMENTS_KEY);
     if (saved && saved.length > 0) return saved;
 
+    const marcoAuthor: AuthorInfo = {
+      id: 12,
+      fullName: 'Marco Rossi',
+      profession: 'Private Sector Professional',
+      profilePhotoUrl:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    };
+    const sophiaAuthor: AuthorInfo = {
+      id: 1,
+      fullName: 'Sophia Laurent',
+      profession: 'Content Creator',
+      profilePhotoUrl:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    };
+    const elenaAuthor: AuthorInfo = {
+      id: 33,
+      fullName: 'Elena Rostova',
+      profession: 'Travel Blogger',
+      profilePhotoUrl:
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+    };
+
     return [
       {
         id: 1,
@@ -1305,14 +1525,13 @@ export class CommunityService {
         createdAtUtc: '2026-09-21T06:12:00Z',
         likeCount: 8,
         dislikeCount: 0,
-        author: {
-          id: 12,
-          fullName: 'Marco Rossi',
-          profession: 'Private Sector Professional',
-          profilePhotoUrl:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-        },
-        myReaction: 'Like',
+        author: marcoAuthor,
+        myReaction: 'Heart',
+        reactions: [
+          { user: sophiaAuthor, type: 'Heart', reactedAtUtc: '2026-09-21T06:15:00Z' },
+          { user: elenaAuthor, type: 'Fire', reactedAtUtc: '2026-09-21T06:16:00Z' },
+          { user: marcoAuthor, type: 'Love', reactedAtUtc: '2026-09-21T06:18:00Z' },
+        ],
         replyCount: 2,
         replies: [
           {
@@ -1321,14 +1540,12 @@ export class CommunityService {
             createdAtUtc: '2026-09-21T06:45:00Z',
             likeCount: 4,
             dislikeCount: 0,
-            author: {
-              id: 1,
-              fullName: 'Sophia Laurent',
-              profession: 'Content Creator',
-              profilePhotoUrl:
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-            },
+            author: sophiaAuthor,
             myReaction: null,
+            reactions: [
+              { user: marcoAuthor, type: 'Love', reactedAtUtc: '2026-09-21T06:47:00Z' },
+              { user: elenaAuthor, type: 'Fire', reactedAtUtc: '2026-09-21T06:48:00Z' },
+            ],
             replyCount: 0,
             parentId: 1,
             replies: [],
@@ -1436,6 +1653,29 @@ export class CommunityService {
       },
     ];
 
+    const sophiaAuthor: AuthorInfo = {
+      id: 1,
+      fullName: 'Sophia Laurent',
+      profession: 'Content Creator',
+      profilePhotoUrl:
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    };
+
+    const seedReactions1: UserReaction[] = [
+      { user: sophiaAuthor, type: 'Heart', reactedAtUtc: '2026-09-21T09:35:00Z' },
+      { user: seedLikers[0], type: 'Fire', reactedAtUtc: '2026-09-21T09:36:00Z' },
+      { user: seedLikers[1], type: 'Love', reactedAtUtc: '2026-09-21T09:37:00Z' },
+      { user: seedLikers[2], type: 'Fire', reactedAtUtc: '2026-09-21T09:38:00Z' },
+      { user: seedLikers[3], type: 'Heart', reactedAtUtc: '2026-09-21T09:39:00Z' },
+      { user: seedLikers[4], type: 'Laugh', reactedAtUtc: '2026-09-21T09:40:00Z' },
+      { user: seedLikers[5], type: 'Clapping', reactedAtUtc: '2026-09-21T09:41:00Z' },
+      { user: seedLikers[6], type: 'Smile', reactedAtUtc: '2026-09-21T09:42:00Z' },
+      { user: seedLikers[7], type: 'Heart', reactedAtUtc: '2026-09-21T09:43:00Z' },
+      { user: seedLikers[8], type: 'Fire', reactedAtUtc: '2026-09-21T09:44:00Z' },
+      { user: seedLikers[9], type: 'Shocked', reactedAtUtc: '2026-09-21T09:45:00Z' },
+      { user: seedLikers[10], type: 'Love', reactedAtUtc: '2026-09-21T09:46:00Z' },
+    ];
+
     return [
       {
         id: 101,
@@ -1450,16 +1690,9 @@ export class CommunityService {
         createdAtUtc: '2026-09-21T09:30:00Z',
         likeCount: 19,
         isLiked: true,
-        likers: [
-          {
-            id: 1,
-            fullName: 'Sophia Laurent',
-            profession: 'Content Creator',
-            profilePhotoUrl:
-              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-          },
-          ...seedLikers,
-        ],
+        myReaction: 'Heart',
+        reactions: seedReactions1,
+        likers: [sophiaAuthor, ...seedLikers],
         location: 'Lake Como, Italy',
         mood: '🌿 Blissful',
         imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
@@ -1475,6 +1708,14 @@ export class CommunityService {
             },
             text: 'Head over to Cafe Varenna right by the ferry dock—best view of the lake and great macchiato!',
             createdAtUtc: '2026-09-21T09:48:00Z',
+            likeCount: 3,
+            isLiked: false,
+            myReaction: null,
+            reactions: [
+              { user: sophiaAuthor, type: 'Love', reactedAtUtc: '2026-09-21T09:50:00Z' },
+              { user: seedLikers[1], type: 'Fire', reactedAtUtc: '2026-09-21T09:51:00Z' },
+              { user: seedLikers[2], type: 'Heart', reactedAtUtc: '2026-09-21T09:52:00Z' },
+            ],
           },
         ],
       },
@@ -1492,6 +1733,8 @@ export class CommunityService {
         createdAtUtc: '2026-09-21T08:15:00Z',
         likeCount: 24,
         isLiked: false,
+        myReaction: null,
+        reactions: seedReactions1.slice(1, 9),
         likers: seedLikers,
         location: 'Positano, Italy',
         mood: '✨ Inspired',
@@ -1499,17 +1742,13 @@ export class CommunityService {
       },
       {
         id: 103,
-        author: {
-          id: 1,
-          fullName: 'Sophia Laurent',
-          profession: 'Content Creator',
-          profilePhotoUrl:
-            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-        },
+        author: sophiaAuthor,
         text: 'Preparing my autumn bucket list: Lauterbrunnen waterfalls, Zermatt alpine trails, and Kyoto maple foliage! Planning to publish a comprehensive photography journey for the NeverBeen community next week. What destination are you dreaming about right now? 🏔️🍁',
         createdAtUtc: '2026-09-20T18:20:00Z',
         likeCount: 31,
         isLiked: true,
+        myReaction: 'Heart',
+        reactions: seedReactions1,
         likers: seedLikers,
         location: 'Paris, France',
         mood: '✈️ Wanderlust',
@@ -1525,6 +1764,13 @@ export class CommunityService {
             },
             text: 'Lauterbrunnen in autumn is unbelievable Sophia! The valley mist creates natural depth in every portrait.',
             createdAtUtc: '2026-09-20T19:05:00Z',
+            likeCount: 2,
+            isLiked: true,
+            myReaction: 'Smile',
+            reactions: [
+              { user: sophiaAuthor, type: 'Smile', reactedAtUtc: '2026-09-20T19:10:00Z' },
+              { user: seedLikers[0], type: 'Heart', reactedAtUtc: '2026-09-20T19:12:00Z' },
+            ],
           },
         ],
       },
@@ -1541,6 +1787,8 @@ export class CommunityService {
         createdAtUtc: '2026-09-20T14:10:00Z',
         likeCount: 15,
         isLiked: false,
+        myReaction: null,
+        reactions: seedReactions1.slice(2, 6),
         likers: seedLikers,
         location: 'Tokyo, Japan',
         mood: '🏮 Serene',
@@ -1561,6 +1809,8 @@ export class CommunityService {
         createdAtUtc: '2026-09-21T10:00:00Z',
         likeCount: 42,
         isLiked: true,
+        myReaction: 'Heart',
+        reactions: seedReactions1,
         likers: seedLikers,
         location: 'St. Moritz, Switzerland',
         mood: '❄️ Scenic',
@@ -1572,6 +1822,143 @@ export class CommunityService {
   private loadCompanions(): Companion[] {
     const saved = this.loadJson<Companion[]>(COMPANIONS_KEY);
     if (saved && saved.length > 0) return saved;
+
+    const elenaAboutMe: AboutMeDetails = {
+      intro: 'Documenting scenic train routes and mountain lakes across Europe.',
+      gender: 'Female',
+      dateOfBirth: '1994-08-12',
+      location: 'Paris, France',
+      hometown: 'Nice, France',
+      relationshipStatus: 'In a relationship',
+      languagesKnown: ['French', 'English', 'German'],
+      workExperience: [
+        {
+          id: 11,
+          company: 'Voyage Panorama Publications',
+          yearFrom: '2020',
+          yearTo: '',
+          currentlyWorkHere: true,
+          country: 'France',
+          city: 'Paris',
+          town: 'Montmartre',
+          description: 'Senior travel columnist covering Swiss rail journeys and Alpine itineraries.',
+        },
+      ],
+      education: [
+        {
+          id: 21,
+          institutionName: 'Sciences Po Paris',
+          level: 'University',
+          courseOrDegree: 'Bachelor in Communication & Media',
+          yearFrom: '2012',
+          yearTo: '2016',
+          currentlyStudying: false,
+        },
+        {
+          id: 22,
+          institutionName: 'Lycée Masséna Nice',
+          level: 'High School',
+          courseOrDegree: 'Baccalauréat Littéraire',
+          yearFrom: '2009',
+          yearTo: '2012',
+          currentlyStudying: false,
+        },
+      ],
+      hobbies: ['Traveling', 'Journaling', 'Reading', 'Photography', 'Camping'],
+      interests: ['Train Journeys', 'Glacier Trails', 'Sunset Chasing', 'Wine Tasting', 'Local Markets'],
+      contactEmail: 'elena.rostova@travelers.example',
+      contactPhone: '+33 6 92 34 56 78',
+      socialLinks: [
+        { platform: 'Instagram', urlOrHandle: '@elena_on_rails' },
+        { platform: 'Facebook', urlOrHandle: 'facebook.com/elena.rostova.wander' },
+      ],
+      aboutThePerson:
+        'Passionate travel blogger exploring alpine vistas, hidden cafes, and train adventures across Central Europe. Sharing stories and photos with fellow NeverBeen wanderers!',
+    };
+
+    const marcoAboutMe: AboutMeDetails = {
+      intro: 'Rome-based architect studying historic coastal architecture and classical arches.',
+      gender: 'Male',
+      dateOfBirth: '1991-11-03',
+      location: 'Rome, Italy',
+      hometown: 'Naples, Italy',
+      relationshipStatus: 'Single',
+      languagesKnown: ['Italian', 'English'],
+      workExperience: [
+        {
+          id: 31,
+          company: 'Studio Architettura Roma',
+          yearFrom: '2018',
+          yearTo: '',
+          currentlyWorkHere: true,
+          country: 'Italy',
+          city: 'Rome',
+          town: 'Trastevere',
+          description: 'Principal architect specializing in seaside historic conservation.',
+        },
+      ],
+      education: [
+        {
+          id: 41,
+          institutionName: 'Sapienza University of Rome',
+          level: 'University',
+          courseOrDegree: 'Master of Architecture & Urban Design',
+          yearFrom: '2010',
+          yearTo: '2016',
+          currentlyStudying: false,
+        },
+      ],
+      hobbies: ['Urban Sketching', 'Photography', 'Coffee Brewing', 'Cycling'],
+      interests: ['Architecture', 'Historical Heritage', 'Art Galleries', 'Street Food'],
+      contactEmail: 'marco.rossi@architettura.example',
+      contactPhone: '+39 06 4991 0022',
+      socialLinks: [
+        { platform: 'Instagram', urlOrHandle: '@marco.arch.rome' },
+        { platform: 'X', urlOrHandle: '@marco_rossi_arch' },
+      ],
+      aboutThePerson:
+        'I travel to sketch and photograph timeless seaside structures along the Mediterranean cliffs. I believe buildings carry memory and soul.',
+    };
+
+    const mayaAboutMe: AboutMeDetails = {
+      intro: 'Minimalist traveler exploring heritage forts and colorful desert fairs.',
+      gender: 'Female',
+      dateOfBirth: '1995-03-24',
+      location: 'Mumbai, India',
+      hometown: 'Jaipur, India',
+      relationshipStatus: 'In a relationship',
+      languagesKnown: ['English', 'Hindi', 'Gujarati'],
+      workExperience: [
+        {
+          id: 51,
+          company: 'Desi Design Studio',
+          yearFrom: '2021',
+          yearTo: '',
+          currentlyWorkHere: true,
+          country: 'India',
+          city: 'Mumbai',
+          town: 'Bandra',
+          description: 'Lead UX designer.',
+        },
+      ],
+      education: [
+        {
+          id: 61,
+          institutionName: 'National Institute of Design',
+          level: 'University',
+          courseOrDegree: 'Bachelor of Design',
+          yearFrom: '2013',
+          yearTo: '2017',
+          currentlyStudying: false,
+        },
+      ],
+      hobbies: ['Painting', 'Photography', 'Yoga'],
+      interests: ['Historical Heritage', 'Art Galleries', 'Cultural Festivals'],
+      contactEmail: 'maya.patel@design.example',
+      contactPhone: '+91 98200 12345',
+      socialLinks: [{ platform: 'Instagram', urlOrHandle: '@maya_pixels' }],
+      aboutThePerson: 'Passionate about Indian architectural heritage and minimalist travel essentials.',
+    };
 
     return [
       {
@@ -1592,6 +1979,7 @@ export class CommunityService {
         bio: 'Documenting scenic train routes and mountain lakes across Europe.',
         aboutMe:
           'Passionate travel blogger exploring alpine vistas, hidden cafes, and train adventures across Central Europe. Sharing stories and photos with fellow NeverBeen wanderers!',
+        aboutMeDetails: elenaAboutMe,
         gallery: [
           {
             id: 331,
@@ -1625,6 +2013,7 @@ export class CommunityService {
         bio: 'Architectural photographer with a focus on historical Italian coastlines.',
         aboutMe:
           'Rome-based architect studying historic coastal architecture and classical arches. I travel to sketch and photograph timeless seaside structures.',
+        aboutMeDetails: marcoAboutMe,
         gallery: [
           {
             id: 121,
@@ -1713,6 +2102,7 @@ export class CommunityService {
         bio: 'Minimalist traveler exploring heritage forts and colorful desert fairs.',
         aboutMe:
           'Passionate about Indian architectural heritage, colorful textiles, and minimalist travel essentials.',
+        aboutMeDetails: mayaAboutMe,
         gallery: [
           {
             id: 711,

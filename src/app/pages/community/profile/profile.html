@@ -121,14 +121,23 @@
 
         <!-- User Basic Details (COVER PHOTO & DOUBLE SIZE PROFILE PHOTO) -->
         <div class="user-card-summary">
-          <!-- User Cover Photo (Requirement C) -->
-          <div class="user-cover-box">
+          <!-- User Cover Photo (Requirement B: hold to enlarge) -->
+          <div
+            class="user-cover-box clickable-cover"
+            (mousedown)="startCoverHold(service.profile()?.coverPhotoUrl || defaultCoverPhoto, service.profile()?.fullName)"
+            (mouseup)="endCoverHold()"
+            (mouseleave)="endCoverHold()"
+            (touchstart)="startCoverHold(service.profile()?.coverPhotoUrl || defaultCoverPhoto, service.profile()?.fullName)"
+            (touchend)="endCoverHold()"
+            (dblclick)="openEnlargedCover(service.profile()?.coverPhotoUrl || defaultCoverPhoto, service.profile()?.fullName)"
+            title="Press and hold to enlarge cover photo"
+          >
             <img
               [src]="service.profile()?.coverPhotoUrl || defaultCoverPhoto"
               alt="Cover Photo"
               class="user-cover-img"
             />
-            <label class="btn-change-cover-badge" for="userCoverUploadInput" title="Update Cover Photo (Max 100 KB)">
+            <label class="btn-change-cover-badge" for="userCoverUploadInput" title="Update Cover Photo (Max 100 KB)" (click)="$event.stopPropagation()">
               <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="currentColor">
                 <path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-1.5c0-2.33-4.67-3.5-7-3.5z"/>
               </svg>
@@ -460,12 +469,25 @@
                 class="composer-textarea"
               ></textarea>
 
-              <!-- COMPOSER ACCESSORIES: Photo, Mood & Destination (Requirement A & B) -->
+              <!-- COMPOSER ACCESSORIES: Photo, Tag, Mood & Destination (Requirement A, B, C) -->
               <div class="composer-accessory-row">
                 <label class="btn-tool-photo-label" title="Attach picture (Max 100 KB)">
                   📷 Add Photo (Max 100 KB)
                   <input type="file" accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
                 </label>
+
+                <!-- REQUIREMENT C: Tag People button -->
+                <button
+                  type="button"
+                  class="btn-tool-tag"
+                  (click)="openTagPeopleModal('journey')"
+                  title="Tag companions in this post"
+                >
+                  🏷️ Tag People
+                  @if (selectedJourneyTaggedCompanions().length > 0) {
+                    <span class="tag-count-bubble">({{ selectedJourneyTaggedCompanions().length }})</span>
+                  }
+                </button>
 
                 <div class="accessory-item">
                   <span class="accessory-lbl">Travel Mood:</span>
@@ -532,6 +554,19 @@
                 </div>
               </div>
 
+              <!-- Tagged companions chips preview (Requirement C) -->
+              @if (selectedJourneyTaggedCompanions().length > 0) {
+                <div class="tagged-chips-strip">
+                  <span class="tagged-chips-label">With:</span>
+                  @for (tagged of selectedJourneyTaggedCompanions(); track tagged.id) {
+                    <span class="tagged-chip">
+                      {{ tagged.fullName }}
+                      <button type="button" class="btn-remove-tagged" (click)="removeTaggedCompanion(tagged.id, 'journey')" title="Remove">✕</button>
+                    </span>
+                  }
+                </div>
+              }
+
               <!-- Journey Photo Attachment Preview (Requirement A) -->
               @if (journeyPhotoPreview()) {
                 <div class="composer-photo-preview-wrap">
@@ -584,6 +619,13 @@
                         <strong class="author-name clickable-user" (click)="openVisitorProfile(post.author)">
                           {{ post.author.fullName }}
                         </strong>
+                        <!-- REQUIREMENT C: post displays as user is with those tagged people -->
+                        @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
+                          <span class="tagged-with-text"> is with </span>
+                          @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
+                            <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
+                          }
+                        }
                         @if (post.isShared && post.originalPost) {
                           <span class="shared-indicator-text">
                             shared
@@ -658,15 +700,40 @@
                     </div>
                   }
 
-                  <!-- Post Engagement Summary (Requirement A: Click/hold opens likers modal) -->
+                  <!-- REQUIREMENT A: Post Engagement Summary (Top 3 icons beside post, Top 1 icon instead of number of likes, hold opens breakdown modal) -->
                   <div class="post-engagement-counts">
-                    <span
-                      class="like-counter clickable-counter"
-                      (click)="openLikersModal(post)"
-                      title="Click or hold Like button to see who liked this"
-                    >
-                      ❤️ {{ post.likeCount }} {{ post.likeCount === 1 ? 'like' : 'likes' }}
-                    </span>
+                    <div class="engagement-reactions-left">
+                      <!-- Instead of number of likes, show the top 1 icon -->
+                      <span
+                        class="top-1-icon-display clickable-reaction-pill"
+                        (mousedown)="startReactionsSummaryHold(post, 'post')"
+                        (mouseup)="endReactionsSummaryHold()"
+                        (touchstart)="startReactionsSummaryHold(post, 'post')"
+                        (touchend)="endReactionsSummaryHold()"
+                        (click)="openReactionsBreakdownModal(post, 'post')"
+                        title="Hold or click to see who reacted"
+                      >
+                        <span class="top-glyph">{{ getTop1ReactionIcon(post) }}</span>
+                      </span>
+
+                      <!-- Beside the post: show at most top 3 icons -->
+                      @if (getTop3ReactionIcons(post).length > 0) {
+                        <div
+                          class="top-3-icons-cluster clickable-reactions-cluster"
+                          (mousedown)="startReactionsSummaryHold(post, 'post')"
+                          (mouseup)="endReactionsSummaryHold()"
+                          (touchstart)="startReactionsSummaryHold(post, 'post')"
+                          (touchend)="endReactionsSummaryHold()"
+                          (click)="openReactionsBreakdownModal(post, 'post')"
+                          title="Hold or click to see reactions breakdown"
+                        >
+                          @for (icon of getTop3ReactionIcons(post); track icon) {
+                            <span class="reaction-emoji-badge">{{ icon }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+
                     <div class="engagement-right">
                       <span class="comment-counter">
                         {{ post.comments.length }} {{ post.comments.length === 1 ? 'comment' : 'comments' }}
@@ -677,25 +744,42 @@
                     </div>
                   </div>
 
-                  <!-- Post Action Bar (Like, Comment, Share with Press-and-Hold on Like) -->
+                  <!-- Post Action Bar (Like, Comment, Share with Press-and-Hold on Like for 11 reactions) -->
                   <div class="post-actions-row">
-                    <button
-                      type="button"
-                      class="post-action-btn"
-                      [class.liked]="post.isLiked"
-                      (mousedown)="startLikePress(post)"
-                      (mouseup)="endLikePress()"
-                      (mouseleave)="endLikePress()"
-                      (touchstart)="startLikePress(post)"
-                      (touchend)="endLikePress()"
-                      (click)="handleLikeClick(post)"
-                      title="Press and hold to see who liked"
-                    >
-                      <svg viewBox="0 0 24 24" class="action-svg" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                      </svg>
-                      <span>{{ post.isLiked ? 'Liked' : 'Like' }}</span>
-                    </button>
+                    <div class="post-like-action-wrap">
+                      <button
+                        type="button"
+                        class="post-action-btn btn-like-react"
+                        [class.liked]="post.isLiked"
+                        (mousedown)="startLikeButtonHold(post.id, 'post')"
+                        (mouseup)="endLikeButtonHold()"
+                        (mouseleave)="endLikeButtonHold()"
+                        (touchstart)="startLikeButtonHold(post.id, 'post')"
+                        (touchend)="endLikeButtonHold()"
+                        (click)="handleLikeClick(post)"
+                        title="Click to like, hold for 11 reactions"
+                      >
+                        <span class="like-btn-glyph">{{ post.myReaction ? reactionIconsMap[post.myReaction] : '🤍' }}</span>
+                        <span>{{ post.myReaction || (post.isLiked ? 'Liked' : 'Like') }}</span>
+                      </button>
+
+                      <!-- 11 reactions popover on holding like button -->
+                      @if (showReactionPickerForTarget()?.id === post.id && showReactionPickerForTarget()?.type === 'post') {
+                        <div class="reactions-popover-card" (click)="$event.stopPropagation()">
+                          @for (reaction of holdReactionOptions; track reaction) {
+                            <button
+                              type="button"
+                              class="reaction-btn-item"
+                              (click)="selectHoldReaction(post.id, 'post', reaction)"
+                              [title]="reaction"
+                            >
+                              <span class="reaction-emoji">{{ reactionIconsMap[reaction] }}</span>
+                              <span class="reaction-name">{{ reaction }}</span>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
 
                     <button
                       type="button"
@@ -777,6 +861,8 @@
                             [currentUserId]="service.currentUser()?.id"
                             (reply)="handleCommentThreadReply($event)"
                             (like)="handleCommentThreadLike($event)"
+                            (react)="handleCommentThreadReact($event)"
+                            (showReactionsModal)="handleCommentThreadShowReactions($event)"
                             (openUser)="openVisitorProfile($event)"
                             (reportAbuse)="openReportAbuseModal('comment', $event.commentId, $event.author, $event.text)"
                           ></app-comment-thread>
@@ -793,18 +879,27 @@
         }
 
         <!-- ================================================================= -->
-        <!-- SECTION 2: ABOUT ME                                               -->
+        <!-- SECTION 2: ABOUT ME (Requirement D: 8 Detailed Sub-sections)        -->
         <!-- ================================================================= -->
         @if (activeSection() === 'about') {
           <section class="section-pane about-pane">
-            <!-- User Cover Banner in About Me (Requirement C) -->
-            <div class="about-cover-banner">
+            <!-- User Cover Banner in About Me (Requirement B: hold to enlarge) -->
+            <div
+              class="about-cover-banner clickable-cover"
+              (mousedown)="startCoverHold(service.profile()?.coverPhotoUrl || defaultCoverPhoto, service.profile()?.fullName)"
+              (mouseup)="endCoverHold()"
+              (mouseleave)="endCoverHold()"
+              (touchstart)="startCoverHold(service.profile()?.coverPhotoUrl || defaultCoverPhoto, service.profile()?.fullName)"
+              (touchend)="endCoverHold()"
+              (dblclick)="openEnlargedCover(service.profile()?.coverPhotoUrl || defaultCoverPhoto, service.profile()?.fullName)"
+              title="Press and hold to enlarge cover photo"
+            >
               <img
                 [src]="service.profile()?.coverPhotoUrl || defaultCoverPhoto"
                 alt="Cover photo"
                 class="about-cover-img"
               />
-              <label class="btn-edit-cover-pill" for="aboutCoverUploadInput" title="Update Cover Photo (Max 100 KB)">
+              <label class="btn-edit-cover-pill" for="aboutCoverUploadInput" title="Update Cover Photo (Max 100 KB)" (click)="$event.stopPropagation()">
                 📷 Edit Cover Photo
               </label>
               <input
@@ -818,74 +913,550 @@
 
             <header class="section-top-bar">
               <h1 class="section-title">About Me</h1>
-              <button
-                type="button"
-                class="btn-secondary-action"
-                (click)="editingDetails() ? cancelEdit() : enableEdit()"
-              >
-                {{ editingDetails() ? 'Cancel Edit' : 'Edit Profile' }}
-              </button>
+              <div class="top-bar-actions">
+                @if (editingAboutMe()) {
+                  <button type="button" class="btn-primary-action" (click)="saveAboutMeDetails()">
+                    💾 Save Changes
+                  </button>
+                  <button type="button" class="btn-secondary-action" (click)="toggleEditAboutMe()">
+                    Cancel
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn-primary-action btn-edit-toggle"
+                    (click)="toggleEditAboutMe()"
+                  >
+                    ✏️ Edit About Me
+                  </button>
+                }
+              </div>
             </header>
 
-            @if (editingDetails()) {
-              <!-- Edit Details Form -->
-              <form [formGroup]="editForm" (ngSubmit)="saveDetails()" class="edit-profile-card">
-                <div class="form-grid-2">
+            <!-- EDIT MODE: Interactive editors for all 8 sub-sections -->
+            @if (editingAboutMe()) {
+              <div class="about-edit-container">
+                <!-- 1. Intro -->
+                <div class="edit-subcard">
+                  <h3 class="edit-subhead">1. Intro</h3>
                   <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" formControlName="fullName" class="form-control" />
-                  </div>
-                  <div class="form-group">
-                    <label>Profession</label>
-                    <input type="text" formControlName="profession" class="form-control" />
-                  </div>
-                  <div class="form-group">
-                    <label>City</label>
-                    <input type="text" formControlName="city" class="form-control" />
-                  </div>
-                  <div class="form-group">
-                    <label>Country</label>
-                    <input type="text" formControlName="country" class="form-control" />
+                    <label>Short Introduction / Catchphrase</label>
+                    <textarea
+                      [(ngModel)]="aboutIntro"
+                      rows="2"
+                      class="form-control"
+                      placeholder="Introduce yourself briefly..."
+                    ></textarea>
                   </div>
                 </div>
 
-                <div class="form-group">
-                  <label>About Me / Bio</label>
-                  <textarea formControlName="aboutMe" rows="4" class="form-control"></textarea>
+                <!-- 2. Personal Details -->
+                <div class="edit-subcard">
+                  <h3 class="edit-subhead">2. Personal Details</h3>
+                  <div class="form-grid-3">
+                    <div class="form-group">
+                      <label>Gender</label>
+                      <select [(ngModel)]="aboutGender" class="form-control">
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Non-Binary">Non-Binary</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Date of Birth</label>
+                      <input
+                        type="date"
+                        [(ngModel)]="aboutDob"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>Relationship Status</label>
+                      <select [(ngModel)]="aboutRelationshipStatus" class="form-control">
+                        <option value="Single">Single</option>
+                        <option value="In a relationship">In a relationship</option>
+                        <option value="Married">Married</option>
+                        <option value="Engaged">Engaged</option>
+                        <option value="It's complicated">It's complicated</option>
+                        <option value="Exploring solo">Exploring solo</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-grid-2">
+                    <div class="form-group">
+                      <label>Current Location</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="aboutLocation"
+                        placeholder="e.g. Paris, France"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>Hometown</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="aboutHometown"
+                        placeholder="e.g. Lyon, France"
+                        class="form-control"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Languages Known</label>
+                    <div class="tags-adder-row">
+                      <input
+                        type="text"
+                        [(ngModel)]="newLanguageInput"
+                        (keydown.enter)="addLanguage()"
+                        placeholder="Type language and press Enter or Add..."
+                        class="form-control"
+                      />
+                      <button type="button" class="btn-secondary-action btn-sm" (click)="addLanguage()">+ Add</button>
+                    </div>
+                    <div class="tags-chips-list">
+                      @for (lang of aboutLanguages(); track lang; let idx = $index) {
+                        <span class="edit-chip">
+                          {{ lang }}
+                          <button type="button" class="btn-del-chip" (click)="removeLanguage(idx)">✕</button>
+                        </span>
+                      }
+                    </div>
+                  </div>
                 </div>
 
-                <div class="form-actions-row">
-                  <button type="button" class="btn-secondary-action" (click)="cancelEdit()">Cancel</button>
-                  <button type="submit" class="btn-primary-action" [disabled]="editForm.invalid">Save Changes</button>
+                <!-- 3. Work Experience -->
+                <div class="edit-subcard">
+                  <div class="subcard-header-row">
+                    <h3 class="edit-subhead">3. Work (Detailed Work Experience)</h3>
+                    <button type="button" class="btn-secondary-action btn-sm" (click)="addWorkExperience()">+ Add Experience</button>
+                  </div>
+                  @for (work of aboutWorkExperiences(); track $index; let idx = $index) {
+                    <div class="item-editor-box">
+                      <div class="item-editor-top">
+                        <strong>Role / Experience #{{ idx + 1 }}</strong>
+                        <button type="button" class="btn-del-item" (click)="removeWorkExperience(idx)" title="Remove experience">✕ Delete</button>
+                      </div>
+                      <div class="form-grid-3">
+                        <div class="form-group">
+                          <label>Company *</label>
+                          <input type="text" [(ngModel)]="work.company" class="form-control" placeholder="Company Name" />
+                        </div>
+                        <div class="form-group">
+                          <label>Year From</label>
+                          <input type="text" [(ngModel)]="work.yearFrom" class="form-control" placeholder="e.g. 2021" />
+                        </div>
+                        <div class="form-group">
+                          <label>Year To</label>
+                          <input type="text" [(ngModel)]="work.yearTo" [disabled]="work.currentlyWorkHere" class="form-control" placeholder="e.g. 2024" />
+                        </div>
+                      </div>
+
+                      <div class="checkbox-field-wrap">
+                        <label class="custom-chk-label">
+                          <input type="checkbox" [(ngModel)]="work.currentlyWorkHere" />
+                          <span>Currently work here</span>
+                        </label>
+                      </div>
+
+                      <div class="form-grid-3">
+                        <div class="form-group">
+                          <label>Country</label>
+                          <input type="text" [(ngModel)]="work.country" class="form-control" placeholder="Country" />
+                        </div>
+                        <div class="form-group">
+                          <label>City</label>
+                          <input type="text" [(ngModel)]="work.city" class="form-control" placeholder="City" />
+                        </div>
+                        <div class="form-group">
+                          <label>Town</label>
+                          <input type="text" [(ngModel)]="work.town" class="form-control" placeholder="Town (optional)" />
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Description</label>
+                        <textarea [(ngModel)]="work.description" rows="2" class="form-control" placeholder="Key responsibilities and achievements..."></textarea>
+                      </div>
+                    </div>
+                  }
                 </div>
-              </form>
+
+                <!-- 4. Education -->
+                <div class="edit-subcard">
+                  <div class="subcard-header-row">
+                    <h3 class="edit-subhead">4. Education</h3>
+                    <button type="button" class="btn-secondary-action btn-sm" (click)="addEducation()">+ Add Education</button>
+                  </div>
+                  @for (edu of aboutEducation(); track $index; let idx = $index) {
+                    <div class="item-editor-box">
+                      <div class="item-editor-top">
+                        <strong>Education Record #{{ idx + 1 }}</strong>
+                        <button type="button" class="btn-del-item" (click)="removeEducation(idx)" title="Remove record">✕ Delete</button>
+                      </div>
+                      <div class="form-grid-3">
+                        <div class="form-group">
+                          <label>Level</label>
+                          <select [(ngModel)]="edu.level" class="form-control">
+                            <option value="University">University</option>
+                            <option value="High School">High School</option>
+                            <option value="Primary School">Primary School</option>
+                          </select>
+                        </div>
+                        <div class="form-group">
+                          <label>School / University Name</label>
+                          <input type="text" [(ngModel)]="edu.institutionName" class="form-control" placeholder="Institution Name" />
+                        </div>
+                        <div class="form-group">
+                          <label>Course / Major</label>
+                          <input type="text" [(ngModel)]="edu.courseOrDegree" class="form-control" placeholder="Degree / Course" />
+                        </div>
+                      </div>
+
+                      <div class="form-grid-2">
+                        <div class="form-group">
+                          <label>Year From</label>
+                          <input type="text" [(ngModel)]="edu.yearFrom" class="form-control" placeholder="e.g. 2017" />
+                        </div>
+                        <div class="form-group">
+                          <label>Year To</label>
+                          <input type="text" [(ngModel)]="edu.yearTo" [disabled]="edu.currentlyStudying" class="form-control" placeholder="e.g. 2021" />
+                        </div>
+                      </div>
+
+                      <div class="checkbox-field-wrap">
+                        <label class="custom-chk-label">
+                          <input type="checkbox" [(ngModel)]="edu.currentlyStudying" />
+                          <span>Currently studying here</span>
+                        </label>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- 5. Hobbies (Up to 10 from dropdown) -->
+                <div class="edit-subcard">
+                  <div class="subcard-header-row">
+                    <h3 class="edit-subhead">5. Hobbies ({{ aboutHobbies().length }}/10)</h3>
+                    <span class="max-badge">Max 10 Hobbies</span>
+                  </div>
+                  @if (hobbyNotice()) {
+                    <div class="notice-msg">⚠️ {{ hobbyNotice() }}</div>
+                  }
+                  <div class="dropdown-adder-row">
+                    <select
+                      [(ngModel)]="newHobbySelect"
+                      class="form-control select-dropdown-pill"
+                      [disabled]="aboutHobbies().length >= 10"
+                    >
+                      <option value="">-- Select a hobby to add --</option>
+                      @for (h of availableHobbies; track h) {
+                        <option [value]="h" [disabled]="aboutHobbies().includes(h)">{{ h }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="btn-primary-action btn-sm"
+                      [disabled]="!newHobbySelect || aboutHobbies().length >= 10"
+                      (click)="addHobby()"
+                    >
+                      + Add Hobby
+                    </button>
+                  </div>
+                  <div class="tags-chips-list">
+                    @for (hobby of aboutHobbies(); track hobby; let idx = $index) {
+                      <span class="edit-chip hobby-chip">
+                        {{ hobby }}
+                        <button type="button" class="btn-del-chip" (click)="removeHobby(idx)">✕</button>
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- 6. Interests (Up to 10 from dropdown) -->
+                <div class="edit-subcard">
+                  <div class="subcard-header-row">
+                    <h3 class="edit-subhead">6. Interests ({{ aboutInterests().length }}/10)</h3>
+                    <span class="max-badge">Max 10 Interests</span>
+                  </div>
+                  @if (interestNotice()) {
+                    <div class="notice-msg">⚠️ {{ interestNotice() }}</div>
+                  }
+                  <div class="dropdown-adder-row">
+                    <select
+                      [(ngModel)]="newInterestSelect"
+                      class="form-control select-dropdown-pill"
+                      [disabled]="aboutInterests().length >= 10"
+                    >
+                      <option value="">-- Select an interest to add --</option>
+                      @for (item of availableInterests; track item) {
+                        <option [value]="item" [disabled]="aboutInterests().includes(item)">{{ item }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="btn-primary-action btn-sm"
+                      [disabled]="!newInterestSelect || aboutInterests().length >= 10"
+                      (click)="addInterest()"
+                    >
+                      + Add Interest
+                    </button>
+                  </div>
+                  <div class="tags-chips-list">
+                    @for (interest of aboutInterests(); track interest; let idx = $index) {
+                      <span class="edit-chip interest-chip">
+                        {{ interest }}
+                        <button type="button" class="btn-del-chip" (click)="removeInterest(idx)">✕</button>
+                      </span>
+                    }
+                  </div>
+                </div>
+
+                <!-- 7. Contact Info (Email, Phone, up to 3 links each for FB, IG, X) -->
+                <div class="edit-subcard">
+                  <div class="subcard-header-row">
+                    <h3 class="edit-subhead">7. Contact Info</h3>
+                    <button
+                      type="button"
+                      class="btn-secondary-action btn-sm"
+                      [disabled]="aboutSocialLinks().length >= 3"
+                      (click)="addSocialLink()"
+                    >
+                      + Add Social Link (Max 3)
+                    </button>
+                  </div>
+                  @if (socialLinkNotice()) {
+                    <div class="notice-msg">⚠️ {{ socialLinkNotice() }}</div>
+                  }
+                  <div class="form-grid-2">
+                    <div class="form-group">
+                      <label>Email Address</label>
+                      <input
+                        type="email"
+                        [(ngModel)]="aboutContactEmail"
+                        class="form-control"
+                        placeholder="youremail@example.com"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label>Phone Number</label>
+                      <input
+                        type="tel"
+                        [(ngModel)]="aboutContactPhone"
+                        class="form-control"
+                        placeholder="+33 6 12 34 56 78"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="social-links-list">
+                    @for (social of aboutSocialLinks(); track $index; let idx = $index) {
+                      <div class="social-link-editor-row">
+                        <select [(ngModel)]="social.platform" class="form-control select-platform">
+                          <option value="Facebook">Facebook</option>
+                          <option value="Instagram">Instagram</option>
+                          <option value="X">X (Twitter)</option>
+                        </select>
+                        <input
+                          type="text"
+                          [(ngModel)]="social.urlOrHandle"
+                          placeholder="Profile URL or @handle"
+                          class="form-control"
+                        />
+                        <button type="button" class="btn-del-social" (click)="removeSocialLink(idx)">✕</button>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- 8. About the Person -->
+                <div class="edit-subcard">
+                  <h3 class="edit-subhead">8. About the Person</h3>
+                  <div class="form-group">
+                    <label>In-depth Personal Story &amp; Philosophy</label>
+                    <textarea
+                      [(ngModel)]="aboutThePersonText"
+                      rows="4"
+                      class="form-control"
+                      placeholder="Write your extended story, values, travel ethos, and worldview..."
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div class="about-edit-footer">
+                  <button type="button" class="btn-primary-action btn-lg" (click)="saveAboutMeDetails()">
+                    💾 Save All About Me Details
+                  </button>
+                  <button type="button" class="btn-secondary-action btn-lg" (click)="toggleEditAboutMe()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
             } @else {
-              <!-- Read-only About Details -->
-              <div class="about-overview-card">
-                <div class="bio-block">
-                  <h3 class="bio-title">Biography</h3>
-                  <p class="bio-text">
-                    {{ service.profile()?.aboutMe || 'No biography written yet.' }}
-                  </p>
+              <!-- READ-ONLY VIEW: All 8 sub-sections displayed cleanly -->
+              <div class="about-sections-wrapper">
+                <!-- 1. Intro -->
+                <div class="about-card-section intro-card">
+                  <h3 class="card-section-title"><span class="title-glyph">✨</span> 1. Intro</h3>
+                  <p class="about-intro-highlight">{{ aboutIntro || 'Passionate traveler discovering global cultures and AI travel memories.' }}</p>
                 </div>
 
-                <div class="info-meta-grid">
-                  <div class="meta-item">
-                    <span class="meta-label">Profession</span>
-                    <strong class="meta-val">{{ service.profile()?.profession || 'Travel Creator' }}</strong>
+                <!-- 2. Personal Details -->
+                <div class="about-card-section personal-details-card">
+                  <h3 class="card-section-title"><span class="title-glyph">👤</span> 2. Personal Details</h3>
+                  <div class="personal-details-grid">
+                    <div class="personal-field-box">
+                      <span class="field-label">Gender</span>
+                      <strong class="field-val">{{ aboutGender || 'Female' }}</strong>
+                    </div>
+                    <div class="personal-field-box">
+                      <span class="field-label">Date of Birth</span>
+                      <strong class="field-val">{{ aboutDob || '1996-04-18' }}</strong>
+                    </div>
+                    <div class="personal-field-box">
+                      <span class="field-label">Current Location</span>
+                      <strong class="field-val">{{ aboutLocation || 'Paris, France' }}</strong>
+                    </div>
+                    <div class="personal-field-box">
+                      <span class="field-label">Hometown</span>
+                      <strong class="field-val">{{ aboutHometown || 'Lyon, France' }}</strong>
+                    </div>
+                    <div class="personal-field-box">
+                      <span class="field-label">Relationship Status</span>
+                      <strong class="field-val">{{ aboutRelationshipStatus || 'Exploring solo' }}</strong>
+                    </div>
+                    <div class="personal-field-box languages-field-box">
+                      <span class="field-label">Languages Known</span>
+                      <div class="lang-chips-cloud">
+                        @for (lang of aboutLanguages(); track lang) {
+                          <span class="language-pill">{{ lang }}</span>
+                        }
+                      </div>
+                    </div>
                   </div>
-                  <div class="meta-item">
-                    <span class="meta-label">Location</span>
-                    <strong class="meta-val">{{ service.profile()?.cityName || 'Paris' }}, {{ service.profile()?.countryName || 'France' }}</strong>
+                </div>
+
+                <!-- 3. Work (Detailed Work Experience) -->
+                <div class="about-card-section work-card">
+                  <h3 class="card-section-title"><span class="title-glyph">💼</span> 3. Work Experience</h3>
+                  <div class="work-exp-list">
+                    @for (work of aboutWorkExperiences(); track $index) {
+                      <div class="work-entry-card">
+                        <div class="work-entry-header">
+                          <strong class="work-company-name">{{ work.company }}</strong>
+                          <span class="work-timeline-badge">
+                            {{ work.yearFrom }} – {{ work.currentlyWorkHere ? 'Present' : work.yearTo }}
+                            @if (work.currentlyWorkHere) {
+                              <span class="current-work-pill">Currently Working</span>
+                            }
+                          </span>
+                        </div>
+                        <div class="work-location-line">
+                          📍 {{ work.city }}{{ work.town ? ', ' + work.town : '' }}, {{ work.country }}
+                        </div>
+                        @if (work.description) {
+                          <p class="work-description-text">{{ work.description }}</p>
+                        }
+                      </div>
+                    } @empty {
+                      <p class="empty-section-notice">No work experience listed yet.</p>
+                    }
                   </div>
-                  <div class="meta-item">
-                    <span class="meta-label">Member Since</span>
-                    <strong class="meta-val">August 2026</strong>
+                </div>
+
+                <!-- 4. Education -->
+                <div class="about-card-section education-card">
+                  <h3 class="card-section-title"><span class="title-glyph">🎓</span> 4. Education</h3>
+                  <div class="edu-records-list">
+                    @for (edu of aboutEducation(); track $index) {
+                      <div class="edu-entry-card">
+                        <div class="edu-entry-header">
+                          <div class="edu-meta-left">
+                            <span class="school-type-tag" [ngClass]="edu.level.toLowerCase().replace(' ', '-')">{{ edu.level }}</span>
+                            <strong class="school-name">{{ edu.institutionName }}</strong>
+                          </div>
+                          <span class="edu-timeline-badge">
+                            {{ edu.yearFrom }} – {{ edu.currentlyStudying ? 'Studying' : edu.yearTo }}
+                          </span>
+                        </div>
+                        <div class="edu-course-line">Course / Field: <strong>{{ edu.courseOrDegree }}</strong></div>
+                      </div>
+                    } @empty {
+                      <p class="empty-section-notice">No education history listed yet.</p>
+                    }
                   </div>
-                  <div class="meta-item">
-                    <span class="meta-label">Companions</span>
-                    <strong class="meta-val">{{ connectedCompanionsCount() }} Connected</strong>
+                </div>
+
+                <!-- 5. Hobbies (up to 10) -->
+                <div class="about-card-section hobbies-card">
+                  <div class="card-title-row">
+                    <h3 class="card-section-title"><span class="title-glyph">🎨</span> 5. Hobbies</h3>
+                    <span class="count-tag-pill">{{ aboutHobbies().length }}/10</span>
                   </div>
+                  <div class="chips-flex-wrap">
+                    @for (hobby of aboutHobbies(); track hobby) {
+                      <span class="attribute-pill hobby-pill">🎨 {{ hobby }}</span>
+                    } @empty {
+                      <p class="empty-section-notice">No hobbies added yet.</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- 6. Interests (up to 10) -->
+                <div class="about-card-section interests-card">
+                  <div class="card-title-row">
+                    <h3 class="card-section-title"><span class="title-glyph">🧭</span> 6. Interests</h3>
+                    <span class="count-tag-pill">{{ aboutInterests().length }}/10</span>
+                  </div>
+                  <div class="chips-flex-wrap">
+                    @for (interest of aboutInterests(); track interest) {
+                      <span class="attribute-pill interest-pill">🧭 {{ interest }}</span>
+                    } @empty {
+                      <p class="empty-section-notice">No interests added yet.</p>
+                    }
+                  </div>
+                </div>
+
+                <!-- 7. Contact Info -->
+                <div class="about-card-section contact-card">
+                  <h3 class="card-section-title"><span class="title-glyph">📞</span> 7. Contact Info</h3>
+                  <div class="contact-info-block">
+                    <div class="contact-direct-row">
+                      <div class="contact-box">
+                        <span class="contact-lbl">✉️ Email Address</span>
+                        <strong class="contact-val">{{ aboutContactEmail || 'sophia.laurent@neverbeen.example' }}</strong>
+                      </div>
+                      <div class="contact-box">
+                        <span class="contact-lbl">📱 Phone Number</span>
+                        <strong class="contact-val">{{ aboutContactPhone || '+33 6 88 41 92 01' }}</strong>
+                      </div>
+                    </div>
+
+                    <div class="social-links-showcase">
+                      <div class="social-platform-col">
+                        <strong class="social-plat-title">🌐 Social Links ({{ aboutSocialLinks().length }}/3)</strong>
+                        @for (social of aboutSocialLinks(); track $index) {
+                          <span class="social-item-pill">
+                            {{ social.platform === 'Facebook' ? '📘' : social.platform === 'Instagram' ? '📷' : '🐦' }}
+                            <strong>{{ social.platform }}:</strong> {{ social.urlOrHandle }}
+                          </span>
+                        } @empty {
+                          <span class="empty-social">None added</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 8. About the Person -->
+                <div class="about-card-section person-narrative-card">
+                  <h3 class="card-section-title"><span class="title-glyph">📖</span> 8. About the Person</h3>
+                  <p class="person-narrative-content">
+                    {{ aboutThePersonText || 'Sophia is a cultural documentarian and landscape enthusiast passionate about slow travel, timeless architecture, and sharing genuine moments across continents.' }}
+                  </p>
                 </div>
               </div>
             }
@@ -997,7 +1568,33 @@
                   📷 Add Photo (Max 100 KB)
                   <input type="file" accept="image/*" (change)="onMessageBookPhotoSelected($event)" class="hidden-file-input" />
                 </label>
+
+                <!-- REQUIREMENT C: Tag People in MessageBook -->
+                <button
+                  type="button"
+                  class="btn-tool-tag"
+                  (click)="openTagPeopleModal('messagebook')"
+                  title="Tag companions in this message"
+                >
+                  🏷️ Tag People
+                  @if (selectedMessageBookTaggedCompanions().length > 0) {
+                    <span class="tag-count-bubble">({{ selectedMessageBookTaggedCompanions().length }})</span>
+                  }
+                </button>
               </div>
+
+              <!-- Tagged companions chips preview (Requirement C) -->
+              @if (selectedMessageBookTaggedCompanions().length > 0) {
+                <div class="tagged-chips-strip">
+                  <span class="tagged-chips-label">With:</span>
+                  @for (tagged of selectedMessageBookTaggedCompanions(); track tagged.id) {
+                    <span class="tagged-chip">
+                      {{ tagged.fullName }}
+                      <button type="button" class="btn-remove-tagged" (click)="removeTaggedCompanion(tagged.id, 'messagebook')" title="Remove">✕</button>
+                    </span>
+                  }
+                </div>
+              }
 
               @if (messageBookPhotoPreview()) {
                 <div class="composer-photo-preview-wrap">
@@ -1032,9 +1629,18 @@
                       (click)="openVisitorProfile(comment.author)"
                     />
                     <div class="author-details">
-                      <strong class="author-name clickable-user" (click)="openVisitorProfile(comment.author)">
-                        {{ comment.author.fullName }}
-                      </strong>
+                      <div class="author-name-line">
+                        <strong class="author-name clickable-user" (click)="openVisitorProfile(comment.author)">
+                          {{ comment.author.fullName }}
+                        </strong>
+                        <!-- REQUIREMENT C: post displays as user is with those tagged people -->
+                        @if (comment.taggedCompanions && comment.taggedCompanions.length > 0) {
+                          <span class="tagged-with-text"> is with </span>
+                          @for (tagged of comment.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
+                            <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === comment.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
+                          }
+                        }
+                      </div>
                       <span class="post-time">{{ formatTime(comment.createdAtUtc) }}</span>
                     </div>
                   </div>
@@ -1046,15 +1652,81 @@
                     </div>
                   }
 
+                  <!-- REQUIREMENT A: Top 3 icons beside comment, Top 1 icon instead of number of likes, hold opens breakdown modal -->
+                  <div class="post-engagement-counts">
+                    <div class="engagement-reactions-left">
+                      <!-- Instead of number of likes, show the top 1 icon -->
+                      <span
+                        class="top-1-icon-display clickable-reaction-pill"
+                        (mousedown)="startReactionsSummaryHold(comment, 'comment')"
+                        (mouseup)="endReactionsSummaryHold()"
+                        (touchstart)="startReactionsSummaryHold(comment, 'comment')"
+                        (touchend)="endReactionsSummaryHold()"
+                        (click)="openReactionsBreakdownModal(comment, 'comment')"
+                        title="Hold or click to see who reacted"
+                      >
+                        <span class="top-glyph">{{ getTop1ReactionIcon(comment) }}</span>
+                      </span>
+
+                      <!-- Beside the post: show at most top 3 icons -->
+                      @if (getTop3ReactionIcons(comment).length > 0) {
+                        <div
+                          class="top-3-icons-cluster clickable-reactions-cluster"
+                          (mousedown)="startReactionsSummaryHold(comment, 'comment')"
+                          (mouseup)="endReactionsSummaryHold()"
+                          (touchstart)="startReactionsSummaryHold(comment, 'comment')"
+                          (touchend)="endReactionsSummaryHold()"
+                          (click)="openReactionsBreakdownModal(comment, 'comment')"
+                          title="Hold or click to see reactions breakdown"
+                        >
+                          @for (icon of getTop3ReactionIcons(comment); track icon) {
+                            <span class="reaction-emoji-badge">{{ icon }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <div class="engagement-right">
+                      <span class="comment-counter">{{ comment.replies.length }} replies</span>
+                    </div>
+                  </div>
+
                   <div class="post-actions-row">
-                    <button
-                      type="button"
-                      class="post-action-btn"
-                      [class.liked]="comment.myReaction === 'Like'"
-                      (click)="react(comment.id, 'like')"
-                    >
-                      ❤️ Like ({{ comment.likeCount }})
-                    </button>
+                    <div class="post-like-action-wrap">
+                      <button
+                        type="button"
+                        class="post-action-btn btn-like-react"
+                        [class.liked]="!!comment.myReaction"
+                        (mousedown)="startLikeButtonHold(comment.id, 'comment')"
+                        (mouseup)="endLikeButtonHold()"
+                        (mouseleave)="endLikeButtonHold()"
+                        (touchstart)="startLikeButtonHold(comment.id, 'comment')"
+                        (touchend)="endLikeButtonHold()"
+                        (click)="react(comment.id, 'like')"
+                        title="Click to like, hold for 11 reactions"
+                      >
+                        <span class="like-btn-glyph">{{ comment.myReaction ? reactionIconsMap[comment.myReaction] : '🤍' }}</span>
+                        <span>{{ comment.myReaction || 'Like' }}</span>
+                      </button>
+
+                      <!-- 11 reactions popover on holding like button -->
+                      @if (showReactionPickerForTarget()?.id === comment.id && showReactionPickerForTarget()?.type === 'comment') {
+                        <div class="reactions-popover-card" (click)="$event.stopPropagation()">
+                          @for (reaction of holdReactionOptions; track reaction) {
+                            <button
+                              type="button"
+                              class="reaction-btn-item"
+                              (click)="selectHoldReaction(comment.id, 'comment', reaction)"
+                              [title]="reaction"
+                            >
+                              <span class="reaction-emoji">{{ reactionIconsMap[reaction] }}</span>
+                              <span class="reaction-name">{{ reaction }}</span>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+
                     <button
                       type="button"
                       class="post-action-btn"
@@ -1838,8 +2510,17 @@
           </button>
         </div>
 
-        <!-- COVER PHOTO (Prominently displayed across top) -->
-        <div class="visitor-modal-cover-wrap visitor-hero-card">
+        <!-- COVER PHOTO (Prominently displayed across top - Requirement B: hold to enlarge) -->
+        <div
+          class="visitor-modal-cover-wrap visitor-hero-card clickable-cover"
+          (mousedown)="startCoverHold(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
+          (mouseup)="endCoverHold()"
+          (mouseleave)="endCoverHold()"
+          (touchstart)="startCoverHold(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
+          (touchend)="endCoverHold()"
+          (dblclick)="openEnlargedCover(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
+          title="Press and hold to enlarge cover photo"
+        >
           <img
             [src]="viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto"
             [alt]="viewingVisitor()!.fullName + ' Cover Photo'"
@@ -1946,26 +2627,132 @@
             }
           </div>
         } @else {
-          <!-- VISIBLE ONE AFTER ANOTHER BELOW: About me, Gallery, Journey -->
+          <!-- VISIBLE ONE AFTER ANOTHER BELOW: About me, Gallery, Journey (Requirement D: all 8 sub-sections visible unless locked) -->
           <div class="visitor-modal-flow-container">
-            <!-- 1. ABOUT ME -->
+            <!-- 1. ABOUT ME (Requirement D) -->
             <section class="visitor-flow-section visitor-flow-about">
               <h3 class="visitor-section-heading">👤 About {{ viewingVisitor()!.fullName }}</h3>
-              <p class="visitor-about-text">
-                {{ viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'Passionate traveler discovering new horizons with NeverBeen AI memories.' }}
-              </p>
-              <div class="visitor-meta-grid">
-                <div class="meta-card-mini">
-                  <span class="meta-label">Profession</span>
-                  <strong class="meta-value">{{ viewingVisitor()!.profession }}</strong>
+              
+              <!-- Sub-sections for visitor -->
+              <div class="visitor-about-subsections">
+                <!-- 1. Intro -->
+                <div class="visitor-sub-block">
+                  <h4 class="visitor-sub-title">✨ Intro</h4>
+                  <p class="visitor-sub-text">
+                    {{ viewingVisitor()!.aboutMeDetails?.intro || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'Passionate traveler discovering new horizons with NeverBeen AI memories.' }}
+                  </p>
                 </div>
-                <div class="meta-card-mini">
-                  <span class="meta-label">Home Base</span>
-                  <strong class="meta-value">{{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }}</strong>
+
+                <!-- 2. Personal Details -->
+                <div class="visitor-sub-block">
+                  <h4 class="visitor-sub-title">👤 Personal Details</h4>
+                  <div class="visitor-meta-grid">
+                    <div class="meta-card-mini">
+                      <span class="meta-label">Gender</span>
+                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
+                    </div>
+                    <div class="meta-card-mini">
+                      <span class="meta-label">Date of Birth</span>
+                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.dateOfBirth || '1995-04-12' }}</strong>
+                    </div>
+                    <div class="meta-card-mini">
+                      <span class="meta-label">Current Location</span>
+                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.location || (viewingVisitor()!.city + ', ' + viewingVisitor()!.country) }}</strong>
+                    </div>
+                    <div class="meta-card-mini">
+                      <span class="meta-label">Hometown</span>
+                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.hometown || viewingVisitor()!.city }}</strong>
+                    </div>
+                    <div class="meta-card-mini">
+                      <span class="meta-label">Relationship Status</span>
+                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.relationshipStatus || 'Single' }}</strong>
+                    </div>
+                    <div class="meta-card-mini">
+                      <span class="meta-label">Languages Known</span>
+                      <div class="visitor-lang-chips">
+                        @for (lang of (viewingVisitor()!.aboutMeDetails?.languagesKnown || ['English', 'French']); track lang) {
+                          <span class="visitor-chip-badge">{{ lang }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="meta-card-mini">
-                  <span class="meta-label">Connection</span>
-                  <strong class="meta-value">{{ viewingVisitor()!.status === 'connected' ? 'Connected Companion' : 'Community Explorer' }}</strong>
+
+                <!-- 3. Work Experience -->
+                @if (viewingVisitor()!.aboutMeDetails?.workExperience && viewingVisitor()!.aboutMeDetails!.workExperience!.length > 0) {
+                  <div class="visitor-sub-block">
+                    <h4 class="visitor-sub-title">💼 Work Experience</h4>
+                    <div class="visitor-work-list">
+                      @for (w of viewingVisitor()!.aboutMeDetails!.workExperience!; track $index) {
+                        <div class="visitor-work-item">
+                          <div class="visitor-work-head">
+                            <strong>{{ w.company }}</strong>
+                            <span>{{ w.yearFrom }} – {{ w.currentlyWorkHere ? 'Present' : (w.yearTo || 'Present') }}</span>
+                          </div>
+                          <span class="visitor-work-loc">📍 {{ w.city }}, {{ w.country }}</span>
+                          @if (w.description) {
+                            <p class="visitor-work-desc">{{ w.description }}</p>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- 4. Education -->
+                @if (viewingVisitor()!.aboutMeDetails?.education && viewingVisitor()!.aboutMeDetails!.education!.length > 0) {
+                  <div class="visitor-sub-block">
+                    <h4 class="visitor-sub-title">🎓 Education</h4>
+                    <div class="visitor-edu-list">
+                      @for (e of viewingVisitor()!.aboutMeDetails!.education!; track $index) {
+                        <div class="visitor-edu-item">
+                          <div class="visitor-edu-head">
+                            <span class="edu-badge">{{ e.level }}</span>
+                            <strong>{{ e.institutionName }}</strong>
+                            <span>{{ e.yearFrom }} – {{ e.currentlyStudying ? 'Studying' : (e.yearTo || 'Completed') }}</span>
+                          </div>
+                          <span class="visitor-edu-course">Course: {{ e.courseOrDegree }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- 5. Hobbies -->
+                <div class="visitor-sub-block">
+                  <h4 class="visitor-sub-title">🎨 Hobbies</h4>
+                  <div class="visitor-chips-wrap">
+                    @for (h of (viewingVisitor()!.aboutMeDetails?.hobbies || ['Photography', 'Hiking', 'Cuisine Tasting']); track h) {
+                      <span class="visitor-chip-badge hobby">🎨 {{ h }}</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- 6. Interests -->
+                <div class="visitor-sub-block">
+                  <h4 class="visitor-sub-title">🧭 Interests</h4>
+                  <div class="visitor-chips-wrap">
+                    @for (item of (viewingVisitor()!.aboutMeDetails?.interests || ['Ancient Architecture', 'Mountain Trekking', 'Art Museums']); track item) {
+                      <span class="visitor-chip-badge interest">🧭 {{ item }}</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- 7. Contact Info -->
+                <div class="visitor-sub-block">
+                  <h4 class="visitor-sub-title">📞 Contact Info</h4>
+                  <div class="visitor-contact-row">
+                    <span>✉️ {{ viewingVisitor()!.aboutMeDetails?.contactEmail || (viewingVisitor()!.fullName.toLowerCase().replace(' ', '.') + '@neverbeen.example.com') }}</span>
+                    <span>📱 {{ viewingVisitor()!.aboutMeDetails?.contactPhone || '+33 6 98 76 54 32' }}</span>
+                  </div>
+                </div>
+
+                <!-- 8. About the Person -->
+                <div class="visitor-sub-block">
+                  <h4 class="visitor-sub-title">📖 About the Person</h4>
+                  <p class="visitor-sub-text">
+                    {{ viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.' }}
+                  </p>
                 </div>
               </div>
             </section>
@@ -2002,7 +2789,15 @@
                   <div class="post-header">
                     <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" />
                     <div class="author-details">
-                      <strong class="author-name">{{ post.author.fullName }}</strong>
+                      <div class="author-name-line">
+                        <strong class="author-name">{{ post.author.fullName }}</strong>
+                        @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
+                          <span class="tagged-with-text"> is with </span>
+                          @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
+                            <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
+                          }
+                        }
+                      </div>
                       <div class="post-sub-meta">
                         <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
                         @if (post.location) {
@@ -2022,10 +2817,77 @@
                       <img [src]="post.imageUrl" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl!)" />
                     </div>
                   }
+
+                  <!-- REQUIREMENT A: Engagement counts with Top 1 icon & Top 3 icons -->
+                  <div class="post-engagement-counts">
+                    <div class="engagement-reactions-left">
+                      <span
+                        class="top-1-icon-display clickable-reaction-pill"
+                        (mousedown)="startReactionsSummaryHold(post, 'post')"
+                        (mouseup)="endReactionsSummaryHold()"
+                        (click)="openReactionsBreakdownModal(post, 'post')"
+                        title="Hold or click to see reactions breakdown"
+                      >
+                        <span class="top-glyph">{{ getTop1ReactionIcon(post) }}</span>
+                      </span>
+
+                      @if (getTop3ReactionIcons(post).length > 0) {
+                        <div
+                          class="top-3-icons-cluster clickable-reactions-cluster"
+                          (mousedown)="startReactionsSummaryHold(post, 'post')"
+                          (mouseup)="endReactionsSummaryHold()"
+                          (click)="openReactionsBreakdownModal(post, 'post')"
+                        >
+                          @for (icon of getTop3ReactionIcons(post); track icon) {
+                            <span class="reaction-emoji-badge">{{ icon }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <div class="engagement-right">
+                      <span class="comment-counter">{{ post.comments.length }} comments</span>
+                      @if ((post.shareCount || 0) > 0) {
+                        <span class="share-counter">• {{ post.shareCount }} shares</span>
+                      }
+                    </div>
+                  </div>
+
                   <div class="post-actions-row">
-                    <button type="button" class="post-action-btn" [class.liked]="post.isLiked" (click)="toggleLikePost(post.id)">
-                      <span>{{ post.isLiked ? '❤️ Liked' : '🤍 Like' }} ({{ post.likeCount }})</span>
-                    </button>
+                    <div class="post-like-action-wrap">
+                      <button
+                        type="button"
+                        class="post-action-btn btn-like-react"
+                        [class.liked]="post.isLiked"
+                        (mousedown)="startLikeButtonHold(post.id, 'post')"
+                        (mouseup)="endLikeButtonHold()"
+                        (mouseleave)="endLikeButtonHold()"
+                        (touchstart)="startLikeButtonHold(post.id, 'post')"
+                        (touchend)="endLikeButtonHold()"
+                        (click)="handleLikeClick(post)"
+                        title="Click to like, hold for 11 reactions"
+                      >
+                        <span class="like-btn-glyph">{{ post.myReaction ? reactionIconsMap[post.myReaction] : '🤍' }}</span>
+                        <span>{{ post.myReaction || (post.isLiked ? 'Liked' : 'Like') }}</span>
+                      </button>
+
+                      @if (showReactionPickerForTarget()?.id === post.id && showReactionPickerForTarget()?.type === 'post') {
+                        <div class="reactions-popover-card" (click)="$event.stopPropagation()">
+                          @for (reaction of holdReactionOptions; track reaction) {
+                            <button
+                              type="button"
+                              class="reaction-btn-item"
+                              (click)="selectHoldReaction(post.id, 'post', reaction)"
+                              [title]="reaction"
+                            >
+                              <span class="reaction-emoji">{{ reactionIconsMap[reaction] }}</span>
+                              <span class="reaction-name">{{ reaction }}</span>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+
                     <button type="button" class="post-action-btn" (click)="toggleCommentSection(post.id)">
                       <span>💬 Comments ({{ post.comments.length }})</span>
                     </button>
@@ -2044,6 +2906,8 @@
                           [currentUserId]="service.currentUser()?.id"
                           (reply)="handleCommentThreadReply($event)"
                           (like)="handleCommentThreadLike($event)"
+                          (react)="handleCommentThreadReact($event)"
+                          (showReactionsModal)="handleCommentThreadShowReactions($event)"
                           (openUser)="openVisitorProfile($event)"
                         ></app-comment-thread>
                       }
@@ -2068,6 +2932,161 @@
       <div class="image-lightbox-card" (click)="$event.stopPropagation()">
         <button type="button" class="btn-close-lightbox" (click)="closeImageModal()" title="Close image">✕</button>
         <img [src]="lightboxImageUrl()!" alt="Enlarged view" class="lightbox-full-img" />
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- REQUIREMENT A: REACTIONS BREAKDOWN MODAL                          -->
+  <!-- Shows who made which reaction; in "All" option show all reactions -->
+  <!-- ================================================================= -->
+  @if (showReactionsBreakdownModal()) {
+    <div class="modal-backdrop-overlay reactions-modal-overlay" (click)="closeReactionsBreakdownModal()">
+      <div class="modal-dialog-card reactions-breakdown-modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <div class="modal-head-title-wrap">
+            <h3 class="modal-head-title">Reactions</h3>
+            <span class="reactions-total-pill">{{ selectedReactionsTarget()?.reactions?.length || 0 }}</span>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="closeReactionsBreakdownModal()" aria-label="Close reactions modal">✕</button>
+        </header>
+
+        <!-- Reactions Tabs: "All" option and individual reaction tabs -->
+        <div class="reactions-tab-bar">
+          @for (tab of uniqueReactionTabs(); track tab.type) {
+            <button
+              type="button"
+              class="reaction-tab-btn"
+              [class.active]="activeReactionFilterTab() === tab.type"
+              (click)="setReactionFilterTab(tab.type)"
+            >
+              @if (tab.icon) {
+                <span class="tab-emoji">{{ tab.icon }}</span>
+              }
+              <span class="tab-label">{{ tab.type }}</span>
+              <span class="tab-count">{{ tab.count }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="modal-body-content likers-body">
+          <div class="likers-scroll-list" [class.has-scrollbar]="filteredBreakdownReactions().length > 8">
+            @for (item of filteredBreakdownReactions(); track item.user.id + item.type) {
+              <div class="liker-item-row" (click)="onLikerClick(item.user)">
+                <div class="reactor-avatar-wrapper">
+                  <img [src]="item.user.profilePhotoUrl || defaultAvatar" [alt]="item.user.fullName" class="liker-avatar" />
+                  <span class="reactor-badge-icon" [title]="item.type">{{ reactionIconsMap[item.type] || '❤️' }}</span>
+                </div>
+                <div class="liker-info">
+                  <strong class="liker-name">{{ item.user.fullName }}</strong>
+                  <span class="liker-role">{{ item.type }} • {{ item.user.profession || 'Traveler' }}</span>
+                </div>
+                <div class="liker-action">
+                  @if (getLikerConnectionStatus(item.user.id) === 'self') {
+                    <span class="status-badge connected">You</span>
+                  } @else if (getLikerConnectionStatus(item.user.id) === 'connected') {
+                    <span class="status-badge connected">✓ Companions</span>
+                  } @else if (getLikerConnectionStatus(item.user.id) === 'pending') {
+                    <span class="status-badge pending">Request Sent</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-request-sm"
+                      (click)="$event.stopPropagation(); requestCompanionship(item.user.id)"
+                    >
+                      + Connect
+                    </button>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-reactions-state">
+                <p>No reactions in this category.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- REQUIREMENT B: ENLARGED COVER PHOTO LIGHTBOX MODAL                -->
+  <!-- On holding the Cover Photo of any user, enlarge it like profile   -->
+  <!-- ================================================================= -->
+  @if (showEnlargedCoverModal()) {
+    <div class="photo-lightbox-backdrop cover-lightbox-backdrop" (click)="closeEnlargedCover()">
+      <div class="photo-lightbox-card cover-lightbox-card" (click)="$event.stopPropagation()">
+        <button type="button" class="btn-close-lightbox" (click)="closeEnlargedCover()" aria-label="Close enlarged cover photo">
+          ✕
+        </button>
+        <img
+          [src]="enlargedCoverUrl() || defaultCoverPhoto"
+          [alt]="(enlargedCoverUser() || 'Traveler') + ' Enlarged Cover Photo'"
+          class="enlarged-cover-hero-img"
+        />
+        <div class="lightbox-caption">
+          <h3>{{ enlargedCoverUser() || 'Traveler' }}'s Cover Photo</h3>
+          <p>NeverBeen Community Header Panorama</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- REQUIREMENT C: TAG PEOPLE MODAL POPUP                             -->
+  <!-- Option to Tag people while making a post in Journey or MessageBook-->
+  <!-- ================================================================= -->
+  @if (showTagPeopleModal()) {
+    <div class="modal-backdrop-overlay" (click)="closeTagPeopleModal()">
+      <div class="modal-dialog-card tag-people-modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <div class="modal-head-title-wrap">
+            <span class="tag-header-icon">🏷️</span>
+            <h3 class="modal-head-title">Tag Companions</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="closeTagPeopleModal()">✕</button>
+        </header>
+
+        <div class="modal-body-content tag-people-body">
+          <p class="tag-modal-instructions">
+            Tag travel companions who are journeying with you.
+          </p>
+
+          <div class="tag-search-input-box">
+            <input
+              type="text"
+              [(ngModel)]="tagSearchQuery"
+              placeholder="Search companions by name..."
+              class="form-control"
+            />
+          </div>
+
+          <div class="taggable-companions-list" [class.has-scrollbar]="availableCompanionsForTagging().length > 6">
+            @for (companion of availableCompanionsForTagging(); track companion.id) {
+              <label class="tag-companion-item-row" [class.selected]="isCompanionTagged(companion.id)">
+                <input
+                  type="checkbox"
+                  class="tag-checkbox"
+                  [checked]="isCompanionTagged(companion.id)"
+                  (change)="toggleCompanionTag(companion)"
+                />
+                <img [src]="companion.profilePhotoUrl || defaultAvatar" [alt]="companion.fullName" class="tag-avatar" />
+                <div class="tag-companion-info">
+                  <strong class="tag-name">{{ companion.fullName }}</strong>
+                  <span class="tag-meta">{{ companion.city }}, {{ companion.country }} • {{ companion.profession }}</span>
+                </div>
+              </label>
+            } @empty {
+              <div class="empty-tag-list">No companions found matching your search.</div>
+            }
+          </div>
+        </div>
+
+        <footer class="modal-footer-bar tag-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="clearAllTaggedCompanions()">Clear All</button>
+          <button type="button" class="btn-primary-action" (click)="closeTagPeopleModal()">Done Tagging</button>
+        </footer>
       </div>
     </div>
   }

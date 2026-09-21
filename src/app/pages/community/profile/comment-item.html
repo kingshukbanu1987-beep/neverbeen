@@ -25,17 +25,68 @@
       }
 
       <div class="comment-actions-bar">
-        <button
-          type="button"
-          class="comment-action-link"
-          [class.liked]="comment.isLiked"
-          (click)="toggleLike()"
-        >
-          <span>{{ comment.isLiked ? '❤️ Liked' : '🤍 Like' }}</span>
-          @if ((comment.likeCount || 0) > 0) {
-            <span class="count-pill">({{ comment.likeCount }})</span>
+        <!-- Reaction Hold / Like button -->
+        <div class="comment-reaction-btn-wrapper">
+          <button
+            type="button"
+            class="comment-action-link btn-comment-like"
+            [class.liked]="comment.isLiked"
+            (mousedown)="startLikeHold($event)"
+            (mouseup)="endLikeHold()"
+            (mouseleave)="endLikeHold()"
+            (touchstart)="startLikeHold($event)"
+            (touchend)="endLikeHold()"
+            (click)="handleLikeClick()"
+            title="Click to like, hold to pick a reaction"
+          >
+            <span>{{ comment.myReaction ? (REACTION_ICONS[comment.myReaction] + ' ' + comment.myReaction) : (comment.isLiked ? '❤️ Liked' : '🤍 Like') }}</span>
+            <!-- Instead of number of likes, show the top 1 icon -->
+            @if (comment.reactions && comment.reactions.length > 0) {
+              <span
+                class="top-1-icon-pill"
+                (mousedown)="startReactionSummaryHold($event)"
+                (mouseup)="endReactionSummaryHold()"
+                (click)="$event.stopPropagation(); openReactionsModal()"
+                title="Hold or click to see reactions breakdown"
+              >{{ getTop1Icon() }}</span>
+            }
+          </button>
+
+          <!-- 11 reactions popover on hold -->
+          @if (showReactionPicker()) {
+            <div class="comment-reaction-popover" (click)="$event.stopPropagation()">
+              @for (reaction of holdReactions; track reaction) {
+                <button
+                  type="button"
+                  class="reaction-pick-emoji-btn"
+                  (click)="selectReaction(reaction)"
+                  [title]="reaction"
+                >
+                  <span class="emoji-glyph">{{ REACTION_ICONS[reaction] }}</span>
+                  <span class="emoji-text">{{ reaction }}</span>
+                </button>
+              }
+            </div>
           }
-        </button>
+        </div>
+
+        <!-- Beside comment: show at most top 3 icons -->
+        @if (getTop3Icons().length > 0) {
+          <div
+            class="comment-top-icons-cluster"
+            (mousedown)="startReactionSummaryHold($event)"
+            (mouseup)="endReactionSummaryHold()"
+            (touchstart)="startReactionSummaryHold($event)"
+            (touchend)="endReactionSummaryHold()"
+            (click)="openReactionsModal()"
+            title="Hold or click to see who reacted"
+          >
+            @for (icon of getTop3Icons(); track icon) {
+              <span class="top-icon-glyph">{{ icon }}</span>
+            }
+          </div>
+        }
+
         <button type="button" class="comment-action-link" (click)="toggleReply()">
           <span>💬 Reply</span>
           @if ((comment.replies?.length || 0) > 0) {

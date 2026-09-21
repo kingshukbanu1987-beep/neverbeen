@@ -814,4 +814,202 @@ describe('CommunityProfile', () => {
       expect(svg?.getAttribute('fill')).toBe('currentColor');
     });
   });
+
+  it('supports 11 reactions on hold, top 1 badge replacing likes count, top 3 icons cluster, and breakdown modal (Requirement A)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    fixture.detectChanges();
+
+    // 1. Verify all 11 reaction options are available
+    expect(component.holdReactionOptions).toEqual([
+      'Dislike',
+      'Love',
+      'Smile',
+      'Laugh',
+      'Cry',
+      'Heart',
+      'Clapping',
+      'Confused',
+      'Shocked',
+      'Angry',
+      'Fire',
+    ]);
+
+    // 2. Journey feed has posts with engagement counts
+    const firstPost = component['service'].journeyPosts()[0];
+    expect(firstPost).toBeTruthy();
+
+    // Top 1 reaction icon returns glyph instead of likes number
+    const top1 = component.getTop1ReactionIcon(firstPost);
+    expect(top1).toBeTruthy();
+
+    // Top 3 reaction icons cluster returns at most 3 icons
+    const top3 = component.getTop3ReactionIcons(firstPost);
+    expect(top3.length).toBeLessThanOrEqual(3);
+
+    // 3. Holding like button opens popover with 11 reactions
+    component['startLikeButtonHold'](firstPost.id, 'post');
+    // Fast-forward or trigger selection directly
+    component['selectHoldReaction'](firstPost.id, 'post', 'Fire');
+    fixture.detectChanges();
+
+    const updatedPost = component['service'].journeyPosts().find((p) => p.id === firstPost.id)!;
+    expect(updatedPost.myReaction).toBe('Fire');
+    expect(updatedPost.isLiked).toBe(true);
+
+    // 4. Reactions breakdown modal on hold / click
+    component.openReactionsBreakdownModal(updatedPost, 'post');
+    fixture.detectChanges();
+
+    expect(component['showReactionsBreakdownModal']()).toBe(true);
+    expect(component['selectedReactionsTarget']()).toBeTruthy();
+    expect(component['selectedReactionsTarget']()?.reactions.length).toBeGreaterThan(0);
+
+    // Breakdown tabs include 'All' and individual reaction types
+    const tabs = component.uniqueReactionTabs();
+    expect(tabs[0].type).toBe('All');
+    expect(tabs.some((t) => t.type === 'Fire' || t.count > 0)).toBe(true);
+
+    // Filter by tab
+    component.setReactionFilterTab('All');
+    expect(component.filteredBreakdownReactions().length).toBe(component['selectedReactionsTarget']()!.reactions.length);
+
+    component.closeReactionsBreakdownModal();
+    expect(component['showReactionsBreakdownModal']()).toBe(false);
+  });
+
+  it('enlarges user cover photo on hold like the profile photo (Requirement B)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const coverUrl = 'https://images.unsplash.com/photo-cover-test.jpg';
+    const userName = 'Sophia Laurent';
+
+    // 1. Open enlarged cover modal
+    component.openEnlargedCover(coverUrl, userName);
+    fixture.detectChanges();
+
+    expect(component['showEnlargedCoverModal']()).toBe(true);
+    expect(component['enlargedCoverUrl']()).toBe(coverUrl);
+    expect(component['enlargedCoverUser']()).toBe(userName);
+
+    const element: HTMLElement = fixture.nativeElement;
+    const coverModal = element.querySelector('.cover-lightbox-backdrop');
+    expect(coverModal).toBeTruthy();
+    const coverImg = coverModal!.querySelector<HTMLImageElement>('.enlarged-cover-hero-img');
+    expect(coverImg?.src).toContain('photo-cover-test.jpg');
+
+    // 2. Close enlarged cover modal
+    component.closeEnlargedCover();
+    fixture.detectChanges();
+    expect(component['showEnlargedCoverModal']()).toBe(false);
+  });
+
+  it('provides option to tag people from a modal popup in Journey and MessageBook posts (Requirement C)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const marco = component['service'].companions().find((c) => c.fullName.includes('Marco'))!;
+    expect(marco).toBeTruthy();
+
+    // 1. Tag in Journey post
+    component.openTagPeopleModal('journey');
+    expect(component['showTagPeopleModal']()).toBe(true);
+    expect(component['tagTarget']()).toBe('journey');
+
+    component.toggleCompanionTag(marco);
+    expect(component.isCompanionTagged(marco.id)).toBe(true);
+    expect(component['selectedJourneyTaggedCompanions']().length).toBe(1);
+
+    component.closeTagPeopleModal();
+    expect(component['showTagPeopleModal']()).toBe(false);
+
+    // Post to Journey with tagged companion
+    component['newJourneyText'] = 'Exploring Kyoto with friends!';
+    component.submitJourneyPost();
+    fixture.detectChanges();
+
+    const latestPost = component['service'].journeyPosts()[0];
+    expect(latestPost.taggedCompanions).toBeTruthy();
+    expect(latestPost.taggedCompanions!.some((c) => c.id === marco.id)).toBe(true);
+
+    // 2. Tag in MessageBook
+    component.openTagPeopleModal('messagebook');
+    expect(component['tagTarget']()).toBe('messagebook');
+
+    component.toggleCompanionTag(marco);
+    expect(component.isCompanionTagged(marco.id)).toBe(true);
+    expect(component['selectedMessageBookTaggedCompanions']().length).toBe(1);
+
+    component.closeTagPeopleModal();
+
+    component['newPostText'] = 'Signing the memoir guestbook';
+    component.submitPost();
+    fixture.detectChanges();
+
+    const latestComment = component['service'].comments()[0];
+    expect(latestComment.taggedCompanions).toBeTruthy();
+    expect(latestComment.taggedCompanions!.some((c) => c.id === marco.id)).toBe(true);
+  });
+
+  it('manages 8 detailed sub-sections in About Me and renders them for visitors unless locked (Requirement D)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    component.setSection('about');
+    fixture.detectChanges();
+
+    // 1. Verify view mode contains 8 detailed sub-sections
+    const aboutWrapper = element.querySelector('.about-sections-wrapper');
+    expect(aboutWrapper).toBeTruthy();
+
+    // 1. Intro
+    expect(aboutWrapper!.querySelector('.intro-card')).toBeTruthy();
+    // 2. Personal Details
+    expect(aboutWrapper!.querySelector('.personal-details-card')).toBeTruthy();
+    // 3. Work
+    expect(aboutWrapper!.querySelector('.work-card')).toBeTruthy();
+    // 4. Education
+    expect(aboutWrapper!.querySelector('.education-card')).toBeTruthy();
+    // 5. Hobbies
+    expect(aboutWrapper!.querySelector('.hobbies-card')).toBeTruthy();
+    // 6. Interests
+    expect(aboutWrapper!.querySelector('.interests-card')).toBeTruthy();
+    // 7. Contact Info
+    expect(aboutWrapper!.querySelector('.contact-card')).toBeTruthy();
+    // 8. About the Person
+    expect(aboutWrapper!.querySelector('.person-narrative-card')).toBeTruthy();
+
+    // 2. Toggle edit mode
+    component.toggleEditAboutMe();
+    fixture.detectChanges();
+    expect(component['editingAboutMe']()).toBe(true);
+
+    // Add hobby from dropdown (up to 10)
+    component['newHobbySelect'] = 'Kayaking';
+    component.addHobby();
+    expect(component['aboutHobbies']()).toContain('Kayaking');
+
+    // Add interest from dropdown (up to 10)
+    component['newInterestSelect'] = 'Wine Tasting';
+    component.addInterest();
+    expect(component['aboutInterests']()).toContain('Wine Tasting');
+
+    // Save changes
+    component.saveAboutMeDetails();
+    fixture.detectChanges();
+    expect(component['editingAboutMe']()).toBe(false);
+
+    // 3. Check visitor profile modal renders sub-sections when unlocked
+    const elena = component['service'].companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    const visitorModal = element.querySelector('.visitor-profile-modal-card');
+    expect(visitorModal).toBeTruthy();
+    expect(visitorModal!.querySelector('.visitor-about-subsections')).toBeTruthy();
+  });
 });

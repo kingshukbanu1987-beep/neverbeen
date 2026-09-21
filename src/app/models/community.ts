@@ -1,5 +1,173 @@
 export type UserActiveStatus = 'Active' | 'Busy' | "Don't Disturb" | 'Away' | 'Inactive' | 'Custom';
 
+export type ReactionType =
+  | 'Like'
+  | 'Dislike'
+  | 'Love'
+  | 'Smile'
+  | 'Laugh'
+  | 'Cry'
+  | 'Heart'
+  | 'Clapping'
+  | 'Confused'
+  | 'Shocked'
+  | 'Angry'
+  | 'Fire';
+
+export const REACTION_ICONS: Record<ReactionType, string> = {
+  Like: '👍',
+  Dislike: '👎',
+  Love: '🥰',
+  Smile: '😊',
+  Laugh: '😆',
+  Cry: '😢',
+  Heart: '❤️',
+  Clapping: '👏',
+  Confused: '😕',
+  Shocked: '😲',
+  Angry: '😡',
+  Fire: '🔥',
+};
+
+export interface UserReaction {
+  user: AuthorInfo;
+  type: ReactionType;
+  reactedAtUtc?: string;
+}
+
+export const HOLD_REACTION_OPTIONS: ReactionType[] = [
+  'Dislike',
+  'Love',
+  'Smile',
+  'Laugh',
+  'Cry',
+  'Heart',
+  'Clapping',
+  'Confused',
+  'Shocked',
+  'Angry',
+  'Fire',
+];
+
+export interface WorkExperience {
+  id: number;
+  company: string;
+  yearFrom: string;
+  yearTo?: string;
+  currentlyWorkHere: boolean;
+  country: string;
+  city: string;
+  town?: string;
+  description?: string;
+}
+
+export const AVAILABLE_HOBBIES: string[] = [
+  'Photography',
+  'Alpine Hiking',
+  'Coffee Brewing',
+  'Scuba Diving',
+  'Journaling',
+  'Vinyl Records',
+  'Skiing',
+  'Traveling',
+  'Cooking',
+  'Reading',
+  'Swimming',
+  'Cycling',
+  'Gaming',
+  'Painting',
+  'Camping',
+  'Fishing',
+  'Bird Watching',
+  'Dancing',
+  'Yoga',
+  'Gardening',
+  'Surfing',
+  'Rock Climbing',
+  'Pottery',
+  'Calligraphy',
+];
+
+export const AVAILABLE_INTERESTS: string[] = [
+  'Architecture',
+  'Historical Heritage',
+  'Sunset Chasing',
+  'Train Journeys',
+  'Street Food',
+  'Glacier Trails',
+  'Art Galleries',
+  'Mountain Climbing',
+  'Sailing',
+  'Wildlife Safari',
+  'Cultural Festivals',
+  'Astronomy',
+  'Eco-Tourism',
+  'Wine Tasting',
+  'Road Trips',
+  'Backpacking',
+  'Local Markets',
+  'Ocean Conservation',
+  'Philosophy',
+  'Urban Sketching',
+];
+
+export function getTopReactionIcons(reactions?: UserReaction[], max = 3): string[] {
+  if (!reactions || reactions.length === 0) return [];
+  const counts = new Map<ReactionType, number>();
+  for (const r of reactions) {
+    counts.set(r.type, (counts.get(r.type) || 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, max)
+    .map(([type]) => REACTION_ICONS[type] || '❤️');
+}
+
+export function getTopReactionIcon(reactions?: UserReaction[]): string {
+  if (!reactions || reactions.length === 0) return '❤️';
+  const counts = new Map<ReactionType, number>();
+  for (const r of reactions) {
+    counts.set(r.type, (counts.get(r.type) || 0) + 1);
+  }
+  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  return sorted[0] ? (REACTION_ICONS[sorted[0][0]] || '❤️') : '❤️';
+}
+
+export type EducationLevel = 'University' | 'High School' | 'Primary School';
+
+export interface EducationInfo {
+  id: number;
+  institutionName: string;
+  level: EducationLevel;
+  courseOrDegree: string;
+  yearFrom: string;
+  yearTo?: string;
+  currentlyStudying: boolean;
+}
+
+export interface SocialMediaLink {
+  platform: 'Facebook' | 'Instagram' | 'X';
+  urlOrHandle: string;
+}
+
+export interface AboutMeDetails {
+  intro?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  location?: string;
+  hometown?: string;
+  relationshipStatus?: 'Single' | 'In a relationship' | 'Married' | "It's complicated" | 'Exploring solo' | string;
+  languagesKnown?: string[];
+  workExperience?: WorkExperience[];
+  education?: EducationInfo[];
+  hobbies?: string[];
+  interests?: string[];
+  contactEmail?: string;
+  contactPhone?: string;
+  socialLinks?: SocialMediaLink[];
+  aboutThePerson?: string;
+}
+
 export interface CurrentUser {
   id: number;
   firstName?: string;
@@ -13,6 +181,7 @@ export interface CurrentUser {
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
   isProfileLocked?: boolean;
+  aboutMeDetails?: AboutMeDetails;
 }
 
 export interface AuthResult {
@@ -80,6 +249,7 @@ export interface Profile {
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
   isProfileLocked?: boolean;
+  aboutMeDetails?: AboutMeDetails;
 }
 
 export interface UpdateProfileRequest {
@@ -96,6 +266,7 @@ export interface UpdateProfileRequest {
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
   isProfileLocked?: boolean;
+  aboutMeDetails?: AboutMeDetails;
 }
 
 export interface AuthorInfo {
@@ -113,7 +284,9 @@ export interface CommunityComment {
   dislikeCount: number;
   author: AuthorInfo;
   imageUrl?: string;
-  myReaction?: 'Like' | 'Dislike' | null;
+  myReaction?: ReactionType | null;
+  reactions?: UserReaction[];
+  taggedCompanions?: AuthorInfo[];
   replyCount: number;
   parentId?: number | null;
   replies: CommunityComment[];
@@ -122,7 +295,7 @@ export interface CommunityComment {
 export interface ReactionResult {
   likeCount: number;
   dislikeCount: number;
-  myReaction?: 'Like' | 'Dislike' | null;
+  myReaction?: ReactionType | null;
 }
 
 export interface Country {
@@ -155,6 +328,8 @@ export interface JourneyComment {
   parentId?: number | null;
   likeCount?: number;
   isLiked?: boolean;
+  myReaction?: ReactionType | null;
+  reactions?: UserReaction[];
   replies?: JourneyComment[];
 }
 
@@ -166,6 +341,9 @@ export interface JourneyPost {
   imageUrl?: string;
   likeCount: number;
   isLiked?: boolean;
+  myReaction?: ReactionType | null;
+  reactions?: UserReaction[];
+  taggedCompanions?: AuthorInfo[];
   comments: JourneyComment[];
   location?: string;
   mood?: string;
@@ -203,6 +381,7 @@ export interface Companion {
   status: 'connected' | 'pending_outgoing' | 'pending_incoming' | 'none';
   bio?: string;
   aboutMe?: string;
+  aboutMeDetails?: AboutMeDetails;
   gallery?: GalleryPhoto[];
   isProfileLocked?: boolean;
   activeStatus?: UserActiveStatus;

@@ -2,7 +2,28 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthorInfo, Circle, City, Companion, JourneyPost, UserActiveStatus } from '../../../models/community';
+import {
+  AboutMeDetails,
+  AuthorInfo,
+  AVAILABLE_HOBBIES,
+  AVAILABLE_INTERESTS,
+  Circle,
+  City,
+  CommunityComment,
+  Companion,
+  EducationInfo,
+  getTopReactionIcon,
+  getTopReactionIcons,
+  HOLD_REACTION_OPTIONS,
+  JourneyComment,
+  JourneyPost,
+  REACTION_ICONS,
+  ReactionType,
+  SocialMediaLink,
+  UserActiveStatus,
+  UserReaction,
+  WorkExperience,
+} from '../../../models/community';
 import { CommunityService } from '../../../services/community.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
 import { CommentThreadComponent } from './comment-item';
@@ -105,6 +126,105 @@ export class CommunityProfile implements OnInit {
   protected readonly selectedPostForLikers = signal<JourneyPost | null>(null);
   private likePressTimer?: any;
   protected isLongPressActive = false;
+
+  // REQUIREMENT A: 11 REACTIONS SYSTEM ON HOLD & BREAKDOWN MODAL
+  readonly holdReactionOptions = HOLD_REACTION_OPTIONS;
+  readonly reactionIconsMap = REACTION_ICONS;
+  protected readonly showReactionPickerForTarget = signal<{
+    id: number;
+    type: 'post' | 'comment' | 'messagebook';
+  } | null>(null);
+  protected readonly showReactionsBreakdownModal = signal(false);
+  protected readonly selectedReactionsTarget = signal<{
+    id: number;
+    type: 'post' | 'comment' | 'messagebook';
+    reactions: UserReaction[];
+    title: string;
+  } | null>(null);
+  protected readonly activeReactionFilterTab = signal<string>('All');
+  private reactionHoldTimer?: any;
+  private reactionSummaryHoldTimer?: any;
+
+  // Computed reaction tabs for Breakdown Modal
+  readonly uniqueReactionTabs = computed(() => {
+    const target = this.selectedReactionsTarget();
+    if (!target) return [];
+    const counts = new Map<string, number>();
+    for (const r of target.reactions) {
+      counts.set(r.type, (counts.get(r.type) || 0) + 1);
+    }
+    const tabs: Array<{ type: string; icon?: string; count: number }> = [
+      { type: 'All', count: target.reactions.length },
+    ];
+    for (const [type, count] of counts.entries()) {
+      tabs.push({
+        type,
+        icon: REACTION_ICONS[type as ReactionType] || '❤️',
+        count,
+      });
+    }
+    return tabs;
+  });
+
+  // Filtered reactions list for Breakdown Modal
+  readonly filteredBreakdownReactions = computed(() => {
+    const target = this.selectedReactionsTarget();
+    if (!target) return [];
+    const active = this.activeReactionFilterTab();
+    if (active === 'All') return target.reactions;
+    return target.reactions.filter((r) => r.type === active);
+  });
+
+  // REQUIREMENT B: COVER PHOTO ENLARGE ON HOLD
+  protected readonly showEnlargedCoverModal = signal(false);
+  protected readonly enlargedCoverUrl = signal<string | null>(null);
+  protected readonly enlargedCoverUser = signal<string | null>(null);
+  private coverHoldTimer?: any;
+
+  // REQUIREMENT C: TAG PEOPLE MODAL & POST TAGS
+  protected readonly showTagPeopleModal = signal(false);
+  protected readonly tagTarget = signal<'journey' | 'messagebook'>('journey');
+  protected tagSearchQuery = '';
+  protected readonly selectedJourneyTaggedCompanions = signal<AuthorInfo[]>([]);
+  protected readonly selectedMessageBookTaggedCompanions = signal<AuthorInfo[]>([]);
+
+  readonly availableCompanionsForTagging = computed(() => {
+    const q = this.tagSearchQuery.trim().toLowerCase();
+    const all = this.service.companions();
+    if (!q) return all;
+    return all.filter(
+      (c) =>
+        c.fullName.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.profession.toLowerCase().includes(q),
+    );
+  });
+
+  // REQUIREMENT D: DETAILED ABOUT ME 8 SUB-SECTIONS
+  protected readonly editingAboutMe = signal(false);
+  readonly availableHobbies = AVAILABLE_HOBBIES;
+  readonly availableInterests = AVAILABLE_INTERESTS;
+  protected aboutIntro = '';
+  protected aboutGender = 'Female';
+  protected aboutDob = '1996-04-18';
+  protected aboutLocation = 'Paris, France';
+  protected aboutHometown = 'Lyon, France';
+  protected aboutRelationshipStatus = 'Exploring solo';
+  protected readonly aboutLanguages = signal<string[]>([]);
+  protected newLanguageInput = '';
+  protected readonly aboutWorkExperiences = signal<WorkExperience[]>([]);
+  protected readonly aboutEducation = signal<EducationInfo[]>([]);
+  protected readonly aboutHobbies = signal<string[]>([]);
+  protected newHobbySelect = '';
+  protected readonly aboutInterests = signal<string[]>([]);
+  protected newInterestSelect = '';
+  protected aboutContactEmail = '';
+  protected aboutContactPhone = '';
+  protected readonly aboutSocialLinks = signal<SocialMediaLink[]>([]);
+  protected aboutThePersonText = '';
+  protected readonly hobbyNotice = signal<string | null>(null);
+  protected readonly interestNotice = signal<string | null>(null);
+  protected readonly socialLinkNotice = signal<string | null>(null);
 
   // Report Abuse Modal (Requirement C)
   protected readonly showReportAbuseModal = signal(false);
@@ -242,6 +362,7 @@ export class CommunityProfile implements OnInit {
 
     this.populateEditForm();
     this.populateSettingsForm();
+    this.initAboutMeData();
 
     const p = this.service.profile();
     if (p?.countryId) {
@@ -366,6 +487,36 @@ export class CommunityProfile implements OnInit {
 
   closeEnlargedPhoto(): void {
     this.showEnlargedPhoto.set(false);
+  }
+
+  // ---------------------------------------------------------------------------
+  // REQUIREMENT B: COVER PHOTO HOLD & ENLARGE
+  // ---------------------------------------------------------------------------
+
+  startCoverHold(url?: string, userName?: string): void {
+    if (!url) return;
+    this.coverHoldTimer = setTimeout(() => {
+      this.openEnlargedCover(url, userName);
+    }, 350);
+  }
+
+  endCoverHold(): void {
+    if (this.coverHoldTimer) {
+      clearTimeout(this.coverHoldTimer);
+      this.coverHoldTimer = undefined;
+    }
+  }
+
+  openEnlargedCover(url: string, userName?: string): void {
+    this.enlargedCoverUrl.set(url);
+    this.enlargedCoverUser.set(userName || 'Cover Photo');
+    this.showEnlargedCoverModal.set(true);
+  }
+
+  closeEnlargedCover(): void {
+    this.showEnlargedCoverModal.set(false);
+    this.enlargedCoverUrl.set(null);
+    this.enlargedCoverUser.set(null);
   }
 
   // ---------------------------------------------------------------------------
@@ -557,8 +708,12 @@ export class CommunityProfile implements OnInit {
         locationTag,
         placeId,
         this.journeyPhotoPreview() || undefined,
+        this.selectedJourneyTaggedCompanions().length > 0
+          ? [...this.selectedJourneyTaggedCompanions()]
+          : undefined,
       );
       this.newJourneyText = '';
+      this.selectedJourneyTaggedCompanions.set([]);
       this.selectedGoogleLocation.set(null);
       this.destinationSearchInput = '';
       this.destinationError.set(null);
@@ -639,6 +794,14 @@ export class CommunityProfile implements OnInit {
     this.service.toggleJourneyCommentLike(event.postId, event.commentId);
   }
 
+  handleCommentThreadReact(event: { postId: number; commentId: number; reaction: ReactionType }): void {
+    this.service.reactToJourneyComment(event.postId, event.commentId, event.reaction);
+  }
+
+  handleCommentThreadShowReactions(event: { comment: JourneyComment; commentId: number }): void {
+    this.openReactionsBreakdownModal(event.comment, 'comment');
+  }
+
   toggleJourneyCommentLike(postId: number, commentId: number): void {
     this.service.toggleJourneyCommentLike(postId, commentId);
   }
@@ -666,6 +829,425 @@ export class CommunityProfile implements OnInit {
     this.service.shareJourneyPost(post.id, this.shareThoughtText);
     this.closeShareModal();
     this.setSection('journey');
+  }
+
+  // ---------------------------------------------------------------------------
+  // REQUIREMENT A: 11 REACTIONS SYSTEM ON HOLD & BREAKDOWN MODAL
+  // ---------------------------------------------------------------------------
+
+  startLikeButtonHold(targetId: number, type: 'post' | 'comment' | 'messagebook'): void {
+    this.reactionHoldTimer = setTimeout(() => {
+      this.showReactionPickerForTarget.set({ id: targetId, type });
+    }, 350);
+  }
+
+  endLikeButtonHold(): void {
+    if (this.reactionHoldTimer) {
+      clearTimeout(this.reactionHoldTimer);
+      this.reactionHoldTimer = undefined;
+    }
+  }
+
+  selectHoldReaction(
+    targetId: number,
+    type: 'post' | 'comment' | 'messagebook',
+    reaction: ReactionType,
+    postId?: number,
+  ): void {
+    this.showReactionPickerForTarget.set(null);
+    if (type === 'post') {
+      this.service.reactToJourneyPost(targetId, reaction);
+    } else if (type === 'comment' && postId) {
+      this.service.reactToJourneyComment(postId, targetId, reaction);
+    } else if (type === 'messagebook') {
+      this.service.reactToComment(targetId, reaction);
+    }
+  }
+
+  startReactionsSummaryHold(
+    item: { id: number; reactions?: UserReaction[]; likers?: AuthorInfo[]; text?: string; author?: AuthorInfo },
+    type: 'post' | 'comment' | 'messagebook',
+  ): void {
+    this.reactionSummaryHoldTimer = setTimeout(() => {
+      this.openReactionsBreakdownModal(item, type);
+    }, 300);
+  }
+
+  endReactionsSummaryHold(): void {
+    if (this.reactionSummaryHoldTimer) {
+      clearTimeout(this.reactionSummaryHoldTimer);
+      this.reactionSummaryHoldTimer = undefined;
+    }
+  }
+
+  openReactionsBreakdownModal(
+    item: { id: number; reactions?: UserReaction[]; likers?: AuthorInfo[]; text?: string; author?: AuthorInfo },
+    type: 'post' | 'comment' | 'messagebook',
+  ): void {
+    let reactions = item.reactions && item.reactions.length > 0 ? [...item.reactions] : [];
+    if (reactions.length === 0) {
+      const pool =
+        item.likers && item.likers.length > 0
+          ? item.likers
+          : this.service.companions().map((c) => ({
+              id: c.id,
+              fullName: c.fullName,
+              profession: c.profession,
+              profilePhotoUrl: c.profilePhotoUrl,
+            }));
+      const sampleReactions: ReactionType[] = ['Heart', 'Fire', 'Love', 'Smile', 'Clapping'];
+      reactions = pool.map((u, i) => ({
+        user: u,
+        type: sampleReactions[i % sampleReactions.length],
+        reactedAtUtc: new Date().toISOString(),
+      }));
+    }
+
+    const title = item.author?.fullName ? `Reactions on ${item.author.fullName}'s post` : 'Reactions';
+    this.selectedReactionsTarget.set({
+      id: item.id,
+      type,
+      reactions,
+      title,
+    });
+    this.activeReactionFilterTab.set('All');
+    this.showReactionsBreakdownModal.set(true);
+  }
+
+  closeReactionsBreakdownModal(): void {
+    this.showReactionsBreakdownModal.set(false);
+    this.selectedReactionsTarget.set(null);
+  }
+
+  setReactionFilterTab(tab: string): void {
+    this.activeReactionFilterTab.set(tab);
+  }
+
+  getTop3ReactionIcons(item?: { reactions?: UserReaction[] } | null): string[] {
+    return getTopReactionIcons(item?.reactions, 3);
+  }
+
+  getTop1ReactionIcon(item?: { reactions?: UserReaction[]; isLiked?: boolean; likeCount?: number } | null): string {
+    return getTopReactionIcon(item?.reactions);
+  }
+
+  // ---------------------------------------------------------------------------
+  // REQUIREMENT C: TAG PEOPLE MODAL & POST TAGS
+  // ---------------------------------------------------------------------------
+
+  openTagPeopleModal(target: 'journey' | 'messagebook'): void {
+    this.tagTarget.set(target);
+    this.tagSearchQuery = '';
+    this.showTagPeopleModal.set(true);
+  }
+
+  closeTagPeopleModal(): void {
+    this.showTagPeopleModal.set(false);
+  }
+
+  toggleCompanionTag(companion: Companion | AuthorInfo): void {
+    const target = this.tagTarget();
+    const listSignal =
+      target === 'journey'
+        ? this.selectedJourneyTaggedCompanions
+        : this.selectedMessageBookTaggedCompanions;
+
+    const current = listSignal();
+    const exists = current.some((c) => c.id === companion.id);
+    if (exists) {
+      listSignal.set(current.filter((c) => c.id !== companion.id));
+    } else {
+      listSignal.set([
+        ...current,
+        {
+          id: companion.id,
+          fullName: companion.fullName,
+          profession: companion.profession,
+          profilePhotoUrl: companion.profilePhotoUrl,
+        },
+      ]);
+    }
+  }
+
+  isCompanionTagged(companionId: number): boolean {
+    const list =
+      this.tagTarget() === 'journey'
+        ? this.selectedJourneyTaggedCompanions()
+        : this.selectedMessageBookTaggedCompanions();
+    return list.some((c) => c.id === companionId);
+  }
+
+  clearAllTaggedCompanions(): void {
+    if (this.tagTarget() === 'journey') {
+      this.selectedJourneyTaggedCompanions.set([]);
+    } else {
+      this.selectedMessageBookTaggedCompanions.set([]);
+    }
+  }
+
+  removeTaggedCompanion(companionId: number, target: 'journey' | 'messagebook'): void {
+    if (target === 'journey') {
+      this.selectedJourneyTaggedCompanions.update((list) =>
+        list.filter((c) => c.id !== companionId),
+      );
+    } else {
+      this.selectedMessageBookTaggedCompanions.update((list) =>
+        list.filter((c) => c.id !== companionId),
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // REQUIREMENT D: DETAILED ABOUT ME (8 SUB-SECTIONS)
+  // ---------------------------------------------------------------------------
+
+  initAboutMeData(): void {
+    const details = this.service.profile()?.aboutMeDetails;
+    this.aboutIntro = details?.intro || this.service.profile()?.aboutMe || '';
+    this.aboutGender = details?.gender || this.service.profile()?.gender || 'Female';
+    this.aboutDob = details?.dateOfBirth || this.service.profile()?.dateOfBirth || '1996-04-18';
+    this.aboutLocation =
+      details?.location ||
+      (this.service.profile()?.cityName
+        ? `${this.service.profile()!.cityName}, ${this.service.profile()!.countryName || ''}`
+        : 'Paris, France');
+    this.aboutHometown = details?.hometown || 'Lyon, France';
+    this.aboutRelationshipStatus = details?.relationshipStatus || 'Exploring solo';
+    this.aboutLanguages.set(
+      details?.languagesKnown && details.languagesKnown.length > 0
+        ? [...details.languagesKnown]
+        : ['English', 'French', 'Italian', 'Spanish'],
+    );
+    this.aboutWorkExperiences.set(
+      details?.workExperience && details.workExperience.length > 0
+        ? JSON.parse(JSON.stringify(details.workExperience))
+        : [
+            {
+              id: 1,
+              company: 'WanderLust Media Studio',
+              yearFrom: '2022',
+              yearTo: '',
+              currentlyWorkHere: true,
+              country: 'France',
+              city: 'Paris',
+              town: '1st Arrondissement',
+              description: 'Lead visual director producing AI-enhanced travel memoirs.',
+            },
+          ],
+    );
+    this.aboutEducation.set(
+      details?.education && details.education.length > 0
+        ? JSON.parse(JSON.stringify(details.education))
+        : [
+            {
+              id: 1,
+              institutionName: 'Sorbonne University',
+              level: 'University',
+              courseOrDegree: 'Master of Fine Arts in Cinematography',
+              yearFrom: '2017',
+              yearTo: '2019',
+              currentlyStudying: false,
+            },
+            {
+              id: 2,
+              institutionName: 'Lycée Condorcet',
+              level: 'High School',
+              courseOrDegree: 'Literature & Visual Arts Diploma',
+              yearFrom: '2014',
+              yearTo: '2017',
+              currentlyStudying: false,
+            },
+            {
+              id: 3,
+              institutionName: 'École Primaire Victor Hugo',
+              level: 'Primary School',
+              courseOrDegree: 'Primary Education Certificate',
+              yearFrom: '2008',
+              yearTo: '2014',
+              currentlyStudying: false,
+            },
+          ],
+    );
+    this.aboutHobbies.set(
+      details?.hobbies && details.hobbies.length > 0
+        ? [...details.hobbies]
+        : ['Photography', 'Alpine Hiking', 'Coffee Brewing', 'Scuba Diving', 'Journaling'],
+    );
+    this.aboutInterests.set(
+      details?.interests && details.interests.length > 0
+        ? [...details.interests]
+        : ['Architecture', 'Historical Heritage', 'Sunset Chasing', 'Train Journeys', 'Street Food'],
+    );
+    this.aboutContactEmail =
+      details?.contactEmail || this.service.profile()?.email || 'sophia.laurent@neverbeen.example';
+    this.aboutContactPhone =
+      details?.contactPhone || this.service.profile()?.contactNumber || '+33 6 88 41 92 01';
+    this.aboutSocialLinks.set(
+      details?.socialLinks && details.socialLinks.length > 0
+        ? JSON.parse(JSON.stringify(details.socialLinks))
+        : [
+            { platform: 'Instagram', urlOrHandle: '@sophia.in.the.wild' },
+            { platform: 'Facebook', urlOrHandle: 'facebook.com/sophialaurent.travel' },
+            { platform: 'X', urlOrHandle: '@sophia_visuals' },
+          ],
+    );
+    this.aboutThePersonText =
+      details?.aboutThePerson ||
+      'I fell in love with storytelling while crossing the Swiss viaducts as a teenager. Today, I travel with a lightweight camera kit and an open heart, seeking authentic human connections across Europe and beyond.';
+  }
+
+  toggleEditAboutMe(): void {
+    if (!this.editingAboutMe()) {
+      this.initAboutMeData();
+    }
+    this.editingAboutMe.update((v) => !v);
+  }
+
+  addHobby(hobby?: string): void {
+    const val = (hobby || this.newHobbySelect).trim();
+    if (!val) return;
+    this.hobbyNotice.set(null);
+    if (this.aboutHobbies().length >= 10) {
+      this.hobbyNotice.set('You can add up to 10 hobbies maximum.');
+      return;
+    }
+    if (!this.aboutHobbies().includes(val)) {
+      this.aboutHobbies.update((h) => [...h, val]);
+    }
+    this.newHobbySelect = '';
+  }
+
+  removeHobby(index: number): void {
+    this.hobbyNotice.set(null);
+    this.aboutHobbies.update((h) => h.filter((_, i) => i !== index));
+  }
+
+  addInterest(interest?: string): void {
+    const val = (interest || this.newInterestSelect).trim();
+    if (!val) return;
+    this.interestNotice.set(null);
+    if (this.aboutInterests().length >= 10) {
+      this.interestNotice.set('You can add up to 10 interests maximum.');
+      return;
+    }
+    if (!this.aboutInterests().includes(val)) {
+      this.aboutInterests.update((ints) => [...ints, val]);
+    }
+    this.newInterestSelect = '';
+  }
+
+  removeInterest(index: number): void {
+    this.interestNotice.set(null);
+    this.aboutInterests.update((ints) => ints.filter((_, i) => i !== index));
+  }
+
+  addWorkExperience(): void {
+    this.aboutWorkExperiences.update((list) => [
+      ...list,
+      {
+        id: Date.now(),
+        company: '',
+        yearFrom: '',
+        yearTo: '',
+        currentlyWorkHere: false,
+        country: '',
+        city: '',
+        town: '',
+        description: '',
+      },
+    ]);
+  }
+
+  removeWorkExperience(index: number): void {
+    this.aboutWorkExperiences.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  addEducation(): void {
+    this.aboutEducation.update((list) => [
+      ...list,
+      {
+        id: Date.now(),
+        institutionName: '',
+        level: 'University',
+        courseOrDegree: '',
+        yearFrom: '',
+        yearTo: '',
+        currentlyStudying: false,
+      },
+    ]);
+  }
+
+  removeEducation(index: number): void {
+    this.aboutEducation.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  addSocialLink(): void {
+    this.socialLinkNotice.set(null);
+    if (this.aboutSocialLinks().length >= 3) {
+      this.socialLinkNotice.set('You can add up to 3 social media links (Facebook, Instagram, X).');
+      return;
+    }
+    this.aboutSocialLinks.update((list) => [
+      ...list,
+      {
+        platform: 'Instagram',
+        urlOrHandle: '',
+      },
+    ]);
+  }
+
+  removeSocialLink(index: number): void {
+    this.socialLinkNotice.set(null);
+    this.aboutSocialLinks.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  addLanguage(lang?: string): void {
+    const val = (lang || this.newLanguageInput).trim();
+    if (!val) return;
+    if (!this.aboutLanguages().includes(val)) {
+      this.aboutLanguages.update((langs) => [...langs, val]);
+    }
+    this.newLanguageInput = '';
+  }
+
+  removeLanguage(index: number): void {
+    this.aboutLanguages.update((langs) => langs.filter((_, i) => i !== index));
+  }
+
+  saveAboutMeDetails(): void {
+    const details: AboutMeDetails = {
+      intro: this.aboutIntro.trim(),
+      gender: this.aboutGender,
+      dateOfBirth: this.aboutDob,
+      location: this.aboutLocation.trim(),
+      hometown: this.aboutHometown.trim(),
+      relationshipStatus: this.aboutRelationshipStatus,
+      languagesKnown: this.aboutLanguages(),
+      workExperience: this.aboutWorkExperiences(),
+      education: this.aboutEducation(),
+      hobbies: this.aboutHobbies(),
+      interests: this.aboutInterests(),
+      contactEmail: this.aboutContactEmail.trim(),
+      contactPhone: this.aboutContactPhone.trim(),
+      socialLinks: this.aboutSocialLinks(),
+      aboutThePerson: this.aboutThePersonText.trim(),
+    };
+
+    this.service.updateAboutMeDetails(details);
+    this.editingAboutMe.set(false);
+  }
+
+  cancelEditAboutMe(): void {
+    this.initAboutMeData();
+    this.editingAboutMe.set(false);
+  }
+
+  getProfileAboutMe(): AboutMeDetails {
+    return this.service.profile()?.aboutMeDetails || {};
+  }
+
+  getVisitorAboutMe(): AboutMeDetails | undefined {
+    return this.viewingVisitor()?.aboutMeDetails;
   }
 
   // ---------------------------------------------------------------------------
@@ -709,6 +1291,7 @@ export class CommunityProfile implements OnInit {
     this.selectedPostLikers.set(likers);
     this.selectedPostForLikers.set(post);
     this.showLikersModal.set(true);
+    this.openReactionsBreakdownModal(post, 'post');
   }
 
   closeLikersModal(): void {
@@ -1085,8 +1668,12 @@ export class CommunityProfile implements OnInit {
         this.newPostText.trim(),
         undefined,
         this.messageBookPhotoPreview() || undefined,
+        this.selectedMessageBookTaggedCompanions().length > 0
+          ? [...this.selectedMessageBookTaggedCompanions()]
+          : undefined,
       );
       this.newPostText = '';
+      this.selectedMessageBookTaggedCompanions.set([]);
       this.clearMessageBookPhoto();
     } finally {
       this.postingPost.set(false);

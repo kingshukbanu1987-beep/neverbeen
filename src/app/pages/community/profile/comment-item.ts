@@ -1,7 +1,15 @@
 import { Component, EventEmitter, Input, Output, forwardRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthorInfo, JourneyComment } from '../../../models/community';
+import {
+  AuthorInfo,
+  HOLD_REACTION_OPTIONS,
+  JourneyComment,
+  REACTION_ICONS,
+  ReactionType,
+  getTopReactionIcon,
+  getTopReactionIcons,
+} from '../../../models/community';
 
 @Component({
   selector: 'app-comment-thread',
@@ -18,6 +26,8 @@ export class CommentThreadComponent {
 
   @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string; imageUrl?: string }>();
   @Output() like = new EventEmitter<{ postId: number; commentId: number }>();
+  @Output() react = new EventEmitter<{ postId: number; commentId: number; reaction: ReactionType }>();
+  @Output() showReactionsModal = new EventEmitter<{ comment: JourneyComment; commentId: number }>();
   @Output() openUser = new EventEmitter<AuthorInfo>();
   @Output() reportAbuse = new EventEmitter<{ commentId: number; author: AuthorInfo; text: string }>();
 
@@ -27,6 +37,78 @@ export class CommentThreadComponent {
   readonly replyPhotoError = signal<string | null>(null);
 
   readonly MAX_PICTURE_SIZE = 100 * 1024; // 100 KB limit (Requirement A)
+
+  // Hold reaction popover state
+  readonly showReactionPicker = signal(false);
+  readonly holdReactions = HOLD_REACTION_OPTIONS;
+  readonly REACTION_ICONS = REACTION_ICONS;
+  private likeHoldTimer?: any;
+  private summaryHoldTimer?: any;
+  protected isLongPressActive = false;
+
+  getTop3Icons(): string[] {
+    return getTopReactionIcons(this.comment.reactions, 3);
+  }
+
+  getTop1Icon(): string {
+    return getTopReactionIcon(this.comment.reactions);
+  }
+
+  startLikeHold(event?: Event): void {
+    this.isLongPressActive = false;
+    this.likeHoldTimer = setTimeout(() => {
+      this.isLongPressActive = true;
+      this.showReactionPicker.set(true);
+    }, 350);
+  }
+
+  endLikeHold(): void {
+    if (this.likeHoldTimer) {
+      clearTimeout(this.likeHoldTimer);
+      this.likeHoldTimer = undefined;
+    }
+  }
+
+  handleLikeClick(): void {
+    if (this.isLongPressActive) {
+      this.isLongPressActive = false;
+      return;
+    }
+    if (this.showReactionPicker()) {
+      this.showReactionPicker.set(false);
+      return;
+    }
+    this.toggleLike();
+  }
+
+  selectReaction(reaction: ReactionType): void {
+    this.showReactionPicker.set(false);
+    this.react.emit({
+      postId: this.postId,
+      commentId: this.comment.id,
+      reaction,
+    });
+  }
+
+  startReactionSummaryHold(event?: Event): void {
+    this.summaryHoldTimer = setTimeout(() => {
+      this.openReactionsModal();
+    }, 300);
+  }
+
+  endReactionSummaryHold(): void {
+    if (this.summaryHoldTimer) {
+      clearTimeout(this.summaryHoldTimer);
+      this.summaryHoldTimer = undefined;
+    }
+  }
+
+  openReactionsModal(): void {
+    this.showReactionsModal.emit({
+      comment: this.comment,
+      commentId: this.comment.id,
+    });
+  }
 
   toggleReply(): void {
     this.replyOpen.update((v) => !v);
@@ -89,6 +171,14 @@ export class CommentThreadComponent {
 
   forwardLike(event: { postId: number; commentId: number }): void {
     this.like.emit(event);
+  }
+
+  forwardReact(event: { postId: number; commentId: number; reaction: ReactionType }): void {
+    this.react.emit(event);
+  }
+
+  forwardShowReactionsModal(event: { comment: JourneyComment; commentId: number }): void {
+    this.showReactionsModal.emit(event);
   }
 
   forwardOpenUser(author: AuthorInfo): void {
