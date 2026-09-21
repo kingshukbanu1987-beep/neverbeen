@@ -1,0 +1,92 @@
+<main class="community-shell">
+  <div class="community-aurora" aria-hidden="true">
+    <span class="aurora-blob aurora-1"></span>
+    <span class="aurora-blob aurora-2"></span>
+  </div>
+
+  <div class="container shell-content">
+    <header class="community-header">
+      <div class="header-main">
+        <a routerLink="/" class="back-link">
+          <svg viewBox="0 0 24 24" class="icon-inline" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Back to NeverBeen Home
+        </a>
+        <div class="community-badge-row">
+          <span class="badge-tag">Community Hub</span>
+          @if (service.isAuthenticated()) {
+            <span class="user-chip" [class.pending]="service.isPending()">
+              <span class="status-dot"></span>
+              {{ service.currentUser()?.fullName || service.currentUser()?.email }}
+              <span class="role-label">({{ service.currentUser()?.status }})</span>
+            </span>
+            <button type="button" class="btn-logout" (click)="logout()">Sign Out</button>
+          } @else {
+            <span class="guest-chip">Guest Visitor</span>
+          }
+        </div>
+      </div>
+
+      <nav class="community-nav" aria-label="Community navigation">
+        <a
+          routerLink="/community"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-tab"
+        >
+          <svg viewBox="0 0 24 24" class="nav-icon" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          Connect &amp; Sign In
+        </a>
+
+        <a
+          routerLink="/community/register"
+          routerLinkActive="active"
+          class="nav-tab"
+        >
+          <svg viewBox="0 0 24 24" class="nav-icon" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          Registration Form
+          @if (service.isPending()) {
+            <span class="attention-dot" title="Pending registration required"></span>
+          }
+        </a>
+
+        <a
+          routerLink="/community/profile"
+          routerLinkActive="active"
+          class="nav-tab"
+        >
+          <svg viewBox="0 0 24 24" class="nav-icon" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Member Profile
+        </a>
+
+        <a
+          routerLink="/community/message-book"
+          routerLinkActive="active"
+          class="nav-tab"
+        >
+          <svg viewBox="0 0 24 24" class="nav-icon" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Message Book
+          <span class="count-pill">{{ service.comments().length }}</span>
+        </a>
+      </nav>
+    </header>
+
+    <div class="community-view-container">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</main>

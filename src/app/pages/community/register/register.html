@@ -1,0 +1,230 @@
+<section class="register-page" aria-labelledby="register-title">
+  <div class="register-header">
+    <span class="eyebrow">Step 2 of 2 — Onboarding</span>
+    <h1 id="register-title">Complete Your Community Profile</h1>
+    <p class="lede">
+      You are connected via your SSO provider. Complete these final details to unlock member
+      conversations, create your traveler portfolio, and access the NeverBeen Community Message Book.
+    </p>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step step-done">
+        <span class="step-num">✓</span>
+        <span class="step-label">OAuth Connected</span>
+      </div>
+      <div class="step-line active"></div>
+      <div class="step step-current">
+        <span class="step-num">2</span>
+        <span class="step-label">Profile Details</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <span class="step-label">Community Access</span>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="register-form" novalidate>
+    <!-- Avatar Section -->
+    <div class="avatar-uploader-card">
+      <div class="avatar-preview-wrap">
+        <img [src]="photoPreview() || defaultAvatar" alt="Avatar preview" class="avatar-preview-img" />
+        <label class="avatar-upload-overlay" for="photoInput" title="Choose photo">
+          <svg viewBox="0 0 24 24" class="camera-icon" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <span>Upload</span>
+        </label>
+        <input
+          type="file"
+          id="photoInput"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          (change)="onFileSelected($event)"
+          class="hidden-input"
+        />
+      </div>
+      <div class="avatar-uploader-meta">
+        <h3>Member Profile Photograph</h3>
+        <p>Upload a clear portrait (< 5 MB, JPEG, PNG or WebP). If omitted, your SSO account picture is used.</p>
+        @if (selectedFileName()) {
+          <span class="selected-file-pill">{{ selectedFileName() }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Personal details -->
+    <div class="form-section">
+      <h2 class="section-title">1. Personal Information</h2>
+      <div class="form-grid">
+        <div class="field-wrap">
+          <label for="fullName">Full Name <span class="req">*</span></label>
+          <input
+            id="fullName"
+            type="text"
+            formControlName="fullName"
+            placeholder="e.g. Sophia Laurent"
+            [class.invalid]="isInvalid('fullName')"
+          />
+          @if (isInvalid('fullName')) {
+            <span class="field-error">Please provide your full name (at least 2 letters).</span>
+          }
+        </div>
+
+        <div class="field-wrap">
+          <label for="email">Connected Email <span class="badge-locked">Verified SSO</span></label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            readonly
+            class="locked-input"
+          />
+        </div>
+
+        <div class="field-wrap">
+          <label for="gender">Gender <span class="req">*</span></label>
+          <select id="gender" formControlName="gender" [class.invalid]="isInvalid('gender')">
+            <option value="" disabled>Select your gender</option>
+            @for (g of service.genders(); track g) {
+              <option [value]="g">{{ g }}</option>
+            }
+          </select>
+          @if (isInvalid('gender')) {
+            <span class="field-error">Please select a gender option.</span>
+          }
+        </div>
+
+        <div class="field-wrap">
+          <label for="dateOfBirth">Date of Birth <span class="req">*</span></label>
+          <input
+            id="dateOfBirth"
+            type="date"
+            formControlName="dateOfBirth"
+            [class.invalid]="isInvalid('dateOfBirth')"
+          />
+          @if (isInvalid('dateOfBirth')) {
+            <span class="field-error">Please select your date of birth.</span>
+          }
+        </div>
+
+        <div class="field-wrap full-col">
+          <label for="profession">Profession / Occupation <span class="req">*</span></label>
+          <select id="profession" formControlName="profession" [class.invalid]="isInvalid('profession')">
+            <option value="" disabled>Select your profession</option>
+            @for (p of service.professions(); track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+          @if (isInvalid('profession')) {
+            <span class="field-error">Please choose your profession from the official list.</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Location details -->
+    <div class="form-section">
+      <h2 class="section-title">2. Geographic &amp; Contact Details</h2>
+      <div class="form-grid">
+        <div class="field-wrap">
+          <label for="country">Country of Residence <span class="req">*</span></label>
+          <select
+            id="country"
+            formControlName="countryId"
+            (change)="onCountryChange()"
+            [class.invalid]="isInvalid('countryId')"
+          >
+            <option [ngValue]="null" disabled>Select your country</option>
+            @for (c of service.countries(); track c.id) {
+              <option [ngValue]="c.id">{{ c.name }} ({{ c.phoneCode }})</option>
+            }
+          </select>
+          @if (isInvalid('countryId')) {
+            <span class="field-error">Please select your country.</span>
+          }
+        </div>
+
+        <div class="field-wrap">
+          <label for="city">City <span class="req">*</span></label>
+          <select id="city" formControlName="cityId" [class.invalid]="isInvalid('cityId')">
+            <option [ngValue]="null" disabled>
+              {{ citiesList().length > 0 ? 'Select your city' : 'Select country first' }}
+            </option>
+            @for (city of citiesList(); track city.id) {
+              <option [ngValue]="city.id">{{ city.name }}</option>
+            }
+          </select>
+          @if (isInvalid('cityId')) {
+            <span class="field-error">Please select your city.</span>
+          }
+        </div>
+
+        <div class="field-wrap">
+          <label for="pincode">Pincode / Postal Code</label>
+          <input
+            id="pincode"
+            type="text"
+            formControlName="pincode"
+            placeholder="e.g. 75001"
+          />
+        </div>
+
+        <div class="field-wrap">
+          <label for="contactNumber">Contact Phone Number</label>
+          <input
+            id="contactNumber"
+            type="tel"
+            formControlName="contactNumber"
+            placeholder="e.g. +33 6 12 34 56 78"
+          />
+        </div>
+
+        <div class="field-wrap full-col">
+          <label for="postalAddress">Mailing Address (Optional)</label>
+          <input
+            id="postalAddress"
+            type="text"
+            formControlName="postalAddress"
+            placeholder="Street address for collection shipments and print proofs"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- About me -->
+    <div class="form-section">
+      <h2 class="section-title">3. About Your Travel Passions</h2>
+      <div class="field-wrap full-col">
+        <div class="label-row">
+          <label for="aboutMe">About Me &amp; Bucket List</label>
+          <span class="char-counter">{{ (form.get('aboutMe')?.value || '').length }} / 2000</span>
+        </div>
+        <textarea
+          id="aboutMe"
+          formControlName="aboutMe"
+          rows="4"
+          maxlength="2000"
+          placeholder="Share your travel interests, favorite photography styles, dream destinations, or what you hope to create with NeverBeen..."
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Submit bar -->
+    <div class="submit-bar">
+      <button type="submit" class="btn btn-primary btn-submit" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="spinner"></span>
+          Saving Profile...
+        } @else {
+          Activate Profile &amp; Join Community →
+        }
+      </button>
+      <p class="terms-note">
+        By completing registration you join the NeverBeen Community network. Your public profile settings can be customized at any time.
+      </p>
+    </div>
+  </form>
+</section>

@@ -1,0 +1,226 @@
+<section class="message-book-page" aria-labelledby="mb-title">
+  <div class="mb-intro">
+    <span class="eyebrow">NeverBeen Community</span>
+    <h1 id="mb-title">Community Message Book</h1>
+    <p class="lede">
+      Share experiences, exchange local destination tips, ask questions about AI vacation photos,
+      and engage with fellow travelers worldwide.
+    </p>
+  </div>
+
+  <!-- Post composer -->
+  <div class="composer-card">
+    @if (service.isAuthenticated()) {
+      <div class="composer-header">
+        <img
+          [src]="service.currentUser()?.profilePhotoUrl || defaultAvatar"
+          alt="My avatar"
+          class="composer-avatar"
+        />
+        <div class="composer-user-meta">
+          <strong>{{ service.currentUser()?.fullName || service.currentUser()?.email }}</strong>
+          <span>{{ service.profile()?.profession || 'Community Member' }}</span>
+        </div>
+      </div>
+      <div class="composer-body">
+        <textarea
+          [(ngModel)]="newPostText"
+          placeholder="Share your travel experiences, questions, or tips with the NeverBeen community..."
+          rows="3"
+          maxlength="2000"
+          class="composer-textarea"
+        ></textarea>
+        <div class="composer-footer">
+          <span class="char-count">{{ newPostText.length }} / 2000</span>
+          <button
+            type="button"
+            class="btn btn-primary btn-post"
+            [disabled]="!newPostText.trim() || posting()"
+            (click)="submitPost()"
+          >
+            @if (posting()) { Posting... } @else { Post to Message Book }
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="guest-composer-banner">
+        <div class="guest-msg">
+          <h3>Sign in to join the discussion</h3>
+          <p>Read any message freely. Connect with your Google, Facebook or Microsoft account to post comments, reply, and react.</p>
+        </div>
+        <a routerLink="/community" class="btn btn-primary">Connect Account →</a>
+      </div>
+    }
+  </div>
+
+  <!-- Filter / Sort Bar -->
+  <div class="feed-filter-bar">
+    <div class="filter-stats">
+      <strong>{{ service.comments().length }} Discussions</strong>
+      <span>Active conversations from verified members</span>
+    </div>
+  </div>
+
+  <!-- Posts list -->
+  <div class="posts-stream">
+    @if (!service.comments().length) {
+      <div class="empty-stream">
+        <p>No comments in the message book yet. Be the first to start a conversation!</p>
+      </div>
+    } @else {
+      @for (post of service.comments(); track post.id) {
+        <article class="post-card">
+          <header class="post-header">
+            <img
+              [src]="post.author.profilePhotoUrl || defaultAvatar"
+              [alt]="post.author.fullName || 'Member'"
+              class="post-avatar"
+            />
+            <div class="post-author-meta">
+              <div class="author-line">
+                <span class="author-name">{{ post.author.fullName || 'Anonymous Traveler' }}</span>
+                @if (post.author.profession) {
+                  <span class="author-profession">{{ post.author.profession }}</span>
+                }
+              </div>
+              <time class="post-time">{{ formatTime(post.createdAtUtc) }}</time>
+            </div>
+
+            @if (canDelete(post.author.id)) {
+              <button
+                type="button"
+                class="btn-delete"
+                title="Delete comment"
+                (click)="deleteComment(post.id)"
+              >
+                <svg viewBox="0 0 24 24" class="del-icon" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            }
+          </header>
+
+          <p class="post-text">{{ post.text }}</p>
+
+          <!-- Action bar: Likes, Dislikes, Replies -->
+          <footer class="post-footer">
+            <div class="action-group">
+              <button
+                type="button"
+                class="btn-reaction"
+                [class.reacted]="post.myReaction === 'Like'"
+                (click)="react(post.id, 'like')"
+                title="Like"
+              >
+                <svg viewBox="0 0 24 24" class="rx-icon" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                </svg>
+                <span class="rx-count">{{ post.likeCount }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn-reaction"
+                [class.reacted]="post.myReaction === 'Dislike'"
+                (click)="react(post.id, 'dislike')"
+                title="Dislike"
+              >
+                <svg viewBox="0 0 24 24" class="rx-icon flip-y" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                </svg>
+                <span class="rx-count">{{ post.dislikeCount }}</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn-reply-toggle"
+                (click)="toggleReplyInput(post.id)"
+              >
+                <svg viewBox="0 0 24 24" class="rx-icon" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>{{ post.replies.length || post.replyCount }} {{ (post.replies.length === 1) ? 'Reply' : 'Replies' }}</span>
+              </button>
+            </div>
+          </footer>
+
+          <!-- Reply thread -->
+          @if (activeReplyPostId() === post.id || post.replies.length > 0) {
+            <section class="replies-thread" aria-label="Thread replies">
+              @for (reply of post.replies; track reply.id) {
+                <div class="reply-item">
+                  <img
+                    [src]="reply.author.profilePhotoUrl || defaultAvatar"
+                    [alt]="reply.author.fullName || 'Reply author'"
+                    class="reply-avatar"
+                  />
+                  <div class="reply-content">
+                    <div class="reply-header">
+                      <span class="reply-author-name">{{ reply.author.fullName || 'Traveler' }}</span>
+                      @if (reply.author.profession) {
+                        <span class="reply-profession">{{ reply.author.profession }}</span>
+                      }
+                      <time class="reply-time">{{ formatTime(reply.createdAtUtc) }}</time>
+
+                      @if (canDelete(reply.author.id)) {
+                        <button
+                          type="button"
+                          class="btn-delete-reply"
+                          title="Delete reply"
+                          (click)="deleteComment(reply.id)"
+                        >
+                          ✕
+                        </button>
+                      }
+                    </div>
+                    <p class="reply-text">{{ reply.text }}</p>
+
+                    <div class="reply-actions">
+                      <button
+                        type="button"
+                        class="btn-reaction-sm"
+                        [class.reacted]="reply.myReaction === 'Like'"
+                        (click)="react(reply.id, 'like')"
+                      >
+                        👍 {{ reply.likeCount }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-reaction-sm"
+                        [class.reacted]="reply.myReaction === 'Dislike'"
+                        (click)="react(reply.id, 'dislike')"
+                      >
+                        👎 {{ reply.dislikeCount }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Inline reply composer -->
+              @if (service.isAuthenticated()) {
+                <div class="inline-reply-composer">
+                  <input
+                    type="text"
+                    [(ngModel)]="replyText"
+                    placeholder="Write a reply to {{ post.author.fullName }}..."
+                    (keydown.enter)="submitReply(post.id)"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-reply-submit"
+                    [disabled]="!replyText.trim() || postingReply()"
+                    (click)="submitReply(post.id)"
+                  >
+                    Reply
+                  </button>
+                </div>
+              }
+            </section>
+          }
+        </article>
+      }
+    }
+  </div>
+</section>

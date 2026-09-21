@@ -1,0 +1,469 @@
+<section class="profile-page" aria-labelledby="profile-title">
+  @if (!service.profile()) {
+    <div class="no-profile-state">
+      <div class="state-icon">👤</div>
+      <h2>Profile Setup Required</h2>
+      <p>Please connect via OAuth and complete your registration details to view your profile dashboard.</p>
+      <div class="state-actions">
+        <a routerLink="/community" class="btn btn-primary">Connect Account</a>
+        <a routerLink="/community/register" class="btn btn-ghost">Registration Form</a>
+      </div>
+    </div>
+  } @else {
+    <!-- Masthead -->
+    <header class="profile-masthead">
+      <div class="masthead-cover" aria-hidden="true">
+        <div class="cover-gradient"></div>
+      </div>
+
+      <div class="masthead-body">
+        <div class="masthead-avatar-col">
+          <div class="profile-avatar-wrap">
+            <img
+              [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
+              [alt]="service.profile()?.fullName || 'Member avatar'"
+              class="profile-avatar-img"
+            />
+            <label class="change-photo-badge" for="profilePhotoInput" title="Update photo">
+              <svg viewBox="0 0 24 24" class="icon-camera" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </label>
+            <input
+              type="file"
+              id="profilePhotoInput"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              (change)="onPhotoFileChange($event)"
+              class="hidden-file-input"
+            />
+          </div>
+        </div>
+
+        <div class="masthead-info-col">
+          <div class="info-badges">
+            <span class="status-pill active-pill">
+              <span class="pulse-dot"></span> Active Member
+            </span>
+            @if (service.profile()?.profession) {
+              <span class="profession-pill">{{ service.profile()?.profession }}</span>
+            }
+            @if (service.profile()?.countryName) {
+              <span class="location-pill">📍 {{ service.profile()?.cityName }}, {{ service.profile()?.countryName }}</span>
+            }
+          </div>
+
+          <h1 id="profile-title" class="profile-name">
+            {{ service.profile()?.fullName || 'NeverBeen Traveler' }}
+          </h1>
+          <p class="profile-email">{{ service.profile()?.email }}</p>
+        </div>
+
+        <div class="masthead-stats-col">
+          <div class="stat-card">
+            <span class="stat-val">{{ service.profile()?.gallery?.length || 0 }}</span>
+            <span class="stat-lbl">Gallery Photos</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-val">{{ service.profile()?.commentCount || 0 }}</span>
+            <span class="stat-lbl">Comments</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-val">Verified</span>
+            <span class="stat-lbl">Community SSO</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Side-panel + Main Dashboard Layout -->
+    <div class="profile-layout">
+      <!-- Side navigation panel -->
+      <aside class="profile-sidebar" aria-label="Profile tabs">
+        <nav class="sidebar-nav">
+          <button
+            type="button"
+            class="sidebar-btn"
+            [class.active]="activeTab() === 'about'"
+            (click)="setTab('about')"
+          >
+            <svg viewBox="0 0 24 24" class="tab-icon" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>About Me</span>
+          </button>
+
+          <button
+            type="button"
+            class="sidebar-btn"
+            [class.active]="activeTab() === 'details'"
+            (click)="setTab('details')"
+          >
+            <svg viewBox="0 0 24 24" class="tab-icon" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Personal Details</span>
+          </button>
+
+          <button
+            type="button"
+            class="sidebar-btn"
+            [class.active]="activeTab() === 'gallery'"
+            (click)="setTab('gallery')"
+          >
+            <svg viewBox="0 0 24 24" class="tab-icon" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>Photo Gallery</span>
+            <span class="tab-badge">{{ service.profile()?.gallery?.length || 0 }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="sidebar-btn"
+            [class.active]="activeTab() === 'settings'"
+            (click)="setTab('settings')"
+          >
+            <svg viewBox="0 0 24 24" class="tab-icon" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Settings</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer-card">
+          <h4>Have travel ideas?</h4>
+          <p>Join the conversation with other members in the Message Book.</p>
+          <a routerLink="/community/message-book" class="btn btn-ghost btn-compact">
+            Open Message Book →
+          </a>
+        </div>
+      </aside>
+
+      <!-- Main panel -->
+      <main class="profile-main-panel">
+        <!-- TAB 1: About Me -->
+        @if (activeTab() === 'about') {
+          <article class="panel-card tab-content-animate">
+            <div class="panel-header">
+              <h2>About Me</h2>
+              <button type="button" class="btn-text" (click)="setTab('details')">Edit Profile Details ↗</button>
+            </div>
+
+            <p class="bio-text">
+              {{ service.profile()?.aboutMe || 'No biography written yet. Head to Personal Details to describe your travel passions.' }}
+            </p>
+
+            <div class="attributes-grid">
+              <div class="attr-box">
+                <span class="attr-lbl">Profession</span>
+                <span class="attr-val">{{ service.profile()?.profession || 'Not set' }}</span>
+              </div>
+              <div class="attr-box">
+                <span class="attr-lbl">Gender</span>
+                <span class="attr-val">{{ service.profile()?.gender || 'Not specified' }}</span>
+              </div>
+              <div class="attr-box">
+                <span class="attr-lbl">Date of Birth</span>
+                <span class="attr-val">{{ service.profile()?.dateOfBirth || 'Not specified' }}</span>
+              </div>
+              <div class="attr-box">
+                <span class="attr-lbl">Hometown / Base</span>
+                <span class="attr-val">{{ service.profile()?.cityName }}, {{ service.profile()?.countryName }}</span>
+              </div>
+            </div>
+
+            <div class="travel-pillars-highlight">
+              <h3>Travel &amp; AI Memoirs Highlights</h3>
+              <div class="pillars-mini">
+                <div class="pmini">
+                  <span class="pmini-icon">🏔️</span>
+                  <div>
+                    <strong>Dream Destinations</strong>
+                    <p>Alpine lakes, Mediterranean coves, and historic Old Towns.</p>
+                  </div>
+                </div>
+                <div class="pmini">
+                  <span class="pmini-icon">📸</span>
+                  <div>
+                    <strong>Preferred Style</strong>
+                    <p>Golden hour lighting, vintage 35mm film tones, and candid leisure.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        }
+
+        <!-- TAB 2: Details -->
+        @if (activeTab() === 'details') {
+          <article class="panel-card tab-content-animate">
+            <div class="panel-header">
+              <h2>Personal &amp; Contact Details</h2>
+              @if (editingDetails()) {
+                <button type="button" class="btn btn-ghost btn-compact" (click)="cancelEdit()">Cancel</button>
+              } @else {
+                <button type="button" class="btn btn-primary btn-compact" (click)="enableEdit()">Edit Details</button>
+              }
+            </div>
+
+            @if (!editingDetails()) {
+              <div class="details-list">
+                <div class="detail-row">
+                  <span class="d-label">Full Name</span>
+                  <span class="d-value">{{ service.profile()?.fullName }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">Email Address</span>
+                  <span class="d-value">{{ service.profile()?.email }} (OAuth Verified)</span>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">Country</span>
+                  <span class="d-value">{{ service.profile()?.countryName }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">City</span>
+                  <span class="d-value">{{ service.profile()?.cityName }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">Postal Code / Pincode</span>
+                  <span class="d-value">{{ service.profile()?.pincode || 'None specified' }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">Contact Number</span>
+                  <span class="d-value">{{ service.profile()?.contactNumber || 'None specified' }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">Mailing Address</span>
+                  <span class="d-value">{{ service.profile()?.postalAddress || 'None specified' }}</span>
+                </div>
+              </div>
+            } @else {
+              <form [formGroup]="editForm" (ngSubmit)="saveDetails()" class="edit-details-form">
+                <div class="form-grid">
+                  <div class="field-wrap">
+                    <label>Full Name</label>
+                    <input type="text" formControlName="fullName" />
+                  </div>
+                  <div class="field-wrap">
+                    <label>Profession</label>
+                    <select formControlName="profession">
+                      @for (p of service.professions(); track p) {
+                        <option [value]="p">{{ p }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field-wrap">
+                    <label>Country</label>
+                    <select formControlName="countryId" (change)="onEditCountryChange()">
+                      @for (c of service.countries(); track c.id) {
+                        <option [ngValue]="c.id">{{ c.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field-wrap">
+                    <label>City</label>
+                    <select formControlName="cityId">
+                      @for (ct of editCitiesList(); track ct.id) {
+                        <option [ngValue]="ct.id">{{ ct.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field-wrap">
+                    <label>Pincode</label>
+                    <input type="text" formControlName="pincode" />
+                  </div>
+                  <div class="field-wrap">
+                    <label>Contact Phone</label>
+                    <input type="tel" formControlName="contactNumber" />
+                  </div>
+                  <div class="field-wrap full-col">
+                    <label>Postal Address</label>
+                    <input type="text" formControlName="postalAddress" />
+                  </div>
+                  <div class="field-wrap full-col">
+                    <label>About Me</label>
+                    <textarea formControlName="aboutMe" rows="3"></textarea>
+                  </div>
+                </div>
+                <div class="edit-actions">
+                  <button type="submit" class="btn btn-primary">Save Changes</button>
+                  <button type="button" class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+                </div>
+              </form>
+            }
+          </article>
+        }
+
+        <!-- TAB 3: Gallery -->
+        @if (activeTab() === 'gallery') {
+          <article class="panel-card tab-content-animate">
+            <div class="panel-header">
+              <div>
+                <h2>Photo Gallery</h2>
+                <p class="panel-sub">Your uploaded AI vacation memoirs stored directly in the NeverBeen database.</p>
+              </div>
+              <button
+                type="button"
+                class="btn btn-primary btn-compact"
+                (click)="showUploadCard.set(!showUploadCard())"
+              >
+                {{ showUploadCard() ? 'Close Uploader' : '+ Add Photo' }}
+              </button>
+            </div>
+
+            <!-- Upload card -->
+            @if (showUploadCard()) {
+              <div class="upload-modal-inline">
+                <h3>Add New Vacation Photograph</h3>
+                <div class="upload-dropzone">
+                  @if (galleryPreviewUrl()) {
+                    <img [src]="galleryPreviewUrl()" alt="Preview" class="gallery-preview-thumb" />
+                  } @else {
+                    <div class="drop-placeholder">
+                      <svg viewBox="0 0 24 24" class="cloud-icon" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      <p>Click to select an image (< 8 MB, JPEG/PNG/WebP)</p>
+                    </div>
+                  }
+                  <input
+                    type="file"
+                    accept="image/*"
+                    (change)="onGalleryFileSelected($event)"
+                    class="drop-file-input"
+                  />
+                </div>
+                <div class="caption-input-wrap">
+                  <label for="caption">Photograph Caption</label>
+                  <input
+                    id="caption"
+                    type="text"
+                    [(ngModel)]="newCaption"
+                    placeholder="e.g. Sunset in Santorini, Greece"
+                  />
+                </div>
+                <div class="upload-btn-row">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    [disabled]="!selectedGalleryFile() || uploadingGallery()"
+                    (click)="submitGalleryUpload()"
+                  >
+                    @if (uploadingGallery()) { Uploading... } @else { Save Photo to Gallery }
+                  </button>
+                  <button type="button" class="btn btn-ghost" (click)="showUploadCard.set(false)">Cancel</button>
+                </div>
+              </div>
+            }
+
+            <!-- Photo Grid -->
+            @if (!service.profile()?.gallery?.length) {
+              <div class="empty-gallery">
+                <p>No photos in your gallery yet. Click "+ Add Photo" to showcase your first vacation render!</p>
+              </div>
+            } @else {
+              <div class="gallery-grid">
+                @for (photo of service.profile()?.gallery; track photo.id) {
+                  <figure class="gallery-item">
+                    <img [src]="photo.url" [alt]="photo.caption || 'Vacation photo'" loading="lazy" />
+                    <figcaption>
+                      <span class="caption-text">{{ photo.caption || 'Vacation memoir' }}</span>
+                      <button
+                        type="button"
+                        class="btn-del-photo"
+                        title="Delete photo"
+                        (click)="deletePhoto(photo.id)"
+                      >
+                        ✕
+                      </button>
+                    </figcaption>
+                  </figure>
+                }
+              </div>
+            }
+          </article>
+        }
+
+        <!-- TAB 4: Settings -->
+        @if (activeTab() === 'settings') {
+          <article class="panel-card tab-content-animate">
+            <div class="panel-header">
+              <h2>Account Settings</h2>
+              <p class="panel-sub">Configure privacy, notifications, and aesthetic preferences.</p>
+            </div>
+
+            <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">
+              <div class="settings-group">
+                <h3>Privacy &amp; Visibility</h3>
+                <label class="toggle-control">
+                  <input type="checkbox" formControlName="publicProfileEnabled" />
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-text">
+                    <strong>Public Profile Enabled</strong>
+                    <small>Allow fellow community members to view your bio and vacation gallery.</small>
+                  </span>
+                </label>
+              </div>
+
+              <div class="settings-group">
+                <h3>Notifications</h3>
+                <label class="toggle-control">
+                  <input type="checkbox" formControlName="emailNotificationsEnabled" />
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-text">
+                    <strong>Email Notifications</strong>
+                    <small>Receive updates when members reply to your message-book comments.</small>
+                  </span>
+                </label>
+
+                <label class="toggle-control">
+                  <input type="checkbox" formControlName="phoneNotificationsEnabled" />
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-text">
+                    <strong>SMS Notifications</strong>
+                    <small>Get alerts on print deliveries and major platform features.</small>
+                  </span>
+                </label>
+              </div>
+
+              <div class="settings-group">
+                <h3>Appearance &amp; Locale</h3>
+                <div class="field-wrap">
+                  <label for="themeSelect">Color Theme</label>
+                  <select id="themeSelect" formControlName="theme">
+                    <option value="light">Light Editorial (Paper &amp; Forest)</option>
+                    <option value="dark">Dark Lux (Midnight &amp; Gold)</option>
+                    <option value="system">Follow System Preferences</option>
+                  </select>
+                </div>
+
+                <div class="field-wrap">
+                  <label for="tzSelect">Timezone</label>
+                  <input id="tzSelect" type="text" formControlName="timezone" placeholder="e.g. Europe/Paris" />
+                </div>
+              </div>
+
+              <div class="settings-submit-row">
+                <button type="submit" class="btn btn-primary" [disabled]="savingSettings()">
+                  @if (savingSettings()) { Saving... } @else { Save Preferences }
+                </button>
+                @if (settingsSaved()) {
+                  <span class="save-toast">✓ Settings saved successfully!</span>
+                }
+              </div>
+            </form>
+          </article>
+        }
+      </main>
+    </div>
+  }
+</section>

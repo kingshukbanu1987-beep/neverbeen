@@ -37,5 +37,43 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/collection/collection').then((m) => m.Collection),
     title: 'Collection — NeverBeen',
   },
+  {
+    path: 'community',
+    loadComponent: () => import('./pages/community/community').then((m) => m.CommunityHub),
+    title: 'Community — NeverBeen',
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/community/connect/connect').then((m) => m.CommunityConnect),
+        title: 'Connect — NeverBeen Community',
+      },
+      {
+        path: 'register',
+        loadComponent: () => import('./pages/community/register/register').then((m) => m.CommunityRegister),
+        title: 'Register Profile — NeverBeen Community',
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
+        title: 'Member Profile — NeverBeen Community',
+      },
+      {
+        path: 'message-book',
+        loadComponent: () =>
+          import('./pages/community/message-book/message-book').then((m) => m.CommunityMessageBook),
+        title: 'Message Book — NeverBeen Community',
+      },
+      {
+        path: 'messages',
+        redirectTo: 'message-book',
+        pathMatch: 'full',
+      },
+      {
+        path: 'callback',
+        loadComponent: () => import('./pages/community/callback/callback').then((m) => m.CommunityCallback),
+        title: 'OAuth Verification — NeverBeen Community',
+      },
+    ],
+  },
   { path: '**', redirectTo: '' },
 ];
