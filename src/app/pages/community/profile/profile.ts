@@ -2,8 +2,10 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Circle, City, Companion, JourneyPost, UserActiveStatus } from '../../../models/community';
+import { AuthorInfo, Circle, City, Companion, JourneyPost, UserActiveStatus } from '../../../models/community';
 import { CommunityService } from '../../../services/community.service';
+import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
+import { CommentThreadComponent } from './comment-item';
 
 export type ProfileSection =
   | 'journey'
@@ -18,17 +20,25 @@ export type ProfileSection =
 
 @Component({
   selector: 'app-community-profile',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CommentThreadComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
 export class CommunityProfile implements OnInit {
   protected readonly service = inject(CommunityService);
+  protected readonly googleMapsService = inject(GoogleMapsService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
 
   // Active section in the right side wide panel (default: 'journey')
   protected readonly activeSection = signal<ProfileSection>('journey');
+
+  // Mobile portrait navigation state
+  protected readonly isMobileSidePanelOpen = signal<boolean>(false);
+
+  // Visitor Profile mode (when clicking any other user)
+  protected readonly viewingVisitor = signal<Companion | null>(null);
 
   // Search state (top-left)
   protected readonly searchQuery = signal('');
@@ -54,7 +64,11 @@ export class CommunityProfile implements OnInit {
   // Journey state
   protected newJourneyText = '';
   protected selectedMood = '✈️ Traveling';
-  protected selectedLocation = '';
+  protected destinationSearchInput = '';
+  protected readonly destinationSuggestions = signal<GoogleMapLocation[]>([]);
+  protected readonly showDestinationDropdown = signal(false);
+  protected readonly selectedGoogleLocation = signal<GoogleMapLocation | null>(null);
+  protected readonly destinationError = signal<string | null>(null);
   protected readonly postingJourney = signal(false);
   protected readonly activeCommentPostId = signal<number | null>(null);
   protected journeyCommentText = '';
@@ -62,6 +76,11 @@ export class CommunityProfile implements OnInit {
   // Multi-level Journey Comment Replies
   protected readonly activeJourneyReplyCommentId = signal<number | null>(null);
   protected journeyReplyText = '';
+
+  // Share Post in Journey Modal
+  protected readonly showShareModal = signal(false);
+  protected readonly postToShare = signal<JourneyPost | null>(null);
+  protected shareThoughtText = '';
 
   // Circles state
   protected readonly showCreateCircleModal = signal(false);
@@ -167,6 +186,10 @@ export class CommunityProfile implements OnInit {
     return { travelers, circles };
   });
 
+  protected readonly connectedCompanionsCount = computed(
+    () => this.service.companions().filter((c) => c.status === 'connected').length,
+  );
+
   async ngOnInit(): Promise<void> {
     if (!this.service.isAuthenticated() || !this.service.profile()) {
       this.router.navigate(['/community']);
@@ -183,21 +206,99 @@ export class CommunityProfile implements OnInit {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // NAVIGATION & MOBILE PORTRAIT DRAWER
+  // ---------------------------------------------------------------------------
+
   setSection(section: ProfileSection): void {
+    this.viewingVisitor.set(null); // Return from visitor view
     this.activeSection.set(section);
+    this.closeMobileSidePanel();
     if (section === 'notifications') {
       this.service.markNotificationsRead();
     }
   }
 
+  toggleMobileSidePanel(): void {
+    this.isMobileSidePanelOpen.update((v) => !v);
+  }
+
+  closeMobileSidePanel(): void {
+    this.isMobileSidePanelOpen.set(false);
+  }
+
   // Alias for tests
   setTab(tab: 'journey' | 'about' | 'details' | 'gallery' | 'settings'): void {
+    this.viewingVisitor.set(null);
     if (tab === 'details') {
       this.activeSection.set('about');
       this.editingDetails.set(true);
     } else {
       this.activeSection.set(tab as ProfileSection);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // VISITOR PROFILE (Open any user's profile on click anywhere)
+  // ---------------------------------------------------------------------------
+
+  openVisitorProfile(authorOrUser: AuthorInfo | Companion | number): void {
+    const currentUserId = this.service.currentUser()?.id || 1;
+    let targetId: number;
+
+    if (typeof authorOrUser === 'number') {
+      targetId = authorOrUser;
+    } else {
+      targetId = authorOrUser.id;
+    }
+
+    // If clicking own profile, navigate to personal about/journey
+    if (targetId === currentUserId) {
+      this.viewingVisitor.set(null);
+      this.setSection('about');
+      return;
+    }
+
+    // Look up in companions or synthesize
+    let found = this.service.companions().find((c) => c.id === targetId);
+    if (!found) {
+      const name = typeof authorOrUser === 'object' ? authorOrUser.fullName || 'Traveler' : 'Traveler';
+      const photo = typeof authorOrUser === 'object' ? authorOrUser.profilePhotoUrl || this.defaultAvatar : this.defaultAvatar;
+      const role = typeof authorOrUser === 'object' ? authorOrUser.profession || 'Explorer' : 'Explorer';
+
+      found = {
+        id: targetId,
+        fullName: name,
+        profilePhotoUrl: photo,
+        country: 'Worldwide',
+        city: 'Explorer',
+        profession: role,
+        isOnline: true,
+        mutualCompanionsCount: 2,
+        status: 'none',
+        isProfileLocked: false,
+        bio: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+      };
+    }
+
+    this.viewingVisitor.set(found);
+    this.showSearchDropdown.set(false);
+    this.closeMobileSidePanel();
+  }
+
+  closeVisitorProfile(): void {
+    this.viewingVisitor.set(null);
+  }
+
+  removeCompanionshipFromVisitor(companionId: number): void {
+    this.service.removeCompanion(companionId);
+    if (this.viewingVisitor() && this.viewingVisitor()!.id === companionId) {
+      this.viewingVisitor.update((v) => (v ? { ...v, status: 'none' } : null));
+    }
+  }
+
+  getVisitorJourneyPosts(visitorId: number): JourneyPost[] {
+    return this.service.journeyPosts().filter((p) => p.author.id === visitorId);
   }
 
   // ---------------------------------------------------------------------------
@@ -297,8 +398,7 @@ export class CommunityProfile implements OnInit {
   }
 
   openTravelerModal(companion: Companion): void {
-    this.viewingTraveler.set(companion);
-    this.showSearchDropdown.set(false);
+    this.openVisitorProfile(companion);
   }
 
   closeTravelerModal(): void {
@@ -307,26 +407,80 @@ export class CommunityProfile implements OnInit {
 
   requestCompanionship(userId: number): void {
     this.service.sendCompanionshipRequest(userId);
+    if (this.viewingVisitor() && this.viewingVisitor()!.id === userId) {
+      this.viewingVisitor.update((t) => (t ? { ...t, status: 'pending_outgoing' } : null));
+    }
     if (this.viewingTraveler() && this.viewingTraveler()!.id === userId) {
       this.viewingTraveler.update((t) => (t ? { ...t, status: 'pending_outgoing' } : null));
     }
   }
 
   // ---------------------------------------------------------------------------
-  // JOURNEY (PUBLIC FEED WITH NESTED COMMENTS ON COMMENTS)
+  // GOOGLE MAPS API DESTINATION TAG AUTO SEARCH
+  // ---------------------------------------------------------------------------
+
+  async onDestinationSearchInput(): Promise<void> {
+    this.destinationError.set(null);
+    const q = this.destinationSearchInput.trim();
+    if (q.length < 2) {
+      this.destinationSuggestions.set([]);
+      this.showDestinationDropdown.set(false);
+      return;
+    }
+    const results = await this.googleMapsService.searchLocations(q);
+    this.destinationSuggestions.set(results);
+    this.showDestinationDropdown.set(true);
+  }
+
+  onDestinationSearchFocus(): void {
+    if (this.destinationSearchInput.trim().length >= 2) {
+      this.showDestinationDropdown.set(true);
+    }
+  }
+
+  selectGoogleLocation(location: GoogleMapLocation): void {
+    this.selectedGoogleLocation.set(location);
+    this.destinationSearchInput = '';
+    this.destinationSuggestions.set([]);
+    this.showDestinationDropdown.set(false);
+    this.destinationError.set(null);
+  }
+
+  clearSelectedGoogleLocation(): void {
+    this.selectedGoogleLocation.set(null);
+    this.destinationError.set(null);
+  }
+
+  // ---------------------------------------------------------------------------
+  // JOURNEY (PUBLIC FEED WITH NESTED COMMENTS ON COMMENTS & SHARE)
   // ---------------------------------------------------------------------------
 
   submitJourneyPost(): void {
     if (!this.newJourneyText.trim()) return;
+
+    // Requirement D: If text was typed in destination tag, only available location from Google Maps can be selected!
+    if (this.destinationSearchInput.trim() && !this.selectedGoogleLocation()) {
+      this.destinationError.set('Only available locations from Google Maps suggestions can be selected.');
+      return;
+    }
+
     this.postingJourney.set(true);
     try {
+      const locationTag = this.selectedGoogleLocation()
+        ? this.selectedGoogleLocation()!.formattedAddress
+        : undefined;
+      const placeId = this.selectedGoogleLocation()?.placeId;
+
       this.service.createJourneyPost(
         this.newJourneyText,
         this.selectedMood,
-        this.selectedLocation,
+        locationTag,
+        placeId,
       );
       this.newJourneyText = '';
-      this.selectedLocation = '';
+      this.selectedGoogleLocation.set(null);
+      this.destinationSearchInput = '';
+      this.destinationError.set(null);
     } finally {
       this.postingJourney.set(false);
     }
@@ -367,8 +521,41 @@ export class CommunityProfile implements OnInit {
     this.activeJourneyReplyCommentId.set(null);
   }
 
+  handleCommentThreadReply(event: { postId: number; parentCommentId: number; text: string }): void {
+    this.service.addJourneyComment(event.postId, event.text, event.parentCommentId);
+  }
+
+  handleCommentThreadLike(event: { postId: number; commentId: number }): void {
+    this.service.toggleJourneyCommentLike(event.postId, event.commentId);
+  }
+
   toggleJourneyCommentLike(postId: number, commentId: number): void {
     this.service.toggleJourneyCommentLike(postId, commentId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // SHARE POST IN JOURNEY (Requirement I)
+  // ---------------------------------------------------------------------------
+
+  openShareModal(post: JourneyPost): void {
+    this.postToShare.set(post);
+    this.shareThoughtText = '';
+    this.showShareModal.set(true);
+  }
+
+  closeShareModal(): void {
+    this.showShareModal.set(false);
+    this.postToShare.set(null);
+    this.shareThoughtText = '';
+  }
+
+  submitSharePost(): void {
+    const post = this.postToShare();
+    if (!post) return;
+
+    this.service.shareJourneyPost(post.id, this.shareThoughtText);
+    this.closeShareModal();
+    this.setSection('journey');
   }
 
   // ---------------------------------------------------------------------------
@@ -460,7 +647,10 @@ export class CommunityProfile implements OnInit {
   // ---------------------------------------------------------------------------
 
   approveRequest(notificationId: number, fromUserId: number): void {
-    this.service.approveCompanionshipRequest(notificationId, fromUserId);
+    const success = this.service.approveCompanionshipRequest(notificationId, fromUserId);
+    if (!success) {
+      alert('Maximum limit of 500 Companions reached. Cannot add more companions.');
+    }
   }
 
   rejectRequest(notificationId: number, fromUserId: number): void {

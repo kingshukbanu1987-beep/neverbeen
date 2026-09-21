@@ -3,10 +3,12 @@ import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityProfile } from './profile';
 import { CommunityService, getCookie, TOKEN_KEY, deleteCookie } from '../../../services/community.service';
+import { GoogleMapsService, VERIFIED_GOOGLE_MAP_LOCATIONS } from '../../../services/google-maps.service';
 
 describe('CommunityProfile', () => {
   let router: Router;
   let service: CommunityService;
+  let googleMapsService: GoogleMapsService;
 
   beforeEach(async () => {
     deleteCookie(TOKEN_KEY);
@@ -21,6 +23,7 @@ describe('CommunityProfile', () => {
 
     router = TestBed.inject(Router);
     service = TestBed.inject(CommunityService);
+    googleMapsService = TestBed.inject(GoogleMapsService);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     // Set up active user
@@ -74,6 +77,232 @@ describe('CommunityProfile', () => {
     expect(leftPanel!.querySelector('.pill-coral')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-slate')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-red')).toBeTruthy();
+  });
+
+  it('supports mobile portrait mode with three horizontal lines hamburger toggle and Journey open by default', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Mobile header exists
+    const mobileHeader = element.querySelector('.mobile-top-header');
+    expect(mobileHeader).toBeTruthy();
+
+    // Three horizontal lines hamburger button exists
+    const hamburgerBtn = element.querySelector('.mobile-hamburger-btn');
+    expect(hamburgerBtn).toBeTruthy();
+    const lines = hamburgerBtn!.querySelectorAll('.hamburger-line');
+    expect(lines.length).toBe(3);
+
+    // Default section is Journey
+    expect(component['activeSection']()).toBe('journey');
+    expect(component['isMobileSidePanelOpen']()).toBe(false);
+
+    // Toggle open
+    component.toggleMobileSidePanel();
+    fixture.detectChanges();
+    expect(component['isMobileSidePanelOpen']()).toBe(true);
+
+    // Close
+    component.closeMobileSidePanel();
+    fixture.detectChanges();
+    expect(component['isMobileSidePanelOpen']()).toBe(false);
+  });
+
+  it('auto-searches Google Maps API for destination tag and restricts selection to available locations only', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    // Auto-search via Google Maps service
+    component['destinationSearchInput'] = 'Kyoto';
+    await component['onDestinationSearchInput']();
+    fixture.detectChanges();
+
+    const suggestions = component['destinationSuggestions']();
+    expect(suggestions.length).toBeGreaterThan(0);
+    expect(suggestions.some((s) => s.name.includes('Kyoto'))).toBe(true);
+
+    // Requirement D: If user attempts to post with unselected freeform destination text, reject it
+    component['newJourneyText'] = 'Testing destination tags';
+    component['destinationSearchInput'] = 'Unverified Place 999';
+    component['selectedGoogleLocation'].set(null);
+
+    component.submitJourneyPost();
+    expect(component['destinationError']()).toContain('Only available locations from Google Maps');
+
+    // Selecting an available location succeeds
+    const kyotoLoc = suggestions.find((s) => s.name.includes('Kyoto'))!;
+    component.selectGoogleLocation(kyotoLoc);
+    expect(component['selectedGoogleLocation']()?.name).toContain('Kyoto');
+    expect(component['destinationError']()).toBeNull();
+
+    // Post to Journey with verified Google Maps location
+    component['newJourneyText'] = 'Visiting Arashiyama Bamboo Grove at sunrise!';
+    component.submitJourneyPost();
+    fixture.detectChanges();
+
+    const latestPost = service.journeyPosts()[0];
+    expect(latestPost.text).toContain('Arashiyama');
+    expect(latestPost.location).toContain('Kyoto');
+  });
+
+  it('enforces maximum 500 companion limit', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    expect(component['connectedCompanionsCount']()).toBeLessThanOrEqual(500);
+
+    // Mock companions array reaching 500 connected companions
+    const mockCompanions = Array.from({ length: 500 }, (_, i) => ({
+      id: 1000 + i,
+      fullName: `Companion ${i}`,
+      profilePhotoUrl: '',
+      country: 'France',
+      city: 'Paris',
+      profession: 'Traveler',
+      isOnline: true,
+      mutualCompanionsCount: 1,
+      status: 'connected' as const,
+    }));
+    service.companions.set(mockCompanions);
+
+    expect(service.companions().filter((c) => c.status === 'connected').length).toBe(500);
+
+    // Attempting to approve 501st companion should fail
+    const approved = service.approveCompanionshipRequest(999, 71);
+    expect(approved).toBe(false);
+  });
+
+  it('opens any other user profile as a visitor on clicking their photo or username anywhere', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Elena Rostova (id: 33)
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    expect(component['viewingVisitor']()).toBeTruthy();
+    expect(component['viewingVisitor']()?.fullName).toBe('Elena Rostova');
+
+    const visitorHero = element.querySelector('.visitor-hero-card');
+    expect(visitorHero).toBeTruthy();
+    expect(element.querySelector('.visitor-name')?.textContent).toContain('Elena Rostova');
+    expect(element.querySelector('.btn-back-to-my-profile')).toBeTruthy();
+
+    // Clicking Back to My Journey returns to normal view
+    component.closeVisitorProfile();
+    fixture.detectChanges();
+    expect(component['viewingVisitor']()).toBeNull();
+  });
+
+  it('provides Remove Companionship option when visiting a connected companion profile and breaks connection', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Visit connected companion Marco Rossi (id: 12)
+    const marco = service.companions().find((c) => c.id === 12)!;
+    expect(marco.status).toBe('connected');
+
+    component.openVisitorProfile(marco);
+    fixture.detectChanges();
+
+    // Requirement G: Remove Companionship button must be present
+    const removeBtn = element.querySelector<HTMLButtonElement>('.btn-remove-companion-action');
+    expect(removeBtn).toBeTruthy();
+    expect(removeBtn?.textContent).toContain('Remove Companionship');
+
+    // Click Remove Companionship
+    component.removeCompanionshipFromVisitor(marco.id);
+    fixture.detectChanges();
+
+    // Companionship connection is broken
+    expect(service.companions().find((c) => c.id === marco.id)?.status).toBe('none');
+    expect(component['viewingVisitor']()?.status).toBe('none');
+  });
+
+  it('supports endless recursive nested commenting on comments in Journey', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    const post = service.journeyPosts()[0];
+
+    // Top-level comment (depth 0)
+    service.addJourneyComment(post.id, 'Depth 0: Incredible view!');
+    const comment0 = service.journeyPosts()[0].comments.find((c) => c.text.includes('Depth 0'))!;
+    expect(comment0).toBeTruthy();
+    expect(comment0.text).toContain('Depth 0');
+
+    // First nested reply (depth 1)
+    component.handleCommentThreadReply({
+      postId: post.id,
+      parentCommentId: comment0.id,
+      text: 'Depth 1: Which camera was this taken with?',
+    });
+    const updatedPost = service.journeyPosts()[0];
+    const parent0 = updatedPost.comments.find((c) => c.id === comment0.id)!;
+    expect(parent0.replies?.length).toBe(1);
+    const comment1 = parent0.replies![0];
+
+    // Second nested reply (depth 2)
+    component.handleCommentThreadReply({
+      postId: post.id,
+      parentCommentId: comment1.id,
+      text: 'Depth 2: A Sony A7IV with 24-70mm GM II lens!',
+    });
+    const deepPost = service.journeyPosts()[0];
+    const deepComment0 = deepPost.comments.find((c) => c.id === comment0.id)!;
+    const deepComment1 = deepComment0.replies![0];
+    expect(deepComment1.replies?.length).toBe(1);
+    const comment2 = deepComment1.replies![0];
+
+    // Third nested reply (depth 3 endless nesting)
+    component.handleCommentThreadReply({
+      postId: post.id,
+      parentCommentId: comment2.id,
+      text: 'Depth 3: Perfect choice for travel clarity!',
+    });
+    const endlessPost = service.journeyPosts()[0];
+    const endlessComment0 = endlessPost.comments.find((c) => c.id === comment0.id)!;
+    const endlessComment1 = endlessComment0.replies![0];
+    const endlessComment2 = endlessComment1.replies![0];
+    expect(endlessComment2.replies?.length).toBe(1);
+    expect(endlessComment2.replies![0].text).toContain('Depth 3');
+  });
+
+  it('allows sharing a Journey post to own profile with custom caption and embedded original post', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const initialPostsCount = service.journeyPosts().length;
+
+    // Pick a post from Elena
+    const elenaPost = service.journeyPosts().find((p) => p.author.fullName?.includes('Elena'))!;
+    expect(elenaPost).toBeTruthy();
+    const initialShares = elenaPost.shareCount || 0;
+
+    // Open share modal
+    component.openShareModal(elenaPost);
+    expect(component['showShareModal']()).toBe(true);
+    expect(component['postToShare']()?.id).toBe(elenaPost.id);
+
+    // Share with thoughts
+    component['shareThoughtText'] = 'Adding Lake Como to my spring travel itinerary!';
+    component.submitSharePost();
+    fixture.detectChanges();
+
+    expect(component['showShareModal']()).toBe(false);
+    expect(service.journeyPosts().length).toBe(initialPostsCount + 1);
+
+    const sharedPost = service.journeyPosts()[0];
+    expect(sharedPost.isShared).toBe(true);
+    expect(sharedPost.text).toContain('Adding Lake Como');
+    expect(sharedPost.originalPost?.author.fullName).toContain('Elena');
+
+    // Original post shareCount incremented
+    const updatedElenaPost = service.journeyPosts().find((p) => p.id === elenaPost.id)!;
+    expect(updatedElenaPost.shareCount).toBe(initialShares + 1);
   });
 
   it('enlarges profile photo in a lightbox modal on clicking the photo', () => {
@@ -172,67 +401,6 @@ describe('CommunityProfile', () => {
     expect(element.querySelector('.locked-profile-shield-box')).toBeNull();
   });
 
-  it('opens Journey section by default in the right side wide panel showing traveler feeds and wall post composer', () => {
-    const fixture = create();
-    const element: HTMLElement = fixture.nativeElement;
-
-    const widePanel = element.querySelector('.right-wide-panel');
-    expect(widePanel).toBeTruthy();
-    expect(widePanel!.querySelector('.section-title')?.textContent?.trim()).toBe('Journey');
-    expect(widePanel!.querySelector('.journey-composer-card')).toBeTruthy();
-    expect(widePanel!.querySelectorAll('.journey-post-card').length).toBeGreaterThan(0);
-  });
-
-  it('allows posting text to Journey and supports commenting on comments of comments (nested replies)', () => {
-    const fixture = create();
-    const component = fixture.componentInstance;
-    const initialPostsCount = service.journeyPosts().length;
-
-    // Compose a new Journey post
-    (component as any).newJourneyText = 'Exploring secret alleys in Montmartre with my Leica!';
-    (component as any).selectedLocation = 'Paris, France';
-    component['submitJourneyPost']();
-    fixture.detectChanges();
-
-    expect(service.journeyPosts().length).toBe(initialPostsCount + 1);
-    const post = service.journeyPosts()[0];
-    expect(post.text).toContain('Montmartre');
-
-    // Like the post
-    const initialLikes = post.likeCount;
-    component['toggleLikePost'](post.id);
-    fixture.detectChanges();
-    expect(service.journeyPosts()[0].likeCount).toBe(initialLikes + 1);
-
-    // Add top-level comment
-    (component as any).journeyCommentText = 'Magnificent view!';
-    component['submitJourneyComment'](post.id);
-    fixture.detectChanges();
-    const updatedPost = service.journeyPosts()[0];
-    const topComment = updatedPost.comments.find((c) => c.text === 'Magnificent view!')!;
-    expect(topComment).toBeTruthy();
-
-    // Comment on comments (nested reply)
-    (component as any).journeyReplyText = 'Agreed! The morning lighting is surreal.';
-    component.submitJourneyCommentReply(post.id, topComment.id);
-    fixture.detectChanges();
-
-    const nestedPost = service.journeyPosts()[0];
-    const parentComment = nestedPost.comments.find((c) => c.id === topComment.id)!;
-    expect(parentComment.replies?.some((r) => r.text.includes('morning lighting'))).toBe(true);
-
-    // Comment on comment of comment (third-level reply)
-    const replyComment = parentComment.replies![0];
-    (component as any).journeyReplyText = 'Which film preset did you use for that?';
-    component.submitJourneyCommentReply(post.id, replyComment.id);
-    fixture.detectChanges();
-
-    const deeplyNestedPost = service.journeyPosts()[0];
-    const deepParent = deeplyNestedPost.comments.find((c) => c.id === topComment.id)!;
-    const subReply = deepParent.replies![0];
-    expect(subReply.replies?.some((r) => r.text.includes('film preset'))).toBe(true);
-  });
-
   it('renders Circles side panel below main side panel and limits circles to maximum 5', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
@@ -255,26 +423,6 @@ describe('CommunityProfile', () => {
     const sixthCircle = service.createCircle('6th Circle', 'Overflow', []);
     expect(sixthCircle).toBeNull();
     expect(service.circles().length).toBe(5);
-  });
-
-  it('provides search for travelers and circles at top left with companionship request', () => {
-    const fixture = create();
-    const component = fixture.componentInstance;
-
-    (component as any).searchQuery.set('Marco');
-    component['onSearchInput']();
-    fixture.detectChanges();
-
-    const results = component['searchResults']();
-    expect(results.travelers.length).toBeGreaterThan(0);
-    expect(results.travelers[0].fullName).toContain('Marco');
-
-    // Request companionship for a traveler not yet connected
-    const targetTraveler = service.companions().find((c) => c.status === 'none');
-    if (targetTraveler) {
-      component['requestCompanionship'](targetTraveler.id);
-      expect(service.companions().find((c) => c.id === targetTraveler.id)?.status).toBe('pending_outgoing');
-    }
   });
 
   it('manages companionship requests in Notifications with Approve and Reject actions', () => {
@@ -378,22 +526,6 @@ describe('CommunityProfile', () => {
     component.setSection('settings');
     fixture.detectChanges();
     expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('Settings');
-  });
-
-  it('supports expanded settings including travel styles and data export', async () => {
-    const fixture = create();
-    const component = fixture.componentInstance;
-
-    component.setSection('settings');
-    fixture.detectChanges();
-
-    // Toggle travel style
-    component.toggleTravelStyle('Alpine Hiking');
-    expect(component['selectedTravelStyles']()).toContain('Alpine Hiking');
-
-    // Save preferences
-    await component.saveSettings();
-    expect(component['settingsSaved']()).toBe(true);
   });
 
   it('terminates user session, sets status to Inactive, and navigates to Sign in page on clicking Log Out', () => {

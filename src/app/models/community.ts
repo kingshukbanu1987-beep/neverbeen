@@ -164,6 +164,11 @@ export interface JourneyPost {
   comments: JourneyComment[];
   location?: string;
   mood?: string;
+  placeId?: string;
+  shareCount?: number;
+  isShared?: boolean;
+  sharedText?: string;
+  originalPost?: JourneyPost;
 }
 
 export interface Companion {

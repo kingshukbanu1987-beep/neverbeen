@@ -691,7 +691,9 @@ export class CommunityService {
   // JOURNEY (Facebook-like Wall Feeds)
   // ---------------------------------------------------------------------------
 
-  createJourneyPost(text: string, mood?: string, location?: string): JourneyPost {
+  readonly MAX_COMPANIONS = 500;
+
+  createJourneyPost(text: string, mood?: string, location?: string, placeId?: string): JourneyPost {
     const user = this.currentUser();
     const profile = this.profile();
     const newPost: JourneyPost = {
@@ -708,14 +710,54 @@ export class CommunityService {
       createdAtUtc: new Date().toISOString(),
       likeCount: 0,
       isLiked: false,
+      shareCount: 0,
       comments: [],
       mood: mood || undefined,
       location: location || (profile?.cityName ? `${profile.cityName}, ${profile.countryName || ''}` : undefined),
+      placeId: placeId || undefined,
     };
 
     this.journeyPosts.update((list) => [newPost, ...list]);
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
     return newPost;
+  }
+
+  shareJourneyPost(originalPostId: number, userThought?: string): JourneyPost | null {
+    const original = this.journeyPosts().find((p) => p.id === originalPostId);
+    if (!original) return null;
+
+    // Increment share count on original
+    this.journeyPosts.update((list) =>
+      list.map((p) =>
+        p.id === originalPostId ? { ...p, shareCount: (p.shareCount || 0) + 1 } : p,
+      ),
+    );
+
+    const user = this.currentUser();
+    const profile = this.profile();
+    const sharedPost: JourneyPost = {
+      id: generateUniqueId(),
+      author: {
+        id: user?.id ?? 1,
+        fullName: user?.fullName || 'Sophia Laurent',
+        profession: profile?.profession || 'Traveler',
+        profilePhotoUrl:
+          user?.profilePhotoUrl ||
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      },
+      text: userThought ? userThought.trim() : '',
+      createdAtUtc: new Date().toISOString(),
+      likeCount: 0,
+      isLiked: false,
+      shareCount: 0,
+      comments: [],
+      isShared: true,
+      originalPost: { ...original },
+    };
+
+    this.journeyPosts.update((list) => [sharedPost, ...list]);
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    return sharedPost;
   }
 
   toggleJourneyLike(postId: number): void {
@@ -838,7 +880,12 @@ export class CommunityService {
     this.saveJson(COMPANIONS_KEY, this.companions());
   }
 
-  approveCompanionshipRequest(notificationId: number, fromUserId: number): void {
+  approveCompanionshipRequest(notificationId: number, fromUserId: number): boolean {
+    const connectedCount = this.companions().filter((c) => c.status === 'connected').length;
+    if (connectedCount >= this.MAX_COMPANIONS) {
+      return false;
+    }
+
     // Connect in companions
     this.companions.update((list) =>
       list.map((c) => (c.id === fromUserId ? { ...c, status: 'connected' } : c)),
@@ -852,6 +899,7 @@ export class CommunityService {
       ),
     );
     this.saveJson(NOTIFS_KEY, this.notifications());
+    return true;
   }
 
   rejectCompanionshipRequest(notificationId: number, fromUserId: number): void {

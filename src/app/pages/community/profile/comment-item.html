@@ -1,0 +1,84 @@
+<div class="nested-comment-node" [class.is-deep-level]="depth > 0">
+  <div class="comment-bubble-wrapper">
+    <img
+      [src]="comment.author.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'"
+      [alt]="comment.author.fullName || 'User'"
+      class="comment-author-avatar clickable-user"
+      (click)="onAuthorClick(comment.author)"
+      title="View traveler profile"
+    />
+    <div class="comment-body-card">
+      <div class="comment-head">
+        <span class="author-name clickable-user" (click)="onAuthorClick(comment.author)">
+          {{ comment.author.fullName || 'Traveler' }}
+        </span>
+        @if (comment.author.profession) {
+          <span class="author-role">• {{ comment.author.profession }}</span>
+        }
+        <span class="comment-time">{{ formatTime(comment.createdAtUtc) }}</span>
+      </div>
+      <p class="comment-text-content">{{ comment.text }}</p>
+
+      <div class="comment-actions-bar">
+        <button
+          type="button"
+          class="comment-action-link"
+          [class.liked]="comment.isLiked"
+          (click)="toggleLike()"
+        >
+          <span>{{ comment.isLiked ? '❤️ Liked' : '🤍 Like' }}</span>
+          @if ((comment.likeCount || 0) > 0) {
+            <span class="count-pill">({{ comment.likeCount }})</span>
+          }
+        </button>
+        <button type="button" class="comment-action-link" (click)="toggleReply()">
+          <span>💬 Reply</span>
+          @if ((comment.replies?.length || 0) > 0) {
+            <span class="replies-count-hint">({{ comment.replies?.length }} {{ (comment.replies?.length || 0) === 1 ? 'reply' : 'replies' }})</span>
+          }
+        </button>
+      </div>
+
+      <!-- INLINE REPLY BOX -->
+      @if (replyOpen()) {
+        <div class="inline-reply-composer">
+          <input
+            type="text"
+            [(ngModel)]="replyText"
+            (keydown.enter)="submitReply()"
+            placeholder="Write a reply..."
+            class="reply-input-field"
+          />
+          <div class="reply-composer-actions">
+            <button type="button" class="btn-cancel-reply" (click)="toggleReply()">Cancel</button>
+            <button
+              type="button"
+              class="btn-submit-reply"
+              [disabled]="!replyText.trim()"
+              (click)="submitReply()"
+            >
+              Reply
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ENDLESS NESTED RECURSION -->
+  @if (comment.replies && comment.replies.length > 0) {
+    <div class="nested-replies-list" [style.margin-left]="'1.25rem'">
+      @for (replyItem of comment.replies; track replyItem.id) {
+        <app-comment-thread
+          [comment]="replyItem"
+          [postId]="postId"
+          [depth]="depth + 1"
+          [currentUserId]="currentUserId"
+          (reply)="forwardReply($event)"
+          (like)="forwardLike($event)"
+          (openUser)="forwardOpenUser($event)"
+        ></app-comment-thread>
+      }
+    </div>
+  }
+</div>
