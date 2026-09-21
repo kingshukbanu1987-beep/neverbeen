@@ -82,6 +82,26 @@ export class CommunityProfile implements OnInit {
   protected readonly postToShare = signal<JourneyPost | null>(null);
   protected shareThoughtText = '';
 
+  // Likers Modal (Requirement A)
+  protected readonly showLikersModal = signal(false);
+  protected readonly selectedPostLikers = signal<AuthorInfo[]>([]);
+  protected readonly selectedPostForLikers = signal<JourneyPost | null>(null);
+  private likePressTimer?: any;
+  protected isLongPressActive = false;
+
+  // Report Abuse Modal (Requirement C)
+  protected readonly showReportAbuseModal = signal(false);
+  protected readonly reportTarget = signal<{
+    type: 'post' | 'comment';
+    id: number;
+    author: AuthorInfo;
+    snippet: string;
+  } | null>(null);
+  protected reportReason = 'Inappropriate Content';
+  protected reportDetails = '';
+  protected readonly reportSubmitted = signal(false);
+  protected readonly reportError = signal<string | null>(null);
+
   // Circles state
   protected readonly showCreateCircleModal = signal(false);
   protected newCircleName = '';
@@ -169,10 +189,11 @@ export class CommunityProfile implements OnInit {
       .companions()
       .filter(
         (c) =>
-          c.fullName.toLowerCase().includes(q) ||
-          c.city.toLowerCase().includes(q) ||
-          c.country.toLowerCase().includes(q) ||
-          c.profession.toLowerCase().includes(q),
+          !this.service.isUserBlocked(c.id) &&
+          (c.fullName.toLowerCase().includes(q) ||
+            c.city.toLowerCase().includes(q) ||
+            c.country.toLowerCase().includes(q) ||
+            c.profession.toLowerCase().includes(q)),
       );
 
     const circles = this.service
@@ -556,6 +577,141 @@ export class CommunityProfile implements OnInit {
     this.service.shareJourneyPost(post.id, this.shareThoughtText);
     this.closeShareModal();
     this.setSection('journey');
+  }
+
+  // ---------------------------------------------------------------------------
+  // LIKES MODAL & LONG-PRESS (Requirement A)
+  // ---------------------------------------------------------------------------
+
+  startLikePress(post: JourneyPost): void {
+    this.isLongPressActive = false;
+    this.likePressTimer = setTimeout(() => {
+      this.isLongPressActive = true;
+      this.openLikersModal(post);
+    }, 400);
+  }
+
+  endLikePress(): void {
+    if (this.likePressTimer) {
+      clearTimeout(this.likePressTimer);
+      this.likePressTimer = undefined;
+    }
+  }
+
+  handleLikeClick(post: JourneyPost): void {
+    if (this.isLongPressActive) {
+      this.isLongPressActive = false;
+      return;
+    }
+    this.toggleLikePost(post.id);
+  }
+
+  openLikersModal(post: JourneyPost): void {
+    let likers = post.likers || [];
+    if (!likers.length) {
+      // Default pool from companions so list exceeds 10 to exhibit the scrollbar
+      likers = this.service.companions().map((c) => ({
+        id: c.id,
+        fullName: c.fullName,
+        profilePhotoUrl: c.profilePhotoUrl,
+        profession: c.profession,
+      }));
+    }
+    this.selectedPostLikers.set(likers);
+    this.selectedPostForLikers.set(post);
+    this.showLikersModal.set(true);
+  }
+
+  closeLikersModal(): void {
+    this.showLikersModal.set(false);
+    this.selectedPostForLikers.set(null);
+  }
+
+  getLikerConnectionStatus(likerId: number): 'self' | 'connected' | 'pending' | 'none' {
+    const currentUserId = this.service.currentUser()?.id || 1;
+    if (likerId === currentUserId) return 'self';
+    const c = this.service.companions().find((comp) => comp.id === likerId);
+    if (!c) return 'none';
+    if (c.status === 'connected') return 'connected';
+    if (c.status === 'pending_outgoing') return 'pending';
+    return 'none';
+  }
+
+  onLikerClick(liker: AuthorInfo): void {
+    this.closeLikersModal();
+    this.openVisitorProfile(liker);
+  }
+
+  // ---------------------------------------------------------------------------
+  // BLOCK / UNBLOCK USERS (Requirement B)
+  // ---------------------------------------------------------------------------
+
+  blockUser(userId: number): void {
+    this.service.blockUser(userId);
+    if (this.viewingVisitor() && this.viewingVisitor()!.id === userId) {
+      this.viewingVisitor.set(null);
+    }
+  }
+
+  unblockUser(userId: number): void {
+    this.service.unblockUser(userId);
+  }
+
+  isUserBlocked(userId: number): boolean {
+    return this.service.isUserBlocked(userId);
+  }
+
+  getBlockedUsers(): Companion[] {
+    return this.service.getBlockedUsers();
+  }
+
+  // ---------------------------------------------------------------------------
+  // REPORT ABUSE (Requirement C)
+  // ---------------------------------------------------------------------------
+
+  openReportAbuseModal(type: 'post' | 'comment', id: number, author: AuthorInfo, text: string): void {
+    this.reportTarget.set({
+      type,
+      id,
+      author,
+      snippet: text.length > 140 ? text.substring(0, 140) + '...' : text,
+    });
+    this.reportReason = 'Inappropriate Content';
+    this.reportDetails = '';
+    this.reportError.set(null);
+    this.reportSubmitted.set(false);
+    this.showReportAbuseModal.set(true);
+  }
+
+  closeReportAbuseModal(): void {
+    this.showReportAbuseModal.set(false);
+    this.reportTarget.set(null);
+    this.reportDetails = '';
+    this.reportError.set(null);
+    this.reportSubmitted.set(false);
+  }
+
+  submitReportAbuse(): void {
+    const target = this.reportTarget();
+    if (!target) return;
+
+    if (!this.reportDetails.trim()) {
+      this.reportError.set('Please provide details or concern about this report.');
+      return;
+    }
+
+    this.service.submitAbuseReport({
+      targetType: target.type,
+      targetId: target.id,
+      reportedAuthor: target.author,
+      reason: this.reportReason,
+      details: this.reportDetails.trim(),
+    });
+
+    this.reportSubmitted.set(true);
+    setTimeout(() => {
+      this.closeReportAbuseModal();
+    }, 1500);
   }
 
   // ---------------------------------------------------------------------------

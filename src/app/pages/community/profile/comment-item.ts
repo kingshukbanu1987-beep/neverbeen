@@ -19,6 +19,7 @@ export class CommentThreadComponent {
   @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string }>();
   @Output() like = new EventEmitter<{ postId: number; commentId: number }>();
   @Output() openUser = new EventEmitter<AuthorInfo>();
+  @Output() reportAbuse = new EventEmitter<{ commentId: number; author: AuthorInfo; text: string }>();
 
   readonly replyOpen = signal(false);
   replyText = '';
@@ -60,6 +61,18 @@ export class CommentThreadComponent {
 
   forwardOpenUser(author: AuthorInfo): void {
     this.openUser.emit(author);
+  }
+
+  onReportAbuse(): void {
+    this.reportAbuse.emit({
+      commentId: this.comment.id,
+      author: this.comment.author,
+      text: this.comment.text,
+    });
+  }
+
+  forwardReportAbuse(event: { commentId: number; author: AuthorInfo; text: string }): void {
+    this.reportAbuse.emit(event);
   }
 
   formatTime(isoString?: string): string {

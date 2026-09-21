@@ -18,7 +18,7 @@
         @if (viewingVisitor()) {
           {{ viewingVisitor()!.fullName }}
         } @else {
-          {{ activeSection() === 'journey' ? 'Journey Feed' : (activeSection() | titlecase) }}
+          {{ activeSection() === 'journey' ? 'Journey' : (activeSection() | titlecase) }}
         }
       </span>
     </div>
@@ -453,7 +453,7 @@
                 </div>
               </div>
 
-              <!-- Visitor Action Buttons (Requirement G: Remove Companionship option) -->
+              <!-- Visitor Action Buttons (Requirement G: Remove Companionship option & Requirement B: Block User) -->
               <div class="visitor-actions-cluster">
                 @if (viewingVisitor()!.status === 'connected') {
                   <span class="badge-connected-status">✓ Companions</span>
@@ -492,6 +492,16 @@
                     + Request Companionship
                   </button>
                 }
+
+                <!-- Requirement B: Option to Block User -->
+                <button
+                  type="button"
+                  class="btn-block-action"
+                  (click)="blockUser(viewingVisitor()!.id)"
+                  title="Block this user"
+                >
+                  🚫 Block
+                </button>
               </div>
             </div>
           </div>
@@ -592,9 +602,6 @@
             <header class="section-top-bar">
               <div class="section-title-line">
                 <h1 class="section-title">Journey</h1>
-                <span class="wall-visibility-pill public" title="Public travel wall feed">
-                  🌐 Public Travel Feed
-                </span>
               </div>
               <p class="section-desc">
                 What's happening across the NeverBeen traveler world. Share stories, discover destinations, and connect.
@@ -711,7 +718,7 @@
 
             <!-- JOURNEY WALL FEED LIST -->
             <div class="journey-feed-list">
-              @for (post of service.journeyPosts(); track post.id) {
+              @for (post of service.visibleJourneyPosts(); track post.id) {
                 <article class="journey-post-card">
                   <!-- Post Author Header -->
                   <div class="post-header">
@@ -747,6 +754,18 @@
                         }
                       </div>
                     </div>
+
+                    <!-- Requirement C: Report Abuse for posts by other users -->
+                    @if (post.author.id !== (service.currentUser()?.id || 1)) {
+                      <button
+                        type="button"
+                        class="btn-report-abuse-mini"
+                        (click)="openReportAbuseModal('post', post.id, post.author, post.text)"
+                        title="Report Abuse"
+                      >
+                        🚩 Report
+                      </button>
+                    }
                   </div>
 
                   <!-- Post Body Text (Or Shared Thoughts) -->
@@ -780,10 +799,14 @@
                     </div>
                   }
 
-                  <!-- Post Engagement Summary -->
+                  <!-- Post Engagement Summary (Requirement A: Click/hold opens likers modal) -->
                   <div class="post-engagement-counts">
-                    <span class="like-counter">
-                      {{ post.likeCount }} {{ post.likeCount === 1 ? 'like' : 'likes' }}
+                    <span
+                      class="like-counter clickable-counter"
+                      (click)="openLikersModal(post)"
+                      title="Click or hold Like button to see who liked this"
+                    >
+                      ❤️ {{ post.likeCount }} {{ post.likeCount === 1 ? 'like' : 'likes' }}
                     </span>
                     <div class="engagement-right">
                       <span class="comment-counter">
@@ -795,13 +818,19 @@
                     </div>
                   </div>
 
-                  <!-- Post Action Bar (Like, Comment, Share) -->
+                  <!-- Post Action Bar (Like, Comment, Share with Press-and-Hold on Like) -->
                   <div class="post-actions-row">
                     <button
                       type="button"
                       class="post-action-btn"
                       [class.liked]="post.isLiked"
-                      (click)="toggleLikePost(post.id)"
+                      (mousedown)="startLikePress(post)"
+                      (mouseup)="endLikePress()"
+                      (mouseleave)="endLikePress()"
+                      (touchstart)="startLikePress(post)"
+                      (touchend)="endLikePress()"
+                      (click)="handleLikeClick(post)"
+                      title="Press and hold to see who liked"
                     >
                       <svg viewBox="0 0 24 24" class="action-svg" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
@@ -836,7 +865,7 @@
                     </button>
                   </div>
 
-                  <!-- RECURSIVE ENDLESS COMMENT THREAD (Requirement H) -->
+                  <!-- RECURSIVE ENDLESS COMMENT THREAD (Requirement H & C) -->
                   @if (activeCommentPostId() === post.id) {
                     <div class="comments-section-wrap">
                       <!-- Add top-level comment composer -->
@@ -876,6 +905,7 @@
                             (reply)="handleCommentThreadReply($event)"
                             (like)="handleCommentThreadLike($event)"
                             (openUser)="openVisitorProfile($event)"
+                            (reportAbuse)="openReportAbuseModal('comment', $event.commentId, $event.author, $event.text)"
                           ></app-comment-thread>
                         } @empty {
                           <div class="empty-comments-text">No comments yet. Start the conversation!</div>
@@ -1119,6 +1149,15 @@
                         🗑️ Delete
                       </button>
                     }
+                    @if (comment.author.id !== (service.currentUser()?.id || 1)) {
+                      <button
+                        type="button"
+                        class="post-action-btn btn-report-abuse"
+                        (click)="openReportAbuseModal('comment', comment.id, comment.author, comment.text)"
+                      >
+                        🚩 Report
+                      </button>
+                    }
                   </div>
 
                   <!-- Reply composer -->
@@ -1185,7 +1224,7 @@
             </header>
 
             <div class="companions-cards-grid">
-              @for (c of service.companions(); track c.id) {
+              @for (c of service.visibleCompanions(); track c.id) {
                 @if (c.status === 'connected') {
                   <div class="companion-card">
                     <div class="card-avatar-wrap" (click)="openVisitorProfile(c)">
@@ -1214,6 +1253,14 @@
                         title="Remove Companion"
                       >
                         Remove
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-secondary-action btn-sm"
+                        (click)="blockUser(c.id)"
+                        title="Block this traveler"
+                      >
+                        🚫 Block
                       </button>
                     </div>
                   </div>
@@ -1466,6 +1513,34 @@
                 </div>
               </div>
 
+              <!-- Blocked Users Management (Requirement B) -->
+              <div class="settings-card">
+                <h3 class="card-title">🚫 Blocked Users</h3>
+                <p class="card-desc">Users you have blocked cannot view your profile or Journey, and you will not see them anywhere unless you unblock them.</p>
+
+                <div class="blocked-users-list">
+                  @for (bUser of getBlockedUsers(); track bUser.id) {
+                    <div class="blocked-user-row">
+                      <img [src]="bUser.profilePhotoUrl || defaultAvatar" [alt]="bUser.fullName" class="blocked-user-avatar" />
+                      <div class="blocked-user-info">
+                        <strong class="blocked-name">{{ bUser.fullName }}</strong>
+                        <span class="blocked-meta">{{ bUser.city }}, {{ bUser.country }} • {{ bUser.profession }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-secondary-action btn-sm"
+                        (click)="unblockUser(bUser.id)"
+                        title="Unblock this traveler"
+                      >
+                        Unblock
+                      </button>
+                    </div>
+                  } @empty {
+                    <p class="empty-blocked-notice">You haven't blocked any travelers.</p>
+                  }
+                </div>
+              </div>
+
               <div class="settings-action-bar">
                 <button type="submit" class="btn-primary-action" [disabled]="savingSettings()">
                   {{ savingSettings() ? 'Saving...' : 'Save Settings' }}
@@ -1711,6 +1786,111 @@
           <button type="button" class="btn-secondary-action" (click)="closeCreateCircleModal()">Cancel</button>
           <button type="button" class="btn-primary-action" (click)="submitCreateCircle()">Create Circle</button>
         </footer>
+      </div>
+    </div>
+  }
+
+  <!-- LIKERS MODAL WINDOW (Requirement A: Press & Hold on Likes) -->
+  @if (showLikersModal()) {
+    <div class="modal-backdrop-overlay" (click)="closeLikersModal()">
+      <div class="modal-dialog-card likers-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <div class="modal-head-title-wrap">
+            <span class="heart-icon-badge">❤️</span>
+            <h3 class="modal-head-title">People Who Liked This ({{ selectedPostLikers().length }})</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="closeLikersModal()">✕</button>
+        </header>
+        <div class="modal-body-content likers-body">
+          <div class="likers-scroll-list" [class.has-scrollbar]="selectedPostLikers().length > 10">
+            @for (liker of selectedPostLikers(); track liker.id) {
+              <div class="liker-item-row" (click)="onLikerClick(liker)">
+                <img [src]="liker.profilePhotoUrl || defaultAvatar" [alt]="liker.fullName" class="liker-avatar" />
+                <div class="liker-info">
+                  <strong class="liker-name">{{ liker.fullName }}</strong>
+                  <span class="liker-role">{{ liker.profession || 'Traveler' }}</span>
+                </div>
+                <div class="liker-action">
+                  @if (getLikerConnectionStatus(liker.id) === 'self') {
+                    <span class="status-badge connected">You</span>
+                  } @else if (getLikerConnectionStatus(liker.id) === 'connected') {
+                    <span class="status-badge connected">✓ Companions</span>
+                  } @else if (getLikerConnectionStatus(liker.id) === 'pending') {
+                    <span class="status-badge pending">Request Sent</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-request-sm"
+                      (click)="$event.stopPropagation(); requestCompanionship(liker.id)"
+                    >
+                      + Connect
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- REPORT ABUSE MODAL FORM (Requirement C) -->
+  @if (showReportAbuseModal() && reportTarget()) {
+    <div class="modal-backdrop-overlay" (click)="closeReportAbuseModal()">
+      <div class="modal-dialog-card report-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <h3 class="modal-head-title">🚩 Report Abuse</h3>
+          <button type="button" class="btn-close-modal" (click)="closeReportAbuseModal()">✕</button>
+        </header>
+        <div class="modal-body-content">
+          @if (reportSubmitted()) {
+            <div class="report-success-box">
+              <span class="report-success-icon">✓</span>
+              <h4>Report Submitted</h4>
+              <p>Thank you for keeping NeverBeen safe. Your concern will be reviewed by our Trust &amp; Safety team.</p>
+            </div>
+          } @else {
+            <div class="report-target-meta">
+              <span>Reporting {{ reportTarget()!.type }} by <strong>{{ reportTarget()!.author.fullName }}</strong>:</span>
+              <blockquote class="report-snippet">“{{ reportTarget()!.snippet }}”</blockquote>
+            </div>
+
+            <div class="form-group">
+              <label>Reason for Report *</label>
+              <select [(ngModel)]="reportReason" class="form-control">
+                <option value="Inappropriate Content">Inappropriate or Offensive Content</option>
+                <option value="Harassment or Hate Speech">Harassment or Hate Speech</option>
+                <option value="Spam or Advertising">Spam, Advertising, or Scam</option>
+                <option value="Misinformation">Misleading Travel Information</option>
+                <option value="Privacy Violation">Privacy or Copyright Violation</option>
+                <option value="Other">Other Violation</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Details &amp; Concern *</label>
+              <textarea
+                [(ngModel)]="reportDetails"
+                rows="3"
+                placeholder="Please describe why this content violates community guidelines..."
+                class="form-control"
+              ></textarea>
+            </div>
+
+            @if (reportError()) {
+              <p class="status-error-msg">⚠️ {{ reportError() }}</p>
+            }
+          }
+        </div>
+        @if (!reportSubmitted()) {
+          <footer class="modal-footer-bar">
+            <button type="button" class="btn-secondary-action" (click)="closeReportAbuseModal()">Cancel</button>
+            <button type="button" class="btn-danger-submit" (click)="submitReportAbuse()">
+              Submit Report
+            </button>
+          </footer>
+        }
       </div>
     </div>
   }

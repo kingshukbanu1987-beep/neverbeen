@@ -2,7 +2,9 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
+  AbuseReport,
   ActiveChatBox,
+  AuthorInfo,
   AuthResult,
   Circle,
   City,
@@ -35,6 +37,8 @@ export const JOURNEY_KEY = 'neverbeen_journey_posts';
 export const COMPANIONS_KEY = 'neverbeen_companions';
 export const CIRCLES_KEY = 'neverbeen_circles';
 export const NOTIFS_KEY = 'neverbeen_notifications';
+export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
+export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
 
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -92,6 +96,8 @@ export class CommunityService {
   readonly circles = signal<Circle[]>(this.loadCircles());
   readonly notifications = signal<NotificationItem[]>(this.loadNotifications());
   readonly activeChatBoxes = signal<ActiveChatBox[]>([]);
+  readonly blockedUserIds = signal<number[]>(this.loadBlockedUsers());
+  readonly abuseReports = signal<AbuseReport[]>(this.loadAbuseReports());
 
   readonly countries = signal<Country[]>(
     SEED_COUNTRIES.map((c) => ({
@@ -107,16 +113,29 @@ export class CommunityService {
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
   readonly isPending = computed(() => this.currentUser()?.status === 'Pending');
 
+  // Filtered views ensuring blocked users cannot see or be seen by each other
+  readonly visibleCompanions = computed(() =>
+    this.companions().filter((c) => !this.blockedUserIds().includes(c.id)),
+  );
+
+  readonly visibleJourneyPosts = computed(() =>
+    this.journeyPosts().filter((p) => !this.blockedUserIds().includes(p.author.id)),
+  );
+
+  readonly visibleNotifications = computed(() =>
+    this.notifications().filter((n) => !this.blockedUserIds().includes(n.fromUser.id)),
+  );
+
   readonly unreadNotificationCount = computed(
-    () => this.notifications().filter((n) => !n.isRead).length,
+    () => this.visibleNotifications().filter((n) => !n.isRead).length,
   );
 
   readonly onlineCompanions = computed(() =>
-    this.companions().filter((c) => c.status === 'connected' && c.isOnline),
+    this.visibleCompanions().filter((c) => c.status === 'connected' && c.isOnline),
   );
 
   readonly offlineCompanions = computed(() =>
-    this.companions().filter((c) => c.status === 'connected' && !c.isOnline),
+    this.visibleCompanions().filter((c) => c.status === 'connected' && !c.isOnline),
   );
 
   constructor() {
@@ -761,12 +780,30 @@ export class CommunityService {
   }
 
   toggleJourneyLike(postId: number): void {
+    const user = this.currentUser();
+    const currentAuthor: AuthorInfo = {
+      id: user?.id ?? 1,
+      fullName: user?.fullName || 'Sophia Laurent',
+      profession: this.profile()?.profession || 'Travel Creator',
+      profilePhotoUrl:
+        user?.profilePhotoUrl ||
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    };
+
     this.journeyPosts.update((list) =>
       list.map((post) => {
         if (post.id === postId) {
           const isLiked = !post.isLiked;
           const likeCount = isLiked ? post.likeCount + 1 : Math.max(0, post.likeCount - 1);
-          return { ...post, isLiked, likeCount };
+          let likers = post.likers ? [...post.likers] : [];
+          if (isLiked) {
+            if (!likers.some((l) => l.id === currentAuthor.id)) {
+              likers = [currentAuthor, ...likers];
+            }
+          } else {
+            likers = likers.filter((l) => l.id !== currentAuthor.id);
+          }
+          return { ...post, isLiked, likeCount, likers };
         }
         return post;
       }),
@@ -921,6 +958,70 @@ export class CommunityService {
       list.map((c) => (c.id === companionId ? { ...c, status: 'none' } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  // ---------------------------------------------------------------------------
+  // BLOCK / UNBLOCK USERS (Requirement B)
+  // ---------------------------------------------------------------------------
+
+  blockUser(userId: number): void {
+    if (!this.blockedUserIds().includes(userId)) {
+      this.blockedUserIds.update((list) => [...list, userId]);
+      this.saveJson(BLOCKED_USERS_KEY, this.blockedUserIds());
+    }
+    // Break companionship connection
+    this.companions.update((list) =>
+      list.map((c) => (c.id === userId ? { ...c, status: 'none' } : c)),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+
+    // Close any active chat with this user
+    this.closeChatBox(userId);
+  }
+
+  unblockUser(userId: number): void {
+    this.blockedUserIds.update((list) => list.filter((id) => id !== userId));
+    this.saveJson(BLOCKED_USERS_KEY, this.blockedUserIds());
+  }
+
+  isUserBlocked(userId: number): boolean {
+    return this.blockedUserIds().includes(userId);
+  }
+
+  getBlockedUsers(): Companion[] {
+    const ids = this.blockedUserIds();
+    return this.companions().filter((c) => ids.includes(c.id));
+  }
+
+  // ---------------------------------------------------------------------------
+  // REPORT ABUSE (Requirement C)
+  // ---------------------------------------------------------------------------
+
+  submitAbuseReport(data: {
+    targetType: 'post' | 'comment' | 'message';
+    targetId: number;
+    reportedAuthor: AuthorInfo;
+    reason: string;
+    details: string;
+    reporterEmail?: string;
+  }): AbuseReport {
+    const user = this.currentUser();
+    const newReport: AbuseReport = {
+      id: generateUniqueId(),
+      targetType: data.targetType,
+      targetId: data.targetId,
+      reportedAuthor: data.reportedAuthor,
+      reportedByUserId: user?.id ?? 1,
+      reason: data.reason,
+      details: data.details,
+      reporterEmail: data.reporterEmail || user?.email,
+      createdAtUtc: new Date().toISOString(),
+      status: 'pending',
+    };
+
+    this.abuseReports.update((list) => [newReport, ...list]);
+    this.saveJson(ABUSE_REPORTS_KEY, this.abuseReports());
+    return newReport;
   }
 
   // ---------------------------------------------------------------------------
@@ -1207,6 +1308,100 @@ export class CommunityService {
     const saved = this.loadJson<JourneyPost[]>(JOURNEY_KEY);
     if (saved && saved.length > 0) return saved;
 
+    const seedLikers: AuthorInfo[] = [
+      {
+        id: 12,
+        fullName: 'Marco Rossi',
+        profession: 'Architect',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 33,
+        fullName: 'Elena Rostova',
+        profession: 'Travel Blogger',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 42,
+        fullName: 'Chloe Dupont',
+        profession: 'Landscape Photographer',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 88,
+        fullName: 'Kenji Sato',
+        profession: 'Street Shooter',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 55,
+        fullName: "Liam O'Connor",
+        profession: 'Adventure Guide',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 71,
+        fullName: 'Maya Patel',
+        profession: 'UI/UX Designer',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 72,
+        fullName: 'Lucas Vance',
+        profession: 'Documentary Filmmaker',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 73,
+        fullName: 'Isabella Santos',
+        profession: 'Food & Wine Writer',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 74,
+        fullName: 'Noah Weber',
+        profession: 'Alpinist',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 75,
+        fullName: 'Amara Okafor',
+        profession: 'Cultural Explorer',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 76,
+        fullName: 'Lars Lindqvist',
+        profession: 'Polar Guide',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 77,
+        fullName: 'Mei-Ling Chen',
+        profession: 'Travel Journalist',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+      },
+      {
+        id: 78,
+        fullName: 'Mateo Alvarez',
+        profession: 'Climber & Drone Pilot',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=200&q=80',
+      },
+    ];
+
     return [
       {
         id: 101,
@@ -1221,6 +1416,16 @@ export class CommunityService {
         createdAtUtc: '2026-09-21T09:30:00Z',
         likeCount: 19,
         isLiked: true,
+        likers: [
+          {
+            id: 1,
+            fullName: 'Sophia Laurent',
+            profession: 'Content Creator',
+            profilePhotoUrl:
+              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+          },
+          ...seedLikers,
+        ],
         location: 'Lake Como, Italy',
         mood: '🌿 Blissful',
         comments: [
@@ -1251,6 +1456,7 @@ export class CommunityService {
         createdAtUtc: '2026-09-21T08:15:00Z',
         likeCount: 24,
         isLiked: false,
+        likers: seedLikers,
         location: 'Positano, Italy',
         mood: '✨ Inspired',
         comments: [],
@@ -1268,6 +1474,7 @@ export class CommunityService {
         createdAtUtc: '2026-09-20T18:20:00Z',
         likeCount: 31,
         isLiked: true,
+        likers: seedLikers,
         location: 'Paris, France',
         mood: '✈️ Wanderlust',
         comments: [
@@ -1298,6 +1505,7 @@ export class CommunityService {
         createdAtUtc: '2026-09-20T14:10:00Z',
         likeCount: 15,
         isLiked: false,
+        likers: seedLikers,
         location: 'Tokyo, Japan',
         mood: '🏮 Serene',
         comments: [],
@@ -1525,6 +1733,16 @@ export class CommunityService {
         isRead: true,
       },
     ];
+  }
+
+  private loadBlockedUsers(): number[] {
+    const saved = this.loadJson<number[]>(BLOCKED_USERS_KEY);
+    return saved || [];
+  }
+
+  private loadAbuseReports(): AbuseReport[] {
+    const saved = this.loadJson<AbuseReport[]>(ABUSE_REPORTS_KEY);
+    return saved || [];
   }
 
   private loadJson<T>(key: string): T | null {

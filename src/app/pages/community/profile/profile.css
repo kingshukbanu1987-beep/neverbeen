@@ -2524,6 +2524,265 @@
   border-radius: 50%;
 }
 
+/* LIKERS MODAL (Requirement A) */
+.likers-dialog-card {
+  max-width: 480px;
+}
+
+.modal-head-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.heart-icon-badge {
+  font-size: 1.1rem;
+}
+
+.likers-body {
+  padding: 0.5rem 0.75rem;
+}
+
+.likers-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+.likers-scroll-list.has-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.likers-scroll-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.likers-scroll-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.liker-item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.liker-item-row:hover {
+  background: #f1f5f9;
+}
+
+.liker-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.liker-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.liker-name {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.liker-role {
+  font-size: 0.74rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.liker-action {
+  flex-shrink: 0;
+}
+
+.clickable-counter {
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.clickable-counter:hover {
+  color: #e11d48;
+  text-decoration: underline;
+}
+
+/* BLOCK USER ACTION (Requirement B) */
+.btn-block-action {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-block-action:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.blocked-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.blocked-user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.blocked-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.blocked-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.blocked-name {
+  font-size: 0.86rem;
+  color: #0f172a;
+}
+
+.blocked-meta {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.empty-blocked-notice {
+  font-size: 0.84rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0.25rem 0 0;
+}
+
+/* REPORT ABUSE ACTION & MODAL (Requirement C) */
+.btn-report-abuse-mini {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-report-abuse-mini:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-report-abuse {
+  color: #94a3b8;
+}
+
+.btn-report-abuse:hover {
+  color: #dc2626 !important;
+}
+
+.report-dialog-card {
+  max-width: 480px;
+}
+
+.report-target-meta {
+  background: #f8fafc;
+  border-left: 3px solid #ef4444;
+  padding: 0.6rem 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 0.85rem;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.report-snippet {
+  margin: 0.35rem 0 0;
+  font-style: italic;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.report-success-box {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.report-success-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #059669;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.65rem;
+}
+
+.report-success-box h4 {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.report-success-box p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.btn-danger-submit {
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-danger-submit:hover {
+  background: #b91c1c;
+}
+
 /* --------------------------------------------------------------------------
    RESPONSIVE DESIGN (Requirement B: Mobile Portrait Mode & Drawer)
    -------------------------------------------------------------------------- */

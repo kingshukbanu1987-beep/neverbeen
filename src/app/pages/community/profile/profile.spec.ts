@@ -528,6 +528,134 @@ describe('CommunityProfile', () => {
     expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('Settings');
   });
 
+  it('deletes Live Feeds from the Journey page header', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    component.setSection('journey');
+    fixture.detectChanges();
+
+    const journeyHeader = element.querySelector('.journey-pane .section-top-bar');
+    expect(journeyHeader).toBeTruthy();
+    expect(journeyHeader?.textContent).not.toContain('Live Feed');
+    expect(journeyHeader?.textContent).not.toContain('Live Feeds');
+    expect(journeyHeader?.textContent).not.toContain('Public Travel Feed');
+  });
+
+  it('opens a modal on press and hold on Likes showing who liked, connection status, scrollbar for >10 users, and redirects to visitor profile', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const post = service.journeyPosts()[0];
+    expect(post.likers?.length).toBeGreaterThan(10);
+
+    // Trigger press and hold (or openLikersModal)
+    component.openLikersModal(post);
+    fixture.detectChanges();
+
+    expect(component['showLikersModal']()).toBe(true);
+
+    const likersModal = element.querySelector('.likers-dialog-card');
+    expect(likersModal).toBeTruthy();
+
+    const likerRows = likersModal!.querySelectorAll('.liker-item-row');
+    expect(likerRows.length).toBeGreaterThan(10);
+
+    // Verify scrollbar indicator / container
+    const scrollList = likersModal!.querySelector('.likers-scroll-list');
+    expect(scrollList).toBeTruthy();
+    expect(scrollList?.classList.contains('has-scrollbar')).toBe(true);
+
+    // Verify connection status / connect action presence
+    const connectActions = likersModal!.querySelectorAll('.liker-action');
+    expect(connectActions.length).toBe(likerRows.length);
+
+    // Click on a liker in the modal
+    const targetLiker = component['selectedPostLikers']().find((l) => l.id !== 1)!;
+    expect(targetLiker).toBeTruthy();
+    component.onLikerClick(targetLiker);
+    fixture.detectChanges();
+
+    // Modal closes and visitor profile opens
+    expect(component['showLikersModal']()).toBe(false);
+    expect(component['viewingVisitor']()).toBeTruthy();
+    expect(component['viewingVisitor']()?.fullName).toBe(targetLiker.fullName);
+  });
+
+  it('blocks another companion or non-connected user causing mutual invisibility, and allows unblocking via Settings', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Marco Rossi (id: 12) is connected initially
+    const marco = service.companions().find((c) => c.id === 12)!;
+    expect(marco.status).toBe('connected');
+    expect(service.visibleJourneyPosts().some((p) => p.author.id === 12)).toBe(true);
+
+    // Block Marco
+    component.blockUser(12);
+    fixture.detectChanges();
+
+    expect(service.isUserBlocked(12)).toBe(true);
+
+    // Invisibility check: Marco is not visible in Journey posts
+    expect(service.visibleJourneyPosts().some((p) => p.author.id === 12)).toBe(false);
+
+    // Invisibility check: Marco is not in visible companions
+    expect(service.visibleCompanions().some((c) => c.id === 12)).toBe(false);
+
+    // Invisibility check: Marco cannot be found in search
+    component['searchQuery'].set('Marco');
+    component.onSearchInput();
+    fixture.detectChanges();
+    expect(component['searchResults']().travelers.some((t) => t.id === 12)).toBe(false);
+
+    // Unblock Marco via Settings
+    component.setSection('settings');
+    fixture.detectChanges();
+    expect(component.getBlockedUsers().some((u) => u.id === 12)).toBe(true);
+
+    component.unblockUser(12);
+    fixture.detectChanges();
+
+    expect(service.isUserBlocked(12)).toBe(false);
+    expect(service.visibleJourneyPosts().some((p) => p.author.id === 12)).toBe(true);
+  });
+
+  it('allows reporting abuse on posts and comments by other users with direct submission', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Post by Elena
+    const elenaPost = service.journeyPosts().find((p) => p.author.id === 33)!;
+    expect(elenaPost).toBeTruthy();
+
+    // Open Report Abuse modal
+    component.openReportAbuseModal('post', elenaPost.id, elenaPost.author, elenaPost.text);
+    fixture.detectChanges();
+
+    expect(component['showReportAbuseModal']()).toBe(true);
+    expect(component['reportTarget']()?.author.fullName).toBe(elenaPost.author.fullName);
+
+    // Validate details requirement
+    component['reportDetails'] = '';
+    component.submitReportAbuse();
+    expect(component['reportError']()).toBeTruthy();
+
+    // Fill valid concern and submit
+    component['reportReason'] = 'Spam or Advertising';
+    component['reportDetails'] = 'Promoting commercial travel booking without disclosure';
+    component.submitReportAbuse();
+    fixture.detectChanges();
+
+    expect(component['reportSubmitted']()).toBe(true);
+    expect(service.abuseReports().length).toBeGreaterThan(0);
+    expect(service.abuseReports()[0].reason).toBe('Spam or Advertising');
+  });
+
   it('terminates user session, sets status to Inactive, and navigates to Sign in page on clicking Log Out', () => {
     const fixture = create();
     const component = fixture.componentInstance;

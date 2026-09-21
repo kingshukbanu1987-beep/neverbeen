@@ -169,6 +169,20 @@ export interface JourneyPost {
   isShared?: boolean;
   sharedText?: string;
   originalPost?: JourneyPost;
+  likers?: AuthorInfo[];
+}
+
+export interface AbuseReport {
+  id: number;
+  targetType: 'post' | 'comment' | 'message';
+  targetId: number;
+  reportedAuthor: AuthorInfo;
+  reportedByUserId: number;
+  reason: string;
+  details: string;
+  reporterEmail?: string;
+  createdAtUtc: string;
+  status: 'pending' | 'reviewed';
 }
 
 export interface Companion {

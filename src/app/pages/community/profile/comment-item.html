@@ -37,6 +37,11 @@
             <span class="replies-count-hint">({{ comment.replies?.length }} {{ (comment.replies?.length || 0) === 1 ? 'reply' : 'replies' }})</span>
           }
         </button>
+        @if (currentUserId && comment.author.id !== currentUserId) {
+          <button type="button" class="comment-action-link btn-report-comment" (click)="onReportAbuse()" title="Report Abuse">
+            <span>🚩 Report</span>
+          </button>
+        }
       </div>
 
       <!-- INLINE REPLY BOX -->
@@ -77,6 +82,7 @@
           (reply)="forwardReply($event)"
           (like)="forwardLike($event)"
           (openUser)="forwardOpenUser($event)"
+          (reportAbuse)="forwardReportAbuse($event)"
         ></app-comment-thread>
       }
     </div>

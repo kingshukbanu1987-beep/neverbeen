@@ -110,6 +110,10 @@
   color: #e11d48;
 }
 
+.comment-action-link.btn-report-comment:hover {
+  color: #dc2626;
+}
+
 .count-pill {
   font-size: 0.7rem;
   color: #64748b;
