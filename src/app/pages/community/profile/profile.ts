@@ -1,11 +1,20 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { City } from '../../../models/community';
+import { Circle, City, Companion, JourneyPost } from '../../../models/community';
 import { CommunityService } from '../../../services/community.service';
 
-export type ProfileSection = 'about' | 'gallery' | 'messagebook' | 'settings';
+export type ProfileSection =
+  | 'journey'
+  | 'about'
+  | 'gallery'
+  | 'messagebook'
+  | 'companions'
+  | 'circles'
+  | 'messenger'
+  | 'notifications'
+  | 'settings';
 
 @Component({
   selector: 'app-community-profile',
@@ -18,8 +27,33 @@ export class CommunityProfile implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
 
-  // Active section in the right side wide panel (default: 'about')
-  protected readonly activeSection = signal<ProfileSection>('about');
+  // Active section in the right side wide panel (default: 'journey' as requested)
+  protected readonly activeSection = signal<ProfileSection>('journey');
+
+  // Search state (top-left)
+  protected readonly searchQuery = signal('');
+  protected readonly showSearchDropdown = signal(false);
+  protected readonly viewingTraveler = signal<Companion | null>(null);
+
+  // Journey state
+  protected newJourneyText = '';
+  protected selectedMood = '✈️ Traveling';
+  protected selectedLocation = '';
+  protected readonly postingJourney = signal(false);
+  protected readonly activeCommentPostId = signal<number | null>(null);
+  protected journeyCommentText = '';
+
+  // Circles state
+  protected readonly showCreateCircleModal = signal(false);
+  protected newCircleName = '';
+  protected newCircleDesc = '';
+  protected newCircleIcon = '🌟';
+  protected newCircleColor = '#2563eb';
+  protected readonly selectedCircleMemberIds = signal<number[]>([]);
+  protected readonly circleError = signal<string | null>(null);
+
+  // Messenger state
+  protected readonly showMessengerFlyout = signal(false);
 
   // Edit details state
   protected readonly editingDetails = signal(false);
@@ -65,8 +99,33 @@ export class CommunityProfile implements OnInit {
     timezone: ['UTC'],
   });
 
+  // Search results computed
+  protected readonly searchResults = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return { travelers: [], circles: [] };
+
+    const travelers = this.service
+      .companions()
+      .filter(
+        (c) =>
+          c.fullName.toLowerCase().includes(q) ||
+          c.city.toLowerCase().includes(q) ||
+          c.country.toLowerCase().includes(q) ||
+          c.profession.toLowerCase().includes(q),
+      );
+
+    const circles = this.service
+      .circles()
+      .filter(
+        (cr) =>
+          cr.name.toLowerCase().includes(q) ||
+          cr.description.toLowerCase().includes(q),
+      );
+
+    return { travelers, circles };
+  });
+
   async ngOnInit(): Promise<void> {
-    // If not authenticated, redirect back to the Sign in Page
     if (!this.service.isAuthenticated() || !this.service.profile()) {
       this.router.navigate(['/community']);
       return;
@@ -84,10 +143,13 @@ export class CommunityProfile implements OnInit {
 
   setSection(section: ProfileSection): void {
     this.activeSection.set(section);
+    if (section === 'notifications') {
+      this.service.markNotificationsRead();
+    }
   }
 
   // Alias for tests
-  setTab(tab: 'about' | 'details' | 'gallery' | 'settings'): void {
+  setTab(tab: 'journey' | 'about' | 'details' | 'gallery' | 'settings'): void {
     if (tab === 'details') {
       this.activeSection.set('about');
       this.editingDetails.set(true);
@@ -95,6 +157,183 @@ export class CommunityProfile implements OnInit {
       this.activeSection.set(tab as ProfileSection);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // SEARCH & TRAVELER MODAL
+  // ---------------------------------------------------------------------------
+
+  onSearchFocus(): void {
+    if (this.searchQuery().trim()) {
+      this.showSearchDropdown.set(true);
+    }
+  }
+
+  onSearchInput(): void {
+    this.showSearchDropdown.set(this.searchQuery().trim().length > 0);
+  }
+
+  openTravelerModal(companion: Companion): void {
+    this.viewingTraveler.set(companion);
+    this.showSearchDropdown.set(false);
+  }
+
+  closeTravelerModal(): void {
+    this.viewingTraveler.set(null);
+  }
+
+  requestCompanionship(userId: number): void {
+    this.service.sendCompanionshipRequest(userId);
+    if (this.viewingTraveler() && this.viewingTraveler()!.id === userId) {
+      this.viewingTraveler.update((t) => (t ? { ...t, status: 'pending_outgoing' } : null));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // JOURNEY
+  // ---------------------------------------------------------------------------
+
+  submitJourneyPost(): void {
+    if (!this.newJourneyText.trim()) return;
+    this.postingJourney.set(true);
+    try {
+      this.service.createJourneyPost(
+        this.newJourneyText,
+        this.selectedMood,
+        this.selectedLocation,
+      );
+      this.newJourneyText = '';
+      this.selectedLocation = '';
+    } finally {
+      this.postingJourney.set(false);
+    }
+  }
+
+  toggleLikePost(postId: number): void {
+    this.service.toggleJourneyLike(postId);
+  }
+
+  toggleCommentSection(postId: number): void {
+    if (this.activeCommentPostId() === postId) {
+      this.activeCommentPostId.set(null);
+    } else {
+      this.activeCommentPostId.set(postId);
+      this.journeyCommentText = '';
+    }
+  }
+
+  submitJourneyComment(postId: number): void {
+    if (!this.journeyCommentText.trim()) return;
+    this.service.addJourneyComment(postId, this.journeyCommentText);
+    this.journeyCommentText = '';
+  }
+
+  // ---------------------------------------------------------------------------
+  // CIRCLES
+  // ---------------------------------------------------------------------------
+
+  openCreateCircleModal(): void {
+    this.circleError.set(null);
+    if (this.service.circles().length >= 5) {
+      this.circleError.set('You have reached the maximum of 5 Circles.');
+      return;
+    }
+    this.newCircleName = '';
+    this.newCircleDesc = '';
+    this.selectedCircleMemberIds.set([]);
+    this.showCreateCircleModal.set(true);
+  }
+
+  closeCreateCircleModal(): void {
+    this.showCreateCircleModal.set(false);
+  }
+
+  toggleCircleMemberSelection(companionId: number): void {
+    const current = this.selectedCircleMemberIds();
+    if (current.includes(companionId)) {
+      this.selectedCircleMemberIds.set(current.filter((id) => id !== companionId));
+    } else {
+      this.selectedCircleMemberIds.set([...current, companionId]);
+    }
+  }
+
+  submitCreateCircle(): void {
+    if (!this.newCircleName.trim()) {
+      this.circleError.set('Circle Name is required.');
+      return;
+    }
+
+    const created = this.service.createCircle(
+      this.newCircleName,
+      this.newCircleDesc || 'A circle of travel companions.',
+      this.selectedCircleMemberIds(),
+      this.newCircleIcon,
+      this.newCircleColor,
+    );
+
+    if (created) {
+      this.showCreateCircleModal.set(false);
+      this.circleError.set(null);
+    } else {
+      this.circleError.set('Maximum of 5 Circles allowed.');
+    }
+  }
+
+  deleteCircle(circleId: number): void {
+    this.service.deleteCircle(circleId);
+  }
+
+  getCircleMembers(memberIds: number[]): Companion[] {
+    return this.service.companions().filter((c) => memberIds.includes(c.id));
+  }
+
+  // ---------------------------------------------------------------------------
+  // MESSENGER & CHAT BOXES
+  // ---------------------------------------------------------------------------
+
+  toggleMessengerFlyout(): void {
+    this.showMessengerFlyout.update((v) => !v);
+  }
+
+  openChatWith(companion: Companion): void {
+    this.service.openChatBox(companion);
+    this.showMessengerFlyout.set(false);
+  }
+
+  closeChat(companionId: number): void {
+    this.service.closeChatBox(companionId);
+  }
+
+  toggleMinimize(companionId: number): void {
+    this.service.toggleMinimizeChatBox(companionId);
+  }
+
+  sendChat(companionId: number, text: string): void {
+    this.service.sendChatMessage(companionId, text);
+  }
+
+  // ---------------------------------------------------------------------------
+  // NOTIFICATIONS (Approve & Reject Companionship)
+  // ---------------------------------------------------------------------------
+
+  approveRequest(notificationId: number, fromUserId: number): void {
+    this.service.approveCompanionshipRequest(notificationId, fromUserId);
+  }
+
+  rejectRequest(notificationId: number, fromUserId: number): void {
+    this.service.rejectCompanionshipRequest(notificationId, fromUserId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // COMPANIONS
+  // ---------------------------------------------------------------------------
+
+  removeCompanion(companionId: number): void {
+    this.service.removeCompanion(companionId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // ABOUT ME EDIT
+  // ---------------------------------------------------------------------------
 
   enableEdit(): void {
     this.populateEditForm();
@@ -153,7 +392,7 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // Gallery
+  // GALLERY
   // ---------------------------------------------------------------------------
 
   onGalleryFileSelected(event: Event): void {
@@ -189,7 +428,7 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // MessageBook
+  // MESSAGEBOOK
   // ---------------------------------------------------------------------------
 
   async submitPost(): Promise<void> {
@@ -236,27 +475,8 @@ export class CommunityProfile implements OnInit {
     return !!(user && user.id === authorId);
   }
 
-  formatTime(isoString: string): string {
-    try {
-      const date = new Date(isoString);
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffMins = Math.floor(diffMs / (1000 * 60));
-      const diffHours = Math.floor(diffMins / 60);
-      const diffDays = Math.floor(diffHours / 24);
-
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
-      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    } catch {
-      return 'Recently';
-    }
-  }
-
   // ---------------------------------------------------------------------------
-  // Settings
+  // SETTINGS
   // ---------------------------------------------------------------------------
 
   async saveSettings(): Promise<void> {
@@ -278,11 +498,30 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // Log Out
+  // LOG OUT
   // ---------------------------------------------------------------------------
 
   logout(): void {
     this.service.logout();
     this.router.navigate(['/community']);
+  }
+
+  formatTime(isoString: string): string {
+    try {
+      const date = new Date(isoString);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch {
+      return 'Recently';
+    }
   }
 }

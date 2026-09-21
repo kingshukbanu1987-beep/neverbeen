@@ -1,582 +1,1397 @@
-<div class="profile-dashboard-layout">
-  <!-- LEFT SIDE PANEL: User basic details + Navigation Menu -->
-  <aside class="left-side-panel" aria-label="User profile and navigation">
-    <div class="user-card-summary">
-      <!-- User Photo -->
-      <div class="user-photo-wrap">
-        <img
-          [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
-          [alt]="service.profile()?.fullName || 'User Photo'"
-          class="user-avatar-img"
-        />
-        <label class="photo-change-btn" for="avatarUploadInput" title="Change profile photo">
-          <svg viewBox="0 0 24 24" class="icon-camera" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-            <circle cx="12" cy="13" r="4"></circle>
-          </svg>
-        </label>
-        <input
-          type="file"
-          id="avatarUploadInput"
-          accept="image/*"
-          (change)="onPhotoUpload($event)"
-          class="hidden-file-input"
-        />
-      </div>
-
-      <!-- Full Name -->
-      <h2 class="profile-full-name">
-        {{ service.profile()?.fullName || ((service.profile()?.firstName || '') + ' ' + (service.profile()?.lastName || '')).trim() || 'NeverBeen Traveler' }}
-      </h2>
-
-      <!-- Country and City -->
-      <p class="profile-location">
-        <svg viewBox="0 0 24 24" class="loc-icon" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-        </svg>
-        <span>
-          {{ service.profile()?.cityName || service.profile()?.city || 'Paris' }},
-          {{ service.profile()?.countryName || service.profile()?.country || 'France' }}
-        </span>
-      </p>
-
-      <span class="member-status-pill">
-        <span class="active-dot"></span> Active Member
-      </span>
+<div class="profile-layout-container">
+  <!-- TOP LEFT SEARCH BAR -->
+  <div class="community-top-search-bar">
+    <div class="search-input-wrapper">
+      <svg viewBox="0 0 24 24" class="search-icon" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (focus)="onSearchFocus()"
+        (input)="onSearchInput()"
+        placeholder="Search travelers, companions, or circles..."
+        class="search-input"
+      />
+      @if (searchQuery()) {
+        <button type="button" class="btn-clear-search" (click)="searchQuery.set(''); showSearchDropdown.set(false)">✕</button>
+      }
     </div>
 
-    <!-- Navigation Menu: About me, Gallery, MessageBook, Settings, Log Out -->
-    <nav class="side-menu" aria-label="Profile navigation menu">
-      <button
-        type="button"
-        class="menu-btn"
-        [class.active]="activeSection() === 'about'"
-        (click)="setSection('about')"
-      >
-        <svg viewBox="0 0 24 24" class="menu-icon" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="7" r="4"></circle>
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-        </svg>
-        <span>About me</span>
-      </button>
-
-      <button
-        type="button"
-        class="menu-btn"
-        [class.active]="activeSection() === 'gallery'"
-        (click)="setSection('gallery')"
-      >
-        <svg viewBox="0 0 24 24" class="menu-icon" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-          <polyline points="21 15 16 10 5 21"></polyline>
-        </svg>
-        <span>Gallery</span>
-        @if (service.profile()?.gallery?.length) {
-          <span class="count-badge">{{ service.profile()?.gallery?.length }}</span>
-        }
-      </button>
-
-      <button
-        type="button"
-        class="menu-btn"
-        [class.active]="activeSection() === 'messagebook'"
-        (click)="setSection('messagebook')"
-      >
-        <svg viewBox="0 0 24 24" class="menu-icon" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span>MessageBook</span>
-        @if (service.comments().length) {
-          <span class="count-badge">{{ service.comments().length }}</span>
-        }
-      </button>
-
-      <button
-        type="button"
-        class="menu-btn"
-        [class.active]="activeSection() === 'settings'"
-        (click)="setSection('settings')"
-      >
-        <svg viewBox="0 0 24 24" class="menu-icon" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-        <span>Settings</span>
-      </button>
-
-      <div class="menu-divider"></div>
-
-      <!-- Log Out -->
-      <button
-        type="button"
-        class="menu-btn logout-btn"
-        (click)="logout()"
-        title="Terminate session and return to Sign in page"
-      >
-        <svg viewBox="0 0 24 24" class="menu-icon" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-        <span>Log Out</span>
-      </button>
-    </nav>
-  </aside>
-
-  <!-- RIGHT SIDE WIDE PANEL -->
-  <main class="right-wide-panel">
-    <!-- SECTION 1: ABOUT ME (DEFAULT OPEN) -->
-    @if (activeSection() === 'about') {
-      <article class="wide-section-card">
-        <header class="section-top-bar">
-          <div>
-            <h1 class="section-title">About Me</h1>
-            <p class="section-desc">Personal bio, travel passions, and member profile details.</p>
-          </div>
-          <button
-            type="button"
-            class="btn-toggle-edit"
-            (click)="editingDetails() ? cancelEdit() : enableEdit()"
-          >
-            {{ editingDetails() ? '✕ Cancel' : '✎ Edit Details' }}
-          </button>
-        </header>
-
-        <!-- Bio narrative -->
-        <div class="bio-container">
-          <h3 class="subsection-title">Biography</h3>
-          <p class="bio-text">
-            {{ service.profile()?.aboutMe || 'No biography written yet. Click "Edit Details" to share your travel memoirs, favorite photography locations, and dream destinations.' }}
-          </p>
-        </div>
-
-        @if (!editingDetails()) {
-          <!-- Details Overview List -->
-          <div class="details-overview-grid">
-            <div class="detail-item">
-              <span class="detail-label">Full Name</span>
-              <span class="detail-value">{{ service.profile()?.fullName }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Email Address</span>
-              <span class="detail-value">{{ service.profile()?.email }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Country</span>
-              <span class="detail-value">{{ service.profile()?.countryName || service.profile()?.country }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">State / Province</span>
-              <span class="detail-value">{{ service.profile()?.state || 'Not specified' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">City</span>
-              <span class="detail-value">{{ service.profile()?.cityName || service.profile()?.city }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Gender</span>
-              <span class="detail-value">{{ service.profile()?.gender || 'Not specified' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Date of Birth</span>
-              <span class="detail-value">{{ service.profile()?.dateOfBirth || 'Not specified' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Profession</span>
-              <span class="detail-value">{{ service.profile()?.profession || 'Travel Enthusiast' }}</span>
-            </div>
-          </div>
-        } @else {
-          <!-- Inline Edit Details Form -->
-          <form [formGroup]="editForm" (ngSubmit)="saveDetails()" class="edit-profile-form">
-            <h3 class="subsection-title">Update Your Information</h3>
-            <div class="edit-fields-grid">
-              <div class="field-box">
-                <label>Full Name</label>
-                <input type="text" formControlName="fullName" />
-              </div>
-              <div class="field-box">
-                <label>Profession</label>
-                <input type="text" formControlName="profession" />
-              </div>
-              <div class="field-box">
-                <label>Gender</label>
-                <select formControlName="gender">
-                  <option value="Female">Female</option>
-                  <option value="Male">Male</option>
-                  <option value="Non-Binary">Non-Binary</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
-                </select>
-              </div>
-              <div class="field-box">
-                <label>Date of Birth</label>
-                <input type="date" formControlName="dateOfBirth" />
-              </div>
-              <div class="field-box full-span">
-                <label>Biography &amp; Travel Passions</label>
-                <textarea formControlName="aboutMe" rows="4"></textarea>
-              </div>
-            </div>
-            <div class="edit-buttons-bar">
-              <button type="submit" class="btn-primary-action">Save Changes</button>
-              <button type="button" class="btn-secondary-action" (click)="cancelEdit()">Cancel</button>
-            </div>
-          </form>
-        }
-
-        <!-- Travel Highlights -->
-        <div class="highlights-box">
-          <h3 class="subsection-title">NeverBeen Travel Highlights</h3>
-          <div class="highlights-row">
-            <div class="highlight-card">
-              <span class="hl-icon">🏔️</span>
-              <div>
-                <strong>Dream Destinations</strong>
-                <p>Alpine lakes, Mediterranean coves, and historic Old Towns.</p>
-              </div>
-            </div>
-            <div class="highlight-card">
-              <span class="hl-icon">📸</span>
-              <div>
-                <strong>Vacation Photography Style</strong>
-                <p>Cinematic lighting, vintage 35mm film tones, and candid leisure.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </article>
-    }
-
-    <!-- SECTION 2: GALLERY -->
-    @if (activeSection() === 'gallery') {
-      <article class="wide-section-card">
-        <header class="section-top-bar">
-          <div>
-            <h1 class="section-title">Vacation Gallery</h1>
-            <p class="section-desc">Upload, manage, and showcase your AI-crafted travel memories.</p>
-          </div>
-          <button
-            type="button"
-            class="btn-primary-action"
-            (click)="showUploadCard.set(!showUploadCard())"
-          >
-            {{ showUploadCard() ? '✕ Close Uploader' : '+ Add Photo' }}
-          </button>
-        </header>
-
-        <!-- Inline Upload Card -->
-        @if (showUploadCard()) {
-          <div class="inline-upload-card">
-            <h3 class="subsection-title">Add New Vacation Photo</h3>
-            <div class="upload-dropzone">
-              @if (galleryPreviewUrl()) {
-                <img [src]="galleryPreviewUrl()" alt="Preview" class="gallery-preview-img" />
-              } @else {
-                <div class="drop-prompt">
-                  <svg viewBox="0 0 24 24" class="drop-icon" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                  <p>Click to choose a photograph from your device</p>
-                  <span>JPEG, PNG, WebP &lt; 8 MB</span>
+    <!-- Real-time Search Dropdown -->
+    @if (showSearchDropdown() && (searchResults().travelers.length > 0 || searchResults().circles.length > 0)) {
+      <div class="search-results-dropdown">
+        @if (searchResults().travelers.length > 0) {
+          <div class="results-group">
+            <span class="group-header">Travelers</span>
+            @for (t of searchResults().travelers; track t.id) {
+              <div class="search-result-item" (click)="openTravelerModal(t)">
+                <img [src]="t.profilePhotoUrl" [alt]="t.fullName" class="res-avatar" />
+                <div class="res-info">
+                  <strong>{{ t.fullName }}</strong>
+                  <span>📍 {{ t.city }}, {{ t.country }} • {{ t.profession }}</span>
                 </div>
-              }
-              <input
-                type="file"
-                accept="image/*"
-                (change)="onGalleryFileSelected($event)"
-                class="hidden-file-input"
-              />
-            </div>
-
-            <div class="field-box" style="margin-top: 1rem;">
-              <label for="newCaption">Photograph Caption</label>
-              <input
-                id="newCaption"
-                type="text"
-                [(ngModel)]="newCaption"
-                placeholder="e.g. Sunset in Positano, Amalfi Coast"
-              />
-            </div>
-
-            <div class="edit-buttons-bar" style="margin-top: 1rem;">
-              <button
-                type="button"
-                class="btn-primary-action"
-                [disabled]="!selectedGalleryFile() || uploadingGallery()"
-                (click)="submitGalleryUpload()"
-              >
-                @if (uploadingGallery()) { Uploading... } @else { Save Photo to Gallery }
-              </button>
-              <button
-                type="button"
-                class="btn-secondary-action"
-                (click)="showUploadCard.set(false)"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- Gallery Grid -->
-        @if (!service.profile()?.gallery?.length) {
-          <div class="empty-state-box">
-            <span class="empty-icon">📷</span>
-            <h3>No photographs in your gallery yet</h3>
-            <p>Click "+ Add Photo" above to upload your first vacation memoir!</p>
-          </div>
-        } @else {
-          <div class="gallery-grid">
-            @for (photo of service.profile()?.gallery; track photo.id) {
-              <figure class="gallery-card">
-                <img [src]="photo.url" [alt]="photo.caption || 'Vacation photo'" loading="lazy" />
-                <figcaption class="gallery-caption">
-                  <span class="caption-text">{{ photo.caption || 'Vacation memoir' }}</span>
-                  <button
-                    type="button"
-                    class="btn-delete-photo"
-                    title="Delete photo"
-                    (click)="deletePhoto(photo.id)"
-                  >
-                    ✕
-                  </button>
-                </figcaption>
-              </figure>
+                <div class="res-action">
+                  @if (t.status === 'connected') {
+                    <span class="status-badge connected">Connected</span>
+                  } @else if (t.status === 'pending_outgoing') {
+                    <span class="status-badge pending">Request Sent</span>
+                  } @else {
+                    <button type="button" class="btn-request-sm" (click)="$event.stopPropagation(); requestCompanionship(t.id)">
+                      + Connect
+                    </button>
+                  }
+                </div>
+              </div>
             }
           </div>
         }
-      </article>
-    }
 
-    <!-- SECTION 3: MESSAGEBOOK -->
-    @if (activeSection() === 'messagebook') {
-      <article class="wide-section-card">
-        <header class="section-top-bar">
-          <div>
-            <h1 class="section-title">Community MessageBook</h1>
-            <p class="section-desc">Connect, exchange tips, and discuss dream destinations with verified travelers.</p>
+        @if (searchResults().circles.length > 0) {
+          <div class="results-group">
+            <span class="group-header">Circles</span>
+            @for (c of searchResults().circles; track c.id) {
+              <div class="search-result-item" (click)="setSection('circles'); showSearchDropdown.set(false)">
+                <span class="circle-icon-badge" [style.background]="c.color">{{ c.icon }}</span>
+                <div class="res-info">
+                  <strong>{{ c.name }}</strong>
+                  <span>{{ c.memberIds.length }} members • {{ c.description }}</span>
+                </div>
+              </div>
+            }
           </div>
-        </header>
+        }
+      </div>
+    }
+  </div>
 
-        <!-- Message Composer -->
-        <div class="mb-composer-box">
-          <div class="composer-header">
+  <!-- MAIN DASHBOARD: LEFT COLUMN + RIGHT WIDE PANEL -->
+  <div class="dashboard-columns">
+    <!-- LEFT COLUMN -->
+    <div class="left-column-wrapper">
+      <!-- MAIN SIDE PANEL: User Info & Menu -->
+      <aside class="left-side-panel" aria-label="User profile and social navigation">
+        <!-- User Basic Details -->
+        <div class="user-card-summary">
+          <div class="user-photo-wrap">
             <img
-              [src]="service.currentUser()?.profilePhotoUrl || defaultAvatar"
-              alt="My avatar"
-              class="composer-avatar"
+              [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
+              [alt]="service.profile()?.fullName || 'User Photo'"
+              class="user-avatar-img"
             />
+            <label class="photo-change-btn" for="avatarUploadInput" title="Update photo">
+              <svg viewBox="0 0 24 24" class="icon-camera" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </label>
+            <input
+              type="file"
+              id="avatarUploadInput"
+              accept="image/*"
+              (change)="onPhotoUpload($event)"
+              class="hidden-file-input"
+            />
+          </div>
+
+          <h2 class="profile-full-name">
+            {{ service.profile()?.fullName || ((service.profile()?.firstName || '') + ' ' + (service.profile()?.lastName || '')).trim() || 'Sophia Laurent' }}
+          </h2>
+
+          <p class="profile-location">
+            <svg viewBox="0 0 24 24" class="loc-icon" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <span>
+              {{ service.profile()?.cityName || service.profile()?.city || 'Paris' }},
+              {{ service.profile()?.countryName || service.profile()?.country || 'France' }}
+            </span>
+          </p>
+
+          <span class="member-status-pill">
+            <span class="active-dot"></span> Active Traveler
+          </span>
+        </div>
+
+        <!-- SIDE MENU WITH COLORFUL ICONS IN SPECIFIED ORDER -->
+        <nav class="side-menu" aria-label="Community navigation options">
+          <!-- 1. About me -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'about'"
+            (click)="setSection('about')"
+          >
+            <span class="icon-pill pill-violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="7" r="4"></circle>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              </svg>
+            </span>
+            <span>About me</span>
+          </button>
+
+          <!-- 2. Journey (Default open & placed after About me) -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'journey'"
+            (click)="setSection('journey')"
+          >
+            <span class="icon-pill pill-emerald">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 19 21 12 17 5 21 12 2"></polygon>
+              </svg>
+            </span>
+            <span>Journey</span>
+            <span class="badge-hot">Wall</span>
+          </button>
+
+          <!-- 3. Gallery -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'gallery'"
+            (click)="setSection('gallery')"
+          >
+            <span class="icon-pill pill-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </span>
+            <span>Gallery</span>
+            @if (service.profile()?.gallery?.length) {
+              <span class="count-badge">{{ service.profile()?.gallery?.length }}</span>
+            }
+          </button>
+
+          <!-- 4. MessageBook -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'messagebook'"
+            (click)="setSection('messagebook')"
+          >
+            <span class="icon-pill pill-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </span>
+            <span>MessageBook</span>
+            @if (service.comments().length) {
+              <span class="count-badge">{{ service.comments().length }}</span>
+            }
+          </button>
+
+          <!-- 5. Companions -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'companions'"
+            (click)="setSection('companions')"
+          >
+            <span class="icon-pill pill-rose">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </span>
+            <span>Companions</span>
+            <span class="count-badge">{{ service.onlineCompanions().length + service.offlineCompanions().length }}</span>
+          </button>
+
+          <!-- 6. Circles -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'circles'"
+            (click)="setSection('circles')"
+          >
+            <span class="icon-pill pill-indigo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="6"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+              </svg>
+            </span>
+            <span>Circles</span>
+            <span class="count-badge">{{ service.circles().length }}/5</span>
+          </button>
+
+          <!-- 7. Messenger -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'messenger'"
+            (click)="setSection('messenger')"
+          >
+            <span class="icon-pill pill-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </span>
+            <span>Messenger</span>
+            @if (service.onlineCompanions().length > 0) {
+              <span class="online-indicator-dot" title="Companions online"></span>
+            }
+          </button>
+
+          <!-- 8. Notifications -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'notifications'"
+            (click)="setSection('notifications')"
+          >
+            <span class="icon-pill pill-coral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </span>
+            <span>Notifications</span>
+            @if (service.unreadNotificationCount() > 0) {
+              <span class="notif-badge">{{ service.unreadNotificationCount() }}</span>
+            }
+          </button>
+
+          <!-- 9. Settings -->
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="activeSection() === 'settings'"
+            (click)="setSection('settings')"
+          >
+            <span class="icon-pill pill-slate">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </span>
+            <span>Settings</span>
+          </button>
+
+          <div class="menu-divider"></div>
+
+          <!-- 10. Log Out -->
+          <button
+            type="button"
+            class="menu-btn logout-btn"
+            (click)="logout()"
+            title="Terminate session and return to Sign in page"
+          >
+            <span class="icon-pill pill-red">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </span>
+            <span>Log Out</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- CIRCLES SUB-PANEL (Shown below side panel) -->
+      <section class="circles-side-panel" aria-label="My travel circles">
+        <div class="circles-header">
+          <div class="circles-title-row">
+            <span class="circles-subhead">My Circles</span>
+            <span class="circle-quota-badge">{{ service.circles().length }}/5</span>
+          </div>
+          <button
+            type="button"
+            class="btn-new-circle-compact"
+            [disabled]="service.circles().length >= 5"
+            (click)="openCreateCircleModal()"
+            title="Create Circle (max 5)"
+          >
+            + Create
+          </button>
+        </div>
+
+        <div class="circles-compact-list">
+          @for (c of service.circles(); track c.id) {
+            <div
+              class="circle-item-card"
+              (click)="setSection('circles')"
+              title="Click to view Circle"
+            >
+              <span class="circle-card-icon" [style.background]="c.color">{{ c.icon }}</span>
+              <div class="circle-card-info">
+                <strong>{{ c.name }}</strong>
+                <span>{{ c.memberIds.length }} companions</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT SIDE WIDE PANEL -->
+    <main class="right-wide-panel">
+      <!-- ====================================================================
+           1. JOURNEY SECTION (DEFAULT OPEN)
+           ==================================================================== -->
+      @if (activeSection() === 'journey') {
+        <article class="wide-section-card journey-feed-page">
+          <header class="section-top-bar">
             <div>
-              <strong>{{ service.currentUser()?.fullName }}</strong>
-              <span class="composer-role">Active Member</span>
+              <h1 class="section-title">Journey</h1>
+              <p class="section-desc">Your personal travel wall &amp; live feeds from connected companions across NeverBeen.</p>
+            </div>
+            <span class="feed-live-tag">
+              <span class="live-pulse"></span> Live Feeds
+            </span>
+          </header>
+
+          <!-- FACEBOOK-LIKE WALL POST COMPOSER (Text post) -->
+          <div class="journey-composer-card">
+            <div class="composer-top-row">
+              <img
+                [src]="service.currentUser()?.profilePhotoUrl || defaultAvatar"
+                alt="My profile photo"
+                class="composer-user-avatar"
+              />
+              <textarea
+                [(ngModel)]="newJourneyText"
+                placeholder="What's on your travel mind, {{ service.currentUser()?.firstName || 'traveler' }}? Share a story, question or tip..."
+                rows="3"
+                class="wall-textarea"
+              ></textarea>
+            </div>
+
+            <!-- Meta attributes: Mood & Location -->
+            <div class="composer-meta-bar">
+              <div class="meta-selectors">
+                <!-- Mood picker -->
+                <select [(ngModel)]="selectedMood" class="chip-select">
+                  <option value="✈️ Traveling">✈️ Traveling</option>
+                  <option value="🏔️ In the Mountains">🏔️ Mountains</option>
+                  <option value="🏖️ Coastal Escape">🏖️ Coast</option>
+                  <option value="📸 Photo Shoot">📸 Shooting</option>
+                  <option value="✨ Inspired">✨ Inspired</option>
+                  <option value="☕ Leisure Day">☕ Leisure</option>
+                </select>
+
+                <!-- Location tag -->
+                <input
+                  type="text"
+                  [(ngModel)]="selectedLocation"
+                  placeholder="📍 Add destination tag..."
+                  class="location-input"
+                />
+              </div>
+
+              <button
+                type="button"
+                class="btn-primary-action btn-wall-post"
+                [disabled]="!newJourneyText.trim() || postingJourney()"
+                (click)="submitJourneyPost()"
+              >
+                @if (postingJourney()) { Posting... } @else { Post to Journey }
+              </button>
             </div>
           </div>
-          <textarea
-            [(ngModel)]="newPostText"
-            placeholder="Share your travel experiences, questions, or destination tips..."
-            rows="3"
-            maxlength="2000"
-            class="composer-textarea"
-          ></textarea>
-          <div class="composer-actions">
-            <span class="char-count">{{ newPostText.length }} / 2000</span>
+
+          <!-- JOURNEY FEEDS STREAM -->
+          <div class="journey-stream">
+            @for (post of service.journeyPosts(); track post.id) {
+              <article class="journey-post-card">
+                <header class="jpost-header">
+                  <img [src]="post.author.profilePhotoUrl" [alt]="post.author.fullName" class="jpost-avatar" />
+                  <div class="jpost-author-meta">
+                    <div class="author-title-line">
+                      <strong>{{ post.author.fullName }}</strong>
+                      @if (post.mood) {
+                        <span class="post-mood-pill">{{ post.mood }}</span>
+                      }
+                    </div>
+                    <div class="author-subline">
+                      @if (post.location) {
+                        <span class="jpost-location">📍 {{ post.location }}</span>
+                        <span class="dot-separator">•</span>
+                      }
+                      <time class="jpost-time">{{ formatTime(post.createdAtUtc) }}</time>
+                    </div>
+                  </div>
+                </header>
+
+                <p class="jpost-body-text">{{ post.text }}</p>
+
+                <!-- Post actions: Like & Comment -->
+                <footer class="jpost-actions-bar">
+                  <button
+                    type="button"
+                    class="btn-jpost-action"
+                    [class.liked]="post.isLiked"
+                    (click)="toggleLikePost(post.id)"
+                  >
+                    <svg viewBox="0 0 24 24" class="action-icon" [attr.fill]="post.isLiked ? '#ef4444' : 'none'" [attr.stroke]="post.isLiked ? '#ef4444' : 'currentColor'" stroke-width="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span>{{ post.likeCount }} Likes</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn-jpost-action"
+                    (click)="toggleCommentSection(post.id)"
+                  >
+                    <svg viewBox="0 0 24 24" class="action-icon" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>{{ post.comments.length }} Comments</span>
+                  </button>
+                </footer>
+
+                <!-- Comments Thread (Facebook style) -->
+                @if (activeCommentPostId() === post.id || post.comments.length > 0) {
+                  <div class="jpost-comments-box">
+                    @for (comment of post.comments; track comment.id) {
+                      <div class="jpost-comment-item">
+                        <img [src]="comment.author.profilePhotoUrl" [alt]="comment.author.fullName" class="comment-author-avatar" />
+                        <div class="comment-bubble">
+                          <div class="comment-bubble-header">
+                            <strong>{{ comment.author.fullName }}</strong>
+                            <time>{{ formatTime(comment.createdAtUtc) }}</time>
+                          </div>
+                          <p>{{ comment.text }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Inline comment input -->
+                    <div class="inline-comment-composer">
+                      <input
+                        type="text"
+                        [(ngModel)]="journeyCommentText"
+                        placeholder="Write a comment..."
+                        (keydown.enter)="submitJourneyComment(post.id)"
+                      />
+                      <button
+                        type="button"
+                        class="btn-primary-action btn-sm"
+                        [disabled]="!journeyCommentText.trim()"
+                        (click)="submitJourneyComment(post.id)"
+                      >
+                        Reply
+                      </button>
+                    </div>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </article>
+      }
+
+      <!-- ====================================================================
+           2. ABOUT ME SECTION
+           ==================================================================== -->
+      @if (activeSection() === 'about') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">About Me</h1>
+              <p class="section-desc">Personal bio, travel passions, and member profile details.</p>
+            </div>
+            <button
+              type="button"
+              class="btn-toggle-edit"
+              (click)="editingDetails() ? cancelEdit() : enableEdit()"
+            >
+              {{ editingDetails() ? '✕ Cancel' : '✎ Edit Details' }}
+            </button>
+          </header>
+
+          <div class="bio-container">
+            <h3 class="subsection-title">Biography</h3>
+            <p class="bio-text">
+              {{ service.profile()?.aboutMe || 'No biography written yet. Click "Edit Details" to share your travel memoirs, favorite photography locations, and dream destinations.' }}
+            </p>
+          </div>
+
+          @if (!editingDetails()) {
+            <div class="details-overview-grid">
+              <div class="detail-item">
+                <span class="detail-label">Full Name</span>
+                <span class="detail-value">{{ service.profile()?.fullName }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Email Address</span>
+                <span class="detail-value">{{ service.profile()?.email }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Country</span>
+                <span class="detail-value">{{ service.profile()?.countryName || service.profile()?.country }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">State / Province</span>
+                <span class="detail-value">{{ service.profile()?.state || 'Not specified' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">City</span>
+                <span class="detail-value">{{ service.profile()?.cityName || service.profile()?.city }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Gender</span>
+                <span class="detail-value">{{ service.profile()?.gender || 'Not specified' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Date of Birth</span>
+                <span class="detail-value">{{ service.profile()?.dateOfBirth || 'Not specified' }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Profession</span>
+                <span class="detail-value">{{ service.profile()?.profession || 'Travel Enthusiast' }}</span>
+              </div>
+            </div>
+          } @else {
+            <form [formGroup]="editForm" (ngSubmit)="saveDetails()" class="edit-profile-form">
+              <h3 class="subsection-title">Update Your Information</h3>
+              <div class="edit-fields-grid">
+                <div class="field-box">
+                  <label>Full Name</label>
+                  <input type="text" formControlName="fullName" />
+                </div>
+                <div class="field-box">
+                  <label>Profession</label>
+                  <input type="text" formControlName="profession" />
+                </div>
+                <div class="field-box">
+                  <label>Gender</label>
+                  <select formControlName="gender">
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Non-Binary">Non-Binary</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
+                </div>
+                <div class="field-box">
+                  <label>Date of Birth</label>
+                  <input type="date" formControlName="dateOfBirth" />
+                </div>
+                <div class="field-box full-span">
+                  <label>Biography &amp; Travel Passions</label>
+                  <textarea formControlName="aboutMe" rows="4"></textarea>
+                </div>
+              </div>
+              <div class="edit-buttons-bar">
+                <button type="submit" class="btn-primary-action">Save Changes</button>
+                <button type="button" class="btn-secondary-action" (click)="cancelEdit()">Cancel</button>
+              </div>
+            </form>
+          }
+
+          <div class="highlights-box">
+            <h3 class="subsection-title">NeverBeen Travel Highlights</h3>
+            <div class="highlights-row">
+              <div class="highlight-card">
+                <span class="hl-icon">🏔️</span>
+                <div>
+                  <strong>Dream Destinations</strong>
+                  <p>Alpine lakes, Mediterranean coves, and historic Old Towns.</p>
+                </div>
+              </div>
+              <div class="highlight-card">
+                <span class="hl-icon">📸</span>
+                <div>
+                  <strong>Vacation Photography Style</strong>
+                  <p>Cinematic lighting, vintage 35mm film tones, and candid leisure.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      }
+
+      <!-- ====================================================================
+           3. GALLERY SECTION
+           ==================================================================== -->
+      @if (activeSection() === 'gallery') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">Vacation Gallery</h1>
+              <p class="section-desc">Upload, manage, and showcase your AI-crafted travel memories.</p>
+            </div>
             <button
               type="button"
               class="btn-primary-action"
-              [disabled]="!newPostText.trim() || postingPost()"
-              (click)="submitPost()"
+              (click)="showUploadCard.set(!showUploadCard())"
             >
-              @if (postingPost()) { Posting... } @else { Post to MessageBook }
+              {{ showUploadCard() ? '✕ Close Uploader' : '+ Add Photo' }}
             </button>
-          </div>
-        </div>
+          </header>
 
-        <!-- Posts stream -->
-        <div class="posts-stream">
-          @for (post of service.comments(); track post.id) {
-            <article class="post-card">
-              <header class="post-header">
-                <img
-                  [src]="post.author.profilePhotoUrl || defaultAvatar"
-                  [alt]="post.author.fullName || 'Member'"
-                  class="post-avatar"
+          @if (showUploadCard()) {
+            <div class="inline-upload-card">
+              <h3 class="subsection-title">Add New Vacation Photo</h3>
+              <div class="upload-dropzone">
+                @if (galleryPreviewUrl()) {
+                  <img [src]="galleryPreviewUrl()" alt="Preview" class="gallery-preview-img" />
+                } @else {
+                  <div class="drop-prompt">
+                    <svg viewBox="0 0 24 24" class="drop-icon" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Click to choose a photograph from your device</p>
+                    <span>JPEG, PNG, WebP &lt; 8 MB</span>
+                  </div>
+                }
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onGalleryFileSelected($event)"
+                  class="hidden-file-input"
                 />
-                <div class="post-meta">
-                  <span class="author-name">{{ post.author.fullName || 'Traveler' }}</span>
-                  <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
-                </div>
-                @if (canDeleteComment(post.author.id)) {
+              </div>
+
+              <div class="field-box" style="margin-top: 1rem;">
+                <label for="newCaption">Photograph Caption</label>
+                <input
+                  id="newCaption"
+                  type="text"
+                  [(ngModel)]="newCaption"
+                  placeholder="e.g. Sunset in Positano, Amalfi Coast"
+                />
+              </div>
+
+              <div class="edit-buttons-bar" style="margin-top: 1rem;">
+                <button
+                  type="button"
+                  class="btn-primary-action"
+                  [disabled]="!selectedGalleryFile() || uploadingGallery()"
+                  (click)="submitGalleryUpload()"
+                >
+                  @if (uploadingGallery()) { Uploading... } @else { Save Photo to Gallery }
+                </button>
+                <button
+                  type="button"
+                  class="btn-secondary-action"
+                  (click)="showUploadCard.set(false)"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (!service.profile()?.gallery?.length) {
+            <div class="empty-state-box">
+              <span class="empty-icon">📷</span>
+              <h3>No photographs in your gallery yet</h3>
+              <p>Click "+ Add Photo" above to upload your first vacation memoir!</p>
+            </div>
+          } @else {
+            <div class="gallery-grid">
+              @for (photo of service.profile()?.gallery; track photo.id) {
+                <figure class="gallery-card">
+                  <img [src]="photo.url" [alt]="photo.caption || 'Vacation photo'" loading="lazy" />
+                  <figcaption class="gallery-caption">
+                    <span class="caption-text">{{ photo.caption || 'Vacation memoir' }}</span>
+                    <button
+                      type="button"
+                      class="btn-delete-photo"
+                      title="Delete photo"
+                      (click)="deletePhoto(photo.id)"
+                    >
+                      ✕
+                    </button>
+                  </figcaption>
+                </figure>
+              }
+            </div>
+          }
+        </article>
+      }
+
+      <!-- ====================================================================
+           4. MESSAGEBOOK SECTION
+           ==================================================================== -->
+      @if (activeSection() === 'messagebook') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">Community MessageBook</h1>
+              <p class="section-desc">Connect, exchange tips, and discuss dream destinations with verified travelers.</p>
+            </div>
+          </header>
+
+          <div class="mb-composer-box">
+            <div class="composer-header">
+              <img
+                [src]="service.currentUser()?.profilePhotoUrl || defaultAvatar"
+                alt="My avatar"
+                class="composer-avatar"
+              />
+              <div>
+                <strong>{{ service.currentUser()?.fullName }}</strong>
+                <span class="composer-role">Active Member</span>
+              </div>
+            </div>
+            <textarea
+              [(ngModel)]="newPostText"
+              placeholder="Share your travel experiences, questions, or destination tips..."
+              rows="3"
+              maxlength="2000"
+              class="composer-textarea"
+            ></textarea>
+            <div class="composer-actions">
+              <span class="char-count">{{ newPostText.length }} / 2000</span>
+              <button
+                type="button"
+                class="btn-primary-action"
+                [disabled]="!newPostText.trim() || postingPost()"
+                (click)="submitPost()"
+              >
+                @if (postingPost()) { Posting... } @else { Post to MessageBook }
+              </button>
+            </div>
+          </div>
+
+          <div class="posts-stream">
+            @for (post of service.comments(); track post.id) {
+              <article class="post-card">
+                <header class="post-header">
+                  <img
+                    [src]="post.author.profilePhotoUrl || defaultAvatar"
+                    [alt]="post.author.fullName || 'Member'"
+                    class="post-avatar"
+                  />
+                  <div class="post-meta">
+                    <span class="author-name">{{ post.author.fullName || 'Traveler' }}</span>
+                    <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                  </div>
+                  @if (canDeleteComment(post.author.id)) {
+                    <button
+                      type="button"
+                      class="btn-delete-comment"
+                      title="Delete my post"
+                      (click)="deleteComment(post.id)"
+                    >
+                      ✕
+                    </button>
+                  }
+                </header>
+
+                <p class="post-content">{{ post.text }}</p>
+
+                <footer class="post-footer">
+                  <div class="reaction-buttons">
+                    <button
+                      type="button"
+                      class="btn-reaction"
+                      [class.active]="post.myReaction === 'Like'"
+                      (click)="react(post.id, 'like')"
+                    >
+                      👍 <span>{{ post.likeCount }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-reaction"
+                      [class.active]="post.myReaction === 'Dislike'"
+                      (click)="react(post.id, 'dislike')"
+                    >
+                      👎 <span>{{ post.dislikeCount }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-reply-toggle"
+                      (click)="toggleReplyInput(post.id)"
+                    >
+                      💬 <span>{{ post.replies.length || post.replyCount }} Replies</span>
+                    </button>
+                  </div>
+                </footer>
+
+                @if (activeReplyPostId() === post.id || post.replies.length > 0) {
+                  <div class="replies-container">
+                    @for (reply of post.replies; track reply.id) {
+                      <div class="reply-card">
+                        <img
+                          [src]="reply.author.profilePhotoUrl || defaultAvatar"
+                          [alt]="reply.author.fullName || 'Reply author'"
+                          class="reply-avatar"
+                        />
+                        <div class="reply-body">
+                          <div class="reply-header">
+                            <strong>{{ reply.author.fullName }}</strong>
+                            <span class="reply-time">{{ formatTime(reply.createdAtUtc) }}</span>
+                            @if (canDeleteComment(reply.author.id)) {
+                              <button
+                                type="button"
+                                class="btn-del-reply"
+                                (click)="deleteComment(reply.id)"
+                              >
+                                ✕
+                              </button>
+                            }
+                          </div>
+                          <p class="reply-text">{{ reply.text }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    <div class="reply-input-row">
+                      <input
+                        type="text"
+                        [(ngModel)]="replyText"
+                        placeholder="Write a reply..."
+                        (keydown.enter)="submitReply(post.id)"
+                      />
+                      <button
+                        type="button"
+                        class="btn-primary-action btn-sm"
+                        [disabled]="!replyText.trim() || postingReply()"
+                        (click)="submitReply(post.id)"
+                      >
+                        Reply
+                      </button>
+                    </div>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </article>
+      }
+
+      <!-- ====================================================================
+           5. COMPANIONS SECTION
+           ==================================================================== -->
+      @if (activeSection() === 'companions') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">Travel Companions</h1>
+              <p class="section-desc">Manage your connected travelers and discover new adventurers across the world.</p>
+            </div>
+          </header>
+
+          <!-- Connected Companions -->
+          <div class="companions-group">
+            <h3 class="subsection-title">
+              Connected Companions ({{ service.onlineCompanions().length + service.offlineCompanions().length }})
+            </h3>
+
+            <div class="companions-cards-grid">
+              @for (c of service.companions(); track c.id) {
+                @if (c.status === 'connected') {
+                  <div class="companion-profile-card">
+                    <div class="c-avatar-wrap">
+                      <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="c-avatar" />
+                      <span
+                        class="status-dot"
+                        [class.online]="c.isOnline"
+                        [title]="c.isOnline ? 'Online now' : 'Offline'"
+                      ></span>
+                    </div>
+
+                    <div class="c-info">
+                      <h4>{{ c.fullName }}</h4>
+                      <span class="c-meta">📍 {{ c.city }}, {{ c.country }}</span>
+                      <span class="c-prof">{{ c.profession }}</span>
+                      @if (c.bio) {
+                        <p class="c-bio">{{ c.bio }}</p>
+                      }
+                    </div>
+
+                    <div class="c-actions">
+                      <button type="button" class="btn-primary-action btn-sm" (click)="openChatWith(c)">
+                        💬 Message
+                      </button>
+                      <button type="button" class="btn-secondary-action btn-sm" (click)="removeCompanion(c.id)">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Discover More Travelers -->
+          <div class="companions-group" style="margin-top: 2.5rem;">
+            <h3 class="subsection-title">Discover Travelers</h3>
+            <div class="companions-cards-grid">
+              @for (c of service.companions(); track c.id) {
+                @if (c.status !== 'connected') {
+                  <div class="companion-profile-card">
+                    <div class="c-avatar-wrap">
+                      <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="c-avatar" />
+                    </div>
+
+                    <div class="c-info">
+                      <h4>{{ c.fullName }}</h4>
+                      <span class="c-meta">📍 {{ c.city }}, {{ c.country }}</span>
+                      <span class="c-prof">{{ c.profession }}</span>
+                      <span class="c-mutual">{{ c.mutualCompanionsCount }} mutual companions</span>
+                    </div>
+
+                    <div class="c-actions">
+                      @if (c.status === 'pending_outgoing') {
+                        <span class="status-badge pending">Request Sent</span>
+                      } @else if (c.status === 'pending_incoming') {
+                        <button type="button" class="btn-primary-action btn-sm" (click)="setSection('notifications')">
+                          Respond to Request
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn-primary-action btn-sm"
+                          (click)="requestCompanionship(c.id)"
+                        >
+                          + Request Companionship
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </article>
+      }
+
+      <!-- ====================================================================
+           6. CIRCLES SECTION (MAX 5)
+           ==================================================================== -->
+      @if (activeSection() === 'circles') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">Travel Circles</h1>
+              <p class="section-desc">Create curated circles of companions for trips, photography styles, and shared itineraries (max 5).</p>
+            </div>
+            <button
+              type="button"
+              class="btn-primary-action"
+              [disabled]="service.circles().length >= 5"
+              (click)="openCreateCircleModal()"
+            >
+              + Create Circle ({{ service.circles().length }}/5)
+            </button>
+          </header>
+
+          <div class="circles-main-grid">
+            @for (circle of service.circles(); track circle.id) {
+              <div class="circle-detailed-card">
+                <div class="circle-card-header">
+                  <span class="circle-main-icon" [style.background]="circle.color">{{ circle.icon }}</span>
+                  <div class="circle-header-text">
+                    <h3>{{ circle.name }}</h3>
+                    <span class="circle-time">Created {{ formatTime(circle.createdAtUtc) }}</span>
+                  </div>
                   <button
                     type="button"
-                    class="btn-delete-comment"
-                    title="Delete my post"
-                    (click)="deleteComment(post.id)"
+                    class="btn-delete-circle"
+                    title="Delete circle"
+                    (click)="deleteCircle(circle.id)"
                   >
                     ✕
                   </button>
-                }
-              </header>
-
-              <p class="post-content">{{ post.text }}</p>
-
-              <!-- Reactions & Replies -->
-              <footer class="post-footer">
-                <div class="reaction-buttons">
-                  <button
-                    type="button"
-                    class="btn-reaction"
-                    [class.active]="post.myReaction === 'Like'"
-                    (click)="react(post.id, 'like')"
-                  >
-                    👍 <span>{{ post.likeCount }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-reaction"
-                    [class.active]="post.myReaction === 'Dislike'"
-                    (click)="react(post.id, 'dislike')"
-                  >
-                    👎 <span>{{ post.dislikeCount }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-reply-toggle"
-                    (click)="toggleReplyInput(post.id)"
-                  >
-                    💬 <span>{{ post.replies.length || post.replyCount }} Replies</span>
-                  </button>
                 </div>
-              </footer>
 
-              <!-- Replies thread -->
-              @if (activeReplyPostId() === post.id || post.replies.length > 0) {
-                <div class="replies-container">
-                  @for (reply of post.replies; track reply.id) {
-                    <div class="reply-card">
-                      <img
-                        [src]="reply.author.profilePhotoUrl || defaultAvatar"
-                        [alt]="reply.author.fullName || 'Reply author'"
-                        class="reply-avatar"
-                      />
-                      <div class="reply-body">
-                        <div class="reply-header">
-                          <strong>{{ reply.author.fullName }}</strong>
-                          <span class="reply-time">{{ formatTime(reply.createdAtUtc) }}</span>
-                          @if (canDeleteComment(reply.author.id)) {
-                            <button
-                              type="button"
-                              class="btn-del-reply"
-                              (click)="deleteComment(reply.id)"
-                            >
-                              ✕
-                            </button>
-                          }
-                        </div>
-                        <p class="reply-text">{{ reply.text }}</p>
+                <p class="circle-desc">{{ circle.description }}</p>
+
+                <!-- Circle Members -->
+                <div class="circle-members-section">
+                  <span class="members-heading">Circle Members ({{ circle.memberIds.length }})</span>
+                  <div class="members-avatars-row">
+                    @for (m of getCircleMembers(circle.memberIds); track m.id) {
+                      <div class="member-chip" (click)="openChatWith(m)" title="Chat with {{ m.fullName }}">
+                        <img [src]="m.profilePhotoUrl" [alt]="m.fullName" />
+                        <span>{{ m.fullName }}</span>
                       </div>
-                    </div>
-                  }
-
-                  <!-- Inline reply input -->
-                  <div class="reply-input-row">
-                    <input
-                      type="text"
-                      [(ngModel)]="replyText"
-                      placeholder="Write a reply..."
-                      (keydown.enter)="submitReply(post.id)"
-                    />
-                    <button
-                      type="button"
-                      class="btn-primary-action btn-sm"
-                      [disabled]="!replyText.trim() || postingReply()"
-                      (click)="submitReply(post.id)"
-                    >
-                      Reply
-                    </button>
+                    }
                   </div>
                 </div>
-              }
-            </article>
-          }
-        </div>
-      </article>
-    }
+              </div>
+            }
+          </div>
+        </article>
+      }
 
-    <!-- SECTION 4: SETTINGS -->
-    @if (activeSection() === 'settings') {
-      <article class="wide-section-card">
-        <header class="section-top-bar">
-          <div>
-            <h1 class="section-title">Settings</h1>
-            <p class="section-desc">Manage privacy, notifications, and application preferences.</p>
+      <!-- ====================================================================
+           7. MESSENGER SECTION (ACTIVE & OFFLINE DIRECTORY)
+           ==================================================================== -->
+      @if (activeSection() === 'messenger') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">Messenger</h1>
+              <p class="section-desc">Instant messaging with your companions. Click any traveler to launch a bottom chat box.</p>
+            </div>
+          </header>
+
+          <!-- Online Companions -->
+          <div class="messenger-section-block">
+            <h3 class="subsection-title">
+              <span class="green-live-dot"></span> Active Companions Online Now ({{ service.onlineCompanions().length }})
+            </h3>
+            <div class="messenger-directory-grid">
+              @for (c of service.onlineCompanions(); track c.id) {
+                <div class="messenger-contact-card" (click)="openChatWith(c)">
+                  <div class="contact-avatar-wrap">
+                    <img [src]="c.profilePhotoUrl" [alt]="c.fullName" />
+                    <span class="status-indicator online"></span>
+                  </div>
+                  <div class="contact-info">
+                    <strong>{{ c.fullName }}</strong>
+                    <span>{{ c.city }}, {{ c.country }}</span>
+                  </div>
+                  <button type="button" class="btn-primary-action btn-sm">Chat</button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Offline Companions -->
+          <div class="messenger-section-block" style="margin-top: 2rem;">
+            <h3 class="subsection-title">Offline Companions ({{ service.offlineCompanions().length }})</h3>
+            <div class="messenger-directory-grid">
+              @for (c of service.offlineCompanions(); track c.id) {
+                <div class="messenger-contact-card" (click)="openChatWith(c)">
+                  <div class="contact-avatar-wrap">
+                    <img [src]="c.profilePhotoUrl" [alt]="c.fullName" />
+                    <span class="status-indicator offline"></span>
+                  </div>
+                  <div class="contact-info">
+                    <strong>{{ c.fullName }}</strong>
+                    <span>{{ c.city }}, {{ c.country }}</span>
+                  </div>
+                  <button type="button" class="btn-secondary-action btn-sm">Message</button>
+                </div>
+              }
+            </div>
+          </div>
+        </article>
+      }
+
+      <!-- ====================================================================
+           8. NOTIFICATIONS SECTION (REQUESTS WITH APPROVE / REJECT)
+           ==================================================================== -->
+      @if (activeSection() === 'notifications') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">Notifications</h1>
+              <p class="section-desc">Manage companionship requests, likes, and comments on your travel updates.</p>
+            </div>
+          </header>
+
+          <div class="notifications-list">
+            @for (n of service.notifications(); track n.id) {
+              <div class="notification-card" [class.unread]="!n.isRead">
+                <img [src]="n.fromUser.profilePhotoUrl" [alt]="n.fromUser.fullName" class="notif-avatar" />
+                <div class="notif-content">
+                  <p class="notif-text">
+                    <strong>{{ n.fromUser.fullName }}</strong> {{ n.message }}
+                  </p>
+                  <time class="notif-time">{{ formatTime(n.createdAtUtc) }}</time>
+
+                  <!-- Companionship Request Action Buttons -->
+                  @if (n.type === 'companionship_request') {
+                    <div class="request-actions-row">
+                      @if (n.status === 'pending') {
+                        <button
+                          type="button"
+                          class="btn-approve"
+                          (click)="approveRequest(n.id, n.fromUser.id)"
+                        >
+                          ✓ Approve
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-reject"
+                          (click)="rejectRequest(n.id, n.fromUser.id)"
+                        >
+                          ✕ Reject
+                        </button>
+                      } @else if (n.status === 'approved') {
+                        <span class="status-badge approved">✓ Companionship Approved</span>
+                      } @else {
+                        <span class="status-badge rejected">✕ Request Declined</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </article>
+      }
+
+      <!-- ====================================================================
+           9. SETTINGS SECTION
+           ==================================================================== -->
+      @if (activeSection() === 'settings') {
+        <article class="wide-section-card">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">Settings</h1>
+              <p class="section-desc">Manage privacy, notifications, and application preferences.</p>
+            </div>
+          </header>
+
+          <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">
+            <div class="settings-group">
+              <h3 class="subsection-title">Privacy &amp; Profile Visibility</h3>
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="publicProfileEnabled" />
+                <span class="slider-toggle"></span>
+                <span class="toggle-desc">
+                  <strong>Public Profile</strong>
+                  <small>Allow fellow community members to view your bio, journey, and vacation gallery.</small>
+                </span>
+              </label>
+            </div>
+
+            <div class="settings-group">
+              <h3 class="subsection-title">Notifications</h3>
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="emailNotificationsEnabled" />
+                <span class="slider-toggle"></span>
+                <span class="toggle-desc">
+                  <strong>Email Notifications</strong>
+                  <small>Get notified when companions reply or comment on your Journey updates.</small>
+                </span>
+              </label>
+
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="phoneNotificationsEnabled" />
+                <span class="slider-toggle"></span>
+                <span class="toggle-desc">
+                  <strong>SMS / Phone Alerts</strong>
+                  <small>Get SMS alerts for companionship requests and print proofs.</small>
+                </span>
+              </label>
+            </div>
+
+            <div class="settings-group">
+              <h3 class="subsection-title">Appearance &amp; Timezone</h3>
+              <div class="field-box" style="margin-bottom: 1rem;">
+                <label for="themeSelect">Color Theme</label>
+                <select id="themeSelect" formControlName="theme">
+                  <option value="light">Light Editorial (Paper &amp; Forest)</option>
+                  <option value="dark">Dark Lux (Midnight &amp; Gold)</option>
+                  <option value="system">Follow System Preferences</option>
+                </select>
+              </div>
+
+              <div class="field-box">
+                <label for="timezoneInput">Timezone</label>
+                <input id="timezoneInput" type="text" formControlName="timezone" placeholder="e.g. UTC, Europe/Paris" />
+              </div>
+            </div>
+
+            <div class="settings-action-row">
+              <button type="submit" class="btn-primary-action" [disabled]="savingSettings()">
+                @if (savingSettings()) { Saving... } @else { Save Preferences }
+              </button>
+              @if (settingsSaved()) {
+                <span class="toast-success">✓ Settings saved successfully!</span>
+              }
+            </div>
+          </form>
+        </article>
+      }
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       FLOATING FACEBOOK-LIKE MESSENGER CHAT BOXES (MAX 5 BOTTOM DOCK)
+       ======================================================================== -->
+  <aside class="floating-chat-dock" aria-label="Open chat boxes">
+    @for (box of service.activeChatBoxes(); track box.companionId) {
+      <div class="chat-popup-box" [class.minimized]="box.isMinimized">
+        <!-- Chat Box Header -->
+        <header class="chat-box-header" (click)="toggleMinimize(box.companionId)">
+          <div class="chat-header-user">
+            <span class="chat-online-dot"></span>
+            <span class="chat-user-name">{{ box.companion.fullName }}</span>
+          </div>
+          <div class="chat-box-controls" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="chat-ctrl-btn"
+              [title]="box.isMinimized ? 'Expand' : 'Minimize'"
+              (click)="toggleMinimize(box.companionId)"
+            >
+              {{ box.isMinimized ? '▲' : '—' }}
+            </button>
+            <button
+              type="button"
+              class="chat-ctrl-btn"
+              title="Close"
+              (click)="closeChat(box.companionId)"
+            >
+              ✕
+            </button>
           </div>
         </header>
 
-        <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">
-          <div class="settings-group">
-            <h3 class="subsection-title">Privacy &amp; Profile Visibility</h3>
-            <label class="toggle-row">
-              <input type="checkbox" formControlName="publicProfileEnabled" />
-              <span class="slider-toggle"></span>
-              <span class="toggle-desc">
-                <strong>Public Profile</strong>
-                <small>Allow fellow community members to view your bio and vacation gallery.</small>
-              </span>
-            </label>
-          </div>
-
-          <div class="settings-group">
-            <h3 class="subsection-title">Notifications</h3>
-            <label class="toggle-row">
-              <input type="checkbox" formControlName="emailNotificationsEnabled" />
-              <span class="slider-toggle"></span>
-              <span class="toggle-desc">
-                <strong>Email Notifications</strong>
-                <small>Get notified when members reply to your MessageBook discussions.</small>
-              </span>
-            </label>
-
-            <label class="toggle-row">
-              <input type="checkbox" formControlName="phoneNotificationsEnabled" />
-              <span class="slider-toggle"></span>
-              <span class="toggle-desc">
-                <strong>SMS / Phone Alerts</strong>
-                <small>Get SMS alerts for special destination guides and print proofs.</small>
-              </span>
-            </label>
-          </div>
-
-          <div class="settings-group">
-            <h3 class="subsection-title">Appearance &amp; Timezone</h3>
-            <div class="field-box" style="margin-bottom: 1rem;">
-              <label for="themeSelect">Color Theme</label>
-              <select id="themeSelect" formControlName="theme">
-                <option value="light">Light Editorial (Paper &amp; Forest)</option>
-                <option value="dark">Dark Lux (Midnight &amp; Gold)</option>
-                <option value="system">Follow System Preferences</option>
-              </select>
-            </div>
-
-            <div class="field-box">
-              <label for="timezoneInput">Timezone</label>
-              <input id="timezoneInput" type="text" formControlName="timezone" placeholder="e.g. UTC, Europe/Paris" />
-            </div>
-          </div>
-
-          <div class="settings-action-row">
-            <button type="submit" class="btn-primary-action" [disabled]="savingSettings()">
-              @if (savingSettings()) { Saving... } @else { Save Preferences }
-            </button>
-            @if (settingsSaved()) {
-              <span class="toast-success">✓ Settings saved successfully!</span>
+        <!-- Chat Box Body (Messages stream) -->
+        @if (!box.isMinimized) {
+          <div class="chat-box-body">
+            @for (msg of box.messages; track msg.id) {
+              <div class="chat-bubble-row" [class.me]="msg.senderId === 1">
+                <div class="chat-bubble">
+                  {{ msg.text }}
+                </div>
+              </div>
             }
           </div>
-        </form>
-      </article>
+
+          <!-- Chat Box Input -->
+          <footer class="chat-box-footer">
+            <input
+              type="text"
+              #msgInput
+              placeholder="Type a message..."
+              (keydown.enter)="sendChat(box.companionId, msgInput.value); msgInput.value = ''"
+            />
+            <button
+              type="button"
+              class="btn-chat-send"
+              (click)="sendChat(box.companionId, msgInput.value); msgInput.value = ''"
+            >
+              ➤
+            </button>
+          </footer>
+        }
+      </div>
     }
-  </main>
+  </aside>
+
+  <!-- ========================================================================
+       MODAL: CREATE CIRCLE (MAX 5)
+       ======================================================================== -->
+  @if (showCreateCircleModal()) {
+    <div class="modal-backdrop" (click)="closeCreateCircleModal()">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>Create New Travel Circle</h3>
+          <button type="button" class="btn-close-modal" (click)="closeCreateCircleModal()">✕</button>
+        </header>
+
+        <div class="modal-body">
+          @if (circleError()) {
+            <div class="modal-alert error">{{ circleError() }}</div>
+          }
+
+          <div class="field-box" style="margin-bottom: 1rem;">
+            <label>Circle Name *</label>
+            <input type="text" [(ngModel)]="newCircleName" placeholder="e.g. Kyoto Explorers, Amalfi Squad" />
+          </div>
+
+          <div class="field-box" style="margin-bottom: 1rem;">
+            <label>Circle Description</label>
+            <input type="text" [(ngModel)]="newCircleDesc" placeholder="Briefly describe the purpose of this Circle..." />
+          </div>
+
+          <div class="field-box" style="margin-bottom: 1rem;">
+            <label>Choose Icon</label>
+            <div class="icon-picker-row">
+              @for (icon of ['🌟', '🏔️', '🌊', '📸', '✈️', '☕', '🏕️', '🏛️']; track icon) {
+                <button
+                  type="button"
+                  class="btn-pick-icon"
+                  [class.selected]="newCircleIcon === icon"
+                  (click)="newCircleIcon = icon"
+                >
+                  {{ icon }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Companions selection checklist -->
+          <div class="companions-picker-section">
+            <label>Add Companions to this Circle</label>
+            <div class="companions-checklist">
+              @for (c of service.companions(); track c.id) {
+                @if (c.status === 'connected') {
+                  <label class="companion-check-item">
+                    <input
+                      type="checkbox"
+                      [checked]="selectedCircleMemberIds().includes(c.id)"
+                      (change)="toggleCircleMemberSelection(c.id)"
+                    />
+                    <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="mini-avatar" />
+                    <span>{{ c.fullName }} ({{ c.city }})</span>
+                  </label>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-primary-action" (click)="submitCreateCircle()">
+            Create Circle
+          </button>
+          <button type="button" class="btn-secondary-action" (click)="closeCreateCircleModal()">
+            Cancel
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================
+       MODAL: TRAVELER PROFILE POPUP
+       ======================================================================== -->
+  @if (viewingTraveler()) {
+    <div class="modal-backdrop" (click)="closeTravelerModal()">
+      <div class="modal-dialog modal-traveler" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>Traveler Profile</h3>
+          <button type="button" class="btn-close-modal" (click)="closeTravelerModal()">✕</button>
+        </header>
+
+        <div class="traveler-modal-body">
+          <img [src]="viewingTraveler()!.profilePhotoUrl" [alt]="viewingTraveler()!.fullName" class="traveler-modal-img" />
+          <h2>{{ viewingTraveler()!.fullName }}</h2>
+          <p class="traveler-modal-meta">📍 {{ viewingTraveler()!.city }}, {{ viewingTraveler()!.country }} • {{ viewingTraveler()!.profession }}</p>
+          @if (viewingTraveler()!.bio) {
+            <p class="traveler-modal-bio">{{ viewingTraveler()!.bio }}</p>
+          }
+          <div class="traveler-modal-stats">
+            <span>{{ viewingTraveler()!.mutualCompanionsCount }} mutual companions</span>
+            <span [class.online-text]="viewingTraveler()!.isOnline">{{ viewingTraveler()!.isOnline ? 'Online now' : 'Offline' }}</span>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          @if (viewingTraveler()!.status === 'connected') {
+            <button type="button" class="btn-primary-action" (click)="openChatWith(viewingTraveler()!); closeTravelerModal()">
+              💬 Send Message
+            </button>
+          } @else if (viewingTraveler()!.status === 'pending_outgoing') {
+            <span class="status-badge pending">Companionship Request Pending</span>
+          } @else {
+            <button
+              type="button"
+              class="btn-primary-action"
+              (click)="requestCompanionship(viewingTraveler()!.id)"
+            >
+              + Request for Companionship
+            </button>
+          }
+          <button type="button" class="btn-secondary-action" (click)="closeTravelerModal()">Close</button>
+        </footer>
+      </div>
+    </div>
+  }
 </div>

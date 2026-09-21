@@ -2,12 +2,19 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
+  ActiveChatBox,
   AuthResult,
+  Circle,
   City,
+  ChatMessage,
   CommunityComment,
+  Companion,
   Country,
   CurrentUser,
   GalleryPhoto,
+  JourneyComment,
+  JourneyPost,
+  NotificationItem,
   Profile,
   ReactionResult,
   UpdateProfileRequest,
@@ -23,6 +30,10 @@ export const TOKEN_KEY = 'neverbeen_auth_token';
 export const USER_KEY = 'neverbeen_current_user';
 export const PROFILE_KEY = 'neverbeen_user_profile';
 export const COMMENTS_KEY = 'neverbeen_comments';
+export const JOURNEY_KEY = 'neverbeen_journey_posts';
+export const COMPANIONS_KEY = 'neverbeen_companions';
+export const CIRCLES_KEY = 'neverbeen_circles';
+export const NOTIFS_KEY = 'neverbeen_notifications';
 
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -41,6 +52,11 @@ export function setCookie(name: string, value: string, days = 30): void {
 export function deleteCookie(name: string): void {
   if (typeof document === 'undefined') return;
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+}
+
+let autoIdCounter = 10000;
+export function generateUniqueId(): number {
+  return Date.now() * 1000 + (++autoIdCounter);
 }
 
 export interface CreateAccountData {
@@ -69,6 +85,13 @@ export class CommunityService {
   readonly profile = signal<Profile | null>(null);
   readonly comments = signal<CommunityComment[]>(this.loadComments());
 
+  // Social Network State: Journey, Companions, Circles, Notifications, Messenger
+  readonly journeyPosts = signal<JourneyPost[]>(this.loadJourneyPosts());
+  readonly companions = signal<Companion[]>(this.loadCompanions());
+  readonly circles = signal<Circle[]>(this.loadCircles());
+  readonly notifications = signal<NotificationItem[]>(this.loadNotifications());
+  readonly activeChatBoxes = signal<ActiveChatBox[]>([]);
+
   readonly countries = signal<Country[]>(
     SEED_COUNTRIES.map((c) => ({
       id: c.id,
@@ -82,6 +105,18 @@ export class CommunityService {
 
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
   readonly isPending = computed(() => this.currentUser()?.status === 'Pending');
+
+  readonly unreadNotificationCount = computed(
+    () => this.notifications().filter((n) => !n.isRead).length,
+  );
+
+  readonly onlineCompanions = computed(() =>
+    this.companions().filter((c) => c.status === 'connected' && c.isOnline),
+  );
+
+  readonly offlineCompanions = computed(() =>
+    this.companions().filter((c) => c.status === 'connected' && !c.isOnline),
+  );
 
   constructor() {
     const existingCookieToken = getCookie(TOKEN_KEY);
@@ -107,11 +142,6 @@ export class CommunityService {
   // Session / OAuth
   // ---------------------------------------------------------------------------
 
-  /**
-   * OAuth login with Google / Facebook / Microsoft.
-   * If user is already a NeverBeen user, sets auth cookie and loads profile.
-   * If not, marks pending for registration.
-   */
   async loginWithOAuth(
     provider: 'google' | 'facebook' | 'microsoft' | string,
     isExistingUserOrCode: boolean | string = false,
@@ -208,7 +238,7 @@ export class CommunityService {
     } else {
       // New member: not registered yet
       const newUser: CurrentUser = {
-        id: Date.now(),
+        id: generateUniqueId(),
         firstName: '',
         lastName: '',
         fullName: '',
@@ -234,7 +264,6 @@ export class CommunityService {
     }
   }
 
-  /** Quick one-click sign in for demonstration / preview mode */
   loginAsDemoUser(mode: 'new_pending' | 'active_member'): void {
     if (mode === 'new_pending') {
       const pendingUser: CurrentUser = {
@@ -268,10 +297,16 @@ export class CommunityService {
     this.token.set(null);
     this.currentUser.set(null);
     this.profile.set(null);
+    this.activeChatBoxes.set([]);
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(PROFILE_KEY);
+      localStorage.removeItem(COMMENTS_KEY);
+      localStorage.removeItem(JOURNEY_KEY);
+      localStorage.removeItem(COMPANIONS_KEY);
+      localStorage.removeItem(CIRCLES_KEY);
+      localStorage.removeItem(NOTIFS_KEY);
     }
   }
 
@@ -448,7 +483,7 @@ export class CommunityService {
       const reader = new FileReader();
       reader.onload = () => {
         const newPhoto: GalleryPhoto = {
-          id: Date.now(),
+          id: generateUniqueId(),
           url: reader.result as string,
           caption: caption || 'NeverBeen AI Vacation Memoir',
           createdAtUtc: new Date().toISOString(),
@@ -487,7 +522,7 @@ export class CommunityService {
   async postComment(text: string, parentId?: number): Promise<CommunityComment> {
     const user = this.currentUser();
     const newComment: CommunityComment = {
-      id: Date.now(),
+      id: generateUniqueId(),
       text,
       createdAtUtc: new Date().toISOString(),
       likeCount: 0,
@@ -579,6 +614,270 @@ export class CommunityService {
     }
 
     return { ...item, likeCount, dislikeCount, myReaction };
+  }
+
+  // ---------------------------------------------------------------------------
+  // JOURNEY (Facebook-like Wall Feeds)
+  // ---------------------------------------------------------------------------
+
+  createJourneyPost(text: string, mood?: string, location?: string): JourneyPost {
+    const user = this.currentUser();
+    const profile = this.profile();
+    const newPost: JourneyPost = {
+      id: generateUniqueId(),
+      author: {
+        id: user?.id ?? 1,
+        fullName: user?.fullName || 'Sophia Laurent',
+        profession: profile?.profession || 'Travel Filmmaker',
+        profilePhotoUrl:
+          user?.profilePhotoUrl ||
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      },
+      text: text.trim(),
+      createdAtUtc: new Date().toISOString(),
+      likeCount: 0,
+      isLiked: false,
+      comments: [],
+      mood: mood || undefined,
+      location: location || (profile?.cityName ? `${profile.cityName}, ${profile.countryName || ''}` : undefined),
+    };
+
+    this.journeyPosts.update((list) => [newPost, ...list]);
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    return newPost;
+  }
+
+  toggleJourneyLike(postId: number): void {
+    this.journeyPosts.update((list) =>
+      list.map((post) => {
+        if (post.id === postId) {
+          const isLiked = !post.isLiked;
+          const likeCount = isLiked ? post.likeCount + 1 : Math.max(0, post.likeCount - 1);
+          return { ...post, isLiked, likeCount };
+        }
+        return post;
+      }),
+    );
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+  }
+
+  addJourneyComment(postId: number, text: string): void {
+    const user = this.currentUser();
+    const newComment: JourneyComment = {
+      id: generateUniqueId(),
+      author: {
+        id: user?.id ?? 1,
+        fullName: user?.fullName || 'Sophia Laurent',
+        profession: this.profile()?.profession || 'Member',
+        profilePhotoUrl: user?.profilePhotoUrl,
+      },
+      text: text.trim(),
+      createdAtUtc: new Date().toISOString(),
+    };
+
+    this.journeyPosts.update((list) =>
+      list.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: [...post.comments, newComment],
+          };
+        }
+        return post;
+      }),
+    );
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+  }
+
+  // ---------------------------------------------------------------------------
+  // COMPANIONS & REQUESTS
+  // ---------------------------------------------------------------------------
+
+  sendCompanionshipRequest(targetUserId: number): void {
+    this.companions.update((list) =>
+      list.map((c) => (c.id === targetUserId ? { ...c, status: 'pending_outgoing' } : c)),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  approveCompanionshipRequest(notificationId: number, fromUserId: number): void {
+    // Connect in companions
+    this.companions.update((list) =>
+      list.map((c) => (c.id === fromUserId ? { ...c, status: 'connected' } : c)),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+
+    // Update notification status
+    this.notifications.update((list) =>
+      list.map((n) =>
+        n.id === notificationId ? { ...n, status: 'approved', isRead: true } : n,
+      ),
+    );
+    this.saveJson(NOTIFS_KEY, this.notifications());
+  }
+
+  rejectCompanionshipRequest(notificationId: number, fromUserId: number): void {
+    this.companions.update((list) =>
+      list.map((c) => (c.id === fromUserId ? { ...c, status: 'none' } : c)),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+
+    this.notifications.update((list) =>
+      list.map((n) =>
+        n.id === notificationId ? { ...n, status: 'rejected', isRead: true } : n,
+      ),
+    );
+    this.saveJson(NOTIFS_KEY, this.notifications());
+  }
+
+  removeCompanion(companionId: number): void {
+    this.companions.update((list) =>
+      list.map((c) => (c.id === companionId ? { ...c, status: 'none' } : c)),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  // ---------------------------------------------------------------------------
+  // CIRCLES (Max 5)
+  // ---------------------------------------------------------------------------
+
+  createCircle(
+    name: string,
+    description: string,
+    memberIds: number[],
+    icon = '🌟',
+    color = '#2563eb',
+  ): Circle | null {
+    if (this.circles().length >= 5) {
+      return null;
+    }
+
+    const newCircle: Circle = {
+      id: generateUniqueId(),
+      name: name.trim(),
+      description: description.trim(),
+      icon,
+      color,
+      memberIds,
+      createdAtUtc: new Date().toISOString(),
+    };
+
+    this.circles.update((list) => [...list, newCircle]);
+    this.saveJson(CIRCLES_KEY, this.circles());
+    return newCircle;
+  }
+
+  deleteCircle(circleId: number): void {
+    this.circles.update((list) => list.filter((c) => c.id !== circleId));
+    this.saveJson(CIRCLES_KEY, this.circles());
+  }
+
+  // ---------------------------------------------------------------------------
+  // NOTIFICATIONS
+  // ---------------------------------------------------------------------------
+
+  markNotificationsRead(): void {
+    this.notifications.update((list) => list.map((n) => ({ ...n, isRead: true })));
+    this.saveJson(NOTIFS_KEY, this.notifications());
+  }
+
+  // ---------------------------------------------------------------------------
+  // MESSENGER (Popup Facebook-like Chat Boxes - Max 5)
+  // ---------------------------------------------------------------------------
+
+  openChatBox(companion: Companion): void {
+    const current = this.activeChatBoxes();
+    const existingIndex = current.findIndex((b) => b.companionId === companion.id);
+
+    if (existingIndex > -1) {
+      // Un-minimize if already open
+      this.activeChatBoxes.update((boxes) =>
+        boxes.map((b) => (b.companionId === companion.id ? { ...b, isMinimized: false } : b)),
+      );
+      return;
+    }
+
+    // Maximum 5 chat boxes can be open at a time
+    let updated = [...current];
+    if (updated.length >= 5) {
+      updated.shift(); // remove oldest
+    }
+
+    const newBox: ActiveChatBox = {
+      companionId: companion.id,
+      companion,
+      isMinimized: false,
+      draftText: '',
+      messages: [
+        {
+          id: 1,
+          senderId: companion.id,
+          receiverId: 1,
+          text: `Hey Sophia! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
+          sentAtUtc: new Date(Date.now() - 3600000).toISOString(),
+        },
+      ],
+    };
+
+    this.activeChatBoxes.set([...updated, newBox]);
+  }
+
+  closeChatBox(companionId: number): void {
+    this.activeChatBoxes.update((boxes) => boxes.filter((b) => b.companionId !== companionId));
+  }
+
+  toggleMinimizeChatBox(companionId: number): void {
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) =>
+        b.companionId === companionId ? { ...b, isMinimized: !b.isMinimized } : b,
+      ),
+    );
+  }
+
+  sendChatMessage(companionId: number, text: string): void {
+    if (!text.trim()) return;
+
+    const newMsg: ChatMessage = {
+      id: generateUniqueId(),
+      senderId: 1,
+      receiverId: companionId,
+      text: text.trim(),
+      sentAtUtc: new Date().toISOString(),
+    };
+
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) =>
+        b.companionId === companionId
+          ? {
+              ...b,
+              draftText: '',
+              messages: [...b.messages, newMsg],
+            }
+          : b,
+      ),
+    );
+
+    // Auto simulated friendly reply after a moment
+    setTimeout(() => {
+      const companion = this.companions().find((c) => c.id === companionId);
+      if (!companion) return;
+
+      const replyMsg: ChatMessage = {
+        id: generateUniqueId(),
+        senderId: companionId,
+        receiverId: 1,
+        text: `That sounds incredible! Let's definitely share photographs in our Circle when we return. 📸✨`,
+        sentAtUtc: new Date().toISOString(),
+      };
+
+      this.activeChatBoxes.update((boxes) =>
+        boxes.map((b) =>
+          b.companionId === companionId
+            ? { ...b, messages: [...b.messages, replyMsg] }
+            : b,
+        ),
+      );
+    }, 1200);
   }
 
   // ---------------------------------------------------------------------------
@@ -701,22 +1000,311 @@ export class CommunityService {
           },
         ],
       },
+    ];
+  }
+
+  private loadJourneyPosts(): JourneyPost[] {
+    const saved = this.loadJson<JourneyPost[]>(JOURNEY_KEY);
+    if (saved && saved.length > 0) return saved;
+
+    return [
       {
-        id: 4,
-        text: 'Pro tip for new community members: upload a clean portrait with soft lighting in the registration form. It makes your profile look sharp and speeds up avatar generation.',
-        createdAtUtc: '2026-09-20T20:30:00Z',
-        likeCount: 14,
-        dislikeCount: 0,
+        id: 101,
         author: {
           id: 33,
           fullName: 'Elena Rostova',
-          profession: 'Blogger',
+          profession: 'Travel Blogger',
           profilePhotoUrl:
             'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
         },
-        myReaction: null,
-        replyCount: 0,
-        replies: [],
+        text: 'Arrived at Lake Como this morning! The golden morning fog lifting over Bellagio is pure cinematic magic. Testing out my new NeverBeen vacation series presets. Who has favorite coffee spots in Varenna? ☕🇮🇹',
+        createdAtUtc: '2026-09-21T09:30:00Z',
+        likeCount: 19,
+        isLiked: true,
+        location: 'Lake Como, Italy',
+        mood: '🌿 Blissful',
+        comments: [
+          {
+            id: 201,
+            author: {
+              id: 12,
+              fullName: 'Marco Rossi',
+              profession: 'Architect',
+              profilePhotoUrl:
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+            },
+            text: 'Head over to Cafe Varenna right by the ferry dock—best view of the lake and great macchiato!',
+            createdAtUtc: '2026-09-21T09:48:00Z',
+          },
+        ],
+      },
+      {
+        id: 102,
+        author: {
+          id: 12,
+          fullName: 'Marco Rossi',
+          profession: 'Architect',
+          profilePhotoUrl:
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+        },
+        text: 'Finalized the print proofs for my Amalfi Coast cliffside portfolio. The warm sunset lighting against the pastel houses is so realistic that my colleagues thought I was in Campania last week! NeverBeen is truly on another level.',
+        createdAtUtc: '2026-09-21T08:15:00Z',
+        likeCount: 24,
+        isLiked: false,
+        location: 'Positano, Italy',
+        mood: '✨ Inspired',
+        comments: [],
+      },
+      {
+        id: 103,
+        author: {
+          id: 1,
+          fullName: 'Sophia Laurent',
+          profession: 'Content Creator',
+          profilePhotoUrl:
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        },
+        text: 'Preparing my autumn bucket list: Lauterbrunnen waterfalls, Zermatt alpine trails, and Kyoto maple foliage! Planning to publish a comprehensive photography journey for the NeverBeen community next week. What destination are you dreaming about right now? 🏔️🍁',
+        createdAtUtc: '2026-09-20T18:20:00Z',
+        likeCount: 31,
+        isLiked: true,
+        location: 'Paris, France',
+        mood: '✈️ Wanderlust',
+        comments: [
+          {
+            id: 202,
+            author: {
+              id: 33,
+              fullName: 'Elena Rostova',
+              profession: 'Travel Blogger',
+              profilePhotoUrl:
+                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+            },
+            text: 'Lauterbrunnen in autumn is unbelievable Sophia! The valley mist creates natural depth in every portrait.',
+            createdAtUtc: '2026-09-20T19:05:00Z',
+          },
+        ],
+      },
+      {
+        id: 104,
+        author: {
+          id: 88,
+          fullName: 'Kenji Sato',
+          profession: 'Student & Street Shooter',
+          profilePhotoUrl:
+            'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80',
+        },
+        text: 'Night stroll through Shibuya and Omoide Yokocho under misty rain. The clear vinyl umbrellas with neon sign reflections make every street feel like a movie frame.',
+        createdAtUtc: '2026-09-20T14:10:00Z',
+        likeCount: 15,
+        isLiked: false,
+        location: 'Tokyo, Japan',
+        mood: '🏮 Serene',
+        comments: [],
+      },
+    ];
+  }
+
+  private loadCompanions(): Companion[] {
+    const saved = this.loadJson<Companion[]>(COMPANIONS_KEY);
+    if (saved && saved.length > 0) return saved;
+
+    return [
+      {
+        id: 33,
+        fullName: 'Elena Rostova',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+        country: 'France',
+        city: 'Paris',
+        profession: 'Travel Blogger',
+        isOnline: true,
+        mutualCompanionsCount: 8,
+        status: 'connected',
+        bio: 'Documenting scenic train routes and mountain lakes across Europe.',
+      },
+      {
+        id: 12,
+        fullName: 'Marco Rossi',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+        country: 'Italy',
+        city: 'Rome',
+        profession: 'Architect',
+        isOnline: true,
+        mutualCompanionsCount: 12,
+        status: 'connected',
+        bio: 'Architectural photographer with a focus on historical Italian coastlines.',
+      },
+      {
+        id: 42,
+        fullName: 'Chloe Dupont',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+        country: 'France',
+        city: 'Nice',
+        profession: 'Landscape Photographer',
+        isOnline: true,
+        mutualCompanionsCount: 5,
+        status: 'connected',
+        bio: 'Chasing turquoise waves and golden light along the French Riviera.',
+      },
+      {
+        id: 88,
+        fullName: 'Kenji Sato',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80',
+        country: 'Japan',
+        city: 'Tokyo',
+        profession: 'Student & Street Shooter',
+        isOnline: false,
+        mutualCompanionsCount: 3,
+        status: 'connected',
+        bio: 'Exploring traditional shrines and night neon in Kanto & Kansai.',
+      },
+      {
+        id: 55,
+        fullName: 'Liam O\'Connor',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+        country: 'Ireland',
+        city: 'Dublin',
+        profession: 'Adventure Guide',
+        isOnline: false,
+        mutualCompanionsCount: 4,
+        status: 'connected',
+        bio: 'Hiking the Wild Atlantic Way and Scottish Highlands.',
+      },
+      // Non-connected travelers (searchable & can send requests)
+      {
+        id: 71,
+        fullName: 'Maya Patel',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        country: 'India',
+        city: 'Mumbai',
+        profession: 'UI/UX Designer',
+        isOnline: true,
+        mutualCompanionsCount: 2,
+        status: 'pending_incoming', // Requested companionship!
+        bio: 'Minimalist traveler exploring heritage forts and colorful desert fairs.',
+      },
+      {
+        id: 72,
+        fullName: 'Lucas Vance',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80',
+        country: 'Germany',
+        city: 'Berlin',
+        profession: 'Documentary Filmmaker',
+        isOnline: false,
+        mutualCompanionsCount: 1,
+        status: 'none',
+        bio: 'Urban exploration and historical travel across Central Europe.',
+      },
+      {
+        id: 73,
+        fullName: 'Isabella Santos',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+        country: 'Portugal',
+        city: 'Lisbon',
+        profession: 'Food & Wine Writer',
+        isOnline: true,
+        mutualCompanionsCount: 6,
+        status: 'none',
+        bio: 'Sharing secret viewpoints and culinary treasures across the Iberian peninsula.',
+      },
+      {
+        id: 74,
+        fullName: 'Noah Weber',
+        profilePhotoUrl:
+          'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=200&q=80',
+        country: 'Switzerland',
+        city: 'Zurich',
+        profession: 'Alpinist',
+        isOnline: false,
+        mutualCompanionsCount: 7,
+        status: 'none',
+        bio: 'High altitude mountaineer exploring glaciers and remote Swiss ridges.',
+      },
+    ];
+  }
+
+  private loadCircles(): Circle[] {
+    const saved = this.loadJson<Circle[]>(CIRCLES_KEY);
+    if (saved && saved.length > 0) return saved;
+
+    return [
+      {
+        id: 1,
+        name: 'Alpine Explorers',
+        description: 'Passionate hikers and mountain photographers in the Alps.',
+        icon: '🏔️',
+        color: '#0284c7',
+        memberIds: [33, 12],
+        createdAtUtc: '2026-08-20T10:00:00Z',
+      },
+      {
+        id: 2,
+        name: 'Mediterranean Photographers',
+        description: 'Coastal light, coastal villages, and seaside photography.',
+        icon: '🌊',
+        color: '#059669',
+        memberIds: [33, 42, 12],
+        createdAtUtc: '2026-08-25T14:30:00Z',
+      },
+    ];
+  }
+
+  private loadNotifications(): NotificationItem[] {
+    const saved = this.loadJson<NotificationItem[]>(NOTIFS_KEY);
+    if (saved && saved.length > 0) return saved;
+
+    return [
+      {
+        id: 1,
+        type: 'companionship_request',
+        fromUser: {
+          id: 71,
+          fullName: 'Maya Patel',
+          profession: 'UI/UX Designer',
+          profilePhotoUrl:
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        },
+        message: 'sent you a Request for Companionship.',
+        createdAtUtc: '2026-09-21T09:10:00Z',
+        isRead: false,
+        requestId: 1,
+        status: 'pending',
+      },
+      {
+        id: 2,
+        type: 'journey_like',
+        fromUser: {
+          id: 12,
+          fullName: 'Marco Rossi',
+          profession: 'Architect',
+          profilePhotoUrl:
+            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+        },
+        message: 'liked your Journey post about autumn travel in the Swiss Alps.',
+        createdAtUtc: '2026-09-21T07:45:00Z',
+        isRead: false,
+      },
+      {
+        id: 3,
+        type: 'journey_comment',
+        fromUser: {
+          id: 33,
+          fullName: 'Elena Rostova',
+          profession: 'Travel Blogger',
+          profilePhotoUrl:
+            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+        },
+        message: 'commented on your Journey post: "Lauterbrunnen in autumn is unbelievable Sophia!"',
+        createdAtUtc: '2026-09-20T19:05:00Z',
+        isRead: true,
       },
     ];
   }

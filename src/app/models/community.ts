@@ -123,3 +123,72 @@ export interface PagedResult<T> {
   pageSize: number;
   totalPages: number;
 }
+
+export interface JourneyComment {
+  id: number;
+  author: AuthorInfo;
+  text: string;
+  createdAtUtc: string;
+}
+
+export interface JourneyPost {
+  id: number;
+  author: AuthorInfo;
+  text: string;
+  createdAtUtc: string;
+  likeCount: number;
+  isLiked?: boolean;
+  comments: JourneyComment[];
+  location?: string;
+  mood?: string;
+}
+
+export interface Companion {
+  id: number;
+  fullName: string;
+  profilePhotoUrl: string;
+  country: string;
+  city: string;
+  profession: string;
+  isOnline: boolean;
+  mutualCompanionsCount: number;
+  status: 'connected' | 'pending_outgoing' | 'pending_incoming' | 'none';
+  bio?: string;
+}
+
+export interface Circle {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  memberIds: number[];
+  createdAtUtc: string;
+}
+
+export interface NotificationItem {
+  id: number;
+  type: 'companionship_request' | 'companionship_accepted' | 'journey_like' | 'journey_comment';
+  fromUser: AuthorInfo;
+  message: string;
+  createdAtUtc: string;
+  isRead: boolean;
+  requestId?: number;
+  status?: 'pending' | 'approved' | 'rejected';
+}
+
+export interface ChatMessage {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  text: string;
+  sentAtUtc: string;
+}
+
+export interface ActiveChatBox {
+  companionId: number;
+  companion: Companion;
+  isMinimized: boolean;
+  draftText: string;
+  messages: ChatMessage[];
+}
