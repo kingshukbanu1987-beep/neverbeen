@@ -1,17 +1,20 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AboutMeDetails,
+  ActiveChatBox,
   AuthorInfo,
   AVAILABLE_HOBBIES,
   AVAILABLE_INTERESTS,
+  ChatMessage,
   Circle,
   City,
   CommunityComment,
   Companion,
   EducationInfo,
+  generate20DigitUid,
   getTopReactionIcon,
   getTopReactionIcons,
   HOLD_REACTION_OPTIONS,
@@ -51,6 +54,7 @@ export class CommunityProfile implements OnInit {
   protected readonly googleMapsService = inject(GoogleMapsService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   // Active section in the right side wide panel (default: 'journey')
   protected readonly activeSection = signal<ProfileSection>('journey');
@@ -58,7 +62,7 @@ export class CommunityProfile implements OnInit {
   // Mobile portrait navigation state
   protected readonly isMobileSidePanelOpen = signal<boolean>(false);
 
-  // Visitor Profile mode (when clicking any other user)
+  // Visitor Profile mode (when visiting any other user)
   protected readonly viewingVisitor = signal<Companion | null>(null);
 
   // Search state (top-left)
@@ -354,6 +358,14 @@ export class CommunityProfile implements OnInit {
     () => this.service.companions().filter((c) => c.status === 'connected').length,
   );
 
+  // Requirement E: Max 9 companions before My Circles
+  readonly topNineCompanions = computed(() =>
+    this.service
+      .visibleCompanions()
+      .filter((c) => c.status === 'connected')
+      .slice(0, 9),
+  );
+
   async ngOnInit(): Promise<void> {
     if (!this.service.isAuthenticated() || !this.service.profile()) {
       this.router.navigate(['/community']);
@@ -369,6 +381,16 @@ export class CommunityProfile implements OnInit {
       const cities = await this.service.getCitiesForCountry(p.countryId);
       this.editCitiesList.set(cities);
     }
+
+    // Handle 20-digit user profile URL route (Requirement B & C)
+    this.route.queryParams.subscribe((params) => {
+      const idParam = params['id'];
+      if (idParam) {
+        this.loadProfileByParam(idParam);
+      } else {
+        this.viewingVisitor.set(null);
+      }
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -404,35 +426,47 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // VISITOR PROFILE (Open any user's profile on click anywhere)
+  // VISITOR PROFILE (Open any user's profile on click anywhere - Requirement B & C)
   // ---------------------------------------------------------------------------
 
   openVisitorProfile(authorOrUser: AuthorInfo | Companion | number): void {
     const currentUserId = this.service.currentUser()?.id || 1;
     let targetId: number;
+    let targetUid: string | undefined;
 
     if (typeof authorOrUser === 'number') {
       targetId = authorOrUser;
+      const foundComp = this.service.companions().find((c) => c.id === targetId);
+      targetUid = foundComp?.uniqueId || generate20DigitUid(targetId);
     } else {
       targetId = authorOrUser.id;
+      targetUid = authorOrUser.uniqueId || generate20DigitUid(targetId);
     }
 
-    // If clicking own profile, navigate to personal about/journey
+    // If clicking own profile, navigate to personal profile page
     if (targetId === currentUserId) {
       this.viewingVisitor.set(null);
-      this.setSection('about');
+      this.router.navigate(['/profile']);
       return;
     }
 
-    // Look up in companions or synthesize
-    let found = this.service.companions().find((c) => c.id === targetId);
+    let found = this.service
+      .companions()
+      .find((c) => c.id === targetId || (targetUid && c.uniqueId === targetUid));
+
     if (!found) {
-      const name = typeof authorOrUser === 'object' ? authorOrUser.fullName || 'Traveler' : 'Traveler';
-      const photo = typeof authorOrUser === 'object' ? authorOrUser.profilePhotoUrl || this.defaultAvatar : this.defaultAvatar;
-      const role = typeof authorOrUser === 'object' ? authorOrUser.profession || 'Explorer' : 'Explorer';
+      const name =
+        typeof authorOrUser === 'object' ? authorOrUser.fullName || 'Traveler' : 'Traveler';
+      const photo =
+        typeof authorOrUser === 'object'
+          ? authorOrUser.profilePhotoUrl || this.defaultAvatar
+          : this.defaultAvatar;
+      const role =
+        typeof authorOrUser === 'object' ? authorOrUser.profession || 'Explorer' : 'Explorer';
 
       found = {
         id: targetId,
+        uniqueId: targetUid || generate20DigitUid(targetId),
         fullName: name,
         profilePhotoUrl: photo,
         coverPhotoUrl: this.defaultCoverPhoto,
@@ -445,6 +479,23 @@ export class CommunityProfile implements OnInit {
         isProfileLocked: false,
         bio: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
         aboutMe: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+        aboutMeDetails: {
+          intro: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+          gender: 'Explorer',
+          dateOfBirth: '1995-06-20',
+          location: 'Worldwide',
+          hometown: 'Global',
+          relationshipStatus: 'Single',
+          languagesKnown: ['English'],
+          workExperience: [],
+          education: [],
+          hobbies: ['Photography', 'Travel'],
+          interests: ['Architecture', 'Cultures'],
+          contactEmail: 'traveler@neverbeen.example',
+          contactPhone: '+1 555 0199',
+          socialLinks: [],
+          aboutThePerson: 'A world traveler discovering authentic horizons.',
+        },
         gallery: [],
       };
     }
@@ -452,10 +503,86 @@ export class CommunityProfile implements OnInit {
     this.viewingVisitor.set(found);
     this.showSearchDropdown.set(false);
     this.closeMobileSidePanel();
+
+    // Requirement B: Navigate to full normal page via /profile?id=... instead of modal popup
+    this.router.navigate(['/profile'], {
+      queryParams: { id: found.uniqueId || targetUid },
+    });
   }
 
   closeVisitorProfile(): void {
     this.viewingVisitor.set(null);
+    this.router.navigate(['/profile']);
+  }
+
+  protected loadProfileByParam(idParam: string): void {
+    const currentProfile = this.service.profile();
+    if (
+      currentProfile &&
+      (currentProfile.uniqueId === idParam ||
+        String(currentProfile.id) === idParam ||
+        generate20DigitUid(currentProfile.id) === idParam)
+    ) {
+      this.viewingVisitor.set(null);
+      return;
+    }
+
+    const companions = this.service.companions();
+    let found = companions.find(
+      (c) =>
+        c.uniqueId === idParam ||
+        String(c.id) === idParam ||
+        generate20DigitUid(c.id) === idParam,
+    );
+
+    if (found) {
+      this.viewingVisitor.set(found);
+    } else {
+      const dynamicCompanion: Companion = {
+        id: Math.abs(this.hashCode(idParam)) || 9999,
+        uniqueId: idParam,
+        fullName: 'Global Traveler',
+        profilePhotoUrl: this.defaultAvatar,
+        coverPhotoUrl: this.defaultCoverPhoto,
+        country: 'Worldwide',
+        city: 'Explorer',
+        profession: 'Travel Nomad',
+        isOnline: true,
+        mutualCompanionsCount: 2,
+        status: 'none',
+        isProfileLocked: false,
+        bio: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+        aboutMe: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+        aboutMeDetails: {
+          intro: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+          gender: 'Explorer',
+          dateOfBirth: '1995-06-20',
+          location: 'Worldwide',
+          hometown: 'Global',
+          relationshipStatus: 'Single',
+          languagesKnown: ['English'],
+          workExperience: [],
+          education: [],
+          hobbies: ['Photography', 'Travel'],
+          interests: ['Architecture', 'Cultures'],
+          contactEmail: 'traveler@neverbeen.example',
+          contactPhone: '+1 555 0199',
+          socialLinks: [],
+          aboutThePerson: 'A world traveler discovering authentic horizons.',
+        },
+        gallery: [],
+      };
+      this.viewingVisitor.set(dynamicCompanion);
+    }
+  }
+
+  private hashCode(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
   }
 
   removeCompanionshipFromVisitor(companionId: number): void {
@@ -1341,9 +1468,9 @@ export class CommunityProfile implements OnInit {
   // REPORT ABUSE (Requirement C)
   // ---------------------------------------------------------------------------
 
-  openReportAbuseModal(type: 'post' | 'comment', id: number, author: AuthorInfo, text: string): void {
+  openReportAbuseModal(type: 'post' | 'comment' | 'companion', id: number, author: AuthorInfo, text: string): void {
     this.reportTarget.set({
-      type,
+      type: type === 'companion' ? 'comment' : type,
       id,
       author,
       snippet: text.length > 140 ? text.substring(0, 140) + '...' : text,
@@ -1478,6 +1605,17 @@ export class CommunityProfile implements OnInit {
     const success = this.service.approveCompanionshipRequest(notificationId, fromUserId);
     if (!success) {
       alert('Maximum limit of 500 Companions reached. Cannot add more companions.');
+    }
+  }
+
+  acceptCompanionship(companionId: number): void {
+    const success = this.service.approveCompanionshipRequest(0, companionId);
+    if (!success) {
+      alert('Maximum limit of 500 Companions reached. Cannot add more companions.');
+      return;
+    }
+    if (this.viewingVisitor() && this.viewingVisitor()!.id === companionId) {
+      this.viewingVisitor.update((v) => (v ? { ...v, status: 'connected' } : null));
     }
   }
 
@@ -1708,9 +1846,157 @@ export class CommunityProfile implements OnInit {
     await this.service.deleteComment(commentId);
   }
 
+  // Requirements F & G:
+  // User can delete any post/comment they made (including on other user's journey or messagebook)
+  // Owner can delete any post/comment made on their profile, but cannot delete other users' posts if not on their profile
   canDeleteComment(authorId: number): boolean {
-    const user = this.service.currentUser();
-    return !!(user && user.id === authorId);
+    const currentUserId = this.service.currentUser()?.id || 1;
+    if (!this.viewingVisitor()) {
+      return true; // Owner of this profile can delete any comment on their profile
+    }
+    return authorId === currentUserId; // On another profile, can only delete own comments
+  }
+
+  canDeleteJourneyPost(post: JourneyPost): boolean {
+    const currentUserId = this.service.currentUser()?.id || 1;
+    if (!this.viewingVisitor()) {
+      return true; // Owner of this profile can delete any post on their profile
+    }
+    return post.author.id === currentUserId; // On another profile, can only delete own post
+  }
+
+  deleteJourneyPost(postId: number): void {
+    if (confirm('Are you sure you want to delete this journey post?')) {
+      this.service.deleteJourneyPost(postId);
+    }
+  }
+
+  handleCommentThreadDelete(event: { postId: number; commentId: number }): void {
+    this.service.deleteJourneyComment(event.postId, event.commentId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // CHAT WINDOW ENHANCEMENTS (Requirements J & K)
+  // ---------------------------------------------------------------------------
+  readonly chatReactionEmojis: string[] = ['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🤔', '😡', '✨', '🎉'];
+  readonly quickSendEmojis: string[] = ['😊', '❤️', '✈️', '📸', '👍', '🔥', '🎉', '🏖️', '☕', '✨'];
+
+  readonly activeReactionPickerMsgId = signal<number | null>(null);
+  readonly activeDotsMenuMsgId = signal<number | null>(null);
+  readonly activeEmojiTrayCompanionId = signal<number | null>(null);
+  readonly copiedProfileUrl = signal(false);
+
+  toggleQuickEmojiTray(companionId: number): void {
+    this.activeEmojiTrayCompanionId.update((id) => (id === companionId ? null : companionId));
+  }
+
+  insertChatEmoji(box: ActiveChatBox, emoji: string): void {
+    box.draftText = (box.draftText || '') + emoji;
+    this.activeEmojiTrayCompanionId.set(null);
+  }
+
+  startChatReply(companionId: number, msg: ChatMessage): void {
+    this.service.activeChatBoxes.update((boxes) =>
+      boxes.map((b) => (b.companionId === companionId ? { ...b, replyingToMessage: msg } : b)),
+    );
+    this.activeDotsMenuMsgId.set(null);
+  }
+
+  cancelChatReply(companionId: number): void {
+    this.service.activeChatBoxes.update((boxes) =>
+      boxes.map((b) => (b.companionId === companionId ? { ...b, replyingToMessage: null } : b)),
+    );
+  }
+
+  toggleMsgReactionPicker(companionId: number, msgId: number): void {
+    this.activeReactionPickerMsgId.update((id) => (id === msgId ? null : msgId));
+    this.activeDotsMenuMsgId.set(null);
+  }
+
+  selectChatReaction(companionId: number, msgId: number, emoji: string): void {
+    this.service.reactToChatMessage(companionId, msgId, emoji);
+    this.activeReactionPickerMsgId.set(null);
+  }
+
+  reactToChatMsg(companionId: number, msgId: number, emoji: string): void {
+    this.service.reactToChatMessage(companionId, msgId, emoji);
+  }
+
+  toggleMsgDotsMenu(companionId: number, msgId: number): void {
+    this.activeDotsMenuMsgId.update((id) => (id === msgId ? null : msgId));
+    this.activeReactionPickerMsgId.set(null);
+  }
+
+  removeChatMsg(companionId: number, msgId: number): void {
+    if (confirm('Are you sure you want to remove this message?')) {
+      this.service.removeChatMessage(companionId, msgId);
+      this.activeDotsMenuMsgId.set(null);
+    }
+  }
+
+  reportChatMsgAbuse(companion: Companion, msg: ChatMessage): void {
+    this.activeDotsMenuMsgId.set(null);
+    this.openReportAbuseModal(
+      'comment',
+      msg.id,
+      {
+        id: msg.senderId,
+        fullName: msg.senderId === 1 ? 'Me' : companion.fullName,
+        profilePhotoUrl:
+          msg.senderId === 1
+            ? this.service.profile()?.profilePhotoUrl
+            : companion.profilePhotoUrl,
+        profession: companion.profession,
+      },
+      msg.text,
+    );
+  }
+
+  sendChatWithReply(box: ActiveChatBox): void {
+    if (!box.draftText.trim()) return;
+    const replyTarget = box.replyingToMessage;
+    const replyTo = replyTarget
+      ? {
+          id: replyTarget.id,
+          senderName: this.getMsgSenderName(box, replyTarget),
+          text: replyTarget.text,
+        }
+      : null;
+    this.service.sendChatMessage(box.companionId, box.draftText, replyTo);
+    box.draftText = '';
+    box.replyingToMessage = null;
+    this.activeEmojiTrayCompanionId.set(null);
+    this.activeReactionPickerMsgId.set(null);
+  }
+
+  getMsgSenderName(box: ActiveChatBox, msg: ChatMessage): string {
+    const currentUserId = this.service.currentUser()?.id || 1;
+    if (msg.senderId === currentUserId) {
+      return this.service.profile()?.fullName || 'Me';
+    }
+    return box.companion.fullName;
+  }
+
+  getMsgReactionsEntries(msg: ChatMessage): { emoji: string; count: number }[] {
+    if (!msg.reactions) return [];
+    return Object.entries(msg.reactions)
+      .filter(([_, count]) => count > 0)
+      .map(([emoji, count]) => ({ emoji, count }));
+  }
+
+  copyProfileUrl(user: Companion): void {
+    const uid = user.uniqueId || generate20DigitUid(user.id);
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}/profile?id=${uid}`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+    }
+    this.copiedProfileUrl.set(true);
+    setTimeout(() => this.copiedProfileUrl.set(false), 2500);
+  }
+
+  generateUid(id: number | string): string {
+    return generate20DigitUid(id);
   }
 
   // ---------------------------------------------------------------------------

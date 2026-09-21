@@ -135,4 +135,28 @@ describe('Navbar', () => {
     }
     expect(references.size).toBe(links.length);
   });
+
+  it('scales neverbeen-logo.png down to 50% when visiting community or profile pages (Requirement I)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Default home page: not compact
+    component['currentUrl'].set('/');
+    fixture.detectChanges();
+    expect(component['isCompactLogo']()).toBe(false);
+    expect(element.querySelector('.logo.compact-logo')).toBeNull();
+
+    // On community page: compact logo active
+    component['currentUrl'].set('/community');
+    fixture.detectChanges();
+    expect(component['isCompactLogo']()).toBe(true);
+    expect(element.querySelector('.logo.compact-logo')).toBeTruthy();
+
+    // On profile page: compact logo active
+    component['currentUrl'].set('/profile?id=89201534010000000101');
+    fixture.detectChanges();
+    expect(component['isCompactLogo']()).toBe(true);
+    expect(element.querySelector('.logo.compact-logo')).toBeTruthy();
+  });
 });

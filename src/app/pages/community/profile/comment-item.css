@@ -114,6 +114,14 @@
   color: #dc2626;
 }
 
+.btn-delete-comment {
+  color: #94a3b8;
+}
+
+.btn-delete-comment:hover {
+  color: #ef4444;
+}
+
 .count-pill {
   font-size: 0.7rem;
   color: #64748b;

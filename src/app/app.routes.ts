@@ -38,6 +38,11 @@ export const routes: Routes = [
     title: 'Collection — NeverBeen',
   },
   {
+    path: 'profile',
+    loadComponent: () => import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
+    title: 'User Profile — NeverBeen Community',
+  },
+  {
     path: 'community',
     loadComponent: () => import('./pages/community/community').then((m) => m.CommunityHub),
     title: 'Community — NeverBeen',

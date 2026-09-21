@@ -1012,4 +1012,220 @@ describe('CommunityProfile', () => {
     expect(visitorModal).toBeTruthy();
     expect(visitorModal!.querySelector('.visitor-about-subsections')).toBeTruthy();
   });
+
+  it('assigns 20-digit unique id to all user and companion profiles and allows direct navigation via /profile?id=... (Requirements A, B, C)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Current user has 20-digit unique ID
+    const myProfile = service.profile()!;
+    expect(myProfile.uniqueId).toMatch(/^\d{20}$/);
+    expect(myProfile.uniqueId).toBe('89201534010000000001');
+
+    // All seeded companions have 20-digit unique IDs
+    const allComps = service.companions();
+    expect(allComps.length).toBeGreaterThan(90);
+    for (const comp of allComps.slice(0, 20)) {
+      expect(comp.uniqueId).toBeDefined();
+      expect(comp.uniqueId).toMatch(/^\d{20}$/);
+    }
+
+    // Direct routing test: simulate pasting /profile?id=89201534010000000101
+    const targetComp = allComps.find((c) => c.country === 'India')!;
+    component['loadProfileByParam'](targetComp.uniqueId!);
+    fixture.detectChanges();
+
+    expect(component['viewingVisitor']()).toBeTruthy();
+    expect(component['viewingVisitor']()?.fullName).toBe(targetComp.fullName);
+
+    // Profile picture is fully visible (Requirement A)
+    const largeAvatar = element.querySelector<HTMLImageElement>('.visitor-fully-visible-avatar');
+    expect(largeAvatar).toBeTruthy();
+    expect(largeAvatar?.src).toBeTruthy();
+
+    // 20-digit ID is prominently displayed on the page
+    const uidPill = element.querySelector('.visitor-uid-pill');
+    expect(uidPill?.textContent).toContain(targetComp.uniqueId);
+
+    // Navigate to visitor profile triggers router navigation (Requirement B)
+    component.openVisitorProfile(targetComp);
+    expect(router.navigate).toHaveBeenCalledWith(['/profile'], {
+      queryParams: { id: targetComp.uniqueId },
+    });
+  });
+
+  it('renders My Companions section right before My Circles with max 9 companions (Requirement E)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const companionsPanel = element.querySelector('.companions-side-panel');
+    const circlesPanel = element.querySelector('.circles-side-panel');
+    expect(companionsPanel).toBeTruthy();
+    expect(circlesPanel).toBeTruthy();
+
+    // Verify companions panel appears right before circles panel in DOM order
+    expect(companionsPanel!.compareDocumentPosition(circlesPanel!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // Verify max 9 companions displayed
+    expect(component.topNineCompanions().length).toBeLessThanOrEqual(9);
+    const companionCards = element.querySelectorAll('.side-companion-card');
+    expect(companionCards.length).toBe(component.topNineCompanions().length);
+
+    // Verify photo, name, and mutual count are displayed
+    if (companionCards.length > 0) {
+      const firstCard = companionCards[0];
+      expect(firstCard.querySelector('.side-companion-avatar')).toBeTruthy();
+      expect(firstCard.querySelector('.side-companion-name')?.textContent).toBeTruthy();
+      expect(firstCard.querySelector('.side-companion-mutual')?.textContent).toContain('mutual');
+    }
+  });
+
+  it('enforces post and comment deletion permissions across own profile and visitor profile (Requirements F & G)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    // 1. On own profile: current user is profile owner
+    component['viewingVisitor'].set(null);
+    const anyPost = service.journeyPosts()[0];
+    expect(component.canDeleteJourneyPost(anyPost)).toBe(true);
+    expect(component.canDeleteComment(999)).toBe(true); // Can delete any comment on their profile
+
+    // 2. When visiting another user's profile:
+    const visitor = service.companions().find((c) => c.id !== 1)!;
+    component['viewingVisitor'].set(visitor);
+
+    // Cannot delete other user's post
+    const otherUserPost = { ...anyPost, author: { id: visitor.id, fullName: visitor.fullName } };
+    expect(component.canDeleteJourneyPost(otherUserPost)).toBe(false);
+
+    // Can delete own post if posted on their page
+    const ownPost = { ...anyPost, author: { id: 1, fullName: 'Sophia Laurent' } };
+    expect(component.canDeleteJourneyPost(ownPost)).toBe(true);
+
+    // Cannot delete other user's comment
+    expect(component.canDeleteComment(visitor.id)).toBe(false);
+
+    // Can delete own comment on another user's page
+    expect(component.canDeleteComment(1)).toBe(true);
+  });
+
+  it('allows visitors to comment on posts in another traveler\'s Journey page (Requirement H)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Create a journey post by visitor
+    const visitor = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(visitor);
+    fixture.detectChanges();
+
+    const posts = component.getVisitorJourneyPosts(visitor.id);
+    expect(posts.length).toBeGreaterThan(0);
+    const targetPost = posts[0];
+
+    // Open comments
+    component.toggleCommentSection(targetPost.id);
+    fixture.detectChanges();
+
+    // Verify visitor comment composer exists
+    const commentComposer = element.querySelector('.visitor-comment-composer');
+    expect(commentComposer).toBeTruthy();
+
+    // Submit comment on visitor's journey post
+    component['journeyCommentText'] = 'Incredible photography! Love this journey!';
+    component.submitJourneyComment(targetPost.id);
+    fixture.detectChanges();
+
+    // Post now contains the visitor's comment authored by current user (id: 1)
+    const updatedPost = service.journeyPosts().find((p) => p.id === targetPost.id)!;
+    const myComment = updatedPost.comments.find((c) => c.text === 'Incredible photography! Love this journey!');
+    expect(myComment).toBeDefined();
+    expect(myComment?.author.id).toBe(1);
+
+    // Current user can delete the comment they made on the visitor's journey
+    expect(component.canDeleteComment(myComment!.author.id)).toBe(true);
+  });
+
+  it('chat window displays user and companion avatars, quick emojis, 11 reactions, replies, and three dots menu (Requirements J & K)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const companion = service.companions().find((c) => c.status === 'connected')!;
+    component.openChatWith(companion);
+    fixture.detectChanges();
+
+    const chatBoxes = service.activeChatBoxes();
+    expect(chatBoxes.length).toBeGreaterThan(0);
+    const box = chatBoxes[0];
+
+    // 1. Requirement J: Show companion and sender profile pictures
+    const headerAvatar = element.querySelector<HTMLImageElement>('.chat-header-avatar');
+    expect(headerAvatar).toBeTruthy();
+    expect(headerAvatar?.src).toBeTruthy();
+
+    // Send a message
+    component['sendChat'](box.companionId, 'Hello from NeverBeen!');
+    fixture.detectChanges();
+
+    const msgRow = element.querySelector('.chat-msg-row.outgoing');
+    expect(msgRow).toBeTruthy();
+    expect(msgRow!.querySelector('.chat-my-avatar')).toBeTruthy();
+
+    // 2. Requirement K: Ability to send emoji
+    expect(component.quickSendEmojis.length).toBeGreaterThanOrEqual(10);
+    component.toggleQuickEmojiTray(box.companionId);
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-quick-emoji-tray')).toBeTruthy();
+    component.insertChatEmoji(box, '🏖️');
+    expect(box.draftText).toContain('🏖️');
+
+    // 3. Requirement K: Like & 10 other emojis (11 total)
+    expect(component.chatReactionEmojis.length).toBe(11);
+    expect(component.chatReactionEmojis).toContain('👍');
+    const msgId = box.messages[0].id;
+    component.reactToChatMsg(box.companionId, msgId, '👍');
+    fixture.detectChanges();
+    const updatedBox = service.activeChatBoxes().find((b) => b.companionId === box.companionId)!;
+    const reactedMsg = updatedBox.messages.find((m) => m.id === msgId)!;
+    expect(reactedMsg.reactions?.['👍']).toBe(1);
+
+    // 4. Requirement K: Reply to particular message
+    component.startChatReply(box.companionId, reactedMsg);
+    fixture.detectChanges();
+    const replyingBox = service.activeChatBoxes().find((b) => b.companionId === box.companionId)!;
+    expect(replyingBox.replyingToMessage?.id).toBe(reactedMsg.id);
+    expect(element.querySelector('.chat-replying-banner')).toBeTruthy();
+
+    // 5. Requirement K: Three dots menu with Remove message and Report abuse
+    component.toggleMsgDotsMenu(box.companionId, msgId);
+    fixture.detectChanges();
+    const dotsMenu = element.querySelector('.chat-msg-dropdown-menu');
+    expect(dotsMenu).toBeTruthy();
+    expect(dotsMenu!.querySelector('.btn-menu-delete')).toBeTruthy();
+    expect(dotsMenu!.querySelector('.btn-menu-report')).toBeTruthy();
+  });
+
+  it('seeds 50 profiles from India, 20 from Pakistan, and 20 from Bangladesh into community profiles (Requirement L)', () => {
+    const all = service.companions();
+    const indianProfiles = all.filter((c) => c.country === 'India');
+    const pakistaniProfiles = all.filter((c) => c.country === 'Pakistan');
+    const bangladeshiProfiles = all.filter((c) => c.country === 'Bangladesh');
+
+    expect(indianProfiles.length).toBeGreaterThanOrEqual(50);
+    expect(pakistaniProfiles.length).toBeGreaterThanOrEqual(20);
+    expect(bangladeshiProfiles.length).toBeGreaterThanOrEqual(20);
+
+    // Verify each profile has 20-digit unique ID and detailed About Me
+    for (const p of [...indianProfiles.slice(0, 5), ...pakistaniProfiles.slice(0, 5), ...bangladeshiProfiles.slice(0, 5)]) {
+      expect(p.uniqueId).toMatch(/^\d{20}$/);
+      expect(p.aboutMeDetails).toBeDefined();
+      expect(p.aboutMeDetails?.intro).toBeTruthy();
+      expect(p.aboutMeDetails?.gender).toBeTruthy();
+      expect(p.aboutMeDetails?.dateOfBirth).toBeTruthy();
+      expect(p.aboutMeDetails?.location).toBeTruthy();
+    }
+  });
 });

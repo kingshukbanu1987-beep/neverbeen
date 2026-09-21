@@ -168,8 +168,15 @@ export interface AboutMeDetails {
   aboutThePerson?: string;
 }
 
+export function generate20DigitUid(id: number | string): string {
+  const str = String(id).padStart(10, '0');
+  const basePrefix = '8920153401';
+  return `${basePrefix}${str}`;
+}
+
 export interface CurrentUser {
   id: number;
+  uniqueId?: string;
   firstName?: string;
   lastName?: string;
   fullName?: string;
@@ -219,6 +226,7 @@ export interface GalleryPhoto {
 
 export interface Profile {
   id: number;
+  uniqueId?: string;
   firstName?: string;
   lastName?: string;
   fullName?: string;
@@ -271,6 +279,7 @@ export interface UpdateProfileRequest {
 
 export interface AuthorInfo {
   id: number;
+  uniqueId?: string;
   fullName?: string;
   profilePhotoUrl?: string;
   profession?: string;
@@ -370,6 +379,7 @@ export interface AbuseReport {
 
 export interface Companion {
   id: number;
+  uniqueId?: string;
   fullName: string;
   profilePhotoUrl: string;
   coverPhotoUrl?: string;
@@ -415,6 +425,13 @@ export interface ChatMessage {
   receiverId: number;
   text: string;
   sentAtUtc: string;
+  reactions?: { [emoji: string]: number };
+  myReaction?: string;
+  replyTo?: {
+    id: number;
+    senderName: string;
+    text: string;
+  };
 }
 
 export interface ActiveChatBox {
@@ -423,4 +440,7 @@ export interface ActiveChatBox {
   isMinimized: boolean;
   draftText: string;
   messages: ChatMessage[];
+  replyingToMessage?: ChatMessage | null;
+  showEmojiPicker?: boolean;
+  showActionMenuForMsgId?: number | null;
 }

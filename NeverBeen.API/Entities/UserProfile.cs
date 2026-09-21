@@ -65,6 +65,16 @@ public class UserProfile
     [MaxLength(64)]
     public string? ProfilePhotoMimeType { get; set; }
 
+    /// <summary>Cover photo uploaded by the user (stored in the database, max 100 KB).</summary>
+    public byte[]? CoverPhotoData { get; set; }
+
+    [MaxLength(64)]
+    public string? CoverPhotoMimeType { get; set; }
+
+    /// <summary>Structured JSON representation of the 8 detailed About Me sub-sections.</summary>
+    [MaxLength(8000)]
+    public string? AboutMeDetailsJson { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 

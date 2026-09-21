@@ -78,7 +78,7 @@ public static class CommentMapper
                 Profession = comment.Author.Profession
             },
             MyReaction = myReactions.TryGetValue(comment.Id, out var reaction)
-                ? (reaction == ReactionTypes.Like ? "Like" : "Dislike")
+                ? ReactionTypes.TypeToName.GetValueOrDefault(reaction, "Like")
                 : null
         };
     }

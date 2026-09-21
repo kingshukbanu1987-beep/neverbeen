@@ -23,6 +23,7 @@ export class CommentThreadComponent {
   @Input({ required: true }) postId!: number;
   @Input() depth = 0;
   @Input() currentUserId?: number;
+  @Input() isProfileOwner = true;
 
   @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string; imageUrl?: string }>();
   @Output() like = new EventEmitter<{ postId: number; commentId: number }>();
@@ -30,6 +31,7 @@ export class CommentThreadComponent {
   @Output() showReactionsModal = new EventEmitter<{ comment: JourneyComment; commentId: number }>();
   @Output() openUser = new EventEmitter<AuthorInfo>();
   @Output() reportAbuse = new EventEmitter<{ commentId: number; author: AuthorInfo; text: string }>();
+  @Output() deleteComment = new EventEmitter<{ postId: number; commentId: number }>();
 
   readonly replyOpen = signal(false);
   replyText = '';
@@ -195,6 +197,24 @@ export class CommentThreadComponent {
 
   forwardReportAbuse(event: { commentId: number; author: AuthorInfo; text: string }): void {
     this.reportAbuse.emit(event);
+  }
+
+  canDeleteComment(): boolean {
+    if (this.isProfileOwner) return true;
+    return this.currentUserId !== undefined && this.comment.author.id === this.currentUserId;
+  }
+
+  onDeleteComment(): void {
+    if (confirm('Are you sure you want to delete this comment?')) {
+      this.deleteComment.emit({
+        postId: this.postId,
+        commentId: this.comment.id,
+      });
+    }
+  }
+
+  forwardDeleteComment(event: { postId: number; commentId: number }): void {
+    this.deleteComment.emit(event);
   }
 
   formatTime(isoString?: string): string {

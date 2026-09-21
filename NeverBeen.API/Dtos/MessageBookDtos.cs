@@ -14,7 +14,7 @@ public class CommentCreateRequest
 /// <summary>Body of POST /api/messagebook/{id}/reactions.</summary>
 public class ReactionRequest
 {
-    /// <summary>"like" or "dislike".</summary>
+    /// <summary>One of: Dislike, Love, Smile, Laugh, Cry, Heart, Clapping, Confused, Shocked, Angry, Fire (or Like).</summary>
     [System.ComponentModel.DataAnnotations.Required]
     public string Type { get; set; } = string.Empty;
 }
@@ -24,7 +24,7 @@ public class ReactionResultDto
     public int LikeCount { get; set; }
     public int DislikeCount { get; set; }
 
-    /// <summary>"Like", "Dislike" or null (when the user's previous reaction was toggled off).</summary>
+    /// <summary>The user's reaction name (e.g. "Fire", "Love") or null when toggled off.</summary>
     public string? MyReaction { get; set; }
 }
 

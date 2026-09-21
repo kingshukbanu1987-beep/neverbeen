@@ -93,6 +93,11 @@
             <span class="replies-count-hint">({{ comment.replies?.length }} {{ (comment.replies?.length || 0) === 1 ? 'reply' : 'replies' }})</span>
           }
         </button>
+        @if (canDeleteComment()) {
+          <button type="button" class="comment-action-link btn-delete-comment" (click)="onDeleteComment()" title="Delete Comment">
+            <span>🗑️ Delete</span>
+          </button>
+        }
         @if (currentUserId && comment.author.id !== currentUserId) {
           <button type="button" class="comment-action-link btn-report-comment" (click)="onReportAbuse()" title="Report Abuse">
             <span>🚩 Report</span>
@@ -150,8 +155,10 @@
           [postId]="postId"
           [depth]="depth + 1"
           [currentUserId]="currentUserId"
+          [isProfileOwner]="isProfileOwner"
           (reply)="forwardReply($event)"
           (like)="forwardLike($event)"
+          (deleteComment)="forwardDeleteComment($event)"
           (openUser)="forwardOpenUser($event)"
           (reportAbuse)="forwardReportAbuse($event)"
         ></app-comment-thread>

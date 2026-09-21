@@ -26,12 +26,14 @@ import {
   UserActiveStatus,
   UserReaction,
   UserSettings,
+  generate20DigitUid,
 } from '../models/community';
 import {
   SEED_COUNTRIES,
   SEED_GENDERS,
   SEED_PROFESSIONS,
 } from '../models/community-seed';
+import { SEED_ASIAN_COMPANIONS } from '../models/community-asian-profiles';
 
 export const TOKEN_KEY = 'neverbeen_auth_token';
 export const USER_KEY = 'neverbeen_current_user';
@@ -1256,7 +1258,11 @@ export class CommunityService {
     );
   }
 
-  sendChatMessage(companionId: number, text: string): void {
+  sendChatMessage(
+    companionId: number,
+    text: string,
+    replyTo?: { id: number; senderName: string; text: string } | null,
+  ): void {
     if (!text.trim()) return;
 
     const newMsg: ChatMessage = {
@@ -1265,6 +1271,7 @@ export class CommunityService {
       receiverId: companionId,
       text: text.trim(),
       sentAtUtc: new Date().toISOString(),
+      replyTo: replyTo || undefined,
     };
 
     this.activeChatBoxes.update((boxes) =>
@@ -1273,6 +1280,7 @@ export class CommunityService {
           ? {
               ...b,
               draftText: '',
+              replyingToMessage: null,
               messages: [...b.messages, newMsg],
             }
           : b,
@@ -1290,6 +1298,11 @@ export class CommunityService {
         receiverId: 1,
         text: `That sounds incredible! Let's definitely share photographs in our Circle when we return. 📸✨`,
         sentAtUtc: new Date().toISOString(),
+        replyTo: {
+          id: newMsg.id,
+          senderName: 'Sophia Laurent',
+          text: newMsg.text,
+        },
       };
 
       this.activeChatBoxes.update((boxes) =>
@@ -1300,6 +1313,77 @@ export class CommunityService {
         ),
       );
     }, 1200);
+  }
+
+  reactToChatMessage(companionId: number, messageId: number, emoji: string): void {
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((box) => {
+        if (box.companionId !== companionId) return box;
+        const messages = box.messages.map((msg) => {
+          if (msg.id !== messageId) return msg;
+          const reactions = { ...(msg.reactions || {}) };
+          let myReaction = msg.myReaction;
+          if (myReaction === emoji) {
+            reactions[emoji] = Math.max(0, (reactions[emoji] || 1) - 1);
+            if (reactions[emoji] === 0) delete reactions[emoji];
+            myReaction = undefined;
+          } else {
+            if (myReaction && reactions[myReaction]) {
+              reactions[myReaction] = Math.max(0, reactions[myReaction] - 1);
+              if (reactions[myReaction] === 0) delete reactions[myReaction];
+            }
+            reactions[emoji] = (reactions[emoji] || 0) + 1;
+            myReaction = emoji;
+          }
+          return { ...msg, reactions, myReaction };
+        });
+        return { ...box, messages };
+      }),
+    );
+  }
+
+  removeChatMessage(companionId: number, messageId: number): void {
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((box) =>
+        box.companionId === companionId
+          ? {
+              ...box,
+              messages: box.messages.filter((m) => m.id !== messageId),
+              replyingToMessage:
+                box.replyingToMessage?.id === messageId ? null : box.replyingToMessage,
+            }
+          : box,
+      ),
+    );
+  }
+
+  deleteJourneyPost(postId: number): void {
+    this.journeyPosts.update((list) => list.filter((p) => p.id !== postId));
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+  }
+
+  deleteJourneyComment(postId: number, commentId: number): void {
+    const removeCommentRecursive = (list: JourneyComment[]): JourneyComment[] => {
+      return list
+        .filter((c) => c.id !== commentId)
+        .map((c) => ({
+          ...c,
+          replies: c.replies ? removeCommentRecursive(c.replies) : [],
+        }));
+    };
+
+    this.journeyPosts.update((list) =>
+      list.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: removeCommentRecursive(post.comments || []),
+          };
+        }
+        return post;
+      }),
+    );
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
   }
 
   // ---------------------------------------------------------------------------
@@ -1401,6 +1485,7 @@ export class CommunityService {
 
     const defaultProfile: Profile = {
       id: 1,
+      uniqueId: generate20DigitUid(1),
       firstName: 'Sophia',
       lastName: 'Laurent',
       fullName: 'Sophia Laurent',
@@ -1471,6 +1556,7 @@ export class CommunityService {
 
     const defaultUser: CurrentUser = {
       id: defaultProfile.id,
+      uniqueId: defaultProfile.uniqueId,
       firstName: defaultProfile.firstName,
       lastName: defaultProfile.lastName,
       fullName: defaultProfile.fullName,
@@ -1821,7 +1907,31 @@ export class CommunityService {
 
   private loadCompanions(): Companion[] {
     const saved = this.loadJson<Companion[]>(COMPANIONS_KEY);
-    if (saved && saved.length > 0) return saved;
+    const baseList: Companion[] = this.getDefaultSeedCompanions();
+
+    let merged: Companion[] = [];
+    if (saved && saved.length > 0) {
+      merged = saved.map((c) => ({
+        ...c,
+        uniqueId: c.uniqueId || generate20DigitUid(c.id),
+      }));
+      // Merge in any missing Asian companions so all 90 are available
+      for (const asian of SEED_ASIAN_COMPANIONS) {
+        if (!merged.some((c) => c.id === asian.id || c.uniqueId === asian.uniqueId)) {
+          merged.push(asian);
+        }
+      }
+    } else {
+      merged = [...baseList, ...SEED_ASIAN_COMPANIONS];
+    }
+
+    return merged.map((c) => ({
+      ...c,
+      uniqueId: c.uniqueId || generate20DigitUid(c.id),
+    }));
+  }
+
+  private getDefaultSeedCompanions(): Companion[] {
 
     const elenaAboutMe: AboutMeDetails = {
       intro: 'Documenting scenic train routes and mountain lakes across Europe.',

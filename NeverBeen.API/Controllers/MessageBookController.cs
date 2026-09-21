@@ -171,13 +171,8 @@ public class MessageBookController : ControllerBase
     {
         var userId = User.GetUserId();
 
-        int type;
-        if (string.Equals(request.Type, "like", StringComparison.OrdinalIgnoreCase))
-            type = ReactionTypes.Like;
-        else if (string.Equals(request.Type, "dislike", StringComparison.OrdinalIgnoreCase))
-            type = ReactionTypes.Dislike;
-        else
-            return BadRequest(new { error = "'type' must be 'like' or 'dislike'." });
+        if (!ReactionTypes.NameToType.TryGetValue(request.Type, out var type))
+            return BadRequest(new { error = "'type' must be one of: Like, Dislike, Love, Smile, Laugh, Cry, Heart, Clapping, Confused, Shocked, Angry, Fire." });
 
         var comment = await _db.CommunityComments
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
@@ -197,31 +192,24 @@ public class MessageBookController : ControllerBase
                 ReactionType = type,
                 CreatedAtUtc = DateTime.UtcNow
             });
-            if (type == ReactionTypes.Like) comment.LikeCount += 1; else comment.DislikeCount += 1;
-            myReactionAfter = type == ReactionTypes.Like ? "Like" : "Dislike";
+            if (type == ReactionTypes.Dislike) comment.DislikeCount += 1; else comment.LikeCount += 1;
+            myReactionAfter = ReactionTypes.TypeToName.GetValueOrDefault(type, "Like");
         }
         else if (existing.ReactionType == type)
         {
             // Same reaction again -> toggle off.
             _db.CommentReactions.Remove(existing);
-            if (type == ReactionTypes.Like) comment.LikeCount -= 1; else comment.DislikeCount -= 1;
+            if (type == ReactionTypes.Dislike) comment.DislikeCount -= 1; else comment.LikeCount -= 1;
             myReactionAfter = null;
         }
         else
         {
-            // Switch like <-> dislike.
+            // Switch reaction.
+            var previousType = existing.ReactionType;
             existing.ReactionType = type;
-            if (type == ReactionTypes.Like)
-            {
-                comment.LikeCount += 1;
-                comment.DislikeCount -= 1;
-            }
-            else
-            {
-                comment.DislikeCount += 1;
-                comment.LikeCount -= 1;
-            }
-            myReactionAfter = type == ReactionTypes.Like ? "Like" : "Dislike";
+            if (previousType == ReactionTypes.Dislike) comment.DislikeCount -= 1; else comment.LikeCount -= 1;
+            if (type == ReactionTypes.Dislike) comment.DislikeCount += 1; else comment.LikeCount += 1;
+            myReactionAfter = ReactionTypes.TypeToName.GetValueOrDefault(type, "Like");
         }
 
         await _db.SaveChangesAsync(cancellationToken);

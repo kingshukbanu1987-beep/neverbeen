@@ -399,6 +399,36 @@
         </nav>
       </aside>
 
+      <!-- MY COMPANIONS SIDE PANEL (Requirement E: right before My Circles displaying a max of 9 companions) -->
+      <section class="companions-side-panel" aria-label="My Companions Shortcuts">
+        <div class="companions-side-head">
+          <h3 class="companions-side-title">My Companions</h3>
+          <span class="companions-count-badge">{{ topNineCompanions().length }}</span>
+        </div>
+        <div class="companions-side-grid">
+          @for (comp of topNineCompanions(); track comp.id) {
+            <div
+              class="side-companion-card"
+              (click)="openVisitorProfile(comp)"
+              role="button"
+              tabindex="0"
+              [title]="'View ' + comp.fullName + ' Profile'"
+            >
+              <div class="side-companion-avatar-wrap">
+                <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="side-companion-avatar" />
+                <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
+              </div>
+              <div class="side-companion-meta">
+                <span class="side-companion-name">{{ comp.fullName }}</span>
+                <span class="side-companion-mutual">👥 {{ comp.mutualCompanionsCount }} mutual</span>
+              </div>
+            </div>
+          } @empty {
+            <p class="side-companions-empty">No companions added yet.</p>
+          }
+        </div>
+      </section>
+
       <!-- CIRCLES SIDE PANEL (Dedicated panel directly below main side panel) -->
       <section class="circles-side-panel" aria-label="Travel Circles Shortcuts">
         <div class="circles-header-row">
@@ -504,10 +534,10 @@
                 <!-- Google Maps API Destination Tag Auto-Search (Requirement B & D) -->
                 <div class="accessory-item destination-autocomplete-wrapper">
                   <div class="dest-field-inline">
-                    <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon">📍</span> Destination:</span>
+                    <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
                     @if (selectedGoogleLocation()) {
                       <div class="selected-google-dest-pill">
-                        <span class="gmap-pin">📍</span>
+                        <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
                         <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
                         <span class="gmap-badge">Verified Google Maps</span>
                         <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
@@ -540,7 +570,7 @@
                       <div class="gmaps-suggestions-scroll">
                         @for (loc of destinationSuggestions(); track loc.placeId) {
                           <div class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
-                            <span class="gmap-pin-red">📍</span>
+                            <span class="gmap-pin-red"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /></span>
                             <div class="gmap-loc-info">
                               <strong class="loc-name">{{ loc.name }}</strong>
                               <span class="loc-address">{{ loc.formattedAddress }}</span>
@@ -640,7 +670,7 @@
                         <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
                         @if (post.location) {
                           <span class="post-loc" title="Google Maps Verified Location">
-                            <span class="post-loc-icon">📍</span> <span class="post-loc-text">{{ post.location }}</span>
+                            <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
                           </span>
                         }
                         @if (post.mood) {
@@ -648,6 +678,18 @@
                         }
                       </div>
                     </div>
+
+                    <!-- Requirements F & G: Delete post button (Profile owner or post author) -->
+                    @if (canDeleteJourneyPost(post)) {
+                      <button
+                        type="button"
+                        class="btn-delete-post-mini"
+                        (click)="deleteJourneyPost(post.id)"
+                        title="Delete Post"
+                      >
+                        🗑️ Delete
+                      </button>
+                    }
 
                     <!-- Requirement C: Report Abuse for posts by other users -->
                     @if (post.author.id !== (service.currentUser()?.id || 1)) {
@@ -859,10 +901,12 @@
                             [postId]="post.id"
                             [depth]="0"
                             [currentUserId]="service.currentUser()?.id"
+                            [isProfileOwner]="!viewingVisitor()"
                             (reply)="handleCommentThreadReply($event)"
                             (like)="handleCommentThreadLike($event)"
                             (react)="handleCommentThreadReact($event)"
                             (showReactionsModal)="handleCommentThreadShowReactions($event)"
+                            (deleteComment)="handleCommentThreadDelete($event)"
                             (openUser)="openVisitorProfile($event)"
                             (reportAbuse)="openReportAbuseModal('comment', $event.commentId, $event.author, $event.text)"
                           ></app-comment-thread>
@@ -2149,15 +2193,25 @@
     </main>
   </div>
 
-  <!-- FLOATING MESSENGER CHAT DOCK (Max 5 open popup boxes at bottom right) -->
+  <!-- FLOATING MESSENGER CHAT DOCK (Max 5 open popup boxes at bottom right - Requirements J & K) -->
   <div class="floating-chat-dock" aria-label="Active floating chats">
     @for (box of service.activeChatBoxes(); track box.companionId) {
       <div class="chat-popup-box" [class.minimized]="box.isMinimized">
-        <!-- Chat Popup Header -->
+        <!-- Chat Popup Header (Requirement J: Show companion profile picture) -->
         <div class="chat-popup-header" (click)="toggleMinimize(box.companionId)">
           <div class="chat-user-meta">
-            <span class="chat-status-dot" [class.online]="box.companion.isOnline"></span>
-            <span class="chat-user-name">{{ box.companion.fullName }}</span>
+            <div class="chat-header-avatar-wrap">
+              <img
+                [src]="box.companion.profilePhotoUrl || defaultAvatar"
+                [alt]="box.companion.fullName"
+                class="chat-header-avatar"
+              />
+              <span class="chat-header-status-dot" [class.online]="box.companion.isOnline"></span>
+            </div>
+            <div class="chat-header-info">
+              <span class="chat-user-name">{{ box.companion.fullName }}</span>
+              <span class="chat-user-subhead">{{ box.companion.isOnline ? 'Online' : 'Offline' }}</span>
+            </div>
           </div>
           <div class="chat-controls">
             <button
@@ -2182,29 +2236,214 @@
         <!-- Chat Popup Body (Visible when not minimized) -->
         @if (!box.isMinimized) {
           <div class="chat-popup-body">
+            <!-- Messages Container -->
             <div class="chat-messages-container">
               @for (msg of box.messages; track msg.id) {
-                <div class="chat-bubble" [class.outgoing]="msg.senderId === 1" [class.incoming]="msg.senderId !== 1">
-                  <p class="msg-text">{{ msg.text }}</p>
-                  <span class="msg-time">{{ formatTime(msg.sentAtUtc) }}</span>
+                <div
+                  class="chat-msg-row"
+                  [class.outgoing]="msg.senderId === (service.currentUser()?.id || 1)"
+                  [class.incoming]="msg.senderId !== (service.currentUser()?.id || 1)"
+                >
+                  <!-- Requirement J: Show user profile picture in Chat Window beside message -->
+                  <div class="chat-avatar-column">
+                    @if (msg.senderId === (service.currentUser()?.id || 1)) {
+                      <img
+                        [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
+                        alt="Me"
+                        class="chat-bubble-avatar chat-my-avatar"
+                        title="You"
+                      />
+                    } @else {
+                      <img
+                        [src]="box.companion.profilePhotoUrl || defaultAvatar"
+                        [alt]="box.companion.fullName"
+                        class="chat-bubble-avatar chat-comp-avatar clickable-user"
+                        (click)="openVisitorProfile(box.companion)"
+                        [title]="box.companion.fullName"
+                      />
+                    }
+                  </div>
+
+                  <!-- Bubble Content Column -->
+                  <div class="chat-bubble-content-col">
+                    <div class="chat-bubble">
+                      <!-- Requirement K: Reply quote preview inside message bubble -->
+                      @if (msg.replyTo) {
+                        <div class="chat-bubble-reply-quote">
+                          <span class="reply-quote-author">↩️ {{ msg.replyTo.senderName }}</span>
+                          <span class="reply-quote-snippet">{{ msg.replyTo.text }}</span>
+                        </div>
+                      }
+
+                      <p class="msg-text">{{ msg.text }}</p>
+                      <span class="msg-time">{{ formatTime(msg.sentAtUtc) }}</span>
+                    </div>
+
+                    <!-- Reactions Display on Bubble -->
+                    @if (getMsgReactionsEntries(msg).length > 0) {
+                      <div class="chat-reactions-display">
+                        @for (r of getMsgReactionsEntries(msg); track r.emoji) {
+                          <button
+                            type="button"
+                            class="chat-reaction-pill"
+                            [class.reacted]="msg.myReaction === r.emoji"
+                            (click)="reactToChatMsg(box.companionId, msg.id, r.emoji)"
+                            [title]="r.emoji"
+                          >
+                            <span>{{ r.emoji }}</span>
+                            <span class="rx-count">{{ r.count }}</span>
+                          </button>
+                        }
+                      </div>
+                    }
+
+                    <!-- Requirement K: Actions Bar: Quick Like, 10 other emojis picker, Reply, Three dots menu -->
+                    <div class="chat-msg-hover-actions">
+                      <!-- Quick Like Button (Like = 👍) -->
+                      <button
+                        type="button"
+                        class="chat-act-btn btn-chat-like"
+                        [class.active]="msg.myReaction === '👍'"
+                        (click)="reactToChatMsg(box.companionId, msg.id, '👍')"
+                        title="Like (👍)"
+                      >
+                        👍
+                      </button>
+
+                      <!-- React with 10 other emojis button / popover -->
+                      <div class="chat-react-picker-wrapper">
+                        <button
+                          type="button"
+                          class="chat-act-btn btn-chat-react"
+                          (click)="toggleMsgReactionPicker(box.companionId, msg.id)"
+                          title="React with other emojis"
+                        >
+                          😊
+                        </button>
+                        @if (activeReactionPickerMsgId() === msg.id) {
+                          <div class="chat-emojis-reaction-bar" (click)="$event.stopPropagation()">
+                            @for (emoji of chatReactionEmojis; track emoji) {
+                              <button
+                                type="button"
+                                class="chat-emoji-item-btn"
+                                (click)="selectChatReaction(box.companionId, msg.id, emoji)"
+                              >
+                                {{ emoji }}
+                              </button>
+                            }
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Reply to this message button -->
+                      <button
+                        type="button"
+                        class="chat-act-btn btn-chat-reply"
+                        (click)="startChatReply(box.companionId, msg)"
+                        title="Reply to message"
+                      >
+                        ↩️
+                      </button>
+
+                      <!-- Three dots action menu: Remove Message & Report Abuse -->
+                      <div class="chat-three-dots-wrapper">
+                        <button
+                          type="button"
+                          class="chat-act-btn btn-chat-dots"
+                          (click)="toggleMsgDotsMenu(box.companionId, msg.id)"
+                          title="More options"
+                        >
+                          ⋯
+                        </button>
+                        @if (activeDotsMenuMsgId() === msg.id) {
+                          <div class="chat-msg-dropdown-menu" (click)="$event.stopPropagation()">
+                            <button
+                              type="button"
+                              class="chat-menu-item"
+                              (click)="startChatReply(box.companionId, msg)"
+                            >
+                              ↩️ Reply
+                            </button>
+                            <button
+                              type="button"
+                              class="chat-menu-item btn-menu-delete"
+                              (click)="removeChatMsg(box.companionId, msg.id)"
+                            >
+                              🗑️ Remove Message
+                            </button>
+                            <button
+                              type="button"
+                              class="chat-menu-item btn-menu-report"
+                              (click)="reportChatMsgAbuse(box.companion, msg)"
+                            >
+                              🚩 Report Abuse
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
                 </div>
               }
             </div>
 
-            <!-- Chat Composer -->
+            <!-- Reply Banner Preview (When replying to a particular message) -->
+            @if (box.replyingToMessage) {
+              <div class="chat-replying-banner">
+                <div class="replying-banner-text">
+                  <span class="replying-label">Replying to <strong>{{ getMsgSenderName(box, box.replyingToMessage) }}</strong></span>
+                  <span class="replying-snippet">{{ box.replyingToMessage.text }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn-cancel-replying"
+                  (click)="cancelChatReply(box.companionId)"
+                  title="Cancel reply"
+                >
+                  ✕
+                </button>
+              </div>
+            }
+
+            <!-- Quick Emoji Tray (Requirement K: Ability to send emoji) -->
+            @if (activeEmojiTrayCompanionId() === box.companionId) {
+              <div class="chat-quick-emoji-tray">
+                @for (emoji of quickSendEmojis; track emoji) {
+                  <button
+                    type="button"
+                    class="quick-emoji-btn"
+                    (click)="insertChatEmoji(box, emoji)"
+                  >
+                    {{ emoji }}
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- Chat Composer Footer -->
             <div class="chat-popup-footer">
+              <button
+                type="button"
+                class="btn-toggle-emoji-tray"
+                (click)="toggleQuickEmojiTray(box.companionId)"
+                title="Choose emoji"
+              >
+                😀
+              </button>
+
               <input
                 type="text"
                 [(ngModel)]="box.draftText"
-                (keydown.enter)="sendChat(box.companionId, box.draftText)"
+                (keydown.enter)="sendChatWithReply(box)"
                 placeholder="Type a message..."
                 class="chat-composer-input"
               />
+
               <button
                 type="button"
                 class="btn-send-chat"
                 [disabled]="!box.draftText.trim()"
-                (click)="sendChat(box.companionId, box.draftText)"
+                (click)="sendChatWithReply(box)"
               >
                 Send
               </button>
@@ -2489,440 +2728,497 @@
   }
 
   <!-- ================================================================= -->
-  <!-- VISITOR PROFILE MODAL CARD POPUP (Requirement C)                  -->
-  <!-- When visiting a user profile the cover photo will be visible and  -->
-  <!-- About me and Gallery will be visible one after another below in a -->
-  <!-- modal card popup where user can see their Journey (unless locked) -->
+  <!-- VISITOR PROFILE FULL NORMAL PAGE (Requirements A, B, C)           -->
+  <!-- When visiting a user profile do not open in a modal popup window, -->
+  <!-- navigate/redirect to user profile as a full normal page via       -->
+  <!-- /profile?id=[20-digit-id]. Profile picture is fully visible.      -->
   <!-- ================================================================= -->
   @if (viewingVisitor()) {
-    <div class="modal-backdrop-overlay visitor-modal-overlay" (click)="closeVisitorProfile()">
-      <div class="modal-dialog-card visitor-profile-modal-card" (click)="$event.stopPropagation()">
-        <!-- Modal Top Bar -->
-        <div class="visitor-modal-header-bar">
-          <span class="visitor-modal-title">NeverBeen Community • Traveler Profile</span>
-          <button
-            type="button"
-            class="btn-close-visitor-modal btn-back-to-my-profile"
-            (click)="closeVisitorProfile()"
-            title="Close Profile Popup"
-          >
-            ✕
+    <div class="visitor-full-page-container visitor-profile-modal-card">
+      <!-- Full Page Nav Bar & Breadcrumbs -->
+      <header class="visitor-page-nav-bar">
+        <div class="visitor-nav-left">
+          <a routerLink="/profile" (click)="closeVisitorProfile()" class="btn-back-to-profile btn-back-to-my-profile">
+            ← Back to My Profile
+          </a>
+          <span class="visitor-nav-sep">/</span>
+          <span class="visitor-nav-current">{{ viewingVisitor()!.fullName }}</span>
+        </div>
+        <div class="visitor-nav-right">
+          <span class="visitor-uid-pill" title="20-digit Profile Unique ID">
+            Profile ID: <strong>{{ viewingVisitor()!.uniqueId || generateUid(viewingVisitor()!.id) }}</strong>
+          </span>
+          <button type="button" class="btn-copy-profile-url" (click)="copyProfileUrl(viewingVisitor()!)" title="Copy Profile Link">
+            📋 {{ copiedProfileUrl() ? 'Copied!' : 'Copy Link' }}
           </button>
         </div>
+      </header>
 
-        <!-- COVER PHOTO (Prominently displayed across top - Requirement B: hold to enlarge) -->
-        <div
-          class="visitor-modal-cover-wrap visitor-hero-card clickable-cover"
-          (mousedown)="startCoverHold(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
-          (mouseup)="endCoverHold()"
-          (mouseleave)="endCoverHold()"
-          (touchstart)="startCoverHold(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
-          (touchend)="endCoverHold()"
-          (dblclick)="openEnlargedCover(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
-          title="Press and hold to enlarge cover photo"
-        >
-          <img
-            [src]="viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto"
-            [alt]="viewingVisitor()!.fullName + ' Cover Photo'"
-            class="visitor-modal-cover-img"
-          />
-          <div class="visitor-modal-avatar-anchor">
+      <!-- COVER PHOTO (Prominently displayed - Press & hold to enlarge) -->
+      <div
+        class="visitor-full-cover-wrap visitor-hero-card clickable-cover"
+        (mousedown)="startCoverHold(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
+        (mouseup)="endCoverHold()"
+        (mouseleave)="endCoverHold()"
+        (touchstart)="startCoverHold(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
+        (touchend)="endCoverHold()"
+        (dblclick)="openEnlargedCover(viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto, viewingVisitor()!.fullName)"
+        title="Press and hold to enlarge cover photo"
+      >
+        <img
+          [src]="viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto"
+          [alt]="viewingVisitor()!.fullName + ' Cover Photo'"
+          class="visitor-full-cover-img visitor-modal-cover-img"
+        />
+        <div class="cover-hint-badge">Hold to Enlarge Cover</div>
+      </div>
+
+      <!-- VISITOR PROFILE HERO BLOCK (Requirement A: Profile picture fully visible) -->
+      <div class="visitor-hero-info-card">
+        <div class="visitor-hero-top-row">
+          <!-- Requirement A: Profile picture fully visible (large, uncropped portrait) -->
+          <div class="visitor-avatar-showcase">
             <img
               [src]="viewingVisitor()!.profilePhotoUrl || defaultAvatar"
-              [alt]="viewingVisitor()!.fullName"
-              class="visitor-modal-avatar-img"
+              [alt]="viewingVisitor()!.fullName + ' Profile Picture'"
+              class="visitor-fully-visible-avatar"
+              (click)="openImageModal(viewingVisitor()!.profilePhotoUrl || defaultAvatar)"
+              title="Click to view full photo"
             />
-            <span class="visitor-modal-status-dot" [ngClass]="getStatusIconClass(viewingVisitor()!.activeStatus)"></span>
+            <span class="visitor-avatar-status-dot" [ngClass]="getStatusIconClass(viewingVisitor()!.activeStatus)"></span>
           </div>
-        </div>
 
-        <!-- VISITOR SUMMARY INFO & ACTIONS -->
-        <div class="visitor-modal-info-block">
-          <div class="visitor-modal-title-row">
-            <div class="visitor-modal-name-group">
-              <div class="visitor-name-line">
-                <h2 class="visitor-modal-name visitor-name">{{ viewingVisitor()!.fullName }}</h2>
-                @if (viewingVisitor()!.isProfileLocked) {
-                  <span class="visitor-lock-pill" title="This profile is locked">🔒 Locked Profile</span>
-                }
-              </div>
-              <p class="visitor-modal-subhead">
-                📍 {{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }} • {{ viewingVisitor()!.profession }}
-              </p>
-              <div class="visitor-modal-badges">
-                <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
-                <span class="badge-mutual-tag">👥 {{ viewingVisitor()!.mutualCompanionsCount }} Mutual Companions</span>
-              </div>
-            </div>
-
-            <!-- Action buttons -->
-            <div class="visitor-modal-actions-cluster">
-              @if (viewingVisitor()!.status === 'connected') {
-                <span class="badge-connected-status">✓ Companions</span>
-                <button
-                  type="button"
-                  class="btn-remove-companion-action"
-                  (click)="removeCompanionshipFromVisitor(viewingVisitor()!.id)"
-                  title="Break companionship connection"
-                >
-                  💔 Remove Companionship
-                </button>
-                <button
-                  type="button"
-                  class="btn-chat-action"
-                  (click)="openChatWith(viewingVisitor()!); closeVisitorProfile()"
-                >
-                  💬 Message
-                </button>
-              } @else if (viewingVisitor()!.status === 'pending_outgoing') {
-                <button type="button" class="btn-pending-action" disabled>⏳ Request Sent</button>
-              } @else if (viewingVisitor()!.status === 'pending_incoming') {
-                <button
-                  type="button"
-                  class="btn-primary-action"
-                  (click)="approveRequest(1, viewingVisitor()!.id)"
-                >
-                  ✓ Approve Request
-                </button>
-              } @else {
-                <button
-                  type="button"
-                  class="btn-primary-action"
-                  (click)="requestCompanionship(viewingVisitor()!.id)"
-                >
-                  + Request Companionship
-                </button>
+          <div class="visitor-hero-meta">
+            <div class="visitor-name-line">
+              <h1 class="visitor-hero-name visitor-name">{{ viewingVisitor()!.fullName }}</h1>
+              @if (viewingVisitor()!.isProfileLocked) {
+                <span class="visitor-lock-pill" title="This profile is locked">🔒 Locked Profile</span>
               }
+            </div>
 
-              <button
-                type="button"
-                class="btn-block-action"
-                (click)="blockUser(viewingVisitor()!.id); closeVisitorProfile()"
-                title="Block this user"
-              >
-                🚫 Block
-              </button>
+            <p class="visitor-hero-subhead">
+              <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
+              {{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }} • {{ viewingVisitor()!.profession }}
+            </p>
+
+            <div class="visitor-hero-badges">
+              <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
+              <span class="badge-mutual-tag">👥 {{ viewingVisitor()!.mutualCompanionsCount }} Mutual Companions</span>
+              <span class="badge-uid-tag">UID: {{ viewingVisitor()!.uniqueId || generateUid(viewingVisitor()!.id) }}</span>
             </div>
           </div>
-        </div>
 
-        <!-- VISITOR CONTENT: One after another below (About me, Gallery, Journey) unless locked -->
-        @if (viewingVisitor()!.isProfileLocked && viewingVisitor()!.status !== 'connected') {
-          <div class="visitor-locked-shield-card locked-profile-shield-box">
-            <div class="shield-icon-circle">🔒</div>
-            <h3 class="shield-title">This Profile is Locked</h3>
-            <p class="shield-description">
-              {{ viewingVisitor()!.fullName }} has locked their profile. Journey feeds, Companions, Circles, and About me are protected and visible only to confirmed Companions.
-            </p>
-            @if (viewingVisitor()!.status === 'none') {
+          <!-- Companionship & Messaging Actions Cluster -->
+          <div class="visitor-hero-actions">
+            @if (viewingVisitor()!.status === 'connected') {
+              <span class="badge-connected-status">✓ Companions</span>
               <button
                 type="button"
-                class="btn-primary-action btn-center"
-                (click)="requestCompanionship(viewingVisitor()!.id)"
+                class="btn-action-outline"
+                (click)="openChatWith(viewingVisitor()!)"
+                title="Message Companion"
               >
-                Request for Companionship to Unlock
+                💬 Message
+              </button>
+              <button
+                type="button"
+                class="btn-remove-companion-action btn-action-subtle"
+                (click)="removeCompanionshipFromVisitor(viewingVisitor()!.id)"
+                title="Remove Companion"
+              >
+                💔 Remove Companionship
               </button>
             } @else if (viewingVisitor()!.status === 'pending_outgoing') {
-              <span class="pending-lock-notice">Companionship request is pending approval.</span>
+              <span class="badge-pending-status">⏳ Request Pending</span>
+            } @else if (viewingVisitor()!.status === 'pending_incoming') {
+              <button
+                type="button"
+                class="btn-action-primary"
+                (click)="acceptCompanionship(viewingVisitor()!.id)"
+              >
+                Accept Companionship
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn-action-primary"
+                (click)="requestCompanionship(viewingVisitor()!.id)"
+              >
+                + Add Companion
+              </button>
             }
-          </div>
-        } @else {
-          <!-- VISIBLE ONE AFTER ANOTHER BELOW: About me, Gallery, Journey (Requirement D: all 8 sub-sections visible unless locked) -->
-          <div class="visitor-modal-flow-container">
-            <!-- 1. ABOUT ME (Requirement D) -->
-            <section class="visitor-flow-section visitor-flow-about">
-              <h3 class="visitor-section-heading">👤 About {{ viewingVisitor()!.fullName }}</h3>
-              
-              <!-- Sub-sections for visitor -->
-              <div class="visitor-about-subsections">
-                <!-- 1. Intro -->
-                <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">✨ Intro</h4>
-                  <p class="visitor-sub-text">
-                    {{ viewingVisitor()!.aboutMeDetails?.intro || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'Passionate traveler discovering new horizons with NeverBeen AI memories.' }}
-                  </p>
-                </div>
 
-                <!-- 2. Personal Details -->
+            <button
+              type="button"
+              class="btn-action-report"
+              (click)="openReportAbuseModal('companion', viewingVisitor()!.id, { id: viewingVisitor()!.id, fullName: viewingVisitor()!.fullName, profilePhotoUrl: viewingVisitor()!.profilePhotoUrl, profession: viewingVisitor()!.profession }, viewingVisitor()!.bio || viewingVisitor()!.aboutMe || 'Profile page')"
+              title="Report Abuse"
+            >
+              🚩 Report Abuse
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISITOR PROFILE CONTENT FLOW -->
+      @if (viewingVisitor()!.isProfileLocked && viewingVisitor()!.status !== 'connected') {
+        <div class="visitor-locked-shield-card locked-profile-shield-box">
+          <div class="shield-icon-circle">🔒</div>
+          <h3 class="shield-title">This Profile is Locked</h3>
+          <p class="shield-description">
+            {{ viewingVisitor()!.fullName }} has locked their profile. Journey feeds, Companions, Circles, and About me are protected and visible only to confirmed Companions.
+          </p>
+          @if (viewingVisitor()!.status === 'none') {
+            <button
+              type="button"
+              class="btn-primary-action btn-center"
+              (click)="requestCompanionship(viewingVisitor()!.id)"
+            >
+              Request for Companionship to Unlock
+            </button>
+          } @else if (viewingVisitor()!.status === 'pending_outgoing') {
+            <span class="pending-lock-notice">Companionship request is pending approval.</span>
+          }
+        </div>
+      } @else {
+        <!-- UNLOCKED: All 8 sub-sections of About me, Gallery, and Journey feeds -->
+        <div class="visitor-page-flow-container">
+          <!-- 1. ABOUT ME (All 8 sub-sections) -->
+          <section class="visitor-flow-section visitor-flow-about">
+            <h3 class="visitor-section-heading">👤 About {{ viewingVisitor()!.fullName }}</h3>
+            
+            <div class="visitor-about-subsections">
+              <!-- 1. Intro -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">✨ Intro</h4>
+                <p class="visitor-sub-text">
+                  {{ viewingVisitor()!.aboutMeDetails?.intro || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'Passionate traveler discovering new horizons with NeverBeen AI memories.' }}
+                </p>
+              </div>
+
+              <!-- 2. Personal Details -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">👤 Personal Details</h4>
+                <div class="visitor-meta-grid">
+                  <div class="meta-card-mini">
+                    <span class="meta-label">Gender</span>
+                    <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
+                  </div>
+                  <div class="meta-card-mini">
+                    <span class="meta-label">Date of Birth</span>
+                    <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.dateOfBirth || '1995-04-12' }}</strong>
+                  </div>
+                  <div class="meta-card-mini">
+                    <span class="meta-label">Current Location</span>
+                    <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.location || (viewingVisitor()!.city + ', ' + viewingVisitor()!.country) }}</strong>
+                  </div>
+                  <div class="meta-card-mini">
+                    <span class="meta-label">Hometown</span>
+                    <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.hometown || viewingVisitor()!.city }}</strong>
+                  </div>
+                  <div class="meta-card-mini">
+                    <span class="meta-label">Relationship Status</span>
+                    <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.relationshipStatus || 'Single' }}</strong>
+                  </div>
+                  <div class="meta-card-mini">
+                    <span class="meta-label">Languages Known</span>
+                    <div class="visitor-lang-chips">
+                      @for (lang of (viewingVisitor()!.aboutMeDetails?.languagesKnown || ['English', 'French']); track lang) {
+                        <span class="visitor-chip-badge">{{ lang }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Work Experience -->
+              @if (viewingVisitor()!.aboutMeDetails?.workExperience && viewingVisitor()!.aboutMeDetails!.workExperience!.length > 0) {
                 <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">👤 Personal Details</h4>
-                  <div class="visitor-meta-grid">
-                    <div class="meta-card-mini">
-                      <span class="meta-label">Gender</span>
-                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
-                    </div>
-                    <div class="meta-card-mini">
-                      <span class="meta-label">Date of Birth</span>
-                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.dateOfBirth || '1995-04-12' }}</strong>
-                    </div>
-                    <div class="meta-card-mini">
-                      <span class="meta-label">Current Location</span>
-                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.location || (viewingVisitor()!.city + ', ' + viewingVisitor()!.country) }}</strong>
-                    </div>
-                    <div class="meta-card-mini">
-                      <span class="meta-label">Hometown</span>
-                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.hometown || viewingVisitor()!.city }}</strong>
-                    </div>
-                    <div class="meta-card-mini">
-                      <span class="meta-label">Relationship Status</span>
-                      <strong class="meta-value">{{ viewingVisitor()!.aboutMeDetails?.relationshipStatus || 'Single' }}</strong>
-                    </div>
-                    <div class="meta-card-mini">
-                      <span class="meta-label">Languages Known</span>
-                      <div class="visitor-lang-chips">
-                        @for (lang of (viewingVisitor()!.aboutMeDetails?.languagesKnown || ['English', 'French']); track lang) {
-                          <span class="visitor-chip-badge">{{ lang }}</span>
+                  <h4 class="visitor-sub-title">💼 Work Experience</h4>
+                  <div class="visitor-work-list">
+                    @for (w of viewingVisitor()!.aboutMeDetails!.workExperience!; track $index) {
+                      <div class="visitor-work-item">
+                        <div class="visitor-work-head">
+                          <strong>{{ w.company }}</strong>
+                          <span>{{ w.yearFrom }} – {{ w.currentlyWorkHere ? 'Present' : (w.yearTo || 'Present') }}</span>
+                        </div>
+                        <span class="visitor-work-loc">📍 {{ w.city }}, {{ w.country }}</span>
+                        @if (w.description) {
+                          <p class="visitor-work-desc">{{ w.description }}</p>
                         }
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 3. Work Experience -->
-                @if (viewingVisitor()!.aboutMeDetails?.workExperience && viewingVisitor()!.aboutMeDetails!.workExperience!.length > 0) {
-                  <div class="visitor-sub-block">
-                    <h4 class="visitor-sub-title">💼 Work Experience</h4>
-                    <div class="visitor-work-list">
-                      @for (w of viewingVisitor()!.aboutMeDetails!.workExperience!; track $index) {
-                        <div class="visitor-work-item">
-                          <div class="visitor-work-head">
-                            <strong>{{ w.company }}</strong>
-                            <span>{{ w.yearFrom }} – {{ w.currentlyWorkHere ? 'Present' : (w.yearTo || 'Present') }}</span>
-                          </div>
-                          <span class="visitor-work-loc">📍 {{ w.city }}, {{ w.country }}</span>
-                          @if (w.description) {
-                            <p class="visitor-work-desc">{{ w.description }}</p>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-
-                <!-- 4. Education -->
-                @if (viewingVisitor()!.aboutMeDetails?.education && viewingVisitor()!.aboutMeDetails!.education!.length > 0) {
-                  <div class="visitor-sub-block">
-                    <h4 class="visitor-sub-title">🎓 Education</h4>
-                    <div class="visitor-edu-list">
-                      @for (e of viewingVisitor()!.aboutMeDetails!.education!; track $index) {
-                        <div class="visitor-edu-item">
-                          <div class="visitor-edu-head">
-                            <span class="edu-badge">{{ e.level }}</span>
-                            <strong>{{ e.institutionName }}</strong>
-                            <span>{{ e.yearFrom }} – {{ e.currentlyStudying ? 'Studying' : (e.yearTo || 'Completed') }}</span>
-                          </div>
-                          <span class="visitor-edu-course">Course: {{ e.courseOrDegree }}</span>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-
-                <!-- 5. Hobbies -->
-                <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">🎨 Hobbies</h4>
-                  <div class="visitor-chips-wrap">
-                    @for (h of (viewingVisitor()!.aboutMeDetails?.hobbies || ['Photography', 'Hiking', 'Cuisine Tasting']); track h) {
-                      <span class="visitor-chip-badge hobby">🎨 {{ h }}</span>
                     }
                   </div>
-                </div>
-
-                <!-- 6. Interests -->
-                <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">🧭 Interests</h4>
-                  <div class="visitor-chips-wrap">
-                    @for (item of (viewingVisitor()!.aboutMeDetails?.interests || ['Ancient Architecture', 'Mountain Trekking', 'Art Museums']); track item) {
-                      <span class="visitor-chip-badge interest">🧭 {{ item }}</span>
-                    }
-                  </div>
-                </div>
-
-                <!-- 7. Contact Info -->
-                <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">📞 Contact Info</h4>
-                  <div class="visitor-contact-row">
-                    <span>✉️ {{ viewingVisitor()!.aboutMeDetails?.contactEmail || (viewingVisitor()!.fullName.toLowerCase().replace(' ', '.') + '@neverbeen.example.com') }}</span>
-                    <span>📱 {{ viewingVisitor()!.aboutMeDetails?.contactPhone || '+33 6 98 76 54 32' }}</span>
-                  </div>
-                </div>
-
-                <!-- 8. About the Person -->
-                <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">📖 About the Person</h4>
-                  <p class="visitor-sub-text">
-                    {{ viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.' }}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <!-- 2. GALLERY -->
-            <section class="visitor-flow-section visitor-flow-gallery">
-              <div class="visitor-flow-section-header">
-                <h3 class="visitor-section-heading">📸 Gallery</h3>
-                <span class="section-count-tag">{{ viewingVisitor()!.gallery?.length || 0 }} Photos</span>
-              </div>
-              @if (viewingVisitor()!.gallery && viewingVisitor()!.gallery!.length > 0) {
-                <div class="visitor-gallery-grid">
-                  @for (photo of viewingVisitor()!.gallery; track photo.id) {
-                    <div class="visitor-gallery-item" (click)="openImageModal(photo.url)">
-                      <img [src]="photo.url" [alt]="photo.caption || 'Gallery photo'" loading="lazy" />
-                      @if (photo.caption) {
-                        <span class="visitor-gallery-caption">{{ photo.caption }}</span>
-                      }
-                    </div>
-                  }
-                </div>
-              } @else {
-                <div class="visitor-gallery-empty">
-                  <p>No gallery photographs uploaded yet.</p>
                 </div>
               }
-            </section>
 
-            <!-- 3. JOURNEY (Where user can see their Journey) -->
-            <section class="visitor-flow-section visitor-flow-journey">
-              <h3 class="visitor-section-heading">✈️ Journey Feeds</h3>
-              @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
-                <article class="journey-post-card">
-                  <div class="post-header">
-                    <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" />
-                    <div class="author-details">
-                      <div class="author-name-line">
-                        <strong class="author-name">{{ post.author.fullName }}</strong>
-                        @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
-                          <span class="tagged-with-text"> is with </span>
-                          @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                            <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
-                          }
-                        }
+              <!-- 4. Education -->
+              @if (viewingVisitor()!.aboutMeDetails?.education && viewingVisitor()!.aboutMeDetails!.education!.length > 0) {
+                <div class="visitor-sub-block">
+                  <h4 class="visitor-sub-title">🎓 Education</h4>
+                  <div class="visitor-edu-list">
+                    @for (e of viewingVisitor()!.aboutMeDetails!.education!; track $index) {
+                      <div class="visitor-edu-item">
+                        <div class="visitor-edu-head">
+                          <span class="edu-badge">{{ e.level }}</span>
+                          <strong>{{ e.institutionName }}</strong>
+                          <span>{{ e.yearFrom }} – {{ e.currentlyStudying ? 'Studying' : (e.yearTo || 'Completed') }}</span>
+                        </div>
+                        <span class="visitor-edu-course">Course: {{ e.courseOrDegree }}</span>
                       </div>
-                      <div class="post-sub-meta">
-                        <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
-                        @if (post.location) {
-                          <span class="post-loc" title="Google Maps Verified Location">
-                            <span class="post-loc-icon">📍</span> <span class="post-loc-text">{{ post.location }}</span>
-                          </span>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- 5. Hobbies -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">🎨 Hobbies</h4>
+                <div class="visitor-chips-wrap">
+                  @for (h of (viewingVisitor()!.aboutMeDetails?.hobbies || ['Photography', 'Hiking', 'Cuisine Tasting']); track h) {
+                    <span class="visitor-chip-badge hobby">🎨 {{ h }}</span>
+                  }
+                </div>
+              </div>
+
+              <!-- 6. Interests -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">🧭 Interests</h4>
+                <div class="visitor-chips-wrap">
+                  @for (item of (viewingVisitor()!.aboutMeDetails?.interests || ['Ancient Architecture', 'Mountain Trekking', 'Art Museums']); track item) {
+                    <span class="visitor-chip-badge interest">🧭 {{ item }}</span>
+                  }
+                </div>
+              </div>
+
+              <!-- 7. Contact Info -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">📞 Contact Info</h4>
+                <div class="visitor-contact-row">
+                  <span>✉️ {{ viewingVisitor()!.aboutMeDetails?.contactEmail || (viewingVisitor()!.fullName.toLowerCase().replace(' ', '.') + '@neverbeen.example.com') }}</span>
+                  <span>📱 {{ viewingVisitor()!.aboutMeDetails?.contactPhone || '+33 6 98 76 54 32' }}</span>
+                </div>
+              </div>
+
+              <!-- 8. About the Person -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">📖 About the Person</h4>
+                <p class="visitor-sub-text">
+                  {{ viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.' }}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. GALLERY -->
+          <section class="visitor-flow-section visitor-flow-gallery">
+            <div class="visitor-flow-section-header">
+              <h3 class="visitor-section-heading">📸 Gallery</h3>
+              <span class="section-count-tag">{{ viewingVisitor()!.gallery?.length || 0 }} Photos</span>
+            </div>
+            @if (viewingVisitor()!.gallery && viewingVisitor()!.gallery!.length > 0) {
+              <div class="visitor-gallery-grid">
+                @for (photo of viewingVisitor()!.gallery; track photo.id) {
+                  <div class="visitor-gallery-item" (click)="openImageModal(photo.url)">
+                    <img [src]="photo.url" [alt]="photo.caption || 'Gallery photo'" loading="lazy" />
+                    @if (photo.caption) {
+                      <span class="visitor-gallery-caption">{{ photo.caption }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="visitor-gallery-empty">
+                <p>No gallery photographs uploaded yet.</p>
+              </div>
+            }
+          </section>
+
+          <!-- 3. JOURNEY (Requirement H: Visitors have ability to comment on posts) -->
+          <section class="visitor-flow-section visitor-flow-journey">
+            <h3 class="visitor-section-heading">✈️ Journey Feeds</h3>
+            @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
+              <article class="journey-post-card">
+                <div class="post-header">
+                  <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" />
+                  <div class="author-details">
+                    <div class="author-name-line">
+                      <strong class="author-name">{{ post.author.fullName }}</strong>
+                      @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
+                        <span class="tagged-with-text"> is with </span>
+                        @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
+                          <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
                         }
-                        @if (post.mood) {
-                          <span class="post-mood">{{ post.mood }}</span>
-                        }
-                      </div>
+                      }
+                    </div>
+                    <div class="post-sub-meta">
+                      <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                      @if (post.location) {
+                        <span class="post-loc" title="Google Maps Verified Location">
+                          <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
+                        </span>
+                      }
+                      @if (post.mood) {
+                        <span class="post-mood">{{ post.mood }}</span>
+                      }
                     </div>
                   </div>
-                  <p class="post-body-text">{{ post.text }}</p>
-                  @if (post.imageUrl) {
-                    <div class="post-image-attachment-wrap">
-                      <img [src]="post.imageUrl" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl!)" />
-                    </div>
-                  }
 
-                  <!-- REQUIREMENT A: Engagement counts with Top 1 icon & Top 3 icons -->
-                  <div class="post-engagement-counts">
-                    <div class="engagement-reactions-left">
-                      <span
-                        class="top-1-icon-display clickable-reaction-pill"
+                  <!-- Requirements F & G: Delete post check (only if author or on own profile) -->
+                  @if (canDeleteJourneyPost(post)) {
+                    <button
+                      type="button"
+                      class="btn-delete-post-mini"
+                      (click)="deleteJourneyPost(post.id)"
+                      title="Delete post"
+                    >
+                      🗑️ Delete
+                    </button>
+                  }
+                </div>
+
+                <p class="post-body-text">{{ post.text }}</p>
+                @if (post.imageUrl) {
+                  <div class="post-image-attachment-wrap">
+                    <img [src]="post.imageUrl" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl!)" />
+                  </div>
+                }
+
+                <!-- Engagement Counts -->
+                <div class="post-engagement-counts">
+                  <div class="engagement-reactions-left">
+                    <span
+                      class="top-1-icon-display clickable-reaction-pill"
+                      (mousedown)="startReactionsSummaryHold(post, 'post')"
+                      (mouseup)="endReactionsSummaryHold()"
+                      (click)="openReactionsBreakdownModal(post, 'post')"
+                      title="Hold or click to see reactions breakdown"
+                    >
+                      <span class="top-glyph">{{ getTop1ReactionIcon(post) }}</span>
+                    </span>
+
+                    @if (getTop3ReactionIcons(post).length > 0) {
+                      <div
+                        class="top-3-icons-cluster clickable-reactions-cluster"
                         (mousedown)="startReactionsSummaryHold(post, 'post')"
                         (mouseup)="endReactionsSummaryHold()"
                         (click)="openReactionsBreakdownModal(post, 'post')"
-                        title="Hold or click to see reactions breakdown"
                       >
-                        <span class="top-glyph">{{ getTop1ReactionIcon(post) }}</span>
-                      </span>
-
-                      @if (getTop3ReactionIcons(post).length > 0) {
-                        <div
-                          class="top-3-icons-cluster clickable-reactions-cluster"
-                          (mousedown)="startReactionsSummaryHold(post, 'post')"
-                          (mouseup)="endReactionsSummaryHold()"
-                          (click)="openReactionsBreakdownModal(post, 'post')"
-                        >
-                          @for (icon of getTop3ReactionIcons(post); track icon) {
-                            <span class="reaction-emoji-badge">{{ icon }}</span>
-                          }
-                        </div>
-                      }
-                    </div>
-
-                    <div class="engagement-right">
-                      <span class="comment-counter">{{ post.comments.length }} comments</span>
-                      @if ((post.shareCount || 0) > 0) {
-                        <span class="share-counter">• {{ post.shareCount }} shares</span>
-                      }
-                    </div>
+                        @for (icon of getTop3ReactionIcons(post); track icon) {
+                          <span class="reaction-emoji-badge">{{ icon }}</span>
+                        }
+                      </div>
+                    }
                   </div>
 
-                  <div class="post-actions-row">
-                    <div class="post-like-action-wrap">
-                      <button
-                        type="button"
-                        class="post-action-btn btn-like-react"
-                        [class.liked]="post.isLiked"
-                        (mousedown)="startLikeButtonHold(post.id, 'post')"
-                        (mouseup)="endLikeButtonHold()"
-                        (mouseleave)="endLikeButtonHold()"
-                        (touchstart)="startLikeButtonHold(post.id, 'post')"
-                        (touchend)="endLikeButtonHold()"
-                        (click)="handleLikeClick(post)"
-                        title="Click to like, hold for 11 reactions"
-                      >
-                        <span class="like-btn-glyph">{{ post.myReaction ? reactionIconsMap[post.myReaction] : '🤍' }}</span>
-                        <span>{{ post.myReaction || (post.isLiked ? 'Liked' : 'Like') }}</span>
-                      </button>
-
-                      @if (showReactionPickerForTarget()?.id === post.id && showReactionPickerForTarget()?.type === 'post') {
-                        <div class="reactions-popover-card" (click)="$event.stopPropagation()">
-                          @for (reaction of holdReactionOptions; track reaction) {
-                            <button
-                              type="button"
-                              class="reaction-btn-item"
-                              (click)="selectHoldReaction(post.id, 'post', reaction)"
-                              [title]="reaction"
-                            >
-                              <span class="reaction-emoji">{{ reactionIconsMap[reaction] }}</span>
-                              <span class="reaction-name">{{ reaction }}</span>
-                            </button>
-                          }
-                        </div>
-                      }
-                    </div>
-
-                    <button type="button" class="post-action-btn" (click)="toggleCommentSection(post.id)">
-                      <span>💬 Comments ({{ post.comments.length }})</span>
-                    </button>
-                    <button type="button" class="post-action-btn" (click)="openShareModal(post)">
-                      <span>🔁 Share@if ((post.shareCount || 0) > 0) { ({{ post.shareCount }}) }</span>
-                    </button>
+                  <div class="engagement-right">
+                    <span class="comment-counter">{{ post.comments.length }} comments</span>
+                    @if ((post.shareCount || 0) > 0) {
+                      <span class="share-counter">• {{ post.shareCount }} shares</span>
+                    }
                   </div>
-
-                  @if (activeCommentPostId() === post.id) {
-                    <div class="comments-thread-container">
-                      @for (c of post.comments; track c.id) {
-                        <app-comment-thread
-                          [comment]="c"
-                          [postId]="post.id"
-                          [depth]="0"
-                          [currentUserId]="service.currentUser()?.id"
-                          (reply)="handleCommentThreadReply($event)"
-                          (like)="handleCommentThreadLike($event)"
-                          (react)="handleCommentThreadReact($event)"
-                          (showReactionsModal)="handleCommentThreadShowReactions($event)"
-                          (openUser)="openVisitorProfile($event)"
-                        ></app-comment-thread>
-                      }
-                    </div>
-                  }
-                </article>
-              } @empty {
-                <div class="visitor-journey-empty">
-                  <p>{{ viewingVisitor()!.fullName }} has not shared any public journey posts yet.</p>
                 </div>
-              }
-            </section>
-          </div>
-        }
-      </div>
+
+                <!-- Post Actions Row -->
+                <div class="post-actions-row">
+                  <div class="post-like-action-wrap">
+                    <button
+                      type="button"
+                      class="post-action-btn btn-like-react"
+                      [class.liked]="post.isLiked"
+                      (mousedown)="startLikeButtonHold(post.id, 'post')"
+                      (mouseup)="endLikeButtonHold()"
+                      (mouseleave)="endLikeButtonHold()"
+                      (touchstart)="startLikeButtonHold(post.id, 'post')"
+                      (touchend)="endLikeButtonHold()"
+                      (click)="handleLikeClick(post)"
+                      title="Click to like, hold for 11 reactions"
+                    >
+                      <span class="like-btn-glyph">{{ post.myReaction ? reactionIconsMap[post.myReaction] : '🤍' }}</span>
+                      <span>{{ post.myReaction || (post.isLiked ? 'Liked' : 'Like') }}</span>
+                    </button>
+
+                    @if (showReactionPickerForTarget()?.id === post.id && showReactionPickerForTarget()?.type === 'post') {
+                      <div class="reactions-popover-card" (click)="$event.stopPropagation()">
+                        @for (reaction of holdReactionOptions; track reaction) {
+                          <button
+                            type="button"
+                            class="reaction-btn-item"
+                            (click)="selectHoldReaction(post.id, 'post', reaction)"
+                            [title]="reaction"
+                          >
+                            <span class="reaction-emoji">{{ reactionIconsMap[reaction] }}</span>
+                            <span class="reaction-name">{{ reaction }}</span>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <button type="button" class="post-action-btn" (click)="toggleCommentSection(post.id)">
+                    <span>💬 Comments ({{ post.comments.length }})</span>
+                  </button>
+                  <button type="button" class="post-action-btn" (click)="openShareModal(post)">
+                    <span>🔁 Share@if ((post.shareCount || 0) > 0) { ({{ post.shareCount }}) }</span>
+                  </button>
+                </div>
+
+                <!-- Comments Thread (Requirement H: Visitors can comment) -->
+                @if (activeCommentPostId() === post.id) {
+                  <div class="comments-thread-container">
+                    <!-- Requirement H: Comment composer for visitor -->
+                    <div class="comment-composer-row visitor-comment-composer">
+                      <img
+                        [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
+                        [alt]="service.profile()?.fullName || 'Me'"
+                        class="commenter-avatar"
+                      />
+                      <div class="comment-input-box">
+                        <input
+                          type="text"
+                          [(ngModel)]="journeyCommentText"
+                          (keydown.enter)="submitJourneyComment(post.id)"
+                          placeholder="Write a comment on {{ viewingVisitor()!.fullName }}'s post..."
+                          class="comment-input"
+                        />
+                        <button
+                          type="button"
+                          class="btn-send-comment"
+                          [disabled]="!journeyCommentText.trim()"
+                          (click)="submitJourneyComment(post.id)"
+                        >
+                          Comment
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- List of comments (Requirement F & G: delete button check) -->
+                    @for (c of post.comments; track c.id) {
+                      <app-comment-thread
+                        [comment]="c"
+                        [postId]="post.id"
+                        [depth]="0"
+                        [currentUserId]="service.currentUser()?.id"
+                        [isProfileOwner]="false"
+                        (reply)="handleCommentThreadReply($event)"
+                        (like)="handleCommentThreadLike($event)"
+                        (react)="handleCommentThreadReact($event)"
+                        (showReactionsModal)="handleCommentThreadShowReactions($event)"
+                        (deleteComment)="handleCommentThreadDelete($event)"
+                        (openUser)="openVisitorProfile($event)"
+                      ></app-comment-thread>
+                    }
+                  </div>
+                }
+              </article>
+            } @empty {
+              <div class="visitor-journey-empty">
+                <p>{{ viewingVisitor()!.fullName }} has not shared any public journey posts yet.</p>
+              </div>
+            }
+          </section>
+        </div>
+      }
     </div>
   }
 

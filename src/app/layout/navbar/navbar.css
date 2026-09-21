@@ -35,6 +35,22 @@
   object-fit: contain;
 }
 
+/* Requirement I: Scale neverbeen-logo.png to 50% on Community page or user profiles */
+.logo.compact-logo {
+  width: clamp(110px, 13vw, 170px);
+  height: clamp(55px, 6.5vw, 85px);
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+.logo.compact-logo img,
+img.compact-logo {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: clamp(110px, 13vw, 170px) !important;
+  max-height: clamp(55px, 6.5vw, 85px) !important;
+  object-fit: contain;
+}
+
 nav {
   display: flex;
   align-items: center;
