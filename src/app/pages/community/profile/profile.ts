@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Circle, City, Companion, JourneyPost } from '../../../models/community';
+import { Circle, City, Companion, JourneyPost, UserActiveStatus } from '../../../models/community';
 import { CommunityService } from '../../../services/community.service';
 
 export type ProfileSection =
@@ -27,13 +27,29 @@ export class CommunityProfile implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
 
-  // Active section in the right side wide panel (default: 'journey' as requested)
+  // Active section in the right side wide panel (default: 'journey')
   protected readonly activeSection = signal<ProfileSection>('journey');
 
   // Search state (top-left)
   protected readonly searchQuery = signal('');
   protected readonly showSearchDropdown = signal(false);
   protected readonly viewingTraveler = signal<Companion | null>(null);
+
+  // Enlarged Profile Photo Modal
+  protected readonly showEnlargedPhoto = signal(false);
+
+  // Active Status Dropdown & Custom Status
+  protected readonly activeStatusOptions: UserActiveStatus[] = [
+    'Active',
+    'Busy',
+    "Don't Disturb",
+    'Away',
+    'Inactive',
+    'Custom',
+  ];
+  protected readonly showCustomStatusModal = signal(false);
+  protected customStatusInput = '';
+  protected readonly statusError = signal<string | null>(null);
 
   // Journey state
   protected newJourneyText = '';
@@ -42,6 +58,10 @@ export class CommunityProfile implements OnInit {
   protected readonly postingJourney = signal(false);
   protected readonly activeCommentPostId = signal<number | null>(null);
   protected journeyCommentText = '';
+
+  // Multi-level Journey Comment Replies
+  protected readonly activeJourneyReplyCommentId = signal<number | null>(null);
+  protected journeyReplyText = '';
 
   // Circles state
   protected readonly showCreateCircleModal = signal(false);
@@ -76,6 +96,21 @@ export class CommunityProfile implements OnInit {
   // Settings state
   protected readonly savingSettings = signal(false);
   protected readonly settingsSaved = signal(false);
+  protected readonly availableTravelStyles = [
+    'Backpacker',
+    'Luxury Resorts',
+    'Solo Exploration',
+    'Landscape Photography',
+    'Culinary & Wine',
+    'Alpine Hiking',
+    'Digital Nomad',
+    'Cultural Heritage',
+  ];
+  protected readonly selectedTravelStyles = signal<string[]>([
+    'Landscape Photography',
+    'Solo Exploration',
+    'Culinary & Wine',
+  ]);
 
   protected readonly defaultAvatar =
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
@@ -93,8 +128,15 @@ export class CommunityProfile implements OnInit {
 
   protected readonly settingsForm = this.fb.group({
     publicProfileEnabled: [true],
+    isProfileLocked: [false],
+    whoCanMessage: ['everyone'],
+    searchVisibility: [true],
+    journeyVisibility: ['public'],
     emailNotificationsEnabled: [true],
     phoneNotificationsEnabled: [false],
+    soundNotificationsEnabled: [true],
+    twoFactorEnabled: [false],
+    preferredSeason: ['Autumn & Spring'],
     theme: ['light'],
     timezone: ['UTC'],
   });
@@ -159,7 +201,89 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // SEARCH & TRAVELER MODAL
+  // PROFILE PHOTO LIGHTBOX
+  // ---------------------------------------------------------------------------
+
+  openEnlargedPhoto(): void {
+    this.showEnlargedPhoto.set(true);
+  }
+
+  closeEnlargedPhoto(): void {
+    this.showEnlargedPhoto.set(false);
+  }
+
+  // ---------------------------------------------------------------------------
+  // ACTIVE STATUS MANAGEMENT
+  // ---------------------------------------------------------------------------
+
+  onStatusSelect(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const value = target.value as UserActiveStatus;
+
+    if (value === 'Custom') {
+      this.statusError.set(null);
+      this.customStatusInput = this.service.currentUser()?.customStatusText || '';
+      this.showCustomStatusModal.set(true);
+    } else {
+      this.service.updateActiveStatus(value);
+    }
+  }
+
+  applyCustomStatus(): void {
+    const trimmed = this.customStatusInput.trim();
+    // Validate: 1 to 15 letters and spaces only
+    if (!/^[A-Za-z ]{1,15}$/.test(trimmed)) {
+      this.statusError.set('Letters and spaces only, up to 15 characters maximum.');
+      return;
+    }
+
+    this.service.updateActiveStatus('Custom', trimmed);
+    this.showCustomStatusModal.set(false);
+    this.statusError.set(null);
+  }
+
+  closeCustomStatusModal(): void {
+    this.showCustomStatusModal.set(false);
+    this.statusError.set(null);
+  }
+
+  getStatusIconClass(status?: string): string {
+    switch (status) {
+      case 'Active':
+        return 'status-icon-active';
+      case 'Busy':
+        return 'status-icon-busy';
+      case "Don't Disturb":
+        return 'status-icon-dnd';
+      case 'Away':
+        return 'status-icon-away';
+      case 'Inactive':
+        return 'status-icon-inactive';
+      case 'Custom':
+        return 'status-icon-custom';
+      default:
+        return 'status-icon-active';
+    }
+  }
+
+  getStatusLabel(status?: string, customText?: string): string {
+    if (status === 'Custom' && customText) {
+      return customText;
+    }
+    return status || 'Active';
+  }
+
+  // ---------------------------------------------------------------------------
+  // PROFILE LOCK / UNLOCK
+  // ---------------------------------------------------------------------------
+
+  toggleProfileLock(): void {
+    const locked = this.service.toggleProfileLock();
+    this.settingsForm.patchValue({ isProfileLocked: locked });
+  }
+
+  // ---------------------------------------------------------------------------
+  // SEARCH & TRAVELER MODAL (WITH PROFILE LOCK ENFORCEMENT)
   // ---------------------------------------------------------------------------
 
   onSearchFocus(): void {
@@ -189,7 +313,7 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // JOURNEY
+  // JOURNEY (PUBLIC FEED WITH NESTED COMMENTS ON COMMENTS)
   // ---------------------------------------------------------------------------
 
   submitJourneyPost(): void {
@@ -225,6 +349,26 @@ export class CommunityProfile implements OnInit {
     if (!this.journeyCommentText.trim()) return;
     this.service.addJourneyComment(postId, this.journeyCommentText);
     this.journeyCommentText = '';
+  }
+
+  toggleJourneyCommentReply(commentId: number): void {
+    if (this.activeJourneyReplyCommentId() === commentId) {
+      this.activeJourneyReplyCommentId.set(null);
+    } else {
+      this.activeJourneyReplyCommentId.set(commentId);
+      this.journeyReplyText = '';
+    }
+  }
+
+  submitJourneyCommentReply(postId: number, parentCommentId: number): void {
+    if (!this.journeyReplyText.trim()) return;
+    this.service.addJourneyComment(postId, this.journeyReplyText, parentCommentId);
+    this.journeyReplyText = '';
+    this.activeJourneyReplyCommentId.set(null);
+  }
+
+  toggleJourneyCommentLike(postId: number, commentId: number): void {
+    this.service.toggleJourneyCommentLike(postId, commentId);
   }
 
   // ---------------------------------------------------------------------------
@@ -360,15 +504,26 @@ export class CommunityProfile implements OnInit {
   }
 
   private populateSettingsForm(): void {
-    const s = this.service.profile()?.settings;
+    const p = this.service.profile();
+    const s = p?.settings;
     if (!s) return;
     this.settingsForm.patchValue({
       publicProfileEnabled: s.publicProfileEnabled,
+      isProfileLocked: s.isProfileLocked ?? p?.isProfileLocked ?? false,
+      whoCanMessage: s.whoCanMessage ?? 'everyone',
+      searchVisibility: s.searchVisibility ?? true,
+      journeyVisibility: s.journeyVisibility ?? 'public',
       emailNotificationsEnabled: s.emailNotificationsEnabled,
       phoneNotificationsEnabled: s.phoneNotificationsEnabled,
+      soundNotificationsEnabled: s.soundNotificationsEnabled ?? true,
+      twoFactorEnabled: s.twoFactorEnabled ?? false,
+      preferredSeason: s.preferredSeason ?? 'Autumn & Spring',
       theme: s.theme,
       timezone: s.timezone || 'UTC',
     });
+    if (s.travelStyles) {
+      this.selectedTravelStyles.set(s.travelStyles);
+    }
   }
 
   async saveDetails(): Promise<void> {
@@ -428,7 +583,7 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // MESSAGEBOOK
+  // MESSAGEBOOK (PERSONAL TO USER AND COMPANIONS)
   // ---------------------------------------------------------------------------
 
   async submitPost(): Promise<void> {
@@ -476,17 +631,37 @@ export class CommunityProfile implements OnInit {
   }
 
   // ---------------------------------------------------------------------------
-  // SETTINGS
+  // SETTINGS & TRAVEL DATA EXPORT
   // ---------------------------------------------------------------------------
+
+  toggleTravelStyle(style: string): void {
+    const current = this.selectedTravelStyles();
+    if (current.includes(style)) {
+      this.selectedTravelStyles.set(current.filter((s) => s !== style));
+    } else {
+      this.selectedTravelStyles.set([...current, style]);
+    }
+  }
 
   async saveSettings(): Promise<void> {
     this.savingSettings.set(true);
     try {
       const v = this.settingsForm.getRawValue();
+      const isLocked = v.isProfileLocked ?? false;
+      this.service.setProfileLock(isLocked);
+
       await this.service.updateSettings({
         publicProfileEnabled: v.publicProfileEnabled ?? true,
+        isProfileLocked: isLocked,
+        whoCanMessage: (v.whoCanMessage as any) ?? 'everyone',
+        searchVisibility: v.searchVisibility ?? true,
+        journeyVisibility: (v.journeyVisibility as any) ?? 'public',
         emailNotificationsEnabled: v.emailNotificationsEnabled ?? true,
         phoneNotificationsEnabled: v.phoneNotificationsEnabled ?? false,
+        soundNotificationsEnabled: v.soundNotificationsEnabled ?? true,
+        twoFactorEnabled: v.twoFactorEnabled ?? false,
+        travelStyles: this.selectedTravelStyles(),
+        preferredSeason: v.preferredSeason ?? 'Autumn & Spring',
         theme: (v.theme as 'light' | 'dark' | 'system') ?? 'light',
         timezone: v.timezone ?? 'UTC',
       });
@@ -495,6 +670,26 @@ export class CommunityProfile implements OnInit {
     } finally {
       this.savingSettings.set(false);
     }
+  }
+
+  downloadTravelData(): void {
+    const p = this.service.profile();
+    const data = {
+      profile: p,
+      journeyPosts: this.service.journeyPosts(),
+      circles: this.service.circles(),
+      companions: this.service.companions().filter((c) => c.status === 'connected'),
+      exportedAtUtc: new Date().toISOString(),
+      platform: 'NeverBeen Traveler Network',
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `neverbeen-travel-data-${p?.id || 'user'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   // ---------------------------------------------------------------------------

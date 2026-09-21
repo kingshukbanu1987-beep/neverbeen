@@ -1,3 +1,5 @@
+export type UserActiveStatus = 'Active' | 'Busy' | "Don't Disturb" | 'Away' | 'Inactive' | 'Custom';
+
 export interface CurrentUser {
   id: number;
   firstName?: string;
@@ -7,6 +9,9 @@ export interface CurrentUser {
   status: 'Pending' | 'Active' | string;
   profileComplete: boolean;
   profilePhotoUrl?: string;
+  activeStatus?: UserActiveStatus;
+  customStatusText?: string;
+  isProfileLocked?: boolean;
 }
 
 export interface AuthResult {
@@ -25,6 +30,14 @@ export interface UserSettings {
   publicProfileEnabled: boolean;
   theme: 'light' | 'dark' | 'system';
   timezone?: string;
+  isProfileLocked?: boolean;
+  whoCanMessage?: 'everyone' | 'companions' | 'none';
+  searchVisibility?: boolean;
+  journeyVisibility?: 'public' | 'companions';
+  soundNotificationsEnabled?: boolean;
+  twoFactorEnabled?: boolean;
+  travelStyles?: string[];
+  preferredSeason?: string;
 }
 
 export interface GalleryPhoto {
@@ -62,6 +75,9 @@ export interface Profile {
   settings: UserSettings;
   gallery: GalleryPhoto[];
   commentCount: number;
+  activeStatus?: UserActiveStatus;
+  customStatusText?: string;
+  isProfileLocked?: boolean;
 }
 
 export interface UpdateProfileRequest {
@@ -75,6 +91,9 @@ export interface UpdateProfileRequest {
   postalAddress?: string;
   aboutMe?: string;
   profession?: string;
+  activeStatus?: UserActiveStatus;
+  customStatusText?: string;
+  isProfileLocked?: boolean;
 }
 
 export interface AuthorInfo {
@@ -129,6 +148,10 @@ export interface JourneyComment {
   author: AuthorInfo;
   text: string;
   createdAtUtc: string;
+  parentId?: number | null;
+  likeCount?: number;
+  isLiked?: boolean;
+  replies?: JourneyComment[];
 }
 
 export interface JourneyPost {
@@ -154,6 +177,9 @@ export interface Companion {
   mutualCompanionsCount: number;
   status: 'connected' | 'pending_outgoing' | 'pending_incoming' | 'none';
   bio?: string;
+  isProfileLocked?: boolean;
+  activeStatus?: UserActiveStatus;
+  customStatusText?: string;
 }
 
 export interface Circle {

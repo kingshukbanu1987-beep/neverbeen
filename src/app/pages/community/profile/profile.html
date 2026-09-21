@@ -29,7 +29,12 @@
               <div class="search-result-item" (click)="openTravelerModal(t)">
                 <img [src]="t.profilePhotoUrl" [alt]="t.fullName" class="res-avatar" />
                 <div class="res-info">
-                  <strong>{{ t.fullName }}</strong>
+                  <strong>
+                    {{ t.fullName }}
+                    @if (t.isProfileLocked) {
+                      <span class="mini-lock-pill" title="Profile is locked">🔒</span>
+                    }
+                  </strong>
                   <span>📍 {{ t.city }}, {{ t.country }} • {{ t.profession }}</span>
                 </div>
                 <div class="res-action">
@@ -72,16 +77,27 @@
     <div class="left-column-wrapper">
       <!-- MAIN SIDE PANEL: User Info & Menu -->
       <aside class="left-side-panel" aria-label="User profile and social navigation">
-        <!-- User Basic Details -->
+        <!-- User Basic Details (DOUBLE SIZE PROFILE PHOTO) -->
         <div class="user-card-summary">
-          <div class="user-photo-wrap">
+          <!-- Profile photo enlarged to double the size + click to view modal -->
+          <div class="user-photo-wrap-large" (click)="openEnlargedPhoto()" title="Click to enlarge photograph">
             <img
               [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
               [alt]="service.profile()?.fullName || 'User Photo'"
-              class="user-avatar-img"
+              class="user-avatar-img user-avatar-img-large"
             />
-            <label class="photo-change-btn" for="avatarUploadInput" title="Update photo">
-              <svg viewBox="0 0 24 24" class="icon-camera" fill="none" stroke="currentColor" stroke-width="2">
+            <div class="photo-overlay-hint">
+              <svg viewBox="0 0 24 24" class="icon-zoom" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+              <span>Enlarge</span>
+            </div>
+            <!-- Photo uploader trigger -->
+            <label class="photo-change-btn-mini" for="avatarUploadInput" (click)="$event.stopPropagation()" title="Update profile photo">
+              <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                 <circle cx="12" cy="13" r="4"></circle>
               </svg>
@@ -110,9 +126,48 @@
             </span>
           </p>
 
-          <span class="member-status-pill">
-            <span class="active-dot"></span> Active Traveler
-          </span>
+          <!-- ACTIVE STATUS DROPDOWN SELECTOR WITH MEANINGFUL ICONS -->
+          <div class="status-selector-wrap">
+            <div class="current-status-badge">
+              <span class="status-circle" [ngClass]="getStatusIconClass(service.currentUser()?.activeStatus)"></span>
+              <span class="status-name-label">
+                {{ getStatusLabel(service.currentUser()?.activeStatus, service.currentUser()?.customStatusText) }}
+              </span>
+            </div>
+
+            <select
+              [value]="service.currentUser()?.activeStatus || 'Active'"
+              (change)="onStatusSelect($event)"
+              class="status-dropdown-select"
+              title="Change your active status"
+            >
+              <option value="Active">🟢 Active</option>
+              <option value="Busy">🔴 Busy</option>
+              <option value="Don't Disturb">⛔ Don't Disturb</option>
+              <option value="Away">🟡 Away</option>
+              <option value="Inactive">⚪ Inactive</option>
+              <option value="Custom">✨ Custom Status...</option>
+            </select>
+          </div>
+
+          <!-- PROFILE LOCK INDICATOR & QUICK TOGGLE -->
+          <div class="profile-lock-status-pill" [class.locked]="service.profile()?.isProfileLocked">
+            @if (service.profile()?.isProfileLocked) {
+              <span class="lock-icon">🔒</span>
+              <span class="lock-text">Profile Locked (Companions Only)</span>
+            } @else {
+              <span class="lock-icon">🔓</span>
+              <span class="lock-text">Profile Public</span>
+            }
+            <button
+              type="button"
+              class="btn-toggle-lock-mini"
+              (click)="toggleProfileLock()"
+              [title]="service.profile()?.isProfileLocked ? 'Unlock Profile' : 'Lock Profile'"
+            >
+              {{ service.profile()?.isProfileLocked ? 'Unlock' : 'Lock' }}
+            </button>
+          </div>
         </div>
 
         <!-- SIDE MENU WITH COLORFUL ICONS IN SPECIFIED ORDER -->
@@ -146,7 +201,7 @@
               </svg>
             </span>
             <span>Journey</span>
-            <span class="badge-hot">Wall</span>
+            <span class="badge-hot">Public</span>
           </button>
 
           <!-- 3. Gallery -->
@@ -169,7 +224,7 @@
             }
           </button>
 
-          <!-- 4. MessageBook -->
+          <!-- 4. MessageBook (Personal to User & Companions) -->
           <button
             type="button"
             class="menu-btn"
@@ -182,9 +237,7 @@
               </svg>
             </span>
             <span>MessageBook</span>
-            @if (service.comments().length) {
-              <span class="count-badge">{{ service.comments().length }}</span>
-            }
+            <span class="badge-personal">Personal</span>
           </button>
 
           <!-- 5. Companions -->
@@ -337,14 +390,19 @@
     <!-- RIGHT SIDE WIDE PANEL -->
     <main class="right-wide-panel">
       <!-- ====================================================================
-           1. JOURNEY SECTION (DEFAULT OPEN)
+           1. JOURNEY SECTION (DEFAULT OPEN - PUBLIC FEED WITH NESTED COMMENTS)
            ==================================================================== -->
       @if (activeSection() === 'journey') {
         <article class="wide-section-card journey-feed-page">
           <header class="section-top-bar">
             <div>
-              <h1 class="section-title">Journey</h1>
-              <p class="section-desc">Your personal travel wall &amp; live feeds from connected companions across NeverBeen.</p>
+              <div class="section-title-line">
+                <h1 class="section-title">Journey</h1>
+                <span class="wall-visibility-pill public" title="Public: Open to all NeverBeen travelers">
+                  🌐 Public Feed
+                </span>
+              </div>
+              <p class="section-desc">Public traveler wall. Connect, post travel stories, react, and reply to comments of comments.</p>
             </div>
             <span class="feed-live-tag">
               <span class="live-pulse"></span> Live Feeds
@@ -451,23 +509,118 @@
                   </button>
                 </footer>
 
-                <!-- Comments Thread (Facebook style) -->
+                <!-- Comments Thread with Nested Replies (Comments of Comments) -->
                 @if (activeCommentPostId() === post.id || post.comments.length > 0) {
                   <div class="jpost-comments-box">
                     @for (comment of post.comments; track comment.id) {
                       <div class="jpost-comment-item">
                         <img [src]="comment.author.profilePhotoUrl" [alt]="comment.author.fullName" class="comment-author-avatar" />
-                        <div class="comment-bubble">
-                          <div class="comment-bubble-header">
-                            <strong>{{ comment.author.fullName }}</strong>
-                            <time>{{ formatTime(comment.createdAtUtc) }}</time>
+                        <div class="comment-bubble-wrapper">
+                          <div class="comment-bubble">
+                            <div class="comment-bubble-header">
+                              <strong>{{ comment.author.fullName }}</strong>
+                              <time>{{ formatTime(comment.createdAtUtc) }}</time>
+                            </div>
+                            <p>{{ comment.text }}</p>
                           </div>
-                          <p>{{ comment.text }}</p>
+
+                          <!-- Comment Action Bar: React & Reply on Comment -->
+                          <div class="comment-sub-actions">
+                            <button
+                              type="button"
+                              class="btn-sub-action"
+                              [class.liked]="comment.isLiked"
+                              (click)="toggleJourneyCommentLike(post.id, comment.id)"
+                            >
+                              ❤️ {{ comment.likeCount || 0 }}
+                            </button>
+                            <button
+                              type="button"
+                              class="btn-sub-action"
+                              (click)="toggleJourneyCommentReply(comment.id)"
+                            >
+                              ↩ Reply
+                            </button>
+                          </div>
+
+                          <!-- Nested Inline Reply Input -->
+                          @if (activeJourneyReplyCommentId() === comment.id) {
+                            <div class="nested-reply-composer">
+                              <input
+                                type="text"
+                                [(ngModel)]="journeyReplyText"
+                                placeholder="Reply to {{ comment.author.fullName }}..."
+                                (keydown.enter)="submitJourneyCommentReply(post.id, comment.id)"
+                              />
+                              <button
+                                type="button"
+                                class="btn-primary-action btn-xs"
+                                [disabled]="!journeyReplyText.trim()"
+                                (click)="submitJourneyCommentReply(post.id, comment.id)"
+                              >
+                                Reply
+                              </button>
+                            </div>
+                          }
+
+                          <!-- Recursive Nested Replies on Comments -->
+                          @if (comment.replies && comment.replies.length > 0) {
+                            <div class="nested-replies-list">
+                              @for (reply of comment.replies; track reply.id) {
+                                <div class="nested-reply-item">
+                                  <img [src]="reply.author.profilePhotoUrl" [alt]="reply.author.fullName" class="mini-reply-avatar" />
+                                  <div class="nested-reply-bubble">
+                                    <div class="comment-bubble-header">
+                                      <strong>{{ reply.author.fullName }}</strong>
+                                      <time>{{ formatTime(reply.createdAtUtc) }}</time>
+                                    </div>
+                                    <p>{{ reply.text }}</p>
+                                    <div class="comment-sub-actions">
+                                      <button
+                                        type="button"
+                                        class="btn-sub-action"
+                                        [class.liked]="reply.isLiked"
+                                        (click)="toggleJourneyCommentLike(post.id, reply.id)"
+                                      >
+                                        ❤️ {{ reply.likeCount || 0 }}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        class="btn-sub-action"
+                                        (click)="toggleJourneyCommentReply(reply.id)"
+                                      >
+                                        ↩ Reply
+                                      </button>
+                                    </div>
+
+                                    @if (activeJourneyReplyCommentId() === reply.id) {
+                                      <div class="nested-reply-composer">
+                                        <input
+                                          type="text"
+                                          [(ngModel)]="journeyReplyText"
+                                          placeholder="Reply to {{ reply.author.fullName }}..."
+                                          (keydown.enter)="submitJourneyCommentReply(post.id, reply.id)"
+                                        />
+                                        <button
+                                          type="button"
+                                          class="btn-primary-action btn-xs"
+                                          [disabled]="!journeyReplyText.trim()"
+                                          (click)="submitJourneyCommentReply(post.id, reply.id)"
+                                        >
+                                          Reply
+                                        </button>
+                                      </div>
+                                    }
+                                  </div>
+                                </div>
+                              }
+                            </div>
+                          }
                         </div>
                       </div>
                     }
 
-                    <!-- Inline comment input -->
+                    <!-- Top-level comment input -->
                     <div class="inline-comment-composer">
                       <input
                         type="text"
@@ -481,7 +634,7 @@
                         [disabled]="!journeyCommentText.trim()"
                         (click)="submitJourneyComment(post.id)"
                       >
-                        Reply
+                        Comment
                       </button>
                     </div>
                   </div>
@@ -716,16 +869,29 @@
       }
 
       <!-- ====================================================================
-           4. MESSAGEBOOK SECTION
+           4. MESSAGEBOOK SECTION (PERSONAL TO USER & COMPANIONS)
            ==================================================================== -->
       @if (activeSection() === 'messagebook') {
         <article class="wide-section-card">
           <header class="section-top-bar">
             <div>
-              <h1 class="section-title">Community MessageBook</h1>
-              <p class="section-desc">Connect, exchange tips, and discuss dream destinations with verified travelers.</p>
+              <div class="section-title-line">
+                <h1 class="section-title">Community MessageBook</h1>
+                <span class="wall-visibility-pill personal" title="Visible only to you and your direct Companions">
+                  🔒 Personal to Companions
+                </span>
+              </div>
+              <p class="section-desc">Personal travel memoirs and discussions. Only you and your direct Companions can read, react, and comment.</p>
             </div>
           </header>
+
+          <div class="personal-notice-banner">
+            <span class="banner-icon">🛡️</span>
+            <div>
+              <strong>Private Circle Sanctuary</strong>
+              <p>Posts published here are exclusively accessible to your direct Companions. Outside travelers cannot see or participate here.</p>
+            </div>
+          </div>
 
           <div class="mb-composer-box">
             <div class="composer-header">
@@ -736,12 +902,12 @@
               />
               <div>
                 <strong>{{ service.currentUser()?.fullName }}</strong>
-                <span class="composer-role">Active Member</span>
+                <span class="composer-role">Personal Journal</span>
               </div>
             </div>
             <textarea
               [(ngModel)]="newPostText"
-              placeholder="Share your travel experiences, questions, or destination tips..."
+              placeholder="Share an exclusive memoir or ask your companions for travel recommendations..."
               rows="3"
               maxlength="2000"
               class="composer-textarea"
@@ -838,6 +1004,35 @@
                             }
                           </div>
                           <p class="reply-text">{{ reply.text }}</p>
+                          <!-- Reply to reply button -->
+                          <div class="comment-sub-actions">
+                            <button
+                              type="button"
+                              class="btn-sub-action"
+                              (click)="toggleReplyInput(reply.id)"
+                            >
+                              ↩ Reply
+                            </button>
+                          </div>
+
+                          @if (activeReplyPostId() === reply.id) {
+                            <div class="reply-input-row" style="margin-top: 0.5rem;">
+                              <input
+                                type="text"
+                                [(ngModel)]="replyText"
+                                placeholder="Reply to {{ reply.author.fullName }}..."
+                                (keydown.enter)="submitReply(reply.id)"
+                              />
+                              <button
+                                type="button"
+                                class="btn-primary-action btn-sm"
+                                [disabled]="!replyText.trim() || postingReply()"
+                                (click)="submitReply(reply.id)"
+                              >
+                                Reply
+                              </button>
+                            </div>
+                          }
                         </div>
                       </div>
                     }
@@ -846,7 +1041,7 @@
                       <input
                         type="text"
                         [(ngModel)]="replyText"
-                        placeholder="Write a reply..."
+                        placeholder="Write a companion reply..."
                         (keydown.enter)="submitReply(post.id)"
                       />
                       <button
@@ -892,15 +1087,21 @@
                       <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="c-avatar" />
                       <span
                         class="status-dot"
-                        [class.online]="c.isOnline"
-                        [title]="c.isOnline ? 'Online now' : 'Offline'"
+                        [ngClass]="getStatusIconClass(c.activeStatus)"
+                        [title]="c.activeStatus || (c.isOnline ? 'Active' : 'Offline')"
                       ></span>
                     </div>
 
                     <div class="c-info">
-                      <h4>{{ c.fullName }}</h4>
+                      <div class="c-name-row">
+                        <h4>{{ c.fullName }}</h4>
+                        @if (c.isProfileLocked) {
+                          <span class="mini-lock-pill" title="Profile is locked">🔒</span>
+                        }
+                      </div>
                       <span class="c-meta">📍 {{ c.city }}, {{ c.country }}</span>
                       <span class="c-prof">{{ c.profession }}</span>
+                      <span class="c-status-tag">{{ getStatusLabel(c.activeStatus, c.customStatusText) }}</span>
                       @if (c.bio) {
                         <p class="c-bio">{{ c.bio }}</p>
                       }
@@ -932,7 +1133,12 @@
                     </div>
 
                     <div class="c-info">
-                      <h4>{{ c.fullName }}</h4>
+                      <div class="c-name-row">
+                        <h4>{{ c.fullName }}</h4>
+                        @if (c.isProfileLocked) {
+                          <span class="mini-lock-pill" title="Profile is locked (Companions only)">🔒</span>
+                        }
+                      </div>
                       <span class="c-meta">📍 {{ c.city }}, {{ c.country }}</span>
                       <span class="c-prof">{{ c.profession }}</span>
                       <span class="c-mutual">{{ c.mutualCompanionsCount }} mutual companions</span>
@@ -1037,14 +1243,14 @@
           <!-- Online Companions -->
           <div class="messenger-section-block">
             <h3 class="subsection-title">
-              <span class="green-live-dot"></span> Active Companions Online Now ({{ service.onlineCompanions().length }})
+              <span class="status-circle status-icon-active" style="display: inline-block;"></span> Active Companions Online Now ({{ service.onlineCompanions().length }})
             </h3>
             <div class="messenger-directory-grid">
               @for (c of service.onlineCompanions(); track c.id) {
                 <div class="messenger-contact-card" (click)="openChatWith(c)">
                   <div class="contact-avatar-wrap">
                     <img [src]="c.profilePhotoUrl" [alt]="c.fullName" />
-                    <span class="status-indicator online"></span>
+                    <span class="status-indicator" [ngClass]="getStatusIconClass(c.activeStatus)"></span>
                   </div>
                   <div class="contact-info">
                     <strong>{{ c.fullName }}</strong>
@@ -1064,7 +1270,7 @@
                 <div class="messenger-contact-card" (click)="openChatWith(c)">
                   <div class="contact-avatar-wrap">
                     <img [src]="c.profilePhotoUrl" [alt]="c.fullName" />
-                    <span class="status-indicator offline"></span>
+                    <span class="status-indicator" [ngClass]="getStatusIconClass(c.activeStatus)"></span>
                   </div>
                   <div class="contact-info">
                     <strong>{{ c.fullName }}</strong>
@@ -1133,38 +1339,127 @@
       }
 
       <!-- ====================================================================
-           9. SETTINGS SECTION
+           9. SETTINGS SECTION (ENHANCED WITH PROFILE LOCK & RICH FEATURES)
            ==================================================================== -->
       @if (activeSection() === 'settings') {
         <article class="wide-section-card">
           <header class="section-top-bar">
             <div>
               <h1 class="section-title">Settings</h1>
-              <p class="section-desc">Manage privacy, notifications, and application preferences.</p>
+              <p class="section-desc">Manage profile lock, social visibility, matching preferences, alerts, and security.</p>
             </div>
+            <button type="button" class="btn-secondary-action btn-sm" (click)="downloadTravelData()">
+              💾 Export My Data
+            </button>
           </header>
 
           <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">
+            <!-- 1. PROFILE LOCK & PRIVACY -->
             <div class="settings-group">
-              <h3 class="subsection-title">Privacy &amp; Profile Visibility</h3>
+              <div class="group-title-row">
+                <h3 class="subsection-title">🛡️ Profile Lock &amp; Privacy Shield</h3>
+                @if (settingsForm.get('isProfileLocked')?.value) {
+                  <span class="status-pill-locked">🔒 Profile Locked</span>
+                } @else {
+                  <span class="status-pill-unlocked">🔓 Public</span>
+                }
+              </div>
+
+              <!-- Main Lock Profile Toggle -->
+              <label class="toggle-row highlight-toggle">
+                <input type="checkbox" formControlName="isProfileLocked" />
+                <span class="slider-toggle"></span>
+                <span class="toggle-desc">
+                  <strong>Lock My Profile (Companions Only Protection)</strong>
+                  <small>When locked, users who are NOT directly connected as your Companions cannot see your Journey wall, Companions, Circles, or About me details.</small>
+                </span>
+              </label>
+
               <label class="toggle-row">
                 <input type="checkbox" formControlName="publicProfileEnabled" />
                 <span class="slider-toggle"></span>
                 <span class="toggle-desc">
-                  <strong>Public Profile</strong>
-                  <small>Allow fellow community members to view your bio, journey, and vacation gallery.</small>
+                  <strong>Public Profile Indexing</strong>
+                  <small>Allow community search engines and discovery algorithms to index your public profile.</small>
                 </span>
               </label>
+
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="searchVisibility" />
+                <span class="slider-toggle"></span>
+                <span class="toggle-desc">
+                  <strong>Show in Top Search Results</strong>
+                  <small>Allow other explorers to find you when typing in the top-left Search bar.</small>
+                </span>
+              </label>
+
+              <!-- Who can message you -->
+              <div class="settings-row-select">
+                <label for="whoCanMessageSelect">Who Can Message You</label>
+                <select id="whoCanMessageSelect" formControlName="whoCanMessage">
+                  <option value="everyone">🌐 Everyone on NeverBeen</option>
+                  <option value="companions">👥 Companions Only</option>
+                  <option value="none">🔒 Nobody (Disable incoming Messenger)</option>
+                </select>
+              </div>
+
+              <!-- Journey visibility default -->
+              <div class="settings-row-select">
+                <label for="journeyVisibilitySelect">Default Audience for Journey Posts</label>
+                <select id="journeyVisibilitySelect" formControlName="journeyVisibility">
+                  <option value="public">🌐 Public (All travelers can see and comment)</option>
+                  <option value="companions">👥 Direct Companions Only</option>
+                </select>
+              </div>
             </div>
 
+            <!-- 2. TRAVEL STYLES & MATCH PREFERENCES -->
             <div class="settings-group">
-              <h3 class="subsection-title">Notifications</h3>
+              <h3 class="subsection-title">🎒 Travel Styles &amp; Passions</h3>
+              <p class="setting-caption">Select categories that describe your vacation style to improve companion recommendations:</p>
+              <div class="styles-chips-grid">
+                @for (style of availableTravelStyles; track style) {
+                  <button
+                    type="button"
+                    class="btn-style-chip"
+                    [class.selected]="selectedTravelStyles().includes(style)"
+                    (click)="toggleTravelStyle(style)"
+                  >
+                    {{ selectedTravelStyles().includes(style) ? '✓ ' : '+ ' }}{{ style }}
+                  </button>
+                }
+              </div>
+
+              <div class="settings-row-select" style="margin-top: 1.25rem;">
+                <label for="seasonSelect">Preferred Travel Season</label>
+                <select id="seasonSelect" formControlName="preferredSeason">
+                  <option value="All Seasons">🌍 All Seasons Enthusiast</option>
+                  <option value="Spring Blossoms">🌸 Spring (Blossoms &amp; Mild Hikes)</option>
+                  <option value="Summer Coastal">☀️ Summer (Coastal &amp; Island Escapes)</option>
+                  <option value="Autumn & Spring">🍁 Autumn &amp; Spring (Golden Light &amp; Foliage)</option>
+                  <option value="Winter Snow & Slopes">❄️ Winter (Alpine Snow &amp; Northern Lights)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 3. NOTIFICATIONS & ALERTS -->
+            <div class="settings-group">
+              <h3 class="subsection-title">🔔 Notifications &amp; Alert Chimes</h3>
               <label class="toggle-row">
                 <input type="checkbox" formControlName="emailNotificationsEnabled" />
                 <span class="slider-toggle"></span>
                 <span class="toggle-desc">
                   <strong>Email Notifications</strong>
-                  <small>Get notified when companions reply or comment on your Journey updates.</small>
+                  <small>Receive digest emails when companions approve requests or comment on your Journey updates.</small>
+                </span>
+              </label>
+
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="soundNotificationsEnabled" />
+                <span class="slider-toggle"></span>
+                <span class="toggle-desc">
+                  <strong>In-App Sound Chimes</strong>
+                  <small>Play a soft melodic chime on incoming Messenger chats and companionship approvals.</small>
                 </span>
               </label>
 
@@ -1172,15 +1467,38 @@
                 <input type="checkbox" formControlName="phoneNotificationsEnabled" />
                 <span class="slider-toggle"></span>
                 <span class="toggle-desc">
-                  <strong>SMS / Phone Alerts</strong>
-                  <small>Get SMS alerts for companionship requests and print proofs.</small>
+                  <strong>SMS Critical Alerts</strong>
+                  <small>Receive SMS alerts for emergency travel notices and print album shipping proofs.</small>
                 </span>
               </label>
             </div>
 
+            <!-- 4. SECURITY & DEVICE SESSIONS -->
             <div class="settings-group">
-              <h3 class="subsection-title">Appearance &amp; Timezone</h3>
-              <div class="field-box" style="margin-bottom: 1rem;">
+              <h3 class="subsection-title">🔐 Account Security &amp; Active Sessions</h3>
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="twoFactorEnabled" />
+                <span class="slider-toggle"></span>
+                <span class="toggle-desc">
+                  <strong>Two-Factor Authentication (2FA)</strong>
+                  <small>Require an authentication code via email or authenticator app when signing in.</small>
+                </span>
+              </label>
+
+              <div class="active-session-card">
+                <div class="session-icon">🖥️</div>
+                <div class="session-info">
+                  <strong>Current Desktop Session (This Browser)</strong>
+                  <span>Cookie Auth Token • Active Now • SameSite=Lax Verified</span>
+                </div>
+                <span class="session-badge-current">Current Session</span>
+              </div>
+            </div>
+
+            <!-- 5. APPEARANCE & TIMEZONE -->
+            <div class="settings-group">
+              <h3 class="subsection-title">🎨 Appearance &amp; Locale</h3>
+              <div class="settings-row-select">
                 <label for="themeSelect">Color Theme</label>
                 <select id="themeSelect" formControlName="theme">
                   <option value="light">Light Editorial (Paper &amp; Forest)</option>
@@ -1189,7 +1507,7 @@
                 </select>
               </div>
 
-              <div class="field-box">
+              <div class="field-box" style="margin-top: 1rem;">
                 <label for="timezoneInput">Timezone</label>
                 <input id="timezoneInput" type="text" formControlName="timezone" placeholder="e.g. UTC, Europe/Paris" />
               </div>
@@ -1200,7 +1518,7 @@
                 @if (savingSettings()) { Saving... } @else { Save Preferences }
               </button>
               @if (settingsSaved()) {
-                <span class="toast-success">✓ Settings saved successfully!</span>
+                <span class="toast-success">✓ Settings and Profile Lock preferences updated successfully!</span>
               }
             </div>
           </form>
@@ -1218,7 +1536,7 @@
         <!-- Chat Box Header -->
         <header class="chat-box-header" (click)="toggleMinimize(box.companionId)">
           <div class="chat-header-user">
-            <span class="chat-online-dot"></span>
+            <span class="status-circle" [ngClass]="getStatusIconClass(box.companion.activeStatus || (box.companion.isOnline ? 'Active' : 'Inactive'))"></span>
             <span class="chat-user-name">{{ box.companion.fullName }}</span>
           </div>
           <div class="chat-box-controls" (click)="$event.stopPropagation()">
@@ -1275,7 +1593,77 @@
   </aside>
 
   <!-- ========================================================================
-       MODAL: CREATE CIRCLE (MAX 5)
+       MODAL 1: ENLARGED PROFILE PHOTO LIGHTBOX
+       ======================================================================== -->
+  @if (showEnlargedPhoto()) {
+    <div class="modal-backdrop" (click)="closeEnlargedPhoto()">
+      <div class="photo-lightbox-card" (click)="$event.stopPropagation()">
+        <button type="button" class="btn-close-lightbox" (click)="closeEnlargedPhoto()">✕</button>
+        <img
+          [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
+          [alt]="service.profile()?.fullName || 'Profile Photo'"
+          class="enlarged-hero-img"
+        />
+        <div class="lightbox-caption">
+          <h3>{{ service.profile()?.fullName }}</h3>
+          <p>📍 {{ service.profile()?.cityName || 'Paris' }}, {{ service.profile()?.countryName || 'France' }}</p>
+          <div class="lightbox-status-row">
+            <span class="status-circle" [ngClass]="getStatusIconClass(service.currentUser()?.activeStatus)"></span>
+            <span>Status: {{ getStatusLabel(service.currentUser()?.activeStatus, service.currentUser()?.customStatusText) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================
+       MODAL 2: CUSTOM STATUS (MAX 15 LETTERS & SPACES ONLY)
+       ======================================================================== -->
+  @if (showCustomStatusModal()) {
+    <div class="modal-backdrop" (click)="closeCustomStatusModal()">
+      <div class="modal-dialog modal-sm" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h3>Set Custom Status</h3>
+          <button type="button" class="btn-close-modal" (click)="closeCustomStatusModal()">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="custom-status-desc">
+            Enter your custom status (maximum 15 letters, alphabets and spaces only):
+          </p>
+
+          @if (statusError()) {
+            <div class="modal-alert error">{{ statusError() }}</div>
+          }
+
+          <div class="field-box">
+            <label for="customStatusInput">Status Text (Max 15 letters)</label>
+            <input
+              id="customStatusInput"
+              type="text"
+              [(ngModel)]="customStatusInput"
+              maxlength="15"
+              placeholder="e.g. In the Alps, Exploring, On Train"
+              (keydown.enter)="applyCustomStatus()"
+            />
+            <span class="char-count">{{ customStatusInput.length }} / 15 characters</span>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="btn-primary-action" (click)="applyCustomStatus()">
+            Set Status
+          </button>
+          <button type="button" class="btn-secondary-action" (click)="closeCustomStatusModal()">
+            Cancel
+          </button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================
+       MODAL 3: CREATE CIRCLE (MAX 5)
        ======================================================================== -->
   @if (showCreateCircleModal()) {
     <div class="modal-backdrop" (click)="closeCreateCircleModal()">
@@ -1350,7 +1738,7 @@
   }
 
   <!-- ========================================================================
-       MODAL: TRAVELER PROFILE POPUP
+       MODAL 4: TRAVELER PROFILE POPUP (WITH PROFILE LOCK ENFORCEMENT)
        ======================================================================== -->
   @if (viewingTraveler()) {
     <div class="modal-backdrop" (click)="closeTravelerModal()">
@@ -1362,15 +1750,41 @@
 
         <div class="traveler-modal-body">
           <img [src]="viewingTraveler()!.profilePhotoUrl" [alt]="viewingTraveler()!.fullName" class="traveler-modal-img" />
-          <h2>{{ viewingTraveler()!.fullName }}</h2>
-          <p class="traveler-modal-meta">📍 {{ viewingTraveler()!.city }}, {{ viewingTraveler()!.country }} • {{ viewingTraveler()!.profession }}</p>
-          @if (viewingTraveler()!.bio) {
-            <p class="traveler-modal-bio">{{ viewingTraveler()!.bio }}</p>
-          }
-          <div class="traveler-modal-stats">
-            <span>{{ viewingTraveler()!.mutualCompanionsCount }} mutual companions</span>
-            <span [class.online-text]="viewingTraveler()!.isOnline">{{ viewingTraveler()!.isOnline ? 'Online now' : 'Offline' }}</span>
+          <div class="traveler-name-lock-row">
+            <h2>{{ viewingTraveler()!.fullName }}</h2>
+            @if (viewingTraveler()!.isProfileLocked) {
+              <span class="locked-badge-pill" title="Locked Profile">🔒 Locked</span>
+            }
           </div>
+          <p class="traveler-modal-meta">📍 {{ viewingTraveler()!.city }}, {{ viewingTraveler()!.country }} • {{ viewingTraveler()!.profession }}</p>
+
+          <!-- Status indicator -->
+          <div class="traveler-status-row">
+            <span class="status-circle" [ngClass]="getStatusIconClass(viewingTraveler()!.activeStatus || (viewingTraveler()!.isOnline ? 'Active' : 'Inactive'))"></span>
+            <span>{{ getStatusLabel(viewingTraveler()!.activeStatus, viewingTraveler()!.customStatusText) }}</span>
+          </div>
+
+          <!-- PROFILE LOCK SHIELD NOTICE (If locked and NOT connected) -->
+          @if (viewingTraveler()!.isProfileLocked && viewingTraveler()!.status !== 'connected') {
+            <div class="locked-profile-shield-box">
+              <span class="shield-big-icon">🔒</span>
+              <h4>This Profile is Locked</h4>
+              <p>
+                {{ viewingTraveler()!.fullName }} has locked their profile.
+                Journey feeds, Companions, Circles, and About me are protected and visible only to direct Companions.
+              </p>
+              <span class="shield-subtext">Send a Request for Companionship to view their full traveler profile.</span>
+            </div>
+          } @else {
+            <!-- Unlocked or Connected: Show Bio & Details -->
+            @if (viewingTraveler()!.bio) {
+              <p class="traveler-modal-bio">{{ viewingTraveler()!.bio }}</p>
+            }
+            <div class="traveler-modal-stats">
+              <span>{{ viewingTraveler()!.mutualCompanionsCount }} mutual companions</span>
+              <span>Status: {{ viewingTraveler()!.status === 'connected' ? 'Connected Companion ✓' : 'Available' }}</span>
+            </div>
+          }
         </div>
 
         <footer class="modal-footer">

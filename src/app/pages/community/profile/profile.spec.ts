@@ -33,13 +33,15 @@ describe('CommunityProfile', () => {
     return fixture;
   }
 
-  it('renders left side panel with colorful icons in the specified order', () => {
+  it('renders left side panel with colorful icons in the specified order and double-size photo', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
 
     const leftPanel = element.querySelector('.left-side-panel');
     expect(leftPanel).toBeTruthy();
 
+    // Verify double-size photo container and image
+    expect(leftPanel!.querySelector('.user-photo-wrap-large')).toBeTruthy();
     expect(leftPanel!.querySelector('.user-avatar-img')).toBeTruthy();
     expect(leftPanel!.querySelector('.profile-full-name')?.textContent?.trim()).toContain('Sophia Laurent');
     expect(leftPanel!.querySelector('.profile-location')?.textContent?.trim()).toContain('Paris');
@@ -74,6 +76,102 @@ describe('CommunityProfile', () => {
     expect(leftPanel!.querySelector('.pill-red')).toBeTruthy();
   });
 
+  it('enlarges profile photo in a lightbox modal on clicking the photo', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    expect(element.querySelector('.photo-lightbox-card')).toBeNull();
+
+    // Open lightbox
+    component.openEnlargedPhoto();
+    fixture.detectChanges();
+
+    expect(element.querySelector('.photo-lightbox-card')).toBeTruthy();
+    expect(element.querySelector('.enlarged-hero-img')).toBeTruthy();
+
+    // Close lightbox
+    component.closeEnlargedPhoto();
+    fixture.detectChanges();
+    expect(element.querySelector('.photo-lightbox-card')).toBeNull();
+  });
+
+  it('manages user active status with dropdown and enforces custom status restrictions (max 15 letters/space)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    // Default status is Active
+    expect(service.currentUser()?.activeStatus).toBe('Active');
+
+    // Switch to Busy
+    service.updateActiveStatus('Busy');
+    fixture.detectChanges();
+    expect(service.currentUser()?.activeStatus).toBe('Busy');
+
+    // Switch to Away
+    service.updateActiveStatus('Away');
+    fixture.detectChanges();
+    expect(service.currentUser()?.activeStatus).toBe('Away');
+
+    // Switch to Don't Disturb
+    service.updateActiveStatus("Don't Disturb");
+    fixture.detectChanges();
+    expect(service.currentUser()?.activeStatus).toBe("Don't Disturb");
+
+    // Custom status validation: invalid with digits/special characters
+    (component as any).customStatusInput = 'Alpine123!';
+    component.applyCustomStatus();
+    expect(component['statusError']()).toBeTruthy();
+
+    // Custom status validation: invalid when over 15 characters
+    (component as any).customStatusInput = 'This is way too long for a status';
+    component.applyCustomStatus();
+    expect(component['statusError']()).toBeTruthy();
+
+    // Custom status valid (alphabet and spaces only, <= 15 chars)
+    (component as any).customStatusInput = 'In Alps';
+    component.applyCustomStatus();
+    expect(component['statusError']()).toBeNull();
+    expect(service.currentUser()?.activeStatus).toBe('Custom');
+    expect(service.currentUser()?.customStatusText).toBe('In Alps');
+  });
+
+  it('allows locking and unlocking profile and enforces locked shield on non-connected travelers', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    // By default profile is unlocked
+    expect(service.profile()?.isProfileLocked).toBe(false);
+
+    // Lock profile
+    component.toggleProfileLock();
+    expect(service.profile()?.isProfileLocked).toBe(true);
+
+    // Unlock profile
+    component.toggleProfileLock();
+    expect(service.profile()?.isProfileLocked).toBe(false);
+
+    // Test viewing a locked traveler profile who is not connected (Maya Patel id: 71)
+    const maya = service.companions().find((c) => c.id === 71)!;
+    expect(maya.isProfileLocked).toBe(true);
+    expect(maya.status).not.toBe('connected');
+
+    component.openTravelerModal(maya);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const shieldBox = element.querySelector('.locked-profile-shield-box');
+    expect(shieldBox).toBeTruthy();
+    expect(shieldBox?.textContent).toContain('This Profile is Locked');
+    expect(shieldBox?.textContent).toContain('Journey feeds, Companions, Circles, and About me are protected');
+
+    // Connected companion profile is accessible without shield
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openTravelerModal(elena);
+    fixture.detectChanges();
+    expect(element.querySelector('.locked-profile-shield-box')).toBeNull();
+  });
+
   it('opens Journey section by default in the right side wide panel showing traveler feeds and wall post composer', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
@@ -85,7 +183,7 @@ describe('CommunityProfile', () => {
     expect(widePanel!.querySelectorAll('.journey-post-card').length).toBeGreaterThan(0);
   });
 
-  it('allows posting text to Journey and toggling likes and comments', () => {
+  it('allows posting text to Journey and supports commenting on comments of comments (nested replies)', () => {
     const fixture = create();
     const component = fixture.componentInstance;
     const initialPostsCount = service.journeyPosts().length;
@@ -97,20 +195,42 @@ describe('CommunityProfile', () => {
     fixture.detectChanges();
 
     expect(service.journeyPosts().length).toBe(initialPostsCount + 1);
-    expect(service.journeyPosts()[0].text).toContain('Montmartre');
+    const post = service.journeyPosts()[0];
+    expect(post.text).toContain('Montmartre');
 
     // Like the post
-    const postId = service.journeyPosts()[0].id;
-    const initialLikes = service.journeyPosts()[0].likeCount;
-    component['toggleLikePost'](postId);
+    const initialLikes = post.likeCount;
+    component['toggleLikePost'](post.id);
     fixture.detectChanges();
     expect(service.journeyPosts()[0].likeCount).toBe(initialLikes + 1);
 
-    // Comment on the post
+    // Add top-level comment
     (component as any).journeyCommentText = 'Magnificent view!';
-    component['submitJourneyComment'](postId);
+    component['submitJourneyComment'](post.id);
     fixture.detectChanges();
-    expect(service.journeyPosts()[0].comments.some((c) => c.text === 'Magnificent view!')).toBe(true);
+    const updatedPost = service.journeyPosts()[0];
+    const topComment = updatedPost.comments.find((c) => c.text === 'Magnificent view!')!;
+    expect(topComment).toBeTruthy();
+
+    // Comment on comments (nested reply)
+    (component as any).journeyReplyText = 'Agreed! The morning lighting is surreal.';
+    component.submitJourneyCommentReply(post.id, topComment.id);
+    fixture.detectChanges();
+
+    const nestedPost = service.journeyPosts()[0];
+    const parentComment = nestedPost.comments.find((c) => c.id === topComment.id)!;
+    expect(parentComment.replies?.some((r) => r.text.includes('morning lighting'))).toBe(true);
+
+    // Comment on comment of comment (third-level reply)
+    const replyComment = parentComment.replies![0];
+    (component as any).journeyReplyText = 'Which film preset did you use for that?';
+    component.submitJourneyCommentReply(post.id, replyComment.id);
+    fixture.detectChanges();
+
+    const deeplyNestedPost = service.journeyPosts()[0];
+    const deepParent = deeplyNestedPost.comments.find((c) => c.id === topComment.id)!;
+    const subReply = deepParent.replies![0];
+    expect(subReply.replies?.some((r) => r.text.includes('film preset'))).toBe(true);
   });
 
   it('renders Circles side panel below main side panel and limits circles to maximum 5', () => {
@@ -126,7 +246,6 @@ describe('CommunityProfile', () => {
     expect(service.circles().length).toBeLessThanOrEqual(5);
 
     // Try adding more than 5 circles
-    const comp = fixture.componentInstance;
     while (service.circles().length < 5) {
       service.createCircle(`Circle ${service.circles().length + 1}`, 'Description', [2, 3]);
     }
@@ -261,13 +380,30 @@ describe('CommunityProfile', () => {
     expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('Settings');
   });
 
-  it('terminates user session and navigates to Sign in page on clicking Log Out', () => {
+  it('supports expanded settings including travel styles and data export', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    component.setSection('settings');
+    fixture.detectChanges();
+
+    // Toggle travel style
+    component.toggleTravelStyle('Alpine Hiking');
+    expect(component['selectedTravelStyles']()).toContain('Alpine Hiking');
+
+    // Save preferences
+    await component.saveSettings();
+    expect(component['settingsSaved']()).toBe(true);
+  });
+
+  it('terminates user session, sets status to Inactive, and navigates to Sign in page on clicking Log Out', () => {
     const fixture = create();
     const component = fixture.componentInstance;
 
     component.logout();
 
     expect(service.isAuthenticated()).toBe(false);
+    expect(service.currentUser()).toBeNull();
     expect(getCookie(TOKEN_KEY)).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/community']);
   });

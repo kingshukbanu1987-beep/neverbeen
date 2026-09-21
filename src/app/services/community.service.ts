@@ -18,6 +18,7 @@ import {
   Profile,
   ReactionResult,
   UpdateProfileRequest,
+  UserActiveStatus,
   UserSettings,
 } from '../models/community';
 import {
@@ -162,6 +163,9 @@ export class CommunityService {
         profileComplete: true,
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        activeStatus: 'Active',
+        customStatusText: '',
+        isProfileLocked: false,
       };
 
       const existingProfile: Profile = {
@@ -190,12 +194,23 @@ export class CommunityService {
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
         createdAtUtc: '2026-08-10T14:22:00Z',
+        activeStatus: 'Active',
+        customStatusText: '',
+        isProfileLocked: false,
         settings: {
           emailNotificationsEnabled: true,
           phoneNotificationsEnabled: false,
           publicProfileEnabled: true,
           theme: 'light',
           timezone: 'Europe/Paris',
+          isProfileLocked: false,
+          whoCanMessage: 'everyone',
+          searchVisibility: true,
+          journeyVisibility: 'public',
+          soundNotificationsEnabled: true,
+          twoFactorEnabled: false,
+          travelStyles: ['Photography', 'Solo Exploration', 'Culinary'],
+          preferredSeason: 'Autumn & Spring',
         },
         gallery: [
           {
@@ -293,6 +308,10 @@ export class CommunityService {
   }
 
   logout(): void {
+    const u = this.currentUser();
+    if (u) {
+      this.currentUser.set({ ...u, activeStatus: 'Inactive' });
+    }
     deleteCookie(TOKEN_KEY);
     this.token.set(null);
     this.currentUser.set(null);
@@ -308,6 +327,44 @@ export class CommunityService {
       localStorage.removeItem(CIRCLES_KEY);
       localStorage.removeItem(NOTIFS_KEY);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Active Status & Profile Lock
+  // ---------------------------------------------------------------------------
+
+  updateActiveStatus(status: UserActiveStatus, customText?: string): void {
+    let sanitized = '';
+    if (customText) {
+      sanitized = customText.replace(/[^A-Za-z ]/g, '').substring(0, 15).trim();
+    }
+    this.currentUser.update((u) => (u ? { ...u, activeStatus: status, customStatusText: sanitized } : null));
+    this.profile.update((p) => (p ? { ...p, activeStatus: status, customStatusText: sanitized } : null));
+    this.saveJson(USER_KEY, this.currentUser());
+    this.saveJson(PROFILE_KEY, this.profile());
+  }
+
+  toggleProfileLock(): boolean {
+    const next = !this.profile()?.isProfileLocked;
+    this.setProfileLock(next);
+    return next;
+  }
+
+  setProfileLock(locked: boolean): void {
+    this.profile.update((p) => {
+      if (!p) return null;
+      return {
+        ...p,
+        isProfileLocked: locked,
+        settings: {
+          ...p.settings,
+          isProfileLocked: locked,
+        },
+      };
+    });
+    this.currentUser.update((u) => (u ? { ...u, isProfileLocked: locked } : null));
+    this.saveJson(PROFILE_KEY, this.profile());
+    this.saveJson(USER_KEY, this.currentUser());
   }
 
   // ---------------------------------------------------------------------------
@@ -541,16 +598,7 @@ export class CommunityService {
 
     if (parentId) {
       this.comments.update((list) =>
-        list.map((post) => {
-          if (post.id === parentId) {
-            return {
-              ...post,
-              replyCount: post.replyCount + 1,
-              replies: [...post.replies, newComment],
-            };
-          }
-          return post;
-        }),
+        this.addNestedMessageBookReply(list, parentId, newComment),
       );
     } else {
       this.comments.update((list) => [newComment, ...list]);
@@ -558,6 +606,29 @@ export class CommunityService {
 
     this.saveJson(COMMENTS_KEY, this.comments());
     return newComment;
+  }
+
+  private addNestedMessageBookReply(
+    list: CommunityComment[],
+    parentId: number,
+    newReply: CommunityComment,
+  ): CommunityComment[] {
+    return list.map((c) => {
+      if (c.id === parentId) {
+        return {
+          ...c,
+          replyCount: (c.replyCount || 0) + 1,
+          replies: [...c.replies, newReply],
+        };
+      }
+      if (c.replies && c.replies.length > 0) {
+        return {
+          ...c,
+          replies: this.addNestedMessageBookReply(c.replies, parentId, newReply),
+        };
+      }
+      return c;
+    });
   }
 
   async toggleReaction(commentId: number, reactionType: 'like' | 'dislike'): Promise<void> {
@@ -661,7 +732,7 @@ export class CommunityService {
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
   }
 
-  addJourneyComment(postId: number, text: string): void {
+  addJourneyComment(postId: number, text: string, parentCommentId?: number): void {
     const user = this.currentUser();
     const newComment: JourneyComment = {
       id: generateUniqueId(),
@@ -673,11 +744,21 @@ export class CommunityService {
       },
       text: text.trim(),
       createdAtUtc: new Date().toISOString(),
+      parentId: parentCommentId ?? null,
+      likeCount: 0,
+      isLiked: false,
+      replies: [],
     };
 
     this.journeyPosts.update((list) =>
       list.map((post) => {
         if (post.id === postId) {
+          if (parentCommentId) {
+            return {
+              ...post,
+              comments: this.addNestedJourneyReply(post.comments, parentCommentId, newComment),
+            };
+          }
           return {
             ...post,
             comments: [...post.comments, newComment],
@@ -687,6 +768,63 @@ export class CommunityService {
       }),
     );
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+  }
+
+  private addNestedJourneyReply(
+    comments: JourneyComment[],
+    parentId: number,
+    newReply: JourneyComment,
+  ): JourneyComment[] {
+    return comments.map((c) => {
+      if (c.id === parentId) {
+        return {
+          ...c,
+          replies: [...(c.replies || []), newReply],
+        };
+      }
+      if (c.replies && c.replies.length > 0) {
+        return {
+          ...c,
+          replies: this.addNestedJourneyReply(c.replies, parentId, newReply),
+        };
+      }
+      return c;
+    });
+  }
+
+  toggleJourneyCommentLike(postId: number, commentId: number): void {
+    this.journeyPosts.update((list) =>
+      list.map((post) => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: this.toggleNestedCommentLike(post.comments, commentId),
+          };
+        }
+        return post;
+      }),
+    );
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+  }
+
+  private toggleNestedCommentLike(
+    comments: JourneyComment[],
+    targetId: number,
+  ): JourneyComment[] {
+    return comments.map((c) => {
+      if (c.id === targetId) {
+        const isLiked = !c.isLiked;
+        const likeCount = isLiked ? (c.likeCount || 0) + 1 : Math.max(0, (c.likeCount || 0) - 1);
+        return { ...c, isLiked, likeCount };
+      }
+      if (c.replies && c.replies.length > 0) {
+        return {
+          ...c,
+          replies: this.toggleNestedCommentLike(c.replies, targetId),
+        };
+      }
+      return c;
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -911,12 +1049,23 @@ export class CommunityService {
       profilePhotoUrl:
         'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
       createdAtUtc: '2026-08-10T14:22:00Z',
+      activeStatus: 'Active',
+      customStatusText: '',
+      isProfileLocked: false,
       settings: {
         emailNotificationsEnabled: true,
         phoneNotificationsEnabled: false,
         publicProfileEnabled: true,
         theme: 'light',
         timezone: 'Europe/Paris',
+        isProfileLocked: false,
+        whoCanMessage: 'everyone',
+        searchVisibility: true,
+        journeyVisibility: 'public',
+        soundNotificationsEnabled: true,
+        twoFactorEnabled: false,
+        travelStyles: ['Photography', 'Solo Exploration', 'Culinary'],
+        preferredSeason: 'Autumn & Spring',
       },
       gallery: [
         {
@@ -950,6 +1099,9 @@ export class CommunityService {
       status: defaultProfile.status,
       profileComplete: true,
       profilePhotoUrl: defaultProfile.profilePhotoUrl,
+      activeStatus: 'Active',
+      customStatusText: '',
+      isProfileLocked: false,
     };
 
     this.token.set('jwt_default_active_token');
@@ -1119,8 +1271,10 @@ export class CommunityService {
         city: 'Paris',
         profession: 'Travel Blogger',
         isOnline: true,
+        activeStatus: 'Active',
         mutualCompanionsCount: 8,
         status: 'connected',
+        isProfileLocked: false,
         bio: 'Documenting scenic train routes and mountain lakes across Europe.',
       },
       {
@@ -1132,8 +1286,10 @@ export class CommunityService {
         city: 'Rome',
         profession: 'Architect',
         isOnline: true,
+        activeStatus: 'Busy',
         mutualCompanionsCount: 12,
         status: 'connected',
+        isProfileLocked: false,
         bio: 'Architectural photographer with a focus on historical Italian coastlines.',
       },
       {
@@ -1145,8 +1301,10 @@ export class CommunityService {
         city: 'Nice',
         profession: 'Landscape Photographer',
         isOnline: true,
+        activeStatus: 'Away',
         mutualCompanionsCount: 5,
         status: 'connected',
+        isProfileLocked: false,
         bio: 'Chasing turquoise waves and golden light along the French Riviera.',
       },
       {
@@ -1158,8 +1316,10 @@ export class CommunityService {
         city: 'Tokyo',
         profession: 'Student & Street Shooter',
         isOnline: false,
+        activeStatus: 'Inactive',
         mutualCompanionsCount: 3,
         status: 'connected',
+        isProfileLocked: false,
         bio: 'Exploring traditional shrines and night neon in Kanto & Kansai.',
       },
       {
@@ -1171,8 +1331,10 @@ export class CommunityService {
         city: 'Dublin',
         profession: 'Adventure Guide',
         isOnline: false,
+        activeStatus: "Don't Disturb",
         mutualCompanionsCount: 4,
         status: 'connected',
+        isProfileLocked: false,
         bio: 'Hiking the Wild Atlantic Way and Scottish Highlands.',
       },
       // Non-connected travelers (searchable & can send requests)
@@ -1185,8 +1347,10 @@ export class CommunityService {
         city: 'Mumbai',
         profession: 'UI/UX Designer',
         isOnline: true,
+        activeStatus: 'Active',
         mutualCompanionsCount: 2,
         status: 'pending_incoming', // Requested companionship!
+        isProfileLocked: true, // Profile is locked!
         bio: 'Minimalist traveler exploring heritage forts and colorful desert fairs.',
       },
       {
@@ -1198,8 +1362,10 @@ export class CommunityService {
         city: 'Berlin',
         profession: 'Documentary Filmmaker',
         isOnline: false,
+        activeStatus: 'Inactive',
         mutualCompanionsCount: 1,
         status: 'none',
+        isProfileLocked: false,
         bio: 'Urban exploration and historical travel across Central Europe.',
       },
       {
@@ -1211,8 +1377,10 @@ export class CommunityService {
         city: 'Lisbon',
         profession: 'Food & Wine Writer',
         isOnline: true,
+        activeStatus: 'Active',
         mutualCompanionsCount: 6,
         status: 'none',
+        isProfileLocked: false,
         bio: 'Sharing secret viewpoints and culinary treasures across the Iberian peninsula.',
       },
       {
@@ -1224,8 +1392,10 @@ export class CommunityService {
         city: 'Zurich',
         profession: 'Alpinist',
         isOnline: false,
+        activeStatus: 'Busy',
         mutualCompanionsCount: 7,
         status: 'none',
+        isProfileLocked: true, // Profile is locked!
         bio: 'High altitude mountaineer exploring glaciers and remote Swiss ridges.',
       },
     ];
