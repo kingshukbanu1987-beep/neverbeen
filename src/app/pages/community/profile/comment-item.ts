@@ -205,12 +205,15 @@ export class CommentThreadComponent {
   }
 
   onDeleteComment(): void {
-    if (confirm('Are you sure you want to delete this comment?')) {
-      this.deleteComment.emit({
-        postId: this.postId,
-        commentId: this.comment.id,
-      });
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      if (!window.confirm('Are you sure you want to delete this comment?')) {
+        return;
+      }
     }
+    this.deleteComment.emit({
+      postId: this.postId,
+      commentId: this.comment.id,
+    });
   }
 
   forwardDeleteComment(event: { postId: number; commentId: number }): void {

@@ -4357,6 +4357,46 @@
 /* REQUIREMENTS A, B, C: FULL NORMAL PAGE VISITOR PROFILE                    */
 /* ========================================================================= */
 
+.side-user-uid-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.side-uid-pill {
+  font-size: 0.72rem;
+  font-family: monospace;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-side-copy-url {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-side-copy-url:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.profile-layout-container.is-viewing-visitor .dashboard-columns {
+  display: none !important;
+}
+
 .visitor-full-page-container {
   width: 100%;
   max-width: 1080px;

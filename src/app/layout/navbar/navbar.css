@@ -201,6 +201,11 @@ a:has(use[href='#nb-icon-live']) .icon {
     height: 110px;
   }
 
+  .logo.compact-logo {
+    width: 110px !important;
+    height: 55px !important;
+  }
+
   nav {
     top: 110px;
   }

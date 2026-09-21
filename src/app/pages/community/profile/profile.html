@@ -1,4 +1,4 @@
-<div class="profile-layout-container">
+<div class="profile-layout-container" [class.is-viewing-visitor]="!!viewingVisitor()">
   <!-- MOBILE TOP BAR (Portrait mode hamburger navigation) -->
   <header class="mobile-top-header" aria-label="Mobile Navigation">
     <button
@@ -235,6 +235,19 @@
                 🌐 Public Profile
               </span>
             }
+          </div>
+
+          <!-- 20-Digit Profile ID & Copy URL (Requirement C) -->
+          <div class="side-user-uid-row" title="Your 20-digit unique Profile URL">
+            <span class="side-uid-pill">ID: {{ service.profile()?.uniqueId || generateUid(service.currentUser()?.id || 1) }}</span>
+            <button
+              type="button"
+              class="btn-side-copy-url"
+              (click)="copyOwnProfileUrl()"
+              [title]="copiedProfileUrl() ? 'Copied to clipboard' : 'Copy your profile link'"
+            >
+              📋 {{ copiedProfileUrl() ? 'Copied!' : 'Copy Link' }}
+            </button>
           </div>
         </div>
 
@@ -733,7 +746,7 @@
                           <span class="shared-orig-time">
                             {{ formatTime(post.originalPost.createdAtUtc) }}
                             @if (post.originalPost.location) {
-                              • 📍 {{ post.originalPost.location }}
+                              • <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ post.originalPost.location }}
                             }
                           </span>
                         </div>
@@ -1831,9 +1844,21 @@
                             (click)="openVisitorProfile(reply.author)"
                           />
                           <div class="nested-content">
-                            <strong class="nested-name clickable-user" (click)="openVisitorProfile(reply.author)">
-                              {{ reply.author.fullName }}
-                            </strong>
+                            <div class="nested-reply-top">
+                              <strong class="nested-name clickable-user" (click)="openVisitorProfile(reply.author)">
+                                {{ reply.author.fullName }}
+                              </strong>
+                              @if (canDeleteComment(reply.author.id)) {
+                                <button
+                                  type="button"
+                                  class="btn-delete-reply-mini"
+                                  (click)="deleteComment(reply.id)"
+                                  title="Delete reply"
+                                >
+                                  ✕
+                                </button>
+                              }
+                            </div>
                             <p class="nested-text">{{ reply.text }}</p>
                           </div>
                         </div>
@@ -2489,7 +2514,7 @@
             </div>
             <p class="target-text">{{ postToShare()!.text }}</p>
             @if (postToShare()!.location) {
-              <span class="target-loc">📍 {{ postToShare()!.location }}</span>
+              <span class="target-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ postToShare()!.location }}</span>
             }
           </div>
         </div>

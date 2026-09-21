@@ -1866,9 +1866,12 @@ export class CommunityProfile implements OnInit {
   }
 
   deleteJourneyPost(postId: number): void {
-    if (confirm('Are you sure you want to delete this journey post?')) {
-      this.service.deleteJourneyPost(postId);
+    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+      if (!window.confirm('Are you sure you want to delete this journey post?')) {
+        return;
+      }
     }
+    this.service.deleteJourneyPost(postId);
   }
 
   handleCommentThreadDelete(event: { postId: number; commentId: number }): void {
@@ -1986,6 +1989,18 @@ export class CommunityProfile implements OnInit {
 
   copyProfileUrl(user: Companion): void {
     const uid = user.uniqueId || generate20DigitUid(user.id);
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}/profile?id=${uid}`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+    }
+    this.copiedProfileUrl.set(true);
+    setTimeout(() => this.copiedProfileUrl.set(false), 2500);
+  }
+
+  copyOwnProfileUrl(): void {
+    const p = this.service.profile();
+    const uid = p?.uniqueId || generate20DigitUid(this.service.currentUser()?.id || 1);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const url = `${origin}/profile?id=${uid}`;
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
