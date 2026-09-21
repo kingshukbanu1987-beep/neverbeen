@@ -119,8 +119,37 @@
           ✕
         </button>
 
-        <!-- User Basic Details (DOUBLE SIZE PROFILE PHOTO) -->
+        <!-- User Basic Details (COVER PHOTO & DOUBLE SIZE PROFILE PHOTO) -->
         <div class="user-card-summary">
+          <!-- User Cover Photo (Requirement C) -->
+          <div class="user-cover-box">
+            <img
+              [src]="service.profile()?.coverPhotoUrl || defaultCoverPhoto"
+              alt="Cover Photo"
+              class="user-cover-img"
+            />
+            <label class="btn-change-cover-badge" for="userCoverUploadInput" title="Update Cover Photo (Max 100 KB)">
+              <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="currentColor">
+                <path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-1.5c0-2.33-4.67-3.5-7-3.5z"/>
+              </svg>
+              <span>Cover</span>
+            </label>
+            <input
+              type="file"
+              id="userCoverUploadInput"
+              accept="image/*"
+              (change)="onCoverPhotoUpload($event)"
+              class="hidden-file-input"
+            />
+          </div>
+
+          @if (coverPhotoError()) {
+            <div class="side-panel-error-banner">⚠️ {{ coverPhotoError() }}</div>
+          }
+          @if (profilePhotoError()) {
+            <div class="side-panel-error-banner">⚠️ {{ profilePhotoError() }}</div>
+          }
+
           <!-- Profile photo enlarged to double the size + click to view modal -->
           <div class="user-photo-wrap-large" (click)="openEnlargedPhoto()" title="Click to enlarge photograph">
             <img
@@ -138,7 +167,7 @@
               <span>Enlarge</span>
             </div>
             <!-- Photo uploader trigger -->
-            <label class="photo-change-btn-mini" for="avatarUploadInput" (click)="$event.stopPropagation()" title="Update profile photo">
+            <label class="photo-change-btn-mini" for="avatarUploadInput" (click)="$event.stopPropagation()" title="Update profile photo (Max 100 KB)">
               <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                 <circle cx="12" cy="13" r="4"></circle>
@@ -202,7 +231,7 @@
 
         <!-- NAVIGATION MENU: Order is About me, Journey, Gallery, MessageBook, Companions, Circles, Messenger, Notifications, Settings, Log Out -->
         <nav class="side-menu-nav" aria-label="Social Sections">
-          <!-- 1. About me -->
+          <!-- 1. About me (Requirement D: Solid filled, transparent, ultra-modern) -->
           <button
             type="button"
             class="menu-btn"
@@ -210,9 +239,8 @@
             (click)="setSection('about')"
           >
             <span class="icon-pill pill-violet">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
               </svg>
             </span>
             <span class="menu-label">About me</span>
@@ -226,9 +254,8 @@
             (click)="setSection('journey')"
           >
             <span class="icon-pill pill-emerald">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.89 6.67l-2.33 5.44c-.11.26-.32.47-.58.58l-5.44 2.33c-.45.19-.92-.28-.73-.73l2.33-5.44c.11-.26.32-.47.58-.58l5.44-2.33c.45-.19.92.28.73.73zM12 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
               </svg>
             </span>
             <span class="menu-label">Journey</span>
@@ -242,10 +269,8 @@
             (click)="setSection('gallery')"
           >
             <span class="icon-pill pill-amber">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
               </svg>
             </span>
             <span class="menu-label">Gallery</span>
@@ -259,9 +284,8 @@
             (click)="setSection('messagebook')"
           >
             <span class="icon-pill pill-blue">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
               </svg>
             </span>
             <span class="menu-label">MessageBook</span>
@@ -275,11 +299,8 @@
             (click)="setSection('companions')"
           >
             <span class="icon-pill pill-rose">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
               </svg>
             </span>
             <span class="menu-label">Companions</span>
@@ -294,10 +315,8 @@
             (click)="setSection('circles')"
           >
             <span class="icon-pill pill-indigo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                <path d="M2 12h20"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 17.93a8.006 8.006 0 0 1-7-7.93c0-.62.08-1.21.21-1.79L9 13v2a1 1 0 0 0 1 1h2v3.93zm6.9-2.54a1 1 0 0 0-.9-1.39h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V6h2a1 1 0 0 0 1-1v-.41A8.001 8.001 0 0 1 19.9 17.39z"/>
               </svg>
             </span>
             <span class="menu-label">Circles</span>
@@ -312,8 +331,8 @@
             (click)="setSection('messenger')"
           >
             <span class="icon-pill pill-cyan">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-6 9H7V9h7v2zm3-4H7V5h10v2z"/>
               </svg>
             </span>
             <span class="menu-label">Messenger</span>
@@ -330,9 +349,8 @@
             (click)="setSection('notifications')"
           >
             <span class="icon-pill pill-coral">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
               </svg>
             </span>
             <span class="menu-label">Notifications</span>
@@ -349,9 +367,8 @@
             (click)="setSection('settings')"
           >
             <span class="icon-pill pill-slate">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.484.484 0 0 0 14.9 3h-3.84a.484.484 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L3.71 9.47a.49.49 0 0 0 .12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
               </svg>
             </span>
             <span class="menu-label">Settings</span>
@@ -364,10 +381,8 @@
             (click)="logout()"
           >
             <span class="icon-pill pill-red">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
               </svg>
             </span>
             <span class="menu-label">Log Out</span>
@@ -407,197 +422,10 @@
 
     <!-- RIGHT WIDE PANEL (Takes majority screen space in landscape and 100% in portrait) -->
     <main class="right-wide-panel">
-      <!-- VISITOR PROFILE VIEW (When viewing another user's profile) -->
-      @if (viewingVisitor()) {
-        <div class="visitor-profile-container">
-          <!-- Visitor Top Navigation Banner -->
-          <div class="visitor-top-bar">
-            <button type="button" class="btn-back-to-my-profile" (click)="closeVisitorProfile()">
-              <svg viewBox="0 0 24 24" class="back-svg" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-              </svg>
-              <span>Back to My Journey</span>
-            </button>
-            <div class="visitor-banner-tag">
-              <span>Viewing Profile as Visitor</span>
-            </div>
-          </div>
-
-          <!-- Visitor Profile Hero Card -->
-          <div class="visitor-hero-card">
-            <div class="visitor-cover-banner"></div>
-            <div class="visitor-hero-content">
-              <div class="visitor-avatar-wrap">
-                <img
-                  [src]="viewingVisitor()!.profilePhotoUrl || defaultAvatar"
-                  [alt]="viewingVisitor()!.fullName"
-                  class="visitor-avatar-img"
-                />
-                <span class="visitor-status-dot" [ngClass]="getStatusIconClass(viewingVisitor()!.activeStatus)"></span>
-              </div>
-
-              <div class="visitor-title-block">
-                <div class="visitor-name-line">
-                  <h1 class="visitor-name">{{ viewingVisitor()!.fullName }}</h1>
-                  @if (viewingVisitor()!.isProfileLocked) {
-                    <span class="visitor-lock-pill" title="This profile is locked">🔒 Locked Profile</span>
-                  }
-                </div>
-                <p class="visitor-subhead">
-                  📍 {{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }} • {{ viewingVisitor()!.profession }}
-                </p>
-                <div class="visitor-status-indicator">
-                  <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
-                  <span class="badge-mutual-tag">👥 {{ viewingVisitor()!.mutualCompanionsCount }} Mutual Companions</span>
-                </div>
-              </div>
-
-              <!-- Visitor Action Buttons (Requirement G: Remove Companionship option & Requirement B: Block User) -->
-              <div class="visitor-actions-cluster">
-                @if (viewingVisitor()!.status === 'connected') {
-                  <span class="badge-connected-status">✓ Companions</span>
-                  <!-- Requirement G: Remove Companionship button -->
-                  <button
-                    type="button"
-                    class="btn-remove-companion-action"
-                    (click)="removeCompanionshipFromVisitor(viewingVisitor()!.id)"
-                    title="Break companionship connection"
-                  >
-                    💔 Remove Companionship
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-chat-action"
-                    (click)="openChatWith(viewingVisitor()!)"
-                  >
-                    💬 Message
-                  </button>
-                } @else if (viewingVisitor()!.status === 'pending_outgoing') {
-                  <button type="button" class="btn-pending-action" disabled>⏳ Request Sent</button>
-                } @else if (viewingVisitor()!.status === 'pending_incoming') {
-                  <button
-                    type="button"
-                    class="btn-primary-action"
-                    (click)="approveRequest(1, viewingVisitor()!.id)"
-                  >
-                    ✓ Approve Request
-                  </button>
-                } @else {
-                  <button
-                    type="button"
-                    class="btn-primary-action"
-                    (click)="requestCompanionship(viewingVisitor()!.id)"
-                  >
-                    + Request Companionship
-                  </button>
-                }
-
-                <!-- Requirement B: Option to Block User -->
-                <button
-                  type="button"
-                  class="btn-block-action"
-                  (click)="blockUser(viewingVisitor()!.id)"
-                  title="Block this user"
-                >
-                  🚫 Block
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- LOCKED PROFILE SHIELD (When visitor is locked and not connected) -->
-          @if (viewingVisitor()!.isProfileLocked && viewingVisitor()!.status !== 'connected') {
-            <div class="locked-profile-shield-box">
-              <div class="shield-icon-circle">🔒</div>
-              <h3 class="shield-title">This Profile is Locked</h3>
-              <p class="shield-description">
-                {{ viewingVisitor()!.fullName }} has locked their profile. Journey feeds, Companions, Circles, and About me are protected and visible only to confirmed Companions.
-              </p>
-              @if (viewingVisitor()!.status === 'none') {
-                <button
-                  type="button"
-                  class="btn-primary-action btn-center"
-                  (click)="requestCompanionship(viewingVisitor()!.id)"
-                >
-                  Request for Companionship to Unlock
-                </button>
-              } @else if (viewingVisitor()!.status === 'pending_outgoing') {
-                <span class="pending-lock-notice">Companionship request is pending approval.</span>
-              }
-            </div>
-          } @else {
-            <!-- UNLOCKED / CONNECTED VISITOR CONTENT -->
-            <div class="visitor-unlocked-grid">
-              <!-- Visitor Bio -->
-              <div class="visitor-bio-card">
-                <h3 class="card-mini-title">About {{ viewingVisitor()!.fullName }}</h3>
-                <p class="visitor-bio-text">{{ viewingVisitor()!.bio || 'Passionate traveler exploring the globe with NeverBeen.' }}</p>
-              </div>
-
-              <!-- Visitor Journey Posts -->
-              <div class="visitor-journey-section">
-                <h3 class="card-mini-title">Travel Journey Posts</h3>
-                @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
-                  <article class="journey-post-card">
-                    <div class="post-header">
-                      <img [src]="post.author.profilePhotoUrl" [alt]="post.author.fullName" class="author-avatar" />
-                      <div class="author-details">
-                        <strong class="author-name">{{ post.author.fullName }}</strong>
-                        <div class="post-sub-meta">
-                          <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
-                          @if (post.location) {
-                            <span class="post-loc">📍 {{ post.location }}</span>
-                          }
-                        </div>
-                      </div>
-                    </div>
-                    <p class="post-body-text">{{ post.text }}</p>
-                    <div class="post-actions-row">
-                      <button type="button" class="post-action-btn" [class.liked]="post.isLiked" (click)="toggleLikePost(post.id)">
-                        <span>{{ post.isLiked ? '❤️ Liked' : '🤍 Like' }} ({{ post.likeCount }})</span>
-                      </button>
-                      <button type="button" class="post-action-btn" (click)="toggleCommentSection(post.id)">
-                        <span>💬 Comments ({{ post.comments.length }})</span>
-                      </button>
-                      <!-- Requirement I: Share Post -->
-                      <button type="button" class="post-action-btn" (click)="openShareModal(post)">
-                        <span>🔁 Share@if ((post.shareCount || 0) > 0) { ({{ post.shareCount }}) }</span>
-                      </button>
-                    </div>
-
-                    <!-- Endless Comments Thread -->
-                    @if (activeCommentPostId() === post.id) {
-                      <div class="comments-thread-container">
-                        @for (c of post.comments; track c.id) {
-                          <app-comment-thread
-                            [comment]="c"
-                            [postId]="post.id"
-                            [depth]="0"
-                            [currentUserId]="service.currentUser()?.id"
-                            (reply)="handleCommentThreadReply($event)"
-                            (like)="handleCommentThreadLike($event)"
-                            (openUser)="openVisitorProfile($event)"
-                          ></app-comment-thread>
-                        }
-                      </div>
-                    }
-                  </article>
-                } @empty {
-                  <div class="empty-visitor-posts">No public journey posts shared yet.</div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- DEFAULT SECTIONS WHEN NOT IN VISITOR VIEW -->
-      @if (!viewingVisitor()) {
-        <!-- ================================================================= -->
-        <!-- SECTION 1: JOURNEY (DEFAULT WIDE PANEL VIEW)                     -->
-        <!-- ================================================================= -->
-        @if (activeSection() === 'journey') {
+      <!-- ================================================================= -->
+      <!-- SECTION 1: JOURNEY (DEFAULT WIDE PANEL VIEW)                     -->
+      <!-- ================================================================= -->
+      @if (activeSection() === 'journey') {
           <section class="section-pane journey-pane">
             <header class="section-top-bar">
               <div class="section-title-line">
@@ -632,8 +460,13 @@
                 class="composer-textarea"
               ></textarea>
 
-              <!-- COMPOSER ACCESSORIES: Mood & Google Maps Destination Auto-Search (Requirement D) -->
+              <!-- COMPOSER ACCESSORIES: Photo, Mood & Destination (Requirement A & B) -->
               <div class="composer-accessory-row">
+                <label class="btn-tool-photo-label" title="Attach picture (Max 100 KB)">
+                  📷 Add Photo (Max 100 KB)
+                  <input type="file" accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
+                </label>
+
                 <div class="accessory-item">
                   <span class="accessory-lbl">Travel Mood:</span>
                   <select [(ngModel)]="selectedMood" class="select-mood">
@@ -646,28 +479,30 @@
                   </select>
                 </div>
 
-                <!-- Google Maps API Destination Tag Auto-Search (Requirement D) -->
+                <!-- Google Maps API Destination Tag Auto-Search (Requirement B & D) -->
                 <div class="accessory-item destination-autocomplete-wrapper">
-                  <span class="accessory-lbl">📍 Destination:</span>
-                  @if (selectedGoogleLocation()) {
-                    <div class="selected-google-dest-pill">
-                      <span class="gmap-pin">📍</span>
-                      <strong class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</strong>
-                      <span class="gmap-badge">Verified Google Maps</span>
-                      <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
-                    </div>
-                  } @else {
-                    <div class="dest-search-input-box">
-                      <input
-                        type="text"
-                        [(ngModel)]="destinationSearchInput"
-                        (input)="onDestinationSearchInput()"
-                        (focus)="onDestinationSearchFocus()"
-                        placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
-                        class="input-location-tag"
-                      />
-                    </div>
-                  }
+                  <div class="dest-field-inline">
+                    <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon">📍</span> Destination:</span>
+                    @if (selectedGoogleLocation()) {
+                      <div class="selected-google-dest-pill">
+                        <span class="gmap-pin">📍</span>
+                        <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
+                        <span class="gmap-badge">Verified Google Maps</span>
+                        <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
+                      </div>
+                    } @else {
+                      <div class="dest-search-input-box">
+                        <input
+                          type="text"
+                          [(ngModel)]="destinationSearchInput"
+                          (input)="onDestinationSearchInput()"
+                          (focus)="onDestinationSearchFocus()"
+                          placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
+                          class="input-location-tag"
+                        />
+                      </div>
+                    }
+                  </div>
 
                   <!-- Google Maps Dropdown Suggestions (Requirement D: only available location can be selected) -->
                   @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
@@ -697,6 +532,21 @@
                 </div>
               </div>
 
+              <!-- Journey Photo Attachment Preview (Requirement A) -->
+              @if (journeyPhotoPreview()) {
+                <div class="composer-photo-preview-wrap">
+                  <img [src]="journeyPhotoPreview()!" alt="Attached photo preview" class="composer-preview-img" />
+                  <button type="button" class="btn-remove-photo" (click)="clearJourneyPhoto()" title="Remove photo">✕</button>
+                </div>
+              }
+
+              <!-- Image upload error banner (Requirement A) -->
+              @if (journeyPhotoError()) {
+                <div class="composer-error-banner">
+                  ⚠️ {{ journeyPhotoError() }}
+                </div>
+              }
+
               <!-- Destination validation message if unselected text entered -->
               @if (destinationError()) {
                 <div class="destination-error-banner">
@@ -708,7 +558,7 @@
                 <button
                   type="button"
                   class="btn-primary-action btn-post"
-                  [disabled]="!newJourneyText.trim() || postingJourney()"
+                  [disabled]="(!newJourneyText.trim() && !journeyPhotoPreview()) || postingJourney()"
                   (click)="submitJourneyPost()"
                 >
                   {{ postingJourney() ? 'Posting...' : 'Post to Journey' }}
@@ -747,7 +597,9 @@
                       <div class="post-sub-meta">
                         <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
                         @if (post.location) {
-                          <span class="post-loc" title="Google Maps Verified Location">📍 {{ post.location }}</span>
+                          <span class="post-loc" title="Google Maps Verified Location">
+                            <span class="post-loc-icon">📍</span> <span class="post-loc-text">{{ post.location }}</span>
+                          </span>
                         }
                         @if (post.mood) {
                           <span class="post-mood">{{ post.mood }}</span>
@@ -771,6 +623,13 @@
                   <!-- Post Body Text (Or Shared Thoughts) -->
                   @if (post.text) {
                     <p class="post-body-text">{{ post.text }}</p>
+                  }
+
+                  <!-- Post Attached Photo (Requirement A: <= 100 KB) -->
+                  @if (post.imageUrl) {
+                    <div class="post-image-attachment-wrap">
+                      <img [src]="post.imageUrl" alt="Journey post attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl!)" />
+                    </div>
                   }
 
                   <!-- EMBEDDED SHARED POST CARD (Requirement I) -->
@@ -868,7 +727,7 @@
                   <!-- RECURSIVE ENDLESS COMMENT THREAD (Requirement H & C) -->
                   @if (activeCommentPostId() === post.id) {
                     <div class="comments-section-wrap">
-                      <!-- Add top-level comment composer -->
+                      <!-- Add top-level comment composer (Requirement A: <= 100 KB picture attachment) -->
                       <div class="comment-composer-row">
                         <img
                           [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
@@ -883,16 +742,30 @@
                             placeholder="Write a comment..."
                             class="comment-input"
                           />
+                          <label class="btn-attach-comment-pic" title="Attach picture (Max 100 KB)">
+                            📷
+                            <input type="file" accept="image/*" (change)="onJourneyCommentPhotoSelected($event, post.id)" class="hidden-file-input" />
+                          </label>
                           <button
                             type="button"
                             class="btn-send-comment"
-                            [disabled]="!journeyCommentText.trim()"
+                            [disabled]="(!journeyCommentText.trim() && !journeyCommentPhotoPreview())"
                             (click)="submitJourneyComment(post.id)"
                           >
                             Post
                           </button>
                         </div>
                       </div>
+
+                      @if (journeyCommentPhotoPreview()?.postId === post.id) {
+                        <div class="comment-photo-preview-strip">
+                          <img [src]="journeyCommentPhotoPreview()!.dataUrl" alt="Attached comment photo" class="comment-preview-thumbnail" />
+                          <button type="button" class="btn-clear-comment-photo" (click)="clearJourneyCommentPhoto()" title="Remove photo">✕</button>
+                        </div>
+                      }
+                      @if (journeyCommentPhotoError()?.postId === post.id) {
+                        <div class="comment-photo-error-banner">⚠️ {{ journeyCommentPhotoError()!.message }}</div>
+                      }
 
                       <!-- Recursive Comment Threads (Endless nesting with self-referencing component) -->
                       <div class="comments-thread-list">
@@ -924,6 +797,25 @@
         <!-- ================================================================= -->
         @if (activeSection() === 'about') {
           <section class="section-pane about-pane">
+            <!-- User Cover Banner in About Me (Requirement C) -->
+            <div class="about-cover-banner">
+              <img
+                [src]="service.profile()?.coverPhotoUrl || defaultCoverPhoto"
+                alt="Cover photo"
+                class="about-cover-img"
+              />
+              <label class="btn-edit-cover-pill" for="aboutCoverUploadInput" title="Update Cover Photo (Max 100 KB)">
+                📷 Edit Cover Photo
+              </label>
+              <input
+                type="file"
+                id="aboutCoverUploadInput"
+                accept="image/*"
+                (change)="onCoverPhotoUpload($event)"
+                class="hidden-file-input"
+              />
+            </div>
+
             <header class="section-top-bar">
               <h1 class="section-title">About Me</h1>
               <button
@@ -1022,12 +914,18 @@
             <!-- Upload Card -->
             @if (showUploadCard()) {
               <div class="gallery-upload-box">
+                <div class="gallery-limit-notice">
+                  <span>📸 Select photograph (Max 100 KB limit)</span>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
                   (change)="onGalleryFileSelected($event)"
                   class="file-picker-input"
                 />
+                @if (galleryError()) {
+                  <div class="gallery-error-banner">⚠️ {{ galleryError() }}</div>
+                }
                 @if (galleryPreviewUrl()) {
                   <div class="upload-preview-area">
                     <img [src]="galleryPreviewUrl()" alt="Upload preview" class="gallery-preview-img" />
@@ -1055,11 +953,11 @@
 
             <div class="gallery-mosaic-grid">
               @for (photo of service.profile()?.gallery || []; track photo.id) {
-                <div class="gallery-item-card gallery-item">
+                <div class="gallery-item-card gallery-item" (click)="openImageModal(photo.url)">
                   <img [src]="photo.url" [alt]="photo.caption || 'Travel photo'" class="gallery-img" />
                   <div class="gallery-caption-overlay">
                     <span>{{ photo.caption }}</span>
-                    <button type="button" class="btn-delete-photo" (click)="deletePhoto(photo.id)" title="Delete photo">✕</button>
+                    <button type="button" class="btn-delete-photo" (click)="$event.stopPropagation(); deletePhoto(photo.id)" title="Delete photo">✕</button>
                   </div>
                 </div>
               } @empty {
@@ -1093,11 +991,29 @@
                 placeholder="Leave a private memory or message in the MessageBook..."
                 class="messagebook-textarea"
               ></textarea>
+
+              <div class="composer-toolbar-row">
+                <label class="btn-tool-photo-label" title="Attach picture (Max 100 KB)">
+                  📷 Add Photo (Max 100 KB)
+                  <input type="file" accept="image/*" (change)="onMessageBookPhotoSelected($event)" class="hidden-file-input" />
+                </label>
+              </div>
+
+              @if (messageBookPhotoPreview()) {
+                <div class="composer-photo-preview-wrap">
+                  <img [src]="messageBookPhotoPreview()!" alt="Attached photo preview" class="composer-preview-img" />
+                  <button type="button" class="btn-remove-photo" (click)="clearMessageBookPhoto()" title="Remove photo">✕</button>
+                </div>
+              }
+              @if (messageBookPhotoError()) {
+                <div class="composer-error-banner">⚠️ {{ messageBookPhotoError() }}</div>
+              }
+
               <div class="composer-footer">
                 <button
                   type="button"
                   class="btn-primary-action"
-                  [disabled]="!newPostText.trim() || postingPost()"
+                  [disabled]="(!newPostText.trim() && !messageBookPhotoPreview()) || postingPost()"
                   (click)="submitPost()"
                 >
                   {{ postingPost() ? 'Writing...' : 'Sign MessageBook' }}
@@ -1123,6 +1039,12 @@
                     </div>
                   </div>
                   <p class="post-body-text">{{ comment.text }}</p>
+
+                  @if (comment.imageUrl) {
+                    <div class="post-image-attachment-wrap">
+                      <img [src]="comment.imageUrl" alt="MessageBook attached photo" class="post-attached-photo" (click)="openImageModal(comment.imageUrl!)" />
+                    </div>
+                  }
 
                   <div class="post-actions-row">
                     <button
@@ -1552,7 +1474,6 @@
             </form>
           </section>
         }
-      }
     </main>
   </div>
 
@@ -1891,6 +1812,262 @@
             </button>
           </footer>
         }
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- VISITOR PROFILE MODAL CARD POPUP (Requirement C)                  -->
+  <!-- When visiting a user profile the cover photo will be visible and  -->
+  <!-- About me and Gallery will be visible one after another below in a -->
+  <!-- modal card popup where user can see their Journey (unless locked) -->
+  <!-- ================================================================= -->
+  @if (viewingVisitor()) {
+    <div class="modal-backdrop-overlay visitor-modal-overlay" (click)="closeVisitorProfile()">
+      <div class="modal-dialog-card visitor-profile-modal-card" (click)="$event.stopPropagation()">
+        <!-- Modal Top Bar -->
+        <div class="visitor-modal-header-bar">
+          <span class="visitor-modal-title">NeverBeen Community • Traveler Profile</span>
+          <button
+            type="button"
+            class="btn-close-visitor-modal btn-back-to-my-profile"
+            (click)="closeVisitorProfile()"
+            title="Close Profile Popup"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- COVER PHOTO (Prominently displayed across top) -->
+        <div class="visitor-modal-cover-wrap visitor-hero-card">
+          <img
+            [src]="viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto"
+            [alt]="viewingVisitor()!.fullName + ' Cover Photo'"
+            class="visitor-modal-cover-img"
+          />
+          <div class="visitor-modal-avatar-anchor">
+            <img
+              [src]="viewingVisitor()!.profilePhotoUrl || defaultAvatar"
+              [alt]="viewingVisitor()!.fullName"
+              class="visitor-modal-avatar-img"
+            />
+            <span class="visitor-modal-status-dot" [ngClass]="getStatusIconClass(viewingVisitor()!.activeStatus)"></span>
+          </div>
+        </div>
+
+        <!-- VISITOR SUMMARY INFO & ACTIONS -->
+        <div class="visitor-modal-info-block">
+          <div class="visitor-modal-title-row">
+            <div class="visitor-modal-name-group">
+              <div class="visitor-name-line">
+                <h2 class="visitor-modal-name visitor-name">{{ viewingVisitor()!.fullName }}</h2>
+                @if (viewingVisitor()!.isProfileLocked) {
+                  <span class="visitor-lock-pill" title="This profile is locked">🔒 Locked Profile</span>
+                }
+              </div>
+              <p class="visitor-modal-subhead">
+                📍 {{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }} • {{ viewingVisitor()!.profession }}
+              </p>
+              <div class="visitor-modal-badges">
+                <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
+                <span class="badge-mutual-tag">👥 {{ viewingVisitor()!.mutualCompanionsCount }} Mutual Companions</span>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="visitor-modal-actions-cluster">
+              @if (viewingVisitor()!.status === 'connected') {
+                <span class="badge-connected-status">✓ Companions</span>
+                <button
+                  type="button"
+                  class="btn-remove-companion-action"
+                  (click)="removeCompanionshipFromVisitor(viewingVisitor()!.id)"
+                  title="Break companionship connection"
+                >
+                  💔 Remove Companionship
+                </button>
+                <button
+                  type="button"
+                  class="btn-chat-action"
+                  (click)="openChatWith(viewingVisitor()!); closeVisitorProfile()"
+                >
+                  💬 Message
+                </button>
+              } @else if (viewingVisitor()!.status === 'pending_outgoing') {
+                <button type="button" class="btn-pending-action" disabled>⏳ Request Sent</button>
+              } @else if (viewingVisitor()!.status === 'pending_incoming') {
+                <button
+                  type="button"
+                  class="btn-primary-action"
+                  (click)="approveRequest(1, viewingVisitor()!.id)"
+                >
+                  ✓ Approve Request
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="btn-primary-action"
+                  (click)="requestCompanionship(viewingVisitor()!.id)"
+                >
+                  + Request Companionship
+                </button>
+              }
+
+              <button
+                type="button"
+                class="btn-block-action"
+                (click)="blockUser(viewingVisitor()!.id); closeVisitorProfile()"
+                title="Block this user"
+              >
+                🚫 Block
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISITOR CONTENT: One after another below (About me, Gallery, Journey) unless locked -->
+        @if (viewingVisitor()!.isProfileLocked && viewingVisitor()!.status !== 'connected') {
+          <div class="visitor-locked-shield-card locked-profile-shield-box">
+            <div class="shield-icon-circle">🔒</div>
+            <h3 class="shield-title">This Profile is Locked</h3>
+            <p class="shield-description">
+              {{ viewingVisitor()!.fullName }} has locked their profile. Journey feeds, Companions, Circles, and About me are protected and visible only to confirmed Companions.
+            </p>
+            @if (viewingVisitor()!.status === 'none') {
+              <button
+                type="button"
+                class="btn-primary-action btn-center"
+                (click)="requestCompanionship(viewingVisitor()!.id)"
+              >
+                Request for Companionship to Unlock
+              </button>
+            } @else if (viewingVisitor()!.status === 'pending_outgoing') {
+              <span class="pending-lock-notice">Companionship request is pending approval.</span>
+            }
+          </div>
+        } @else {
+          <!-- VISIBLE ONE AFTER ANOTHER BELOW: About me, Gallery, Journey -->
+          <div class="visitor-modal-flow-container">
+            <!-- 1. ABOUT ME -->
+            <section class="visitor-flow-section visitor-flow-about">
+              <h3 class="visitor-section-heading">👤 About {{ viewingVisitor()!.fullName }}</h3>
+              <p class="visitor-about-text">
+                {{ viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'Passionate traveler discovering new horizons with NeverBeen AI memories.' }}
+              </p>
+              <div class="visitor-meta-grid">
+                <div class="meta-card-mini">
+                  <span class="meta-label">Profession</span>
+                  <strong class="meta-value">{{ viewingVisitor()!.profession }}</strong>
+                </div>
+                <div class="meta-card-mini">
+                  <span class="meta-label">Home Base</span>
+                  <strong class="meta-value">{{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }}</strong>
+                </div>
+                <div class="meta-card-mini">
+                  <span class="meta-label">Connection</span>
+                  <strong class="meta-value">{{ viewingVisitor()!.status === 'connected' ? 'Connected Companion' : 'Community Explorer' }}</strong>
+                </div>
+              </div>
+            </section>
+
+            <!-- 2. GALLERY -->
+            <section class="visitor-flow-section visitor-flow-gallery">
+              <div class="visitor-flow-section-header">
+                <h3 class="visitor-section-heading">📸 Gallery</h3>
+                <span class="section-count-tag">{{ viewingVisitor()!.gallery?.length || 0 }} Photos</span>
+              </div>
+              @if (viewingVisitor()!.gallery && viewingVisitor()!.gallery!.length > 0) {
+                <div class="visitor-gallery-grid">
+                  @for (photo of viewingVisitor()!.gallery; track photo.id) {
+                    <div class="visitor-gallery-item" (click)="openImageModal(photo.url)">
+                      <img [src]="photo.url" [alt]="photo.caption || 'Gallery photo'" loading="lazy" />
+                      @if (photo.caption) {
+                        <span class="visitor-gallery-caption">{{ photo.caption }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="visitor-gallery-empty">
+                  <p>No gallery photographs uploaded yet.</p>
+                </div>
+              }
+            </section>
+
+            <!-- 3. JOURNEY (Where user can see their Journey) -->
+            <section class="visitor-flow-section visitor-flow-journey">
+              <h3 class="visitor-section-heading">✈️ Journey Feeds</h3>
+              @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
+                <article class="journey-post-card">
+                  <div class="post-header">
+                    <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" />
+                    <div class="author-details">
+                      <strong class="author-name">{{ post.author.fullName }}</strong>
+                      <div class="post-sub-meta">
+                        <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                        @if (post.location) {
+                          <span class="post-loc" title="Google Maps Verified Location">
+                            <span class="post-loc-icon">📍</span> <span class="post-loc-text">{{ post.location }}</span>
+                          </span>
+                        }
+                        @if (post.mood) {
+                          <span class="post-mood">{{ post.mood }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <p class="post-body-text">{{ post.text }}</p>
+                  @if (post.imageUrl) {
+                    <div class="post-image-attachment-wrap">
+                      <img [src]="post.imageUrl" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl!)" />
+                    </div>
+                  }
+                  <div class="post-actions-row">
+                    <button type="button" class="post-action-btn" [class.liked]="post.isLiked" (click)="toggleLikePost(post.id)">
+                      <span>{{ post.isLiked ? '❤️ Liked' : '🤍 Like' }} ({{ post.likeCount }})</span>
+                    </button>
+                    <button type="button" class="post-action-btn" (click)="toggleCommentSection(post.id)">
+                      <span>💬 Comments ({{ post.comments.length }})</span>
+                    </button>
+                    <button type="button" class="post-action-btn" (click)="openShareModal(post)">
+                      <span>🔁 Share@if ((post.shareCount || 0) > 0) { ({{ post.shareCount }}) }</span>
+                    </button>
+                  </div>
+
+                  @if (activeCommentPostId() === post.id) {
+                    <div class="comments-thread-container">
+                      @for (c of post.comments; track c.id) {
+                        <app-comment-thread
+                          [comment]="c"
+                          [postId]="post.id"
+                          [depth]="0"
+                          [currentUserId]="service.currentUser()?.id"
+                          (reply)="handleCommentThreadReply($event)"
+                          (like)="handleCommentThreadLike($event)"
+                          (openUser)="openVisitorProfile($event)"
+                        ></app-comment-thread>
+                      }
+                    </div>
+                  }
+                </article>
+              } @empty {
+                <div class="visitor-journey-empty">
+                  <p>{{ viewingVisitor()!.fullName }} has not shared any public journey posts yet.</p>
+                </div>
+              }
+            </section>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- LIGHTBOX IMAGE MODAL -->
+  @if (lightboxImageUrl()) {
+    <div class="modal-backdrop-overlay image-lightbox-overlay" (click)="closeImageModal()">
+      <div class="image-lightbox-card" (click)="$event.stopPropagation()">
+        <button type="button" class="btn-close-lightbox" (click)="closeImageModal()" title="Close image">✕</button>
+        <img [src]="lightboxImageUrl()!" alt="Enlarged view" class="lightbox-full-img" />
       </div>
     </div>
   }

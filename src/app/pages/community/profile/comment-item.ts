@@ -16,17 +16,46 @@ export class CommentThreadComponent {
   @Input() depth = 0;
   @Input() currentUserId?: number;
 
-  @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string }>();
+  @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string; imageUrl?: string }>();
   @Output() like = new EventEmitter<{ postId: number; commentId: number }>();
   @Output() openUser = new EventEmitter<AuthorInfo>();
   @Output() reportAbuse = new EventEmitter<{ commentId: number; author: AuthorInfo; text: string }>();
 
   readonly replyOpen = signal(false);
   replyText = '';
+  readonly replyPhotoPreview = signal<string | null>(null);
+  readonly replyPhotoError = signal<string | null>(null);
+
+  readonly MAX_PICTURE_SIZE = 100 * 1024; // 100 KB limit (Requirement A)
 
   toggleReply(): void {
     this.replyOpen.update((v) => !v);
     this.replyText = '';
+    this.replyPhotoPreview.set(null);
+    this.replyPhotoError.set(null);
+  }
+
+  onReplyPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.replyPhotoError.set(null);
+    if (file.size > this.MAX_PICTURE_SIZE) {
+      this.replyPhotoError.set('Picture size exceeds 100 KB limit.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.replyPhotoPreview.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  clearReplyPhoto(): void {
+    this.replyPhotoPreview.set(null);
+    this.replyPhotoError.set(null);
   }
 
   submitReply(): void {
@@ -35,8 +64,11 @@ export class CommentThreadComponent {
       postId: this.postId,
       parentCommentId: this.comment.id,
       text: this.replyText.trim(),
+      imageUrl: this.replyPhotoPreview() || undefined,
     });
     this.replyText = '';
+    this.replyPhotoPreview.set(null);
+    this.replyPhotoError.set(null);
     this.replyOpen.set(false);
   }
 
@@ -51,7 +83,7 @@ export class CommentThreadComponent {
     this.openUser.emit(author);
   }
 
-  forwardReply(event: { postId: number; parentCommentId: number; text: string }): void {
+  forwardReply(event: { postId: number; parentCommentId: number; text: string; imageUrl?: string }): void {
     this.reply.emit(event);
   }
 

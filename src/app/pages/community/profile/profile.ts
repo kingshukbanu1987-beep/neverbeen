@@ -47,6 +47,14 @@ export class CommunityProfile implements OnInit {
 
   // Enlarged Profile Photo Modal
   protected readonly showEnlargedPhoto = signal(false);
+  protected readonly lightboxImageUrl = signal<string | null>(null);
+
+  // Maximum picture upload limit (Requirement A: 100 KB)
+  readonly MAX_PICTURE_SIZE = 100 * 1024; // 100 KB limit (102,400 bytes)
+  readonly defaultCoverPhoto =
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
+  protected readonly coverPhotoError = signal<string | null>(null);
+  protected readonly profilePhotoError = signal<string | null>(null);
 
   // Active Status Dropdown & Custom Status
   protected readonly activeStatusOptions: UserActiveStatus[] = [
@@ -72,6 +80,15 @@ export class CommunityProfile implements OnInit {
   protected readonly postingJourney = signal(false);
   protected readonly activeCommentPostId = signal<number | null>(null);
   protected journeyCommentText = '';
+
+  // Journey Post Photo Attachment (Requirement A: <= 100 KB)
+  protected readonly selectedJourneyPhoto = signal<File | null>(null);
+  protected readonly journeyPhotoPreview = signal<string | null>(null);
+  protected readonly journeyPhotoError = signal<string | null>(null);
+
+  // Journey Comment Photo Attachment (Requirement A: <= 100 KB)
+  protected readonly journeyCommentPhotoPreview = signal<{ postId: number; dataUrl: string } | null>(null);
+  protected readonly journeyCommentPhotoError = signal<{ postId: number; message: string } | null>(null);
 
   // Multi-level Journey Comment Replies
   protected readonly activeJourneyReplyCommentId = signal<number | null>(null);
@@ -123,6 +140,7 @@ export class CommunityProfile implements OnInit {
   protected readonly uploadingGallery = signal(false);
   protected readonly selectedGalleryFile = signal<File | null>(null);
   protected readonly galleryPreviewUrl = signal<string | null>(null);
+  protected readonly galleryError = signal<string | null>(null);
   protected newCaption = '';
 
   // MessageBook state
@@ -131,6 +149,11 @@ export class CommunityProfile implements OnInit {
   protected readonly postingPost = signal(false);
   protected readonly postingReply = signal(false);
   protected readonly activeReplyPostId = signal<number | null>(null);
+
+  // MessageBook Photo Attachment (Requirement A: <= 100 KB)
+  protected readonly selectedMessageBookPhoto = signal<File | null>(null);
+  protected readonly messageBookPhotoPreview = signal<string | null>(null);
+  protected readonly messageBookPhotoError = signal<string | null>(null);
 
   // Settings state
   protected readonly savingSettings = signal(false);
@@ -291,6 +314,7 @@ export class CommunityProfile implements OnInit {
         id: targetId,
         fullName: name,
         profilePhotoUrl: photo,
+        coverPhotoUrl: this.defaultCoverPhoto,
         country: 'Worldwide',
         city: 'Explorer',
         profession: role,
@@ -299,6 +323,8 @@ export class CommunityProfile implements OnInit {
         status: 'none',
         isProfileLocked: false,
         bio: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+        aboutMe: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+        gallery: [],
       };
     }
 
@@ -320,6 +346,14 @@ export class CommunityProfile implements OnInit {
 
   getVisitorJourneyPosts(visitorId: number): JourneyPost[] {
     return this.service.journeyPosts().filter((p) => p.author.id === visitorId);
+  }
+
+  openImageModal(url: string): void {
+    this.lightboxImageUrl.set(url);
+  }
+
+  closeImageModal(): void {
+    this.lightboxImageUrl.set(null);
   }
 
   // ---------------------------------------------------------------------------
@@ -476,8 +510,33 @@ export class CommunityProfile implements OnInit {
   // JOURNEY (PUBLIC FEED WITH NESTED COMMENTS ON COMMENTS & SHARE)
   // ---------------------------------------------------------------------------
 
+  onJourneyPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.journeyPhotoError.set(null);
+    if (file.size > this.MAX_PICTURE_SIZE) {
+      this.journeyPhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
+      this.selectedJourneyPhoto.set(null);
+      this.journeyPhotoPreview.set(null);
+      input.value = '';
+      return;
+    }
+    this.selectedJourneyPhoto.set(file);
+    const reader = new FileReader();
+    reader.onload = () => this.journeyPhotoPreview.set(reader.result as string);
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  clearJourneyPhoto(): void {
+    this.selectedJourneyPhoto.set(null);
+    this.journeyPhotoPreview.set(null);
+    this.journeyPhotoError.set(null);
+  }
+
   submitJourneyPost(): void {
-    if (!this.newJourneyText.trim()) return;
+    if (!this.newJourneyText.trim() && !this.journeyPhotoPreview()) return;
 
     // Requirement D: If text was typed in destination tag, only available location from Google Maps can be selected!
     if (this.destinationSearchInput.trim() && !this.selectedGoogleLocation()) {
@@ -497,11 +556,13 @@ export class CommunityProfile implements OnInit {
         this.selectedMood,
         locationTag,
         placeId,
+        this.journeyPhotoPreview() || undefined,
       );
       this.newJourneyText = '';
       this.selectedGoogleLocation.set(null);
       this.destinationSearchInput = '';
       this.destinationError.set(null);
+      this.clearJourneyPhoto();
     } finally {
       this.postingJourney.set(false);
     }
@@ -520,10 +581,38 @@ export class CommunityProfile implements OnInit {
     }
   }
 
+  onJourneyCommentPhotoSelected(event: Event, postId: number): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.journeyCommentPhotoError.set(null);
+    if (file.size > this.MAX_PICTURE_SIZE) {
+      this.journeyCommentPhotoError.set({ postId, message: 'Picture size exceeds 100 KB limit.' });
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.journeyCommentPhotoPreview.set({ postId, dataUrl: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  clearJourneyCommentPhoto(): void {
+    this.journeyCommentPhotoPreview.set(null);
+    this.journeyCommentPhotoError.set(null);
+  }
+
   submitJourneyComment(postId: number): void {
-    if (!this.journeyCommentText.trim()) return;
-    this.service.addJourneyComment(postId, this.journeyCommentText);
+    if (!this.journeyCommentText.trim() && !this.journeyCommentPhotoPreview()) return;
+    const attachedImg =
+      this.journeyCommentPhotoPreview()?.postId === postId
+        ? this.journeyCommentPhotoPreview()?.dataUrl
+        : undefined;
+    this.service.addJourneyComment(postId, this.journeyCommentText, undefined, attachedImg);
     this.journeyCommentText = '';
+    this.clearJourneyCommentPhoto();
   }
 
   toggleJourneyCommentReply(commentId: number): void {
@@ -542,8 +631,8 @@ export class CommunityProfile implements OnInit {
     this.activeJourneyReplyCommentId.set(null);
   }
 
-  handleCommentThreadReply(event: { postId: number; parentCommentId: number; text: string }): void {
-    this.service.addJourneyComment(event.postId, event.text, event.parentCommentId);
+  handleCommentThreadReply(event: { postId: number; parentCommentId: number; text: string; imageUrl?: string }): void {
+    this.service.addJourneyComment(event.postId, event.text, event.parentCommentId, event.imageUrl);
   }
 
   handleCommentThreadLike(event: { postId: number; commentId: number }): void {
@@ -887,9 +976,34 @@ export class CommunityProfile implements OnInit {
 
   async onPhotoUpload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      await this.service.uploadProfilePhoto(input.files[0]);
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.profilePhotoError.set(null);
+    if (file.size > this.MAX_PICTURE_SIZE) {
+      this.profilePhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
+      input.value = '';
+      return;
     }
+    await this.service.uploadProfilePhoto(file);
+    input.value = '';
+  }
+
+  async onCoverPhotoUpload(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.coverPhotoError.set(null);
+    if (file.size > this.MAX_PICTURE_SIZE) {
+      this.coverPhotoError.set('Picture size exceeds 100 KB limit. Please choose an image under 100 KB.');
+      input.value = '';
+      return;
+    }
+    try {
+      await this.service.uploadCoverPhoto(file);
+    } catch (err: any) {
+      this.coverPhotoError.set(err.message || 'Failed to upload cover photo');
+    }
+    input.value = '';
   }
 
   // ---------------------------------------------------------------------------
@@ -898,14 +1012,20 @@ export class CommunityProfile implements OnInit {
 
   onGalleryFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      this.selectedGalleryFile.set(file);
-
-      const reader = new FileReader();
-      reader.onload = () => this.galleryPreviewUrl.set(reader.result as string);
-      reader.readAsDataURL(file);
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.galleryError.set(null);
+    if (file.size > this.MAX_PICTURE_SIZE) {
+      this.galleryError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
+      this.selectedGalleryFile.set(null);
+      this.galleryPreviewUrl.set(null);
+      input.value = '';
+      return;
     }
+    this.selectedGalleryFile.set(file);
+    const reader = new FileReader();
+    reader.onload = () => this.galleryPreviewUrl.set(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
   async submitGalleryUpload(): Promise<void> {
@@ -932,12 +1052,42 @@ export class CommunityProfile implements OnInit {
   // MESSAGEBOOK (PERSONAL TO USER AND COMPANIONS)
   // ---------------------------------------------------------------------------
 
+  onMessageBookPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    this.messageBookPhotoError.set(null);
+    if (file.size > this.MAX_PICTURE_SIZE) {
+      this.messageBookPhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
+      this.selectedMessageBookPhoto.set(null);
+      this.messageBookPhotoPreview.set(null);
+      input.value = '';
+      return;
+    }
+    this.selectedMessageBookPhoto.set(file);
+    const reader = new FileReader();
+    reader.onload = () => this.messageBookPhotoPreview.set(reader.result as string);
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  clearMessageBookPhoto(): void {
+    this.selectedMessageBookPhoto.set(null);
+    this.messageBookPhotoPreview.set(null);
+    this.messageBookPhotoError.set(null);
+  }
+
   async submitPost(): Promise<void> {
-    if (!this.newPostText.trim()) return;
+    if (!this.newPostText.trim() && !this.messageBookPhotoPreview()) return;
     this.postingPost.set(true);
     try {
-      await this.service.postComment(this.newPostText.trim());
+      await this.service.postComment(
+        this.newPostText.trim(),
+        undefined,
+        this.messageBookPhotoPreview() || undefined,
+      );
       this.newPostText = '';
+      this.clearMessageBookPhoto();
     } finally {
       this.postingPost.set(false);
     }

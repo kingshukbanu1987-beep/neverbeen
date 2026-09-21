@@ -9,6 +9,7 @@ export interface CurrentUser {
   status: 'Pending' | 'Active' | string;
   profileComplete: boolean;
   profilePhotoUrl?: string;
+  coverPhotoUrl?: string;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
   isProfileLocked?: boolean;
@@ -70,6 +71,7 @@ export interface Profile {
   profession?: string;
   status: string;
   profilePhotoUrl?: string;
+  coverPhotoUrl?: string;
   externalProfilePictureUrl?: string;
   createdAtUtc: string;
   settings: UserSettings;
@@ -110,6 +112,7 @@ export interface CommunityComment {
   likeCount: number;
   dislikeCount: number;
   author: AuthorInfo;
+  imageUrl?: string;
   myReaction?: 'Like' | 'Dislike' | null;
   replyCount: number;
   parentId?: number | null;
@@ -148,6 +151,7 @@ export interface JourneyComment {
   author: AuthorInfo;
   text: string;
   createdAtUtc: string;
+  imageUrl?: string;
   parentId?: number | null;
   likeCount?: number;
   isLiked?: boolean;
@@ -159,6 +163,7 @@ export interface JourneyPost {
   author: AuthorInfo;
   text: string;
   createdAtUtc: string;
+  imageUrl?: string;
   likeCount: number;
   isLiked?: boolean;
   comments: JourneyComment[];
@@ -189,6 +194,7 @@ export interface Companion {
   id: number;
   fullName: string;
   profilePhotoUrl: string;
+  coverPhotoUrl?: string;
   country: string;
   city: string;
   profession: string;
@@ -196,6 +202,8 @@ export interface Companion {
   mutualCompanionsCount: number;
   status: 'connected' | 'pending_outgoing' | 'pending_incoming' | 'none';
   bio?: string;
+  aboutMe?: string;
+  gallery?: GalleryPhoto[];
   isProfileLocked?: boolean;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;

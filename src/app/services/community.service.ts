@@ -212,6 +212,8 @@ export class CommunityService {
         status: 'Active',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
         createdAtUtc: '2026-08-10T14:22:00Z',
         activeStatus: 'Active',
         customStatusText: '',
@@ -529,7 +531,12 @@ export class CommunityService {
     return updated;
   }
 
+  readonly MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100 KB limit (Requirement A)
+
   async uploadProfilePhoto(file: File): Promise<string> {
+    if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
+      throw new Error('Picture size exceeds 100 KB limit.');
+    }
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -539,6 +546,24 @@ export class CommunityService {
         this.saveJson(PROFILE_KEY, this.profile());
         this.saveJson(USER_KEY, this.currentUser());
         resolve(photoUrl);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async uploadCoverPhoto(file: File): Promise<string> {
+    if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
+      throw new Error('Picture size exceeds 100 KB limit.');
+    }
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const coverUrl = reader.result as string;
+        this.profile.update((p) => (p ? { ...p, coverPhotoUrl: coverUrl } : null));
+        this.currentUser.update((u) => (u ? { ...u, coverPhotoUrl: coverUrl } : null));
+        this.saveJson(PROFILE_KEY, this.profile());
+        this.saveJson(USER_KEY, this.currentUser());
+        resolve(coverUrl);
       };
       reader.readAsDataURL(file);
     });
@@ -555,6 +580,9 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   async addGalleryPhoto(file: File, caption?: string): Promise<GalleryPhoto> {
+    if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
+      throw new Error('Picture size exceeds 100 KB limit.');
+    }
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -595,11 +623,12 @@ export class CommunityService {
   // Message Book Comments
   // ---------------------------------------------------------------------------
 
-  async postComment(text: string, parentId?: number): Promise<CommunityComment> {
+  async postComment(text: string, parentId?: number, imageUrl?: string): Promise<CommunityComment> {
     const user = this.currentUser();
     const newComment: CommunityComment = {
       id: generateUniqueId(),
       text,
+      imageUrl: imageUrl || undefined,
       createdAtUtc: new Date().toISOString(),
       likeCount: 0,
       dislikeCount: 0,
@@ -712,7 +741,7 @@ export class CommunityService {
 
   readonly MAX_COMPANIONS = 500;
 
-  createJourneyPost(text: string, mood?: string, location?: string, placeId?: string): JourneyPost {
+  createJourneyPost(text: string, mood?: string, location?: string, placeId?: string, imageUrl?: string): JourneyPost {
     const user = this.currentUser();
     const profile = this.profile();
     const newPost: JourneyPost = {
@@ -726,6 +755,7 @@ export class CommunityService {
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
       },
       text: text.trim(),
+      imageUrl: imageUrl || undefined,
       createdAtUtc: new Date().toISOString(),
       likeCount: 0,
       isLiked: false,
@@ -811,7 +841,7 @@ export class CommunityService {
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
   }
 
-  addJourneyComment(postId: number, text: string, parentCommentId?: number): void {
+  addJourneyComment(postId: number, text: string, parentCommentId?: number, imageUrl?: string): void {
     const user = this.currentUser();
     const newComment: JourneyComment = {
       id: generateUniqueId(),
@@ -822,6 +852,7 @@ export class CommunityService {
         profilePhotoUrl: user?.profilePhotoUrl,
       },
       text: text.trim(),
+      imageUrl: imageUrl || undefined,
       createdAtUtc: new Date().toISOString(),
       parentId: parentCommentId ?? null,
       likeCount: 0,
@@ -1197,6 +1228,8 @@ export class CommunityService {
       status: 'Active',
       profilePhotoUrl:
         'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      coverPhotoUrl:
+        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
       createdAtUtc: '2026-08-10T14:22:00Z',
       activeStatus: 'Active',
       customStatusText: '',
@@ -1248,6 +1281,7 @@ export class CommunityService {
       status: defaultProfile.status,
       profileComplete: true,
       profilePhotoUrl: defaultProfile.profilePhotoUrl,
+      coverPhotoUrl: defaultProfile.coverPhotoUrl,
       activeStatus: 'Active',
       customStatusText: '',
       isProfileLocked: false,
@@ -1428,6 +1462,7 @@ export class CommunityService {
         ],
         location: 'Lake Como, Italy',
         mood: '🌿 Blissful',
+        imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
         comments: [
           {
             id: 201,
@@ -1453,6 +1488,7 @@ export class CommunityService {
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
         },
         text: 'Finalized the print proofs for my Amalfi Coast cliffside portfolio. The warm sunset lighting against the pastel houses is so realistic that my colleagues thought I was in Campania last week! NeverBeen is truly on another level.',
+        imageUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80',
         createdAtUtc: '2026-09-21T08:15:00Z',
         likeCount: 24,
         isLiked: false,
@@ -1510,6 +1546,26 @@ export class CommunityService {
         mood: '🏮 Serene',
         comments: [],
       },
+      {
+        id: 105,
+        author: {
+          id: 33,
+          fullName: 'Elena Rostova',
+          profession: 'Travel Blogger',
+          profilePhotoUrl:
+            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+        },
+        text: 'Traversing the Bernina Express across Swiss viaducts. Snowy peaks above and vibrant alpine meadows below—unmatched journey memories! 🚂🏔️',
+        imageUrl:
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+        createdAtUtc: '2026-09-21T10:00:00Z',
+        likeCount: 42,
+        isLiked: true,
+        likers: seedLikers,
+        location: 'St. Moritz, Switzerland',
+        mood: '❄️ Scenic',
+        comments: [],
+      },
     ];
   }
 
@@ -1523,6 +1579,8 @@ export class CommunityService {
         fullName: 'Elena Rostova',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
         country: 'France',
         city: 'Paris',
         profession: 'Travel Blogger',
@@ -1532,12 +1590,30 @@ export class CommunityService {
         status: 'connected',
         isProfileLocked: false,
         bio: 'Documenting scenic train routes and mountain lakes across Europe.',
+        aboutMe:
+          'Passionate travel blogger exploring alpine vistas, hidden cafes, and train adventures across Central Europe. Sharing stories and photos with fellow NeverBeen wanderers!',
+        gallery: [
+          {
+            id: 331,
+            url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80',
+            caption: 'Sunset over Lauterbrunnen',
+            createdAtUtc: '2026-09-18T10:00:00Z',
+          },
+          {
+            id: 332,
+            url: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=600&q=80',
+            caption: 'Zermatt peak reflections',
+            createdAtUtc: '2026-09-19T14:30:00Z',
+          },
+        ],
       },
       {
         id: 12,
         fullName: 'Marco Rossi',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80',
         country: 'Italy',
         city: 'Rome',
         profession: 'Architect',
@@ -1547,12 +1623,24 @@ export class CommunityService {
         status: 'connected',
         isProfileLocked: false,
         bio: 'Architectural photographer with a focus on historical Italian coastlines.',
+        aboutMe:
+          'Rome-based architect studying historic coastal architecture and classical arches. I travel to sketch and photograph timeless seaside structures.',
+        gallery: [
+          {
+            id: 121,
+            url: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80',
+            caption: 'Amalfi cliffside pastel houses',
+            createdAtUtc: '2026-09-17T11:00:00Z',
+          },
+        ],
       },
       {
         id: 42,
         fullName: 'Chloe Dupont',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80',
         country: 'France',
         city: 'Nice',
         profession: 'Landscape Photographer',
@@ -1562,12 +1650,17 @@ export class CommunityService {
         status: 'connected',
         isProfileLocked: false,
         bio: 'Chasing turquoise waves and golden light along the French Riviera.',
+        aboutMe:
+          'Golden-hour lover capturing Mediterranean bays, sailing routes, and dramatic coastal cliffs from Nice to Monaco.',
+        gallery: [],
       },
       {
         id: 88,
         fullName: 'Kenji Sato',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
         country: 'Japan',
         city: 'Tokyo',
         profession: 'Student & Street Shooter',
@@ -1577,12 +1670,17 @@ export class CommunityService {
         status: 'connected',
         isProfileLocked: false,
         bio: 'Exploring traditional shrines and night neon in Kanto & Kansai.',
+        aboutMe:
+          'Capturing street life under neon lights and quiet morning temples in Tokyo, Kyoto, and Osaka.',
+        gallery: [],
       },
       {
         id: 55,
         fullName: 'Liam O\'Connor',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
         country: 'Ireland',
         city: 'Dublin',
         profession: 'Adventure Guide',
@@ -1592,6 +1690,9 @@ export class CommunityService {
         status: 'connected',
         isProfileLocked: false,
         bio: 'Hiking the Wild Atlantic Way and Scottish Highlands.',
+        aboutMe:
+          'Guiding outdoor adventures along rugged cliffs, ancient ruins, and misty islands.',
+        gallery: [],
       },
       // Non-connected travelers (searchable & can send requests)
       {
@@ -1599,6 +1700,8 @@ export class CommunityService {
         fullName: 'Maya Patel',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
         country: 'India',
         city: 'Mumbai',
         profession: 'UI/UX Designer',
@@ -1608,12 +1711,24 @@ export class CommunityService {
         status: 'pending_incoming', // Requested companionship!
         isProfileLocked: true, // Profile is locked!
         bio: 'Minimalist traveler exploring heritage forts and colorful desert fairs.',
+        aboutMe:
+          'Passionate about Indian architectural heritage, colorful textiles, and minimalist travel essentials.',
+        gallery: [
+          {
+            id: 711,
+            url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+            caption: 'Hawa Mahal courtyards',
+            createdAtUtc: '2026-09-10T12:00:00Z',
+          },
+        ],
       },
       {
         id: 72,
         fullName: 'Lucas Vance',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
         country: 'Germany',
         city: 'Berlin',
         profession: 'Documentary Filmmaker',
@@ -1623,12 +1738,17 @@ export class CommunityService {
         status: 'none',
         isProfileLocked: false,
         bio: 'Urban exploration and historical travel across Central Europe.',
+        aboutMe:
+          'Creating visual documentaries centered on forgotten historical routes and creative cultural centers.',
+        gallery: [],
       },
       {
         id: 73,
         fullName: 'Isabella Santos',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80',
         country: 'Portugal',
         city: 'Lisbon',
         profession: 'Food & Wine Writer',
@@ -1638,12 +1758,17 @@ export class CommunityService {
         status: 'none',
         isProfileLocked: false,
         bio: 'Sharing secret viewpoints and culinary treasures across the Iberian peninsula.',
+        aboutMe:
+          'Lisbon local roaming vineyards in Douro and coastal seafood shacks from Porto to the Algarve.',
+        gallery: [],
       },
       {
         id: 74,
         fullName: 'Noah Weber',
         profilePhotoUrl:
           'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=200&q=80',
+        coverPhotoUrl:
+          'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80',
         country: 'Switzerland',
         city: 'Zurich',
         profession: 'Alpinist',
@@ -1653,6 +1778,9 @@ export class CommunityService {
         status: 'none',
         isProfileLocked: true, // Profile is locked!
         bio: 'High altitude mountaineer exploring glaciers and remote Swiss ridges.',
+        aboutMe:
+          'Ice climbing, ski touring, and technical ascents across Valais and the Bernese Oberland.',
+        gallery: [],
       },
     ];
   }

@@ -18,6 +18,11 @@
         <span class="comment-time">{{ formatTime(comment.createdAtUtc) }}</span>
       </div>
       <p class="comment-text-content">{{ comment.text }}</p>
+      @if (comment.imageUrl) {
+        <div class="comment-image-attachment">
+          <img [src]="comment.imageUrl" alt="Comment photo attachment" class="comment-attached-photo" />
+        </div>
+      }
 
       <div class="comment-actions-bar">
         <button
@@ -44,16 +49,31 @@
         }
       </div>
 
-      <!-- INLINE REPLY BOX -->
+      <!-- INLINE REPLY BOX (With Requirement A: Picture upload limit <= 100 KB) -->
       @if (replyOpen()) {
         <div class="inline-reply-composer">
-          <input
-            type="text"
-            [(ngModel)]="replyText"
-            (keydown.enter)="submitReply()"
-            placeholder="Write a reply..."
-            class="reply-input-field"
-          />
+          <div class="reply-input-box-row">
+            <input
+              type="text"
+              [(ngModel)]="replyText"
+              (keydown.enter)="submitReply()"
+              placeholder="Write a reply..."
+              class="reply-input-field"
+            />
+            <label class="btn-attach-reply-photo" title="Attach photo (Max 100 KB)">
+              📷
+              <input type="file" accept="image/*" (change)="onReplyPhotoSelected($event)" class="hidden-file-input" />
+            </label>
+          </div>
+          @if (replyPhotoPreview()) {
+            <div class="reply-photo-preview-bar">
+              <img [src]="replyPhotoPreview()!" alt="Attached photo preview" class="reply-preview-thumbnail" />
+              <button type="button" class="btn-remove-reply-photo" (click)="clearReplyPhoto()" title="Remove photo">✕</button>
+            </div>
+          }
+          @if (replyPhotoError()) {
+            <div class="reply-photo-error-banner">{{ replyPhotoError() }}</div>
+          }
           <div class="reply-composer-actions">
             <button type="button" class="btn-cancel-reply" (click)="toggleReply()">Cancel</button>
             <button

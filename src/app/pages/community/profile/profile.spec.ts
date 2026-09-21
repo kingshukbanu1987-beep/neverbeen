@@ -667,4 +667,151 @@ describe('CommunityProfile', () => {
     expect(getCookie(TOKEN_KEY)).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/community']);
   });
+
+  it('enforces 100 KB limit for pictures in Gallery, Journey composer, MessageBook, comments, and cover photo (Requirement A)', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+
+    const oversizedBlob = new Blob(['a'.repeat(105 * 1024)], { type: 'image/jpeg' });
+    const oversizedFile = new File([oversizedBlob], 'huge.jpg', { type: 'image/jpeg' });
+
+    const validBlob = new Blob(['a'.repeat(20 * 1024)], { type: 'image/jpeg' });
+    const validFile = new File([validBlob], 'valid.jpg', { type: 'image/jpeg' });
+
+    // 1. Gallery upload limit
+    const galleryEvent = { target: { files: [oversizedFile] } } as unknown as Event;
+    component.onGalleryFileSelected(galleryEvent);
+    expect(component['galleryError']()).toContain('100 KB');
+    expect(component['selectedGalleryFile']()).toBeNull();
+
+    // 2. Journey composer photo limit
+    const journeyEvent = { target: { files: [oversizedFile] } } as unknown as Event;
+    component.onJourneyPhotoSelected(journeyEvent);
+    expect(component['journeyPhotoError']()).toContain('100 KB');
+    expect(component['selectedJourneyPhoto']()).toBeNull();
+
+    // Valid file for Journey composer
+    const validJourneyEvent = { target: { files: [validFile] } } as unknown as Event;
+    component.onJourneyPhotoSelected(validJourneyEvent);
+    expect(component['journeyPhotoError']()).toBeNull();
+    expect(component['selectedJourneyPhoto']()).toBe(validFile);
+
+    // 3. MessageBook composer photo limit
+    const mbEvent = { target: { files: [oversizedFile] } } as unknown as Event;
+    component.onMessageBookPhotoSelected(mbEvent);
+    expect(component['messageBookPhotoError']()).toContain('100 KB');
+    expect(component['selectedMessageBookPhoto']()).toBeNull();
+
+    // 4. Journey Comment photo limit
+    const commentEvent = { target: { files: [oversizedFile] } } as unknown as Event;
+    component.onJourneyCommentPhotoSelected(commentEvent, 101);
+    expect(component['journeyCommentPhotoError']()?.message).toContain('100 KB');
+
+    // 5. Cover photo upload limit
+    const coverEvent = { target: { files: [oversizedFile] } } as unknown as Event;
+    await component.onCoverPhotoUpload(coverEvent);
+    expect(component['coverPhotoError']()).toContain('100 KB');
+
+    // 6. Service level rejection for files > 100 KB
+    await expect(service.uploadCoverPhoto(oversizedFile)).rejects.toThrow('100 KB');
+    await expect(service.addGalleryPhoto(oversizedFile)).rejects.toThrow('100 KB');
+    await expect(service.uploadProfilePhoto(oversizedFile)).rejects.toThrow('100 KB');
+  });
+
+  it('displays destination icon and destination strictly in one line in Journey composer and posts (Requirement B)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    component.setSection('journey');
+    fixture.detectChanges();
+
+    // In composer: destination wrapper contains inline field with pin and text
+    const composerDestWrap = element.querySelector('.destination-autocomplete-wrapper');
+    expect(composerDestWrap).toBeTruthy();
+    const destInline = composerDestWrap!.querySelector('.dest-field-inline');
+    expect(destInline).toBeTruthy();
+    expect(destInline!.querySelector('.dest-pin-icon')?.textContent).toContain('📍');
+
+    // Select a Google Maps location
+    component.selectGoogleLocation(VERIFIED_GOOGLE_MAP_LOCATIONS[0]);
+    fixture.detectChanges();
+
+    const selectedPill = element.querySelector('.selected-google-dest-pill');
+    expect(selectedPill).toBeTruthy();
+    expect(selectedPill!.querySelector('.gmap-pin')?.textContent).toContain('📍');
+    expect(selectedPill!.querySelector('.dest-text')?.textContent).toContain(VERIFIED_GOOGLE_MAP_LOCATIONS[0].name);
+
+    // In Journey feed: post location contains icon and destination name
+    const postLoc = element.querySelector('.post-loc');
+    expect(postLoc).toBeTruthy();
+    expect(postLoc!.querySelector('.post-loc-icon')?.textContent).toContain('📍');
+    expect(postLoc!.querySelector('.post-loc-text')).toBeTruthy();
+  });
+
+  it('displays Cover photo and opens visitor profile modal card popup with About me, Gallery, and Journey visible one after another (Requirement C)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // 1. User has Cover Photo in side panel summary
+    const userCoverImg = element.querySelector<HTMLImageElement>('.user-cover-img');
+    expect(userCoverImg).toBeTruthy();
+    expect(userCoverImg?.src).toBeTruthy();
+
+    // 2. Click Elena Rostova (id: 33) to open visitor profile
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    // Modal card popup is open
+    const modalPopup = element.querySelector('.visitor-profile-modal-card');
+    expect(modalPopup).toBeTruthy();
+
+    // Cover photo is visible at the top
+    const visitorCoverImg = modalPopup!.querySelector<HTMLImageElement>('.visitor-modal-cover-img');
+    expect(visitorCoverImg).toBeTruthy();
+
+    // Visible one after another below:
+    // 1. About me
+    const aboutSection = modalPopup!.querySelector('.visitor-flow-about');
+    expect(aboutSection).toBeTruthy();
+    expect(aboutSection!.textContent).toContain('About Elena Rostova');
+
+    // 2. Gallery
+    const gallerySection = modalPopup!.querySelector('.visitor-flow-gallery');
+    expect(gallerySection).toBeTruthy();
+    expect(gallerySection!.textContent).toContain('Gallery');
+
+    // 3. Journey (feeds)
+    const journeySection = modalPopup!.querySelector('.visitor-flow-journey');
+    expect(journeySection).toBeTruthy();
+    expect(journeySection!.textContent).toContain('Journey');
+
+    // When visiting locked traveler Maya Patel, locked shield replaces content
+    const maya = service.companions().find((c) => c.id === 71)!;
+    component.openVisitorProfile(maya);
+    fixture.detectChanges();
+
+    const lockedShield = modalPopup!.querySelector('.visitor-locked-shield-card');
+    expect(lockedShield).toBeTruthy();
+    expect(lockedShield!.textContent).toContain('This Profile is Locked');
+  });
+
+  it('renders side panel menu icons as solid filled transparent ultra-modern SVG silhouettes (Requirement D)', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    const navButtons = element.querySelectorAll<HTMLButtonElement>('.side-menu-nav .menu-btn');
+    expect(navButtons.length).toBe(10);
+
+    navButtons.forEach((btn) => {
+      const pill = btn.querySelector('.icon-pill');
+      expect(pill).toBeTruthy();
+
+      const svg = pill!.querySelector('svg');
+      expect(svg).toBeTruthy();
+      expect(svg?.getAttribute('fill')).toBe('currentColor');
+    });
+  });
 });
