@@ -238,15 +238,14 @@
             }
           </div>
 
-          <!-- Copy URL (Requirement C) -->
-          <div class="side-user-uid-row" title="Copy your Profile Link">
+          <!-- View Profile Option (Requirement C) -->
+          <div class="side-user-view-profile-row" title="Preview how your profile appears to visitors">
             <button
               type="button"
-              class="btn-side-copy-url"
-              (click)="copyOwnProfileUrl()"
-              [title]="copiedProfileUrl() ? 'Copied to clipboard' : 'Copy your profile link'"
+              class="btn-side-view-profile"
+              (click)="viewOwnProfileAsVisitor()"
             >
-              📋 {{ copiedProfileUrl() ? 'Copied!' : 'Copy Profile Link' }}
+              👁️ View Profile
             </button>
           </div>
         </div>
@@ -681,9 +680,9 @@
               </div>
             </div>
 
-            <!-- JOURNEY WALL FEED LIST -->
+            <!-- JOURNEY WALL FEED LIST (Requirement F: Virtual scrolling / infinite scroll) -->
             <div class="journey-feed-list">
-              @for (post of service.visibleJourneyPosts(); track post.id) {
+              @for (post of displayedJourneyPosts(); track post.id) {
                 <article class="journey-post-card">
                   <!-- Post Author Header -->
                   <div class="post-header">
@@ -729,8 +728,8 @@
                       </div>
                     </div>
 
-                    <!-- Requirements F & G: Delete post button (Profile owner or post author) -->
-                    @if (canDeleteJourneyPost(post)) {
+                    <!-- Requirements F & G: Delete own post, or Hide post for other users' posts -->
+                    @if (post.author.id === (service.currentUser()?.id || 1)) {
                       <button
                         type="button"
                         class="btn-delete-post-mini"
@@ -739,10 +738,15 @@
                       >
                         🗑️ Delete
                       </button>
-                    }
-
-                    <!-- Requirement C: Report Abuse for posts by other users -->
-                    @if (post.author.id !== (service.currentUser()?.id || 1)) {
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-hide-post-mini"
+                        (click)="hideJourneyPost(post.id)"
+                        title="Hide this post from your feed"
+                      >
+                        👁️‍🗨️ Hide
+                      </button>
                       <button
                         type="button"
                         class="btn-report-abuse-mini"
@@ -759,15 +763,25 @@
                     <p class="post-body-text">{{ post.text }}</p>
                   }
 
-                  <!-- Post Attached Photo (Requirement A: <= 100 KB, Requirement F: Multi-photo support) -->
+                  <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
                   @if (post.imageUrls && post.imageUrls.length > 1) {
-                    <div class="post-multi-images-grid" [attr.data-count]="post.imageUrls.length">
-                      @for (img of post.imageUrls; track $index) {
-                        <div class="multi-img-cell" (click)="openImageModal(img)">
+                    <div class="post-multi-images-grid facebook-collage" [attr.data-count]="post.imageUrls.length >= 4 ? 4 : post.imageUrls.length">
+                      @for (img of post.imageUrls.slice(0, 4); track $index) {
+                        <div
+                          class="multi-img-cell"
+                          [class.has-more]="post.imageUrls.length > 4 && $index === 3"
+                          (click)="post.imageUrls.length > 4 && $index === 3 ? openPostDetail(post) : openImageModal(img)"
+                        >
                           <img [src]="img" alt="Journey post photo" class="post-attached-photo multi-photo-img" />
                           @if (post.imageUrls.length > 4 && $index === 3) {
-                            <div class="multi-img-more-overlay">
-                              +{{ post.imageUrls.length - 4 }}
+                            <div
+                              class="multi-img-more-overlay"
+                              (click)="$event.stopPropagation(); openPostDetail(post)"
+                              role="button"
+                              tabindex="0"
+                              title="Click to view full post with all {{ post.imageUrls.length }} photos"
+                            >
+                              +{{ post.imageUrls.length - 4 > 0 ? (post.imageUrls.length - 4) : 1 }}
                             </div>
                           }
                         </div>
@@ -980,6 +994,19 @@
                     </div>
                   }
                 </article>
+              }
+
+              <!-- Requirement F: Infinite scroll / load more sentinel -->
+              @if (hasMoreJourneyPosts()) {
+                <div class="journey-infinite-scroll-sentinel">
+                  <button type="button" class="btn-load-more-posts" (click)="loadMoreJourneyPosts()">
+                    Showing {{ displayedJourneyPosts().length }} of {{ service.visibleJourneyPosts().length }} posts • Load More
+                  </button>
+                </div>
+              } @else if (service.visibleJourneyPosts().length > 0) {
+                <div class="journey-feed-end-notice">
+                  ✨ You've viewed all {{ service.visibleJourneyPosts().length }} journey stories.
+                </div>
               }
             </div>
           </section>
@@ -2873,9 +2900,6 @@
           <span class="visitor-uid-pill" title="20-digit Profile Unique ID" style="display: none !important;">
             Profile ID: <strong>{{ viewingVisitor()!.uniqueId || generateUid(viewingVisitor()!.id) }}</strong>
           </span>
-          <button type="button" class="btn-copy-profile-url" (click)="copyProfileUrl(viewingVisitor()!)" title="Copy Profile Link">
-            📋 {{ copiedProfileUrl() ? 'Copied!' : 'Copy Link' }}
-          </button>
         </div>
       </header>
 
@@ -3334,15 +3358,25 @@
                 </div>
 
                 <p class="post-body-text">{{ post.text }}</p>
-                <!-- Post Attached Photo (Multi-photo & single photo support - Requirement F) -->
+                <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
                 @if (post.imageUrls && post.imageUrls.length > 1) {
-                  <div class="post-multi-images-grid" [attr.data-count]="post.imageUrls.length">
-                    @for (img of post.imageUrls; track $index) {
-                      <div class="multi-img-cell" (click)="openImageModal(img)">
+                  <div class="post-multi-images-grid facebook-collage" [attr.data-count]="post.imageUrls.length >= 4 ? 4 : post.imageUrls.length">
+                    @for (img of post.imageUrls.slice(0, 4); track $index) {
+                      <div
+                        class="multi-img-cell"
+                        [class.has-more]="post.imageUrls.length > 4 && $index === 3"
+                        (click)="post.imageUrls.length > 4 && $index === 3 ? openPostDetail(post) : openImageModal(img)"
+                      >
                         <img [src]="img" alt="Journey photo attachment" class="post-attached-photo multi-photo-img" />
                         @if (post.imageUrls.length > 4 && $index === 3) {
-                          <div class="multi-img-more-overlay">
-                            +{{ post.imageUrls.length - 4 }}
+                          <div
+                            class="multi-img-more-overlay"
+                            (click)="$event.stopPropagation(); openPostDetail(post)"
+                            role="button"
+                            tabindex="0"
+                            title="Click to view full post with all {{ post.imageUrls.length }} photos"
+                          >
+                            +{{ post.imageUrls.length - 4 > 0 ? (post.imageUrls.length - 4) : 1 }}
                           </div>
                         }
                       </div>
@@ -3563,10 +3597,10 @@
   <!-- POPUP MODAL: SEE ALL COMPANIONS OF CURRENT USER (Requirements A & D) -->
   @if (showAllUserCompanionsModal()) {
     <div class="modal-backdrop-overlay" (click)="closeAllUserCompanionsModal()">
-      <div class="modal-dialog-card user-all-companions-modal" (click)="$event.stopPropagation()">
+      <div class="modal-dialog-card user-all-companions-modal my-companions-modal" (click)="$event.stopPropagation()">
         <header class="modal-head">
           <div class="modal-head-title-wrap">
-            <h3 class="modal-head-title">👥 All Companions</h3>
+            <h3 class="modal-head-title">👥 My Companions</h3>
             <span class="modal-count-tag">{{ totalCompanionsCount() }} Total</span>
           </div>
           <button type="button" class="btn-close-modal" (click)="closeAllUserCompanionsModal()" aria-label="Close modal">✕</button>
@@ -3849,6 +3883,73 @@
         <footer class="modal-footer-bar tag-footer-bar">
           <button type="button" class="btn-secondary-action" (click)="clearAllTaggedCompanions()">Clear All</button>
           <button type="button" class="btn-primary-action" (click)="closeTagPeopleModal()">Done Tagging</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  <!-- POPUP MODAL: FULL POST DETAIL (Requirement E: Clicking +[N] opens post) -->
+  @if (viewingPostDetail()) {
+    <div class="modal-backdrop-overlay post-detail-modal-overlay" (click)="closePostDetail()">
+      <div class="modal-dialog-card post-detail-modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <div class="post-detail-author-row">
+            <img
+              [src]="viewingPostDetail()!.author.profilePhotoUrl || defaultAvatar"
+              [alt]="viewingPostDetail()!.author.fullName"
+              class="author-avatar-img clickable-user"
+              (click)="closePostDetail(); openVisitorProfile(viewingPostDetail()!.author)"
+            />
+            <div class="post-detail-author-meta">
+              <strong
+                class="author-name clickable-user"
+                (click)="closePostDetail(); openVisitorProfile(viewingPostDetail()!.author)"
+              >
+                {{ viewingPostDetail()!.author.fullName }}
+              </strong>
+              <span class="post-detail-submeta">
+                {{ formatTime(viewingPostDetail()!.createdAtUtc) }}
+                @if (viewingPostDetail()!.location) {
+                  • 📍 {{ viewingPostDetail()!.location }}
+                }
+                @if (viewingPostDetail()!.mood) {
+                  • {{ viewingPostDetail()!.mood }}
+                }
+              </span>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="closePostDetail()" aria-label="Close post detail">✕</button>
+        </header>
+
+        <div class="modal-body-content post-detail-body">
+          @if (viewingPostDetail()!.text) {
+            <p class="post-detail-text">{{ viewingPostDetail()!.text }}</p>
+          }
+
+          <!-- All Attached Photos (Complete album with full visibility) -->
+          @if (viewingPostDetail()!.imageUrls && viewingPostDetail()!.imageUrls!.length > 0) {
+            <div class="post-detail-photos-gallery">
+              @for (photo of viewingPostDetail()!.imageUrls; track $index) {
+                <div class="post-detail-photo-item" (click)="openImageModal(photo)" title="Click to enlarge photo">
+                  <img [src]="photo" alt="Post photo attachment" class="detail-gallery-img" />
+                </div>
+              }
+            </div>
+          } @else if (viewingPostDetail()!.imageUrl) {
+            <div class="post-detail-photo-item" (click)="openImageModal(viewingPostDetail()!.imageUrl!)" title="Click to enlarge photo">
+              <img [src]="viewingPostDetail()!.imageUrl" alt="Post photo attachment" class="detail-gallery-img" />
+            </div>
+          }
+
+          <!-- Post Engagement summary -->
+          <div class="post-detail-engagement-summary">
+            <span>❤️ {{ viewingPostDetail()!.likeCount }} reactions</span>
+            <span>💬 {{ viewingPostDetail()!.comments.length }} comments</span>
+          </div>
+        </div>
+
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="closePostDetail()">Close</button>
         </footer>
       </div>
     </div>

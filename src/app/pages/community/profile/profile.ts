@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -112,6 +112,18 @@ export class CommunityProfile implements OnInit {
   protected readonly journeyPhotoPreviews = signal<string[]>([]);
   protected readonly journeyPhotoPreview = signal<string | null>(null);
   protected readonly journeyPhotoError = signal<string | null>(null);
+
+  // Virtual Scrolling / Infinite Scroll for Journey Posts (Requirement F)
+  readonly displayedJourneyPostLimit = signal<number>(25);
+  readonly displayedJourneyPosts = computed(() =>
+    this.service.visibleJourneyPosts().slice(0, this.displayedJourneyPostLimit()),
+  );
+  readonly hasMoreJourneyPosts = computed(
+    () => this.displayedJourneyPostLimit() < this.service.visibleJourneyPosts().length,
+  );
+
+  // Full Post Detail Modal (Requirement E)
+  readonly viewingPostDetail = signal<JourneyPost | null>(null);
 
   // Journey Comment Photo Attachment (Requirement A: <= 100 KB)
   protected readonly journeyCommentPhotoPreview = signal<{ postId: number; dataUrl: string } | null>(null);
@@ -1935,6 +1947,44 @@ export class CommunityProfile implements OnInit {
       }
     }
     this.service.deleteJourneyPost(postId);
+  }
+
+  // Requirement G: Hide post option for other users' posts in Journey feed
+  hideJourneyPost(postId: number): void {
+    this.service.hideJourneyPost(postId);
+  }
+
+  // Requirement C: View own profile as visitor preview
+  viewOwnProfileAsVisitor(): void {
+    const ownComp = this.service.getCurrentUserAsCompanion();
+    this.viewingVisitor.set(ownComp);
+  }
+
+  // Requirement E: Facebook collage open full post detail modal
+  openPostDetail(post: JourneyPost): void {
+    this.viewingPostDetail.set(post);
+  }
+
+  closePostDetail(): void {
+    this.viewingPostDetail.set(null);
+  }
+
+  // Requirement F: Virtual scrolling / infinite scroll for Journey page
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.activeSection() !== 'journey' || !this.hasMoreJourneyPosts()) return;
+    if (typeof window === 'undefined') return;
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const threshold = document.documentElement.scrollHeight - 700;
+    if (scrollPosition >= threshold) {
+      this.loadMoreJourneyPosts();
+    }
+  }
+
+  loadMoreJourneyPosts(): void {
+    this.displayedJourneyPostLimit.update((cur) =>
+      Math.min(cur + 25, this.service.visibleJourneyPosts().length),
+    );
   }
 
   handleCommentThreadDelete(event: { postId: number; commentId: number }): void {

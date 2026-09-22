@@ -34,6 +34,8 @@ import {
   SEED_PROFESSIONS,
 } from '../models/community-seed';
 import { SEED_ASIAN_COMPANIONS } from '../models/community-asian-profiles';
+import { ALL_SEED_INDIAN_COMPANIONS } from '../models/community-indian-profiles';
+import { SEED_EXTENDED_JOURNEY_POSTS } from '../models/community-journey-feed-seed';
 
 export const TOKEN_KEY = 'neverbeen_auth_token';
 export const USER_KEY = 'neverbeen_current_user';
@@ -45,6 +47,7 @@ export const CIRCLES_KEY = 'neverbeen_circles';
 export const NOTIFS_KEY = 'neverbeen_notifications';
 export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
+export const HIDDEN_POSTS_KEY = 'neverbeen_hidden_post_ids';
 
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -104,6 +107,7 @@ export class CommunityService {
   readonly activeChatBoxes = signal<ActiveChatBox[]>([]);
   readonly blockedUserIds = signal<number[]>(this.loadBlockedUsers());
   readonly abuseReports = signal<AbuseReport[]>(this.loadAbuseReports());
+  readonly hiddenPostIds = signal<number[]>(this.loadHiddenPostIds());
 
   readonly countries = signal<Country[]>(
     SEED_COUNTRIES.map((c) => ({
@@ -125,7 +129,9 @@ export class CommunityService {
   );
 
   readonly visibleJourneyPosts = computed(() =>
-    this.journeyPosts().filter((p) => !this.blockedUserIds().includes(p.author.id)),
+    this.journeyPosts()
+      .filter((p) => !this.blockedUserIds().includes(p.author.id))
+      .filter((p) => !this.hiddenPostIds().includes(p.id)),
   );
 
   readonly visibleNotifications = computed(() =>
@@ -1580,6 +1586,26 @@ export class CommunityService {
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
   }
 
+  hideJourneyPost(postId: number): void {
+    if (!this.hiddenPostIds().includes(postId)) {
+      this.hiddenPostIds.update((list) => [...list, postId]);
+      this.saveJson(HIDDEN_POSTS_KEY, this.hiddenPostIds());
+    }
+  }
+
+  unhideJourneyPost(postId: number): void {
+    this.hiddenPostIds.update((list) => list.filter((id) => id !== postId));
+    this.saveJson(HIDDEN_POSTS_KEY, this.hiddenPostIds());
+  }
+
+  isPostHidden(postId: number): boolean {
+    return this.hiddenPostIds().includes(postId);
+  }
+
+  private loadHiddenPostIds(): number[] {
+    return this.loadJson<number[]>(HIDDEN_POSTS_KEY) || [];
+  }
+
   deleteJourneyComment(postId: number, commentId: number): void {
     const removeCommentRecursive = (list: JourneyComment[]): JourneyComment[] => {
       return list
@@ -1860,7 +1886,25 @@ export class CommunityService {
 
   private loadJourneyPosts(): JourneyPost[] {
     const saved = this.loadJson<JourneyPost[]>(JOURNEY_KEY);
-    if (saved && saved.length > 0) return saved;
+    const baseList: JourneyPost[] = this.getBaseSeedJourneyPosts();
+
+    let merged: JourneyPost[] = [];
+    if (saved && saved.length >= 500) {
+      return saved;
+    } else if (saved && saved.length > 0) {
+      merged = [...saved];
+      for (const p of SEED_EXTENDED_JOURNEY_POSTS) {
+        if (!merged.some((m) => m.id === p.id)) {
+          merged.push(p);
+        }
+      }
+    } else {
+      merged = [...baseList, ...SEED_EXTENDED_JOURNEY_POSTS];
+    }
+    return merged;
+  }
+
+  private getBaseSeedJourneyPosts(): JourneyPost[] {
 
     const seedLikers: AuthorInfo[] = [
       {
@@ -2138,8 +2182,14 @@ export class CommunityService {
           merged.push(asian);
         }
       }
+      // Merge in any missing Indian companions (500 WB/Kolkata + 100 other Indian states)
+      for (const indian of ALL_SEED_INDIAN_COMPANIONS) {
+        if (!merged.some((c) => c.id === indian.id || c.uniqueId === indian.uniqueId)) {
+          merged.push(indian);
+        }
+      }
     } else {
-      merged = [...baseList, ...SEED_ASIAN_COMPANIONS];
+      merged = [...baseList, ...SEED_ASIAN_COMPANIONS, ...ALL_SEED_INDIAN_COMPANIONS];
     }
 
     const defaultCover =

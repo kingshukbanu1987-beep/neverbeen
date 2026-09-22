@@ -283,6 +283,8 @@ export interface AuthorInfo {
   fullName?: string;
   profilePhotoUrl?: string;
   profession?: string;
+  country?: string;
+  city?: string;
 }
 
 export interface CommunityComment {
@@ -330,6 +332,7 @@ export interface PagedResult<T> {
 
 export interface JourneyComment {
   id: number;
+  postId?: number;
   author: AuthorInfo;
   text: string;
   createdAtUtc: string;
@@ -359,6 +362,7 @@ export interface JourneyPost {
   mood?: string;
   placeId?: string;
   shareCount?: number;
+  sharesCount?: number;
   isShared?: boolean;
   sharedText?: string;
   originalPost?: JourneyPost;

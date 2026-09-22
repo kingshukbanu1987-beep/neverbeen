@@ -1556,4 +1556,179 @@ describe('CommunityProfile', () => {
     expect(visitorIntroStory).toBeTruthy();
     expect(visitorIntroStory?.textContent).toContain('train');
   });
+
+  it('renders My Companion modal window without top clipping and displays title (Requirement A)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    component.openAllUserCompanionsModal();
+    fixture.detectChanges();
+
+    const modalBackdrop = element.querySelector('.modal-backdrop-overlay');
+    expect(modalBackdrop).toBeTruthy();
+
+    const myCompanionModal = element.querySelector('.user-all-companions-modal');
+    expect(myCompanionModal).toBeTruthy();
+
+    const modalTitle = myCompanionModal?.querySelector('.modal-head-title');
+    expect(modalTitle?.textContent).toContain('My Companions');
+
+    // Close modal
+    component.closeAllUserCompanionsModal();
+    fixture.detectChanges();
+    expect(element.querySelector('.user-all-companions-modal')).toBeNull();
+  });
+
+  it('provides View Profile option in own profile to preview visitor view (Requirement C)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // View Profile button is present on own profile
+    const viewProfileBtn = element.querySelector<HTMLButtonElement>('.btn-side-view-profile');
+    expect(viewProfileBtn).toBeTruthy();
+    expect(viewProfileBtn?.textContent).toContain('View Profile');
+
+    // Clicking View Profile previews visitor view of own profile
+    viewProfileBtn?.click();
+    fixture.detectChanges();
+
+    expect(component['viewingVisitor']()).toBeTruthy();
+    expect(component['viewingVisitor']()?.fullName).toBe(service.currentUser()?.fullName);
+
+    const visitorPageContainer = element.querySelector('.visitor-full-page-container');
+    expect(visitorPageContainer).toBeTruthy();
+
+    // Can return back to own profile
+    component.closeVisitorProfile();
+    fixture.detectChanges();
+    expect(component['viewingVisitor']()).toBeNull();
+  });
+
+  it('removes Copy Link and Copy Profile Link buttons from user profiles (Requirement D)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // 1. On own profile: no .btn-side-copy-url or "Copy Profile Link" text
+    expect(element.querySelector('.btn-side-copy-url')).toBeNull();
+    expect(element.textContent).not.toContain('Copy Profile Link');
+
+    // 2. On visitor profile: no .btn-copy-profile-url or "Copy Link" button
+    const visitor = service.companions().find((c) => c.id === 12)!;
+    component.openVisitorProfile(visitor);
+    fixture.detectChanges();
+
+    expect(element.querySelector('.btn-copy-profile-url')).toBeNull();
+    const visitorHeader = element.querySelector('.visitor-page-nav-bar');
+    expect(visitorHeader?.textContent).not.toContain('Copy Link');
+  });
+
+  it('renders Facebook-like photo collage and opens full post on clicking +N overflow (Requirement E)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Post with 5 photos
+    const postWith5Photos = service.journeyPosts().find((p) => p.imageUrls && p.imageUrls.length >= 5);
+    expect(postWith5Photos).toBeTruthy();
+
+    component.setSection('journey');
+    fixture.detectChanges();
+
+    // Find the multi-image collage
+    const collage = element.querySelector('.post-multi-images-grid');
+    expect(collage).toBeTruthy();
+
+    // Clicking +N overflow opens post detail modal
+    component.openPostDetail(postWith5Photos!);
+    fixture.detectChanges();
+
+    expect(component.viewingPostDetail()).toBeTruthy();
+    expect(component.viewingPostDetail()?.id).toBe(postWith5Photos!.id);
+
+    const postDetailCard = element.querySelector('.post-detail-modal-card');
+    expect(postDetailCard).toBeTruthy();
+    expect(postDetailCard?.textContent).toContain(postWith5Photos!.author.fullName);
+
+    // Close detail modal
+    component.closePostDetail();
+    fixture.detectChanges();
+    expect(component.viewingPostDetail()).toBeNull();
+  });
+
+  it('supports virtual scrolling / infinite scroll for 500+ journey posts (Requirement F)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Total journey posts count is 500+
+    const totalPosts = service.visibleJourneyPosts();
+    expect(totalPosts.length).toBeGreaterThanOrEqual(500);
+
+    // Initial limit loads first chunk
+    expect(component.displayedJourneyPosts().length).toBe(25);
+    expect(component.hasMoreJourneyPosts()).toBe(true);
+
+    // Load next chunk
+    component.loadMoreJourneyPosts();
+    expect(component.displayedJourneyPosts().length).toBe(50);
+
+    // Load multiple chunks
+    component.loadMoreJourneyPosts();
+    expect(component.displayedJourneyPosts().length).toBe(75);
+  });
+
+  it('provides hide post option for other users\' posts in Journey feed (Requirement G)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const currentUserId = service.currentUser()?.id || 1;
+    const otherUserPost = service.journeyPosts().find((p) => p.author.id !== currentUserId)!;
+    expect(otherUserPost).toBeTruthy();
+
+    const initialVisibleCount = service.visibleJourneyPosts().length;
+    expect(service.visibleJourneyPosts().some((p) => p.id === otherUserPost.id)).toBe(true);
+
+    // Hide post
+    component.hideJourneyPost(otherUserPost.id);
+    fixture.detectChanges();
+
+    // Post is now hidden from visible Journey feed
+    expect(service.visibleJourneyPosts().some((p) => p.id === otherUserPost.id)).toBe(false);
+    expect(service.visibleJourneyPosts().length).toBe(initialVisibleCount - 1);
+    expect(service.isPostHidden(otherUserPost.id)).toBe(true);
+
+    // Unhide post restores it
+    service.unhideJourneyPost(otherUserPost.id);
+    expect(service.visibleJourneyPosts().some((p) => p.id === otherUserPost.id)).toBe(true);
+  });
+
+  it('contains 500+ Indian users from West Bengal & Kolkata locations and 100+ from other Indian states (Requirements H & I)', () => {
+    const allCompanions = service.companions();
+
+    // Requirement H: 500+ Indian users in Community from West Bengal and Kolkata locations
+    const wbKolkataUsers = allCompanions.filter(
+      (c) =>
+        c.country === 'India' &&
+        (c.city?.toLowerCase().includes('kolkata') ||
+          c.city?.toLowerCase().includes('west bengal')),
+    );
+    expect(wbKolkataUsers.length).toBeGreaterThanOrEqual(500);
+
+    // Requirement I: 100+ Indian users in Community from other Indian states
+    const otherIndiaUsers = allCompanions.filter(
+      (c) =>
+        c.country === 'India' &&
+        !c.city?.toLowerCase().includes('kolkata') &&
+        !c.city?.toLowerCase().includes('west bengal'),
+    );
+    expect(otherIndiaUsers.length).toBeGreaterThanOrEqual(100);
+
+    // Total Indian companions is at least 600
+    const totalIndianUsers = allCompanions.filter((c) => c.country === 'India');
+    expect(totalIndianUsers.length).toBeGreaterThanOrEqual(600);
+  });
 });

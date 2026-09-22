@@ -1,5 +1,5 @@
-<header class="nav">
-  <div class="bar container">
+<header class="nav" [class.compact-nav]="isCompactLogo()">
+  <div class="bar container" [class.compact-bar]="isCompactLogo()">
     <a routerLink="/" class="logo" [class.compact-logo]="isCompactLogo()" (click)="close()" aria-label="NeverBeen home">
       <img ngSrc="/neverbeen-logo.png" [class.compact-logo]="isCompactLogo()" width="150" height="75" alt="NeverBeen" priority />
     </a>

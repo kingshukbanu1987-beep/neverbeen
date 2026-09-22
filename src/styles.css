@@ -121,3 +121,10 @@ section {
     padding-inline: 1.1rem;
   }
 }
+
+/* Ensure all modals display completely above the sticky navbar and are never clipped */
+.modal-backdrop-overlay,
+.photo-lightbox-backdrop,
+.visitor-modal-overlay {
+  z-index: 100000 !important;
+}
