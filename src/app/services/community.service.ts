@@ -49,6 +49,83 @@ export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
 export const HIDDEN_POSTS_KEY = 'neverbeen_hidden_post_ids';
 
+// Curated authentic portrait & cover pools (Requirements E, F, G)
+export const SEED_INDIAN_MALE_PORTRAITS = [
+  'photo-1506794778202-cad84cf45f1d',
+  'photo-1507003211169-0a1dd7228f2d',
+  'photo-1500648767791-00dcc994a43e',
+  'photo-1539571696357-5a69c17a67c6',
+  'photo-1492562080023-ab3db95bfbce',
+  'photo-1522075469751-3a6694fb2f61',
+  'photo-1519085360753-af0119f7cbe7',
+  'photo-1517070208541-6ddc4d3efbcb',
+  'photo-1472099645785-5658abf4ff4e',
+  'photo-1542909168-82c3e7fdca5c',
+  'photo-1560250097-0b93528c311a',
+  'photo-1513956589380-bad6acb9b9d4',
+  'photo-1563240619-44ec0047592c',
+  'photo-1582233479366-6d38bc390a08',
+  'photo-1570295999919-56ceb5ecca61',
+  'photo-1528892952291-009c663ce843',
+  'photo-1501196354995-cbb51c65aaea',
+];
+
+export const SEED_INDIAN_FEMALE_PORTRAITS = [
+  'photo-1544005313-94ddf0286df2',
+  'photo-1517841905240-472988babdf9',
+  'photo-1524504388940-b1c1722653e1',
+  'photo-1531746020798-e6953c6e8e04',
+  'photo-1567532939604-b6b5b0db2604',
+  'photo-1573496359142-b8d87734a5a2',
+  'photo-1580489944761-15a19d654956',
+  'photo-1529626455594-4ff0802cfb7e',
+  'photo-1494790108377-be9c29b29330',
+  'photo-1508214751196-bcfd4ca60f91',
+  'photo-1534528741775-53994a69daeb',
+  'photo-1558898479-33c0057a5d12',
+  'photo-1548142813-c348350df52b',
+  'photo-1516726817505-f5ed825624d8',
+];
+
+export const SEED_COVER_DESTINATIONS = [
+  'photo-1506744038136-46273834b3fb',
+  'photo-1507525428034-b723cf961d3e',
+  'photo-1513635269975-59663e0ac1ad',
+  'photo-1476514525535-07fb3b4ae5f1',
+  'photo-1469854523086-cc02fe5d8800',
+  'photo-1502602898657-3e91760cbb34',
+  'photo-1518684079-3c830dcef090',
+  'photo-1524492412937-b28074a5d7da',
+  'photo-1506905925346-21bda4d32df4',
+  'photo-1433838552652-f9a46b332c40',
+  'photo-1501785888041-af3ef285b470',
+  'photo-1470071459604-3b5ec3a7fe05',
+];
+
+export const SEED_COVER_FAMILY = [
+  'photo-1511895426328-dc8714191300',
+  'photo-1475503572774-15a45e5d60b9',
+  'photo-1542037104857-ffbb0b9155fb',
+  'photo-1609234656388-0ff363383899',
+  'photo-1536640712-4d4c36ff0e4e',
+];
+
+export const SEED_COVER_FRIENDS = [
+  'photo-1529156069898-49953e39b3ac',
+  'photo-1539635278303-d4002c07eae3',
+  'photo-1517457373958-b7bdd4587205',
+  'photo-1511632765486-a01980e01a18',
+  'photo-1523580494863-6f3031224c94',
+];
+
+export const SEED_COVER_COLLEAGUES = [
+  'photo-1522071820081-009f0129c71c',
+  'photo-1517245386807-bb43f82c33c4',
+  'photo-1556761175-5973dc0f32e7',
+  'photo-1531482615713-2afd69097998',
+  'photo-1519389950473-47ba0277781c',
+];
+
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(
@@ -156,22 +233,31 @@ export class CommunityService {
       const storedUser = this.loadJson<CurrentUser>(USER_KEY);
       const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
       if (storedUser && storedProfile) {
-        if (!storedProfile.aboutMeDetails?.intro || storedProfile.aboutMeDetails.intro.length < 150) {
-          const richIntro = this.getRichIntroForUser();
-          storedProfile.aboutMeDetails = {
-            ...(storedProfile.aboutMeDetails || {}),
-            intro: richIntro,
-          };
-          storedUser.aboutMeDetails = {
-            ...(storedUser.aboutMeDetails || {}),
-            intro: richIntro,
-          };
-          this.saveJson(USER_KEY, storedUser);
-          this.saveJson(PROFILE_KEY, storedProfile);
+        // Requirement B: Migrate old profile to Founder Profile (Kingshuk)
+        if (
+          storedProfile.fullName === 'Sophia Laurent' ||
+          storedUser.fullName === 'Sophia Laurent' ||
+          !storedProfile.fullName?.includes('Kingshuk')
+        ) {
+          this.initDefaultMember();
+        } else {
+          if (!storedProfile.aboutMeDetails?.intro || storedProfile.aboutMeDetails.intro.length < 150) {
+            const richIntro = this.getRichIntroForUser();
+            storedProfile.aboutMeDetails = {
+              ...(storedProfile.aboutMeDetails || {}),
+              intro: richIntro,
+            };
+            storedUser.aboutMeDetails = {
+              ...(storedUser.aboutMeDetails || {}),
+              intro: richIntro,
+            };
+            this.saveJson(USER_KEY, storedUser);
+            this.saveJson(PROFILE_KEY, storedProfile);
+          }
+          this.token.set(existingCookieToken);
+          this.currentUser.set(storedUser);
+          this.profile.set(storedProfile);
         }
-        this.token.set(existingCookieToken);
-        this.currentUser.set(storedUser);
-        this.profile.set(storedProfile);
       } else {
         this.initDefaultMember();
       }
@@ -199,65 +285,54 @@ export class CommunityService {
       setCookie(TOKEN_KEY, token, 30);
       const existingUser: CurrentUser = {
         id: 1,
-        firstName: 'Sophia',
-        lastName: 'Laurent',
-        fullName: 'Sophia Laurent',
-        email: `sophia.${provider.toLowerCase()}@neverbeen.example`,
+        firstName: 'Kingshuk',
+        lastName: '',
+        fullName: 'Kingshuk',
+        email: `kingshuk.${provider.toLowerCase()}@neverbeen.example`,
         status: 'Active',
         profileComplete: true,
-        profilePhotoUrl:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        profilePhotoUrl: '/author.jpeg',
         activeStatus: 'Active',
         customStatusText: '',
         isProfileLocked: false,
+        isVerified: false,
+        verificationType: null,
+        verifiedEmail: undefined,
       };
 
       const existingProfile: Profile = {
         id: 1,
-        firstName: 'Sophia',
-        lastName: 'Laurent',
-        fullName: 'Sophia Laurent',
-        email: `sophia.${provider.toLowerCase()}@neverbeen.example`,
-        gender: 'Female',
-        dateOfBirth: '1996-04-18',
-        age: 28,
-        country: 'France',
-        countryId: 58,
-        countryName: 'France',
-        state: 'Île-de-France',
-        city: 'Paris',
-        cityId: 320,
-        cityName: 'Paris',
-        pincode: '75001',
-        contactNumber: '+33 6 88 41 92 01',
-        postalAddress: '14 Rue de Castiglione, 75001 Paris',
+        firstName: 'Kingshuk',
+        lastName: '',
+        fullName: 'Kingshuk',
+        email: `kingshuk.${provider.toLowerCase()}@neverbeen.example`,
+        gender: 'Male',
+        dateOfBirth: '1987-07-02',
+        age: 39,
+        country: 'India',
+        countryId: 101,
+        countryName: 'India',
+        state: 'West Bengal',
+        city: 'Kolkata',
+        cityId: 700001,
+        cityName: 'Kolkata',
+        pincode: '700107',
+        contactNumber: '+91 98300 12345',
+        postalAddress: 'Salt Lake City, Kolkata, West Bengal, 700107',
         aboutMe:
-          'Travel filmmaker and visual storyteller. Passionate about hidden alleys across Europe, alpine sunrises in the Swiss Alps, and sunset tones along the Mediterranean coast. Sharing AI vacation journeys with the NeverBeen community!',
-        profession: 'Content Creator',
+          'Senior Software Engineer and founder of NeverBeen. I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.',
+        profession: 'Senior Software Engineer and founder of NeverBeen',
         status: 'Active',
-        profilePhotoUrl:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        profilePhotoUrl: '/author.jpeg',
         coverPhotoUrl:
-          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-        createdAtUtc: '2026-08-10T14:22:00Z',
+          'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80&uid=founder',
+        createdAtUtc: '2026-01-01T00:00:00Z',
         activeStatus: 'Active',
         customStatusText: '',
         isProfileLocked: false,
-        settings: {
-          emailNotificationsEnabled: true,
-          phoneNotificationsEnabled: false,
-          publicProfileEnabled: true,
-          theme: 'light',
-          timezone: 'Europe/Paris',
-          isProfileLocked: false,
-          whoCanMessage: 'everyone',
-          searchVisibility: true,
-          journeyVisibility: 'public',
-          soundNotificationsEnabled: true,
-          twoFactorEnabled: false,
-          travelStyles: ['Photography', 'Solo Exploration', 'Culinary'],
-          preferredSeason: 'Autumn & Spring',
-        },
+        isVerified: false,
+        verificationType: null,
+        verifiedEmail: undefined,
         gallery: [
           {
             id: 101,
@@ -279,6 +354,21 @@ export class CommunityService {
           },
         ],
         commentCount: 3,
+        settings: {
+          emailNotificationsEnabled: true,
+          phoneNotificationsEnabled: false,
+          publicProfileEnabled: true,
+          theme: 'light',
+          timezone: 'Asia/Kolkata',
+          isProfileLocked: false,
+          whoCanMessage: 'everyone',
+          searchVisibility: true,
+          journeyVisibility: 'public',
+          soundNotificationsEnabled: true,
+          twoFactorEnabled: false,
+          travelStyles: ['Generative AI', 'Architecture & Heritage', 'Solo Exploration'],
+          preferredSeason: 'Winter & Autumn',
+        },
       };
 
       this.token.set(token);
@@ -837,9 +927,9 @@ export class CommunityService {
     const user = this.currentUser();
     const currentAuthor: AuthorInfo = {
       id: user?.id ?? 1,
-      fullName: user?.fullName || 'Sophia Laurent',
+      fullName: user?.fullName || 'Kingshuk',
       profession: this.profile()?.profession || 'Travel Creator',
-      profilePhotoUrl: user?.profilePhotoUrl,
+      profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
     };
 
     if (myReaction === target) {
@@ -885,11 +975,9 @@ export class CommunityService {
       id: generateUniqueId(),
       author: {
         id: user?.id ?? 1,
-        fullName: user?.fullName || 'Sophia Laurent',
-        profession: profile?.profession || 'Travel Filmmaker',
-        profilePhotoUrl:
-          user?.profilePhotoUrl ||
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        fullName: user?.fullName || 'Kingshuk',
+        profession: profile?.profession || 'Senior Software Engineer and founder of NeverBeen',
+        profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
         isVerified: !!user?.isVerified || !!profile?.isVerified,
       },
       text: text.trim(),
@@ -929,11 +1017,9 @@ export class CommunityService {
       id: generateUniqueId(),
       author: {
         id: user?.id ?? 1,
-        fullName: user?.fullName || 'Sophia Laurent',
-        profession: profile?.profession || 'Traveler',
-        profilePhotoUrl:
-          user?.profilePhotoUrl ||
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        fullName: user?.fullName || 'Kingshuk',
+        profession: profile?.profession || 'Senior Software Engineer and founder of NeverBeen',
+        profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
         isVerified: !!user?.isVerified || !!profile?.isVerified,
       },
       text: userThought ? userThought.trim() : '',
@@ -959,11 +1045,9 @@ export class CommunityService {
     const user = this.currentUser();
     const currentAuthor: AuthorInfo = {
       id: user?.id ?? 1,
-      fullName: user?.fullName || 'Sophia Laurent',
-      profession: this.profile()?.profession || 'Travel Creator',
-      profilePhotoUrl:
-        user?.profilePhotoUrl ||
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      fullName: user?.fullName || 'Kingshuk',
+      profession: this.profile()?.profession || 'Senior Software Engineer and founder of NeverBeen',
+      profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
     };
 
     this.journeyPosts.update((list) =>
@@ -1012,9 +1096,9 @@ export class CommunityService {
       id: generateUniqueId(),
       author: {
         id: user?.id ?? 1,
-        fullName: user?.fullName || 'Sophia Laurent',
-        profession: this.profile()?.profession || 'Member',
-        profilePhotoUrl: user?.profilePhotoUrl,
+        fullName: user?.fullName || 'Kingshuk',
+        profession: this.profile()?.profession || 'Senior Software Engineer and founder of NeverBeen',
+        profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
         isVerified: !!user?.isVerified || !!this.profile()?.isVerified,
       },
       text: text.trim(),
@@ -1077,9 +1161,9 @@ export class CommunityService {
     const user = this.currentUser();
     const currentAuthor: AuthorInfo = {
       id: user?.id ?? 1,
-      fullName: user?.fullName || 'Sophia Laurent',
-      profession: this.profile()?.profession || 'Member',
-      profilePhotoUrl: user?.profilePhotoUrl,
+      fullName: user?.fullName || 'Kingshuk',
+      profession: this.profile()?.profession || 'Senior Software Engineer and founder of NeverBeen',
+      profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
     };
 
     this.journeyPosts.update((list) =>
@@ -1207,18 +1291,18 @@ export class CommunityService {
     return {
       id: user?.id || 1,
       uniqueId: user?.uniqueId || prof?.uniqueId || generate20DigitUid(1),
-      fullName: prof?.fullName || user?.fullName || 'Sophia Laurent',
+      fullName: prof?.fullName || user?.fullName || 'Kingshuk',
       profilePhotoUrl:
         prof?.profilePhotoUrl ||
         user?.profilePhotoUrl ||
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        '/author.jpeg',
       coverPhotoUrl:
         prof?.coverPhotoUrl ||
         user?.coverPhotoUrl ||
-        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-      country: prof?.country || 'France',
-      city: prof?.city || 'Paris',
-      profession: prof?.profession || 'Content Creator',
+        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80&uid=founder',
+      country: prof?.country || 'India',
+      city: prof?.city || 'Kolkata',
+      profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
       isOnline: true,
       activeStatus: prof?.activeStatus || 'Active',
       mutualCompanionsCount: 0,
@@ -1299,9 +1383,9 @@ export class CommunityService {
 
   getRichIntroForUser(): string {
     return (
-      "Ever since I packed my vintage 35mm film camera into a weathered canvas backpack for my first solo train trip through the Swiss Alps, travel has been more than a passion—it is the lens through which I experience the world. I believe the most unforgettable memories aren't found in crowded tourist plazas, but at dawn in quiet Parisian alleyways, smelling freshly baked brioche as the streetlights flicker off, or listening to fishermen untangle their nets on the pebbled beaches of the Mediterranean.\n\n" +
-      "Over the past five years, I have wandered across eighteen countries, documenting the quiet cadence of local life, ancient stone architecture, and culinary traditions that have survived generations. As a filmmaker and storyteller with NeverBeen, my mission is to capture authentic moments that inspire others to step outside their comfort zones, embrace spontaneity, and build meaningful connections with kindred spirits across every continent.\n\n" +
-      "Whether scaling granite ridges in the Pyrenees, navigating misty canals in Bruges, or sharing mint tea with carpet weavers in North African souks, I travel to listen, learn, and preserve stories that celebrate our shared humanity."
+      "I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.\n\n" +
+      "I am Kingshuk, a Senior Software Engineer with vast IT experience, specializing in software development, requirements modelling, database modelling, application architecture design, and customer-facing delivery within the Manufacturing & Intelligence Services domain. I have worked with world-leading companies like Continental AG, Intel, E&Y, and others.\n\n" +
+      "As the founder and principal architect of NeverBeen, I blend cutting-edge Generative AI technology with high-performance engineering to bring the world's most breathtaking vacation dreams to life—empowering travelers to discover authentic cultural stories, timeless landscapes, and global companionship."
     );
   }
 
@@ -1546,7 +1630,7 @@ export class CommunityService {
           id: 1,
           senderId: companion.id,
           receiverId: 1,
-          text: `Hey Sophia! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
+          text: `Hey Kingshuk! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
           sentAtUtc: new Date(Date.now() - 3600000).toISOString(),
         },
       ],
@@ -1609,7 +1693,7 @@ export class CommunityService {
         sentAtUtc: new Date().toISOString(),
         replyTo: {
           id: newMsg.id,
-          senderName: 'Sophia Laurent',
+          senderName: 'Kingshuk',
           text: newMsg.text,
         },
       };
@@ -1722,142 +1806,144 @@ export class CommunityService {
   private initDefaultMember(): void {
     const defaultAboutMeDetails: AboutMeDetails = {
       intro: this.getRichIntroForUser(),
-      gender: 'Female',
-      dateOfBirth: '1996-04-18',
-      location: 'Paris, France',
-      hometown: 'Lyon, France',
-      relationshipStatus: 'Exploring solo',
-      languagesKnown: ['English', 'French', 'Italian', 'Spanish'],
+      gender: 'Male',
+      dateOfBirth: '1987-07-02',
+      location: 'Kolkata, West Bengal, India',
+      hometown: 'Kolkata, India',
+      relationshipStatus: 'Single',
+      languagesKnown: ['Bengali', 'English', 'Hindi'],
       workExperience: [
         {
           id: 1,
-          company: 'WanderLust Media Studio',
-          yearFrom: '2022',
+          company: 'NeverBeen',
+          yearFrom: '2024',
           yearTo: '',
           currentlyWorkHere: true,
-          country: 'France',
-          city: 'Paris',
-          town: '1st Arrondissement',
+          country: 'India',
+          city: 'Kolkata',
+          town: 'Salt Lake City',
           description:
-            'Lead visual director producing AI-enhanced travel memoirs and landscape editorial series.',
+            'Founder & Principal Architect driving AI-generated travel photography platform, requirements modelling, and scalable full-stack architecture.',
         },
         {
           id: 2,
-          company: 'Alpine Cinema Productions',
-          yearFrom: '2019',
-          yearTo: '2022',
+          company: 'Continental AG',
+          yearFrom: '2020',
+          yearTo: '2024',
           currentlyWorkHere: false,
-          country: 'Switzerland',
-          city: 'Zurich',
-          town: 'Altstadt',
+          country: 'Germany / India',
+          city: 'Frankfurt / Bangalore',
           description:
-            'Assistant cinematographer capturing high-altitude mountaineering documentaries.',
+            'Senior Software Engineer specializing in application architecture, microservices, and customer-facing delivery within Manufacturing & Intelligence Services.',
+        },
+        {
+          id: 3,
+          company: 'Intel Corporation',
+          yearFrom: '2016',
+          yearTo: '2020',
+          currentlyWorkHere: false,
+          country: 'India',
+          city: 'Bangalore',
+          description:
+            'Software Engineer focused on high-performance C#.NET, database modelling, REST APIs, and distributed workflows.',
+        },
+        {
+          id: 4,
+          company: 'Ernst & Young (EY)',
+          yearFrom: '2012',
+          yearTo: '2016',
+          currentlyWorkHere: false,
+          country: 'India',
+          city: 'Kolkata',
+          description:
+            'Technology consultant delivering enterprise web APIs, SQL database optimization, and 3-tier architecture solutions.',
         },
       ],
       education: [
         {
           id: 1,
-          institutionName: 'Sorbonne University',
+          institutionName: 'Heritage Institute of Technology, Kolkata',
           level: 'University',
-          courseOrDegree: 'Master of Fine Arts in Cinematography',
-          yearFrom: '2017',
-          yearTo: '2019',
-          currentlyStudying: false,
-        },
-        {
-          id: 2,
-          institutionName: 'Lycée Condorcet',
-          level: 'High School',
-          courseOrDegree: 'Literature & Visual Arts Diploma',
-          yearFrom: '2014',
-          yearTo: '2017',
-          currentlyStudying: false,
-        },
-        {
-          id: 3,
-          institutionName: 'École Primaire Victor Hugo',
-          level: 'Primary School',
-          courseOrDegree: 'Primary Education Certificate',
-          yearFrom: '2008',
-          yearTo: '2014',
+          courseOrDegree: 'B.Tech in Computer Science and Engineering',
+          yearFrom: '2005',
+          yearTo: '2009',
           currentlyStudying: false,
         },
       ],
       hobbies: [
-        'Photography',
-        'Alpine Hiking',
-        'Coffee Brewing',
-        'Scuba Diving',
-        'Journaling',
-        'Vinyl Records',
-        'Skiing',
+        'Creative Programming',
+        'Application Architecture',
+        'Generative AI Design',
+        'Landscape Exploration',
+        'Coffee Tasting',
       ],
       interests: [
-        'Architecture',
-        'Historical Heritage',
-        'Sunset Chasing',
-        'Train Journeys',
-        'Street Food',
-        'Glacier Trails',
+        'C#.NET & Microservices',
+        'Future-Proof Systems',
+        'SOLID & Design Patterns',
+        'Travel Photography',
+        'Database Optimization',
       ],
-      contactEmail: 'sophia.laurent@neverbeen.example',
-      contactPhone: '+33 6 88 41 92 01',
+      contactEmail: 'kingshuk.founder@neverbeen.example',
+      contactPhone: '+91 98300 12345',
       socialLinks: [
-        { platform: 'Instagram', urlOrHandle: '@sophia.in.the.wild' },
-        { platform: 'Facebook', urlOrHandle: 'facebook.com/sophialaurent.travel' },
-        { platform: 'X', urlOrHandle: '@sophia_visuals' },
+        { platform: 'Instagram', urlOrHandle: '@kingshuk_founder' },
+        { platform: 'Facebook', urlOrHandle: 'facebook.com/kingshuk.neverbeen' },
+        { platform: 'X', urlOrHandle: '@kingshuk_dev' },
       ],
       aboutThePerson:
-        'I fell in love with storytelling while crossing the Swiss viaducts as a teenager. Today, I travel with a lightweight camera kit and an open heart, seeking authentic human connections, vibrant morning markets, and silent alpine dawns across Europe and beyond.',
+        'I am Kingshuk, a Senior Software Engineer with vast IT experience, specializing in software development, requirements modelling, database modelling, application architecture design, and customer-facing delivery within the Manufacturing & Intelligence Services domain. I have worked with world-leading companies like Continental AG, Intel, E&Y, and others. I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.',
     };
 
     const defaultProfile: Profile = {
       id: 1,
       uniqueId: generate20DigitUid(1),
-      firstName: 'Sophia',
-      lastName: 'Laurent',
-      fullName: 'Sophia Laurent',
-      email: 'sophia.laurent@neverbeen.example',
-      gender: 'Female',
-      dateOfBirth: '1996-04-18',
-      age: 28,
-      country: 'France',
-      countryId: 58,
-      countryName: 'France',
-      state: 'Île-de-France',
-      city: 'Paris',
-      cityId: 320,
-      cityName: 'Paris',
-      pincode: '75001',
-      contactNumber: '+33 6 88 41 92 01',
-      postalAddress: '14 Rue de Castiglione, 75001 Paris',
+      firstName: 'Kingshuk',
+      lastName: '',
+      fullName: 'Kingshuk',
+      email: 'kingshuk.founder@neverbeen.example',
+      gender: 'Male',
+      dateOfBirth: '1987-07-02',
+      age: 39,
+      country: 'India',
+      countryId: 101,
+      countryName: 'India',
+      state: 'West Bengal',
+      city: 'Kolkata',
+      cityId: 700001,
+      cityName: 'Kolkata',
+      pincode: '700107',
+      contactNumber: '+91 98300 12345',
+      postalAddress: 'Salt Lake City, Kolkata, West Bengal, 700107',
       aboutMe:
-        'Travel filmmaker and visual storyteller. Passionate about hidden alleys across Europe, alpine sunrises in the Swiss Alps, and sunset tones along the Mediterranean coast. Sharing AI vacation journeys with the NeverBeen community!',
-      profession: 'Content Creator',
+        'Senior Software Engineer and founder of NeverBeen. I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.',
+      profession: 'Senior Software Engineer and founder of NeverBeen',
       status: 'Active',
-      profilePhotoUrl:
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      profilePhotoUrl: '/author.jpeg',
       coverPhotoUrl:
-        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-      createdAtUtc: '2026-08-10T14:22:00Z',
+        'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80&uid=founder',
+      createdAtUtc: '2026-01-01T00:00:00Z',
       activeStatus: 'Active',
       customStatusText: '',
       isProfileLocked: false,
+      isVerified: false,
+      verifiedEmail: undefined,
+      verificationType: null,
       aboutMeDetails: defaultAboutMeDetails,
       settings: {
         emailNotificationsEnabled: true,
         phoneNotificationsEnabled: false,
         publicProfileEnabled: true,
         theme: 'light',
-        timezone: 'Europe/Paris',
+        timezone: 'Asia/Kolkata',
         isProfileLocked: false,
         whoCanMessage: 'everyone',
         searchVisibility: true,
         journeyVisibility: 'public',
         soundNotificationsEnabled: true,
         twoFactorEnabled: false,
-        travelStyles: ['Photography', 'Solo Exploration', 'Culinary'],
-        preferredSeason: 'Autumn & Spring',
+        travelStyles: ['Generative AI', 'Architecture & Heritage', 'Solo Exploration'],
+        preferredSeason: 'Winter & Autumn',
       },
       gallery: [
         {
@@ -1896,6 +1982,9 @@ export class CommunityService {
       activeStatus: 'Active',
       customStatusText: '',
       isProfileLocked: false,
+      isVerified: false,
+      verifiedEmail: undefined,
+      verificationType: null,
       aboutMeDetails: defaultAboutMeDetails,
     };
 
@@ -1917,13 +2006,14 @@ export class CommunityService {
       profilePhotoUrl:
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
     };
-    const sophiaAuthor: AuthorInfo = {
+    const kingshukAuthor: AuthorInfo = {
       id: 1,
-      fullName: 'Sophia Laurent',
-      profession: 'Content Creator',
-      profilePhotoUrl:
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      fullName: 'Kingshuk',
+      profession: 'Senior Software Engineer and founder of NeverBeen',
+      profilePhotoUrl: '/author.jpeg',
+      isVerified: false,
     };
+    const sophiaAuthor = kingshukAuthor;
     const elenaAuthor: AuthorInfo = {
       id: 33,
       fullName: 'Elena Rostova',
@@ -2085,16 +2175,17 @@ export class CommunityService {
       },
     ];
 
-    const sophiaAuthor: AuthorInfo = {
+    const kingshukAuthor: AuthorInfo = {
       id: 1,
-      fullName: 'Sophia Laurent',
-      profession: 'Content Creator',
-      profilePhotoUrl:
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      fullName: 'Kingshuk',
+      profession: 'Senior Software Engineer and founder of NeverBeen',
+      profilePhotoUrl: '/author.jpeg',
+      isVerified: false,
     };
+    const sophiaAuthor = kingshukAuthor;
 
     const seedReactions1: UserReaction[] = [
-      { user: sophiaAuthor, type: 'Heart', reactedAtUtc: '2026-09-21T09:35:00Z' },
+      { user: kingshukAuthor, type: 'Heart', reactedAtUtc: '2026-09-21T09:35:00Z' },
       { user: seedLikers[0], type: 'Fire', reactedAtUtc: '2026-09-21T09:36:00Z' },
       { user: seedLikers[1], type: 'Love', reactedAtUtc: '2026-09-21T09:37:00Z' },
       { user: seedLikers[2], type: 'Fire', reactedAtUtc: '2026-09-21T09:38:00Z' },
@@ -2124,7 +2215,7 @@ export class CommunityService {
         isLiked: true,
         myReaction: 'Heart',
         reactions: seedReactions1,
-        likers: [sophiaAuthor, ...seedLikers],
+        likers: [kingshukAuthor, ...seedLikers],
         location: 'Lake Como, Italy',
         mood: '🌿 Blissful',
         imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
@@ -2194,13 +2285,13 @@ export class CommunityService {
               profilePhotoUrl:
                 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
             },
-            text: 'Lauterbrunnen in autumn is unbelievable Sophia! The valley mist creates natural depth in every portrait.',
+            text: 'Lauterbrunnen in autumn is unbelievable Kingshuk! The valley mist creates natural depth in every portrait.',
             createdAtUtc: '2026-09-20T19:05:00Z',
             likeCount: 2,
             isLiked: true,
             myReaction: 'Smile',
             reactions: [
-              { user: sophiaAuthor, type: 'Smile', reactedAtUtc: '2026-09-20T19:10:00Z' },
+              { user: kingshukAuthor, type: 'Smile', reactedAtUtc: '2026-09-20T19:10:00Z' },
               { user: seedLikers[0], type: 'Heart', reactedAtUtc: '2026-09-20T19:12:00Z' },
             ],
           },
@@ -2251,6 +2342,22 @@ export class CommunityService {
     ];
   }
 
+  private isFemaleCompanion(c: Companion, index: number): boolean {
+    if (c.aboutMeDetails?.gender) {
+      return c.aboutMeDetails.gender.toLowerCase() === 'female';
+    }
+    const femaleNames = [
+      'ananya', 'priya', 'shreya', 'pooja', 'sneha', 'debolina', 'tanushree', 'riya',
+      'ishita', 'meera', 'payel', 'moumita', 'swati', 'nandita', 'aditi', 'kavita',
+      'sunita', 'madhuri', 'anita', 'geeta', 'elena', 'aarti', 'jyoti', 'radha',
+      'farhana', 'ayesha', 'fatima', 'zainab', 'maryam', 'nusrat', 'maya',
+      'sara', 'nisha', 'neha', 'divya', 'rupa', 'suman', 'shikha', 'archana',
+    ];
+    const first = (c.fullName || '').toLowerCase().split(' ')[0];
+    if (femaleNames.some((fn) => first.includes(fn))) return true;
+    return index % 2 === 0;
+  }
+
   private loadCompanions(): Companion[] {
     const saved = this.loadJson<Companion[]>(COMPANIONS_KEY);
     const baseList: Companion[] = this.getDefaultSeedCompanions();
@@ -2277,19 +2384,65 @@ export class CommunityService {
       merged = [...baseList, ...SEED_ASIAN_COMPANIONS, ...ALL_SEED_INDIAN_COMPANIONS];
     }
 
-    const defaultCover =
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
+    const incomingSeedIds = new Set([71, 1003, 1007, 1012, 1018]);
 
-    return merged.map((c) => {
+    return merged.map((c, index) => {
       const rawIntro = c.aboutMeDetails?.intro;
       const intro = !rawIntro || rawIntro.length < 150 ? this.getRichIntroForCompanion(c) : rawIntro;
+
+      // Requirement F: Profile picture strictly matching Gender, Age, Ethnicity
+      const isFemale = this.isFemaleCompanion(c, index);
+      let profilePhotoUrl = c.profilePhotoUrl;
+      if (c.id === 33) {
+        profilePhotoUrl = `https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80&user=33`;
+      } else if (c.id === 12) {
+        profilePhotoUrl = `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80&user=12`;
+      } else {
+        const portraitPool = isFemale ? SEED_INDIAN_FEMALE_PORTRAITS : SEED_INDIAN_MALE_PORTRAITS;
+        const photoId = portraitPool[Math.abs(c.id * 17 + index) % portraitPool.length];
+        // Requirement E: Unique profile photo per user
+        profilePhotoUrl = `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=400&q=80&user=${c.id}`;
+      }
+
+      // Requirement G: Cover picture is different (destinations, family, friends, colleagues)
+      const coverCat = Math.abs(c.id * 13 + index) % 10;
+      let coverPhotoId = '';
+      if (coverCat < 4) {
+        coverPhotoId = SEED_COVER_DESTINATIONS[Math.abs(c.id + index) % SEED_COVER_DESTINATIONS.length];
+      } else if (coverCat < 6) {
+        coverPhotoId = SEED_COVER_FAMILY[Math.abs(c.id + index) % SEED_COVER_FAMILY.length];
+      } else if (coverCat < 8) {
+        coverPhotoId = SEED_COVER_FRIENDS[Math.abs(c.id + index) % SEED_COVER_FRIENDS.length];
+      } else {
+        coverPhotoId = SEED_COVER_COLLEAGUES[Math.abs(c.id + index) % SEED_COVER_COLLEAGUES.length];
+      }
+      // Requirement E: Unique cover photo per user
+      const coverPhotoUrl = `https://images.unsplash.com/${coverPhotoId}?auto=format&fit=crop&w=1200&q=80&cover=${c.id}&uid=${c.uniqueId || c.id}`;
+
+      // Requirement C: Exactly 60% of companions are verified with blue tick
+      const isVerified = (index % 5) < 3; // 3 out of 5 = 60.0%
+      const verificationType: 'work' | 'university' = index % 2 === 0 ? 'work' : 'university';
+      const cleanName = c.fullName.toLowerCase().replace(/[^a-z0-9]/g, '.');
+      const verifiedEmail = `${cleanName}@${index % 2 === 0 ? 'techcorp.com' : 'university.edu'}`;
+
+      let status = c.status;
+      if (incomingSeedIds.has(c.id)) {
+        status = 'pending_incoming';
+      }
+
       return {
         ...c,
-        coverPhotoUrl: c.coverPhotoUrl || defaultCover,
+        status,
+        profilePhotoUrl,
+        coverPhotoUrl,
+        isVerified,
+        verificationType,
+        verifiedEmail,
         uniqueId: c.uniqueId || generate20DigitUid(c.id),
         aboutMeDetails: {
           ...(c.aboutMeDetails || {}),
           intro,
+          gender: isFemale ? 'Female' : 'Male',
         },
       };
     });
@@ -2719,7 +2872,7 @@ export class CommunityService {
           profilePhotoUrl:
             'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
         },
-        message: 'commented on your Journey post: "Lauterbrunnen in autumn is unbelievable Sophia!"',
+        message: 'commented on your Journey post: "The architecture and scenery look unbelievable Kingshuk!"',
         createdAtUtc: '2026-09-20T19:05:00Z',
         isRead: true,
       },

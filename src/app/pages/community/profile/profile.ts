@@ -384,6 +384,39 @@ export class CommunityProfile implements OnInit {
       .filter((c) => c.status === 'pending_outgoing'),
   );
 
+  // Requirement A: 3 Groups on Companion page
+  readonly incomingRequests = computed(() =>
+    this.service
+      .visibleCompanions()
+      .filter((c) => c.status === 'pending_incoming'),
+  );
+
+  readonly suggestedCompanions = computed(() => {
+    const myProfile = this.service.profile();
+    const myCity = (myProfile?.city || 'Kolkata').toLowerCase();
+    const myCountry = (myProfile?.country || 'India').toLowerCase();
+
+    return this.service
+      .visibleCompanions()
+      .filter((c) => {
+        if (c.id === (myProfile?.id || 1)) return false;
+        if (c.status === 'connected' || c.status === 'pending_incoming') return false;
+
+        const city = (c.city || '').toLowerCase();
+        const country = (c.country || '').toLowerCase();
+
+        const inMyArea =
+          city.includes(myCity) ||
+          city.includes('kolkata') ||
+          city.includes('west bengal') ||
+          (city.length > 0 && country === myCountry);
+
+        const hasMutual = this.getMutualCompanionsCount(c.id) > 0;
+        return inMyArea || hasMutual;
+      })
+      .slice(0, 48);
+  });
+
   readonly totalCompanionsCount = computed(() => this.connectedCompanions().length);
 
   // In own profile companion section, only show people with whom user is already connected (max 9 default)
@@ -1709,6 +1742,17 @@ export class CommunityProfile implements OnInit {
     }
     if (this.viewingVisitor() && this.viewingVisitor()!.id === companionId) {
       this.viewingVisitor.update((v) => (v ? { ...v, status: 'connected' } : null));
+    }
+  }
+
+  acceptCompanionRequest(userId: number): void {
+    this.acceptCompanionship(userId);
+  }
+
+  rejectCompanionRequest(userId: number): void {
+    this.service.rejectCompanionshipRequest(0, userId);
+    if (this.viewingVisitor() && Number(this.viewingVisitor()!.id) === Number(userId)) {
+      this.viewingVisitor.update((v) => (v ? { ...v, status: 'none' } : null));
     }
   }
 

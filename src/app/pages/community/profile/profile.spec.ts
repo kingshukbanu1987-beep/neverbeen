@@ -46,8 +46,8 @@ describe('CommunityProfile', () => {
     // Verify double-size photo container and image
     expect(leftPanel!.querySelector('.user-photo-wrap-large')).toBeTruthy();
     expect(leftPanel!.querySelector('.user-avatar-img')).toBeTruthy();
-    expect(leftPanel!.querySelector('.profile-full-name')?.textContent?.trim()).toContain('Sophia Laurent');
-    expect(leftPanel!.querySelector('.profile-location')?.textContent?.trim()).toContain('Paris');
+    expect(leftPanel!.querySelector('.profile-full-name')?.textContent?.trim()).toContain('Kingshuk');
+    expect(leftPanel!.querySelector('.profile-location')?.textContent?.trim()).toContain('Kolkata');
 
     const menuButtons = Array.from(leftPanel!.querySelectorAll<HTMLButtonElement>('.menu-btn'));
     const menuLabels = menuButtons.map((b) => b.textContent?.trim());
@@ -1540,7 +1540,7 @@ describe('CommunityProfile', () => {
     expect(introSection).toBeTruthy();
     const introHighlight = introSection?.querySelector('.about-intro-highlight');
     expect(introHighlight).toBeTruthy();
-    expect(introHighlight?.textContent).toContain('Swiss Alps');
+    expect(introHighlight?.textContent).toContain('Creativity');
 
     // 2. Visitor profile About Me Intro
     const elena = service.companions().find((c) => c.id === 33)!;
@@ -1941,5 +1941,82 @@ describe('CommunityProfile', () => {
 
     expect(service.companions().find((c) => c.id === stranger.id)?.status).toBe('none');
     expect(component.pendingOutgoingCompanions().some((c) => c.id === stranger.id)).toBe(false);
+  });
+
+  it('Requirement A: renders Companions tab with 3 distinct groups (Request for Companionship, Companions, Suggestions for Companions) and 70% card design', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    component.setSection('companions');
+    fixture.detectChanges();
+
+    // 1. Check the 3 sections exist
+    const requestGroup = element.querySelector('.request-group-section');
+    const connectedGroup = element.querySelector('.connected-group-section');
+    const suggestionsGroup = element.querySelector('.suggestions-group-section');
+
+    expect(requestGroup).toBeTruthy();
+    expect(connectedGroup).toBeTruthy();
+    expect(suggestionsGroup).toBeTruthy();
+
+    expect(requestGroup?.textContent).toContain('Request for Companionship');
+    expect(connectedGroup?.textContent).toContain('Companions');
+    expect(suggestionsGroup?.textContent).toContain('Suggestions for Companions');
+
+    // 2. Check 70% card design structure
+    const cards = element.querySelectorAll('.companion-70-card');
+    expect(cards.length).toBeGreaterThan(0);
+
+    const firstCard = cards[0];
+    const photoCol = firstCard.querySelector('.companion-70-photo-col');
+    const infoCol = firstCard.querySelector('.companion-70-info-col');
+    const footer = firstCard.querySelector('.companion-70-card-footer');
+
+    expect(photoCol).toBeTruthy();
+    expect(infoCol).toBeTruthy();
+    expect(footer).toBeTruthy();
+    expect(infoCol?.textContent).toContain('Profession:');
+    expect(infoCol?.textContent).toContain('Location:');
+  });
+
+  it('Requirement B: default profile is Kingshuk (Founder Profile with Senior Software Engineer details)', () => {
+    const user = service.currentUser();
+    const profile = service.profile();
+
+    expect(user?.fullName).toBe('Kingshuk');
+    expect(user?.profilePhotoUrl).toBe('/author.jpeg');
+    expect(profile?.fullName).toBe('Kingshuk');
+    expect(profile?.profession).toContain('Senior Software Engineer');
+    expect(profile?.profession).toContain('founder of NeverBeen');
+    expect(profile?.aboutMe).toContain('Creativity, Future Proof Design and Strong Foundation in Programming');
+  });
+
+  it('Requirement C: exactly 60% of companions are verified with blue tick', () => {
+    const companions = service.companions();
+    expect(companions.length).toBeGreaterThan(500);
+
+    const verifiedCount = companions.filter((c) => c.isVerified).length;
+    const ratio = verifiedCount / companions.length;
+    // Exactly 60% (0.60)
+    expect(ratio).toBeCloseTo(0.6, 2);
+  });
+
+  it('Requirements E, F, G: companions have unique photos, diverse covers, and region-appropriate avatars', () => {
+    const companions = service.companions();
+    const photoUrls = companions.map((c) => c.profilePhotoUrl).filter(Boolean);
+    const coverUrls = companions.map((c) => c.coverPhotoUrl).filter(Boolean);
+
+    // Unique profile photos - no duplicates
+    const uniquePhotos = new Set(photoUrls);
+    expect(uniquePhotos.size).toBe(photoUrls.length);
+
+    // Unique cover photos - no duplicates
+    const uniqueCovers = new Set(coverUrls);
+    expect(uniqueCovers.size).toBe(coverUrls.length);
+
+    // Check high diversity (>500 distinct photos and covers)
+    expect(uniquePhotos.size).toBeGreaterThanOrEqual(500);
+    expect(uniqueCovers.size).toBeGreaterThanOrEqual(500);
   });
 });

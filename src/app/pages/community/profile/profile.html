@@ -208,7 +208,7 @@
           </div>
 
           <h2 class="profile-full-name">
-            {{ service.profile()?.fullName || ((service.profile()?.firstName || '') + ' ' + (service.profile()?.lastName || '')).trim() || 'Sophia Laurent' }}
+            {{ service.profile()?.fullName || ((service.profile()?.firstName || '') + ' ' + (service.profile()?.lastName || '')).trim() || 'Kingshuk' }}
             @if (isUserVerified()) {
               <span class="blue-verified-badge" title="Verified Account">
                 <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
@@ -547,7 +547,7 @@
                 />
                 <div class="composer-author-info">
                   <span class="composer-user-name clickable-user" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
-                    {{ service.profile()?.fullName || 'Sophia Laurent' }}
+                    {{ service.profile()?.fullName || 'Kingshuk' }}
                   </span>
                   <span class="composer-audience-badge">🌐 Public</span>
                 </div>
@@ -1672,7 +1672,7 @@
                 <div class="about-card-section person-narrative-card">
                   <h3 class="card-section-title"><span class="title-glyph">📖</span> 8. About the Person</h3>
                   <p class="person-narrative-content">
-                    {{ aboutThePersonText || 'Sophia is a cultural documentarian and landscape enthusiast passionate about slow travel, timeless architecture, and sharing genuine moments across continents.' }}
+                    {{ aboutThePersonText || 'Kingshuk is a Senior Software Engineer and the founder of NeverBeen, specializing in software development, application architecture design, requirements modelling, generative AI, and travel storytelling.' }}
                   </p>
                 </div>
               </div>
@@ -2080,54 +2080,225 @@
               </div>
             }
 
-            <div class="companions-cards-grid">
-              @for (c of service.visibleCompanions(); track c.id) {
-                @if (c.status === 'connected') {
-                  <div class="companion-card">
-                    <div class="card-avatar-wrap" (click)="openVisitorProfile(c)">
-                      <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="companion-avatar" />
-                      <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
-                    </div>
-                    <div class="card-details">
-                      <strong class="companion-name clickable-user" (click)="openVisitorProfile(c)">
-                        {{ c.fullName }}
-                        @if (isAuthorVerified(c)) {
-                          <span class="blue-verified-badge" title="Verified Account">
-                            <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                          </span>
-                        }
-                        @if (c.isProfileLocked) {
-                          <span class="mini-lock-pill" title="Profile locked">🔒</span>
-                        }
-                      </strong>
-                      <span class="companion-role">{{ c.profession }}</span>
-                      <span class="companion-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ c.city }}, {{ c.country }}</span>
-                      <span class="companion-mutual">{{ getMutualCompanionsCount(c.id) }} mutual companions</span>
-                    </div>
-                    <div class="card-actions">
-                      <button type="button" class="btn-primary-action btn-sm" (click)="openChatWith(c)">
-                        💬 Message
-                      </button>
-                      <button
-                        type="button"
-                        class="btn-danger-outline btn-sm"
-                        (click)="removeCompanion(c.id)"
-                        title="Remove Companion"
-                      >
-                        Remove
-                      </button>
-                      <button
-                        type="button"
-                        class="btn-secondary-action btn-sm"
-                        (click)="blockUser(c.id)"
-                        title="Block this traveler"
-                      >
-                        🚫 Block
-                      </button>
-                    </div>
+            <!-- Requirement A: 3-Group Layout (Request for Companionship, Companions, Suggestions) -->
+            <div class="companions-groups-container">
+              <!-- GROUP 1: Request for Companionship -->
+              <div class="companion-group-section request-group-section">
+                <div class="companion-group-header">
+                  <h3 class="companion-group-title">📥 Request for Companionship</h3>
+                  <span class="companion-group-count-badge">{{ incomingRequests().length }} Requests</span>
+                </div>
+                @if (incomingRequests().length > 0) {
+                  <div class="companion-group-grid">
+                    @for (c of incomingRequests(); track c.id) {
+                      <div class="companion-70-card">
+                        <div class="companion-70-card-body">
+                          <div class="companion-70-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                            <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img" />
+                            <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                          </div>
+                          <div class="companion-70-info-col">
+                            <h4 class="companion-70-name clickable-user" (click)="openVisitorProfile(c)">
+                              {{ c.fullName }}
+                              @if (isAuthorVerified(c)) {
+                                <span class="blue-verified-badge" title="Verified Account">
+                                  <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                                </span>
+                              }
+                            </h4>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Profession:</span>
+                              <span class="companion-70-field-val">{{ c.profession }}</span>
+                            </div>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Location:</span>
+                              <span class="companion-70-field-val">
+                                <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
+                                {{ c.city }}, {{ c.country }}
+                              </span>
+                            </div>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Mutual companions:</span>
+                              <span class="companion-70-field-val mutual-link clickable-user" (click)="openMutualCompanionsModal(c)">
+                                👥 {{ getMutualCompanionsCount(c.id) }} mutual companions
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <footer class="companion-70-card-footer">
+                          <button
+                            type="button"
+                            class="btn-primary-action btn-sm btn-accept-request"
+                            (click)="acceptCompanionRequest(c.id)"
+                          >
+                            ✓ Accept
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-danger-outline btn-sm btn-reject-request"
+                            (click)="rejectCompanionRequest(c.id)"
+                          >
+                            ✕ Delete Request
+                          </button>
+                        </footer>
+                      </div>
+                    }
                   </div>
+                } @else {
+                  <div class="companion-empty-box">No pending companion requests at this time.</div>
                 }
-              }
+              </div>
+
+              <!-- GROUP 2: Companions (with whom already connected) -->
+              <div class="companion-group-section connected-group-section">
+                <div class="companion-group-header">
+                  <h3 class="companion-group-title">👥 Companions</h3>
+                  <span class="companion-group-count-badge">{{ connectedCompanions().length }} Connected</span>
+                </div>
+                @if (connectedCompanions().length > 0) {
+                  <div class="companion-group-grid">
+                    @for (c of connectedCompanions(); track c.id) {
+                      <div class="companion-70-card">
+                        <div class="companion-70-card-body">
+                          <div class="companion-70-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                            <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img" />
+                            <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                          </div>
+                          <div class="companion-70-info-col">
+                            <h4 class="companion-70-name clickable-user" (click)="openVisitorProfile(c)">
+                              {{ c.fullName }}
+                              @if (isAuthorVerified(c)) {
+                                <span class="blue-verified-badge" title="Verified Account">
+                                  <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                                </span>
+                              }
+                              @if (c.isProfileLocked) {
+                                <span class="mini-lock-pill" title="Profile locked">🔒</span>
+                              }
+                            </h4>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Profession:</span>
+                              <span class="companion-70-field-val">{{ c.profession }}</span>
+                            </div>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Location:</span>
+                              <span class="companion-70-field-val">
+                                <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
+                                {{ c.city }}, {{ c.country }}
+                              </span>
+                            </div>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Mutual companions:</span>
+                              <span class="companion-70-field-val mutual-link clickable-user" (click)="openMutualCompanionsModal(c)">
+                                👥 {{ getMutualCompanionsCount(c.id) }} mutual companions
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <footer class="companion-70-card-footer">
+                          <button type="button" class="btn-primary-action btn-sm" (click)="openChatWith(c)">
+                            💬 Message
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-danger-outline btn-sm btn-remove-companion-action"
+                            (click)="removeCompanion(c.id)"
+                            title="Remove Companion"
+                          >
+                            💔 Remove Companionship
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-secondary-action btn-sm"
+                            (click)="blockUser(c.id)"
+                            title="Block this traveler"
+                          >
+                            🚫 Block
+                          </button>
+                        </footer>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="companion-empty-box">No connected companions yet. Discover new connections in Suggestions below!</div>
+                }
+              </div>
+
+              <!-- GROUP 3: Suggestions for Companions (connected to my companions or located in my area/city) -->
+              <div class="companion-group-section suggestions-group-section">
+                <div class="companion-group-header">
+                  <h3 class="companion-group-title">✨ Suggestions for Companions</h3>
+                  <span class="companion-group-count-badge">{{ suggestedCompanions().length }} Suggestions</span>
+                </div>
+                @if (suggestedCompanions().length > 0) {
+                  <div class="companion-group-grid">
+                    @for (c of suggestedCompanions(); track c.id) {
+                      <div class="companion-70-card">
+                        <div class="companion-70-card-body">
+                          <div class="companion-70-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                            <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img" />
+                            <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                          </div>
+                          <div class="companion-70-info-col">
+                            <h4 class="companion-70-name clickable-user" (click)="openVisitorProfile(c)">
+                              {{ c.fullName }}
+                              @if (isAuthorVerified(c)) {
+                                <span class="blue-verified-badge" title="Verified Account">
+                                  <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                                </span>
+                              }
+                              @if (c.isProfileLocked) {
+                                <span class="mini-lock-pill" title="Profile locked">🔒</span>
+                              }
+                            </h4>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Profession:</span>
+                              <span class="companion-70-field-val">{{ c.profession }}</span>
+                            </div>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Location:</span>
+                              <span class="companion-70-field-val">
+                                <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
+                                {{ c.city }}, {{ c.country }}
+                              </span>
+                            </div>
+                            <div class="companion-70-field">
+                              <span class="companion-70-field-label">Mutual companions:</span>
+                              <span class="companion-70-field-val mutual-link clickable-user" (click)="openMutualCompanionsModal(c)">
+                                👥 {{ getMutualCompanionsCount(c.id) }} mutual companions
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <footer class="companion-70-card-footer">
+                          @if (c.status === 'pending_outgoing') {
+                            <span class="badge-pending-status">⏳ Request Pending</span>
+                            <button
+                              type="button"
+                              class="btn-cancel-request btn-sm"
+                              (click)="cancelCompanionshipRequest(c.id)"
+                              title="Cancel companion request"
+                            >
+                              ✕ Cancel Request
+                            </button>
+                          } @else {
+                            <button
+                              type="button"
+                              class="btn-primary-action btn-sm btn-connect-companion"
+                              (click)="requestCompanionship(c.id)"
+                              title="Send companion request"
+                            >
+                              + Add Companion
+                            </button>
+                          }
+                        </footer>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="companion-empty-box">No companion suggestions available.</div>
+                }
+              </div>
             </div>
           </section>
         }
@@ -2793,7 +2964,7 @@
           <div class="share-user-line">
             <img [src]="service.profile()?.profilePhotoUrl || defaultAvatar" alt="Me" class="share-my-avatar" />
             <div>
-              <strong>{{ service.profile()?.fullName || 'Sophia Laurent' }}</strong>
+              <strong>{{ service.profile()?.fullName || 'Kingshuk' }}</strong>
               <span class="share-scope">Public Journey Feed</span>
             </div>
           </div>
