@@ -1,0 +1,12 @@
+<div class="callback-card">
+  <div class="spinner-large"></div>
+  <h2>Connecting to NeverBeen Community...</h2>
+  <p class="callback-status">{{ statusMessage() }}</p>
+
+  @if (errorMessage()) {
+    <div class="callback-error">
+      <p>{{ errorMessage() }}</p>
+      <a routerLink="/community" class="btn btn-primary">Return to Connect</a>
+    </div>
+  }
+</div>

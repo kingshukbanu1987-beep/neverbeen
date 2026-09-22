@@ -1,0 +1,46 @@
+.community-shell {
+  position: relative;
+  min-height: calc(100vh - 84px);
+  background: #ffffff;
+  color: var(--ink, #1d1914);
+  overflow-x: hidden;
+  padding: 2rem 0 4rem;
+}
+
+.community-aurora {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.15;
+}
+
+.aurora-1 {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #f3ece2, transparent 70%);
+  top: -100px;
+  left: 15%;
+}
+
+.aurora-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #e6efe8, transparent 70%);
+  bottom: 5%;
+  right: 15%;
+}
+
+.community-content-area {
+  position: relative;
+  z-index: 1;
+  width: min(1320px, calc(100% - 2rem));
+  margin: 0 auto;
+}

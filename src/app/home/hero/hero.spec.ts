@@ -52,4 +52,24 @@ describe('Hero', () => {
     expect(collectionStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
     expect(collectionStyle.color).toBe(galleryStyle.color);
   });
+
+  it('places a Connect to NeverBeen Community button styled like Explore Gallery right after Explore Gallery', () => {
+    const element: HTMLElement = create().nativeElement;
+    const buttons = Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
+    const labels = buttons.map((link) => link.textContent?.trim());
+
+    const galleryIndex = labels.indexOf('Explore Gallery');
+    expect(galleryIndex).toBeGreaterThan(-1);
+    expect(labels[galleryIndex + 1]).toBe('Connect to NeverBeen Community');
+
+    const community = buttons[galleryIndex + 1];
+    const gallery = buttons[galleryIndex];
+
+    expect(community.getAttribute('href')).toBe('/community');
+    expect(community.classList.contains('btn-ghost')).toBe(true);
+    const communityStyle = getComputedStyle(community);
+    const galleryStyle = getComputedStyle(gallery);
+    expect(communityStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
+    expect(communityStyle.color).toBe(galleryStyle.color);
+  });
 });
