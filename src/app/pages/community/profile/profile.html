@@ -2811,6 +2811,14 @@
               title="Click to view full photo"
             />
             <span class="visitor-avatar-status-dot" [ngClass]="getStatusIconClass(viewingVisitor()!.activeStatus)"></span>
+            <button
+              type="button"
+              class="btn-avatar-zoom-badge"
+              (click)="openImageModal(viewingVisitor()!.profilePhotoUrl || defaultAvatar)"
+              title="Click to view full photo"
+            >
+              🔍 Full Photo
+            </button>
           </div>
 
           <div class="visitor-hero-meta">
