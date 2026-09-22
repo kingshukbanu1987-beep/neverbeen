@@ -360,13 +360,17 @@ export class CommunityProfile implements OnInit {
     () => this.service.companions().filter((c) => c.status === 'connected').length,
   );
 
-  readonly totalCompanionsCount = computed(() => this.service.visibleCompanions().length);
-
-  // Requirements A & D: Max 9 companions default in side panel with connected status or option to connect
-  readonly topNineCompanions = computed(() =>
+  readonly connectedCompanions = computed(() =>
     this.service
       .visibleCompanions()
-      .slice(0, 9),
+      .filter((c) => c.status === 'connected'),
+  );
+
+  readonly totalCompanionsCount = computed(() => this.connectedCompanions().length);
+
+  // In own profile companion section, only show people with whom user is already connected (max 9 default)
+  readonly topNineCompanions = computed(() =>
+    this.connectedCompanions().slice(0, 9),
   );
 
   async ngOnInit(): Promise<void> {
@@ -2065,7 +2069,7 @@ export class CommunityProfile implements OnInit {
   }
 
   filteredUserCompanions(): Companion[] {
-    const all = this.service.visibleCompanions();
+    const all = this.connectedCompanions();
     const q = this.userCompanionsSearch().trim().toLowerCase();
     if (!q) return all;
     return all.filter(

@@ -1320,11 +1320,12 @@ describe('CommunityProfile', () => {
     expect(cards?.length).toBeLessThanOrEqual(9);
     expect(cards?.length).toBe(component.topNineCompanions().length);
 
-    // Each companion shows if connected or else option to connect
-    const hasConnectOrConnected = Array.from(cards || []).some(
-      (c) => c.querySelector('.badge-comp-connected') || c.querySelector('.btn-comp-connect')
+    // In own profile companion section: only people with whom user is already connected
+    const allConnected = Array.from(cards || []).every(
+      (c) => c.querySelector('.badge-comp-connected') && !c.querySelector('.btn-comp-connect')
     );
-    expect(hasConnectOrConnected).toBe(true);
+    expect(allConnected).toBe(true);
+    expect(cards?.length).toBeGreaterThan(0);
 
     // "See All" button opens popup modal with all companions
     const seeAllBtn = companionsSidePanel?.querySelector<HTMLButtonElement>('.btn-see-all-companions-footer');

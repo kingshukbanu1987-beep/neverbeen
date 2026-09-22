@@ -447,24 +447,11 @@
                 </div>
               </div>
               <div class="side-companion-action-wrap">
-                @if (comp.status === 'connected') {
-                  <span class="badge-comp-connected" title="Already connected">✓ Connected</span>
-                } @else if (comp.status === 'pending_outgoing') {
-                  <span class="badge-comp-pending" title="Request pending">⏳ Pending</span>
-                } @else {
-                  <button
-                    type="button"
-                    class="btn-comp-connect"
-                    (click)="$event.stopPropagation(); requestCompanionship(comp.id)"
-                    title="Send Companionship Request"
-                  >
-                    + Connect
-                  </button>
-                }
+                <span class="badge-comp-connected" title="Already connected">✓ Connected</span>
               </div>
             </div>
           } @empty {
-            <p class="side-companions-empty">No companions added yet.</p>
+            <p class="side-companions-empty">No companions connected yet.</p>
           }
         </div>
         <button
@@ -3600,20 +3587,7 @@
               </div>
 
               <div class="modal-comp-action">
-                @if (comp.status === 'connected') {
-                  <span class="badge-comp-connected">✓ Connected</span>
-                } @else if (comp.status === 'pending_outgoing') {
-                  <span class="badge-comp-pending">⏳ Pending</span>
-                } @else {
-                  <button
-                    type="button"
-                    class="btn-comp-connect"
-                    (click)="requestCompanionship(comp.id)"
-                    title="Connect with this companion"
-                  >
-                    + Connect
-                  </button>
-                }
+                <span class="badge-comp-connected">✓ Connected</span>
               </div>
             </div>
           } @empty {
