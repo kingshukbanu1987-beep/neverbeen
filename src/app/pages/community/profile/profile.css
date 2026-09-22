@@ -6664,7 +6664,7 @@
 }
 
 /* ========================================================
-   COMPANIONS 3-GROUP LAYOUT & 70% PHOTO CARDS (Requirement A)
+   COMPANIONS 3-GROUP LAYOUT & 40% PHOTO CARDS (Collapsible/Expandable)
    ======================================================== */
 .companions-groups-container {
   display: flex;
@@ -6684,6 +6684,75 @@
   justify-content: space-between;
   padding-bottom: 0.65rem;
   border-bottom: 2px solid #e2e8f0;
+}
+
+.companion-group-header.companion-group-header-interactive {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border-radius: 8px;
+  padding: 0.5rem 0.5rem;
+  margin: -0.5rem -0.5rem 0;
+}
+
+.companion-group-header.companion-group-header-interactive:hover {
+  background-color: #f8fafc;
+}
+
+.companion-group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-group-toggle:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.btn-group-toggle .toggle-icon {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.btn-group-toggle .toggle-text {
+  font-size: 0.78rem;
+}
+
+.btn-group-toggle.btn-toggle-sm {
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.pending-sent-head.companion-group-header-interactive {
+  cursor: pointer;
+  user-select: none;
+}
+
+.pending-sent-head-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .companion-group-title {
@@ -6718,7 +6787,9 @@
   }
 }
 
-.companion-70-card {
+.companion-70-card,
+.companion-40-card,
+.companion-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -6729,20 +6800,28 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.companion-70-card:hover {
+.companion-70-card:hover,
+.companion-40-card:hover,
+.companion-card:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
-.companion-70-card-body {
+.companion-70-card-body,
+.companion-40-card-body,
+.companion-card-body {
   display: flex;
   flex-direction: row;
-  min-height: 220px;
+  min-height: 200px;
 }
 
-/* "where the profile picture will be 70% of the card in left side" */
-.companion-70-photo-col {
-  width: 70%;
+/* "In Companion Page, in Card Design, reduce the size of the user photo to 40% of the card" */
+.companion-70-photo-col,
+.companion-40-photo-col,
+.companion-card-photo-col {
+  width: 40%;
+  flex: 0 0 40%;
+  max-width: 40%;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -6750,7 +6829,9 @@
   cursor: pointer;
 }
 
-.companion-70-photo-col .companion-photo-70-img {
+.companion-70-photo-col .companion-photo-70-img,
+.companion-40-photo-col .companion-photo-img,
+.companion-card-photo-col .companion-photo-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -6758,11 +6839,15 @@
   transition: transform 0.3s ease;
 }
 
-.companion-70-photo-col:hover .companion-photo-70-img {
+.companion-70-photo-col:hover .companion-photo-70-img,
+.companion-40-photo-col:hover .companion-photo-img,
+.companion-card-photo-col:hover .companion-photo-img {
   transform: scale(1.03);
 }
 
-.companion-70-photo-col .status-dot {
+.companion-70-photo-col .status-dot,
+.companion-40-photo-col .status-dot,
+.companion-card-photo-col .status-dot {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -6772,9 +6857,13 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
-.companion-70-info-col {
-  width: 30%;
-  padding: 1.15rem 0.95rem;
+.companion-70-info-col,
+.companion-40-info-col,
+.companion-card-info-col {
+  width: 60%;
+  flex: 0 0 60%;
+  max-width: 60%;
+  padding: 1.15rem 1.15rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -6783,7 +6872,8 @@
   background: #ffffff;
 }
 
-.companion-70-name {
+.companion-70-name,
+.companion-card-name {
   margin: 0;
   font-size: 1.02rem;
   font-weight: 700;
@@ -6795,18 +6885,21 @@
   line-height: 1.25;
 }
 
-.companion-70-name:hover {
+.companion-70-name:hover,
+.companion-card-name:hover {
   color: #1d9bf0;
 }
 
-.companion-70-field {
+.companion-70-field,
+.companion-card-field {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   font-size: 0.83rem;
 }
 
-.companion-70-field-label {
+.companion-70-field-label,
+.companion-card-field-label {
   font-weight: 600;
   color: #64748b;
   font-size: 0.72rem;
@@ -6814,7 +6907,8 @@
   letter-spacing: 0.04em;
 }
 
-.companion-70-field-val {
+.companion-70-field-val,
+.companion-card-field-val {
   color: #1e293b;
   font-weight: 500;
   display: flex;
@@ -6824,18 +6918,21 @@
   line-height: 1.35;
 }
 
-.companion-70-field-val.mutual-link {
+.companion-70-field-val.mutual-link,
+.companion-card-field-val.mutual-link {
   color: #0369a1;
   font-weight: 600;
   cursor: pointer;
 }
 
-.companion-70-field-val.mutual-link:hover {
+.companion-70-field-val.mutual-link:hover,
+.companion-card-field-val.mutual-link:hover {
   text-decoration: underline;
   color: #0284c7;
 }
 
-.companion-70-card-footer {
+.companion-70-card-footer,
+.companion-card-footer {
   padding: 0.75rem 1rem;
   background: #f8fafc;
   border-top: 1px solid #f1f5f9;

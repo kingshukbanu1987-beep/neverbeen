@@ -1756,6 +1756,38 @@ export class CommunityProfile implements OnInit {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // COMPANION PAGE GROUP COLLAPSE / EXPAND
+  // ---------------------------------------------------------------------------
+
+  readonly isRequestsGroupCollapsed = signal<boolean>(false);
+  readonly isConnectedGroupCollapsed = signal<boolean>(false);
+  readonly isSuggestionsGroupCollapsed = signal<boolean>(false);
+  readonly isPendingSentGroupCollapsed = signal<boolean>(false);
+
+  toggleRequestsGroup(): void {
+    this.isRequestsGroupCollapsed.update((c) => !c);
+  }
+
+  toggleConnectedGroup(): void {
+    this.isConnectedGroupCollapsed.update((c) => !c);
+  }
+
+  toggleSuggestionsGroup(): void {
+    this.isSuggestionsGroupCollapsed.update((c) => !c);
+  }
+
+  togglePendingSentGroup(): void {
+    this.isPendingSentGroupCollapsed.update((c) => !c);
+  }
+
+  toggleCompanionGroup(group: 'requests' | 'connected' | 'suggestions' | 'pendingSent'): void {
+    if (group === 'requests') this.toggleRequestsGroup();
+    else if (group === 'connected') this.toggleConnectedGroup();
+    else if (group === 'suggestions') this.toggleSuggestionsGroup();
+    else if (group === 'pendingSent') this.togglePendingSentGroup();
+  }
+
   rejectRequest(notificationId: number, fromUserId: number): void {
     this.service.rejectCompanionshipRequest(notificationId, fromUserId);
   }

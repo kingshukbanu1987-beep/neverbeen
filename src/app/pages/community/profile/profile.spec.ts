@@ -2019,4 +2019,79 @@ describe('CommunityProfile', () => {
     expect(uniquePhotos.size).toBeGreaterThanOrEqual(500);
     expect(uniqueCovers.size).toBeGreaterThanOrEqual(500);
   });
+
+  it('Companion Page: reduces user photo size to 40% of the card and allows each group to collapse and expand', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    component.setSection('companions');
+    fixture.detectChanges();
+
+    // 1. Verify 40% photo column and card structure
+    const cards = element.querySelectorAll('.companion-card');
+    expect(cards.length).toBeGreaterThan(0);
+    const firstCard = cards[0];
+    const photoCol = firstCard.querySelector('.companion-card-photo-col');
+    const infoCol = firstCard.querySelector('.companion-card-info-col');
+    expect(photoCol).toBeTruthy();
+    expect(infoCol).toBeTruthy();
+
+    // 2. Verify all 3 groups are expanded by default
+    expect(component.isRequestsGroupCollapsed()).toBe(false);
+    expect(component.isConnectedGroupCollapsed()).toBe(false);
+    expect(component.isSuggestionsGroupCollapsed()).toBe(false);
+
+    const requestHeader = element.querySelector('.request-group-section .companion-group-header') as HTMLElement;
+    const connectedHeader = element.querySelector('.connected-group-section .companion-group-header') as HTMLElement;
+    const suggestionsHeader = element.querySelector('.suggestions-group-section .companion-group-header') as HTMLElement;
+
+    expect(requestHeader).toBeTruthy();
+    expect(connectedHeader).toBeTruthy();
+    expect(suggestionsHeader).toBeTruthy();
+
+    // 3. Test collapse & expand on Request for Companionship group
+    const requestToggleBtn = requestHeader.querySelector<HTMLButtonElement>('.btn-group-toggle');
+    expect(requestToggleBtn?.textContent).toContain('Collapse');
+    requestToggleBtn?.click();
+    fixture.detectChanges();
+
+    expect(component.isRequestsGroupCollapsed()).toBe(true);
+    expect(requestHeader.querySelector('.btn-group-toggle')?.textContent).toContain('Expand');
+    expect(element.querySelector('.request-group-section .companion-group-grid')).toBeNull();
+
+    // Expand Request for Companionship group again
+    requestHeader.click();
+    fixture.detectChanges();
+    expect(component.isRequestsGroupCollapsed()).toBe(false);
+    expect(requestHeader.querySelector('.btn-group-toggle')?.textContent).toContain('Collapse');
+
+    // 4. Test collapse & expand on Companions group
+    const connectedToggleBtn = connectedHeader.querySelector<HTMLButtonElement>('.btn-group-toggle');
+    expect(connectedToggleBtn?.textContent).toContain('Collapse');
+    component.toggleConnectedGroup();
+    fixture.detectChanges();
+
+    expect(component.isConnectedGroupCollapsed()).toBe(true);
+    expect(element.querySelector('.connected-group-section .companion-group-grid')).toBeNull();
+
+    component.toggleConnectedGroup();
+    fixture.detectChanges();
+    expect(component.isConnectedGroupCollapsed()).toBe(false);
+    expect(element.querySelector('.connected-group-section .companion-group-grid')).toBeTruthy();
+
+    // 5. Test collapse & expand on Suggestions for Companions group
+    const suggestionsToggleBtn = suggestionsHeader.querySelector<HTMLButtonElement>('.btn-group-toggle');
+    expect(suggestionsToggleBtn?.textContent).toContain('Collapse');
+    component.toggleSuggestionsGroup();
+    fixture.detectChanges();
+
+    expect(component.isSuggestionsGroupCollapsed()).toBe(true);
+    expect(element.querySelector('.suggestions-group-section .companion-group-grid')).toBeNull();
+
+    component.toggleSuggestionsGroup();
+    fixture.detectChanges();
+    expect(component.isSuggestionsGroupCollapsed()).toBe(false);
+    expect(element.querySelector('.suggestions-group-section .companion-group-grid')).toBeTruthy();
+  });
 });
