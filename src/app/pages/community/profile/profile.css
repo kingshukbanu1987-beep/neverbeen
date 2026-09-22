@@ -6809,19 +6809,21 @@
 
 .companion-70-card-body,
 .companion-40-card-body,
+.companion-25-card-body,
 .companion-card-body {
   display: flex;
   flex-direction: row;
-  min-height: 200px;
+  min-height: 190px;
 }
 
-/* "In Companion Page, in Card Design, reduce the size of the user photo to 40% of the card" */
+/* "In Companion Page, in Card Design, reduce the size of the user photo to 25% of the card" */
 .companion-70-photo-col,
 .companion-40-photo-col,
+.companion-25-photo-col,
 .companion-card-photo-col {
-  width: 40%;
-  flex: 0 0 40%;
-  max-width: 40%;
+  width: 25%;
+  flex: 0 0 25%;
+  max-width: 25%;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -6831,22 +6833,26 @@
 
 .companion-70-photo-col .companion-photo-70-img,
 .companion-40-photo-col .companion-photo-img,
+.companion-25-photo-col .companion-photo-img,
 .companion-card-photo-col .companion-photo-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   display: block;
   transition: transform 0.3s ease;
 }
 
 .companion-70-photo-col:hover .companion-photo-70-img,
 .companion-40-photo-col:hover .companion-photo-img,
+.companion-25-photo-col:hover .companion-photo-img,
 .companion-card-photo-col:hover .companion-photo-img {
   transform: scale(1.03);
 }
 
 .companion-70-photo-col .status-dot,
 .companion-40-photo-col .status-dot,
+.companion-25-photo-col .status-dot,
 .companion-card-photo-col .status-dot {
   position: absolute;
   top: 12px;
@@ -6859,11 +6865,12 @@
 
 .companion-70-info-col,
 .companion-40-info-col,
+.companion-25-info-col,
 .companion-card-info-col {
-  width: 60%;
-  flex: 0 0 60%;
-  max-width: 60%;
-  padding: 1.15rem 1.15rem;
+  width: 75%;
+  flex: 0 0 75%;
+  max-width: 75%;
+  padding: 1.15rem 1.25rem;
   display: flex;
   flex-direction: column;
   justify-content: center;

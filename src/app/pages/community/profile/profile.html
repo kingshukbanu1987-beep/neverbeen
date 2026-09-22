@@ -2134,13 +2134,13 @@
                   @if (incomingRequests().length > 0) {
                     <div class="companion-group-grid">
                       @for (c of incomingRequests(); track c.id) {
-                        <div class="companion-70-card companion-40-card companion-card">
-                          <div class="companion-70-card-body companion-card-body">
-                            <div class="companion-70-photo-col companion-40-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                        <div class="companion-70-card companion-40-card companion-25-card companion-card">
+                          <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
+                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
                               <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
                             </div>
-                            <div class="companion-70-info-col companion-40-info-col companion-card-info-col">
+                            <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" (click)="openVisitorProfile(c)">
                                 {{ c.fullName }}
                                 @if (isAuthorVerified(c)) {
@@ -2223,13 +2223,13 @@
                   @if (connectedCompanions().length > 0) {
                     <div class="companion-group-grid">
                       @for (c of connectedCompanions(); track c.id) {
-                        <div class="companion-70-card companion-40-card companion-card">
-                          <div class="companion-70-card-body companion-card-body">
-                            <div class="companion-70-photo-col companion-40-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                        <div class="companion-70-card companion-40-card companion-25-card companion-card">
+                          <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
+                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
                               <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
                             </div>
-                            <div class="companion-70-info-col companion-40-info-col companion-card-info-col">
+                            <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" (click)="openVisitorProfile(c)">
                                 {{ c.fullName }}
                                 @if (isAuthorVerified(c)) {
@@ -2320,13 +2320,13 @@
                   @if (suggestedCompanions().length > 0) {
                     <div class="companion-group-grid">
                       @for (c of suggestedCompanions(); track c.id) {
-                        <div class="companion-70-card companion-40-card companion-card">
-                          <div class="companion-70-card-body companion-card-body">
-                            <div class="companion-70-photo-col companion-40-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                        <div class="companion-70-card companion-40-card companion-25-card companion-card">
+                          <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
+                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
                               <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
                             </div>
-                            <div class="companion-70-info-col companion-40-info-col companion-card-info-col">
+                            <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" (click)="openVisitorProfile(c)">
                                 {{ c.fullName }}
                                 @if (isAuthorVerified(c)) {

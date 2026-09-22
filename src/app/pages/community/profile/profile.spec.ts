@@ -2020,7 +2020,7 @@ describe('CommunityProfile', () => {
     expect(uniqueCovers.size).toBeGreaterThanOrEqual(500);
   });
 
-  it('Companion Page: reduces user photo size to 40% of the card and allows each group to collapse and expand', () => {
+  it('Companion Page: reduces user photo size to 25% of the card and allows each group to collapse and expand', () => {
     const fixture = create();
     const component = fixture.componentInstance;
     const element: HTMLElement = fixture.nativeElement;
@@ -2028,7 +2028,7 @@ describe('CommunityProfile', () => {
     component.setSection('companions');
     fixture.detectChanges();
 
-    // 1. Verify 40% photo column and card structure
+    // 1. Verify 25% photo column and card structure
     const cards = element.querySelectorAll('.companion-card');
     expect(cards.length).toBeGreaterThan(0);
     const firstCard = cards[0];
@@ -2036,6 +2036,8 @@ describe('CommunityProfile', () => {
     const infoCol = firstCard.querySelector('.companion-card-info-col');
     expect(photoCol).toBeTruthy();
     expect(infoCol).toBeTruthy();
+    expect(firstCard.querySelector('.companion-25-photo-col')).toBeTruthy();
+    expect(firstCard.querySelector('.companion-25-info-col')).toBeTruthy();
 
     // 2. Verify all 3 groups are expanded by default
     expect(component.isRequestsGroupCollapsed()).toBe(false);
