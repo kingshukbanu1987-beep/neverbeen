@@ -378,6 +378,12 @@ export class CommunityProfile implements OnInit {
       .filter((c) => c.status === 'connected'),
   );
 
+  readonly pendingOutgoingCompanions = computed(() =>
+    this.service
+      .visibleCompanions()
+      .filter((c) => c.status === 'pending_outgoing'),
+  );
+
   readonly totalCompanionsCount = computed(() => this.connectedCompanions().length);
 
   // In own profile companion section, only show people with whom user is already connected (max 9 default)
@@ -758,12 +764,24 @@ export class CommunityProfile implements OnInit {
   }
 
   requestCompanionship(userId: number): void {
-    this.service.sendCompanionshipRequest(userId);
-    if (this.viewingVisitor() && this.viewingVisitor()!.id === userId) {
+    const numId = Number(userId);
+    this.service.sendCompanionshipRequest(numId);
+    if (this.viewingVisitor() && (Number(this.viewingVisitor()!.id) === numId || !userId)) {
       this.viewingVisitor.update((t) => (t ? { ...t, status: 'pending_outgoing' } : null));
     }
-    if (this.viewingTraveler() && this.viewingTraveler()!.id === userId) {
+    if (this.viewingTraveler() && (Number(this.viewingTraveler()!.id) === numId || !userId)) {
       this.viewingTraveler.update((t) => (t ? { ...t, status: 'pending_outgoing' } : null));
+    }
+  }
+
+  cancelCompanionshipRequest(userId: number): void {
+    const numId = Number(userId);
+    this.service.cancelCompanionshipRequest(numId);
+    if (this.viewingVisitor() && (Number(this.viewingVisitor()!.id) === numId || !userId)) {
+      this.viewingVisitor.update((t) => (t ? { ...t, status: 'none' } : null));
+    }
+    if (this.viewingTraveler() && (Number(this.viewingTraveler()!.id) === numId || !userId)) {
+      this.viewingTraveler.update((t) => (t ? { ...t, status: 'none' } : null));
     }
   }
 

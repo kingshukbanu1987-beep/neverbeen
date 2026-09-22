@@ -5216,6 +5216,21 @@
   .visitor-hero-top-row {
     gap: 0.65rem;
     align-items: center;
+    flex-wrap: wrap;
+  }
+  .visitor-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .visitor-hero-actions .btn-companion-request,
+  .visitor-hero-actions .btn-action-primary,
+  .visitor-hero-actions .badge-pending-status,
+  .visitor-hero-actions .btn-cancel-request {
+    touch-action: manipulation;
   }
   .visitor-avatar-showcase {
     width: 72px;
@@ -6439,6 +6454,213 @@
 .btn-verify-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* ========================================================
+   COMPANION REQUEST PENDING & CANCEL ACTIONS (Requirements A, B, C)
+   ======================================================== */
+.badge-pending-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(146, 64, 14, 0.08);
+  white-space: nowrap;
+}
+
+.btn-companion-request {
+  background: #1877f2;
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.15s ease;
+}
+
+.btn-companion-request:hover {
+  background: #1564cc;
+}
+
+.btn-cancel-request {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 0.38rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-cancel-request:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #b91c1c;
+}
+
+.btn-cancel-request.btn-sm {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.btn-cancel-sm {
+  background: #ffffff;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-cancel-sm:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.btn-cancel-mini {
+  background: #ffffff;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-cancel-mini:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+
+.search-pending-cluster,
+.liker-pending-cluster,
+.comp-pending-wrap,
+.modal-pending-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pending-lock-notice-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+/* Pending Sent Requests Block in Companions Tab */
+.pending-sent-requests-block {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.pending-sent-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.pending-sent-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.pending-sent-count-pill {
+  background: #fde68a;
+  color: #78350f;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.pending-sent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.pending-sent-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #fef3c7;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.pending-sent-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+}
+
+.pending-sent-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pending-sent-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pending-sent-name {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.pending-sent-loc {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pending-sent-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
 }
 
 

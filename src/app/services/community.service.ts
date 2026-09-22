@@ -1143,8 +1143,17 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   sendCompanionshipRequest(targetUserId: number): void {
+    const numId = Number(targetUserId);
     this.companions.update((list) =>
-      list.map((c) => (c.id === targetUserId ? { ...c, status: 'pending_outgoing' } : c)),
+      list.map((c) => (Number(c.id) === numId ? { ...c, status: 'pending_outgoing' as const } : c)),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  cancelCompanionshipRequest(targetUserId: number): void {
+    const numId = Number(targetUserId);
+    this.companions.update((list) =>
+      list.map((c) => (Number(c.id) === numId ? { ...c, status: 'none' as const } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
   }

@@ -83,7 +83,17 @@
                   @if (t.status === 'connected') {
                     <span class="status-badge connected">Connected</span>
                   } @else if (t.status === 'pending_outgoing') {
-                    <span class="status-badge pending">Request Sent</span>
+                    <div class="search-pending-cluster">
+                      <span class="status-badge pending">Request Sent</span>
+                      <button
+                        type="button"
+                        class="btn-cancel-sm"
+                        (click)="$event.stopPropagation(); cancelCompanionshipRequest(t.id)"
+                        title="Cancel companion request"
+                      >
+                        ✕ Cancel
+                      </button>
+                    </div>
                   } @else {
                     <button type="button" class="btn-request-sm" (click)="$event.stopPropagation(); requestCompanionship(t.id)">
                       + Connect
@@ -2036,6 +2046,40 @@
               </span>
             </header>
 
+            <!-- Option to cancel companion request once sent (Requirement C: Anywhere) -->
+            @if (pendingOutgoingCompanions().length > 0) {
+              <div class="pending-sent-requests-block">
+                <div class="pending-sent-head">
+                  <h3 class="pending-sent-title">⏳ Pending Requests Sent</h3>
+                  <span class="pending-sent-count-pill">{{ pendingOutgoingCompanions().length }} Pending</span>
+                </div>
+                <div class="pending-sent-grid">
+                  @for (p of pendingOutgoingCompanions(); track p.id) {
+                    <div class="pending-sent-card">
+                      <div class="pending-sent-left" (click)="openVisitorProfile(p)">
+                        <img [src]="p.profilePhotoUrl || defaultAvatar" [alt]="p.fullName" class="pending-sent-avatar" />
+                        <div class="pending-sent-meta">
+                          <strong class="pending-sent-name">{{ p.fullName }}</strong>
+                          <span class="pending-sent-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ p.city }}, {{ p.country }}</span>
+                        </div>
+                      </div>
+                      <div class="pending-sent-actions">
+                        <span class="badge-pending-status">⏳ Request Pending</span>
+                        <button
+                          type="button"
+                          class="btn-cancel-request btn-sm"
+                          (click)="cancelCompanionshipRequest(p.id)"
+                          title="Cancel companion request"
+                        >
+                          ✕ Cancel Request
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
             <div class="companions-cards-grid">
               @for (c of service.visibleCompanions(); track c.id) {
                 @if (c.status === 'connected') {
@@ -2931,7 +2975,17 @@
                   } @else if (getLikerConnectionStatus(liker.id) === 'connected') {
                     <span class="status-badge connected">✓ Companions</span>
                   } @else if (getLikerConnectionStatus(liker.id) === 'pending') {
-                    <span class="status-badge pending">Request Sent</span>
+                    <div class="liker-pending-cluster">
+                      <span class="status-badge pending">Request Sent</span>
+                      <button
+                        type="button"
+                        class="btn-cancel-sm"
+                        (click)="$event.stopPropagation(); cancelCompanionshipRequest(liker.id)"
+                        title="Cancel companion request"
+                      >
+                        ✕ Cancel
+                      </button>
+                    </div>
                   } @else {
                     <button
                       type="button"
@@ -3111,7 +3165,7 @@
             </div>
           </div>
 
-          <!-- Companionship & Messaging Actions Cluster -->
+          <!-- Companionship & Messaging Actions Cluster (Requirements A, B, C) -->
           <div class="visitor-hero-actions">
             @if (viewingVisitor()!.status === 'connected') {
               <span class="badge-connected-status">✓ Companions</span>
@@ -3133,6 +3187,14 @@
               </button>
             } @else if (viewingVisitor()!.status === 'pending_outgoing') {
               <span class="badge-pending-status">⏳ Request Pending</span>
+              <button
+                type="button"
+                class="btn-cancel-request btn-action-subtle"
+                (click)="cancelCompanionshipRequest(viewingVisitor()!.id)"
+                title="Cancel companion request"
+              >
+                ✕ Cancel Request
+              </button>
             } @else if (viewingVisitor()!.status === 'pending_incoming') {
               <button
                 type="button"
@@ -3144,10 +3206,11 @@
             } @else {
               <button
                 type="button"
-                class="btn-action-primary"
+                class="btn-action-primary btn-companion-request"
                 (click)="requestCompanionship(viewingVisitor()!.id)"
+                title="Send Companion Request"
               >
-                + Add Companion
+                + Companion Request
               </button>
             }
 
@@ -3171,16 +3234,35 @@
           <p class="shield-description">
             {{ viewingVisitor()!.fullName }} has locked their profile. Journey feeds, Companions, Circles, and About me are protected and visible only to confirmed Companions.
           </p>
-          @if (viewingVisitor()!.status === 'none') {
+          @if (viewingVisitor()!.status === 'pending_outgoing') {
+            <div class="pending-lock-notice-box">
+              <span class="badge-pending-status">⏳ Request Pending</span>
+              <button
+                type="button"
+                class="btn-cancel-request btn-center"
+                (click)="cancelCompanionshipRequest(viewingVisitor()!.id)"
+                title="Cancel companion request"
+              >
+                ✕ Cancel Request
+              </button>
+            </div>
+          } @else if (viewingVisitor()!.status === 'pending_incoming') {
             <button
               type="button"
               class="btn-primary-action btn-center"
+              (click)="acceptCompanionship(viewingVisitor()!.id)"
+            >
+              Accept Companionship
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="btn-primary-action btn-center btn-companion-request"
               (click)="requestCompanionship(viewingVisitor()!.id)"
+              title="Request for Companionship to Unlock"
             >
               Request for Companionship to Unlock
             </button>
-          } @else if (viewingVisitor()!.status === 'pending_outgoing') {
-            <span class="pending-lock-notice">Companionship request is pending approval.</span>
           }
         </div>
       } @else {
@@ -3231,7 +3313,17 @@
                       } @else if (comp.status === 'connected') {
                         <span class="badge-comp-connected" title="Already companions">✓ Connected</span>
                       } @else if (comp.status === 'pending_outgoing') {
-                        <span class="badge-comp-pending" title="Request pending">⏳ Pending</span>
+                        <div class="comp-pending-wrap">
+                          <span class="badge-comp-pending" title="Request pending">⏳ Pending</span>
+                          <button
+                            type="button"
+                            class="btn-cancel-mini"
+                            (click)="$event.stopPropagation(); cancelCompanionshipRequest(comp.id)"
+                            title="Cancel companion request"
+                          >
+                            ✕ Cancel
+                          </button>
+                        </div>
                       } @else {
                         <button
                           type="button"
@@ -3712,7 +3804,17 @@
                   } @else if (comp.status === 'connected') {
                     <span class="badge-comp-connected">✓ Connected</span>
                   } @else if (comp.status === 'pending_outgoing') {
-                    <span class="badge-comp-pending">⏳ Pending</span>
+                    <div class="modal-pending-cluster">
+                      <span class="badge-comp-pending">⏳ Pending</span>
+                      <button
+                        type="button"
+                        class="btn-cancel-mini"
+                        (click)="cancelCompanionshipRequest(comp.id)"
+                        title="Cancel companion request"
+                      >
+                        ✕ Cancel
+                      </button>
+                    </div>
                   } @else {
                     <button
                       type="button"
@@ -3857,7 +3959,17 @@
                 @if (comp.status === 'connected') {
                   <span class="badge-comp-connected">✓ Connected</span>
                 } @else if (comp.status === 'pending_outgoing') {
-                  <span class="badge-comp-pending">⏳ Pending</span>
+                  <div class="modal-pending-cluster">
+                    <span class="badge-comp-pending">⏳ Pending</span>
+                    <button
+                      type="button"
+                      class="btn-cancel-mini"
+                      (click)="cancelCompanionshipRequest(comp.id)"
+                      title="Cancel companion request"
+                    >
+                      ✕ Cancel
+                    </button>
+                  </div>
                 } @else {
                   <button
                     type="button"
@@ -3943,7 +4055,17 @@
                   } @else if (getLikerConnectionStatus(item.user.id) === 'connected') {
                     <span class="status-badge connected">✓ Companions</span>
                   } @else if (getLikerConnectionStatus(item.user.id) === 'pending') {
-                    <span class="status-badge pending">Request Sent</span>
+                    <div class="liker-pending-cluster">
+                      <span class="status-badge pending">Request Sent</span>
+                      <button
+                        type="button"
+                        class="btn-cancel-sm"
+                        (click)="$event.stopPropagation(); cancelCompanionshipRequest(item.user.id)"
+                        title="Cancel companion request"
+                      >
+                        ✕ Cancel
+                      </button>
+                    </div>
                   } @else {
                     <button
                       type="button"

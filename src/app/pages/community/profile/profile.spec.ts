@@ -1832,4 +1832,114 @@ describe('CommunityProfile', () => {
     expect(component.isUserVerified()).toBe(false);
     expect(service.currentUser()?.isVerified).toBe(false);
   });
+
+  it('Requirement A & B: displays Request Pending immediately and provides option to cancel companion request on visitor profile (unlocked and mobile/desktop)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Pick an unconnected companion
+    const stranger = service.companions().find((c) => c.status === 'none' && !c.isProfileLocked)!;
+    expect(stranger).toBeTruthy();
+
+    component.openVisitorProfile(stranger);
+    fixture.detectChanges();
+
+    // Verify initial button is present
+    const reqBtn = element.querySelector<HTMLButtonElement>('.btn-companion-request');
+    expect(reqBtn).toBeTruthy();
+    expect(reqBtn?.textContent).toContain('Companion Request');
+
+    // Click Companion Request (simulate click / tap)
+    component.requestCompanionship(stranger.id);
+    fixture.detectChanges();
+
+    // Requirement B: immediately shows 'Request Pending'
+    expect(component['viewingVisitor']()?.status).toBe('pending_outgoing');
+    const pendingBadge = element.querySelector('.badge-pending-status');
+    expect(pendingBadge).toBeTruthy();
+    expect(pendingBadge?.textContent).toContain('Request Pending');
+
+    // Requirement A: Option to cancel companion request once sent
+    const cancelBtn = element.querySelector<HTMLButtonElement>('.btn-cancel-request');
+    expect(cancelBtn).toBeTruthy();
+    expect(cancelBtn?.textContent).toContain('Cancel Request');
+
+    // Click Cancel Request
+    component.cancelCompanionshipRequest(stranger.id);
+    fixture.detectChanges();
+
+    // Status reverted to 'none', companion request button reappears immediately
+    expect(component['viewingVisitor']()?.status).toBe('none');
+    expect(element.querySelector('.badge-pending-status')).toBeFalsy();
+    expect(element.querySelector('.btn-companion-request')).toBeTruthy();
+  });
+
+  it('Requirement A & B: locked visitor profile shows Request Pending immediately and provides Cancel Request', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Pick a locked companion
+    const lockedComp = service.companions().find((c) => c.isProfileLocked && c.status === 'none')!;
+    expect(lockedComp).toBeTruthy();
+
+    component.openVisitorProfile(lockedComp);
+    fixture.detectChanges();
+
+    // In locked shield card, companion request button is displayed
+    const unlockBtn = element.querySelector<HTMLButtonElement>('.visitor-locked-shield-card .btn-companion-request');
+    expect(unlockBtn).toBeTruthy();
+
+    // Send request
+    component.requestCompanionship(lockedComp.id);
+    fixture.detectChanges();
+
+    // Locked card immediately shows 'Request Pending' and Cancel Request
+    const pendingBox = element.querySelector('.pending-lock-notice-box');
+    expect(pendingBox).toBeTruthy();
+    expect(pendingBox?.textContent).toContain('Request Pending');
+
+    const cancelBtn = pendingBox?.querySelector<HTMLButtonElement>('.btn-cancel-request');
+    expect(cancelBtn).toBeTruthy();
+
+    // Cancel request
+    component.cancelCompanionshipRequest(lockedComp.id);
+    fixture.detectChanges();
+
+    expect(component['viewingVisitor']()?.status).toBe('none');
+    expect(element.querySelector('.pending-lock-notice-box')).toBeFalsy();
+    expect(element.querySelector('.visitor-locked-shield-card .btn-companion-request')).toBeTruthy();
+  });
+
+  it('Requirement C: provides option to cancel companion request once sent anywhere (search, side companions, and modal)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const stranger = service.companions().find((c) => c.status === 'none')!;
+    expect(stranger).toBeTruthy();
+
+    // 1. Send request via service
+    service.sendCompanionshipRequest(stranger.id);
+    fixture.detectChanges();
+
+    expect(service.companions().find((c) => c.id === stranger.id)?.status).toBe('pending_outgoing');
+    expect(component.pendingOutgoingCompanions().some((c) => c.id === stranger.id)).toBe(true);
+
+    // In Companions tab, pending sent request block renders Cancel Request
+    component.setSection('companions');
+    fixture.detectChanges();
+
+    const pendingSentBlock = element.querySelector('.pending-sent-requests-block');
+    expect(pendingSentBlock).toBeTruthy();
+    expect(pendingSentBlock?.textContent).toContain('Pending Requests Sent');
+
+    // 2. Cancel request via component
+    component.cancelCompanionshipRequest(stranger.id);
+    fixture.detectChanges();
+
+    expect(service.companions().find((c) => c.id === stranger.id)?.status).toBe('none');
+    expect(component.pendingOutgoingCompanions().some((c) => c.id === stranger.id)).toBe(false);
+  });
 });
