@@ -1293,4 +1293,144 @@ describe('CommunityProfile', () => {
     fixture.detectChanges();
     expect(component.showAllVisitorCompanionsModal()).toBe(false);
   });
+
+  it('implements Requirements A, B, C, D, E, F seamlessly', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const service = TestBed.inject(CommunityService);
+    const element: HTMLElement = fixture.nativeElement;
+    component['viewingVisitor'].set(null);
+    fixture.detectChanges();
+
+    // -------------------------------------------------------------------------
+    // REQUIREMENT A & D: Own profile side panel companions (total count, max 9, connect status, see all popup)
+    // -------------------------------------------------------------------------
+    const companionsSidePanel = element.querySelector('.companions-side-panel');
+    expect(companionsSidePanel).toBeTruthy();
+
+    // Total count shown in badge, NOT 9
+    const countBadge = companionsSidePanel?.querySelector('.companions-count-badge');
+    expect(countBadge).toBeTruthy();
+    const totalCount = component.totalCompanionsCount();
+    expect(totalCount).toBeGreaterThan(9);
+    expect(countBadge?.textContent?.trim()).toBe(String(totalCount));
+
+    // Side panel shows max 9 companions by default
+    const cards = companionsSidePanel?.querySelectorAll('.side-companion-card');
+    expect(cards?.length).toBeLessThanOrEqual(9);
+    expect(cards?.length).toBe(component.topNineCompanions().length);
+
+    // Each companion shows if connected or else option to connect
+    const hasConnectOrConnected = Array.from(cards || []).some(
+      (c) => c.querySelector('.badge-comp-connected') || c.querySelector('.btn-comp-connect')
+    );
+    expect(hasConnectOrConnected).toBe(true);
+
+    // "See All" button opens popup modal with all companions
+    const seeAllBtn = companionsSidePanel?.querySelector<HTMLButtonElement>('.btn-see-all-companions-footer');
+    expect(seeAllBtn).toBeTruthy();
+    expect(seeAllBtn?.textContent).toContain(`See All Companions (${totalCount})`);
+
+    component.openAllUserCompanionsModal();
+    fixture.detectChanges();
+    expect(component.showAllUserCompanionsModal()).toBe(true);
+    const userModal = element.querySelector('.user-all-companions-modal');
+    expect(userModal).toBeTruthy();
+    expect(userModal?.querySelector('.modal-count-tag')?.textContent).toContain(`${totalCount} Total`);
+
+    component.closeAllUserCompanionsModal();
+    fixture.detectChanges();
+    expect(component.showAllUserCompanionsModal()).toBe(false);
+
+    // -------------------------------------------------------------------------
+    // REQUIREMENT B: Ultra-modern Personal Details layout (own profile & other's profile)
+    // -------------------------------------------------------------------------
+    component.setSection('about');
+    fixture.detectChanges();
+
+    const ownPersonalDetails = element.querySelector('.modern-personal-details-section');
+    expect(ownPersonalDetails).toBeTruthy();
+    expect(ownPersonalDetails?.querySelector('.modern-details-header')).toBeTruthy();
+    const ownTiles = ownPersonalDetails?.querySelectorAll('.modern-detail-tile');
+    expect(ownTiles?.length).toBeGreaterThanOrEqual(5);
+
+    // Now visit Elena's profile and check Personal Details there too
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    const visitorPersonalDetails = element.querySelector('.visitor-flow-about .modern-personal-details-section');
+    expect(visitorPersonalDetails).toBeTruthy();
+    const visitorTiles = visitorPersonalDetails?.querySelectorAll('.modern-detail-tile');
+    expect(visitorTiles?.length).toBeGreaterThanOrEqual(5);
+
+    // -------------------------------------------------------------------------
+    // REQUIREMENT C: Cover Picture present for profile and visible when visiting someone's profile
+    // -------------------------------------------------------------------------
+    const visitorCover = element.querySelector<HTMLImageElement>('.visitor-modal-cover-img');
+    expect(visitorCover).toBeTruthy();
+    expect(visitorCover?.src).toBeTruthy();
+    expect(visitorCover?.src).toContain('http');
+
+    // -------------------------------------------------------------------------
+    // REQUIREMENT E: Mutual Companions popup on clicking "Mutual Companions"
+    // -------------------------------------------------------------------------
+    const mutualBadge = element.querySelector<HTMLElement>('.badge-mutual-tag');
+    expect(mutualBadge).toBeTruthy();
+    mutualBadge?.click();
+    fixture.detectChanges();
+
+    expect(component.showMutualCompanionsModal()).toBe(true);
+    const mutualModal = element.querySelector('.mutual-companions-modal');
+    expect(mutualModal).toBeTruthy();
+    expect(mutualModal?.textContent).toContain('Mutual Companions');
+    const mutualRows = mutualModal?.querySelectorAll('.modal-companion-row');
+    expect(mutualRows?.length).toBeGreaterThan(0);
+
+    component.closeMutualCompanionsModal();
+    fixture.detectChanges();
+    expect(component.showMutualCompanionsModal()).toBe(false);
+
+    // -------------------------------------------------------------------------
+    // REQUIREMENT F: User can post multiple photos in Journey section
+    // -------------------------------------------------------------------------
+    component.closeVisitorProfile();
+    component.setSection('journey');
+    fixture.detectChanges();
+
+    // Create 2 mock files under 100 KB
+    const file1 = new File(['mock content 1'], 'photo1.jpg', { type: 'image/jpeg' });
+    const file2 = new File(['mock content 2'], 'photo2.jpg', { type: 'image/jpeg' });
+    const multiEvent = { target: { files: [file1, file2] } } as unknown as Event;
+    component.onJourneyPhotoSelected(multiEvent);
+
+    // Simulate FileReader data URLs
+    component['journeyPhotoPreviews'].set(['data:image/jpeg;base64,img1', 'data:image/jpeg;base64,img2']);
+    fixture.detectChanges();
+
+    expect(component['journeyPhotoPreviews']().length).toBe(2);
+
+    // Verify previews in DOM
+    const previewGrid = element.querySelector('.multi-photos-preview-grid');
+    expect(previewGrid).toBeTruthy();
+    const thumbWraps = previewGrid?.querySelectorAll('.composer-photo-thumb-wrap');
+    expect(thumbWraps?.length).toBe(2);
+
+    // Submit Journey post with multiple photos
+    component['newJourneyText'] = 'Exploring Kyoto with multiple photos!';
+    component.submitJourneyPost();
+    fixture.detectChanges();
+
+    const latestPost = service.journeyPosts()[0];
+    expect(latestPost.text).toBe('Exploring Kyoto with multiple photos!');
+    expect(latestPost.imageUrls?.length).toBe(2);
+    expect(latestPost.imageUrls).toEqual(['data:image/jpeg;base64,img1', 'data:image/jpeg;base64,img2']);
+
+    // Check feed renders multi-image grid
+    fixture.detectChanges();
+    const multiGridInFeed = element.querySelector('.post-multi-images-grid');
+    expect(multiGridInFeed).toBeTruthy();
+    const cells = multiGridInFeed?.querySelectorAll('.multi-img-cell');
+    expect(cells?.length).toBe(2);
+  });
 });

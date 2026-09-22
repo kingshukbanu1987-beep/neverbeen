@@ -106,8 +106,10 @@ export class CommunityProfile implements OnInit {
   protected readonly activeCommentPostId = signal<number | null>(null);
   protected journeyCommentText = '';
 
-  // Journey Post Photo Attachment (Requirement A: <= 100 KB)
+  // Journey Post Photo Attachment (Requirement A: <= 100 KB, Requirement F: Multi-photo support)
   protected readonly selectedJourneyPhoto = signal<File | null>(null);
+  protected readonly selectedJourneyPhotos = signal<File[]>([]);
+  protected readonly journeyPhotoPreviews = signal<string[]>([]);
   protected readonly journeyPhotoPreview = signal<string | null>(null);
   protected readonly journeyPhotoError = signal<string | null>(null);
 
@@ -358,11 +360,12 @@ export class CommunityProfile implements OnInit {
     () => this.service.companions().filter((c) => c.status === 'connected').length,
   );
 
-  // Requirement E: Max 9 companions before My Circles
+  readonly totalCompanionsCount = computed(() => this.service.visibleCompanions().length);
+
+  // Requirements A & D: Max 9 companions default in side panel with connected status or option to connect
   readonly topNineCompanions = computed(() =>
     this.service
       .visibleCompanions()
-      .filter((c) => c.status === 'connected')
       .slice(0, 9),
   );
 
@@ -791,30 +794,63 @@ export class CommunityProfile implements OnInit {
   onJourneyPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-    const file = input.files[0];
+    const files = Array.from(input.files);
     this.journeyPhotoError.set(null);
-    if (file.size > this.MAX_PICTURE_SIZE) {
-      this.journeyPhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
-      this.selectedJourneyPhoto.set(null);
-      this.journeyPhotoPreview.set(null);
-      input.value = '';
-      return;
+
+    for (const file of files) {
+      if (file.size > this.MAX_PICTURE_SIZE) {
+        this.journeyPhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
+        this.selectedJourneyPhoto.set(null);
+        this.selectedJourneyPhotos.set([]);
+        this.journeyPhotoPreview.set(null);
+        this.journeyPhotoPreviews.set([]);
+        input.value = '';
+        return;
+      }
     }
-    this.selectedJourneyPhoto.set(file);
-    const reader = new FileReader();
-    reader.onload = () => this.journeyPhotoPreview.set(reader.result as string);
-    reader.readAsDataURL(file);
+
+    this.selectedJourneyPhoto.set(files[0]);
+    this.selectedJourneyPhotos.update((existing) => [...existing, ...files]);
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        this.journeyPhotoPreviews.update((list) => [...list, dataUrl]);
+        if (!this.journeyPhotoPreview()) {
+          this.journeyPhotoPreview.set(dataUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
     input.value = '';
+  }
+
+  removeJourneyPhoto(index: number): void {
+    this.journeyPhotoPreviews.update((list) => list.filter((_, i) => i !== index));
+    this.selectedJourneyPhotos.update((list) => list.filter((_, i) => i !== index));
+    const remaining = this.journeyPhotoPreviews();
+    if (remaining.length > 0) {
+      this.journeyPhotoPreview.set(remaining[0]);
+      const photos = this.selectedJourneyPhotos();
+      this.selectedJourneyPhoto.set(photos[0] || null);
+    } else {
+      this.journeyPhotoPreview.set(null);
+      this.selectedJourneyPhoto.set(null);
+    }
   }
 
   clearJourneyPhoto(): void {
     this.selectedJourneyPhoto.set(null);
+    this.selectedJourneyPhotos.set([]);
+    this.journeyPhotoPreviews.set([]);
     this.journeyPhotoPreview.set(null);
     this.journeyPhotoError.set(null);
   }
 
   submitJourneyPost(): void {
-    if (!this.newJourneyText.trim() && !this.journeyPhotoPreview()) return;
+    const hasPhotos = this.journeyPhotoPreviews().length > 0 || !!this.journeyPhotoPreview();
+    if (!this.newJourneyText.trim() && !hasPhotos) return;
 
     // Requirement D: If text was typed in destination tag, only available location from Google Maps can be selected!
     if (this.destinationSearchInput.trim() && !this.selectedGoogleLocation()) {
@@ -828,16 +864,19 @@ export class CommunityProfile implements OnInit {
         ? this.selectedGoogleLocation()!.formattedAddress
         : undefined;
       const placeId = this.selectedGoogleLocation()?.placeId;
+      const allPreviews = this.journeyPhotoPreviews();
+      const primaryPhoto = allPreviews[0] || this.journeyPhotoPreview() || undefined;
 
       this.service.createJourneyPost(
         this.newJourneyText,
         this.selectedMood,
         locationTag,
         placeId,
-        this.journeyPhotoPreview() || undefined,
+        primaryPhoto,
         this.selectedJourneyTaggedCompanions().length > 0
           ? [...this.selectedJourneyTaggedCompanions()]
           : undefined,
+        allPreviews.length > 0 ? allPreviews : (primaryPhoto ? [primaryPhoto] : undefined),
       );
       this.newJourneyText = '';
       this.selectedJourneyTaggedCompanions.set([]);
@@ -2008,6 +2047,82 @@ export class CommunityProfile implements OnInit {
     }
     this.copiedProfileUrl.set(true);
     setTimeout(() => this.copiedProfileUrl.set(false), 2500);
+  }
+
+  // ---------------------------------------------------------------------------
+  // USER COMPANIONS & "SEE ALL COMPANIONS" POPUP MODAL (Requirements A & D)
+  // ---------------------------------------------------------------------------
+  readonly showAllUserCompanionsModal = signal(false);
+  readonly userCompanionsSearch = signal('');
+
+  openAllUserCompanionsModal(): void {
+    this.userCompanionsSearch.set('');
+    this.showAllUserCompanionsModal.set(true);
+  }
+
+  closeAllUserCompanionsModal(): void {
+    this.showAllUserCompanionsModal.set(false);
+  }
+
+  filteredUserCompanions(): Companion[] {
+    const all = this.service.visibleCompanions();
+    const q = this.userCompanionsSearch().trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(
+      (c) =>
+        c.fullName.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.country.toLowerCase().includes(q) ||
+        c.profession.toLowerCase().includes(q),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // MUTUAL COMPANIONS POPUP MODAL (Requirement E)
+  // ---------------------------------------------------------------------------
+  readonly showMutualCompanionsModal = signal(false);
+  readonly mutualCompanionsSearch = signal('');
+  readonly selectedMutualCompanionTarget = signal<Companion | null>(null);
+
+  openMutualCompanionsModal(target?: Companion): void {
+    const comp = target || this.viewingVisitor();
+    this.selectedMutualCompanionTarget.set(comp);
+    this.mutualCompanionsSearch.set('');
+    this.showMutualCompanionsModal.set(true);
+  }
+
+  closeMutualCompanionsModal(): void {
+    this.showMutualCompanionsModal.set(false);
+    this.selectedMutualCompanionTarget.set(null);
+  }
+
+  getMutualCompanions(targetId: number): Companion[] {
+    const visitor =
+      this.service.companions().find((c) => c.id === targetId) || this.viewingVisitor();
+    const count = visitor?.mutualCompanionsCount ?? 3;
+    const connected = this.service
+      .companions()
+      .filter((c) => c.status === 'connected' && c.id !== targetId);
+    if (connected.length >= count) {
+      return connected.slice(0, count);
+    }
+    const remaining = this.service
+      .companions()
+      .filter((c) => c.id !== targetId && !connected.some((conn) => conn.id === c.id));
+    return [...connected, ...remaining.slice(0, Math.max(0, count - connected.length))];
+  }
+
+  filteredMutualCompanions(targetId: number): Companion[] {
+    const all = this.getMutualCompanions(targetId);
+    const q = this.mutualCompanionsSearch().trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(
+      (c) =>
+        c.fullName.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.country.toLowerCase().includes(q) ||
+        c.profession.toLowerCase().includes(q),
+    );
   }
 
   // ---------------------------------------------------------------------------

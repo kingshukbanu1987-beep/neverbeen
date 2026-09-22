@@ -348,6 +348,7 @@ export interface JourneyPost {
   text: string;
   createdAtUtc: string;
   imageUrl?: string;
+  imageUrls?: string[];
   likeCount: number;
   isLiked?: boolean;
   myReaction?: ReactionType | null;

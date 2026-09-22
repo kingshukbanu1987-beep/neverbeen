@@ -787,9 +787,12 @@ export class CommunityService {
     placeId?: string,
     imageUrl?: string,
     taggedCompanions?: AuthorInfo[],
+    imageUrls?: string[],
   ): JourneyPost {
     const user = this.currentUser();
     const profile = this.profile();
+    const allImages = imageUrls && imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : undefined);
+    const primaryImage = imageUrl || (imageUrls && imageUrls.length > 0 ? imageUrls[0] : undefined);
     const newPost: JourneyPost = {
       id: generateUniqueId(),
       author: {
@@ -801,7 +804,8 @@ export class CommunityService {
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
       },
       text: text.trim(),
-      imageUrl: imageUrl || undefined,
+      imageUrl: primaryImage,
+      imageUrls: allImages,
       createdAtUtc: new Date().toISOString(),
       likeCount: 0,
       isLiked: false,
@@ -1925,8 +1929,12 @@ export class CommunityService {
       merged = [...baseList, ...SEED_ASIAN_COMPANIONS];
     }
 
+    const defaultCover =
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
+
     return merged.map((c) => ({
       ...c,
+      coverPhotoUrl: c.coverPhotoUrl || defaultCover,
       uniqueId: c.uniqueId || generate20DigitUid(c.id),
     }));
   }
