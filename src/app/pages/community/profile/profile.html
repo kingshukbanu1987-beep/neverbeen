@@ -237,16 +237,15 @@
             }
           </div>
 
-          <!-- 20-Digit Profile ID & Copy URL (Requirement C) -->
-          <div class="side-user-uid-row" title="Your 20-digit unique Profile URL">
-            <span class="side-uid-pill">ID: {{ service.profile()?.uniqueId || generateUid(service.currentUser()?.id || 1) }}</span>
+          <!-- Copy URL (Requirement C) -->
+          <div class="side-user-uid-row" title="Copy your Profile Link">
             <button
               type="button"
               class="btn-side-copy-url"
               (click)="copyOwnProfileUrl()"
               [title]="copiedProfileUrl() ? 'Copied to clipboard' : 'Copy your profile link'"
             >
-              📋 {{ copiedProfileUrl() ? 'Copied!' : 'Copy Link' }}
+              📋 {{ copiedProfileUrl() ? 'Copied!' : 'Copy Profile Link' }}
             </button>
           </div>
         </div>
@@ -2770,7 +2769,7 @@
           <span class="visitor-nav-current">{{ viewingVisitor()!.fullName }}</span>
         </div>
         <div class="visitor-nav-right">
-          <span class="visitor-uid-pill" title="20-digit Profile Unique ID">
+          <span class="visitor-uid-pill" title="20-digit Profile Unique ID" style="display: none !important;">
             Profile ID: <strong>{{ viewingVisitor()!.uniqueId || generateUid(viewingVisitor()!.id) }}</strong>
           </span>
           <button type="button" class="btn-copy-profile-url" (click)="copyProfileUrl(viewingVisitor()!)" title="Copy Profile Link">
@@ -2837,7 +2836,6 @@
             <div class="visitor-hero-badges">
               <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
               <span class="badge-mutual-tag">👥 {{ viewingVisitor()!.mutualCompanionsCount }} Mutual Companions</span>
-              <span class="badge-uid-tag">UID: {{ viewingVisitor()!.uniqueId || generateUid(viewingVisitor()!.id) }}</span>
             </div>
           </div>
 
