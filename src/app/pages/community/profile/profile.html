@@ -2912,15 +2912,81 @@
           }
         </div>
       } @else {
-        <!-- UNLOCKED: All 8 sub-sections of About me, Gallery, and Journey feeds -->
-        <div class="visitor-page-flow-container">
-          <!-- 1. ABOUT ME (All 8 sub-sections) -->
-          <section class="visitor-flow-section visitor-flow-about">
-            <h3 class="visitor-section-heading">👤 About {{ viewingVisitor()!.fullName }}</h3>
+        <!-- UNLOCKED: Two-column layout with Side Panel (Companions) and Main Content (About Me, Gallery, Journey) -->
+        <div class="visitor-page-flow-container visitor-body-layout">
+          <!-- SIDE PANEL: Their Companions (Max 9 by default, with option to see all in popup) -->
+          <aside class="visitor-side-panel" aria-label="Visitor companions shortcuts">
+            <div class="visitor-companions-card">
+              <div class="visitor-comp-head-row">
+                <div class="visitor-comp-title-line">
+                  <h3 class="visitor-comp-panel-title">👥 Companions</h3>
+                  <span class="visitor-comp-count-pill">{{ getVisitorCompanions(viewingVisitor()!.id).length }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn-link-see-all"
+                  (click)="openAllVisitorCompanionsModal()"
+                  title="See all companions in popup"
+                >
+                  See All
+                </button>
+              </div>
+
+              <div class="visitor-side-companions-list">
+                @for (comp of getVisitorTopNineCompanions(viewingVisitor()!.id); track comp.id) {
+                  <div class="visitor-side-comp-item">
+                    <div class="visitor-side-comp-left" (click)="openVisitorProfile(comp)">
+                      <div class="visitor-side-comp-avatar-wrap">
+                        <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="visitor-side-comp-avatar" />
+                        <span class="visitor-side-comp-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
+                      </div>
+                      <div class="visitor-side-comp-details">
+                        <strong class="visitor-side-comp-name">{{ comp.fullName }}</strong>
+                        <span class="visitor-side-comp-mutual">👥 {{ comp.mutualCompanionsCount }} mutual</span>
+                      </div>
+                    </div>
+
+                    <div class="visitor-side-comp-right">
+                      @if (comp.status === 'connected') {
+                        <span class="badge-comp-connected" title="Already companions">✓ Connected</span>
+                      } @else if (comp.status === 'pending_outgoing') {
+                        <span class="badge-comp-pending" title="Request pending">⏳ Pending</span>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn-comp-connect"
+                          (click)="requestCompanionship(comp.id)"
+                          title="Send Companionship Request"
+                        >
+                          + Connect
+                        </button>
+                      }
+                    </div>
+                  </div>
+                } @empty {
+                  <p class="visitor-side-comp-empty">No companions added yet.</p>
+                }
+              </div>
+
+              <button
+                type="button"
+                class="btn-see-all-companions-footer"
+                (click)="openAllVisitorCompanionsModal()"
+              >
+                See All Companions ({{ getVisitorCompanions(viewingVisitor()!.id).length }}) →
+              </button>
+            </div>
+          </aside>
+
+          <!-- MAIN WIDE CONTENT: About Me, Gallery, Journey -->
+          <div class="visitor-main-content">
+            <!-- 1. ABOUT ME (Compact, nicely arranged modern style) -->
+            <section class="visitor-flow-section visitor-flow-about">
+              <h3 class="visitor-section-heading">👤 About {{ viewingVisitor()!.fullName }}</h3>
             
             <div class="visitor-about-subsections">
               <!-- 1. Intro -->
-              <div class="visitor-sub-block">
+              <div class="visitor-sub-block full-width">
                 <h4 class="visitor-sub-title">✨ Intro</h4>
                 <p class="visitor-sub-text">
                   {{ viewingVisitor()!.aboutMeDetails?.intro || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'Passionate traveler discovering new horizons with NeverBeen AI memories.' }}
@@ -2928,7 +2994,7 @@
               </div>
 
               <!-- 2. Personal Details -->
-              <div class="visitor-sub-block">
+              <div class="visitor-sub-block full-width">
                 <h4 class="visitor-sub-title">👤 Personal Details</h4>
                 <div class="visitor-meta-grid">
                   <div class="meta-card-mini">
@@ -3249,8 +3315,74 @@
             }
           </section>
         </div>
-      }
-    </div>
+      </div>
+    }
+
+    <!-- POPUP MODAL: SEE ALL COMPANIONS OF VISITED USER -->
+    @if (showAllVisitorCompanionsModal() && viewingVisitor()) {
+      <div class="modal-backdrop-overlay" (click)="closeAllVisitorCompanionsModal()">
+        <div class="modal-dialog-card visitor-all-companions-modal" (click)="$event.stopPropagation()">
+          <header class="modal-head">
+            <div class="modal-head-title-wrap">
+              <h3 class="modal-head-title">👥 {{ viewingVisitor()!.fullName }}'s Companions</h3>
+              <span class="modal-count-tag">{{ getVisitorCompanions(viewingVisitor()!.id).length }} Total</span>
+            </div>
+            <button type="button" class="btn-close-modal" (click)="closeAllVisitorCompanionsModal()">✕</button>
+          </header>
+
+          <div class="modal-search-row">
+            <input
+              type="text"
+              [(ngModel)]="visitorCompanionsSearch"
+              placeholder="Search companions by name, city, or country..."
+              class="modal-filter-input"
+            />
+          </div>
+
+          <div class="modal-companions-scroll-list">
+            @for (comp of filteredVisitorCompanions(viewingVisitor()!.id); track comp.id) {
+              <div class="modal-companion-row">
+                <div class="modal-comp-user-info" (click)="closeAllVisitorCompanionsModal(); openVisitorProfile(comp)">
+                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" />
+                  <div class="modal-comp-meta">
+                    <strong class="modal-comp-name">{{ comp.fullName }}</strong>
+                    <span class="modal-comp-subhead">
+                      <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
+                      {{ comp.city }}, {{ comp.country }} • {{ comp.profession }}
+                    </span>
+                    <span class="modal-comp-mutual">👥 {{ comp.mutualCompanionsCount }} mutual companions</span>
+                  </div>
+                </div>
+
+                <div class="modal-comp-action">
+                  @if (comp.status === 'connected') {
+                    <span class="badge-comp-connected">✓ Connected</span>
+                  } @else if (comp.status === 'pending_outgoing') {
+                    <span class="badge-comp-pending">⏳ Pending</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-comp-connect"
+                      (click)="requestCompanionship(comp.id)"
+                      title="Connect with this companion"
+                    >
+                      + Connect
+                    </button>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <div class="modal-empty-hint">No companions found matching "{{ visitorCompanionsSearch() }}".</div>
+            }
+          </div>
+
+          <footer class="modal-footer-bar">
+            <button type="button" class="btn-secondary-action" (click)="closeAllVisitorCompanionsModal()">Close</button>
+          </footer>
+        </div>
+      </div>
+    }
+  </div>
   }
 
   <!-- LIGHTBOX IMAGE MODAL -->

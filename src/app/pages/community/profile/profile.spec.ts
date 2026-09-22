@@ -1228,4 +1228,69 @@ describe('CommunityProfile', () => {
       expect(p.aboutMeDetails?.location).toBeTruthy();
     }
   });
+
+  it('displays Cover Picture at top, compact modern About Me, and visitor companions in side panel with max 9 and See All popup', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Visit Elena Rostova (id: 33)
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    // 1. Cover Picture is visible at the top of the profile
+    const coverWrap = element.querySelector('.visitor-full-cover-wrap');
+    const coverImg = element.querySelector<HTMLImageElement>('.visitor-modal-cover-img');
+    expect(coverWrap).toBeTruthy();
+    expect(coverImg).toBeTruthy();
+    expect(coverImg?.src).toBeTruthy();
+
+    // 2. About Me section is compact and nicely arranged
+    const aboutSection = element.querySelector('.visitor-flow-about');
+    expect(aboutSection).toBeTruthy();
+    const subsections = element.querySelector('.visitor-about-subsections');
+    expect(subsections).toBeTruthy();
+    const subBlocks = element.querySelectorAll('.visitor-sub-block');
+    expect(subBlocks.length).toBeGreaterThanOrEqual(6);
+
+    // 3. Side panel displays visitor companions with max 9
+    const sidePanel = element.querySelector('.visitor-side-panel');
+    expect(sidePanel).toBeTruthy();
+    const companionsCard = element.querySelector('.visitor-companions-card');
+    expect(companionsCard).toBeTruthy();
+    const sideCompanions = element.querySelectorAll('.visitor-side-comp-item');
+    expect(sideCompanions.length).toBeLessThanOrEqual(9);
+    expect(sideCompanions.length).toBeGreaterThan(0);
+
+    // 4. Verify connection status or option to connect for companions
+    const hasStatusOrConnect = Array.from(sideCompanions).some(
+      (item) => item.querySelector('.badge-comp-connected') || item.querySelector('.btn-comp-connect')
+    );
+    expect(hasStatusOrConnect).toBe(true);
+
+    // 5. Option to see all companions in a separate popup modal
+    const seeAllBtn = element.querySelector<HTMLButtonElement>('.btn-see-all-companions-footer');
+    expect(seeAllBtn).toBeTruthy();
+    component.openAllVisitorCompanionsModal();
+    fixture.detectChanges();
+
+    expect(component.showAllVisitorCompanionsModal()).toBe(true);
+    const modal = element.querySelector('.visitor-all-companions-modal');
+    expect(modal).toBeTruthy();
+    expect(modal!.textContent).toContain("Elena Rostova's Companions");
+
+    // Modal has full list of companions with connect/connected status
+    const modalRows = modal!.querySelectorAll('.modal-companion-row');
+    expect(modalRows.length).toBeGreaterThan(9);
+    const hasModalConnect = Array.from(modalRows).some(
+      (r) => r.querySelector('.badge-comp-connected') || r.querySelector('.btn-comp-connect')
+    );
+    expect(hasModalConnect).toBe(true);
+
+    // Close modal
+    component.closeAllVisitorCompanionsModal();
+    fixture.detectChanges();
+    expect(component.showAllVisitorCompanionsModal()).toBe(false);
+  });
 });

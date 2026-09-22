@@ -2010,6 +2010,42 @@ export class CommunityProfile implements OnInit {
     setTimeout(() => this.copiedProfileUrl.set(false), 2500);
   }
 
+  // ---------------------------------------------------------------------------
+  // VISITOR COMPANIONS & "SEE ALL COMPANIONS" POPUP MODAL
+  // ---------------------------------------------------------------------------
+  readonly showAllVisitorCompanionsModal = signal(false);
+  readonly visitorCompanionsSearch = signal('');
+
+  openAllVisitorCompanionsModal(): void {
+    this.visitorCompanionsSearch.set('');
+    this.showAllVisitorCompanionsModal.set(true);
+  }
+
+  closeAllVisitorCompanionsModal(): void {
+    this.showAllVisitorCompanionsModal.set(false);
+  }
+
+  getVisitorCompanions(visitorId: number): Companion[] {
+    return this.service.companions().filter((c) => c.id !== visitorId);
+  }
+
+  getVisitorTopNineCompanions(visitorId: number): Companion[] {
+    return this.getVisitorCompanions(visitorId).slice(0, 9);
+  }
+
+  filteredVisitorCompanions(visitorId: number): Companion[] {
+    const all = this.getVisitorCompanions(visitorId);
+    const q = this.visitorCompanionsSearch().trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(
+      (c) =>
+        c.fullName.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.country.toLowerCase().includes(q) ||
+        c.profession.toLowerCase().includes(q),
+    );
+  }
+
   generateUid(id: number | string): string {
     return generate20DigitUid(id);
   }
