@@ -397,6 +397,7 @@ export interface Companion {
   isProfileLocked?: boolean;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
+  connectedCompanionIds?: number[];
 }
 
 export interface Circle {

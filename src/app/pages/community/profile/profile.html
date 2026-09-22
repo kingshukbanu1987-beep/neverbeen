@@ -136,6 +136,7 @@
               [src]="service.profile()?.coverPhotoUrl || defaultCoverPhoto"
               alt="Cover Photo"
               class="user-cover-img"
+              (error)="onCoverImgError($event)"
             />
             <label class="btn-change-cover-badge" for="userCoverUploadInput" title="Update Cover Photo (Max 100 KB)" (click)="$event.stopPropagation()">
               <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="currentColor">
@@ -1004,6 +1005,7 @@
                 [src]="service.profile()?.coverPhotoUrl || defaultCoverPhoto"
                 alt="Cover photo"
                 class="about-cover-img"
+                (error)="onCoverImgError($event)"
               />
               <label class="btn-edit-cover-pill" for="aboutCoverUploadInput" title="Update Cover Photo (Max 100 KB)" (click)="$event.stopPropagation()">
                 📷 Edit Cover Photo
@@ -1044,14 +1046,14 @@
               <div class="about-edit-container">
                 <!-- 1. Intro -->
                 <div class="edit-subcard">
-                  <h3 class="edit-subhead">1. Intro</h3>
+                  <h3 class="edit-subhead">1. Intro & Travel Story</h3>
                   <div class="form-group">
-                    <label>Short Introduction / Catchphrase</label>
+                    <label>Detailed Introduction & Travel Story</label>
                     <textarea
                       [(ngModel)]="aboutIntro"
-                      rows="2"
+                      rows="6"
                       class="form-control"
-                      placeholder="Introduce yourself briefly..."
+                      placeholder="Share your multi-paragraph travel story, memorable journeys, and worldview..."
                     ></textarea>
                   </div>
                 </div>
@@ -1406,8 +1408,11 @@
               <div class="about-sections-wrapper">
                 <!-- 1. Intro -->
                 <div class="about-card-section intro-card">
-                  <h3 class="card-section-title"><span class="title-glyph">✨</span> 1. Intro</h3>
-                  <p class="about-intro-highlight">{{ aboutIntro || 'Passionate traveler discovering global cultures and AI travel memories.' }}</p>
+                  <div class="intro-card-header">
+                    <h3 class="card-section-title"><span class="title-glyph">✨</span> 1. Intro & Travel Story</h3>
+                    <span class="intro-tag-badge">Narrative Journey</span>
+                  </div>
+                  <div class="about-intro-highlight multi-paragraph-story">{{ aboutIntro }}</div>
                 </div>
 
                 <!-- 2. Personal Details (Ultra-Modern Layout - Requirement B) -->
@@ -2889,6 +2894,7 @@
           [src]="viewingVisitor()!.coverPhotoUrl || defaultCoverPhoto"
           [alt]="viewingVisitor()!.fullName + ' Cover Photo'"
           class="visitor-full-cover-img visitor-modal-cover-img"
+          (error)="onCoverImgError($event)"
         />
         <div class="cover-hint-badge">Hold to Enlarge Cover</div>
       </div>
@@ -3039,7 +3045,7 @@
               <div class="visitor-side-companions-list">
                 @for (comp of getVisitorTopNineCompanions(viewingVisitor()!.id); track comp.id) {
                   <div class="visitor-side-comp-item">
-                    <div class="visitor-side-comp-left" (click)="openVisitorProfile(comp)">
+                    <div class="visitor-side-comp-left" (click)="comp.id === (service.currentUser()?.id || 1) ? closeVisitorProfile() : openVisitorProfile(comp)">
                       <div class="visitor-side-comp-avatar-wrap">
                         <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="visitor-side-comp-avatar" />
                         <span class="visitor-side-comp-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
@@ -3051,7 +3057,9 @@
                     </div>
 
                     <div class="visitor-side-comp-right">
-                      @if (comp.status === 'connected') {
+                      @if (comp.id === (service.currentUser()?.id || 1)) {
+                        <span class="badge-comp-connected" title="This is you">You</span>
+                      } @else if (comp.status === 'connected') {
                         <span class="badge-comp-connected" title="Already companions">✓ Connected</span>
                       } @else if (comp.status === 'pending_outgoing') {
                         <span class="badge-comp-pending" title="Request pending">⏳ Pending</span>
@@ -3090,11 +3098,14 @@
             
             <div class="visitor-about-subsections">
               <!-- 1. Intro -->
-              <div class="visitor-sub-block full-width">
-                <h4 class="visitor-sub-title">✨ Intro</h4>
-                <p class="visitor-sub-text">
-                  {{ viewingVisitor()!.aboutMeDetails?.intro || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'Passionate traveler discovering new horizons with NeverBeen AI memories.' }}
-                </p>
+              <div class="visitor-sub-block full-width visitor-intro-card">
+                <div class="visitor-intro-header-row">
+                  <h4 class="visitor-sub-title">✨ Intro & Travel Story</h4>
+                  <span class="visitor-intro-badge">Personal Story</span>
+                </div>
+                <div class="visitor-sub-text visitor-intro-story multi-paragraph-story">
+                  {{ getVisitorIntro(viewingVisitor()!) }}
+                </div>
               </div>
 
               <!-- 2. Personal Details (Ultra-Modern Layout - Requirement B) -->
@@ -3504,7 +3515,7 @@
           <div class="modal-companions-scroll-list">
             @for (comp of filteredVisitorCompanions(viewingVisitor()!.id); track comp.id) {
               <div class="modal-companion-row">
-                <div class="modal-comp-user-info" (click)="closeAllVisitorCompanionsModal(); openVisitorProfile(comp)">
+                <div class="modal-comp-user-info" (click)="closeAllVisitorCompanionsModal(); comp.id === (service.currentUser()?.id || 1) ? closeVisitorProfile() : openVisitorProfile(comp)">
                   <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" />
                   <div class="modal-comp-meta">
                     <strong class="modal-comp-name">{{ comp.fullName }}</strong>
@@ -3517,7 +3528,9 @@
                 </div>
 
                 <div class="modal-comp-action">
-                  @if (comp.status === 'connected') {
+                  @if (comp.id === (service.currentUser()?.id || 1)) {
+                    <span class="badge-comp-connected">You</span>
+                  } @else if (comp.status === 'connected') {
                     <span class="badge-comp-connected">✓ Connected</span>
                   } @else if (comp.status === 'pending_outgoing') {
                     <span class="badge-comp-pending">⏳ Pending</span>

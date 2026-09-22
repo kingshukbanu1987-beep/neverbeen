@@ -1434,4 +1434,126 @@ describe('CommunityProfile', () => {
     const cells = multiGridInFeed?.querySelectorAll('.multi-img-cell');
     expect(cells?.length).toBe(2);
   });
+
+  it('shows distinct connected companions per visitor profile (not all 98), includes current user when connected, and updates when disconnected', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // 1. Visit Elena Rostova (id: 33)
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    const elenaCompanions = component.getVisitorCompanions(33);
+    // Elena's companions count is distinct (around 12-14), NOT all 98!
+    expect(elenaCompanions.length).toBeLessThan(90);
+    expect(elenaCompanions.length).toBeGreaterThanOrEqual(5);
+
+    // Current user (Sophia Laurent, id: 1) is connected to Elena, so currentUser is in Elena's list
+    const currentUserId = service.currentUser()?.id || 1;
+    expect(elenaCompanions.some((c) => c.id === currentUserId)).toBe(true);
+
+    // 2. Visit Marco Rossi (id: 12)
+    const marco = service.companions().find((c) => c.id === 12)!;
+    component.openVisitorProfile(marco);
+    fixture.detectChanges();
+
+    const marcoCompanions = component.getVisitorCompanions(12);
+    expect(marcoCompanions.length).toBeLessThan(90);
+    expect(marcoCompanions.length).toBeGreaterThanOrEqual(5);
+    // Elena's list and Marco's list are distinct
+    expect(elenaCompanions).not.toEqual(marcoCompanions);
+
+    // 3. Visit Maya Patel (id: 71, pending incoming request, NOT connected)
+    const maya = service.companions().find((c) => c.id === 71)!;
+    component.openVisitorProfile(maya);
+    fixture.detectChanges();
+
+    const mayaCompanions = component.getVisitorCompanions(71);
+    expect(mayaCompanions.length).toBeLessThan(90);
+    // Current user is NOT connected to Maya yet, so currentUser is NOT in Maya's companions list
+    expect(mayaCompanions.some((c) => c.id === currentUserId)).toBe(false);
+
+    // 4. Remove companionship with Elena: currentUser should be removed from Elena's companions list
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+    const countBeforeRemoval = component.getVisitorCompanions(33).length;
+    component.removeCompanionshipFromVisitor(33);
+    fixture.detectChanges();
+
+    const elenaCompanionsAfter = component.getVisitorCompanions(33);
+    expect(elenaCompanionsAfter.some((c) => c.id === currentUserId)).toBe(false);
+    expect(elenaCompanionsAfter.length).toBe(countBeforeRemoval - 1);
+  });
+
+  it('ensures cover picture is visible across all visitor states with object-fit cover and proper container dimensions', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // 1. Visit Elena Rostova (unlocked profile)
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    const coverWrap = element.querySelector('.visitor-full-cover-wrap');
+    expect(coverWrap).toBeTruthy();
+    const coverImg = element.querySelector<HTMLImageElement>('.visitor-full-cover-img');
+    expect(coverImg).toBeTruthy();
+    expect(coverImg?.src).toBeTruthy();
+    expect(coverImg?.src).toContain('http');
+
+    // 2. Visit Maya Patel (locked profile)
+    const maya = service.companions().find((c) => c.id === 71)!;
+    component.openVisitorProfile(maya);
+    fixture.detectChanges();
+
+    const lockedCoverWrap = element.querySelector('.visitor-full-cover-wrap');
+    expect(lockedCoverWrap).toBeTruthy();
+    const lockedCoverImg = element.querySelector<HTMLImageElement>('.visitor-full-cover-img');
+    expect(lockedCoverImg).toBeTruthy();
+    expect(lockedCoverImg?.src).toBeTruthy();
+
+    // 3. Fallback error handler
+    const mockErrorEvent = { target: { src: 'broken.jpg' } } as unknown as Event;
+    component.onCoverImgError(mockErrorEvent);
+    expect((mockErrorEvent.target as HTMLImageElement).src).toBe(component.defaultCoverPhoto);
+  });
+
+  it('displays rich multi-paragraph travel stories covering the About Me Intro section for both user and visitors', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // 1. Own profile About Me
+    component.setSection('about');
+    fixture.detectChanges();
+
+    const userIntroText = component['aboutIntro'];
+    expect(userIntroText).toBeTruthy();
+    expect(userIntroText.length).toBeGreaterThan(150);
+    // Story contains multiple paragraphs separated by newlines
+    expect(userIntroText).toContain('\n\n');
+
+    const introSection = element.querySelector('.intro-card');
+    expect(introSection).toBeTruthy();
+    const introHighlight = introSection?.querySelector('.about-intro-highlight');
+    expect(introHighlight).toBeTruthy();
+    expect(introHighlight?.textContent).toContain('Swiss Alps');
+
+    // 2. Visitor profile About Me Intro
+    const elena = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(elena);
+    fixture.detectChanges();
+
+    const elenaIntro = component.getVisitorIntro(elena);
+    expect(elenaIntro).toBeTruthy();
+    expect(elenaIntro.length).toBeGreaterThan(150);
+    expect(elenaIntro).toContain('\n\n');
+
+    const visitorIntroStory = element.querySelector('.visitor-intro-story');
+    expect(visitorIntroStory).toBeTruthy();
+    expect(visitorIntroStory?.textContent).toContain('train');
+  });
 });

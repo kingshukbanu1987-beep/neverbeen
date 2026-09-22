@@ -150,6 +150,19 @@ export class CommunityService {
       const storedUser = this.loadJson<CurrentUser>(USER_KEY);
       const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
       if (storedUser && storedProfile) {
+        if (!storedProfile.aboutMeDetails?.intro || storedProfile.aboutMeDetails.intro.length < 150) {
+          const richIntro = this.getRichIntroForUser();
+          storedProfile.aboutMeDetails = {
+            ...(storedProfile.aboutMeDetails || {}),
+            intro: richIntro,
+          };
+          storedUser.aboutMeDetails = {
+            ...(storedUser.aboutMeDetails || {}),
+            intro: richIntro,
+          };
+          this.saveJson(USER_KEY, storedUser);
+          this.saveJson(PROFILE_KEY, storedProfile);
+        }
         this.token.set(existingCookieToken);
         this.currentUser.set(storedUser);
         this.profile.set(storedProfile);
@@ -1101,6 +1114,207 @@ export class CommunityService {
     this.saveJson(COMPANIONS_KEY, this.companions());
   }
 
+  getCurrentUserAsCompanion(): Companion {
+    const user = this.currentUser();
+    const prof = this.profile();
+    return {
+      id: user?.id || 1,
+      uniqueId: user?.uniqueId || prof?.uniqueId || generate20DigitUid(1),
+      fullName: prof?.fullName || user?.fullName || 'Sophia Laurent',
+      profilePhotoUrl:
+        prof?.profilePhotoUrl ||
+        user?.profilePhotoUrl ||
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      coverPhotoUrl:
+        prof?.coverPhotoUrl ||
+        user?.coverPhotoUrl ||
+        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+      country: prof?.country || 'France',
+      city: prof?.city || 'Paris',
+      profession: prof?.profession || 'Content Creator',
+      isOnline: true,
+      activeStatus: prof?.activeStatus || 'Active',
+      mutualCompanionsCount: 0,
+      status: 'connected',
+      isProfileLocked: !!prof?.isProfileLocked,
+    };
+  }
+
+  getVisitorConnectedCompanions(visitorId: number): Companion[] {
+    const all = this.companions();
+    const visitor = all.find((c) => c.id === visitorId);
+    const currentUserId = this.currentUser()?.id || 1;
+
+    // Distinct connected companion networks per user
+    const explicitNetworks: Record<number, number[]> = {
+      // Elena Rostova (33): connected to fellow creators & explorers
+      33: [12, 42, 88, 55, 72, 73, 74, 101, 102, 103, 104],
+      // Marco Rossi (12): connected to architects, photographers & European travelers
+      12: [33, 42, 55, 73, 74, 101, 105, 106, 107],
+      // Chloe Dupont (42): Riviera artists & coastal explorers
+      42: [33, 12, 55, 73, 102, 103, 108, 109],
+      // Kenji Sato (88): urban photographers & Asian wandering companions
+      88: [33, 55, 42, 101, 103, 106, 107, 110, 111],
+      // Liam O'Connor (55): outdoor trek guides & Atlantic hikers
+      55: [33, 12, 42, 88, 74, 104, 105, 112, 113],
+      // Maya Patel (71): Indian & international designers (current user is pending incoming)
+      71: [101, 105, 114, 88, 115, 116, 117],
+      // Lucas Vance (72)
+      72: [33, 12, 73, 74, 105, 108, 119],
+      // Isabella Santos (73)
+      73: [33, 12, 42, 72, 74, 103, 120],
+      // Noah Weber (74)
+      74: [33, 12, 55, 72, 73, 104, 121],
+    };
+
+    let targetIds: number[];
+    if (visitor?.connectedCompanionIds && visitor.connectedCompanionIds.length > 0) {
+      targetIds = [...visitor.connectedCompanionIds];
+    } else if (explicitNetworks[visitorId]) {
+      targetIds = [...explicitNetworks[visitorId]];
+    } else {
+      // Deterministic distinct subset for any other companion based on visitorId
+      const candidates = all.filter((c) => c.id !== visitorId && c.id !== currentUserId);
+      const targetCount = 8 + (Math.abs(visitorId * 31 + 7) % 9); // 8 to 16 companions
+      let seed = Math.abs(visitorId * 2654435761);
+      const nextRand = () => {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      };
+      const shuffled = [...candidates];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(nextRand() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      targetIds = shuffled.slice(0, targetCount).map((c) => c.id);
+    }
+
+    // Map targetIds to Companion objects from the live companions store
+    let result = targetIds
+      .map((id) => all.find((c) => c.id === id))
+      .filter((c): c is Companion => !!c && c.id !== visitorId);
+
+    // If current user is connected with this visitor, add current user to the front
+    const isConnectedWithCurrentUser = visitor?.status === 'connected';
+    if (isConnectedWithCurrentUser) {
+      const userComp = this.getCurrentUserAsCompanion();
+      result = [userComp, ...result.filter((c) => c.id !== currentUserId)];
+    } else {
+      result = result.filter((c) => c.id !== currentUserId);
+    }
+
+    return result;
+  }
+
+  getRichIntroForUser(): string {
+    return (
+      "Ever since I packed my vintage 35mm film camera into a weathered canvas backpack for my first solo train trip through the Swiss Alps, travel has been more than a passion—it is the lens through which I experience the world. I believe the most unforgettable memories aren't found in crowded tourist plazas, but at dawn in quiet Parisian alleyways, smelling freshly baked brioche as the streetlights flicker off, or listening to fishermen untangle their nets on the pebbled beaches of the Mediterranean.\n\n" +
+      "Over the past five years, I have wandered across eighteen countries, documenting the quiet cadence of local life, ancient stone architecture, and culinary traditions that have survived generations. As a filmmaker and storyteller with NeverBeen, my mission is to capture authentic moments that inspire others to step outside their comfort zones, embrace spontaneity, and build meaningful connections with kindred spirits across every continent.\n\n" +
+      "Whether scaling granite ridges in the Pyrenees, navigating misty canals in Bruges, or sharing mint tea with carpet weavers in North African souks, I travel to listen, learn, and preserve stories that celebrate our shared humanity."
+    );
+  }
+
+  getRichIntroForCompanion(c: {
+    id?: number;
+    fullName: string;
+    city?: string;
+    country?: string;
+    profession?: string;
+    bio?: string;
+    aboutMe?: string;
+    aboutMeDetails?: AboutMeDetails;
+  }): string {
+    const rawIntro = c.aboutMeDetails?.intro;
+    if (rawIntro && rawIntro.trim().length > 150 && rawIntro.includes('\n')) {
+      return rawIntro;
+    }
+
+    const id = c.id;
+    if (id === 33 || c.fullName.includes('Elena Rostova')) {
+      return (
+        "I find my deepest peace gazing out the window of a regional train as it winds between mist-shrouded pine forests and turquoise alpine lakes. Growing up with an insatiable fascination for European rail journeys and old-world literature, I set out to chronicle the forgotten trails, high-altitude passes, and family-owned chalets that never appear on conventional postcards.\n\n" +
+        "Through my writing and photography, I celebrate slow travel—spending weeks in a single canton or valley, learning dialect phrases, and hiking up to remote mountain huts before sunrise. Traveling with the NeverBeen community has connected me with incredible adventurers who share my passion for crisp morning air, railway maps, and stories told around crackling hearths.\n\n" +
+        "Every journey is an invitation to slow down, disconnect from digital noise, and rediscover the wonder hidden in ordinary landscapes."
+      );
+    }
+
+    if (id === 12 || c.fullName.includes('Marco Rossi')) {
+      return (
+        "To me, travel is a continuous dialogue with history, light, and geometry. Born in Rome, I spent my childhood surrounded by classical columns and weathered travertine, which inspired a lifelong career studying historic coastal architecture and classical arches across Southern Europe. When I journey along the Mediterranean—from the pastel cliffs of Amalfi to the ancient harbors of Greece—I study the intimate interplay of sunlight, stone, and the sea.\n\n" +
+        "My travel journals are filled with ink sketches of porticos, arches, and seaside fortresses, alongside conversations with elderly stonemasons who preserve centuries-old craft traditions. Through NeverBeen, I share architectural insights and discover hidden gems where human ingenuity harmonizes with breathtaking natural landscapes.\n\n" +
+        "Architecture isn't just about buildings; it's about the living souls who inhabit them across generations."
+      );
+    }
+
+    if (id === 42 || c.fullName.includes('Chloe Dupont')) {
+      return (
+        "Chasing the golden hour along rugged Mediterranean coastlines has been my life's compass. From the lavender fields of Provence to the sapphire coves of the French Riviera, I seek out the fleeting moments when dawn breaks over turquoise waters and turns sea spray into pure amber light.\n\n" +
+        "My journeys are guided by intuition and tides rather than strict itineraries. I love setting up my tripod on wind-swept limestone cliffs before the world awakens, waiting patiently for the exact moment the horizon catches fire. NeverBeen lets me share these visual sanctuaries with fellow wanderers seeking serenity in nature's grand designs.\n\n" +
+        "Photography reminds me that perfection is never static—it exists in a wave crashing or sunlight shifting across a cliff face."
+      );
+    }
+
+    if (id === 88 || c.fullName.includes('Kenji Sato')) {
+      return (
+        "My world moves to the rhythm of neon reflections on rain-slicked asphalt and the serene chime of windbells at dawn in ancient temple gardens. As a street photographer navigating Tokyo, Kyoto, and Osaka, I roam alleyways with a compact prime lens, searching for transient human emotions that tell the deeper story of modern urban Japan.\n\n" +
+        "Whether capturing a salaryman contemplating a quiet subway platform or an artisan steaming bamboo baskets in an old market, my goal is to freeze poetic moments in time. Connecting with companions on NeverBeen fuels my desire to explore beyond the metropolis—trekking pilgrim trails in Kumano Kodo and discovering untamed coastlines in Hokkaido.\n\n" +
+        "In the fastest-paced cities on Earth, the most profound stories happen when you stop and simply watch."
+      );
+    }
+
+    if (id === 55 || c.fullName.includes('Liam O\'Connor')) {
+      return (
+        "There is something sacred about standing on the wind-battered edge of the Cliffs of Moher, with ocean spray in your face and nothing between you and the open Atlantic. As an adventure guide and wilderness enthusiast, I have led backcountry expeditions across Ireland's Wild Atlantic Way, the Scottish Highlands, and the jagged fjords of Scandinavia.\n\n" +
+        "I believe true adventure begins when the trail ends and the weather turns unpredictable. Guiding travelers through peat bogs, ancient stone circles, and mountain summits has taught me resilience, humility, and the unmatched camaraderie forged over a warm brew at the end of a grueling day on the ridge.\n\n" +
+        "The wilderness doesn't care about your schedule, and that is precisely why we must venture into it."
+      );
+    }
+
+    if (id === 71 || c.fullName.includes('Maya Patel')) {
+      return (
+        "Between designing digital interfaces and exploring century-old stepwells in Rajasthan, I search for the timeless balance between aesthetics, utility, and soul. Travel has taught me to strip away excess and practice minimalism—living out of a single carry-on while immersing myself in the sensory wonder of bustling spice markets, desert music festivals, and carved sandstone palaces.\n\n" +
+        "Every journey across the subcontinent deepens my appreciation for indigenous craft, sustainable living, and the warm hospitality of strangers who welcome you with a cup of hot masala chai. Through NeverBeen, I hope to inspire mindful travel that honors cultural heritage and leaves a gentle footprint wherever we wander.\n\n" +
+        "When we travel light, our hearts and minds have the room to carry back treasures that cannot be bought."
+      );
+    }
+
+    if (id === 72 || c.fullName.includes('Lucas Vance')) {
+      return (
+        "Berlin taught me that every city is a palimpsest of forgotten revolutions, hidden art dens, and unexpected green sanctuaries. As an independent documentary filmmaker, I traverse Central and Eastern Europe with an audio recorder and lightweight rig, documenting experimental art collectives, abandoned railway stations, and stories of cultural reinvention.\n\n" +
+        "I travel to listen rather than speak. The heart of Europe beats in converted warehouse studios, underground electronic clubs, and late-night bakeries where people from every corner of the globe cross paths and share dreams.\n\n" +
+        "NeverBeen gives me a canvas to weave sound, light, and wanderlust together with kindred creative spirits."
+      );
+    }
+
+    if (id === 73 || c.fullName.includes('Isabella Santos')) {
+      return (
+        "To know Portugal is to love the scent of salt air mingling with grilled sardines in Lisbon's Alfama and the golden hues of terraced vineyards cascading down the Douro Valley. As a food and wine writer, I journey through sleepy coastal villages, hidden mountain quintas, and bustling municipal markets.\n\n" +
+        "I believe the true heritage of a nation is preserved on its plates and in the hospitality of its cooks. Sharing freshly baked pastéis de nata with neighborhood bakers or listening to melancholic Fado guitars in a dimly lit tavern gives travel its unforgettable texture.\n\n" +
+        "Through NeverBeen, I hope to guide fellow wanderers to authentic culinary discoveries that nourish both body and soul."
+      );
+    }
+
+    if (id === 74 || c.fullName.includes('Noah Weber')) {
+      return (
+        "High on the glaciated ridges of the Swiss Alps, silence has a physical weight. As an alpinist and mountaineering guide based in Zurich, I spend my summers navigating crevasse fields and technical granite walls, and my winters ski touring through untouched powder in the Bernese Oberland.\n\n" +
+        "The mountains teach an uncompromising honesty. Above the cloud line, life becomes refreshingly simple: watch the weather, trust your rope partner, and respect the ancient forces that sculpted our planet.\n\n" +
+        "On NeverBeen, I share high-altitude routes, mountain safety knowledge, and sunrise vistas that remind us how grand the Earth truly is."
+      );
+    }
+
+    // Dynamic tailored rich story for any companion
+    const name = c.fullName || 'Traveler';
+    const city = c.city || 'Wanderlust City';
+    const country = c.country || 'Global';
+    const profession = c.profession || 'Passionate Explorer';
+
+    return (
+      `Ever since I set out on my first expedition beyond the familiar neighborhoods of ${city}, exploring the world has been an essential chapter of my personal journey. Working as a ${profession.toLowerCase()} in ${city}, ${country}, I have always believed that travel is far more than visiting famous monuments—it is about discovering the soul of a place, the rhythm of its daily life, and the warmth of the people who call it home.\n\n` +
+      `Whether wandering historic cobblestone lanes tucked away in quiet districts, hiking scenic trails at daybreak, or savoring regional delicacies at bustling neighborhood markets, I find inspiration in unexpected, unhurried moments. Every landscape tells a story of human resilience, local heritage, and nature's quiet majesty.\n\n` +
+      `Through NeverBeen, I look forward to connecting with fellow wanderers, exchanging authentic travel experiences, and sharing journeys that celebrate curiosity, mindful exploration, and global companionship.`
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // BLOCK / UNBLOCK USERS (Requirement B)
   // ---------------------------------------------------------------------------
@@ -1396,8 +1610,7 @@ export class CommunityService {
 
   private initDefaultMember(): void {
     const defaultAboutMeDetails: AboutMeDetails = {
-      intro:
-        'Visual storyteller & travel documentary creator roaming hidden valleys, vintage cafes, and mountain peaks.',
+      intro: this.getRichIntroForUser(),
       gender: 'Female',
       dateOfBirth: '1996-04-18',
       location: 'Paris, France',
@@ -1932,17 +2145,24 @@ export class CommunityService {
     const defaultCover =
       'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
 
-    return merged.map((c) => ({
-      ...c,
-      coverPhotoUrl: c.coverPhotoUrl || defaultCover,
-      uniqueId: c.uniqueId || generate20DigitUid(c.id),
-    }));
+    return merged.map((c) => {
+      const rawIntro = c.aboutMeDetails?.intro;
+      const intro = !rawIntro || rawIntro.length < 150 ? this.getRichIntroForCompanion(c) : rawIntro;
+      return {
+        ...c,
+        coverPhotoUrl: c.coverPhotoUrl || defaultCover,
+        uniqueId: c.uniqueId || generate20DigitUid(c.id),
+        aboutMeDetails: {
+          ...(c.aboutMeDetails || {}),
+          intro,
+        },
+      };
+    });
   }
 
   private getDefaultSeedCompanions(): Companion[] {
-
     const elenaAboutMe: AboutMeDetails = {
-      intro: 'Documenting scenic train routes and mountain lakes across Europe.',
+      intro: this.getRichIntroForCompanion({ id: 33, fullName: 'Elena Rostova' }),
       gender: 'Female',
       dateOfBirth: '1994-08-12',
       location: 'Paris, France',
@@ -1995,7 +2215,7 @@ export class CommunityService {
     };
 
     const marcoAboutMe: AboutMeDetails = {
-      intro: 'Rome-based architect studying historic coastal architecture and classical arches.',
+      intro: this.getRichIntroForCompanion({ id: 12, fullName: 'Marco Rossi' }),
       gender: 'Male',
       dateOfBirth: '1991-11-03',
       location: 'Rome, Italy',
@@ -2039,7 +2259,7 @@ export class CommunityService {
     };
 
     const mayaAboutMe: AboutMeDetails = {
-      intro: 'Minimalist traveler exploring heritage forts and colorful desert fairs.',
+      intro: this.getRichIntroForCompanion({ id: 71, fullName: 'Maya Patel' }),
       gender: 'Female',
       dateOfBirth: '1995-03-24',
       location: 'Mumbai, India',

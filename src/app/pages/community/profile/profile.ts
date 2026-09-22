@@ -1167,13 +1167,25 @@ export class CommunityProfile implements OnInit {
     }
   }
 
+  onCoverImgError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target && target.src !== this.defaultCoverPhoto) {
+      target.src = this.defaultCoverPhoto;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // REQUIREMENT D: DETAILED ABOUT ME (8 SUB-SECTIONS)
   // ---------------------------------------------------------------------------
 
   initAboutMeData(): void {
     const details = this.service.profile()?.aboutMeDetails;
-    this.aboutIntro = details?.intro || this.service.profile()?.aboutMe || '';
+    const introVal = details?.intro || this.service.profile()?.aboutMe || '';
+    if (!introVal || introVal.trim().length < 150) {
+      this.aboutIntro = this.service.getRichIntroForUser();
+    } else {
+      this.aboutIntro = introVal;
+    }
     this.aboutGender = details?.gender || this.service.profile()?.gender || 'Female';
     this.aboutDob = details?.dateOfBirth || this.service.profile()?.dateOfBirth || '1996-04-18';
     this.aboutLocation =
@@ -1418,6 +1430,14 @@ export class CommunityProfile implements OnInit {
 
   getVisitorAboutMe(): AboutMeDetails | undefined {
     return this.viewingVisitor()?.aboutMeDetails;
+  }
+
+  getVisitorIntro(visitor: Companion): string {
+    const rawIntro = visitor.aboutMeDetails?.intro;
+    if (rawIntro && rawIntro.trim().length > 150 && rawIntro.includes('\n')) {
+      return rawIntro;
+    }
+    return this.service.getRichIntroForCompanion(visitor);
   }
 
   // ---------------------------------------------------------------------------
@@ -2101,19 +2121,18 @@ export class CommunityProfile implements OnInit {
   }
 
   getMutualCompanions(targetId: number): Companion[] {
+    const visitorComps = this.getVisitorCompanions(targetId);
+    const myConnected = this.connectedCompanions();
+    const mutual = visitorComps.filter(
+      (vc) => vc.id !== 1 && myConnected.some((mc) => mc.id === vc.id),
+    );
+    if (mutual.length > 0) {
+      return mutual;
+    }
     const visitor =
       this.service.companions().find((c) => c.id === targetId) || this.viewingVisitor();
-    const count = visitor?.mutualCompanionsCount ?? 3;
-    const connected = this.service
-      .companions()
-      .filter((c) => c.status === 'connected' && c.id !== targetId);
-    if (connected.length >= count) {
-      return connected.slice(0, count);
-    }
-    const remaining = this.service
-      .companions()
-      .filter((c) => c.id !== targetId && !connected.some((conn) => conn.id === c.id));
-    return [...connected, ...remaining.slice(0, Math.max(0, count - connected.length))];
+    const count = visitor?.mutualCompanionsCount ?? 2;
+    return myConnected.filter((c) => c.id !== targetId).slice(0, Math.min(myConnected.length, count));
   }
 
   filteredMutualCompanions(targetId: number): Companion[] {
@@ -2145,7 +2164,7 @@ export class CommunityProfile implements OnInit {
   }
 
   getVisitorCompanions(visitorId: number): Companion[] {
-    return this.service.companions().filter((c) => c.id !== visitorId);
+    return this.service.getVisitorConnectedCompanions(visitorId);
   }
 
   getVisitorTopNineCompanions(visitorId: number): Companion[] {
