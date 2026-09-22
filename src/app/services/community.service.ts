@@ -608,6 +608,75 @@ export class CommunityService {
     return settings;
   }
 
+  // Requirement C: Verification through Work or University Email
+  verifyUserEmail(email: string, type: 'work' | 'university'): void {
+    this.currentUser.update((u) =>
+      u ? { ...u, isVerified: true, verifiedEmail: email, verificationType: type } : null,
+    );
+    this.profile.update((p) =>
+      p
+        ? {
+            ...p,
+            isVerified: true,
+            verifiedEmail: email,
+            verificationType: type,
+            settings: {
+              ...(p.settings || {}),
+              isVerified: true,
+              verificationEmail: email,
+              verificationType: type,
+              verifiedAtUtc: new Date().toISOString(),
+            },
+          }
+        : null,
+    );
+
+    // Update all journey posts authored by current user so author.isVerified is true
+    const currentUserId = this.currentUser()?.id || 1;
+    this.journeyPosts.update((posts) =>
+      posts.map((p) =>
+        p.author.id === currentUserId ? { ...p, author: { ...p.author, isVerified: true } } : p,
+      ),
+    );
+
+    this.saveJson(USER_KEY, this.currentUser());
+    this.saveJson(PROFILE_KEY, this.profile());
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+  }
+
+  removeUserVerification(): void {
+    this.currentUser.update((u) =>
+      u ? { ...u, isVerified: false, verifiedEmail: undefined, verificationType: null } : null,
+    );
+    this.profile.update((p) =>
+      p
+        ? {
+            ...p,
+            isVerified: false,
+            verifiedEmail: undefined,
+            verificationType: null,
+            settings: {
+              ...(p.settings || {}),
+              isVerified: false,
+              verificationEmail: undefined,
+              verificationType: null,
+            },
+          }
+        : null,
+    );
+
+    const currentUserId = this.currentUser()?.id || 1;
+    this.journeyPosts.update((posts) =>
+      posts.map((p) =>
+        p.author.id === currentUserId ? { ...p, author: { ...p.author, isVerified: false } } : p,
+      ),
+    );
+
+    this.saveJson(USER_KEY, this.currentUser());
+    this.saveJson(PROFILE_KEY, this.profile());
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+  }
+
   // ---------------------------------------------------------------------------
   // Gallery
   // ---------------------------------------------------------------------------
@@ -821,6 +890,7 @@ export class CommunityService {
         profilePhotoUrl:
           user?.profilePhotoUrl ||
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        isVerified: !!user?.isVerified || !!profile?.isVerified,
       },
       text: text.trim(),
       imageUrl: primaryImage,
@@ -864,6 +934,7 @@ export class CommunityService {
         profilePhotoUrl:
           user?.profilePhotoUrl ||
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        isVerified: !!user?.isVerified || !!profile?.isVerified,
       },
       text: userThought ? userThought.trim() : '',
       createdAtUtc: new Date().toISOString(),
@@ -944,6 +1015,7 @@ export class CommunityService {
         fullName: user?.fullName || 'Sophia Laurent',
         profession: this.profile()?.profession || 'Member',
         profilePhotoUrl: user?.profilePhotoUrl,
+        isVerified: !!user?.isVerified || !!this.profile()?.isVerified,
       },
       text: text.trim(),
       imageUrl: imageUrl || undefined,
@@ -1143,6 +1215,7 @@ export class CommunityService {
       mutualCompanionsCount: 0,
       status: 'connected',
       isProfileLocked: !!prof?.isProfileLocked,
+      isVerified: !!user?.isVerified || !!prof?.isVerified,
     };
   }
 
@@ -1180,8 +1253,9 @@ export class CommunityService {
       targetIds = [...explicitNetworks[visitorId]];
     } else {
       // Deterministic distinct subset for any other companion based on visitorId
-      const candidates = all.filter((c) => c.id !== visitorId && c.id !== currentUserId);
-      const targetCount = 8 + (Math.abs(visitorId * 31 + 7) % 9); // 8 to 16 companions
+      const commonMutuals = [12, 33, 42, 55, 88].filter((id) => id !== visitorId);
+      const candidates = all.filter((c) => c.id !== visitorId && c.id !== currentUserId && !commonMutuals.includes(c.id));
+      const targetCount = 6 + (Math.abs(visitorId * 31 + 7) % 7); // 6 to 12 companions
       let seed = Math.abs(visitorId * 2654435761);
       const nextRand = () => {
         seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -1192,7 +1266,9 @@ export class CommunityService {
         const j = Math.floor(nextRand() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
-      targetIds = shuffled.slice(0, targetCount).map((c) => c.id);
+      const numMutuals = 2 + (Math.abs(visitorId * 17) % 3); // 2 to 4 mutuals
+      const selectedMutuals = commonMutuals.slice(0, numMutuals);
+      targetIds = [...selectedMutuals, ...shuffled.slice(0, targetCount).map((c) => c.id)];
     }
 
     // Map targetIds to Companion objects from the live companions store

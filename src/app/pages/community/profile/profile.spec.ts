@@ -1731,4 +1731,105 @@ describe('CommunityProfile', () => {
     const totalIndianUsers = allCompanions.filter((c) => c.country === 'India');
     expect(totalIndianUsers.length).toBeGreaterThanOrEqual(600);
   });
+
+  it('Requirement A: mutual companions count badge and popup modal list match exactly', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Pick a companion with mutual connections
+    const targetCompanion = service.companions().find((c) => c.id !== 1)!;
+    expect(targetCompanion).toBeTruthy();
+
+    // Open visitor profile for this companion
+    component.openVisitorProfile(targetCompanion);
+    fixture.detectChanges();
+
+    const mutualList = component.getMutualCompanions(targetCompanion.id);
+    const countViaHelper = component.getMutualCompanionsCount(targetCompanion.id);
+    const filteredList = component.filteredMutualCompanions(targetCompanion.id);
+
+    // Mutual companions count badge must equal mutual companions list length
+    expect(countViaHelper).toBe(mutualList.length);
+    expect(filteredList.length).toBe(mutualList.length);
+
+    // Open mutual companions modal
+    component.openMutualCompanionsModal(targetCompanion);
+    fixture.detectChanges();
+
+    const modalTitle = element.querySelector('.mutual-companions-modal .modal-count-tag');
+    expect(modalTitle?.textContent).toContain(`${mutualList.length} Mutual`);
+  });
+
+  it('Requirement B: visitor profile displays Work, Education, Hobbies, Interests, About the Person, and hides Contact Info', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const companion = service.companions().find((c) => c.id === 33)!;
+    component.openVisitorProfile(companion);
+    fixture.detectChanges();
+
+    const visitorFlow = element.querySelector('.visitor-flow-about');
+    expect(visitorFlow).toBeTruthy();
+
+    const textContent = visitorFlow?.textContent || '';
+
+    // Must show Work Experience, Education, Hobbies, Interests, About the Person
+    expect(textContent).toContain('Work Experience');
+    expect(textContent).toContain('Education');
+    expect(textContent).toContain('Hobbies');
+    expect(textContent).toContain('Interests');
+    expect(textContent).toContain('About the Person');
+
+    // Must NOT show Contact Info section
+    expect(textContent).not.toContain('Contact Info');
+    expect(textContent).not.toContain('📞 Contact Info');
+    expect(element.querySelector('.visitor-contact-row')).toBeFalsy();
+  });
+
+  it('Requirement C: settings verification via Work/University email displays blue verified badge everywhere', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Initially user is not verified
+    expect(component.isUserVerified()).toBe(false);
+
+    // Navigate to Settings
+    component.setSection('settings');
+    fixture.detectChanges();
+
+    const verificationCard = element.querySelector('.verification-card');
+    expect(verificationCard).toBeTruthy();
+
+    // Verify using university email
+    component.verificationTypeSelection.set('university');
+    component.verificationEmailInput = 'researcher@oxford.edu';
+    component.verificationStep.set('code');
+    component.verificationCodeInput = '123456';
+    component.confirmVerificationCode();
+    fixture.detectChanges();
+
+    expect(component.isUserVerified()).toBe(true);
+    expect(service.currentUser()?.isVerified).toBe(true);
+    expect(service.profile()?.isVerified).toBe(true);
+
+    // Blue verified badge is rendered next to user's name
+    const verifiedBadges = element.querySelectorAll('.blue-verified-badge');
+    expect(verifiedBadges.length).toBeGreaterThan(0);
+
+    // Post authored by verified user has blue verified badge
+    const myPost = service.journeyPosts().find((p) => p.author.id === (service.currentUser()?.id || 1));
+    if (myPost) {
+      expect(component.isAuthorVerified(myPost.author)).toBe(true);
+    }
+
+    // Removing verification clears verified badge
+    component.removeVerification();
+    fixture.detectChanges();
+
+    expect(component.isUserVerified()).toBe(false);
+    expect(service.currentUser()?.isVerified).toBe(false);
+  });
 });

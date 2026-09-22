@@ -68,6 +68,11 @@
                 <div class="res-info">
                   <strong>
                     {{ t.fullName }}
+                    @if (isAuthorVerified(t)) {
+                      <span class="blue-verified-badge" title="Verified Account">
+                        <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                      </span>
+                    }
                     @if (t.isProfileLocked) {
                       <span class="mini-lock-pill" title="Profile is locked">🔒</span>
                     }
@@ -194,6 +199,11 @@
 
           <h2 class="profile-full-name">
             {{ service.profile()?.fullName || ((service.profile()?.firstName || '') + ' ' + (service.profile()?.lastName || '')).trim() || 'Sophia Laurent' }}
+            @if (isUserVerified()) {
+              <span class="blue-verified-badge" title="Verified Account">
+                <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+              </span>
+            }
           </h2>
 
           <p class="profile-location">
@@ -442,8 +452,15 @@
                   <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                 </div>
                 <div class="side-companion-meta">
-                  <span class="side-companion-name">{{ comp.fullName }}</span>
-                  <span class="side-companion-mutual" (click)="$event.stopPropagation(); openMutualCompanionsModal(comp)">👥 {{ comp.mutualCompanionsCount }} mutual</span>
+                  <span class="side-companion-name">
+                    {{ comp.fullName }}
+                    @if (isAuthorVerified(comp)) {
+                      <span class="blue-verified-badge" title="Verified Account">
+                        <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                      </span>
+                    }
+                  </span>
+                  <span class="side-companion-mutual" (click)="$event.stopPropagation(); openMutualCompanionsModal(comp)">👥 {{ getMutualCompanionsCount(comp.id) }} mutual</span>
                 </div>
               </div>
               <div class="side-companion-action-wrap">
@@ -698,6 +715,11 @@
                         <strong class="author-name clickable-user" (click)="openVisitorProfile(post.author)">
                           {{ post.author.fullName }}
                         </strong>
+                        @if (isAuthorVerified(post.author)) {
+                          <span class="blue-verified-badge" title="Verified Account">
+                            <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                          </span>
+                        }
                         <!-- REQUIREMENT C: post displays as user is with those tagged people -->
                         @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
                           <span class="tagged-with-text"> is with </span>
@@ -979,6 +1001,7 @@
                             [depth]="0"
                             [currentUserId]="service.currentUser()?.id"
                             [isProfileOwner]="!viewingVisitor()"
+                            [isCurrentUserVerified]="isUserVerified()"
                             (reply)="handleCommentThreadReply($event)"
                             (like)="handleCommentThreadLike($event)"
                             (react)="handleCommentThreadReact($event)"
@@ -2024,13 +2047,18 @@
                     <div class="card-details">
                       <strong class="companion-name clickable-user" (click)="openVisitorProfile(c)">
                         {{ c.fullName }}
+                        @if (isAuthorVerified(c)) {
+                          <span class="blue-verified-badge" title="Verified Account">
+                            <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                          </span>
+                        }
                         @if (c.isProfileLocked) {
                           <span class="mini-lock-pill" title="Profile locked">🔒</span>
                         }
                       </strong>
                       <span class="companion-role">{{ c.profession }}</span>
                       <span class="companion-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ c.city }}, {{ c.country }}</span>
-                      <span class="companion-mutual">{{ c.mutualCompanionsCount }} mutual companions</span>
+                      <span class="companion-mutual">{{ getMutualCompanionsCount(c.id) }} mutual companions</span>
                     </div>
                     <div class="card-actions">
                       <button type="button" class="btn-primary-action btn-sm" (click)="openChatWith(c)">
@@ -2239,6 +2267,109 @@
             </header>
 
             <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="settings-form">
+              <!-- Work or University Email Verification Card (Requirement C) -->
+              <div class="settings-card verification-card">
+                <div class="verification-head-row">
+                  <div>
+                    <h3 class="card-title">
+                      <span class="verification-title-icon">🎓</span>
+                      Work or University Email Verification
+                      @if (isUserVerified()) {
+                        <span class="blue-verified-badge" title="Verified Profile">
+                          <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                        </span>
+                      }
+                    </h3>
+                    <p class="card-desc">
+                      Verify your account with an official work or university email address to earn a Blue Verified Tick beside your name throughout NeverBeen.
+                    </p>
+                  </div>
+                </div>
+
+                @if (isUserVerified()) {
+                  <div class="verified-status-banner">
+                    <div class="verified-banner-icon">
+                      <span class="blue-verified-badge large-badge" title="Verified Profile">
+                        <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                      </span>
+                    </div>
+                    <div class="verified-banner-content">
+                      <strong class="verified-title">Account Verified</strong>
+                      <p class="verified-desc">
+                        Verified via {{ userVerificationEmail() }} ({{ userVerificationType() === 'university' ? 'University / Academic Email' : 'Work / Corporate Email' }})
+                      </p>
+                    </div>
+                    <button type="button" class="btn-secondary-action btn-sm" (click)="removeVerification()">
+                      Change Email
+                    </button>
+                  </div>
+                } @else {
+                  <div class="verification-form-box">
+                    <div class="verification-inputs-grid">
+                      <div class="form-group">
+                        <label class="form-label">Verification Type</label>
+                        <select [(ngModel)]="verificationTypeSelection" [ngModelOptions]="{standalone: true}" class="settings-select">
+                          <option value="university">University / College (.edu, .ac, academic domain)</option>
+                          <option value="work">Work / Organization (company domain)</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="form-label">Work or University Email</label>
+                        <input
+                          type="email"
+                          [(ngModel)]="verificationEmailInput"
+                          [ngModelOptions]="{standalone: true}"
+                          placeholder="e.g. name@university.edu or name@company.com"
+                          class="form-control"
+                        />
+                      </div>
+                    </div>
+
+                    @if (verificationStep() === 'code') {
+                      <div class="verification-code-box">
+                        <p class="verification-code-instructions">
+                          A 6-digit confirmation code was sent to <strong>{{ verificationEmailInput }}</strong>. Enter code below:
+                        </p>
+                        <div class="code-input-row">
+                          <input
+                            type="text"
+                            [(ngModel)]="verificationCodeInput"
+                            [ngModelOptions]="{standalone: true}"
+                            placeholder="Enter 6-digit code (e.g. 849201)"
+                            maxlength="6"
+                            class="form-control code-input"
+                          />
+                          <button
+                            type="button"
+                            class="btn-primary-action btn-sm"
+                            (click)="confirmVerificationCode()"
+                          >
+                            Verify &amp; Activate Blue Tick
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="verification-action-row">
+                        <button
+                          type="button"
+                          class="btn-verify-email btn-primary-action btn-sm"
+                          (click)="requestEmailVerification()"
+                        >
+                          Verify Email
+                        </button>
+                      </div>
+                    }
+
+                    @if (verificationMessage()) {
+                      <div class="verification-alert" [class.success]="verificationSuccess()" [class.error]="!verificationSuccess()">
+                        {{ verificationMessage() }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
               <!-- Privacy & Profile Lock Card -->
               <div class="settings-card">
                 <h3 class="card-title">🛡️ Privacy &amp; Profile Lock</h3>
@@ -2948,7 +3079,14 @@
 
           <div class="visitor-hero-meta">
             <div class="visitor-name-line">
-              <h1 class="visitor-hero-name visitor-name">{{ viewingVisitor()!.fullName }}</h1>
+              <h1 class="visitor-hero-name visitor-name">
+                {{ viewingVisitor()!.fullName }}
+                @if (isAuthorVerified(viewingVisitor()!)) {
+                  <span class="blue-verified-badge large-badge" title="Verified Account">
+                    <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                  </span>
+                }
+              </h1>
               @if (viewingVisitor()!.isProfileLocked) {
                 <span class="visitor-lock-pill" title="This profile is locked">🔒 Locked Profile</span>
               }
@@ -2968,7 +3106,7 @@
                 tabindex="0"
                 title="Click to view mutual companions popup"
               >
-                👥 {{ viewingVisitor()!.mutualCompanionsCount }} Mutual Companions
+                👥 {{ getMutualCompanionsCount(viewingVisitor()!.id) }} Mutual Companions
               </span>
             </div>
           </div>
@@ -3075,8 +3213,15 @@
                         <span class="visitor-side-comp-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                       </div>
                       <div class="visitor-side-comp-details">
-                        <strong class="visitor-side-comp-name">{{ comp.fullName }}</strong>
-                        <span class="visitor-side-comp-mutual">👥 {{ comp.mutualCompanionsCount }} mutual</span>
+                        <strong class="visitor-side-comp-name">
+                          {{ comp.fullName }}
+                          @if (isAuthorVerified(comp)) {
+                            <span class="blue-verified-badge" title="Verified Account">
+                              <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                            </span>
+                          }
+                        </strong>
+                        <span class="visitor-side-comp-mutual">👥 {{ getMutualCompanionsCount(comp.id) }} mutual</span>
                       </div>
                     </div>
 
@@ -3211,47 +3356,43 @@
                 </div>
               </div>
 
-              <!-- 3. Work Experience -->
-              @if (viewingVisitor()!.aboutMeDetails?.workExperience && viewingVisitor()!.aboutMeDetails!.workExperience!.length > 0) {
-                <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">💼 Work Experience</h4>
-                  <div class="visitor-work-list">
-                    @for (w of viewingVisitor()!.aboutMeDetails!.workExperience!; track $index) {
-                      <div class="visitor-work-item">
-                        <div class="visitor-work-head">
-                          <strong>{{ w.company }}</strong>
-                          <span>{{ w.yearFrom }} – {{ w.currentlyWorkHere ? 'Present' : (w.yearTo || 'Present') }}</span>
-                        </div>
-                        <span class="visitor-work-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ w.city }}, {{ w.country }}</span>
-                        @if (w.description) {
-                          <p class="visitor-work-desc">{{ w.description }}</p>
-                        }
+              <!-- 3. Work Experience (Requirement B) -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">💼 Work Experience</h4>
+                <div class="visitor-work-list">
+                  @for (w of getVisitorWorkExperiences(viewingVisitor()!); track $index) {
+                    <div class="visitor-work-item">
+                      <div class="visitor-work-head">
+                        <strong>{{ w.company }}</strong>
+                        <span>{{ w.yearFrom }} – {{ w.currentlyWorkHere ? 'Present' : (w.yearTo || 'Present') }}</span>
                       </div>
-                    }
-                  </div>
+                      <span class="visitor-work-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ w.city }}, {{ w.country }}</span>
+                      @if (w.description) {
+                        <p class="visitor-work-desc">{{ w.description }}</p>
+                      }
+                    </div>
+                  }
                 </div>
-              }
+              </div>
 
-              <!-- 4. Education -->
-              @if (viewingVisitor()!.aboutMeDetails?.education && viewingVisitor()!.aboutMeDetails!.education!.length > 0) {
-                <div class="visitor-sub-block">
-                  <h4 class="visitor-sub-title">🎓 Education</h4>
-                  <div class="visitor-edu-list">
-                    @for (e of viewingVisitor()!.aboutMeDetails!.education!; track $index) {
-                      <div class="visitor-edu-item">
-                        <div class="visitor-edu-head">
-                          <span class="edu-badge">{{ e.level }}</span>
-                          <strong>{{ e.institutionName }}</strong>
-                          <span>{{ e.yearFrom }} – {{ e.currentlyStudying ? 'Studying' : (e.yearTo || 'Completed') }}</span>
-                        </div>
-                        <span class="visitor-edu-course">Course: {{ e.courseOrDegree }}</span>
+              <!-- 4. Education (Requirement B) -->
+              <div class="visitor-sub-block">
+                <h4 class="visitor-sub-title">🎓 Education</h4>
+                <div class="visitor-edu-list">
+                  @for (e of getVisitorEducationHistory(viewingVisitor()!); track $index) {
+                    <div class="visitor-edu-item">
+                      <div class="visitor-edu-head">
+                        <span class="edu-badge">{{ e.level }}</span>
+                        <strong>{{ e.institutionName }}</strong>
+                        <span>{{ e.yearFrom }} – {{ e.currentlyStudying ? 'Studying' : (e.yearTo || 'Completed') }}</span>
                       </div>
-                    }
-                  </div>
+                      <span class="visitor-edu-course">Course: {{ e.courseOrDegree }}</span>
+                    </div>
+                  }
                 </div>
-              }
+              </div>
 
-              <!-- 5. Hobbies -->
+              <!-- 5. Hobbies (Requirement B) -->
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🎨 Hobbies</h4>
                 <div class="visitor-chips-wrap">
@@ -3261,7 +3402,7 @@
                 </div>
               </div>
 
-              <!-- 6. Interests -->
+              <!-- 6. Interests (Requirement B) -->
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🧭 Interests</h4>
                 <div class="visitor-chips-wrap">
@@ -3271,16 +3412,7 @@
                 </div>
               </div>
 
-              <!-- 7. Contact Info -->
-              <div class="visitor-sub-block">
-                <h4 class="visitor-sub-title">📞 Contact Info</h4>
-                <div class="visitor-contact-row">
-                  <span>✉️ {{ viewingVisitor()!.aboutMeDetails?.contactEmail || (viewingVisitor()!.fullName.toLowerCase().replace(' ', '.') + '@neverbeen.example.com') }}</span>
-                  <span>📱 {{ viewingVisitor()!.aboutMeDetails?.contactPhone || '+33 6 98 76 54 32' }}</span>
-                </div>
-              </div>
-
-              <!-- 8. About the Person -->
+              <!-- 7. About the Person (Requirement B: Visible, but NOT the Contact Info section) -->
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">📖 About the Person</h4>
                 <p class="visitor-sub-text">
@@ -3324,6 +3456,11 @@
                   <div class="author-details">
                     <div class="author-name-line">
                       <strong class="author-name">{{ post.author.fullName }}</strong>
+                      @if (isAuthorVerified(post.author)) {
+                        <span class="blue-verified-badge" title="Verified Account">
+                          <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                        </span>
+                      }
                       @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
                         <span class="tagged-with-text"> is with </span>
                         @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
@@ -3504,6 +3641,7 @@
                         [depth]="0"
                         [currentUserId]="service.currentUser()?.id"
                         [isProfileOwner]="false"
+                        [isCurrentUserVerified]="isUserVerified()"
                         (reply)="handleCommentThreadReply($event)"
                         (like)="handleCommentThreadLike($event)"
                         (react)="handleCommentThreadReact($event)"
@@ -3552,12 +3690,19 @@
                 <div class="modal-comp-user-info" (click)="closeAllVisitorCompanionsModal(); comp.id === (service.currentUser()?.id || 1) ? closeVisitorProfile() : openVisitorProfile(comp)">
                   <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" />
                   <div class="modal-comp-meta">
-                    <strong class="modal-comp-name">{{ comp.fullName }}</strong>
+                    <strong class="modal-comp-name">
+                      {{ comp.fullName }}
+                      @if (isAuthorVerified(comp)) {
+                        <span class="blue-verified-badge" title="Verified Account">
+                          <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                        </span>
+                      }
+                    </strong>
                     <span class="modal-comp-subhead">
                       <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
                       {{ comp.city }}, {{ comp.country }} • {{ comp.profession }}
                     </span>
-                    <span class="modal-comp-mutual">👥 {{ comp.mutualCompanionsCount }} mutual companions</span>
+                    <span class="modal-comp-mutual">👥 {{ getMutualCompanionsCount(comp.id) }} mutual companions</span>
                   </div>
                 </div>
 
@@ -3624,12 +3769,19 @@
                   <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                 </div>
                 <div class="modal-comp-meta">
-                  <strong class="modal-comp-name">{{ comp.fullName }}</strong>
+                  <strong class="modal-comp-name">
+                    {{ comp.fullName }}
+                    @if (isAuthorVerified(comp)) {
+                      <span class="blue-verified-badge" title="Verified Account">
+                        <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                      </span>
+                    }
+                  </strong>
                   <span class="modal-comp-subhead">
                     <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
                     {{ comp.city }}, {{ comp.country }} • {{ comp.profession }}
                   </span>
-                  <span class="modal-comp-mutual">👥 {{ comp.mutualCompanionsCount }} mutual companions</span>
+                  <span class="modal-comp-mutual">👥 {{ getMutualCompanionsCount(comp.id) }} mutual companions</span>
                 </div>
               </div>
 
@@ -3685,12 +3837,19 @@
                   <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                 </div>
                 <div class="modal-comp-meta">
-                  <strong class="modal-comp-name">{{ comp.fullName }}</strong>
+                  <strong class="modal-comp-name">
+                    {{ comp.fullName }}
+                    @if (isAuthorVerified(comp)) {
+                      <span class="blue-verified-badge" title="Verified Account">
+                        <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                      </span>
+                    }
+                  </strong>
                   <span class="modal-comp-subhead">
                     <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
                     {{ comp.city }}, {{ comp.country }} • {{ comp.profession }}
                   </span>
-                  <span class="modal-comp-mutual">👥 {{ comp.mutualCompanionsCount }} mutual companions</span>
+                  <span class="modal-comp-mutual">👥 {{ getMutualCompanionsCount(comp.id) }} mutual companions</span>
                 </div>
               </div>
 

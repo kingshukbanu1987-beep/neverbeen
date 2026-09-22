@@ -2171,18 +2171,16 @@ export class CommunityProfile implements OnInit {
   }
 
   getMutualCompanions(targetId: number): Companion[] {
+    const currentUserId = this.service.currentUser()?.id || 1;
     const visitorComps = this.getVisitorCompanions(targetId);
     const myConnected = this.connectedCompanions();
-    const mutual = visitorComps.filter(
-      (vc) => vc.id !== 1 && myConnected.some((mc) => mc.id === vc.id),
+    return visitorComps.filter(
+      (vc) => vc.id !== currentUserId && vc.id !== targetId && myConnected.some((mc) => mc.id === vc.id),
     );
-    if (mutual.length > 0) {
-      return mutual;
-    }
-    const visitor =
-      this.service.companions().find((c) => c.id === targetId) || this.viewingVisitor();
-    const count = visitor?.mutualCompanionsCount ?? 2;
-    return myConnected.filter((c) => c.id !== targetId).slice(0, Math.min(myConnected.length, count));
+  }
+
+  getMutualCompanionsCount(targetId: number): number {
+    return this.getMutualCompanions(targetId).length;
   }
 
   filteredMutualCompanions(targetId: number): Companion[] {
@@ -2196,6 +2194,125 @@ export class CommunityProfile implements OnInit {
         c.country.toLowerCase().includes(q) ||
         c.profession.toLowerCase().includes(q),
     );
+  }
+
+  // Requirement B: Work Experience and Education for visitor profile
+  getVisitorWorkExperiences(visitor: Companion): WorkExperience[] {
+    if (visitor.aboutMeDetails?.workExperience && visitor.aboutMeDetails.workExperience.length > 0) {
+      return visitor.aboutMeDetails.workExperience;
+    }
+    return [
+      {
+        id: 1,
+        company: `${visitor.profession || 'Creative'} Studio & Expeditions`,
+        country: visitor.country || 'India',
+        city: visitor.city || 'Kolkata',
+        yearFrom: '2022',
+        yearTo: 'Present',
+        currentlyWorkHere: true,
+        description: `Working as ${visitor.profession || 'Creative Specialist'} focusing on cultural heritage documentation and scenic travel adventures.`,
+      },
+    ];
+  }
+
+  getVisitorEducationHistory(visitor: Companion): EducationInfo[] {
+    if (visitor.aboutMeDetails?.education && visitor.aboutMeDetails.education.length > 0) {
+      return visitor.aboutMeDetails.education;
+    }
+    return [
+      {
+        id: 1,
+        institutionName: `${visitor.city || 'Regional'} University of Arts & Sciences`,
+        level: 'University',
+        courseOrDegree: 'Bachelor of Visual Arts & Travel Communications',
+        yearFrom: '2017',
+        yearTo: '2021',
+        currentlyStudying: false,
+      },
+    ];
+  }
+
+  // Requirement C: Verification through Work or University Email
+  readonly verificationTypeSelection = signal<'university' | 'work'>('university');
+  verificationEmailInput = '';
+  readonly verificationStep = signal<'input' | 'code' | 'verified'>('input');
+  verificationCodeInput = '';
+  readonly verificationMessage = signal<string | null>(null);
+  readonly verificationSuccess = signal<boolean>(false);
+
+  isUserVerified(userId?: number): boolean {
+    const currentUserId = this.service.currentUser()?.id || 1;
+    if (userId === undefined || userId === currentUserId) {
+      return !!this.service.currentUser()?.isVerified || !!this.service.profile()?.isVerified;
+    }
+    const comp = this.service.companions().find((c) => c.id === userId);
+    return !!comp?.isVerified;
+  }
+
+  isAuthorVerified(author?: AuthorInfo | Companion | null): boolean {
+    if (!author) return false;
+    const currentUserId = this.service.currentUser()?.id || 1;
+    if (author.id === currentUserId) {
+      return this.isUserVerified();
+    }
+    return !!author.isVerified;
+  }
+
+  userVerificationEmail(): string {
+    return (
+      this.service.currentUser()?.verifiedEmail ||
+      this.service.profile()?.verifiedEmail ||
+      this.verificationEmailInput ||
+      'verified@university.edu'
+    );
+  }
+
+  userVerificationType(): string {
+    return (
+      this.service.currentUser()?.verificationType ||
+      this.service.profile()?.verificationType ||
+      this.verificationTypeSelection()
+    );
+  }
+
+  requestEmailVerification(): void {
+    const email = this.verificationEmailInput.trim();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      this.verificationSuccess.set(false);
+      this.verificationMessage.set('Please enter a valid work or university email address.');
+      return;
+    }
+    this.verificationStep.set('code');
+    this.verificationCodeInput = '849201';
+    this.verificationSuccess.set(true);
+    this.verificationMessage.set(
+      `Verification code sent to ${email}. Enter code below to activate your blue tick.`,
+    );
+  }
+
+  confirmVerificationCode(): void {
+    const code = this.verificationCodeInput.trim();
+    if (code.length < 4) {
+      this.verificationSuccess.set(false);
+      this.verificationMessage.set('Please enter a valid verification code.');
+      return;
+    }
+
+    const email = this.verificationEmailInput.trim() || 'verified.user@university.edu';
+    this.service.verifyUserEmail(email, this.verificationTypeSelection());
+    this.verificationSuccess.set(true);
+    this.verificationStep.set('verified');
+    this.verificationMessage.set(
+      'Account successfully verified! Blue verified tick has been activated across your profile.',
+    );
+  }
+
+  removeVerification(): void {
+    this.service.removeUserVerification();
+    this.verificationEmailInput = '';
+    this.verificationCodeInput = '';
+    this.verificationStep.set('input');
+    this.verificationMessage.set(null);
   }
 
   // ---------------------------------------------------------------------------

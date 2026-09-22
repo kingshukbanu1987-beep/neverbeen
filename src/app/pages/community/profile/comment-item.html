@@ -12,6 +12,11 @@
         <span class="author-name clickable-user" (click)="onAuthorClick(comment.author)">
           {{ comment.author.fullName || 'Traveler' }}
         </span>
+        @if (isAuthorVerified()) {
+          <span class="blue-verified-badge" title="Verified Account">
+            <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+          </span>
+        }
         @if (comment.author.profession) {
           <span class="author-role">• {{ comment.author.profession }}</span>
         }
@@ -156,6 +161,7 @@
           [depth]="depth + 1"
           [currentUserId]="currentUserId"
           [isProfileOwner]="isProfileOwner"
+          [isCurrentUserVerified]="isCurrentUserVerified"
           (reply)="forwardReply($event)"
           (like)="forwardLike($event)"
           (deleteComment)="forwardDeleteComment($event)"

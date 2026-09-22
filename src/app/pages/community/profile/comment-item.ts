@@ -24,6 +24,7 @@ export class CommentThreadComponent {
   @Input() depth = 0;
   @Input() currentUserId?: number;
   @Input() isProfileOwner = true;
+  @Input() isCurrentUserVerified = false;
 
   @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string; imageUrl?: string }>();
   @Output() like = new EventEmitter<{ postId: number; commentId: number }>();
@@ -54,6 +55,14 @@ export class CommentThreadComponent {
 
   getTop1Icon(): string {
     return getTopReactionIcon(this.comment.reactions);
+  }
+
+  isAuthorVerified(): boolean {
+    if (this.comment.author.isVerified) return true;
+    if (this.currentUserId !== undefined && this.comment.author.id === this.currentUserId) {
+      return this.isCurrentUserVerified;
+    }
+    return false;
   }
 
   startLikeHold(event?: Event): void {

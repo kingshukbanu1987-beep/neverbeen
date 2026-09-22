@@ -189,6 +189,9 @@ export interface CurrentUser {
   customStatusText?: string;
   isProfileLocked?: boolean;
   aboutMeDetails?: AboutMeDetails;
+  isVerified?: boolean;
+  verifiedEmail?: string;
+  verificationType?: 'work' | 'university' | null;
 }
 
 export interface AuthResult {
@@ -215,6 +218,10 @@ export interface UserSettings {
   twoFactorEnabled?: boolean;
   travelStyles?: string[];
   preferredSeason?: string;
+  isVerified?: boolean;
+  verificationEmail?: string;
+  verificationType?: 'work' | 'university' | null;
+  verifiedAtUtc?: string;
 }
 
 export interface GalleryPhoto {
@@ -258,6 +265,9 @@ export interface Profile {
   customStatusText?: string;
   isProfileLocked?: boolean;
   aboutMeDetails?: AboutMeDetails;
+  isVerified?: boolean;
+  verifiedEmail?: string;
+  verificationType?: 'work' | 'university' | null;
 }
 
 export interface UpdateProfileRequest {
@@ -285,6 +295,7 @@ export interface AuthorInfo {
   profession?: string;
   country?: string;
   city?: string;
+  isVerified?: boolean;
 }
 
 export interface CommunityComment {
@@ -402,6 +413,8 @@ export interface Companion {
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
   connectedCompanionIds?: number[];
+  isVerified?: boolean;
+  verifiedEmail?: string;
 }
 
 export interface Circle {
