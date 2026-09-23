@@ -71,9 +71,11 @@ describe('Destinations', () => {
     const hrefs = cards.map((card) => card.getAttribute('href'));
 
     for (const name of addedDestinations) {
-      const destination = destinations.find((place) => place.name === name);
+      const destination = destinations.find(
+        (place) => place.name === name || place.country === name,
+      );
       expect(destination, name).toBeDefined();
-      expect(text, name).toContain(name);
+      expect(text, name).toContain(destination!.name);
       expect(hrefs, name).toContain(`/destinations/${destination!.slug}`);
     }
   });

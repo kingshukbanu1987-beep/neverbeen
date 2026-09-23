@@ -1,0 +1,198 @@
+<section class="register-page-wrapper" aria-labelledby="reg-title">
+  <div class="register-card">
+    <header class="reg-header">
+      <a routerLink="/community" class="back-link">← Back to Sign In</a>
+      <div class="reg-badge">New Member Registration</div>
+      <h1 id="reg-title">Create NeverBeen Account</h1>
+      <p class="reg-subtitle">
+        Please complete your mandatory traveler details below. All fields are required to verify your membership and unlock the community.
+      </p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="reg-form" novalidate>
+      <!-- Mandatory Photo Upload -->
+      <div class="photo-upload-group" [class.has-error]="photoError()">
+        <div class="photo-preview-circle">
+          @if (photoPreview()) {
+            <img [src]="photoPreview()" alt="Uploaded portrait preview" class="preview-img" />
+          } @else {
+            <div class="photo-placeholder">
+              <svg viewBox="0 0 24 24" class="camera-icon" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <span>Upload Photo *</span>
+            </div>
+          }
+          <label class="photo-overlay-btn" for="photoInput" title="Select portrait photograph">
+            <svg viewBox="0 0 24 24" class="edit-icon" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </label>
+          <input
+            type="file"
+            id="photoInput"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onPhotoSelected($event)"
+            class="hidden-file-input"
+          />
+        </div>
+        <div class="photo-meta">
+          <label class="photo-label">Profile Photograph <span class="req">*</span></label>
+          <p class="photo-hint">Mandatory portrait for your community profile (JPEG, PNG, WebP &lt; 8 MB).</p>
+          @if (photoError()) {
+            <span class="field-error-msg">{{ photoError() }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Basic Details Grid -->
+      <div class="form-grid">
+        <!-- Name (First Name) -->
+        <div class="field-box">
+          <label for="name">Name <span class="req">*</span></label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="e.g. Sophia"
+            [class.invalid]="isInvalid('name')"
+          />
+          @if (isInvalid('name')) {
+            <span class="field-error-msg">Name is mandatory (minimum 2 characters).</span>
+          }
+        </div>
+
+        <!-- Surname (Last Name) -->
+        <div class="field-box">
+          <label for="surname">Surname <span class="req">*</span></label>
+          <input
+            id="surname"
+            type="text"
+            formControlName="surname"
+            placeholder="e.g. Laurent"
+            [class.invalid]="isInvalid('surname')"
+          />
+          @if (isInvalid('surname')) {
+            <span class="field-error-msg">Surname is mandatory (minimum 2 characters).</span>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="field-box full-span">
+          <label for="email">Email <span class="req">*</span></label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="e.g. sophia.laurent@neverbeen.example"
+            [class.invalid]="isInvalid('email')"
+          />
+          @if (isInvalid('email')) {
+            <span class="field-error-msg">A valid email address is mandatory.</span>
+          }
+        </div>
+
+        <!-- Country -->
+        <div class="field-box">
+          <label for="country">Country <span class="req">*</span></label>
+          <select
+            id="country"
+            formControlName="country"
+            (change)="onCountryChange()"
+            [class.invalid]="isInvalid('country')"
+          >
+            <option value="" disabled>Select Country</option>
+            @for (c of service.countries(); track c.id) {
+              <option [value]="c.name">{{ c.name }}</option>
+            }
+          </select>
+          @if (isInvalid('country')) {
+            <span class="field-error-msg">Country is mandatory. Please select your country.</span>
+          }
+        </div>
+
+        <!-- State -->
+        <div class="field-box">
+          <label for="state">State <span class="req">*</span></label>
+          <input
+            id="state"
+            type="text"
+            formControlName="state"
+            placeholder="e.g. Île-de-France, California, etc."
+            [class.invalid]="isInvalid('state')"
+          />
+          @if (isInvalid('state')) {
+            <span class="field-error-msg">State is mandatory. Please enter your state or province.</span>
+          }
+        </div>
+
+        <!-- City -->
+        <div class="field-box">
+          <label for="city">City <span class="req">*</span></label>
+          <input
+            id="city"
+            type="text"
+            formControlName="city"
+            list="citiesDatalist"
+            placeholder="e.g. Paris"
+            [class.invalid]="isInvalid('city')"
+          />
+          <datalist id="citiesDatalist">
+            @for (ct of citiesList(); track ct.id) {
+              <option [value]="ct.name"></option>
+            }
+          </datalist>
+          @if (isInvalid('city')) {
+            <span class="field-error-msg">City is mandatory. Please enter or select your city.</span>
+          }
+        </div>
+
+        <!-- Gender -->
+        <div class="field-box">
+          <label for="gender">Gender <span class="req">*</span></label>
+          <select id="gender" formControlName="gender" [class.invalid]="isInvalid('gender')">
+            <option value="" disabled>Select Gender</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+            <option value="Non-Binary">Non-Binary</option>
+            <option value="Prefer not to say">Prefer not to say</option>
+          </select>
+          @if (isInvalid('gender')) {
+            <span class="field-error-msg">Gender is mandatory. Please select an option.</span>
+          }
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="field-box full-span">
+          <label for="dateOfBirth">Date of Birth <span class="req">*</span></label>
+          <input
+            id="dateOfBirth"
+            type="date"
+            formControlName="dateOfBirth"
+            [class.invalid]="isInvalid('dateOfBirth')"
+          />
+          @if (isInvalid('dateOfBirth')) {
+            <span class="field-error-msg">Date of Birth is mandatory. Please select your birth date.</span>
+          }
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="submit-action-row">
+        <button
+          type="submit"
+          class="btn-create-account"
+          [disabled]="submitting()"
+        >
+          @if (submitting()) {
+            Creating Account...
+          } @else {
+            Create Neverbeen Account
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

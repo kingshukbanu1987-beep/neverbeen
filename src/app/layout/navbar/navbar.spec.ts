@@ -135,4 +135,34 @@ describe('Navbar', () => {
     }
     expect(references.size).toBe(links.length);
   });
+
+  it('scales neverbeen-logo.png down to 50% when visiting community or profile pages (Requirement I)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    // Default home page: not compact
+    component['currentUrl'].set('/');
+    fixture.detectChanges();
+    expect(component['isCompactLogo']()).toBe(false);
+    expect(element.querySelector('.logo.compact-logo')).toBeNull();
+    expect(element.querySelector('header.compact-nav')).toBeNull();
+    expect(element.querySelector('.bar.compact-bar')).toBeNull();
+
+    // On community page: compact logo and compact header active (Requirement B & I)
+    component['currentUrl'].set('/community');
+    fixture.detectChanges();
+    expect(component['isCompactLogo']()).toBe(true);
+    expect(element.querySelector('.logo.compact-logo')).toBeTruthy();
+    expect(element.querySelector('header.compact-nav')).toBeTruthy();
+    expect(element.querySelector('.bar.compact-bar')).toBeTruthy();
+
+    // On profile page: compact logo and compact header active (Requirement B & I)
+    component['currentUrl'].set('/profile?id=89201534010000000101');
+    fixture.detectChanges();
+    expect(component['isCompactLogo']()).toBe(true);
+    expect(element.querySelector('.logo.compact-logo')).toBeTruthy();
+    expect(element.querySelector('header.compact-nav')).toBeTruthy();
+    expect(element.querySelector('.bar.compact-bar')).toBeTruthy();
+  });
 });

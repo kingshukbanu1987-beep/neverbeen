@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgOptimizedImage } from '@angular/common';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-navbar',
@@ -9,7 +10,22 @@ import { NgOptimizedImage } from '@angular/common';
   styleUrl: './navbar.css',
 })
 export class Navbar {
+  private readonly router = inject(Router);
   protected readonly open = signal(false);
+  protected readonly currentUrl = signal(this.router.url || '');
+
+  constructor() {
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        this.currentUrl.set(event.urlAfterRedirects || event.url);
+      });
+  }
+
+  protected readonly isCompactLogo = computed(() => {
+    const url = this.currentUrl();
+    return url.includes('/community') || url.includes('/profile');
+  });
 
   protected readonly links = [
     { label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },

@@ -1,0 +1,174 @@
+<div class="nested-comment-node" [class.is-deep-level]="depth > 0">
+  <div class="comment-bubble-wrapper">
+    <img
+      [src]="comment.author.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'"
+      [alt]="comment.author.fullName || 'User'"
+      class="comment-author-avatar clickable-user"
+      (click)="onAuthorClick(comment.author)"
+      title="View traveler profile"
+    />
+    <div class="comment-body-card">
+      <div class="comment-head">
+        <span class="author-name clickable-user" (click)="onAuthorClick(comment.author)">
+          {{ comment.author.fullName || 'Traveler' }}
+        </span>
+        @if (isAuthorVerified()) {
+          <span class="blue-verified-badge" title="Verified Account">
+            <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+          </span>
+        }
+        @if (comment.author.profession) {
+          <span class="author-role">• {{ comment.author.profession }}</span>
+        }
+        <span class="comment-time">{{ formatTime(comment.createdAtUtc) }}</span>
+      </div>
+      <p class="comment-text-content">{{ comment.text }}</p>
+      @if (comment.imageUrl) {
+        <div class="comment-image-attachment">
+          <img [src]="comment.imageUrl" alt="Comment photo attachment" class="comment-attached-photo" />
+        </div>
+      }
+
+      <div class="comment-actions-bar">
+        <!-- Reaction Hold / Like button -->
+        <div class="comment-reaction-btn-wrapper">
+          <button
+            type="button"
+            class="comment-action-link btn-comment-like"
+            [class.liked]="comment.isLiked"
+            (mousedown)="startLikeHold($event)"
+            (mouseup)="endLikeHold()"
+            (mouseleave)="endLikeHold()"
+            (touchstart)="startLikeHold($event)"
+            (touchend)="endLikeHold()"
+            (click)="handleLikeClick()"
+            title="Click to like, hold to pick a reaction"
+          >
+            <span>{{ comment.myReaction ? (REACTION_ICONS[comment.myReaction] + ' ' + comment.myReaction) : (comment.isLiked ? '❤️ Liked' : '🤍 Like') }}</span>
+            <!-- Instead of number of likes, show the top 1 icon -->
+            @if (comment.reactions && comment.reactions.length > 0) {
+              <span
+                class="top-1-icon-pill"
+                (mousedown)="startReactionSummaryHold($event)"
+                (mouseup)="endReactionSummaryHold()"
+                (click)="$event.stopPropagation(); openReactionsModal()"
+                title="Hold or click to see reactions breakdown"
+              >{{ getTop1Icon() }}</span>
+            }
+          </button>
+
+          <!-- 11 reactions popover on hold -->
+          @if (showReactionPicker()) {
+            <div class="comment-reaction-popover" (click)="$event.stopPropagation()">
+              @for (reaction of holdReactions; track reaction) {
+                <button
+                  type="button"
+                  class="reaction-pick-emoji-btn"
+                  (click)="selectReaction(reaction)"
+                  [title]="reaction"
+                >
+                  <span class="emoji-glyph">{{ REACTION_ICONS[reaction] }}</span>
+                  <span class="emoji-text">{{ reaction }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Beside comment: show at most top 3 icons -->
+        @if (getTop3Icons().length > 0) {
+          <div
+            class="comment-top-icons-cluster"
+            (mousedown)="startReactionSummaryHold($event)"
+            (mouseup)="endReactionSummaryHold()"
+            (touchstart)="startReactionSummaryHold($event)"
+            (touchend)="endReactionSummaryHold()"
+            (click)="openReactionsModal()"
+            title="Hold or click to see who reacted"
+          >
+            @for (icon of getTop3Icons(); track icon) {
+              <span class="top-icon-glyph">{{ icon }}</span>
+            }
+          </div>
+        }
+
+        <button type="button" class="comment-action-link" (click)="toggleReply()">
+          <span>💬 Reply</span>
+          @if ((comment.replies?.length || 0) > 0) {
+            <span class="replies-count-hint">({{ comment.replies?.length }} {{ (comment.replies?.length || 0) === 1 ? 'reply' : 'replies' }})</span>
+          }
+        </button>
+        @if (canDeleteComment()) {
+          <button type="button" class="comment-action-link btn-delete-comment" (click)="onDeleteComment()" title="Delete Comment">
+            <span>🗑️ Delete</span>
+          </button>
+        }
+        @if (currentUserId && comment.author.id !== currentUserId) {
+          <button type="button" class="comment-action-link btn-report-comment" (click)="onReportAbuse()" title="Report Abuse">
+            <span>🚩 Report</span>
+          </button>
+        }
+      </div>
+
+      <!-- INLINE REPLY BOX (With Requirement A: Picture upload limit <= 100 KB) -->
+      @if (replyOpen()) {
+        <div class="inline-reply-composer">
+          <div class="reply-input-box-row">
+            <input
+              type="text"
+              [(ngModel)]="replyText"
+              (keydown.enter)="submitReply()"
+              placeholder="Write a reply..."
+              class="reply-input-field"
+            />
+            <label class="btn-attach-reply-photo" title="Attach photo (Max 100 KB)">
+              📷
+              <input type="file" accept="image/*" (change)="onReplyPhotoSelected($event)" class="hidden-file-input" />
+            </label>
+          </div>
+          @if (replyPhotoPreview()) {
+            <div class="reply-photo-preview-bar">
+              <img [src]="replyPhotoPreview()!" alt="Attached photo preview" class="reply-preview-thumbnail" />
+              <button type="button" class="btn-remove-reply-photo" (click)="clearReplyPhoto()" title="Remove photo">✕</button>
+            </div>
+          }
+          @if (replyPhotoError()) {
+            <div class="reply-photo-error-banner">{{ replyPhotoError() }}</div>
+          }
+          <div class="reply-composer-actions">
+            <button type="button" class="btn-cancel-reply" (click)="toggleReply()">Cancel</button>
+            <button
+              type="button"
+              class="btn-submit-reply"
+              [disabled]="!replyText.trim()"
+              (click)="submitReply()"
+            >
+              Reply
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ENDLESS NESTED RECURSION -->
+  @if (comment.replies && comment.replies.length > 0) {
+    <div class="nested-replies-list" [style.margin-left]="'1.25rem'">
+      @for (replyItem of comment.replies; track replyItem.id) {
+        <app-comment-thread
+          [comment]="replyItem"
+          [postId]="postId"
+          [depth]="depth + 1"
+          [currentUserId]="currentUserId"
+          [isProfileOwner]="isProfileOwner"
+          [isCurrentUserVerified]="isCurrentUserVerified"
+          (reply)="forwardReply($event)"
+          (like)="forwardLike($event)"
+          (deleteComment)="forwardDeleteComment($event)"
+          (openUser)="forwardOpenUser($event)"
+          (reportAbuse)="forwardReportAbuse($event)"
+        ></app-comment-thread>
+      }
+    </div>
+  }
+</div>

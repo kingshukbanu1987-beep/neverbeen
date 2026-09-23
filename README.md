@@ -81,6 +81,19 @@ regenerate the manifest in one step.
 While `public/collection` is empty, the page shows the sample studio photographs from
 `public/audience` so it is never blank.
 
+## Community Backend API
+
+The NeverBeen Community backend is an ASP.NET Core (.NET 7) Web API located in [`NeverBeen.API/`](./NeverBeen.API/README.md). It powers:
+
+- **OAuth (SSO) authentication** with Google, Facebook, and Microsoft Outlook accounts
+- **New member registration**
+- **User profiles** (About Me, Details, Gallery, Settings)
+- **Photo storage** for avatars and galleries
+- **Community Message Book** (posts, nested replies, like/dislike reactions)
+- **Geographic and profession lookup data**
+
+See the [NeverBeen.API README](./NeverBeen.API/README.md) for architecture, configuration, database options (Azure SQL and SQLite), and API endpoints.
+
 ## Deploying to Cloudflare Pages
 
 Create a Pages project connected to this repository with these settings:
