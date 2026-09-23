@@ -129,7 +129,7 @@
                 [class.invalid]="isApplyInvalid('fullName')"
               />
               @if (isApplyInvalid('fullName')) {
-                <span class="field-error">Full name is mandatory (minimum 2 characters).</span>
+                <span class="field-error">Full name is mandatory (minimum 2 words — first and last name).</span>
               }
             </label>
 
@@ -153,11 +153,18 @@
                 type="password"
                 formControlName="password"
                 autocomplete="new-password"
-                placeholder="Create a password (min. 6 characters)"
+                placeholder="Create a password (min. 10 characters)"
                 [class.invalid]="isApplyInvalid('password')"
               />
+              <ul class="pwd-rules" aria-label="Password requirements">
+                @let pwdRules = passwordRuleState();
+                <li [class.met]="pwdRules.length">Minimum 10 characters</li>
+                <li [class.met]="pwdRules.capital">One capital letter</li>
+                <li [class.met]="pwdRules.number">One number</li>
+                <li [class.met]="pwdRules.special">One special character (!@#$…)</li>
+              </ul>
               @if (isApplyInvalid('password')) {
-                <span class="field-error">Password is mandatory (minimum 6 characters).</span>
+                <span class="field-error">{{ applyPasswordError() }}</span>
               }
             </label>
 

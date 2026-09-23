@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 export type AdminLoginView = 'signin' | 'apply';
@@ -11,6 +11,40 @@ const RESUME_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 const RESUME_EXTENSIONS = ['pdf', 'doc', 'docx'];
+
+/** Volunteer application Full Name must contain at least `count` words (e.g. First Last). */
+function minWords(count: number): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = typeof control.value === 'string' ? control.value : '';
+    const words = value.trim().split(/\s+/).filter((w) => w.length > 0);
+    return words.length >= count ? null : { minWords: { required: count, actual: words.length } };
+  };
+}
+
+/**
+ * Volunteer application password policy: minimum 10 characters including at least
+ * one capital letter, one number and one special character.
+ */
+function strongPassword(control: AbstractControl): ValidationErrors | null {
+  const value = typeof control.value === 'string' ? control.value : '';
+  if (!value) {
+    return null; // Validators.required reports the empty case.
+  }
+  const errors: ValidationErrors = {};
+  if (value.length < 10) {
+    errors['passwordLength'] = true;
+  }
+  if (!/[A-Z]/.test(value)) {
+    errors['passwordUppercase'] = true;
+  }
+  if (!/[0-9]/.test(value)) {
+    errors['passwordNumber'] = true;
+  }
+  if (!/[^A-Za-z0-9]/.test(value)) {
+    errors['passwordSpecial'] = true;
+  }
+  return Object.keys(errors).length > 0 ? errors : null;
+}
 
 /**
  * NeverBeen Admin Console — administrator-only sign in, plus the
@@ -41,11 +75,12 @@ export class Login {
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
-  /** Basic mandatory details — mirroring the community sign-in identity fields. */
+  /** Basic mandatory details — mirroring the community sign-in identity fields.
+   *  Full Name: at least 2 words. Password: ≥10 chars with a capital, a number and a special character. */
   protected readonly applyForm = this.fb.nonNullable.group({
-    fullName: ['', [Validators.required, Validators.minLength(2)]],
+    fullName: ['', [Validators.required, minWords(2)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: ['', [Validators.required, strongPassword]],
   });
 
   // ---------------------------------------------------------------------------
@@ -116,6 +151,29 @@ export class Login {
   isApplyInvalid(controlName: string): boolean {
     const ctrl = this.applyForm.get(controlName);
     return !!(ctrl && ctrl.invalid && (ctrl.dirty || ctrl.touched));
+  }
+
+  /** Live password-policy checklist for the volunteer application form. */
+  passwordRuleState(): { length: boolean; capital: boolean; number: boolean; special: boolean } {
+    const value = this.applyForm.get('password')?.value ?? '';
+    return {
+      length: value.length >= 10,
+      capital: /[A-Z]/.test(value),
+      number: /[0-9]/.test(value),
+      special: /[^A-Za-z0-9]/.test(value),
+    };
+  }
+
+  /** Combined helper message when the volunteer password fails the policy. */
+  applyPasswordError(): string | null {
+    const ctrl = this.applyForm.get('password');
+    if (!ctrl || ctrl.valid || !(ctrl.dirty || ctrl.touched)) {
+      return null;
+    }
+    if (ctrl.errors && Object.prototype.hasOwnProperty.call(ctrl.errors, 'required')) {
+      return 'Password is mandatory (minimum 10 characters with a capital letter, a number and a special character).';
+    }
+    return 'Password must be at least 10 characters and include a capital letter, a number and a special character.';
   }
 
   isAdminInvalid(controlName: string): boolean {
