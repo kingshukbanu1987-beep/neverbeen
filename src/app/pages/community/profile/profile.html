@@ -1575,7 +1575,7 @@
                           <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ work.city }}{{ work.town ? ', ' + work.town : '' }}, {{ work.country }}
                         </div>
                         @if (work.description) {
-                          <p class="work-description-text">{{ work.description }}</p>
+                          <p class="work-description-text" [nbTranslatable]="work.description">{{ work.description }}</p>
                         }
                       </div>
                     } @empty {
@@ -1745,7 +1745,7 @@
                 <div class="gallery-item-card gallery-item" (click)="openImageModal(photo.url)">
                   <img [src]="photo.url" [alt]="photo.caption || 'Travel photo'" class="gallery-img" />
                   <div class="gallery-caption-overlay">
-                    <span>{{ photo.caption }}</span>
+                    <span [nbTranslatable]="photo.caption || ''">{{ photo.caption }}</span>
                     <button type="button" class="btn-delete-photo" (click)="$event.stopPropagation(); deletePhoto(photo.id)" title="Delete photo">✕</button>
                   </div>
                 </div>
@@ -2420,7 +2420,7 @@
                     <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id)" title="Delete Circle">✕</button>
                   </div>
                   <h3 class="circle-title">{{ circle.name }}</h3>
-                  <p class="circle-desc">{{ circle.description }}</p>
+                  <p class="circle-desc" [nbTranslatable]="circle.description">{{ circle.description }}</p>
 
                   <div class="circle-members-row">
                     <span class="members-lbl">Members ({{ circle.memberIds.length }}):</span>
@@ -2979,7 +2979,7 @@
               <div class="chat-replying-banner">
                 <div class="replying-banner-text">
                   <span class="replying-label">Replying to <strong>{{ getMsgSenderName(box, box.replyingToMessage) }}</strong></span>
-                  <span class="replying-snippet">{{ box.replyingToMessage.text }}</span>
+                  <span class="replying-snippet" [nbTranslatable]="box.replyingToMessage.text">{{ box.replyingToMessage.text }}</span>
                 </div>
                 <button
                   type="button"
@@ -3720,7 +3720,7 @@
                       </div>
                       <span class="visitor-work-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ w.city }}, {{ w.country }}</span>
                       @if (w.description) {
-                        <p class="visitor-work-desc">{{ w.description }}</p>
+                        <p class="visitor-work-desc" [nbTranslatable]="w.description">{{ w.description }}</p>
                       }
                     </div>
                   }
@@ -3787,7 +3787,7 @@
                   <div class="visitor-gallery-item" (click)="openImageModal(photo.url)">
                     <img [src]="photo.url" [alt]="photo.caption || 'Gallery photo'" loading="lazy" />
                     @if (photo.caption) {
-                      <span class="visitor-gallery-caption">{{ photo.caption }}</span>
+                      <span class="visitor-gallery-caption" [nbTranslatable]="photo.caption">{{ photo.caption }}</span>
                     }
                   </div>
                 }
