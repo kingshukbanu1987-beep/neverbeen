@@ -22,7 +22,7 @@
         }
         <span class="comment-time">{{ formatTime(comment.createdAtUtc) }}</span>
       </div>
-      <p class="comment-text-content">{{ comment.text }}</p>
+      <p class="comment-text-content" [nbTranslatable]="comment.text">{{ comment.text }}</p>
       @if (comment.imageUrl) {
         <div class="comment-image-attachment">
           <img [src]="comment.imageUrl" alt="Comment photo attachment" class="comment-attached-photo" />

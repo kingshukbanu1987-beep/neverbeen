@@ -10,11 +10,17 @@ import {
   getTopReactionIcon,
   getTopReactionIcons,
 } from '../../../models/community';
+import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 
 @Component({
   selector: 'app-comment-thread',
   standalone: true,
-  imports: [CommonModule, FormsModule, forwardRef(() => CommentThreadComponent)],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslatableTextDirective,
+    forwardRef(() => CommentThreadComponent),
+  ],
   templateUrl: './comment-item.html',
   styleUrl: './comment-item.css',
 })

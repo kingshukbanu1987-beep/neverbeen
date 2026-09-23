@@ -792,7 +792,7 @@
 
                   <!-- Post Body Text (Or Shared Thoughts) -->
                   @if (post.text) {
-                    <p class="post-body-text">{{ post.text }}</p>
+                    <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
                   }
 
                   <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
@@ -847,7 +847,7 @@
                           </span>
                         </div>
                       </div>
-                      <p class="shared-orig-text">{{ post.originalPost.text }}</p>
+                      <p class="shared-orig-text" [nbTranslatable]="post.originalPost.text">{{ post.originalPost.text }}</p>
                     </div>
                   }
 
@@ -1472,7 +1472,7 @@
                     <h3 class="card-section-title"><span class="title-glyph">✨</span> 1. Intro & Travel Story</h3>
                     <span class="intro-tag-badge">Narrative Journey</span>
                   </div>
-                  <div class="about-intro-highlight multi-paragraph-story">{{ aboutIntro }}</div>
+                  <div class="about-intro-highlight multi-paragraph-story" [nbTranslatable]="aboutIntro">{{ aboutIntro }}</div>
                 </div>
 
                 <!-- 2. Personal Details (Ultra-Modern Layout - Requirement B) -->
@@ -1671,8 +1671,9 @@
                 <!-- 8. About the Person -->
                 <div class="about-card-section person-narrative-card">
                   <h3 class="card-section-title"><span class="title-glyph">📖</span> 8. About the Person</h3>
-                  <p class="person-narrative-content">
-                    {{ aboutThePersonText || 'Kingshuk is a Senior Software Engineer and the founder of NeverBeen, specializing in software development, application architecture design, requirements modelling, generative AI, and travel storytelling.' }}
+                  @let personNarrative = aboutThePersonText || 'Kingshuk is a Senior Software Engineer and the founder of NeverBeen, specializing in software development, application architecture design, requirements modelling, generative AI, and travel storytelling.';
+                  <p class="person-narrative-content" [nbTranslatable]="personNarrative">
+                    {{ personNarrative }}
                   </p>
                 </div>
               </div>
@@ -1861,7 +1862,7 @@
                       <span class="post-time">{{ formatTime(comment.createdAtUtc) }}</span>
                     </div>
                   </div>
-                  <p class="post-body-text">{{ comment.text }}</p>
+                  <p class="post-body-text" [nbTranslatable]="comment.text">{{ comment.text }}</p>
 
                   @if (comment.imageUrl) {
                     <div class="post-image-attachment-wrap">
@@ -2019,7 +2020,7 @@
                                 </button>
                               }
                             </div>
-                            <p class="nested-text">{{ reply.text }}</p>
+                            <p class="nested-text" [nbTranslatable]="reply.text">{{ reply.text }}</p>
                           </div>
                         </div>
                       }
@@ -2857,11 +2858,11 @@
                       @if (msg.replyTo) {
                         <div class="chat-bubble-reply-quote">
                           <span class="reply-quote-author">↩️ {{ msg.replyTo.senderName }}</span>
-                          <span class="reply-quote-snippet">{{ msg.replyTo.text }}</span>
+                          <span class="reply-quote-snippet" [nbTranslatable]="msg.replyTo.text">{{ msg.replyTo.text }}</span>
                         </div>
                       }
 
-                      <p class="msg-text">{{ msg.text }}</p>
+                      <p class="msg-text" [nbTranslatable]="msg.text">{{ msg.text }}</p>
                       <span class="msg-time">{{ formatTime(msg.sentAtUtc) }}</span>
                     </div>
 
@@ -3073,7 +3074,7 @@
                 <span>{{ formatTime(postToShare()!.createdAtUtc) }}</span>
               </div>
             </div>
-            <p class="target-text">{{ postToShare()!.text }}</p>
+            <p class="target-text" [nbTranslatable]="postToShare()!.text">{{ postToShare()!.text }}</p>
             @if (postToShare()!.location) {
               <span class="target-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ postToShare()!.location }}</span>
             }
@@ -3623,7 +3624,7 @@
                   <h4 class="visitor-sub-title">✨ Intro & Travel Story</h4>
                   <span class="visitor-intro-badge">Personal Story</span>
                 </div>
-                <div class="visitor-sub-text visitor-intro-story multi-paragraph-story">
+                <div class="visitor-sub-text visitor-intro-story multi-paragraph-story" [nbTranslatable]="getVisitorIntro(viewingVisitor()!)">
                   {{ getVisitorIntro(viewingVisitor()!) }}
                 </div>
               </div>
@@ -3766,8 +3767,9 @@
               <!-- 7. About the Person (Requirement B: Visible, but NOT the Contact Info section) -->
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">📖 About the Person</h4>
-                <p class="visitor-sub-text">
-                  {{ viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.' }}
+                @let visitorNarrative = viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.';
+                <p class="visitor-sub-text" [nbTranslatable]="visitorNarrative">
+                  {{ visitorNarrative }}
                 </p>
               </div>
             </div>
@@ -3845,7 +3847,7 @@
                   }
                 </div>
 
-                <p class="post-body-text">{{ post.text }}</p>
+                <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
                 <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
                 @if (post.imageUrls && post.imageUrls.length > 1) {
                   <div class="post-multi-images-grid facebook-collage" [attr.data-count]="post.imageUrls.length >= 4 ? 4 : post.imageUrls.length">
@@ -4463,7 +4465,7 @@
 
         <div class="modal-body-content post-detail-body">
           @if (viewingPostDetail()!.text) {
-            <p class="post-detail-text">{{ viewingPostDetail()!.text }}</p>
+            <p class="post-detail-text" [nbTranslatable]="viewingPostDetail()!.text">{{ viewingPostDetail()!.text }}</p>
           }
 
           <!-- All Attached Photos (Complete album with full visibility) -->

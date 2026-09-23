@@ -2,10 +2,11 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
+import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 
 @Component({
   selector: 'app-community-message-book',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, TranslatableTextDirective],
   templateUrl: './message-book.html',
   styleUrl: './message-book.css',
 })

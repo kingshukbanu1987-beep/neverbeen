@@ -128,3 +128,46 @@ section {
 .visitor-modal-overlay {
   z-index: 100000 !important;
 }
+
+/* -----------------------------------------------------------------------------
+   "Translate" toggle injected by TranslatableTextDirective next to user content
+   (Journey posts, MessageBook entries, comments, chats, About me, Intro …).
+   Rendered outside component style scopes, so it is styled globally.
+   ----------------------------------------------------------------------------- */
+.nb-translate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+  padding: 0.14rem 0.6rem;
+  border: 1px solid rgba(100, 116, 139, 0.38);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.nb-translate-btn::before {
+  content: '\1F310';
+  font-size: 0.72rem;
+}
+
+.nb-translate-btn:hover,
+.nb-translate-btn:focus-visible {
+  background: #eef4fb;
+  border-color: #3b6ea5;
+  color: #2b5f96;
+  outline: none;
+}
+
+.nb-translate-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
