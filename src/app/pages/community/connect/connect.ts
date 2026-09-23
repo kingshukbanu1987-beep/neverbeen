@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
+import { TranslationService } from '../../../services/translation.service';
 
 @Component({
   selector: 'app-community-connect',
@@ -10,6 +11,7 @@ import { CommunityService } from '../../../services/community.service';
 })
 export class CommunityConnect implements OnInit {
   protected readonly service = inject(CommunityService);
+  protected readonly translation = inject(TranslationService);
   private readonly router = inject(Router);
 
   protected readonly simulateExisting = signal(false);
@@ -24,6 +26,12 @@ export class CommunityConnect implements OnInit {
 
   setSimulationMode(isExisting: boolean): void {
     this.simulateExisting.set(isExisting);
+  }
+
+  /** Switch the entire NeverBeen site to the chosen language. */
+  onLanguageChange(event: Event): void {
+    const code = (event.target as HTMLSelectElement).value;
+    this.translation.setLanguage(code);
   }
 
   async signInWith(provider: 'google' | 'facebook' | 'microsoft'): Promise<void> {

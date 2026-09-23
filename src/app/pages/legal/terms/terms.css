@@ -1,0 +1,103 @@
+/* Terms page reuses the Privacy page design system */
+@import '../privacy/privacy.css';
+
+.terms-page .hero-media {
+  background-image: url('/images/terms-hero.jpg');
+  background-position: center 55%;
+}
+
+.terms-page .hero-veil {
+  background: linear-gradient(
+    100deg,
+    rgba(20, 30, 40, 0.82) 0%,
+    rgba(20, 30, 40, 0.52) 48%,
+    rgba(20, 30, 40, 0.12) 100%
+  );
+}
+
+/* The “short version” agreement strip */
+.agree-strip {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(29, 25, 20, 0.1);
+  padding: 2.6rem 0;
+}
+
+.agree-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+}
+
+.agree-grid article {
+  background: linear-gradient(160deg, #faf6f0, #f3ece2);
+  border: 1px solid rgba(29, 25, 20, 0.08);
+  border-radius: 18px;
+  padding: 1.4rem;
+  text-align: left;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.agree-grid article:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(24, 36, 30, 0.1);
+}
+
+.agree-grid span {
+  font-size: 1.5rem;
+}
+
+.agree-grid h2 {
+  margin: 0.6rem 0 0.4rem;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.agree-grid p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5c5348;
+  line-height: 1.55;
+}
+
+/* Acceptable-use “ban” cards */
+.ban-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.ban-card {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  background: #faf6f0;
+  border: 1px solid rgba(29, 25, 20, 0.08);
+  border-left: 3px solid rgba(140, 90, 50, 0.55);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+}
+
+.ban-card p {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.inline-link {
+  color: #24352c;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.inline-link:hover {
+  color: #8c5a32;
+}
+
+@media (max-width: 640px) {
+  .agree-grid,
+  .ban-grid {
+    grid-template-columns: 1fr;
+  }
+}

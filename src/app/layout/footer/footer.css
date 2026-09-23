@@ -6,7 +6,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
   gap: 2rem;
 }
 
@@ -53,5 +53,11 @@
 
   .copy {
     width: min(1160px, calc(100% - 1.5rem));
+  }
+}
+
+@media (max-width: 1040px) and (min-width: 721px) {
+  .grid {
+    grid-template-columns: 1.4fr 1fr 1fr;
   }
 }

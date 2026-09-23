@@ -33,6 +33,21 @@ export const routes: Routes = [
     title: 'Feedback & suggestions — NeverBeen',
   },
   {
+    path: 'privacy',
+    loadComponent: () => import('./pages/legal/privacy/privacy').then((m) => m.PrivacyPage),
+    title: 'Privacy Policy — NeverBeen',
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./pages/legal/terms/terms').then((m) => m.TermsPage),
+    title: 'Terms & Condition — NeverBeen',
+  },
+  {
+    path: 'help',
+    loadComponent: () => import('./pages/help/help').then((m) => m.HelpPage),
+    title: 'Help Centre — NeverBeen',
+  },
+  {
     path: 'collection',
     loadComponent: () => import('./pages/collection/collection').then((m) => m.Collection),
     title: 'Collection — NeverBeen',
