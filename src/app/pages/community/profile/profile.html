@@ -153,6 +153,7 @@
               class="user-cover-img"
               (error)="onCoverImgError($event)"
             />
+            <div class="cover-veil" aria-hidden="true"></div>
             <label class="btn-change-cover-badge" for="userCoverUploadInput" title="Update Cover Photo (Max 100 KB)" (click)="$event.stopPropagation()">
               <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="currentColor">
                 <path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-1.5c0-2.33-4.67-3.5-7-3.5z"/>
@@ -223,6 +224,22 @@
             </svg>
             <span>{{ service.profile()?.cityName || service.profile()?.city || 'Paris' }}, {{ service.profile()?.countryName || service.profile()?.country || 'France' }}</span>
           </p>
+
+          <!-- Quick stats: companions, circles, photos -->
+          <div class="side-stats-chips" aria-label="Profile statistics">
+            <div class="stat-chip">
+              <strong>{{ connectedCompanionsCount() }}</strong>
+              <span>Companions</span>
+            </div>
+            <div class="stat-chip">
+              <strong>{{ service.circles().length }}</strong>
+              <span>Circles</span>
+            </div>
+            <div class="stat-chip">
+              <strong>{{ service.profile()?.gallery?.length || 0 }}</strong>
+              <span>Photos</span>
+            </div>
+          </div>
 
           <!-- ACTIVE STATUS SELECTOR (Dropdown with pulsing Active indicator) -->
           <div class="active-status-bar">
