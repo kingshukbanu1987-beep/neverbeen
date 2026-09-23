@@ -17,10 +17,15 @@
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin: 0.4rem 0 0.8rem;
+  color: #f8fafc;
+}
+
+.mb-intro .eyebrow {
+  color: #5eead4;
 }
 
 .mb-intro .lede {
-  color: var(--ink-soft);
+  color: #94a3b8;
   max-width: 36rem;
   margin-inline: auto;
   font-size: 1.02rem;

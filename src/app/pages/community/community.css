@@ -1,7 +1,10 @@
 .community-shell {
   position: relative;
   min-height: calc(100vh - 84px);
-  background: #ffffff;
+  background:
+    radial-gradient(1000px 520px at 8% -6%, rgba(16, 185, 129, 0.12), transparent 60%),
+    radial-gradient(900px 600px at 96% 6%, rgba(99, 102, 241, 0.1), transparent 55%),
+    #05070a;
   color: var(--ink, #1d1914);
   overflow-x: hidden;
   padding: 2rem 0 4rem;
@@ -19,7 +22,7 @@
   position: absolute;
   border-radius: 50%;
   filter: blur(140px);
-  opacity: 0.15;
+  opacity: 0.22;
 }
 
 .aurora-1 {

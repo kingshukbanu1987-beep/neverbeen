@@ -1,6 +1,10 @@
 :host {
   display: block;
-  background-color: #f8fafc;
+  background:
+    radial-gradient(1000px 520px at 8% -6%, rgba(16, 185, 129, 0.12), transparent 60%),
+    radial-gradient(900px 600px at 96% 6%, rgba(99, 102, 241, 0.1), transparent 55%),
+    radial-gradient(1200px 700px at 50% 118%, rgba(13, 148, 136, 0.08), transparent 60%),
+    #05070a;
   min-height: 100vh;
   color: #1e293b;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -276,19 +280,20 @@
 .left-side-panel {
   position: relative;
   background:
-    radial-gradient(150% 70% at 50% -12%, rgba(16, 185, 129, 0.1), transparent 55%),
-    linear-gradient(168deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 247, 242, 0.95) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  outline: 1px solid rgba(148, 163, 184, 0.22);
+    radial-gradient(150% 70% at 50% -12%, rgba(16, 185, 129, 0.09), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.995) 0%, rgba(252, 251, 249, 0.985) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  outline: 1px solid rgba(148, 163, 184, 0.3);
   outline-offset: -1px;
   border-radius: 26px;
   padding: 1.05rem 1rem 1.15rem;
   box-shadow:
-    0 30px 60px -28px rgba(15, 23, 42, 0.3),
-    0 12px 28px -16px rgba(15, 23, 42, 0.14),
+    0 36px 80px -32px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 0 70px -34px rgba(16, 185, 129, 0.7),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   animation: sidePanelFloatIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -611,10 +616,10 @@
 }
 
 .menu-btn:hover {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(148, 163, 184, 0.32);
+  background: rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.12);
   transform: translateX(5px);
-  box-shadow: 0 10px 22px -10px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 10px 22px -10px rgba(15, 23, 42, 0.35);
   color: #0f172a;
 }
 
@@ -648,11 +653,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, currentColor 13%, transparent);
+  background: transparent;
   border: none;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  box-shadow: none;
   flex-shrink: 0;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .icon-pill svg {
@@ -675,12 +680,15 @@
 .pill-red { color: #ef4444; }
 
 .menu-btn:hover .icon-pill {
-  transform: scale(1.1) rotate(-5deg);
+  transform: scale(1.12) rotate(-5deg);
+  filter: drop-shadow(0 0 7px color-mix(in srgb, currentColor 65%, transparent));
 }
 
 .menu-btn.active .icon-pill {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 6px 14px -4px rgba(15, 23, 42, 0.25), inset 0 0 0 1px rgba(16, 185, 129, 0.25);
+  background: transparent;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, currentColor 45%, transparent),
+    0 0 16px -2px color-mix(in srgb, currentColor 65%, transparent);
 }
 
 .menu-label {
@@ -739,13 +747,17 @@
 
 
 .circles-side-panel {
-  background: linear-gradient(168deg, rgba(255, 255, 255, 0.97), rgba(250, 247, 242, 0.94));
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  outline: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(252, 251, 249, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(148, 163, 184, 0.28);
   outline-offset: -1px;
   border-radius: 22px;
   padding: 0.95rem 1rem 1rem;
-  box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 30px 60px -30px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 55px -32px rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .circles-header-row {
@@ -2921,7 +2933,7 @@
     bottom: 0;
     width: 290px;
     max-width: 85vw;
-    background: #ffffff;
+    background: #07090d;
     z-index: 9999;
     transform: translateX(-105%);
     transition: transform 0.25s ease;
@@ -4459,13 +4471,17 @@
 /* ========================================================================= */
 
 .companions-side-panel {
-  background: linear-gradient(168deg, rgba(255, 255, 255, 0.97), rgba(250, 247, 242, 0.94));
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  outline: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(252, 251, 249, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(148, 163, 184, 0.28);
   outline-offset: -1px;
   border-radius: 22px;
   padding: 0.95rem 1rem 1rem;
-  box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 30px 60px -30px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 55px -32px rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   margin-bottom: 1rem;
 }
 
