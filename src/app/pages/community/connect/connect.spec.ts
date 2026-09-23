@@ -27,7 +27,7 @@ describe('CommunityConnect', () => {
     return fixture;
   }
 
-  it('renders the 3 OAuth login options in the middle of the page in a card box design', () => {
+  it('renders the 4 OAuth login options in order — Google, Facebook, Apple (3rd), Microsoft — in a card box design', () => {
     const element: HTMLElement = create().nativeElement;
     const cardBox = element.querySelector('.oauth-card-box');
     expect(cardBox).toBeTruthy();
@@ -37,7 +37,15 @@ describe('CommunityConnect', () => {
 
     expect(labels.some((l) => l?.includes('Sign in with Google'))).toBe(true);
     expect(labels.some((l) => l?.includes('Sign in with Facebook'))).toBe(true);
+    expect(labels.some((l) => l?.includes('Sign in with Apple'))).toBe(true);
     expect(labels.some((l) => l?.includes('Sign in with Microsoft'))).toBe(true);
+
+    // Apple must sit in 3rd place, right after Facebook and before Microsoft
+    expect(labels[0]).toContain('Sign in with Google');
+    expect(labels[1]).toContain('Sign in with Facebook');
+    expect(labels[2]).toContain('Sign in with Apple');
+    expect(labels[3]).toContain('Sign in with Microsoft');
+    expect(buttons[2].classList.contains('btn-apple')).toBe(true);
   });
 
   it('redirects to user profile page if already authenticated on open', () => {

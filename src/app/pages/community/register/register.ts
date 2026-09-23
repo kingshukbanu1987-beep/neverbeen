@@ -1,8 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { City } from '../../../models/community';
 import { CommunityService } from '../../../services/community.service';
+import { getStatesForCountry, getCitiesForState } from '../../../models/location-cascade';
+
+/** Profile photos are capped at 200 KB (JPEG / PNG / JPG only). */
+export const MAX_PHOTO_BYTES = 200 * 1024;
+const PHOTO_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/jpg']);
+const PHOTO_EXTENSIONS = /\.(jpe?g|png)$/i;
 
 @Component({
   selector: 'app-community-register',
@@ -16,7 +21,9 @@ export class CommunityRegister implements OnInit {
   private readonly router = inject(Router);
 
   protected readonly submitting = signal(false);
-  protected readonly citiesList = signal<City[]>([]);
+  /** Cascading dropdown options — children are rebuilt and cleared when a parent changes. */
+  protected readonly statesList = signal<string[]>([]);
+  protected readonly citiesList = signal<string[]>([]);
   protected readonly photoPreview = signal<string | null>(null);
   protected readonly selectedFile = signal<File | null>(null);
   protected readonly photoError = signal<string | null>(null);
@@ -36,10 +43,7 @@ export class CommunityRegister implements OnInit {
     const user = this.service.currentUser();
     if (user?.email) {
       this.form.patchValue({ email: user.email });
-    } else {
-      this.form.patchValue({ email: 'alex.vance@neverbeen.example' });
     }
-
     if (user?.firstName) {
       this.form.patchValue({ name: user.firstName });
     }
@@ -48,29 +52,41 @@ export class CommunityRegister implements OnInit {
     }
   }
 
-  async onCountryChange(): Promise<void> {
-    const countryName = this.form.get('country')?.value;
-    if (!countryName) return;
-    const countryObj = this.service.countries().find((c) => c.name.toLowerCase() === countryName.toLowerCase());
-    if (countryObj) {
-      const cities = await this.service.getCitiesForCountry(countryObj.id);
-      this.citiesList.set(cities);
-      if (cities.length > 0 && !this.form.get('city')?.value) {
-        this.form.patchValue({ city: cities[0].name });
-      }
-    }
+  /**
+   * Country changed: rebuild the State options from the cascade dataset and clear
+   * both children so the member must re-select a valid State and City.
+   */
+  onCountryChange(): void {
+    const country = this.form.get('country')?.value ?? '';
+    this.statesList.set(country ? getStatesForCountry(country) : []);
+    this.form.get('state')?.setValue('');
+    this.citiesList.set([]);
+    this.form.get('city')?.setValue('');
+  }
+
+  /**
+   * State changed: rebuild the City options for that country/state pair and clear
+   * the City selection so the member picks again.
+   */
+  onStateChange(): void {
+    const country = this.form.get('country')?.value ?? '';
+    const state = this.form.get('state')?.value ?? '';
+    this.citiesList.set(country && state ? getCitiesForState(country, state) : []);
+    this.form.get('city')?.setValue('');
   }
 
   onPhotoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const file = input.files[0];
-      if (!file.type.startsWith('image/')) {
-        this.photoError.set('Please select a valid image file (JPEG, PNG, or WebP).');
+      const looksLikePhoto =
+        PHOTO_MIME_TYPES.has(file.type.toLowerCase()) || PHOTO_EXTENSIONS.test(file.name);
+      if (!looksLikePhoto) {
+        this.photoError.set('Please select a valid image file (JPEG, PNG, or JPG).');
         return;
       }
-      if (file.size > 8 * 1024 * 1024) {
-        this.photoError.set('Photograph size must not exceed 8 MB.');
+      if (file.size > MAX_PHOTO_BYTES) {
+        this.photoError.set('Photograph size must not exceed 200 KB.');
         return;
       }
       this.photoError.set(null);

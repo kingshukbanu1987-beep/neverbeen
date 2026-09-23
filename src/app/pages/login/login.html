@@ -1,22 +1,222 @@
-<section class="login">
-  <div class="panel">
-    <p class="eyebrow">Members</p>
-    <h1>Return to your gallery</h1>
-    <p class="lede">Sign in to collections, destination looks, and print files.</p>
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <label>
-        Email
-        <input type="email" formControlName="email" autocomplete="email" />
-      </label>
-      <label>
-        Password
-        <input type="password" formControlName="password" autocomplete="current-password" />
-      </label>
-      <button type="submit" class="btn btn-primary">Login</button>
-    </form>
-    @if (submitted()) {
-      <p class="note">This preview does not connect to an account service yet.</p>
+<section class="admin-login">
+  <div class="admin-shell" aria-live="polite">
+    <span class="aurora aurora-a" aria-hidden="true"></span>
+    <span class="aurora aurora-b" aria-hidden="true"></span>
+
+    <!-- ======================= ADMIN SIGN IN ======================= -->
+    @if (view() === 'signin') {
+      <div class="admin-card">
+        <header class="admin-header">
+          <div class="shield-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="shield-icon" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2l8 3.5v5.7c0 5-3.4 9.3-8 10.8-4.6-1.5-8-5.8-8-10.8V5.5L12 2z"></path>
+              <path d="M9 12l2.2 2.2L15.5 10"></path>
+            </svg>
+          </div>
+          <p class="eyebrow">NeverBeen Administration</p>
+          <h1>Admin Console</h1>
+          <p class="lede">
+            Restricted access for NeverBeen administrators — manage members, travel galleries,
+            content and community operations.
+          </p>
+        </header>
+
+        <form [formGroup]="adminForm" (ngSubmit)="submit()" class="admin-form" novalidate>
+          <label class="field">
+            <span class="field-label">Admin Email</span>
+            <input
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+              placeholder="admin@neverbeen.example"
+              [class.invalid]="isAdminInvalid('email')"
+            />
+            @if (isAdminInvalid('email')) {
+              <span class="field-error">Enter a valid administrator email address.</span>
+            }
+          </label>
+
+          <label class="field">
+            <span class="field-label">Password</span>
+            <input
+              type="password"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="Enter your admin password"
+              [class.invalid]="isAdminInvalid('password')"
+            />
+            @if (isAdminInvalid('password')) {
+              <span class="field-error">Password is mandatory (minimum 6 characters).</span>
+            }
+          </label>
+
+          <button type="submit" class="btn-admin">
+            <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            Sign in to Admin Console
+          </button>
+
+          @if (adminSubmitted()) {
+            <p class="note success-note">
+              ✓ Credentials verified — the admin dashboard preview is not connected to a live
+              directory service yet.
+            </p>
+          }
+        </form>
+
+        <div class="divider" aria-hidden="true"><span>or</span></div>
+
+        <button type="button" class="btn-volunteer" (click)="showApply()">
+          <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Join as a Volunteer Admin
+        </button>
+
+        <footer class="card-foot">
+          <a routerLink="/">← NeverBeen Home</a>
+          <a routerLink="/community">Community Sign In</a>
+        </footer>
+      </div>
+    } @else {
+      <!-- ================== VOLUNTEER ADMIN APPLICATION ================== -->
+      <div class="admin-card apply-card">
+        <button type="button" class="back-btn" (click)="showSignIn()">
+          ← Back to Admin Sign In
+        </button>
+
+        <header class="admin-header">
+          <div class="shield-badge gold" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="shield-icon" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </div>
+          <p class="eyebrow">NeverBeen Administration</p>
+          <h1>Volunteer Admin</h1>
+          <p class="tagline">Apply for Volunteer Admin Role</p>
+          <p class="lede">
+            Share your time to help moderate discussions, welcome new travelers and keep the
+            NeverBeen community safe. All fields are mandatory.
+          </p>
+        </header>
+
+        @if (applySubmitted()) {
+          <div class="success-panel">
+            <span class="success-glyph" aria-hidden="true">✓</span>
+            <h2>Application received</h2>
+            <p>
+              Thank you, {{ applyForm.getRawValue().fullName }} — your Volunteer Admin
+              application and resume have been submitted for review. Our team will respond within
+              5–7 business days.
+            </p>
+            <button type="button" class="btn-admin" (click)="showSignIn()">Back to Admin Sign In</button>
+          </div>
+        } @else {
+          <form [formGroup]="applyForm" (ngSubmit)="submitApplication()" class="admin-form" novalidate>
+            <label class="field">
+              <span class="field-label">Full Name</span>
+              <input
+                type="text"
+                formControlName="fullName"
+                autocomplete="name"
+                placeholder="e.g. Kingshuk Banerjee"
+                [class.invalid]="isApplyInvalid('fullName')"
+              />
+              @if (isApplyInvalid('fullName')) {
+                <span class="field-error">Full name is mandatory (minimum 2 characters).</span>
+              }
+            </label>
+
+            <label class="field">
+              <span class="field-label">Email</span>
+              <input
+                type="email"
+                formControlName="email"
+                autocomplete="email"
+                placeholder="e.g. volunteer.admin@neverbeen.example"
+                [class.invalid]="isApplyInvalid('email')"
+              />
+              @if (isApplyInvalid('email')) {
+                <span class="field-error">A valid email address is mandatory.</span>
+              }
+            </label>
+
+            <label class="field">
+              <span class="field-label">Password</span>
+              <input
+                type="password"
+                formControlName="password"
+                autocomplete="new-password"
+                placeholder="Create a password (min. 6 characters)"
+                [class.invalid]="isApplyInvalid('password')"
+              />
+              @if (isApplyInvalid('password')) {
+                <span class="field-error">Password is mandatory (minimum 6 characters).</span>
+              }
+            </label>
+
+            <!-- Resume upload — max 2 MB -->
+            <div class="field resume-field" [class.invalid]="!!resumeError()">
+              <span class="field-label">Resume Attachment <span class="req">*</span></span>
+              <label class="resume-drop" for="resumeInput">
+                @if (resumeName()) {
+                  <span class="resume-chip">
+                    <svg viewBox="0 0 24 24" class="file-icon" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                    </svg>
+                    {{ resumeName() }}
+                    <button
+                      type="button"
+                      class="resume-remove"
+                      (click)="$event.preventDefault(); $event.stopPropagation(); clearResume()"
+                      title="Remove resume"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                } @else {
+                  <span class="resume-pick">
+                    <svg viewBox="0 0 24 24" class="file-icon" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                    </svg>
+                    Upload Resume <span class="req">*</span>
+                    <span class="resume-hint">PDF, DOC or DOCX — max {{ MAX_RESUME_LABEL }}</span>
+                  </span>
+                }
+              </label>
+              <input
+                type="file"
+                id="resumeInput"
+                class="hidden-file-input"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                (change)="onResumeSelected($event)"
+              />
+              @if (resumeError()) {
+                <span class="field-error">{{ resumeError() }}</span>
+              }
+            </div>
+
+            <button type="submit" class="btn-admin btn-submit-apply">
+              <svg viewBox="0 0 24 24" class="btn-icon" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13"></path>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+              Submit Application
+            </button>
+          </form>
+        }
+
+        <footer class="card-foot">
+          <a routerLink="/">← NeverBeen Home</a>
+          <a routerLink="/help">Need Help?</a>
+        </footer>
+      </div>
     }
-    <a routerLink="/" fragment="contact">Need a collection instead?</a>
   </div>
 </section>

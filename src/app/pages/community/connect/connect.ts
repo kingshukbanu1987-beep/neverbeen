@@ -34,7 +34,7 @@ export class CommunityConnect implements OnInit {
     this.translation.setLanguage(code);
   }
 
-  async signInWith(provider: 'google' | 'facebook' | 'microsoft'): Promise<void> {
+  async signInWith(provider: 'google' | 'facebook' | 'apple' | 'microsoft'): Promise<void> {
     this.loadingProvider.set(provider);
     try {
       const res = await this.service.loginWithOAuth(provider, this.simulateExisting());

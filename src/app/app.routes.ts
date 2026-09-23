@@ -9,7 +9,7 @@ export const routes: Routes = [
     component: Home,
     title: 'NeverBeen — Vacation photographs of places you have never been',
   },
-  { path: 'login', component: Login, title: 'Login — NeverBeen' },
+  { path: 'login', component: Login, title: 'Admin — NeverBeen' },
   { path: 'founder', component: Founder, title: 'Founder — NeverBeen' },
   {
     path: 'audience',
