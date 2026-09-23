@@ -337,6 +337,93 @@
   border-color: #1f1f1f;
 }
 
+/* Official Google button panel (shown when One-Tap is skipped) */
+.google-official-panel {
+  margin-top: 1.1rem;
+  padding: 1.2rem 1.3rem;
+  border: 1px solid rgba(29, 25, 20, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(250, 247, 242, 0.9));
+  box-shadow: 0 12px 30px rgba(29, 25, 20, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  animation: googlePanelIn 0.3s ease-out;
+}
+
+@keyframes googlePanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.google-panel-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink, #1d1914);
+}
+
+.google-panel-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft, #5c5348);
+  text-align: center;
+  line-height: 1.45;
+}
+
+.google-official-btn {
+  min-height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.google-cancel {
+  background: none;
+  border: none;
+  color: var(--ink-soft, #5c5348);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0.2rem 0.5rem;
+  transition: color 0.18s ease;
+}
+
+.google-cancel:hover {
+  color: #dc2626;
+}
+
+.google-help {
+  width: 100%;
+  font-size: 0.74rem;
+  color: var(--ink-soft, #5c5348);
+}
+
+.google-help summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.google-help p {
+  margin: 0.4rem 0 0;
+  line-height: 1.5;
+}
+
+.google-help code {
+  background: rgba(29, 25, 20, 0.07);
+  padding: 0.08rem 0.35rem;
+  border-radius: 6px;
+  word-break: break-all;
+}
+
 /* Footer & Security */
 .card-footer {
   border-top: 1px solid rgba(29, 25, 20, 0.08);

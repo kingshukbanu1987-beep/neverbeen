@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityConnect } from './connect';
-import { CommunityService, setCookie, deleteCookie, TOKEN_KEY } from '../../../services/community.service';
+import { CommunityService, setCookie, deleteCookie, TOKEN_KEY, PROFILE_KEY } from '../../../services/community.service';
 
 describe('CommunityConnect', () => {
   let router: Router;
@@ -73,6 +73,71 @@ describe('CommunityConnect', () => {
     component.setSimulationMode(true); // Existing member mode
 
     await component.signInWith('google');
+    expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
+  });
+
+  it('signs in with a real Google identity and routes a brand-new account to registration', async () => {
+    localStorage.removeItem(PROFILE_KEY); // no NeverBeen profile yet for this Google email
+    const fixture = TestBed.createComponent(CommunityConnect);
+    const component = fixture.componentInstance;
+
+    vi.spyOn(service, 'signInWithGoogle').mockResolvedValue({
+      step: 'identity',
+      identity: {
+        sub: 'google-sub-101',
+        email: 'sophia.travels@gmail.com',
+        emailVerified: true,
+        name: 'Sophia Laurent',
+        givenName: 'Sophia',
+        familyName: 'Laurent',
+        picture: 'https://example.com/sophia.jpg',
+      },
+    });
+
+    await component.signInWith('google');
+
+    // Real Google data lands on the pending account and registration is required
+    expect(service.currentUser()?.email).toBe('sophia.travels@gmail.com');
+    expect(service.currentUser()?.firstName).toBe('Sophia');
+    expect(service.currentUser()?.lastName).toBe('Laurent');
+    expect(service.currentUser()?.profileComplete).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/community/register']);
+  });
+
+  it('routes an existing NeverBeen profile matched by Google email straight to the profile page', async () => {
+    // A profile already completed for this member's Google email
+    localStorage.setItem(
+      PROFILE_KEY,
+      JSON.stringify({
+        id: 42,
+        email: 'member.google@gmail.com',
+        firstName: 'Marco',
+        lastName: 'Polo',
+        fullName: 'Marco Polo',
+        settings: { isProfileLocked: false },
+      }),
+    );
+
+    const fixture = TestBed.createComponent(CommunityConnect);
+    const component = fixture.componentInstance;
+
+    vi.spyOn(service, 'signInWithGoogle').mockResolvedValue({
+      step: 'identity',
+      identity: {
+        sub: 'google-sub-42',
+        email: 'member.google@gmail.com',
+        emailVerified: true,
+        name: 'Marco Polo',
+        givenName: 'Marco',
+        familyName: 'Polo',
+        picture: '',
+      },
+    });
+
+    await component.signInWith('google');
+
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.currentUser()?.profileComplete).toBe(true);
     expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
   });
 });

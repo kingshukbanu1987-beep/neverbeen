@@ -73,7 +73,7 @@
       <button
         type="button"
         class="oauth-btn btn-google"
-        [disabled]="loadingProvider() !== null"
+        [disabled]="loadingProvider() !== null || googleManualStep() !== null"
         (click)="signInWith('google')"
       >
         <svg viewBox="0 0 24 24" class="provider-icon" aria-hidden="true">
@@ -141,6 +141,26 @@
         </span>
       </button>
     </div>
+
+    <!-- Official Google button — shown only when Google skips the One-Tap prompt -->
+    @if (googleManualStep()) {
+      <div class="google-official-panel" role="region" aria-label="Continue with Google">
+        <p class="google-panel-title">Continue with Google</p>
+        <p class="google-panel-hint">
+          One more click — choose the Google account you want to use for NeverBeen.
+        </p>
+        <div class="google-official-btn" #googleOfficialHost></div>
+        <button type="button" class="google-cancel" (click)="cancelGoogleSignIn()">Cancel</button>
+        <details class="google-help">
+          <summary>Trouble connecting?</summary>
+          <p>
+            If Google reports that the origin is not authorised, add
+            <code>{{ currentOrigin }}</code> to <strong>Authorized JavaScript origins</strong>
+            for your OAuth client in the Google Cloud Console.
+          </p>
+        </details>
+      </div>
+    }
 
     <!-- Security footnote -->
     <footer class="card-footer">

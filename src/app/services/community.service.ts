@@ -49,6 +49,32 @@ export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
 export const HIDDEN_POSTS_KEY = 'neverbeen_hidden_post_ids';
 
+/**
+ * Public Google OAuth Web Client ID — safe (and required) in browser code.
+ * The matching Client secret must never be shipped to the frontend.
+ */
+export const GOOGLE_CLIENT_ID =
+  '211635270312-q7d8p4bd3ujakcoli0ggspbdj1b75tc4.apps.googleusercontent.com';
+/** localStorage key remembering which Google account signed in. */
+export const GOOGLE_ACCOUNT_KEY = 'neverbeen_google_account';
+
+/** Identity extracted from a Google Identity Services credential. */
+export interface GoogleIdentity {
+  sub: string;
+  email: string;
+  emailVerified: boolean;
+  name: string;
+  givenName: string;
+  familyName: string;
+  picture: string;
+}
+
+/** Outcome of starting the Google sign-in flow. */
+export type GoogleSignInStep =
+  | { step: 'identity'; identity: GoogleIdentity }
+  | { step: 'show_google_button'; render: (host: HTMLElement) => void }
+  | { step: 'unavailable' };
+
 // Curated authentic portrait & cover pools (Requirements E, F, G)
 export const SEED_INDIAN_MALE_PORTRAITS = [
   'photo-1506794778202-cad84cf45f1d',
@@ -198,6 +224,11 @@ export class CommunityService {
   readonly genders = signal<string[]>(SEED_GENDERS);
 
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
+
+  /** Google Identity Services script loader (see loadGoogleGis). */
+  private gisScriptPromise: Promise<boolean> | null = null;
+  /** Resolver for the official fallback Google button's identity. */
+  private googleManualIdentityResolve: ((identity: GoogleIdentity | null) => void) | null = null;
   readonly isPending = computed(() => this.currentUser()?.status === 'Pending');
 
   // Filtered views ensuring blocked users cannot see or be seen by each other
@@ -412,6 +443,290 @@ export class CommunityService {
         message: 'New member detected, registration required.',
         user: newUser,
       };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Google OAuth (Sign in with Google via Google Identity Services)
+  //
+  // SECURITY: only the public OAuth Client ID ships in browser code — the Client
+  // secret must NEVER be embedded in the frontend (it would be public). GIS issues
+  // the credential directly to the browser; no secret is needed for this flow.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Loads https://accounts.google.com/gsi/client once. Resolves false when the
+   * script is blocked/unreachable so callers can fall back gracefully (the
+   * sandbox preview blocks some egress; real end-user browsers load it fine).
+   */
+  private loadGoogleGis(): Promise<boolean> {
+    if ((globalThis as any).google?.accounts?.id) {
+      return Promise.resolve(true);
+    }
+    if (!this.gisScriptPromise) {
+      const promise = new Promise<boolean>((resolve) => {
+        if (typeof document === 'undefined') {
+          resolve(false);
+          return;
+        }
+        let settled = false;
+        const settle = (loaded: boolean) => {
+          if (settled) return;
+          settled = true;
+          resolve(loaded && !!(globalThis as any).google?.accounts?.id);
+        };
+        const existing = document.querySelector<HTMLScriptElement>('script[data-nb-gis]');
+        if (existing) {
+          // Script tag already present — wait for it (or time out).
+          if ((globalThis as any).google?.accounts?.id) {
+            settle(true);
+            return;
+          }
+          existing.addEventListener('load', () => settle(true));
+          existing.addEventListener('error', () => settle(false));
+        } else {
+          const script = document.createElement('script');
+          script.id = 'nb-gis-script';
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true;
+          script.defer = true;
+          script.setAttribute('data-nb-gis', 'true');
+          script.addEventListener('load', () => settle(true));
+          script.addEventListener('error', () => settle(false));
+          document.head.appendChild(script);
+        }
+        window.setTimeout(() => settle(false), 4000);
+      });
+      this.gisScriptPromise = promise;
+      // Allow a retry on the next click when this attempt failed.
+      promise.then((ok) => {
+        if (!ok) {
+          this.gisScriptPromise = null;
+        }
+      });
+    }
+    return this.gisScriptPromise;
+  }
+
+  /**
+   * Starts the real Google sign-in:
+   *  1. Tries the One-Tap/prompt flow — resolves `{ step: 'identity' }` when the
+   *     member picks an account;
+   *  2. If Google skips/dismisses the prompt (common with FedCM), resolves
+   *     `{ step: 'show_google_button' }` — the caller renders the official
+   *     Google button via `render()` and the identity arrives through
+   *     `awaitGoogleIdentity()`;
+   *  3. Resolves `{ step: 'unavailable' }` when GIS cannot run (script blocked,
+   *     test environment, popup failure) so callers can use the preview fallback.
+   */
+  async signInWithGoogle(): Promise<GoogleSignInStep> {
+    // Google Identity Services cannot run under jsdom/test runners — bail
+    // immediately so unit tests don't stall waiting for a script that never loads.
+    if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)) {
+      return { step: 'unavailable' };
+    }
+
+    const gisReady = await this.loadGoogleGis();
+    const gis = (globalThis as any).google?.accounts?.id;
+    if (!gisReady || !gis) {
+      return { step: 'unavailable' };
+    }
+
+    return new Promise<GoogleSignInStep>((resolve) => {
+      let settled = false;
+      const settle = (step: GoogleSignInStep) => {
+        if (settled) return;
+        settled = true;
+        resolve(step);
+      };
+
+      const showOfficialButton: GoogleSignInStep = {
+        step: 'show_google_button',
+        render: (host: HTMLElement) => {
+          try {
+            gis.renderButton(host, {
+              theme: 'outline',
+              size: 'large',
+              text: 'signin_with',
+              shape: 'rectangular',
+              width: 260,
+            });
+          } catch {
+            /* rendered only once per panel */
+          }
+        },
+      };
+
+      gis.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response: { credential?: string }) => {
+          const identity = response.credential
+            ? this.decodeGoogleCredential(response.credential)
+            : null;
+          if (!identity) {
+            settle({ step: 'unavailable' });
+            this.googleManualIdentityResolve?.(null);
+            this.googleManualIdentityResolve = null;
+            return;
+          }
+          if (!settled) {
+            settle({ step: 'identity', identity });
+            return;
+          }
+          // Second stage: the official fallback button delivered the credential.
+          const manual = this.googleManualIdentityResolve;
+          this.googleManualIdentityResolve = null;
+          manual?.(identity);
+        },
+        error_callback: (err: { type?: string }) => {
+          if (err?.type === 'popup_failed_to_open') {
+            settle({ step: 'unavailable' });
+          } else {
+            // popup_closed / unknown — offer the official button instead.
+            settle(showOfficialButton);
+          }
+        },
+      });
+
+      try {
+        gis.prompt(() => {
+          // Called when the One-Tap prompt is skipped or dismissed.
+          settle(showOfficialButton);
+        });
+      } catch {
+        settle(showOfficialButton);
+      }
+    });
+  }
+
+  /** Waits for the identity delivered by the official fallback Google button. */
+  awaitGoogleIdentity(): Promise<GoogleIdentity | null> {
+    return new Promise<GoogleIdentity | null>((resolve) => {
+      this.googleManualIdentityResolve = resolve;
+    });
+  }
+
+  /** Cancels a pending official-button wait (member pressed Cancel). */
+  cancelGoogleIdentity(): void {
+    const manual = this.googleManualIdentityResolve;
+    this.googleManualIdentityResolve = null;
+    manual?.(null);
+  }
+
+  /**
+   * Completes sign-in from a verified Google identity:
+   *  - a NeverBeen profile already stored for this Google email → active session
+   *    straight to the profile;
+   *  - otherwise a brand-new member → prefilled pending account (name, surname,
+   *    email from Google) and the registration form.
+   */
+  completeGoogleSignIn(identity: GoogleIdentity): AuthResult {
+    this.saveJson(GOOGLE_ACCOUNT_KEY, {
+      sub: identity.sub,
+      email: identity.email,
+      name: identity.name,
+      picture: identity.picture,
+    });
+
+    const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
+    const sameEmail =
+      !!storedProfile?.email &&
+      storedProfile.email.toLowerCase() === identity.email.toLowerCase();
+
+    if (storedProfile && sameEmail) {
+      const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
+      setCookie(TOKEN_KEY, token, 30);
+
+      const existingUser: CurrentUser = {
+        id: storedProfile.id,
+        firstName: storedProfile.firstName || identity.givenName,
+        lastName: storedProfile.lastName || identity.familyName,
+        fullName: storedProfile.fullName || identity.name,
+        email: identity.email,
+        status: 'Active',
+        profileComplete: true,
+        profilePhotoUrl: storedProfile.profilePhotoUrl || identity.picture || '',
+        activeStatus: 'Active',
+        customStatusText: '',
+        isProfileLocked: storedProfile.settings?.isProfileLocked ?? false,
+        isVerified: false,
+        verificationType: null,
+        verifiedEmail: undefined,
+      };
+
+      this.token.set(token);
+      this.currentUser.set(existingUser);
+      this.profile.set(storedProfile);
+      this.saveJson(USER_KEY, existingUser);
+
+      return {
+        token,
+        tokenType: 'Bearer',
+        expiresIn: 2592000,
+        isNewUser: false,
+        profileComplete: true,
+        message: 'Signed in successfully with Google.',
+        user: existingUser,
+      };
+    }
+
+    // New member: real Google identity, community profile not created yet.
+    const nameParts = identity.name.trim().split(/\s+/);
+    const newUser: CurrentUser = {
+      id: generateUniqueId(),
+      firstName: identity.givenName || nameParts[0] || '',
+      lastName: identity.familyName || nameParts.slice(1).join(' ') || '',
+      fullName: identity.name || '',
+      email: identity.email,
+      status: 'Pending',
+      profileComplete: false,
+      profilePhotoUrl: identity.picture || '',
+    };
+    this.token.set(null);
+    this.currentUser.set(newUser);
+    this.profile.set(null);
+    this.saveJson(USER_KEY, newUser);
+
+    return {
+      token: '',
+      tokenType: 'Bearer',
+      expiresIn: 0,
+      isNewUser: true,
+      profileComplete: false,
+      message: 'New Google member detected, registration required.',
+      user: newUser,
+    };
+  }
+
+  /** Decodes the GIS credential (JWT) payload — name/email/picture/sub. */
+  private decodeGoogleCredential(credential: string): GoogleIdentity | null {
+    try {
+      const part = credential.split('.')[1];
+      const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const payload = JSON.parse(new TextDecoder().decode(bytes)) as {
+        sub?: string;
+        email?: string;
+        email_verified?: boolean;
+        name?: string;
+        given_name?: string;
+        family_name?: string;
+        picture?: string;
+      };
+      if (!payload.sub || !payload.email) {
+        return null;
+      }
+      return {
+        sub: payload.sub,
+        email: payload.email,
+        emailVerified: payload.email_verified === true,
+        name: payload.name || payload.email,
+        givenName: payload.given_name || '',
+        familyName: payload.family_name || '',
+        picture: payload.picture || '',
+      };
+    } catch {
+      return null;
     }
   }
 
