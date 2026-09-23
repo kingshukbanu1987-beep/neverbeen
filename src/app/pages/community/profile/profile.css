@@ -3293,7 +3293,7 @@
 
 .visitor-profile-modal-card {
   width: 100%;
-  max-width: 760px;
+  max-width: 1600px;
   max-height: 90vh;
   background: #ffffff;
   border-radius: 20px;
@@ -4703,7 +4703,7 @@
 
 .visitor-full-page-container {
   width: 100%;
-  max-width: 980px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0.65rem 1rem 2.5rem;
   max-height: calc(100vh - 80px);

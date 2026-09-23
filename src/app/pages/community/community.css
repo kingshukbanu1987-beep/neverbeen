@@ -41,6 +41,6 @@
 .community-content-area {
   position: relative;
   z-index: 1;
-  width: min(1320px, calc(100% - 2rem));
+  width: min(1800px, calc(100% - 2rem));
   margin: 0 auto;
 }

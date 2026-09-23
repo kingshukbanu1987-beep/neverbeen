@@ -1,5 +1,5 @@
 .message-book-page {
-  max-width: 48rem;
+  max-width: min(76rem, 100%);
   margin-inline: auto;
   display: flex;
   flex-direction: column;
