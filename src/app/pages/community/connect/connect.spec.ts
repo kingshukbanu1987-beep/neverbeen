@@ -140,4 +140,64 @@ describe('CommunityConnect', () => {
     expect(service.currentUser()?.profileComplete).toBe(true);
     expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
   });
+
+  it('signs in with a real Facebook identity and routes a brand-new account to registration', async () => {
+    localStorage.removeItem(PROFILE_KEY); // no NeverBeen profile yet for this Facebook email
+    const fixture = TestBed.createComponent(CommunityConnect);
+    const component = fixture.componentInstance;
+
+    vi.spyOn(service, 'signInWithFacebook').mockResolvedValue({
+      step: 'identity',
+      identity: {
+        id: 'fb-id-777',
+        email: 'marco.travels@example.com',
+        name: 'Marco Polo',
+        firstName: 'Marco',
+        lastName: 'Polo',
+        picture: 'https://example.com/marco.jpg',
+      },
+    });
+
+    await component.signInWith('facebook');
+
+    expect(service.currentUser()?.email).toBe('marco.travels@example.com');
+    expect(service.currentUser()?.firstName).toBe('Marco');
+    expect(service.currentUser()?.profileComplete).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/community/register']);
+  });
+
+  it('routes an existing NeverBeen profile matched by Facebook email straight to the profile page', async () => {
+    localStorage.setItem(
+      PROFILE_KEY,
+      JSON.stringify({
+        id: 77,
+        email: 'existing.fb@example.com',
+        firstName: 'Elena',
+        lastName: 'Rossi',
+        fullName: 'Elena Rossi',
+        settings: { isProfileLocked: false },
+      }),
+    );
+
+    const fixture = TestBed.createComponent(CommunityConnect);
+    const component = fixture.componentInstance;
+
+    vi.spyOn(service, 'signInWithFacebook').mockResolvedValue({
+      step: 'identity',
+      identity: {
+        id: 'fb-id-78',
+        email: 'existing.fb@example.com',
+        name: 'Elena Rossi',
+        firstName: 'Elena',
+        lastName: 'Rossi',
+        picture: '',
+      },
+    });
+
+    await component.signInWith('facebook');
+
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.currentUser()?.profileComplete).toBe(true);
+    expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
+  });
 });

@@ -1,6 +1,6 @@
 import { Component, ElementRef, Injector, OnInit, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { CommunityService, GoogleIdentity } from '../../../services/community.service';
+import { CommunityService, FacebookIdentity, GoogleIdentity } from '../../../services/community.service';
 import { TranslationService } from '../../../services/translation.service';
 
 type GoogleButtonStep = Extract<
@@ -87,6 +87,21 @@ export class CommunityConnect implements OnInit {
         // step === 'unavailable' → GIS blocked/unreachable: preview fallback below.
       }
 
+      if (provider === 'facebook') {
+        const step = await this.service.signInWithFacebook();
+
+        if (step.step === 'identity') {
+          await this.finishFacebookSignIn(step.identity);
+          return;
+        }
+
+        if (step.step === 'cancelled') {
+          return; // member closed the Facebook dialog — do nothing.
+        }
+
+        // step === 'unavailable' → SDK blocked/unreachable: preview fallback below.
+      }
+
       const res = await this.service.loginWithOAuth(provider, this.simulateExisting());
       if (res.profileComplete) {
         this.router.navigate(['/community/profile']);
@@ -101,6 +116,16 @@ export class CommunityConnect implements OnInit {
   /** Routes a real Google identity: existing profile → profile, new → register. */
   private async finishGoogleSignIn(identity: GoogleIdentity): Promise<void> {
     const res = this.service.completeGoogleSignIn(identity);
+    if (res.profileComplete) {
+      this.router.navigate(['/community/profile']);
+    } else {
+      this.router.navigate(['/community/register']);
+    }
+  }
+
+  /** Routes a real Facebook identity: existing profile → profile, new → register. */
+  private async finishFacebookSignIn(identity: FacebookIdentity): Promise<void> {
+    const res = this.service.completeFacebookSignIn(identity);
     if (res.profileComplete) {
       this.router.navigate(['/community/profile']);
     } else {
