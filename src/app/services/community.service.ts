@@ -49,6 +49,70 @@ export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
 export const HIDDEN_POSTS_KEY = 'neverbeen_hidden_post_ids';
 
+/**
+ * Public Google OAuth Web Client ID — safe (and required) in browser code.
+ * The matching Client secret must never be shipped to the frontend.
+ */
+export const GOOGLE_CLIENT_ID =
+  '211635270312-q7d8p4bd3ujakcoli0ggspbdj1b75tc4.apps.googleusercontent.com';
+/** localStorage key remembering which Google account signed in. */
+export const GOOGLE_ACCOUNT_KEY = 'neverbeen_google_account';
+
+/** Identity extracted from a Google Identity Services credential. */
+export interface GoogleIdentity {
+  sub: string;
+  email: string;
+  emailVerified: boolean;
+  name: string;
+  givenName: string;
+  familyName: string;
+  picture: string;
+}
+
+/** Outcome of starting the Google sign-in flow. */
+export type GoogleSignInStep =
+  | { step: 'identity'; identity: GoogleIdentity }
+  | { step: 'show_google_button'; render: (host: HTMLElement) => void }
+  | { step: 'unavailable' };
+
+/**
+ * Public Facebook App ID — safe (and required) in browser code.
+ * The matching App secret must never be shipped to the frontend.
+ */
+export const FACEBOOK_APP_ID = '1075272841953402';
+/** Graph API version used by the Facebook JS SDK. */
+const FACEBOOK_GRAPH_VERSION = 'v26.0';
+/** localStorage key remembering which Facebook account signed in. */
+export const FACEBOOK_ACCOUNT_KEY = 'neverbeen_facebook_account';
+
+/** Identity fetched from the Graph API after FB.login succeeds. */
+export interface FacebookIdentity {
+  id: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  picture: string;
+}
+
+/** Outcome of starting the Facebook sign-in flow. */
+export type FacebookSignInStep =
+  | { step: 'identity'; identity: FacebookIdentity }
+  | { step: 'cancelled' }
+  | { step: 'unavailable' };
+
+/** Shared shape for completing a social (Google/Facebook) sign-in. */
+interface SocialSignInParams {
+  provider: string;
+  storageKey: string;
+  accountRef: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  picture: string;
+}
+
 // Curated authentic portrait & cover pools (Requirements E, F, G)
 export const SEED_INDIAN_MALE_PORTRAITS = [
   'photo-1506794778202-cad84cf45f1d',
@@ -198,6 +262,13 @@ export class CommunityService {
   readonly genders = signal<string[]>(SEED_GENDERS);
 
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
+
+  /** Google Identity Services script loader (see loadGoogleGis). */
+  private gisScriptPromise: Promise<boolean> | null = null;
+  /** Resolver for the official fallback Google button's identity. */
+  private googleManualIdentityResolve: ((identity: GoogleIdentity | null) => void) | null = null;
+  /** Facebook JavaScript SDK loader (see loadFacebookSdk). */
+  private fbsdkScriptPromise: Promise<boolean> | null = null;
   readonly isPending = computed(() => this.currentUser()?.status === 'Pending');
 
   // Filtered views ensuring blocked users cannot see or be seen by each other
@@ -412,6 +483,486 @@ export class CommunityService {
         message: 'New member detected, registration required.',
         user: newUser,
       };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Google OAuth (Sign in with Google via Google Identity Services)
+  //
+  // SECURITY: only the public OAuth Client ID ships in browser code — the Client
+  // secret must NEVER be embedded in the frontend (it would be public). GIS issues
+  // the credential directly to the browser; no secret is needed for this flow.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Loads https://accounts.google.com/gsi/client once. Resolves false when the
+   * script is blocked/unreachable so callers can fall back gracefully (the
+   * sandbox preview blocks some egress; real end-user browsers load it fine).
+   */
+  private loadGoogleGis(): Promise<boolean> {
+    if ((globalThis as any).google?.accounts?.id) {
+      return Promise.resolve(true);
+    }
+    if (!this.gisScriptPromise) {
+      const promise = new Promise<boolean>((resolve) => {
+        if (typeof document === 'undefined') {
+          resolve(false);
+          return;
+        }
+        let settled = false;
+        const settle = (loaded: boolean) => {
+          if (settled) return;
+          settled = true;
+          resolve(loaded && !!(globalThis as any).google?.accounts?.id);
+        };
+        const existing = document.querySelector<HTMLScriptElement>('script[data-nb-gis]');
+        if (existing) {
+          // Script tag already present — wait for it (or time out).
+          if ((globalThis as any).google?.accounts?.id) {
+            settle(true);
+            return;
+          }
+          existing.addEventListener('load', () => settle(true));
+          existing.addEventListener('error', () => settle(false));
+        } else {
+          const script = document.createElement('script');
+          script.id = 'nb-gis-script';
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true;
+          script.defer = true;
+          script.setAttribute('data-nb-gis', 'true');
+          script.addEventListener('load', () => settle(true));
+          script.addEventListener('error', () => settle(false));
+          document.head.appendChild(script);
+        }
+        window.setTimeout(() => settle(false), 4000);
+      });
+      this.gisScriptPromise = promise;
+      // Allow a retry on the next click when this attempt failed.
+      promise.then((ok) => {
+        if (!ok) {
+          this.gisScriptPromise = null;
+        }
+      });
+    }
+    return this.gisScriptPromise;
+  }
+
+  /**
+   * Starts the real Google sign-in:
+   *  1. Tries the One-Tap/prompt flow — resolves `{ step: 'identity' }` when the
+   *     member picks an account;
+   *  2. If Google skips/dismisses the prompt (common with FedCM), resolves
+   *     `{ step: 'show_google_button' }` — the caller renders the official
+   *     Google button via `render()` and the identity arrives through
+   *     `awaitGoogleIdentity()`;
+   *  3. Resolves `{ step: 'unavailable' }` when GIS cannot run (script blocked,
+   *     test environment, popup failure) so callers can use the preview fallback.
+   */
+  async signInWithGoogle(): Promise<GoogleSignInStep> {
+    // Google Identity Services cannot run under jsdom/test runners — bail
+    // immediately so unit tests don't stall waiting for a script that never loads.
+    if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)) {
+      return { step: 'unavailable' };
+    }
+
+    const gisReady = await this.loadGoogleGis();
+    const gis = (globalThis as any).google?.accounts?.id;
+    if (!gisReady || !gis) {
+      return { step: 'unavailable' };
+    }
+
+    return new Promise<GoogleSignInStep>((resolve) => {
+      let settled = false;
+      const settle = (step: GoogleSignInStep) => {
+        if (settled) return;
+        settled = true;
+        resolve(step);
+      };
+
+      const showOfficialButton: GoogleSignInStep = {
+        step: 'show_google_button',
+        render: (host: HTMLElement) => {
+          try {
+            gis.renderButton(host, {
+              theme: 'outline',
+              size: 'large',
+              text: 'signin_with',
+              shape: 'rectangular',
+              width: 260,
+            });
+          } catch {
+            /* rendered only once per panel */
+          }
+        },
+      };
+
+      gis.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response: { credential?: string }) => {
+          const identity = response.credential
+            ? this.decodeGoogleCredential(response.credential)
+            : null;
+          if (!identity) {
+            settle({ step: 'unavailable' });
+            this.googleManualIdentityResolve?.(null);
+            this.googleManualIdentityResolve = null;
+            return;
+          }
+          if (!settled) {
+            settle({ step: 'identity', identity });
+            return;
+          }
+          // Second stage: the official fallback button delivered the credential.
+          const manual = this.googleManualIdentityResolve;
+          this.googleManualIdentityResolve = null;
+          manual?.(identity);
+        },
+        error_callback: (err: { type?: string }) => {
+          if (err?.type === 'popup_failed_to_open') {
+            settle({ step: 'unavailable' });
+          } else {
+            // popup_closed / unknown — offer the official button instead.
+            settle(showOfficialButton);
+          }
+        },
+      });
+
+      try {
+        gis.prompt(() => {
+          // Called when the One-Tap prompt is skipped or dismissed.
+          settle(showOfficialButton);
+        });
+      } catch {
+        settle(showOfficialButton);
+      }
+    });
+  }
+
+  /** Waits for the identity delivered by the official fallback Google button. */
+  awaitGoogleIdentity(): Promise<GoogleIdentity | null> {
+    return new Promise<GoogleIdentity | null>((resolve) => {
+      this.googleManualIdentityResolve = resolve;
+    });
+  }
+
+  /** Cancels a pending official-button wait (member pressed Cancel). */
+  cancelGoogleIdentity(): void {
+    const manual = this.googleManualIdentityResolve;
+    this.googleManualIdentityResolve = null;
+    manual?.(null);
+  }
+
+  /**
+   * Completes sign-in from a verified Google identity:
+   *  - a NeverBeen profile already stored for this Google email → active session
+   *    straight to the profile;
+   *  - otherwise a brand-new member → prefilled pending account (name, surname,
+   *    email from Google) and the registration form.
+   */
+  /** Completes sign-in from a Google Identity Services credential. */
+  completeGoogleSignIn(identity: GoogleIdentity): AuthResult {
+    return this.completeSocialSignIn({
+      provider: 'Google',
+      storageKey: GOOGLE_ACCOUNT_KEY,
+      accountRef: identity.sub,
+      email: identity.email,
+      name: identity.name,
+      firstName: identity.givenName,
+      lastName: identity.familyName,
+      picture: identity.picture,
+    });
+  }
+
+  /** Completes sign-in from a Facebook Graph API identity. */
+  completeFacebookSignIn(identity: FacebookIdentity): AuthResult {
+    return this.completeSocialSignIn({
+      provider: 'Facebook',
+      storageKey: FACEBOOK_ACCOUNT_KEY,
+      accountRef: identity.id,
+      email: identity.email,
+      name: identity.name,
+      firstName: identity.firstName,
+      lastName: identity.lastName,
+      picture: identity.picture,
+    });
+  }
+
+  /**
+   * Shared completion for social sign-in (Google / Facebook):
+   *  - a NeverBeen profile already stored for this email → active session
+   *    straight to the profile;
+   *  - otherwise a brand-new member → prefilled pending account (name, surname,
+   *    email, photo from the provider) and the registration form.
+   */
+  private completeSocialSignIn(p: SocialSignInParams): AuthResult {
+    this.saveJson(p.storageKey, {
+      ref: p.accountRef,
+      email: p.email,
+      name: p.name,
+      picture: p.picture,
+      signedInAtUtc: new Date().toISOString(),
+    });
+
+    const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
+    const sameEmail =
+      !!storedProfile?.email &&
+      storedProfile.email.toLowerCase() === p.email.toLowerCase();
+
+    if (storedProfile && sameEmail) {
+      const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
+      setCookie(TOKEN_KEY, token, 30);
+
+      const existingUser: CurrentUser = {
+        id: storedProfile.id,
+        firstName: storedProfile.firstName || p.firstName,
+        lastName: storedProfile.lastName || p.lastName,
+        fullName: storedProfile.fullName || p.name,
+        email: p.email,
+        status: 'Active',
+        profileComplete: true,
+        profilePhotoUrl: storedProfile.profilePhotoUrl || p.picture || '',
+        activeStatus: 'Active',
+        customStatusText: '',
+        isProfileLocked: storedProfile.settings?.isProfileLocked ?? false,
+        isVerified: false,
+        verificationType: null,
+        verifiedEmail: undefined,
+      };
+
+      this.token.set(token);
+      this.currentUser.set(existingUser);
+      this.profile.set(storedProfile);
+      this.saveJson(USER_KEY, existingUser);
+
+      return {
+        token,
+        tokenType: 'Bearer',
+        expiresIn: 2592000,
+        isNewUser: false,
+        profileComplete: true,
+        message: `Signed in successfully with ${p.provider}.`,
+        user: existingUser,
+      };
+    }
+
+    // New member: real social identity, community profile not created yet.
+    const nameParts = p.name.trim().split(/\s+/);
+    const newUser: CurrentUser = {
+      id: generateUniqueId(),
+      firstName: p.firstName || nameParts[0] || '',
+      lastName: p.lastName || nameParts.slice(1).join(' ') || '',
+      fullName: p.name || '',
+      email: p.email,
+      status: 'Pending',
+      profileComplete: false,
+      profilePhotoUrl: p.picture || '',
+    };
+    this.token.set(null);
+    this.currentUser.set(newUser);
+    this.profile.set(null);
+    this.saveJson(USER_KEY, newUser);
+
+    return {
+      token: '',
+      tokenType: 'Bearer',
+      expiresIn: 0,
+      isNewUser: true,
+      profileComplete: false,
+      message: `New ${p.provider} member detected, registration required.`,
+      user: newUser,
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Facebook OAuth (Sign in with Facebook via the JavaScript SDK)
+  //
+  // SECURITY: only the public App ID ships in browser code — the App secret must
+  // NEVER be embedded in the frontend. FB.login() + Graph /me give the identity
+  // with public_profile + email (no app review required for these permissions).
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Loads https://connect.facebook.net/en_US/sdk.js once and calls FB.init with
+   * the public App ID. Resolves false when blocked/unreachable so callers can
+   * fall back gracefully (sandbox egress may block it; end-user browsers load it).
+   */
+  private loadFacebookSdk(): Promise<boolean> {
+    if ((globalThis as any).FB?.init) {
+      return Promise.resolve(true);
+    }
+    if (!this.fbsdkScriptPromise) {
+      const promise = new Promise<boolean>((resolve) => {
+        if (typeof document === 'undefined') {
+          resolve(false);
+          return;
+        }
+        let settled = false;
+        const settle = (ok: boolean) => {
+          if (settled) return;
+          settled = true;
+          resolve(ok && !!(globalThis as any).FB?.init);
+        };
+
+        let inited = false;
+        // The SDK invokes window.fbAsyncInit as soon as it finishes loading.
+        (globalThis as any).fbAsyncInit = () => {
+          if (inited) return;
+          try {
+            (globalThis as any).FB.init({
+              appId: FACEBOOK_APP_ID,
+              cookie: false,
+              xfbml: false,
+              autoLogAppEvents: false,
+              version: FACEBOOK_GRAPH_VERSION,
+            });
+            inited = true;
+            settle(true);
+          } catch {
+            settle(false);
+          }
+        };
+
+        // Fresh injection — drop any previous failed attempt.
+        const stale = document.querySelector<HTMLScriptElement>('script[data-nb-fbsdk]');
+        if (stale) {
+          stale.remove();
+        }
+        const script = document.createElement('script');
+        script.src = 'https://connect.facebook.net/en_US/sdk.js';
+        script.async = true;
+        script.defer = true;
+        script.setAttribute('data-nb-fbsdk', 'true');
+        script.addEventListener('load', () => {
+          // Manual init for SDK builds that don't auto-invoke fbAsyncInit.
+          if (!(globalThis as any).FB?.init) {
+            settle(false);
+          } else {
+            (globalThis as any).fbAsyncInit();
+          }
+        });
+        script.addEventListener('error', () => settle(false));
+        document.head.appendChild(script);
+        window.setTimeout(() => settle(false), 4000);
+      });
+      this.fbsdkScriptPromise = promise;
+      // Allow a retry on the next click when this attempt failed.
+      promise.then((ok) => {
+        if (!ok) {
+          this.fbsdkScriptPromise = null;
+        }
+      });
+    }
+    return this.fbsdkScriptPromise;
+  }
+
+  /**
+   * Starts the real Facebook sign-in (FB.login popup → Graph /me):
+   *  - `{ step: 'identity' }` — the member authorised the app;
+   *  - `{ step: 'cancelled' }` — the member closed/declined the dialog;
+   *  - `{ step: 'unavailable' }` — SDK blocked or the Graph call failed, so
+   *    callers can use the preview fallback.
+   */
+  async signInWithFacebook(): Promise<FacebookSignInStep> {
+    // The Facebook SDK cannot run under jsdom/test runners — bail immediately.
+    if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)) {
+      return { step: 'unavailable' };
+    }
+
+    const sdkReady = await this.loadFacebookSdk();
+    const FB = (globalThis as any).FB;
+    if (!sdkReady || !FB?.login) {
+      return { step: 'unavailable' };
+    }
+
+    return new Promise<FacebookSignInStep>((resolve) => {
+      let settled = false;
+      const settle = (step: FacebookSignInStep) => {
+        if (settled) return;
+        settled = true;
+        resolve(step);
+      };
+
+      try {
+        FB.login(
+          (response: { authResponse?: { accessToken?: string; userID?: string } | null }) => {
+            if (!response?.authResponse) {
+              settle({ step: 'cancelled' });
+              return;
+            }
+            FB.api(
+              '/me',
+              { fields: 'id,name,email,first_name,last_name,picture.type(large)' },
+              (me: {
+                id?: string;
+                name?: string;
+                email?: string;
+                first_name?: string;
+                last_name?: string;
+                picture?: { data?: { url?: string } };
+                error?: unknown;
+              }) => {
+                if (!me || me.error || !me.id) {
+                  settle({ step: 'unavailable' });
+                  return;
+                }
+                const name =
+                  me.name ||
+                  `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim() ||
+                  'NeverBeen Traveler';
+                settle({
+                  step: 'identity',
+                  identity: {
+                    id: String(me.id),
+                    // Users can decline the email permission — keep a stable
+                    // provider-scoped address so the account still links.
+                    email: me.email || `${me.id}@facebook.neverbeen.example`,
+                    name,
+                    firstName: me.first_name || name.split(' ')[0] || '',
+                    lastName: me.last_name || '',
+                    picture: me.picture?.data?.url || '',
+                  },
+                });
+              },
+            );
+          },
+          { scope: 'public_profile,email', auth_type: 'rerequest' },
+        );
+      } catch {
+        settle({ step: 'unavailable' });
+      }
+    });
+  }
+
+  /** Decodes the GIS credential (JWT) payload — name/email/picture/sub. */
+  private decodeGoogleCredential(credential: string): GoogleIdentity | null {
+    try {
+      const part = credential.split('.')[1];
+      const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const payload = JSON.parse(new TextDecoder().decode(bytes)) as {
+        sub?: string;
+        email?: string;
+        email_verified?: boolean;
+        name?: string;
+        given_name?: string;
+        family_name?: string;
+        picture?: string;
+      };
+      if (!payload.sub || !payload.email) {
+        return null;
+      }
+      return {
+        sub: payload.sub,
+        email: payload.email,
+        emailVerified: payload.email_verified === true,
+        name: payload.name || payload.email,
+        givenName: payload.given_name || '',
+        familyName: payload.family_name || '',
+        picture: payload.picture || '',
+      };
+    } catch {
+      return null;
     }
   }
 

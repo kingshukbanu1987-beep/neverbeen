@@ -1,0 +1,197 @@
+<main class="legal-page terms-page">
+  <!-- Hero -->
+  <section class="legal-hero" aria-labelledby="terms-title">
+    <div class="hero-media" role="img" aria-label="A wooden trail signpost above a Norwegian fjord"></div>
+    <div class="hero-veil" aria-hidden="true"></div>
+    <div class="container hero-inner">
+      <a class="hero-back" routerLink="/community">← Back to Community</a>
+      <p class="eyebrow">Terms &amp; Condition</p>
+      <h1 id="terms-title">The rules of the trail</h1>
+      <p class="hero-lede">
+        Like any good trail, NeverBeen Social Network works best when everyone follows a few shared
+        guidelines. These Terms &amp; Condition describe what you can expect from us — and what we
+        ask of you — while you share travel memoirs and vacation galleries with the community.
+      </p>
+      <div class="hero-chips">
+        <span class="chip">🕐 Effective {{ updated }}</span>
+        <span class="chip">🤝 Fair for members &amp; studio</span>
+        <span class="chip">🧭 Written for humans</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick agreement cards -->
+  <section class="agree-strip" aria-label="The short version">
+    <div class="container agree-grid">
+      <article>
+        <span aria-hidden="true">✅</span>
+        <h2>Be genuine</h2>
+        <p>One honest member, real conversations, no fake engagement or bots.</p>
+      </article>
+      <article>
+        <span aria-hidden="true">📖</span>
+        <h2>Share your own</h2>
+        <p>Post memoirs and photos you have the right to share — yours or licensed.</p>
+      </article>
+      <article>
+        <span aria-hidden="true">🕊️</span>
+        <h2>Keep it hospitable</h2>
+        <p>Discussions are for travellers helping travellers — no harassment or spam.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Body -->
+  <div class="container legal-layout">
+    <aside class="toc-card" aria-label="On this page">
+      <p class="toc-title">On this page</p>
+      <nav>
+        @for (item of toc; track item.id) {
+          <button type="button" [class.active]="activeSection() === item.id" (click)="goTo(item.id)">
+            {{ item.label }}
+          </button>
+        }
+      </nav>
+      <div class="toc-help">
+        <p>Something unclear?</p>
+        <a routerLink="/help">Ask in the Help Centre →</a>
+      </div>
+    </aside>
+
+    <article class="legal-content">
+      <section id="acceptance" class="legal-section" (mouseenter)="onSectionVisible('acceptance')">
+        <h2>1. Acceptance of terms</h2>
+        <p>
+          By creating an account or using NeverBeen — including the Community discussions, travel
+          memoirs and vacation galleries — you agree to these Terms &amp; Condition and to our
+          <a class="inline-link" routerLink="/privacy">Privacy Policy</a>. If you do not agree,
+          please do not use the service. Continuing after an update means you accept the revised
+          terms; we will date every change at the top of this page.
+        </p>
+      </section>
+
+      <section id="account" class="legal-section" (mouseenter)="onSectionVisible('account')">
+        <h2>2. Your account</h2>
+        <p>
+          You sign in through a trusted identity provider (Google, Facebook or Microsoft). You are
+          responsible for activity under your account and for keeping your provider login secure.
+        </p>
+        <ul class="tick-list">
+          <li>You must be at least 16 years old (or the minimum age in your country).</li>
+          <li>One person per account — do not impersonate others or misrepresent who you are.</li>
+          <li>Choose a display name and avatar that are not offensive or infringing.</li>
+          <li>Tell us promptly if you believe your account has been compromised.</li>
+        </ul>
+      </section>
+
+      <section id="conduct" class="legal-section" (mouseenter)="onSectionVisible('conduct')">
+        <h2>3. Acceptable use</h2>
+        <p>NeverBeen is built for generous, curious travellers. The following are not allowed:</p>
+        <div class="ban-grid">
+          <div class="ban-card"><span>🚫</span><p>Harassment, hate speech, or targeting other members</p></div>
+          <div class="ban-card"><span>🚫</span><p>Spam, self-promotion floods, or coordinated fake engagement</p></div>
+          <div class="ban-card"><span>🚫</span><p>Scams, phishing links, or selling accounts and features</p></div>
+          <div class="ban-card"><span>🚫</span><p>Posting content you do not have rights to share</p></div>
+          <div class="ban-card"><span>🚫</span><p>Scraping, mining, or reverse-engineering the service</p></div>
+          <div class="ban-card"><span>🚫</span><p>Anything unlawful in your jurisdiction or ours</p></div>
+        </div>
+        <p>
+          We may remove content or restrict accounts that break these rules — always with a clear
+          reason, and with a route to appeal through the
+          <a class="inline-link" routerLink="/help">Help Centre</a>.
+        </p>
+      </section>
+
+      <section id="content" class="legal-section" (mouseenter)="onSectionVisible('content')">
+        <h2>4. Your content</h2>
+        <figure class="inline-figure">
+          <img src="/audience/social.jpg" alt="A traveller photographing a historic street at dusk" />
+          <figcaption>You keep ownership of everything you publish on NeverBeen.</figcaption>
+        </figure>
+        <p>
+          You keep every ounce of ownership over your memoirs, photographs, comments and gallery
+          uploads. What you grant NeverBeen is a worldwide, non-exclusive licence to host, store,
+          format and display that content as part of running the social network — ending when you
+          delete it (subject to the rolling backups described in our Privacy Policy).
+        </p>
+        <p>
+          You confirm that your content is lawful, that it does not infringe someone else’s rights,
+          and that it matches the audience label you selected. Serious or repeated infringements
+          count as a breach of these terms.
+        </p>
+      </section>
+
+      <section id="billing" class="legal-section" (mouseenter)="onSectionVisible('billing')">
+        <h2>5. Plans &amp; billing</h2>
+        <p>
+          Core community features are free. Optional paid plans (for example print files or
+          collection tools on the main NeverBeen studio site) are priced and renewed as shown at
+          checkout. In short:
+        </p>
+        <ul class="tick-list">
+          <li>Prices include applicable taxes unless stated otherwise at checkout.</li>
+          <li>Subscriptions renew automatically until cancelled — cancel any time before the next cycle.</li>
+          <li>Right of withdrawal for digital content follows the consumer law of your country.</li>
+          <li>Questions about an invoice go through the feedback form with your order reference.</li>
+        </ul>
+      </section>
+
+      <section id="rights" class="legal-section" (mouseenter)="onSectionVisible('rights')">
+        <h2>6. NeverBeen’s rights</h2>
+        <p>
+          The NeverBeen name, logo, interface, illustrations and software are owned by the studio
+          and protected by intellectual-property law. We give you a personal, revocable,
+          non-transferable licence to use the service — not to copy, resell or rebrand it.
+        </p>
+        <div class="callout">
+          <span class="callout-icon" aria-hidden="true">⚖️</span>
+          <p>
+            <strong>Moderation:</strong> we may remove content, limit visibility, or suspend
+            accounts to protect the community — acting proportionately and on notice wherever
+            possible.
+          </p>
+        </div>
+      </section>
+
+      <section id="termination" class="legal-section" (mouseenter)="onSectionVisible('termination')">
+        <h2>7. Termination</h2>
+        <p>
+          You can leave whenever you like — delete your account from profile settings and your
+          content leaves with you. We may suspend or close accounts that seriously or repeatedly
+          breach these terms, are used for fraud, or create risk for other members. Where the law
+          allows, we will give you notice and a chance to export your data first.
+        </p>
+      </section>
+
+      <section id="disclaimer" class="legal-section" (mouseenter)="onSectionVisible('disclaimer')">
+        <h2>8. Disclaimers &amp; liability</h2>
+        <p>
+          NeverBeen is provided “as is”. We work hard to keep it fast, available and accurate, but
+          we do not promise it will be uninterrupted or error-free. Travel information shared by
+          members is personal experience, not professional advice — always verify visas, safety and
+          bookings independently. To the extent permitted by law, our total liability is limited to
+          the amount you paid us in the twelve months before the claim arose.
+        </p>
+      </section>
+
+      <section id="law" class="legal-section" (mouseenter)="onSectionVisible('law')">
+        <h2>9. Governing law &amp; contact</h2>
+        <p>
+          These terms are governed by the laws applicable to the studio’s place of business, without
+          removing any mandatory consumer protections of your home country. If one clause is found
+          unenforceable, the rest stay in effect. For questions, appeals or notices, reach us
+          through the Help Centre or the feedback form — we read everything.
+        </p>
+        <div class="section-actions">
+          <a class="btn btn-primary" routerLink="/help">Visit Help Centre</a>
+          <a class="btn btn-ghost" routerLink="/feedback">Contact the studio</a>
+        </div>
+      </section>
+
+      <div class="related-row">
+        <a routerLink="/privacy"><span>Related</span><strong>← Privacy Policy</strong></a>
+        <a routerLink="/help"><span>Support</span><strong>Help Centre →</strong></a>
+      </div>
+    </article>
+  </div>
+</main>

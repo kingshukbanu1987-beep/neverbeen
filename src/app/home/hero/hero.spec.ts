@@ -16,60 +16,79 @@ describe('Hero', () => {
     return fixture;
   }
 
-  it('places a green Dream Destinations button right after Know the Founder that links to the destinations section', () => {
+  function buttonsOf(element: HTMLElement): HTMLAnchorElement[] {
+    return Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
+  }
+
+  function labelsOf(element: HTMLElement): string[] {
+    return buttonsOf(element).map((link) => link.textContent?.trim() ?? '');
+  }
+
+  it('places Connect to NeverBeen Community very first, before Know the Founder, styled like Dream Destinations used to be', () => {
     const element: HTMLElement = create().nativeElement;
-    const buttons = Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
-    const labels = buttons.map((link) => link.textContent?.trim());
+    const buttons = buttonsOf(element);
+    const labels = labelsOf(element);
+
+    expect(labels).toEqual([
+      'Connect to NeverBeen Community',
+      'Know the Founder',
+      'Create My Vacation',
+      'Dream Destinations',
+      'Neverbeen Collection',
+      'Explore Gallery',
+    ]);
+
+    const community = buttons[0];
+    expect(community.getAttribute('href')).toBe('/community');
+    // Same style Dream Destinations had: solid green pill with white text
+    expect(community.classList.contains('btn-dream')).toBe(true);
+    expect(getComputedStyle(community).backgroundColor).toBe('rgb(91, 181, 35)');
+    expect(getComputedStyle(community).color).toBe('rgb(255, 255, 255)');
+  });
+
+  it('places Create My Vacation right after Know the Founder', () => {
+    const element: HTMLElement = create().nativeElement;
+    const buttons = buttonsOf(element);
+    const labels = labelsOf(element);
 
     const founderIndex = labels.indexOf('Know the Founder');
     expect(founderIndex).toBeGreaterThan(-1);
-    expect(labels[founderIndex + 1]).toBe('Dream Destinations');
+    expect(labels[founderIndex + 1]).toBe('Create My Vacation');
 
-    const dream = buttons[founderIndex + 1];
-    expect(dream.getAttribute('href')).toBe('/#destinations');
-    expect(dream.classList.contains('btn-dream')).toBe(true);
-    expect(getComputedStyle(dream).backgroundColor).toBe('rgb(91, 181, 35)');
-    expect(getComputedStyle(dream).color).toBe('rgb(255, 255, 255)');
+    const createBtn = buttons[founderIndex + 1];
+    expect(createBtn.getAttribute('href')).toBe('/#contact');
+    expect(createBtn.classList.contains('btn-primary')).toBe(true);
   });
 
-  it('places a Neverbeen Collection button styled like Explore Gallery right after Create My Vacation', () => {
+  it('styles Dream Destinations exactly like Explore Gallery (ghost style)', () => {
     const element: HTMLElement = create().nativeElement;
-    const buttons = Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
-    const labels = buttons.map((link) => link.textContent?.trim());
+    const buttons = buttonsOf(element);
+    const labels = labelsOf(element);
 
     const createIndex = labels.indexOf('Create My Vacation');
     expect(createIndex).toBeGreaterThan(-1);
-    expect(labels[createIndex + 1]).toBe('Neverbeen Collection');
+    expect(labels[createIndex + 1]).toBe('Dream Destinations');
 
-    const collection = buttons[createIndex + 1];
+    const dream = buttons[createIndex + 1];
     const gallery = buttons.find((b) => b.textContent?.trim() === 'Explore Gallery')!;
 
-    expect(collection.getAttribute('href')).toBe('/collection');
-    // Should have same background/foreground as Explore Gallery (ghost style)
-    expect(collection.classList.contains('btn-ghost')).toBe(true);
-    const collectionStyle = getComputedStyle(collection);
+    expect(dream.getAttribute('href')).toBe('/#destinations');
+    expect(dream.classList.contains('btn-ghost')).toBe(true);
+
+    const dreamStyle = getComputedStyle(dream);
     const galleryStyle = getComputedStyle(gallery);
-    expect(collectionStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
-    expect(collectionStyle.color).toBe(galleryStyle.color);
+    expect(dreamStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
+    expect(dreamStyle.color).toBe(galleryStyle.color);
+    expect(dreamStyle.borderColor).toBe(galleryStyle.borderColor);
   });
 
-  it('places a Connect to NeverBeen Community button styled like Explore Gallery right after Explore Gallery', () => {
+  it('keeps Neverbeen Collection between Dream Destinations and Explore Gallery', () => {
     const element: HTMLElement = create().nativeElement;
-    const buttons = Array.from(element.querySelectorAll<HTMLAnchorElement>('.actions a.btn'));
-    const labels = buttons.map((link) => link.textContent?.trim());
+    const labels = labelsOf(element);
 
-    const galleryIndex = labels.indexOf('Explore Gallery');
-    expect(galleryIndex).toBeGreaterThan(-1);
-    expect(labels[galleryIndex + 1]).toBe('Connect to NeverBeen Community');
-
-    const community = buttons[galleryIndex + 1];
-    const gallery = buttons[galleryIndex];
-
-    expect(community.getAttribute('href')).toBe('/community');
-    expect(community.classList.contains('btn-ghost')).toBe(true);
-    const communityStyle = getComputedStyle(community);
-    const galleryStyle = getComputedStyle(gallery);
-    expect(communityStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
-    expect(communityStyle.color).toBe(galleryStyle.color);
+    const dreamIndex = labels.indexOf('Dream Destinations');
+    expect(dreamIndex).toBeGreaterThan(-1);
+    expect(labels[dreamIndex + 1]).toBe('Neverbeen Collection');
+    expect(labels[dreamIndex + 2]).toBe('Explore Gallery');
   });
 });

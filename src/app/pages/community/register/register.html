@@ -1,12 +1,23 @@
 <section class="register-page-wrapper" aria-labelledby="reg-title">
+  <!-- Responsive scene background: a different photograph per screen size -->
+  <div class="reg-bg" aria-hidden="true">
+    <picture>
+      <source media="(min-width: 1024px)" srcset="/images/register-laptop.jpg" />
+      <source media="(min-width: 640px)" srcset="/images/register-tablet.jpg" />
+      <img src="/images/register-mobile.jpg" alt="" />
+    </picture>
+    <div class="reg-bg-scrim"></div>
+  </div>
+
   <div class="register-card">
     <header class="reg-header">
       <a routerLink="/community" class="back-link">← Back to Sign In</a>
       <div class="reg-badge">New Member Registration</div>
-      <h1 id="reg-title">Create NeverBeen Account</h1>
+      <h1 id="reg-title">Create <span class="title-accent">NeverBeen</span> Account</h1>
       <p class="reg-subtitle">
         Please complete your mandatory traveler details below. All fields are required to verify your membership and unlock the community.
       </p>
+      <div class="reg-progress" aria-hidden="true"><span></span></div>
     </header>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="reg-form" novalidate>
@@ -33,14 +44,14 @@
           <input
             type="file"
             id="photoInput"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,.jpg,.jpeg,.png"
             (change)="onPhotoSelected($event)"
             class="hidden-file-input"
           />
         </div>
         <div class="photo-meta">
           <label class="photo-label">Profile Photograph <span class="req">*</span></label>
-          <p class="photo-hint">Mandatory portrait for your community profile (JPEG, PNG, WebP &lt; 8 MB).</p>
+          <p class="photo-hint">Mandatory Picture for your community profile (JPEG, PNG, JPG &lt; 200 KB).</p>
           @if (photoError()) {
             <span class="field-error-msg">{{ photoError() }}</span>
           }
@@ -94,7 +105,7 @@
           }
         </div>
 
-        <!-- Country -->
+        <!-- Country (cascade level 1) -->
         <div class="field-box">
           <label for="country">Country <span class="req">*</span></label>
           <select
@@ -113,39 +124,46 @@
           }
         </div>
 
-        <!-- State -->
+        <!-- State (cascade level 2 — options depend on Country) -->
         <div class="field-box">
           <label for="state">State <span class="req">*</span></label>
-          <input
+          <select
             id="state"
-            type="text"
             formControlName="state"
-            placeholder="e.g. Île-de-France, California, etc."
+            (change)="onStateChange()"
             [class.invalid]="isInvalid('state')"
-          />
+            [attr.disabled]="statesList().length === 0 ? '' : null"
+          >
+            <option value="" disabled>Select State</option>
+            @for (s of statesList(); track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+          </select>
           @if (isInvalid('state')) {
-            <span class="field-error-msg">State is mandatory. Please enter your state or province.</span>
+            <span class="field-error-msg">State is mandatory. Please select your state.</span>
+          } @else if (statesList().length === 0) {
+            <span class="field-hint-msg">Choose a country first.</span>
           }
         </div>
 
-        <!-- City -->
+        <!-- City (cascade level 3 — options depend on State) -->
         <div class="field-box">
           <label for="city">City <span class="req">*</span></label>
-          <input
+          <select
             id="city"
-            type="text"
             formControlName="city"
-            list="citiesDatalist"
-            placeholder="e.g. Paris"
             [class.invalid]="isInvalid('city')"
-          />
-          <datalist id="citiesDatalist">
-            @for (ct of citiesList(); track ct.id) {
-              <option [value]="ct.name"></option>
+            [attr.disabled]="citiesList().length === 0 ? '' : null"
+          >
+            <option value="" disabled>Select City</option>
+            @for (ct of citiesList(); track ct) {
+              <option [value]="ct">{{ ct }}</option>
             }
-          </datalist>
+          </select>
           @if (isInvalid('city')) {
-            <span class="field-error-msg">City is mandatory. Please enter or select your city.</span>
+            <span class="field-error-msg">City is mandatory. Please select your city.</span>
+          } @else if (citiesList().length === 0) {
+            <span class="field-hint-msg">Choose a state first.</span>
           }
         </div>
 
@@ -191,8 +209,11 @@
           } @else {
             Create Neverbeen Account
           }
+          <span class="btn-arrow" aria-hidden="true">→</span>
         </button>
       </div>
+
+      <p class="reg-footnote">Free forever · Verified community · Your photo stays private until approved</p>
     </form>
   </div>
 </section>

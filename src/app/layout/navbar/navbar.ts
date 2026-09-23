@@ -36,7 +36,7 @@ export class Navbar {
     { label: 'Live', path: '/travel-feeds', fragment: undefined, icon: 'live' },
     { label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },
     { label: 'FAQ', path: '/', fragment: 'faq', icon: 'help-circle' },
-    { label: 'Login', path: '/login', fragment: undefined, icon: 'log-in' },
+    { label: 'Admin', path: '/login', fragment: undefined, icon: 'log-in' },
     { label: 'Founder', path: '/', fragment: 'owner', icon: 'user' },
     { label: 'Contact', path: '/', fragment: 'contact', icon: 'mail' },
     { label: 'Feedback', path: '/feedback', fragment: undefined, icon: 'message-square' },

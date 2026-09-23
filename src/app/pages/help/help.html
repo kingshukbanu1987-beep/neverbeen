@@ -1,0 +1,175 @@
+<main class="help-page">
+  <!-- Hero with big Help-Centre search (Facebook/Flickr style) -->
+  <section class="help-hero" aria-labelledby="help-title">
+    <div class="hero-media" role="img" aria-label="A local guiding a traveller with a map in a sunny Norwegian town"></div>
+    <div class="hero-veil" aria-hidden="true"></div>
+    <div class="container hero-inner">
+      <a class="hero-back" routerLink="/community">← Back to Community</a>
+      <p class="eyebrow">Help Centre</p>
+      <h1 id="help-title">How can we help you today?</h1>
+      <p class="hero-lede">
+        Search the NeverBeen knowledge base, browse popular topics, or jump straight into a
+        category — answers about signing in, memoirs, galleries, privacy and languages live here.
+      </p>
+
+      <div class="hero-search" role="search">
+        <svg viewBox="0 0 24 24" class="search-icon" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+        <label class="visually-hidden" for="help-search-input">Search help articles</label>
+        <input
+          id="help-search-input"
+          type="search"
+          placeholder="Search help — try “sign in”, “delete account” or “language”…"
+          [value]="query()"
+          (input)="setQuery($any($event.target).value)"
+          autocomplete="off"
+        />
+        @if (query()) {
+          <button type="button" class="clear-btn" (click)="setQuery('')" aria-label="Clear search">✕</button>
+        }
+      </div>
+
+      <div class="popular-row">
+        <span>Popular:</span>
+        @for (term of popularQueries; track term) {
+          <button type="button" class="popular-chip" (click)="usePopular(term)">{{ term }}</button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Category cards -->
+  <section class="category-section" aria-labelledby="browse-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Browse by topic</p>
+        <h2 id="browse-title">Help categories</h2>
+      </div>
+      <div class="category-grid">
+        @for (cat of categories; track cat.id) {
+          <button
+            type="button"
+            class="category-card"
+            [class.active]="activeCategory() === cat.id"
+            (click)="selectCategory(cat.id)"
+          >
+            <span class="cat-icon" aria-hidden="true">{{ cat.icon }}</span>
+            <span class="cat-title">{{ cat.title }}</span>
+            <span class="cat-blurb">{{ cat.blurb }}</span>
+            <span class="cat-count">{{ countFor(cat.id) }} article{{ countFor(cat.id) === 1 ? '' : 's' }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Search results / article list -->
+  <section class="results-section" id="help-results" aria-labelledby="results-title">
+    <div class="container results-layout">
+      <div class="results-main">
+        <div class="results-head">
+          <div>
+            <p class="eyebrow">Knowledge base</p>
+            <h2 id="results-title">
+              @if (query()) {
+                Results for “{{ query() }}”
+              } @else if (activeCategory()) {
+                {{ activeCategoryTitle() }}
+              } @else {
+                All help articles
+              }
+            </h2>
+          </div>
+          @if (hasFilters()) {
+            <button type="button" class="clear-filters" (click)="clearFilters()">Clear filters</button>
+          }
+        </div>
+
+        <p class="results-count" role="status">
+          {{ results().length }} article{{ results().length === 1 ? '' : 's' }} found
+        </p>
+
+        @if (results().length === 0) {
+          <div class="empty-state">
+            <span aria-hidden="true">🗺️</span>
+            <h3>No articles matched that search</h3>
+            <p>
+              Try a shorter phrase, browse a category above, or ask a human — the studio reads
+              every message.
+            </p>
+            <div class="empty-actions">
+              <button type="button" class="btn btn-ghost" (click)="clearFilters()">Reset search</button>
+              <a class="btn btn-primary" routerLink="/feedback">Ask the studio</a>
+            </div>
+          </div>
+        } @else {
+          <div class="article-list">
+            @for (article of results(); track article.id) {
+              <article class="article-card" [class.open]="openArticle() === article.id">
+                <button
+                  type="button"
+                  class="article-toggle"
+                  [attr.aria-expanded]="openArticle() === article.id"
+                  (click)="toggleArticle(article.id)"
+                >
+                  <span class="article-q">{{ article.question }}</span>
+                  <span class="article-meta">{{ categoryOf(article) }}</span>
+                  <span class="article-chevron" aria-hidden="true">{{
+                    openArticle() === article.id ? '−' : '+'
+                  }}</span>
+                </button>
+                @if (openArticle() === article.id) {
+                  <div class="article-body">
+                    <p>{{ article.answer }}</p>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="help-aside">
+        <div class="aside-card contact-card">
+          <h3>Still need help?</h3>
+          <p>
+            Can’t find the answer? Send the studio a message — urgent queries and grievances are
+            answered first, usually within a working day.
+          </p>
+          <a class="btn btn-primary" routerLink="/feedback">Contact support</a>
+          <a class="btn btn-ghost" routerLink="/" fragment="faq">Read the FAQ</a>
+        </div>
+
+        <div class="aside-card">
+          <h3>Good to know</h3>
+          <ul class="aside-links">
+            <li><a routerLink="/privacy">🔒 Privacy Policy</a></li>
+            <li><a routerLink="/terms">📜 Terms &amp; Condition</a></li>
+            <li><a routerLink="/community">👥 Community sign-in</a></li>
+            <li><a routerLink="/founder">✍️ Meet the founder</a></li>
+          </ul>
+        </div>
+
+        <div class="aside-card aside-photo-card">
+          <img src="/images/help-hero.jpg" alt="A guide helping a traveller read a map by colourful Bryggen houses" />
+          <p>Every question helps the next traveller — ask away.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Bottom CTA -->
+  <section class="help-cta">
+    <div class="container cta-inner">
+      <div>
+        <p class="eyebrow">NeverBeen Social Network</p>
+        <h2>Ready to join the conversation?</h2>
+        <p>Sign in, share a memoir, and explore vacation galleries from members around the world.</p>
+      </div>
+      <a class="btn btn-gold" routerLink="/community">Go to Community sign-in</a>
+    </div>
+  </section>
+</main>

@@ -101,7 +101,7 @@
             }
           </header>
 
-          <p class="post-text">{{ post.text }}</p>
+          <p class="post-text" [nbTranslatable]="post.text">{{ post.text }}</p>
 
           <!-- Action bar: Likes, Dislikes, Replies -->
           <footer class="post-footer">
@@ -174,7 +174,7 @@
                         </button>
                       }
                     </div>
-                    <p class="reply-text">{{ reply.text }}</p>
+                    <p class="reply-text" [nbTranslatable]="reply.text">{{ reply.text }}</p>
 
                     <div class="reply-actions">
                       <button

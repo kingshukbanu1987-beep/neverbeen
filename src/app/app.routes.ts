@@ -9,7 +9,7 @@ export const routes: Routes = [
     component: Home,
     title: 'NeverBeen — Vacation photographs of places you have never been',
   },
-  { path: 'login', component: Login, title: 'Login — NeverBeen' },
+  { path: 'login', component: Login, title: 'Admin — NeverBeen' },
   { path: 'founder', component: Founder, title: 'Founder — NeverBeen' },
   {
     path: 'audience',
@@ -31,6 +31,21 @@ export const routes: Routes = [
     path: 'feedback',
     loadComponent: () => import('./pages/feedback/feedback').then((m) => m.Feedback),
     title: 'Feedback & suggestions — NeverBeen',
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./pages/legal/privacy/privacy').then((m) => m.PrivacyPage),
+    title: 'Privacy Policy — NeverBeen',
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./pages/legal/terms/terms').then((m) => m.TermsPage),
+    title: 'Terms & Condition — NeverBeen',
+  },
+  {
+    path: 'help',
+    loadComponent: () => import('./pages/help/help').then((m) => m.HelpPage),
+    title: 'Help Centre — NeverBeen',
   },
   {
     path: 'collection',
