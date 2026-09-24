@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AdminAuthService } from '../../services/admin-auth.service';
 
 export type AdminLoginView = 'signin' | 'apply';
 
@@ -58,10 +59,12 @@ function strongPassword(control: AbstractControl): ValidationErrors | null {
 })
 export class Login {
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
+  protected readonly adminAuth = inject(AdminAuthService);
 
   /** Toggles between the admin sign-in card and the volunteer application form. */
   protected readonly view = signal<AdminLoginView>('signin');
-  protected readonly adminSubmitted = signal(false);
+  protected readonly adminError = signal<string | null>(null);
   protected readonly applySubmitted = signal(false);
 
   protected readonly resumeName = signal<string | null>(null);
@@ -70,8 +73,13 @@ export class Login {
 
   protected readonly MAX_RESUME_LABEL = '2 MB';
 
+  /**
+   * Demo admin account (Requirement B):
+   *   username: admin
+   *   password: adminadmin
+   */
   protected readonly adminForm = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    username: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
@@ -87,9 +95,16 @@ export class Login {
   // View switching
   // ---------------------------------------------------------------------------
 
+  constructor() {
+    // Already signed in? Skip the sign-in card and open the console.
+    if (this.adminAuth.isAuthed()) {
+      this.router.navigate(['/admin']);
+    }
+  }
+
   showApply(): void {
     this.view.set('apply');
-    this.adminSubmitted.set(false);
+    this.adminError.set(null);
   }
 
   showSignIn(): void {
@@ -106,7 +121,15 @@ export class Login {
       this.adminForm.markAllAsTouched();
       return;
     }
-    this.adminSubmitted.set(true);
+    const { username, password } = this.adminForm.getRawValue();
+    if (this.adminAuth.login(username, password)) {
+      this.adminError.set(null);
+      this.router.navigate(['/admin']);
+    } else {
+      this.adminError.set(
+        'Invalid credentials. Use the demo admin account — username: admin, password: adminadmin.',
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------

@@ -1,0 +1,364 @@
+/* ===================================================================== */
+/*  Traveler hover preview card — ultra-modern glass card                */
+/* ===================================================================== */
+
+.uhc-host {
+  position: fixed;
+  inset: 0;
+  z-index: 100001; /* above community modal overlays (100000) */
+  pointer-events: none;
+}
+
+.uhc-card {
+  position: fixed;
+  width: 300px;
+  border-radius: 20px;
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 252, 250, 0.94) 100%);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 22px 48px -14px rgba(2, 44, 34, 0.32),
+    0 6px 18px -8px rgba(2, 44, 34, 0.2),
+    0 0 0 1px rgba(16, 185, 129, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  overflow: hidden;
+  pointer-events: auto;
+  opacity: 1;
+  animation: uhc-in 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+  will-change: transform, opacity;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #0f172a;
+  text-align: left;
+  line-height: 1.35;
+}
+
+/* Pop-in entrance (also replayed via the .uhc-replay toggle in the component) */
+@keyframes uhc-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Restart helper: added for one frame, then removed to replay uhc-in */
+.uhc-card.uhc-replay {
+  animation: none;
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+}
+
+/* Fade-out exit (pointer left name/avatar and the card) */
+.uhc-card:not(.is-visible) {
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+}
+
+/* ----------------------------- Aurora cover ---------------------------- */
+
+.uhc-cover {
+  position: relative;
+  height: 76px;
+  background: linear-gradient(118deg, #10b981 0%, #0d9488 46%, #4f46e5 115%);
+  overflow: hidden;
+}
+
+.uhc-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(130px 70px at 18% 0%, rgba(255, 255, 255, 0.4), transparent 70%),
+    radial-gradient(150px 90px at 88% 130%, rgba(79, 70, 229, 0.55), transparent 72%);
+}
+
+.uhc-cover-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 32%, rgba(255, 255, 255, 0.3) 50%, transparent 68%);
+  transform: translateX(-110%);
+  animation: uhc-shimmer 2.6s ease-in-out infinite;
+}
+
+@keyframes uhc-shimmer {
+  0% {
+    transform: translateX(-110%);
+  }
+  62%,
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+/* ------------------------------ Avatar --------------------------------- */
+
+.uhc-avatar-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: -36px 0 0 18px;
+}
+
+.uhc-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 6px 16px rgba(2, 44, 34, 0.28),
+    0 0 0 2px rgba(16, 185, 129, 0.35);
+  background: #e2e8f0;
+  display: block;
+}
+
+.uhc-status-dot {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2.5px solid #ffffff;
+  background: #94a3b8;
+}
+
+.uhc-status-dot.tone-online {
+  background: #10b981;
+  animation: uhc-pulse 2.2s ease-out infinite;
+}
+
+.uhc-status-dot.tone-busy {
+  background: #ef4444;
+}
+
+.uhc-status-dot.tone-away {
+  background: #f59e0b;
+}
+
+.uhc-status-dot.tone-dnd {
+  background: #8b5cf6;
+}
+
+.uhc-status-dot.tone-custom {
+  background: #06b6d4;
+}
+
+.uhc-status-dot.tone-inactive {
+  background: #94a3b8;
+}
+
+@keyframes uhc-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+/* ------------------------------- Body ---------------------------------- */
+
+.uhc-body {
+  padding: 10px 18px 14px;
+}
+
+.uhc-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+}
+
+.uhc-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 165px;
+}
+
+.uhc-verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.5);
+  flex: 0 0 auto;
+}
+
+.uhc-verified-svg {
+  width: 10px;
+  height: 10px;
+}
+
+.uhc-status-pill {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 2.5px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.uhc-status-pill.tone-online {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.uhc-status-pill.tone-busy {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.uhc-status-pill.tone-away {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.uhc-status-pill.tone-dnd {
+  color: #6d28d9;
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.28);
+}
+
+.uhc-status-pill.tone-custom {
+  color: #0e7490;
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.28);
+}
+
+.uhc-status-pill.tone-inactive {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.1);
+  border-color: rgba(100, 116, 139, 0.22);
+}
+
+/* ------------------------------- Meta rows ----------------------------- */
+
+.uhc-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.uhc-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.uhc-meta-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  color: #0d9488;
+}
+
+.uhc-meta-text {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------ Stat chips ----------------------------- */
+
+.uhc-stats-row {
+  display: flex;
+  gap: 7px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.uhc-stat-chip {
+  flex: 1 1 auto;
+  min-width: 84px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(13, 148, 136, 0.06));
+  border: 1px solid rgba(13, 148, 136, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.uhc-stat-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.uhc-stat-value {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #065f46;
+  letter-spacing: -0.01em;
+}
+
+.uhc-stat-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.15;
+}
+
+/* ------------------------------- Footer -------------------------------- */
+
+.uhc-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px 10px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(16, 185, 129, 0.05));
+  font-size: 11px;
+  font-weight: 600;
+  color: #0d9488;
+}
+
+.uhc-footer-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .uhc-card {
+    animation: none;
+    transition: opacity 0.1s ease;
+    transform: none;
+  }
+  .uhc-cover-shimmer,
+  .uhc-status-dot.tone-online {
+    animation: none;
+  }
+}

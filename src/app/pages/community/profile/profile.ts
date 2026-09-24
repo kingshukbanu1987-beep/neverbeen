@@ -30,6 +30,7 @@ import {
 import { CommunityService } from '../../../services/community.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
+import { UserHoverCard, UserPreviewDirective } from '../../../shared/user-hover-card';
 import { CommentThreadComponent } from './comment-item';
 
 export type ProfileSection =
@@ -52,6 +53,8 @@ export type ProfileSection =
     ReactiveFormsModule,
     CommentThreadComponent,
     TranslatableTextDirective,
+    UserPreviewDirective,
+    UserHoverCard,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.css',

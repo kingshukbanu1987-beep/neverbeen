@@ -75,10 +75,11 @@
               [src]="post.author.profilePhotoUrl || defaultAvatar"
               [alt]="post.author.fullName || 'Member'"
               class="post-avatar"
+              [nbUserPreview]="post.author"
             />
             <div class="post-author-meta">
               <div class="author-line">
-                <span class="author-name">{{ post.author.fullName || 'Anonymous Traveler' }}</span>
+                <span class="author-name" [nbUserPreview]="post.author">{{ post.author.fullName || 'Anonymous Traveler' }}</span>
                 @if (post.author.profession) {
                   <span class="author-profession">{{ post.author.profession }}</span>
                 }
@@ -154,10 +155,11 @@
                     [src]="reply.author.profilePhotoUrl || defaultAvatar"
                     [alt]="reply.author.fullName || 'Reply author'"
                     class="reply-avatar"
+                    [nbUserPreview]="reply.author"
                   />
                   <div class="reply-content">
                     <div class="reply-header">
-                      <span class="reply-author-name">{{ reply.author.fullName || 'Traveler' }}</span>
+                      <span class="reply-author-name" [nbUserPreview]="reply.author">{{ reply.author.fullName || 'Traveler' }}</span>
                       @if (reply.author.profession) {
                         <span class="reply-profession">{{ reply.author.profession }}</span>
                       }
@@ -223,4 +225,7 @@
       }
     }
   </div>
+
+  <!-- Traveler hover preview card (shows while hovering a user name/picture in the Message Book) -->
+  <app-user-hover-card />
 </section>

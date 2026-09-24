@@ -10,6 +10,10 @@ export const routes: Routes = [
     title: 'NeverBeen — Vacation photographs of places you have never been',
   },
   { path: 'login', component: Login, title: 'Admin — NeverBeen' },
+  {
+    path: 'admin',
+    loadChildren: () => import('./pages/admin/admin.routes').then((m) => m.adminRoutes),
+  },
   { path: 'founder', component: Founder, title: 'Founder — NeverBeen' },
   {
     path: 'audience',

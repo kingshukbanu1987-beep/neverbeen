@@ -1,0 +1,275 @@
+/* ---------------------- Admin > Dashboard styles ---------------------- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  margin-bottom: 1.3rem;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--stat-glow, rgba(16, 185, 129, 0.4));
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -14px rgba(15, 23, 42, 0.3);
+}
+
+.stat-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.stat-label {
+  margin: 0.55rem 0 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.stat-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.dash-lower {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 0.9rem;
+}
+
+.chart-card,
+.feed-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem 1.3rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  min-width: 0;
+}
+
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.chart-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.chart-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  flex-wrap: wrap;
+}
+
+.chart-legend .sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 0.35rem;
+  vertical-align: -1px;
+}
+
+.sw-posts {
+  background: linear-gradient(180deg, #10b981, #059669);
+}
+
+.sw-comments {
+  background: linear-gradient(180deg, #6366f1, #4f46e5);
+}
+
+/* Chart */
+.chart-plot {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.chart-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 130px;
+  width: 100%;
+  max-width: 54px;
+  justify-content: center;
+}
+
+.bar {
+  display: block;
+  width: 12px;
+  border-radius: 5px 5px 2px 2px;
+  transition: height 0.4s ease;
+}
+
+.bar-posts {
+  background: linear-gradient(180deg, #34d399, #059669);
+}
+
+.bar-comments {
+  background: linear-gradient(180deg, #818cf8, #4f46e5);
+}
+
+.bar.tiny {
+  opacity: 0.35;
+}
+
+.chart-total {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.chart-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Feed */
+.empty-note {
+  margin: 1.2rem 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-item {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.75rem 0.25rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.feed-item:last-child {
+  border-bottom: none;
+}
+
+.feed-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: #e2e8f0;
+}
+
+.feed-body {
+  min-width: 0;
+}
+
+.feed-title {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.feed-title strong {
+  color: #0f172a;
+}
+
+.feed-time {
+  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.feed-text {
+  margin: 0.2rem 0 0.3rem;
+  font-size: 0.8rem;
+  color: #475569;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.feed-meta {
+  margin: 0;
+  display: flex;
+  gap: 0.8rem;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+@media (max-width: 1200px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-lower {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}

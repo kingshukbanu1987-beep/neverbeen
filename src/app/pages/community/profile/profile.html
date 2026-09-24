@@ -282,7 +282,7 @@
               class="btn-side-view-profile"
               (click)="viewOwnProfileAsVisitor()"
             >
-              👁️ View Profile
+              View Profile
             </button>
           </div>
         </div>
@@ -471,15 +471,14 @@
               (click)="openVisitorProfile(comp)"
               role="button"
               tabindex="0"
-              [title]="'View ' + comp.fullName + ' Profile'"
             >
               <div class="side-companion-main-row">
                 <div class="side-companion-avatar-wrap">
-                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="side-companion-avatar" />
+                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="side-companion-avatar" [nbUserPreview]="comp" />
                   <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                 </div>
                 <div class="side-companion-meta">
-                  <span class="side-companion-name">
+                  <span class="side-companion-name" [nbUserPreview]="comp">
                     {{ comp.fullName }}
                     @if (isAuthorVerified(comp)) {
                       <span class="blue-verified-badge" title="Verified Account">
@@ -560,10 +559,11 @@
                   [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
                   [alt]="service.profile()?.fullName || 'Me'"
                   class="composer-user-avatar clickable-user"
+                  [nbUserPreview]="service.profile()"
                   (click)="openVisitorProfile(service.currentUser()?.id || 1)"
                 />
                 <div class="composer-author-info">
-                  <span class="composer-user-name clickable-user" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
+                  <span class="composer-user-name clickable-user" [nbUserPreview]="service.profile()" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
                     {{ service.profile()?.fullName || 'Kingshuk' }}
                   </span>
                   <span class="composer-audience-badge">🌐 Public</span>
@@ -734,12 +734,12 @@
                       [src]="post.author.profilePhotoUrl || defaultAvatar"
                       [alt]="post.author.fullName"
                       class="author-avatar clickable-user"
+                      [nbUserPreview]="post.author"
                       (click)="openVisitorProfile(post.author)"
-                      title="View traveler profile"
                     />
                     <div class="author-details">
                       <div class="author-name-line">
-                        <strong class="author-name clickable-user" (click)="openVisitorProfile(post.author)">
+                        <strong class="author-name clickable-user" [nbUserPreview]="post.author" (click)="openVisitorProfile(post.author)">
                           {{ post.author.fullName }}
                         </strong>
                         @if (isAuthorVerified(post.author)) {
@@ -751,13 +751,13 @@
                         @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
                           <span class="tagged-with-text"> is with </span>
                           @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                            <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
+                            <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
                           }
                         }
                         @if (post.isShared && post.originalPost) {
                           <span class="shared-indicator-text">
                             shared
-                            <strong class="clickable-user" (click)="openVisitorProfile(post.originalPost.author)">
+                            <strong class="clickable-user" [nbUserPreview]="post.originalPost.author" (click)="openVisitorProfile(post.originalPost.author)">
                               {{ post.originalPost.author.fullName }}'s
                             </strong>
                             post
@@ -850,10 +850,11 @@
                           [src]="post.originalPost.author.profilePhotoUrl || defaultAvatar"
                           [alt]="post.originalPost.author.fullName"
                           class="shared-orig-avatar clickable-user"
+                          [nbUserPreview]="post.originalPost.author"
                           (click)="openVisitorProfile(post.originalPost.author)"
                         />
                         <div class="shared-orig-meta">
-                          <strong class="shared-orig-name clickable-user" (click)="openVisitorProfile(post.originalPost.author)">
+                          <strong class="shared-orig-name clickable-user" [nbUserPreview]="post.originalPost.author" (click)="openVisitorProfile(post.originalPost.author)">
                             {{ post.originalPost.author.fullName }}
                           </strong>
                           <span class="shared-orig-time">
@@ -1861,18 +1862,19 @@
                       [src]="comment.author.profilePhotoUrl || defaultAvatar"
                       [alt]="comment.author.fullName || 'User'"
                       class="author-avatar clickable-user"
+                      [nbUserPreview]="comment.author"
                       (click)="openVisitorProfile(comment.author)"
                     />
                     <div class="author-details">
                       <div class="author-name-line">
-                        <strong class="author-name clickable-user" (click)="openVisitorProfile(comment.author)">
+                        <strong class="author-name clickable-user" [nbUserPreview]="comment.author" (click)="openVisitorProfile(comment.author)">
                           {{ comment.author.fullName }}
                         </strong>
                         <!-- REQUIREMENT C: post displays as user is with those tagged people -->
                         @if (comment.taggedCompanions && comment.taggedCompanions.length > 0) {
                           <span class="tagged-with-text"> is with </span>
                           @for (tagged of comment.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                            <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === comment.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
+                            <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === comment.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
                           }
                         }
                       </div>
@@ -2019,11 +2021,12 @@
                             [src]="reply.author.profilePhotoUrl || defaultAvatar"
                             [alt]="reply.author.fullName || 'User'"
                             class="nested-avatar clickable-user"
+                            [nbUserPreview]="reply.author"
                             (click)="openVisitorProfile(reply.author)"
                           />
                           <div class="nested-content">
                             <div class="nested-reply-top">
-                              <strong class="nested-name clickable-user" (click)="openVisitorProfile(reply.author)">
+                              <strong class="nested-name clickable-user" [nbUserPreview]="reply.author" (click)="openVisitorProfile(reply.author)">
                                 {{ reply.author.fullName }}
                               </strong>
                               @if (canDeleteComment(reply.author.id)) {
@@ -2095,10 +2098,10 @@
                   <div class="pending-sent-grid">
                     @for (p of pendingOutgoingCompanions(); track p.id) {
                       <div class="pending-sent-card">
-                        <div class="pending-sent-left" (click)="openVisitorProfile(p)">
+                        <div class="pending-sent-left" [nbUserPreview]="p" (click)="openVisitorProfile(p)">
                           <img [src]="p.profilePhotoUrl || defaultAvatar" [alt]="p.fullName" class="pending-sent-avatar" />
                           <div class="pending-sent-meta">
-                            <strong class="pending-sent-name">{{ p.fullName }}</strong>
+                            <strong class="pending-sent-name" [nbUserPreview]="p">{{ p.fullName }}</strong>
                             <span class="pending-sent-loc"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ p.city }}, {{ p.country }}</span>
                           </div>
                         </div>
@@ -2154,12 +2157,12 @@
                       @for (c of incomingRequests(); track c.id) {
                         <div class="companion-70-card companion-40-card companion-25-card companion-card">
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
-                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
                               <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
-                              <h4 class="companion-70-name companion-card-name clickable-user" (click)="openVisitorProfile(c)">
+                              <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                                 {{ c.fullName }}
                                 @if (isAuthorVerified(c)) {
                                   <span class="blue-verified-badge" title="Verified Account">
@@ -2243,12 +2246,12 @@
                       @for (c of connectedCompanions(); track c.id) {
                         <div class="companion-70-card companion-40-card companion-25-card companion-card">
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
-                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
                               <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
-                              <h4 class="companion-70-name companion-card-name clickable-user" (click)="openVisitorProfile(c)">
+                              <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                                 {{ c.fullName }}
                                 @if (isAuthorVerified(c)) {
                                   <span class="blue-verified-badge" title="Verified Account">
@@ -2340,12 +2343,12 @@
                       @for (c of suggestedCompanions(); track c.id) {
                         <div class="companion-70-card companion-40-card companion-25-card companion-card">
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
-                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" (click)="openVisitorProfile(c)" title="Click to view profile">
+                            <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
                               <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
-                              <h4 class="companion-70-name companion-card-name clickable-user" (click)="openVisitorProfile(c)">
+                              <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                                 {{ c.fullName }}
                                 @if (isAuthorVerified(c)) {
                                   <span class="blue-verified-badge" title="Verified Account">
@@ -2447,8 +2450,8 @@
                           [src]="member.profilePhotoUrl"
                           [alt]="member.fullName"
                           class="member-cluster-avatar clickable-user"
+                          [nbUserPreview]="member"
                           (click)="openVisitorProfile(member)"
-                          [title]="member.fullName"
                         />
                       }
                     </div>
@@ -2477,11 +2480,11 @@
                   @for (c of service.onlineCompanions(); track c.id) {
                     <div class="companion-chat-item" (click)="openChatWith(c)">
                       <div class="chat-avatar-wrap">
-                        <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" />
+                        <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
                         <span class="online-indicator"></span>
                       </div>
                       <div class="chat-item-info">
-                        <strong>{{ c.fullName }}</strong>
+                        <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
                         <span>{{ c.city }}, {{ c.country }}</span>
                       </div>
                       <button type="button" class="btn-launch-chat">Chat</button>
@@ -2499,10 +2502,10 @@
                   @for (c of service.offlineCompanions(); track c.id) {
                     <div class="companion-chat-item offline" (click)="openChatWith(c)">
                       <div class="chat-avatar-wrap">
-                        <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" />
+                        <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
                       </div>
                       <div class="chat-item-info">
-                        <strong>{{ c.fullName }}</strong>
+                        <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
                         <span>Last seen recently</span>
                       </div>
                       <button type="button" class="btn-launch-chat">Leave Message</button>
@@ -2531,11 +2534,12 @@
                     [src]="notif.fromUser.profilePhotoUrl || defaultAvatar"
                     [alt]="notif.fromUser.fullName || 'User'"
                     class="notif-avatar clickable-user"
+                    [nbUserPreview]="notif.fromUser"
                     (click)="openVisitorProfile(notif.fromUser)"
                   />
                   <div class="notif-content">
                     <p class="notif-text">
-                      <strong class="clickable-user" (click)="openVisitorProfile(notif.fromUser)">
+                      <strong class="clickable-user" [nbUserPreview]="notif.fromUser" (click)="openVisitorProfile(notif.fromUser)">
                         {{ notif.fromUser.fullName }}
                       </strong>
                       {{ notif.message }}
@@ -2862,8 +2866,8 @@
                         [src]="box.companion.profilePhotoUrl || defaultAvatar"
                         [alt]="box.companion.fullName"
                         class="chat-bubble-avatar chat-comp-avatar clickable-user"
+                        [nbUserPreview]="box.companion"
                         (click)="openVisitorProfile(box.companion)"
-                        [title]="box.companion.fullName"
                       />
                     }
                   </div>
@@ -3394,6 +3398,7 @@
               [src]="viewingVisitor()!.profilePhotoUrl || defaultAvatar"
               [alt]="viewingVisitor()!.fullName + ' Profile Picture'"
               class="visitor-fully-visible-avatar"
+              [nbUserPreview]="viewingVisitor()!"
               (click)="openImageModal(viewingVisitor()!.profilePhotoUrl || defaultAvatar)"
               title="Click to view full photo"
             />
@@ -3410,7 +3415,7 @@
 
           <div class="visitor-hero-meta">
             <div class="visitor-name-line">
-              <h1 class="visitor-hero-name visitor-name">
+              <h1 class="visitor-hero-name visitor-name" [nbUserPreview]="viewingVisitor()!">
                 {{ viewingVisitor()!.fullName }}
                 @if (isAuthorVerified(viewingVisitor()!)) {
                   <span class="blue-verified-badge large-badge" title="Verified Account">
@@ -3568,11 +3573,11 @@
                   <div class="visitor-side-comp-item">
                     <div class="visitor-side-comp-left" (click)="comp.id === (service.currentUser()?.id || 1) ? closeVisitorProfile() : openVisitorProfile(comp)">
                       <div class="visitor-side-comp-avatar-wrap">
-                        <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="visitor-side-comp-avatar" />
+                        <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="visitor-side-comp-avatar" [nbUserPreview]="comp" />
                         <span class="visitor-side-comp-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                       </div>
                       <div class="visitor-side-comp-details">
-                        <strong class="visitor-side-comp-name">
+                        <strong class="visitor-side-comp-name" [nbUserPreview]="comp">
                           {{ comp.fullName }}
                           @if (isAuthorVerified(comp)) {
                             <span class="blue-verified-badge" title="Verified Account">
@@ -3822,10 +3827,10 @@
             @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
               <article class="journey-post-card">
                 <div class="post-header">
-                  <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" />
+                  <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" [nbUserPreview]="post.author" />
                   <div class="author-details">
                     <div class="author-name-line">
-                      <strong class="author-name">{{ post.author.fullName }}</strong>
+                      <strong class="author-name" [nbUserPreview]="post.author">{{ post.author.fullName }}</strong>
                       @if (isAuthorVerified(post.author)) {
                         <span class="blue-verified-badge" title="Verified Account">
                           <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
@@ -3834,7 +3839,7 @@
                       @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
                         <span class="tagged-with-text"> is with </span>
                         @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                          <strong class="tagged-companion-link clickable-user" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
+                          <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
                         }
                       }
                     </div>
@@ -4058,9 +4063,9 @@
             @for (comp of filteredVisitorCompanions(viewingVisitor()!.id); track comp.id) {
               <div class="modal-companion-row">
                 <div class="modal-comp-user-info" (click)="closeAllVisitorCompanionsModal(); comp.id === (service.currentUser()?.id || 1) ? closeVisitorProfile() : openVisitorProfile(comp)">
-                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" />
+                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" [nbUserPreview]="comp" />
                   <div class="modal-comp-meta">
-                    <strong class="modal-comp-name">
+                    <strong class="modal-comp-name" [nbUserPreview]="comp">
                       {{ comp.fullName }}
                       @if (isAuthorVerified(comp)) {
                         <span class="blue-verified-badge" title="Verified Account">
@@ -4145,11 +4150,11 @@
             <div class="modal-companion-row">
               <div class="modal-comp-user-info" (click)="closeAllUserCompanionsModal(); openVisitorProfile(comp)">
                 <div class="modal-comp-avatar-wrap">
-                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" />
+                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" [nbUserPreview]="comp" />
                   <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                 </div>
                 <div class="modal-comp-meta">
-                  <strong class="modal-comp-name">
+                  <strong class="modal-comp-name" [nbUserPreview]="comp">
                     {{ comp.fullName }}
                     @if (isAuthorVerified(comp)) {
                       <span class="blue-verified-badge" title="Verified Account">
@@ -4213,11 +4218,11 @@
             <div class="modal-companion-row">
               <div class="modal-comp-user-info" (click)="closeMutualCompanionsModal(); openVisitorProfile(comp)">
                 <div class="modal-comp-avatar-wrap">
-                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" />
+                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" [nbUserPreview]="comp" />
                   <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
                 </div>
                 <div class="modal-comp-meta">
-                  <strong class="modal-comp-name">
+                  <strong class="modal-comp-name" [nbUserPreview]="comp">
                     {{ comp.fullName }}
                     @if (isAuthorVerified(comp)) {
                       <span class="blue-verified-badge" title="Verified Account">
@@ -4320,11 +4325,11 @@
             @for (item of filteredBreakdownReactions(); track item.user.id + item.type) {
               <div class="liker-item-row" (click)="onLikerClick(item.user)">
                 <div class="reactor-avatar-wrapper">
-                  <img [src]="item.user.profilePhotoUrl || defaultAvatar" [alt]="item.user.fullName" class="liker-avatar" />
+                  <img [src]="item.user.profilePhotoUrl || defaultAvatar" [alt]="item.user.fullName" class="liker-avatar" [nbUserPreview]="item.user" />
                   <span class="reactor-badge-icon" [title]="item.type">{{ reactionIconsMap[item.type] || '❤️' }}</span>
                 </div>
                 <div class="liker-info">
-                  <strong class="liker-name">{{ item.user.fullName }}</strong>
+                  <strong class="liker-name" [nbUserPreview]="item.user">{{ item.user.fullName }}</strong>
                   <span class="liker-role">{{ item.type }} • {{ item.user.profession || 'Traveler' }}</span>
                 </div>
                 <div class="liker-action">
@@ -4427,9 +4432,9 @@
                   [checked]="isCompanionTagged(companion.id)"
                   (change)="toggleCompanionTag(companion)"
                 />
-                <img [src]="companion.profilePhotoUrl || defaultAvatar" [alt]="companion.fullName" class="tag-avatar" />
+                <img [src]="companion.profilePhotoUrl || defaultAvatar" [alt]="companion.fullName" class="tag-avatar" [nbUserPreview]="companion" />
                 <div class="tag-companion-info">
-                  <strong class="tag-name">{{ companion.fullName }}</strong>
+                  <strong class="tag-name" [nbUserPreview]="companion">{{ companion.fullName }}</strong>
                   <span class="tag-meta">{{ companion.city }}, {{ companion.country }} • {{ companion.profession }}</span>
                 </div>
               </label>
@@ -4457,11 +4462,13 @@
               [src]="viewingPostDetail()!.author.profilePhotoUrl || defaultAvatar"
               [alt]="viewingPostDetail()!.author.fullName"
               class="author-avatar-img clickable-user"
+              [nbUserPreview]="viewingPostDetail()!.author"
               (click)="closePostDetail(); openVisitorProfile(viewingPostDetail()!.author)"
             />
             <div class="post-detail-author-meta">
               <strong
                 class="author-name clickable-user"
+                [nbUserPreview]="viewingPostDetail()!.author"
                 (click)="closePostDetail(); openVisitorProfile(viewingPostDetail()!.author)"
               >
                 {{ viewingPostDetail()!.author.fullName }}
@@ -4513,4 +4520,7 @@
       </div>
     </div>
   }
+
+  <!-- Traveler hover preview card (shows while hovering a user name/picture anywhere in Community) -->
+  <app-user-hover-card />
 </div>
