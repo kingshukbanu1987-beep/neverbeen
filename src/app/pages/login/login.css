@@ -317,6 +317,13 @@ h1 {
   color: #bbf7d0;
 }
 
+.error-note {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #fecaca;
+  font-weight: 600;
+}
+
 /* Back link */
 .back-btn {
   display: inline-flex;

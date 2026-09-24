@@ -228,6 +228,17 @@ export interface CreateAccountData {
   profession?: string;
 }
 
+function loadJsonValue(key: string): unknown {
+  if (typeof localStorage === 'undefined') return null;
+  const str = localStorage.getItem(key);
+  if (str == null) return null;
+  try {
+    return JSON.parse(str);
+  } catch {
+    return str;
+  }
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -1834,6 +1845,67 @@ export class CommunityService {
       list.map((c) => (c.id === companionId ? { ...c, status: 'none' } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  // ---------------------------------------------------------------------------
+  // Admin Console operations (persisted exactly like the member-side mutations)
+  // ---------------------------------------------------------------------------
+
+  /** Admin: patch any fields on a community member (verification, lock, status…). */
+  adminPatchCompanion(companionId: number, patch: Partial<Companion>): void {
+    this.companions.update((list) =>
+      list.map((c) => (Number(c.id) === Number(companionId) ? { ...c, ...patch } : c)),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  /** Admin: permanently remove a community member from the directory. */
+  adminDeleteCompanion(companionId: number): void {
+    this.companions.update((list) => list.filter((c) => Number(c.id) !== Number(companionId)));
+    this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  /** Admin: wipe a whole dataset (re-seeds on next load). */
+  adminClearDataset(key: string): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  }
+
+  /** Admin: total bytes currently used by all NeverBeen datasets in localStorage. */
+  adminStorageUsage(): { key: string; bytes: number }[] {
+    if (typeof localStorage === 'undefined') return [];
+    const usage: { key: string; bytes: number }[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('neverbeen_')) continue;
+      const value = localStorage.getItem(key) ?? '';
+      usage.push({ key, bytes: value.length * 2 }); // UTF-16 code units
+    }
+    return usage.sort((a, b) => b.bytes - a.bytes);
+  }
+
+  /** Admin: every NeverBeen dataset as a single JSON document (for export). */
+  adminExportData(): string {
+    const source: Record<string, unknown> = {};
+    if (typeof localStorage !== 'undefined') {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith('neverbeen_')) continue;
+        source[key] = loadJsonValue(key);
+      }
+    }
+    source['__exportedAtUtc'] = new Date().toISOString();
+    return JSON.stringify(source, null, 2);
+  }
+
+  /** Journey posts authored by a member (used by the admin user table). */
+  journeyPostCountFor(userId: number): number {
+    let n = 0;
+    for (const post of this.journeyPosts()) {
+      if (post.author?.id === userId) n++;
+    }
+    return n;
   }
 
   getCurrentUserAsCompanion(): Companion {

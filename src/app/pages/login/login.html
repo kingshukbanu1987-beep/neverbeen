@@ -23,16 +23,16 @@
 
         <form [formGroup]="adminForm" (ngSubmit)="submit()" class="admin-form" novalidate>
           <label class="field">
-            <span class="field-label">Admin Email</span>
+            <span class="field-label">Admin Username</span>
             <input
-              type="email"
-              formControlName="email"
-              autocomplete="email"
-              placeholder="admin@neverbeen.example"
-              [class.invalid]="isAdminInvalid('email')"
+              type="text"
+              formControlName="username"
+              autocomplete="username"
+              placeholder="admin"
+              [class.invalid]="isAdminInvalid('username')"
             />
-            @if (isAdminInvalid('email')) {
-              <span class="field-error">Enter a valid administrator email address.</span>
+            @if (isAdminInvalid('username')) {
+              <span class="field-error">Enter the administrator username (minimum 3 characters).</span>
             }
           </label>
 
@@ -59,10 +59,9 @@
             Sign in to Admin Console
           </button>
 
-          @if (adminSubmitted()) {
-            <p class="note success-note">
-              ✓ Credentials verified — the admin dashboard preview is not connected to a live
-              directory service yet.
+          @if (adminError()) {
+            <p class="note error-note" role="alert">
+              ⚠ {{ adminError() }}
             </p>
           }
         </form>
