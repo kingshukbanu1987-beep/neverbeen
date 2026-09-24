@@ -415,6 +415,8 @@ export interface Companion {
   connectedCompanionIds?: number[];
   isVerified?: boolean;
   verifiedEmail?: string;
+  /** Set by the admin console when a member's account is suspended. */
+  isAccountDisabled?: boolean;
 }
 
 export interface Circle {

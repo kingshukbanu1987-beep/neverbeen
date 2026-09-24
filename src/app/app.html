@@ -1,5 +1,9 @@
-<app-navbar />
+@if (showSiteChrome()) {
+  <app-navbar />
+}
 <main>
   <router-outlet />
 </main>
-<app-footer />
+@if (showSiteChrome()) {
+  <app-footer />
+}

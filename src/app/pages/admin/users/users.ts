@@ -12,11 +12,12 @@ interface MemberRow {
   status: Companion['status'];
   isVerified: boolean;
   isProfileLocked: boolean;
+  isAccountDisabled: boolean;
   postCount: number;
   isCurrentUser: boolean;
 }
 
-type FilterKey = 'all' | 'online' | 'verified' | 'locked' | 'pending';
+type FilterKey = 'all' | 'online' | 'verified' | 'locked' | 'pending' | 'disabled';
 
 /**
  * Admin > User Management — community member profile management:
@@ -105,6 +106,9 @@ type FilterKey = 'all' | 'online' | 'verified' | 'locked' | 'pending';
                     @if (member.isProfileLocked) {
                       <span class="flag warn" title="Profile locked">🔒 Locked</span>
                     }
+                    @if (member.isAccountDisabled) {
+                      <span class="flag danger" title="Account disabled by admin">🚫 Disabled</span>
+                    }
                   </td>
                   <td class="actions-cell">
                     <button
@@ -124,6 +128,20 @@ type FilterKey = 'all' | 'online' | 'verified' | 'locked' | 'pending';
                       [title]="member.isProfileLocked ? 'Unlock profile' : 'Lock profile'"
                     >
                       {{ member.isProfileLocked ? 'Unlock' : 'Lock' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="action-btn"
+                      [class.active-danger]="member.isAccountDisabled"
+                      (click)="toggleDisable(member)"
+                      [disabled]="member.isCurrentUser"
+                      [title]="member.isCurrentUser
+                        ? 'You cannot disable the signed-in member'
+                        : member.isAccountDisabled
+                          ? 'Re-enable this account'
+                          : 'Disable this account (hides the member from the community)'"
+                    >
+                      {{ member.isAccountDisabled ? 'Enable' : 'Disable' }}
                     </button>
                     <button
                       type="button"
@@ -178,6 +196,7 @@ export class AdminUsers {
     { key: 'online', label: 'Online' },
     { key: 'verified', label: 'Verified' },
     { key: 'locked', label: 'Locked' },
+    { key: 'disabled', label: 'Disabled' },
     { key: 'pending', label: 'Pending' },
   ];
 
@@ -201,6 +220,7 @@ export class AdminUsers {
       if (filter === 'online' && !m.isOnline) return false;
       if (filter === 'verified' && !m.isVerified) return false;
       if (filter === 'locked' && !m.isProfileLocked) return false;
+      if (filter === 'disabled' && !m.isAccountDisabled) return false;
       if (filter === 'pending' && m.status !== 'pending_incoming' && m.status !== 'pending_outgoing') return false;
       if (!term) return true;
       return (
@@ -224,6 +244,8 @@ export class AdminUsers {
         return members.filter((m) => m.isVerified).length;
       case 'locked':
         return members.filter((m) => m.isProfileLocked).length;
+      case 'disabled':
+        return members.filter((m) => m.isAccountDisabled).length;
       case 'pending':
         return members.filter((m) => m.status === 'pending_incoming' || m.status === 'pending_outgoing').length;
       default:
@@ -254,6 +276,17 @@ export class AdminUsers {
     this.showToast(`${member.fullName}'s profile ${member.isProfileLocked ? 'unlocked' : 'locked'}.`);
   }
 
+  toggleDisable(member: MemberRow): void {
+    if (member.isCurrentUser) return;
+    const disabling = !member.isAccountDisabled;
+    this.community.adminSetAccountDisabled(member.id, disabling);
+    this.showToast(
+      disabling
+        ? `${member.fullName}'s account has been disabled — hidden from the community until re-enabled.`
+        : `${member.fullName}'s account has been re-enabled.`,
+    );
+  }
+
   deleteMember(member: MemberRow): void {
     this.confirmation.set(member);
   }
@@ -281,6 +314,7 @@ export class AdminUsers {
       status: companion.status ?? 'none',
       isVerified: companion.isVerified === true,
       isProfileLocked: companion.isProfileLocked === true,
+      isAccountDisabled: companion.isAccountDisabled === true,
       postCount: this.community.journeyPostCountFor(companion.id),
       isCurrentUser,
     };

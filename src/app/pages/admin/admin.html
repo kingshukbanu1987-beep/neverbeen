@@ -62,6 +62,78 @@
         <h1>Admin Console</h1>
         <p>Manage website statistics, repositories, community members and data.</p>
       </div>
+
+      <!-- Global member search: find a user and disable / re-enable their account -->
+      <div class="topbar-user-search">
+        <label class="topbar-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+          </svg>
+          <input
+            type="search"
+            placeholder="Find a member by name, city or profession…"
+            [value]="searchQuery()"
+            (input)="onSearchInput($event)"
+            (focus)="resultsOpen.set(true)"
+            aria-label="Find a community member"
+          />
+          @if (searchQuery()) {
+            <button
+              type="button"
+              class="search-clear"
+              (click)="clearSearch()"
+              aria-label="Clear member search"
+            >×</button>
+          }
+        </label>
+
+        @if (resultsOpen() && searchQuery().trim()) {
+          <div class="topbar-search-results" role="listbox" aria-label="Member search results">
+            @if (searchResults().length === 0) {
+              <p class="search-results-empty">No members match “{{ searchQuery().trim() }}”.</p>
+            } @else {
+              @for (member of searchResults(); track member.id) {
+                <div class="search-result-row" role="option">
+                  <img [src]="member.profilePhotoUrl" [alt]="'Photo of ' + member.fullName" />
+                  <div class="sr-meta">
+                    <strong>
+                      {{ member.fullName }}
+                      @if (member.isCurrentUser) {
+                        <span class="sr-you">YOU</span>
+                      }
+                    </strong>
+                    <small>{{ member.profession }} · {{ member.location }}</small>
+                    @if (member.isAccountDisabled) {
+                      <span class="sr-disabled-tag">Account disabled</span>
+                    }
+                  </div>
+                  <button
+                    type="button"
+                    class="sr-action"
+                    [class.reenable]="member.isAccountDisabled"
+                    [disabled]="member.isCurrentUser"
+                    [title]="member.isCurrentUser
+                      ? 'You cannot disable the signed-in member'
+                      : member.isAccountDisabled
+                        ? 'Re-enable this account'
+                        : 'Disable this account'"
+                    (click)="toggleDisabled(member)"
+                  >
+                    {{ member.isAccountDisabled ? 'Enable' : 'Disable' }}
+                  </button>
+                </div>
+              }
+              <div class="search-results-foot">
+                <a routerLink="/admin/users" (click)="clearSearch()">
+                  Open User Management →
+                </a>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
       <div class="topbar-status">
         <span class="status-pill"><span class="live-dot" aria-hidden="true"></span> System Online</span>
         <span class="status-pill neutral">{{ onlineCount().length }} members online</span>
@@ -73,3 +145,7 @@
     </div>
   </main>
 </div>
+
+@if (toast(); as message) {
+  <div class="admin-toast" role="status">{{ message }}</div>
+}

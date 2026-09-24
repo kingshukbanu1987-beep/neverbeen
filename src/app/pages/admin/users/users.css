@@ -233,6 +233,12 @@ tr.current-user {
   border-color: rgba(245, 158, 11, 0.35);
 }
 
+.flag.danger {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
 .actions-col {
   text-align: left;
 }
@@ -264,6 +270,12 @@ tr.current-user {
   color: #047857;
   background: rgba(16, 185, 129, 0.1);
   border-color: rgba(16, 185, 129, 0.45);
+}
+
+.action-btn.active-danger {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.45);
 }
 
 .action-btn.danger {

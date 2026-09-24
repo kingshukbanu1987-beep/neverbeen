@@ -283,8 +283,11 @@ export class CommunityService {
   readonly isPending = computed(() => this.currentUser()?.status === 'Pending');
 
   // Filtered views ensuring blocked users cannot see or be seen by each other
+  // (members whose accounts were disabled from the Admin Console are also hidden)
   readonly visibleCompanions = computed(() =>
-    this.companions().filter((c) => !this.blockedUserIds().includes(c.id)),
+    this.companions()
+      .filter((c) => !this.blockedUserIds().includes(c.id))
+      .filter((c) => c.isAccountDisabled !== true),
   );
 
   readonly visibleJourneyPosts = computed(() =>
@@ -1863,6 +1866,25 @@ export class CommunityService {
   adminDeleteCompanion(companionId: number): void {
     this.companions.update((list) => list.filter((c) => Number(c.id) !== Number(companionId)));
     this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  /**
+   * Admin: suspend (disable) or re-activate a community member's account.
+   * A disabled account is hidden from the public companion directory until
+   * re-enabled.
+   */
+  adminSetAccountDisabled(companionId: number, disabled: boolean): void {
+    this.companions.update((list) =>
+      list.map((c) =>
+        Number(c.id) === Number(companionId) ? { ...c, isAccountDisabled: disabled } : c,
+      ),
+    );
+    this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  /** Admin: is this member's account currently suspended? */
+  isCompanionAccountDisabled(companionId: number): boolean {
+    return this.companions().find((c) => Number(c.id) === Number(companionId))?.isAccountDisabled === true;
   }
 
   /** Admin: wipe a whole dataset (re-seeds on next load). */
