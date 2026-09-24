@@ -7037,7 +7037,9 @@
   min-height: 190px;
 }
 
-/* "In Companion Page, in Card Design, reduce the size of the user photo to 25% of the card" */
+/* "In Companion Page, in Card Design, reduce the size of the user photo to 25% of the card"
+   The photo image itself is further reduced to 30% of its previous size and
+   centered inside the photo area (Requirement: "reduce the photo to 30%"). */
 .companion-70-photo-col,
 .companion-40-photo-col,
 .companion-25-photo-col,
@@ -7050,18 +7052,25 @@
   overflow: hidden;
   background: #f1f5f9;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 190px;
 }
 
 .companion-70-photo-col .companion-photo-70-img,
 .companion-40-photo-col .companion-photo-img,
 .companion-25-photo-col .companion-photo-img,
 .companion-card-photo-col .companion-photo-img {
-  width: 100%;
-  height: 100%;
+  width: 30%;
+  height: 30%;
   object-fit: cover;
   object-position: center top;
   display: block;
   transition: transform 0.3s ease;
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.14);
 }
 
 .companion-70-photo-col:hover .companion-photo-70-img,
@@ -7075,9 +7084,11 @@
 .companion-40-photo-col .status-dot,
 .companion-25-photo-col .status-dot,
 .companion-card-photo-col .status-dot {
+  /* Anchor to the bottom-right corner of the 30%-size thumbnail (35%→65% box) */
   position: absolute;
-  top: 12px;
-  right: 12px;
+  left: 65%;
+  top: 65%;
+  transform: translate(25%, 25%);
   width: 13px;
   height: 13px;
   border: 2px solid #ffffff;
