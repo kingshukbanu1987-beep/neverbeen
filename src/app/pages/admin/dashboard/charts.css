@@ -1,0 +1,219 @@
+/* --------------- Admin dashboard — statistical chart cards --------------- */
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.c-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.1rem 1.2rem 1.2rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 40px -34px rgba(15, 23, 42, 0.35);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.c-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.c-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.c-head p {
+  margin: 0.15rem 0 0;
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.c-toggle {
+  display: inline-flex;
+  padding: 0.2rem;
+  border-radius: 10px;
+  background: #f1f5f9;
+  gap: 0.15rem;
+}
+
+.c-toggle button {
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
+.c-toggle button.on {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+}
+
+.c-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  margin-bottom: 0.9rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  border: 1px solid #e2e8f0;
+}
+
+.c-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+.c-filters label > span {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  padding-left: 0.15rem;
+}
+
+.c-filters select,
+.c-filters input {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 0.38rem 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.c-filters select:focus,
+.c-filters input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.c-reset {
+  align-self: flex-end;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0.2rem;
+}
+
+.c-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.c-kpi {
+  border-radius: 12px;
+  padding: 0.5rem 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+  min-width: 0;
+}
+
+.c-kpi small {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.c-kpi strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.c-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.c-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 0.3rem;
+  vertical-align: -1px;
+}
+
+.c-empty {
+  margin: auto 0;
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.84rem;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.c-foot {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.c-link {
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #047857;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .c-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -22,7 +22,7 @@
     <nav class="admin-nav">
       @for (item of navItems; track item.path) {
         <a
-          [routerLink]="'/' + item.path"
+          [routerLink]="'/admin/' + item.path"
           routerLinkActive="active"
           [title]="item.hint"
         >
@@ -73,3 +73,7 @@
     </div>
   </main>
 </div>
+
+@if (toast(); as message) {
+  <div class="admin-toast" role="status" aria-live="polite">{{ message }}</div>
+}

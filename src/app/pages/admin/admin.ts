@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AdminAuthService } from '../../services/admin-auth.service';
-import { CommunityService } from '../../services/community.service';
+import { AdminInsightsService } from './shared/admin-insights.service';
 
 interface AdminNavItem {
   path: string;
@@ -22,7 +22,7 @@ interface AdminNavItem {
 })
 export class AdminLayout {
   protected readonly adminAuth = inject(AdminAuthService);
-  protected readonly community = inject(CommunityService);
+  protected readonly insights = inject(AdminInsightsService);
 
   protected readonly navItems: AdminNavItem[] = [
     { path: 'dashboard', label: 'Dashboard', icon: '📊', hint: 'Website statistics & activity' },
@@ -31,8 +31,9 @@ export class AdminLayout {
     { path: 'data', label: 'Data Management', icon: '💾', hint: 'Datasets, storage & backups' },
   ];
 
-  protected readonly onlineCount = this.community.onlineCompanions;
-  protected readonly memberCount = this.community.companions.asReadonly();
+  protected readonly onlineCount = this.insights.onlineMembers;
+  protected readonly memberCount = this.insights.members;
+  protected readonly toast = this.insights.toast;
 
   logout(): void {
     this.adminAuth.logout();

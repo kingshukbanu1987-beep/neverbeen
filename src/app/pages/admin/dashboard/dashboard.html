@@ -1,0 +1,145 @@
+<div class="admin-page-head">
+  <h2>Dashboard</h2>
+  <p>Live overview of the NeverBeen community — members, moderation and engagement.</p>
+</div>
+
+<!-- K: find a user & disable -->
+<app-admin-user-search />
+
+<!-- Key metric cards -->
+<div class="stat-grid">
+  @for (card of statCards(); track card.label) {
+    <button
+      type="button"
+      class="stat-card"
+      [class.clickable]="card.link || card.action"
+      [disabled]="!card.link && !card.action"
+      [style.--stat-glow]="card.glow"
+      (click)="openCard(card)"
+      [attr.aria-label]="card.label + ': ' + card.value"
+    >
+      <span class="stat-top">
+        <span class="stat-icon" aria-hidden="true">{{ card.icon }}</span>
+        @if (card.link || card.action) {
+          <span class="stat-go" aria-hidden="true">View →</span>
+        }
+      </span>
+      <span class="stat-label">{{ card.label }}</span>
+      <span class="stat-value">{{ card.value.toLocaleString() }}</span>
+      <span class="stat-sub">{{ card.sub }}</span>
+    </button>
+  }
+</div>
+
+<!-- H + I: statistical charts -->
+<div class="dash-row two">
+  <app-admin-country-chart />
+  <app-admin-registration-chart />
+</div>
+
+<div class="dash-row lower">
+  <!-- 7-day activity chart -->
+  <section class="chart-card">
+    <header class="chart-head">
+      <div>
+        <h3>7-Day Activity</h3>
+        <p>Journey posts &amp; comments created per day</p>
+      </div>
+      <div class="chart-legend">
+        <span><i class="sw sw-posts"></i> Posts</span>
+        <span><i class="sw sw-comments"></i> Comments</span>
+      </div>
+    </header>
+    <div class="chart-plot">
+      @for (day of chartDays(); track day.label) {
+        <div class="chart-col" [title]="day.label + ': ' + day.posts + ' posts, ' + day.comments + ' comments'">
+          <div class="chart-bars">
+            <span class="bar bar-posts" [style.height.%]="day.postsPct" [class.tiny]="day.posts === 0"></span>
+            <span class="bar bar-comments" [style.height.%]="day.commentsPct" [class.tiny]="day.comments === 0"></span>
+          </div>
+          <span class="chart-total">{{ day.posts + day.comments }}</span>
+          <span class="chart-label">{{ day.label }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- F: Latest Most Highlight Journey Posts -->
+  <section class="feed-card">
+    <header class="chart-head">
+      <div>
+        <h3>🔥 Latest Most Highlight Journey Posts</h3>
+        <p>Posts where members are engaging the most — likes, comments, shares &amp; reactions</p>
+      </div>
+    </header>
+
+    @if (highlightPosts().length === 0) {
+      <p class="empty-note">No journey posts yet — highlights appear as members engage.</p>
+    } @else {
+      <ol class="hl-list">
+        @for (h of highlightPosts(); track h.post.id) {
+          <li class="hl-item">
+            <span class="hl-rank" [class.gold]="h.rank === 1">#{{ h.rank }}</span>
+            @if (h.post.imageUrl) {
+              <img class="hl-thumb" [src]="h.post.imageUrl" [alt]="'Photo from ' + (h.post.location || 'journey post')" loading="lazy" />
+            } @else {
+              <img class="hl-thumb avatar" [src]="h.post.author.profilePhotoUrl ?? ''" [alt]="h.post.author.fullName ?? 'Member'" loading="lazy" />
+            }
+            <div class="hl-body">
+              <p class="hl-title">
+                <strong>{{ h.post.author.fullName ?? 'Member' }}</strong>
+                <span class="hl-time">{{ timeAgo(h.post.createdAtUtc) }}</span>
+                @if (h.post.location) {
+                  <span class="hl-time">· 📍 {{ h.post.location }}</span>
+                }
+              </p>
+              <p class="hl-text">{{ h.post.text }}</p>
+              <p class="hl-meta">
+                <span title="Likes">❤️ {{ h.likes }}</span>
+                <span title="Comments &amp; replies">💬 {{ h.comments }}</span>
+                <span title="Shares">🔁 {{ h.shares }}</span>
+                <span title="Reactions">✨ {{ h.reactions }}</span>
+              </p>
+              <span class="hl-meter" [title]="'Engagement score ' + h.score"><i [style.width.%]="h.pct"></i></span>
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  </section>
+</div>
+
+<!-- A: latest abuse reports preview -->
+<section class="reports-strip">
+  <header class="chart-head">
+    <div>
+      <h3>🚩 Abuse Reports awaiting decision</h3>
+      <p>Click a report to open the full review page with the decision options.</p>
+    </div>
+    <a class="strip-link" routerLink="/admin/dashboard/abuse-reports">View all reports →</a>
+  </header>
+  @if (latestReports().length === 0) {
+    <p class="empty-note">No pending abuse reports. 🎉</p>
+  } @else {
+    <div class="report-tiles">
+      @for (r of latestReports(); track r.id) {
+        <a class="report-tile" routerLink="/admin/dashboard/abuse-reports" [queryParams]="{ report: r.id }">
+          <span class="rt-top">
+            <span class="rt-reason">{{ r.reason }}</span>
+            <span class="rt-time">{{ timeAgo(r.createdAtUtc) }}</span>
+          </span>
+          <span class="rt-people">
+            <img [src]="r.reporter.photo" [alt]="r.reporter.fullName" />
+            <span class="rt-arrow">→</span>
+            <img [src]="r.reported.photo" [alt]="r.reported.fullName" />
+            <span class="rt-names"><b>{{ r.reporter.fullName }}</b> reported <b>{{ r.reported.fullName }}</b></span>
+          </span>
+          <span class="rt-quote">“{{ r.contentExcerpt }}”</span>
+        </a>
+      }
+    </div>
+  }
+</section>
+
+<!-- G: suspicious users grid -->
+<app-admin-suspicious-users />

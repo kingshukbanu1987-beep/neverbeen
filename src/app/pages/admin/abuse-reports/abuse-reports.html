@@ -1,0 +1,225 @@
+<div class="g-page-head">
+  <div>
+    <a class="g-back" routerLink="/admin/dashboard">← Dashboard</a>
+    <h2>🚩 Abuse Reports</h2>
+    <p>Review every report filed by members, see who reported whom, and decide the action to take.</p>
+  </div>
+  <nav class="g-tabs" aria-label="Report status">
+    <button type="button" [class.active]="tab() === 'pending'" (click)="tab.set('pending')">⏳ Pending <span class="count">{{ counts().pending }}</span></button>
+    <button type="button" [class.active]="tab() === 'resolved'" (click)="tab.set('resolved')">✔ Resolved <span class="count">{{ counts().resolved }}</span></button>
+    <button type="button" [class.active]="tab() === 'all'" (click)="tab.set('all')">All <span class="count">{{ counts().all }}</span></button>
+  </nav>
+</div>
+
+<div class="g-kpis">
+  @for (k of kpis(); track k.label) {
+    <div class="g-kpi" [style.--kpi-glow]="k.glow">
+      <small>{{ k.label }}</small>
+      <strong>{{ k.value }}</strong>
+    </div>
+  }
+</div>
+
+<section class="g-panel ar-panel">
+  <div class="g-toolbar">
+    <label class="g-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+      </svg>
+      <input type="search" placeholder="Search reporter, reported member, reason, content…" [value]="search()" (input)="search.set($any($event.target).value)" aria-label="Search reports" />
+    </label>
+    <label class="g-select">
+      <span>Reason</span>
+      <select [value]="reason()" (change)="reason.set($any($event.target).value)">
+        <option value="">All reasons</option>
+        @for (r of reasons(); track r) {
+          <option [value]="r">{{ r }}</option>
+        }
+      </select>
+    </label>
+    <label class="g-select">
+      <span>Content type</span>
+      <select [value]="type()" (change)="type.set($any($event.target).value)">
+        <option value="">All types</option>
+        <option value="post">Journey post</option>
+        <option value="comment">Comment</option>
+        <option value="message">Direct message</option>
+      </select>
+    </label>
+  </div>
+
+  @if (filtered().length === 0) {
+    <p class="g-empty">
+      @if (tab() === 'pending') {
+        All caught up — no reports are awaiting a decision. 🎉
+      } @else {
+        No reports match these filters.
+      }
+    </p>
+  } @else {
+    <div class="ar-list">
+      @for (r of filtered(); track r.id) {
+        <article class="ar-card" [attr.data-report-id]="r.id" [class.focus]="focusId() === r.id" [class.resolved]="r.status === 'resolved'">
+          <header class="ar-card-head">
+            <div class="ar-card-title">
+              <span class="ar-id">#{{ r.id }}</span>
+              <span class="g-badge" [class]="'g-badge ' + reasonTone(r.reason)">{{ r.reason }}</span>
+              <span class="g-badge">{{ r.targetType === 'post' ? '📝 Journey post' : r.targetType === 'comment' ? '💬 Comment' : '✉️ Direct message' }}</span>
+            </div>
+            <div class="ar-card-meta">
+              <span class="g-muted" [title]="r.createdAtUtc">{{ timeAgo(r.createdAtUtc) }} · {{ shortDate(r.createdAtUtc) }}</span>
+              @if (r.status === 'pending') {
+                <span class="g-badge warn">⏳ Pending review</span>
+              } @else {
+                <span class="g-badge ok">✔ Resolved</span>
+              }
+            </div>
+          </header>
+
+          <div class="ar-parties">
+            <div class="ar-party">
+              <small>Reported by</small>
+              <div class="g-member">
+                <span class="g-avatar"><img [src]="r.reporter.photo" [alt]="r.reporter.fullName" loading="lazy" /></span>
+                <span class="g-member-meta">
+                  <strong>
+                    {{ r.reporter.fullName }}
+                    @if (r.reporter.isVerified) {
+                      <span class="g-tick" title="Verified">✓</span>
+                    }
+                  </strong>
+                  <small>{{ r.reporter.location }}</small>
+                  <small>{{ r.reporter.email }}</small>
+                </span>
+              </div>
+            </div>
+
+            <div class="ar-arrow" aria-hidden="true">
+              <span>reported</span>
+              <svg viewBox="0 0 48 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 8h42M36 2l8 6-8 6" /></svg>
+            </div>
+
+            <div class="ar-party against">
+              <small>Report against</small>
+              <div class="g-member">
+                <span class="g-avatar"><img [src]="r.reported.photo" [alt]="r.reported.fullName" loading="lazy" /></span>
+                <span class="g-member-meta">
+                  <strong>
+                    {{ r.reported.fullName }}
+                    @if (r.reported.isVerified) {
+                      <span class="g-tick" title="Verified">✓</span>
+                    }
+                  </strong>
+                  <small>{{ r.reported.location }}</small>
+                  <span class="ar-party-badges">
+                    <span class="g-badge" [class]="'g-badge ' + stateTone(r.reported.accountState)">{{ stateLabel(r.reported.accountState) }}</span>
+                    @if (r.reportsAgainstMember > 1) {
+                      <span class="g-badge danger">{{ r.reportsAgainstMember }} reports against</span>
+                    }
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ar-body">
+            <div class="ar-content">
+              <small>Reported content</small>
+              <blockquote>
+                @if (r.contentImage) {
+                  <img [src]="r.contentImage" alt="Reported post image" loading="lazy" />
+                }
+                <span>“{{ r.contentExcerpt }}”</span>
+              </blockquote>
+            </div>
+            <div class="ar-details">
+              <small>Reporter's description</small>
+              <p>{{ r.details }}</p>
+            </div>
+          </div>
+
+          <!-- Decision -->
+          @if (r.status === 'pending') {
+            <div class="ar-decision">
+              <div class="ar-decision-row">
+                <label class="ar-field grow">
+                  <span>Admin decision</span>
+                  <select [value]="draft(r.id).decision" (change)="updateDraft(r.id, { decision: $any($event.target).value })">
+                    <option value="">— Select a decision —</option>
+                    @for (d of decisions; track d.key) {
+                      <option [value]="d.key">{{ d.label }}</option>
+                    }
+                  </select>
+                </label>
+                @if (draft(r.id).decision === 'restrict') {
+                  <label class="ar-field">
+                    <span>Limit access for</span>
+                    <select [value]="draft(r.id).days" (change)="updateDraft(r.id, { days: +$any($event.target).value })">
+                      @for (d of durations; track d.days) {
+                        <option [value]="d.days">{{ d.label }}</option>
+                      }
+                    </select>
+                  </label>
+                }
+              </div>
+
+              @if (decisionMeta(draft(r.id).decision); as meta) {
+                <p class="ar-hint" [attr.data-tone]="meta.tone">{{ meta.hint }}</p>
+              }
+
+              @if (draft(r.id).decision === 'restrict') {
+                <fieldset class="ar-scopes">
+                  <legend>Features to switch off</legend>
+                  @for (s of scopes; track s.key) {
+                    <label>
+                      <input type="checkbox" [checked]="draft(r.id).scopes.includes(s.key)" (change)="toggleScope(r.id, s.key, $any($event.target).checked)" />
+                      {{ s.label }}
+                    </label>
+                  }
+                </fieldset>
+              }
+
+              <div class="ar-decision-row">
+                <label class="ar-field grow">
+                  <span>Note (optional)</span>
+                  <input type="text" placeholder="Internal note for other admins…" [value]="draft(r.id).note" (input)="updateDraft(r.id, { note: $any($event.target).value })" />
+                </label>
+                <button
+                  type="button"
+                  class="g-btn"
+                  [class.danger]="decisionMeta(draft(r.id).decision)?.tone === 'danger'"
+                  [class.dark]="decisionMeta(draft(r.id).decision)?.tone !== 'danger'"
+                  [disabled]="!draft(r.id).decision || (draft(r.id).decision === 'restrict' && draft(r.id).scopes.length === 0)"
+                  (click)="apply(r)"
+                >
+                  Apply decision
+                </button>
+              </div>
+            </div>
+          } @else {
+            @if (r.decision; as d) {
+            <div class="ar-outcome" [attr.data-tone]="decisionMeta(d.decision)?.tone">
+              <div>
+                <strong>{{ decisionMeta(d.decision)?.label }}</strong>
+                @if (d.decision === 'restrict') {
+                  <span> · {{ durationLabel(d.durationDays) }} — {{ scopeLabels(d.restrictions) }}</span>
+                }
+                <small>Decided by {{ d.decidedBy }} · {{ timeAgo(d.decidedAtUtc) }}@if (d.note) { · “{{ d.note }}”}</small>
+              </div>
+              <div class="g-actions">
+                @if (r.reported.accountState === 'disabled') {
+                  <button type="button" class="g-btn success" (click)="reEnable(r)">Re-enable account</button>
+                }
+                <button type="button" class="g-btn" (click)="reopen(r)">Reopen report</button>
+              </div>
+            </div>
+          } @else {
+            <div class="ar-outcome"><strong>Reviewed in the community app</strong></div>
+          }
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

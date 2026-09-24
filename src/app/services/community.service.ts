@@ -36,6 +36,7 @@ import {
 import { SEED_ASIAN_COMPANIONS } from '../models/community-asian-profiles';
 import { ALL_SEED_INDIAN_COMPANIONS } from '../models/community-indian-profiles';
 import { SEED_EXTENDED_JOURNEY_POSTS } from '../models/community-journey-feed-seed';
+import { AdminModerationService } from './admin-moderation.service';
 
 export const TOKEN_KEY = 'neverbeen_auth_token';
 export const USER_KEY = 'neverbeen_current_user';
@@ -244,6 +245,8 @@ function loadJsonValue(key: string): unknown {
 })
 export class CommunityService {
   private readonly http = inject(HttpClient, { optional: true });
+  /** Admin Console moderation — accounts disabled by an admin are hidden from the community. */
+  private readonly moderation = inject(AdminModerationService);
   readonly apiUrl = 'http://localhost:5080';
 
   readonly token = signal<string | null>(getCookie(TOKEN_KEY));
@@ -283,15 +286,24 @@ export class CommunityService {
   readonly isPending = computed(() => this.currentUser()?.status === 'Pending');
 
   // Filtered views ensuring blocked users cannot see or be seen by each other
-  readonly visibleCompanions = computed(() =>
-    this.companions().filter((c) => !this.blockedUserIds().includes(c.id)),
-  );
+  /** Accounts disabled from the Admin Console (the signed-in member is never hidden from themself). */
+  private readonly adminDisabledIds = computed(() => {
+    const selfId = this.currentUser()?.id;
+    return new Set(this.moderation.disabledUserIds().filter((id) => id !== selfId));
+  });
 
-  readonly visibleJourneyPosts = computed(() =>
-    this.journeyPosts()
+  readonly visibleCompanions = computed(() => {
+    const disabled = this.adminDisabledIds();
+    return this.companions().filter((c) => !this.blockedUserIds().includes(c.id) && !disabled.has(Number(c.id)));
+  });
+
+  readonly visibleJourneyPosts = computed(() => {
+    const disabled = this.adminDisabledIds();
+    return this.journeyPosts()
       .filter((p) => !this.blockedUserIds().includes(p.author.id))
-      .filter((p) => !this.hiddenPostIds().includes(p.id)),
-  );
+      .filter((p) => !disabled.has(Number(p.author.id)))
+      .filter((p) => !this.hiddenPostIds().includes(p.id));
+  });
 
   readonly visibleNotifications = computed(() =>
     this.notifications().filter((n) => !this.blockedUserIds().includes(n.fromUser.id)),
