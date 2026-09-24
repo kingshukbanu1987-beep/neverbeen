@@ -24,7 +24,7 @@ function readSession(): AdminSession | null {
  *
  * The demo admin account is fixed:
  *   username: admin
- *   password: admin
+ *   password: adminadmin
  * The session persists in localStorage so a page refresh keeps the admin
  * signed in until "Log out" is used inside the panel.
  */
@@ -36,7 +36,7 @@ export class AdminAuthService {
 
   /** @returns true when the credentials are the demo admin credentials. */
   login(username: string, password: string): boolean {
-    const ok = username.trim().toLowerCase() === 'admin' && password === 'admin';
+    const ok = username.trim().toLowerCase() === 'admin' && password === 'adminadmin';
     if (!ok) return false;
     this.session.set({
       username: 'admin',

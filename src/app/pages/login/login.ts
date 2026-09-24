@@ -76,7 +76,7 @@ export class Login {
   /**
    * Demo admin account (Requirement B):
    *   username: admin
-   *   password: admin
+   *   password: adminadmin
    */
   protected readonly adminForm = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
@@ -127,7 +127,7 @@ export class Login {
       this.router.navigate(['/admin']);
     } else {
       this.adminError.set(
-        'Invalid credentials. Use the demo admin account — username: admin, password: admin.',
+        'Invalid credentials. Use the demo admin account — username: admin, password: adminadmin.',
       );
     }
   }
