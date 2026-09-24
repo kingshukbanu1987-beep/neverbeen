@@ -1,0 +1,82 @@
+@if (state(); as s) {
+    <div
+      #cardEl
+      class="uhc-card"
+      [class.is-visible]="s.visible"
+      [class.from-left]="s.placement === 'left'"
+      [style.left.px]="s.x"
+      [style.top.px]="s.y"
+      role="tooltip"
+      aria-hidden="false"
+      (mouseenter)="onCardEnter()"
+      (mouseleave)="onCardLeave()"
+    >
+      <!-- Aurora cover -->
+      <div class="uhc-cover" aria-hidden="true">
+        <div class="uhc-cover-shimmer"></div>
+      </div>
+
+      <!-- Avatar with status dot -->
+      <div class="uhc-avatar-wrap">
+        <img [src]="s.photo || defaultAvatar" [alt]="s.name" class="uhc-avatar" />
+        <span class="uhc-status-dot" [class.tone-online]="s.statusTone === 'online'" [class.tone-busy]="s.statusTone === 'busy'" [class.tone-away]="s.statusTone === 'away'" [class.tone-dnd]="s.statusTone === 'dnd'" [class.tone-custom]="s.statusTone === 'custom'" [class.tone-inactive]="s.statusTone === 'inactive'"></span>
+      </div>
+
+      <!-- Identity -->
+      <div class="uhc-body">
+        <div class="uhc-name-row">
+          <span class="uhc-name">{{ s.name }}</span>
+          @if (s.isVerified) {
+            <span class="uhc-verified" title="Verified Account">
+              <svg viewBox="0 0 24 24" class="uhc-verified-svg" aria-hidden="true"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" /></svg>
+            </span>
+          }
+          <span class="uhc-status-pill" [class.tone-online]="s.statusTone === 'online'" [class.tone-busy]="s.statusTone === 'busy'" [class.tone-away]="s.statusTone === 'away'" [class.tone-dnd]="s.statusTone === 'dnd'" [class.tone-custom]="s.statusTone === 'custom'" [class.tone-inactive]="s.statusTone === 'inactive'">{{ s.statusLabel }}</span>
+        </div>
+
+        <div class="uhc-meta-row">
+          @if (s.profession) {
+            <span class="uhc-meta-item">
+              <svg viewBox="0 0 24 24" class="uhc-meta-icon" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4z" fill="none" stroke="currentColor" stroke-width="2" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+              <span class="uhc-meta-text">{{ s.profession }}</span>
+            </span>
+          }
+          @if (s.location) {
+            <span class="uhc-meta-item">
+              <svg viewBox="0 0 24 24" class="uhc-meta-icon" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+              <span class="uhc-meta-text">{{ s.location }}</span>
+            </span>
+          }
+        </div>
+
+        <!-- Stats -->
+        <div class="uhc-stats-row">
+          <div class="uhc-stat-chip">
+            <span class="uhc-stat-icon" aria-hidden="true">👥</span>
+            <span class="uhc-stat-value">{{ s.companionCount }}</span>
+            <span class="uhc-stat-label">{{ s.companionCount === 1 ? 'Companion' : 'Companions' }}</span>
+          </div>
+          <div class="uhc-stat-chip">
+            <span class="uhc-stat-icon" aria-hidden="true">📸</span>
+            <span class="uhc-stat-value">{{ s.journeyPostCount }}</span>
+            <span class="uhc-stat-label">{{ s.journeyPostCount === 1 ? 'Journey Post' : 'Journey Posts' }}</span>
+          </div>
+          @if (s.mutualWithMe !== null) {
+            <div class="uhc-stat-chip">
+              <span class="uhc-stat-icon" aria-hidden="true">🤝</span>
+              <span class="uhc-stat-value">{{ s.mutualWithMe }}</span>
+              <span class="uhc-stat-label">{{ s.mutualWithMe === 1 ? 'Mutual' : 'Mutuals' }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Footer hint -->
+      <div class="uhc-footer">
+        <svg viewBox="0 0 24 24" class="uhc-footer-icon" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="12" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+        <span>Click to view full profile</span>
+      </div>
+    </div>
+  
+}
+

@@ -11,6 +11,7 @@ import {
   getTopReactionIcons,
 } from '../../../models/community';
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
+import { UserPreviewDirective } from '../../../shared/user-hover-card';
 
 @Component({
   selector: 'app-comment-thread',
@@ -19,6 +20,7 @@ import { TranslatableTextDirective } from '../../../shared/translate/translatabl
     CommonModule,
     FormsModule,
     TranslatableTextDirective,
+    UserPreviewDirective,
     forwardRef(() => CommentThreadComponent),
   ],
   templateUrl: './comment-item.html',

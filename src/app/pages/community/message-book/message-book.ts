@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
+import { UserHoverCard, UserPreviewDirective } from '../../../shared/user-hover-card';
 
 @Component({
   selector: 'app-community-message-book',
-  imports: [FormsModule, RouterLink, TranslatableTextDirective],
+  imports: [FormsModule, RouterLink, TranslatableTextDirective, UserPreviewDirective, UserHoverCard],
   templateUrl: './message-book.html',
   styleUrl: './message-book.css',
 })
