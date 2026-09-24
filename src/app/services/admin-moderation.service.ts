@@ -1,4 +1,5 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { AdminAuditService } from './admin-audit.service';
 
 /** localStorage keys for Admin Console moderation state. */
 export const ADMIN_ACCOUNT_ACTIONS_KEY = 'neverbeen_admin_account_actions';
@@ -86,6 +87,7 @@ function save<T>(key: string, value: T): void {
  */
 @Injectable({ providedIn: 'root' })
 export class AdminModerationService {
+  private readonly audit = inject(AdminAuditService);
   readonly accountActions = signal<Record<number, AccountModeration>>(
     load<Record<number, AccountModeration>>(ADMIN_ACCOUNT_ACTIONS_KEY, {}),
   );
@@ -115,10 +117,12 @@ export class AdminModerationService {
 
   disableAccount(userId: number, reason = 'Disabled by administrator'): void {
     this.patch(userId, { state: 'disabled', reason });
+    this.audit.log({ category: 'account', action: 'Account disabled', targetId: userId, details: reason });
   }
 
   enableAccount(userId: number): void {
     this.patch(userId, { state: 'active', reason: 'Re-enabled by administrator', restrictedUntilUtc: undefined, restrictions: undefined });
+    this.audit.log({ category: 'account', action: 'Account re-enabled', targetId: userId });
   }
 
   warn(userId: number, reason = 'Formal warning issued'): void {
@@ -128,6 +132,7 @@ export class AdminModerationService {
       warnings: (current?.warnings ?? 0) + 1,
       reason,
     });
+    this.audit.log({ category: 'moderation', action: 'Warning issued', targetId: userId, details: reason });
   }
 
   restrict(userId: number, days: number, scopes: RestrictionScope[], reason = 'Temporarily restricted'): void {
@@ -140,16 +145,24 @@ export class AdminModerationService {
       restrictions: scopes.length ? scopes : ['posting', 'commenting'],
       reason,
     });
+    this.audit.log({
+      category: 'moderation',
+      action: `Restricted for ${days} day(s)`,
+      targetId: userId,
+      details: `${(scopes.length ? scopes : ['posting', 'commenting']).join(', ')} — ${reason}`,
+    });
   }
 
   forceIdentityConfirmation(userId: number, reason = 'Identity confirmation required'): void {
     this.patch(userId, { state: 'identity_required', reason });
+    this.audit.log({ category: 'security', action: 'Identity confirmation required', targetId: userId, details: reason });
   }
 
   decideReport(decision: Omit<ReportDecision, 'decidedAtUtc' | 'decidedBy'>): void {
     const full: ReportDecision = { ...decision, decidedAtUtc: new Date().toISOString(), decidedBy: 'admin' };
     this.reportDecisions.update((map) => ({ ...map, [decision.reportId]: full }));
     save(ADMIN_REPORT_DECISIONS_KEY, this.reportDecisions());
+    this.audit.log({ category: 'moderation', action: `Abuse report #${decision.reportId} decided: ${decision.decision}`, details: decision.note });
   }
 
   reopenReport(reportId: number): void {
@@ -159,6 +172,7 @@ export class AdminModerationService {
       return next;
     });
     save(ADMIN_REPORT_DECISIONS_KEY, this.reportDecisions());
+    this.audit.log({ category: 'moderation', action: `Abuse report #${reportId} re-opened` });
   }
 
   private patch(userId: number, patch: Partial<AccountModeration>): void {

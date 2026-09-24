@@ -49,10 +49,10 @@ export const adminRoutes: Routes = [
         title: 'Dashboard — NeverBeen Admin',
         loadComponent: () => import('./dashboard/dashboard').then((m) => m.AdminDashboard),
       },
-      // Other side-panel sections are not built yet.
+      { path: 'users', title: 'User Management — NeverBeen Admin', loadComponent: () => import('./users/users').then((m) => m.AdminUsers) },
+      { path: 'data', title: 'Data Management — NeverBeen Admin', loadComponent: () => import('./data/data').then((m) => m.AdminData) },
+      // Repositories is not built yet.
       { path: 'repositories', title: 'Repositories — NeverBeen Admin', data: { section: 'Repositories' }, loadComponent: underDevelopment },
-      { path: 'users', title: 'User Management — NeverBeen Admin', data: { section: 'User Management' }, loadComponent: underDevelopment },
-      { path: 'data', title: 'Data Management — NeverBeen Admin', data: { section: 'Data Management' }, loadComponent: underDevelopment },
       { path: '**', redirectTo: 'dashboard' },
     ],
   },

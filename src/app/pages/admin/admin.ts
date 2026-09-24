@@ -27,8 +27,8 @@ export class AdminLayout {
   protected readonly navItems: AdminNavItem[] = [
     { path: 'dashboard', label: 'Dashboard', icon: '📊', hint: 'Website statistics & activity' },
     { path: 'repositories', label: 'Repositories', icon: '🗄️', hint: 'Connected git repos & integrations' },
-    { path: 'users', label: 'User Management', icon: '👥', hint: 'Community member profiles' },
-    { path: 'data', label: 'Data Management', icon: '💾', hint: 'Datasets, storage & backups' },
+    { path: 'users', label: 'User Management', icon: '👥', hint: 'Accounts, roles, security & audit' },
+    { path: 'data', label: 'Data Management', icon: '💾', hint: 'Privacy, retention, quality & backups' },
   ];
 
   protected readonly onlineCount = this.insights.onlineMembers;

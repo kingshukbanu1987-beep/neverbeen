@@ -1877,6 +1877,43 @@ export class CommunityService {
     this.saveJson(COMPANIONS_KEY, this.companions());
   }
 
+  /**
+   * Admin: replace a whole community dataset in memory and persist it
+   * (used by Data Management — retention purges, erasure, quality fixes, restores).
+   */
+  adminReplaceDataset(key: string, value: unknown): boolean {
+    switch (key) {
+      case COMPANIONS_KEY:
+        this.companions.set(value as Companion[]);
+        break;
+      case JOURNEY_KEY:
+        this.journeyPosts.set(value as JourneyPost[]);
+        break;
+      case COMMENTS_KEY:
+        this.comments.set(value as CommunityComment[]);
+        break;
+      case CIRCLES_KEY:
+        this.circles.set(value as Circle[]);
+        break;
+      case NOTIFS_KEY:
+        this.notifications.set(value as NotificationItem[]);
+        break;
+      case ABUSE_REPORTS_KEY:
+        this.abuseReports.set(value as AbuseReport[]);
+        break;
+      case HIDDEN_POSTS_KEY:
+        this.hiddenPostIds.set(value as number[]);
+        break;
+      case BLOCKED_USERS_KEY:
+        this.blockedUserIds.set(value as number[]);
+        break;
+      default:
+        return false;
+    }
+    this.saveJson(key, value);
+    return true;
+  }
+
   /** Admin: wipe a whole dataset (re-seeds on next load). */
   adminClearDataset(key: string): void {
     if (typeof localStorage !== 'undefined') {

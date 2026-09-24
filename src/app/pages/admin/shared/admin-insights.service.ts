@@ -127,7 +127,7 @@ export const PROFESSION_CATEGORIES = [
 /* ------------------------------------------------------------------------ */
 
 /** Deterministic PRNG so demo analytics stay stable between reloads. */
-function seeded(seed: number): () => number {
+export function seeded(seed: number): () => number {
   let a = (seed * 2654435761) >>> 0 || 1;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
