@@ -260,7 +260,9 @@ describe('Website Management, Site Downtime & Health', () => {
     TestBed.configureTestingModule({ imports: [HealthReportBuilder], providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(HealthReportBuilder);
     fixture.detectChanges();
-    const el: HTMLElement = fixture.nativeElement;
+    // The builder is a modal: it renders at the <body> root so it is never hidden behind a panel.
+    const el: HTMLElement = document.body.querySelector('.g-modal-backdrop') as HTMLElement;
+    expect(el.parentElement).toBe(document.body);
     const audit = TestBed.inject(AdminAuditService);
     const closed = vi.fn();
     fixture.componentInstance.closed.subscribe(closed);

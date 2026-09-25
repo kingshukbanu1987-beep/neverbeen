@@ -1,6 +1,9 @@
+import { OverlayPortal } from '../shared/overlay-portal';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { AdminInsightsService, SUSPICIOUS_META, shortDate, timeAgo } from '../shared/admin-insights.service';
-import { AdminUserOpsService, ROLES, SUGGESTED_TAGS, UserRole, roleMeta } from '../shared/admin-user-ops.service';
+import { NgTemplateOutlet } from '@angular/common';
+import { AdminInsightsService, SUSPICIOUS_META, downloadCsv, shortDate, timeAgo } from '../shared/admin-insights.service';
+import { AdminUserOpsService, INACTIVE_DEVICE_LIMIT, InactiveDevice, ROLES, SUGGESTED_TAGS, UserRole, UserSession, roleMeta } from '../shared/admin-user-ops.service';
+import { flagOf, maskIp, maskMac } from '../shared/device-intel';
 import { AdminDataOpsService, maskValue } from '../shared/admin-data-ops.service';
 import {
   AccountState,
@@ -30,7 +33,7 @@ interface TimelineItem {
 /** User 360° drawer — full profile, activity, moderation, security/devices, notes/tags and every account control. */
 @Component({
   selector: 'app-admin-user-drawer',
-  imports: [AdminConfirmDialog],
+  imports: [AdminConfirmDialog, NgTemplateOutlet, OverlayPortal],
   templateUrl: './user-drawer.html',
   styleUrls: ['../shared/admin-grid.css', './user-drawer.css'],
 })
@@ -92,6 +95,42 @@ export class AdminUserDrawer {
     const m = this.member();
     return m ? this.ops.sessionsOf(m) : [];
   });
+  /** Last devices / sessions that are no longer signed in (max 10). */
+  protected readonly inactiveDevices = computed<InactiveDevice[]>(() => {
+    this.ops.state();
+    const m = this.member();
+    return m ? this.ops.inactiveDevicesOf(m) : [];
+  });
+  protected readonly inactiveLimit = INACTIVE_DEVICE_LIMIT;
+  protected readonly flagOf = flagOf;
+
+  protected ipOf(d: UserSession): string {
+    return this.revealPii() ? d.ipFull : maskIp(d.ipFull);
+  }
+
+  protected macOf(d: UserSession): string {
+    return this.revealPii() ? d.mac : maskMac(d.mac);
+  }
+
+  protected asInactive(d: UserSession): InactiveDevice | null {
+    return 'endReason' in d ? (d as InactiveDevice) : null;
+  }
+
+  protected exportDevices(): void {
+    const m = this.member();
+    if (!m) return;
+    const rows = [
+      ...this.sessions().map((d) => ({ d, status: 'Active', ended: '', reason: '', signIns: '' as string | number })),
+      ...this.inactiveDevices().map((d) => ({ d, status: 'Inactive', ended: d.endedUtc, reason: d.endReason, signIns: d.signIns as string | number })),
+    ];
+    downloadCsv(
+      `neverbeen-devices-${m.uniqueId || m.id}.csv`,
+      ['Status', 'Device name', 'Model', 'Type', 'OS', 'Browser', 'IP address', 'MAC address', 'City', 'Region', 'Country', 'ISP', 'Time zone', 'First seen (UTC)', 'Last active (UTC)', 'Ended (UTC)', 'End reason', 'Sign-ins', 'Risk'],
+      rows.map(({ d, status, ended, reason, signIns }) => [status, d.deviceName, d.device, d.kind, d.platform, d.browser, d.ipFull, d.mac, d.city, d.region, d.country, d.isp, d.timezone, d.startedUtc, d.lastSeenUtc, ended, reason, signIns, d.risk ?? '']),
+    );
+    this.audit.log({ category: 'privacy', action: 'Device & session history exported', targetId: m.id, targetLabel: m.fullName, details: `${rows.length} devices` });
+  }
+
   protected readonly locked = computed(() => this.companion()?.isProfileLocked === true);
   protected readonly action = computed(() => {
     this.moderation.accountActions();

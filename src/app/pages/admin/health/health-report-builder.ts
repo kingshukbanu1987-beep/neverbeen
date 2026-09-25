@@ -1,3 +1,4 @@
+import { OverlayPortal } from '../shared/overlay-portal';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { DeviceFilter, Granularity, HealthDataService, RANGE_OPTIONS, RangeKey } from './health-data.service';
 import { REPORT_SECTIONS, ReportSection, ReportSpec, buildExcel, buildReportData, describeWindow, saveSpec } from './health-report.model';
@@ -20,9 +21,10 @@ interface ReportPreset {
  */
 @Component({
   selector: 'app-health-report-builder',
+  imports: [OverlayPortal],
   styleUrls: ['../shared/admin-grid.css', '../website/website.css', './health-report-builder.css'],
   template: `
-    <div class="g-modal-backdrop" (click)="closed.emit()">
+    <div class="g-modal-backdrop" appOverlayPortal (click)="closed.emit()">
       <div class="g-modal rb" role="dialog" aria-modal="true" aria-label="Generate health report" (click)="$event.stopPropagation()">
         <header class="rb-head">
           <div>

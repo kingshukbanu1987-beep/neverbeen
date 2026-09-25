@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AdminUsers } from './users/users';
+import { AdminUserDrawer } from './users/user-drawer';
 import { AdminData } from './data/data';
 import { AdminRolesMatrix } from './users/roles-matrix';
 import { AdminDataExplorer, maskDeep } from './data/data-explorer';
@@ -100,7 +101,7 @@ describe('Admin User & Data Management', () => {
     expect(ops.security(member).passwordResetRequired).toBe(true);
     click(buttonByText(drawer, 'Sign out all devices'));
     fixture.detectChanges();
-    click(el.querySelector('app-admin-confirm-dialog .g-modal-actions .g-btn:last-child'));
+    click(document.body.querySelector('.g-modal-backdrop .g-modal-actions .g-btn:last-child'));
     fixture.detectChanges();
     expect(ops.sessionsOf(member).length).toBe(0);
 
@@ -240,5 +241,119 @@ describe('Admin User & Data Management', () => {
     (tampered.data as Record<string, unknown>)['neverbeen_hidden_posts'] = [1, 2, 3];
     expect((await dataOps.previewRestore(JSON.stringify(tampered))).checksumOk).toBe(false);
     expect((await dataOps.previewRestore('not json')).valid).toBe(false);
+  });
+
+  it('confirmation modals open above the Manage drawer', async () => {
+    TestBed.configureTestingModule({ imports: [AdminUsers], providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(AdminUsers);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    click(el.querySelector('app-admin-user-directory tbody tr .g-btn.dark'));
+    fixture.detectChanges();
+    const drawer = el.querySelector('app-admin-user-drawer') as HTMLElement;
+    const panel = drawer.querySelector('aside.ud') as HTMLElement;
+
+    // Profile photo fills the circle (centred, cropped to cover), not a small square in its corner.
+    const avatar = drawer.querySelector('.ud-avatar') as HTMLElement;
+    const photo = avatar.querySelector('img') as HTMLImageElement;
+    expect(getComputedStyle(avatar).borderRadius).toBe('50%');
+    expect(getComputedStyle(photo).width).toBe('100%');
+    expect(getComputedStyle(photo).height).toBe('100%');
+    expect(getComputedStyle(photo).borderRadius).toBe('50%');
+    expect(getComputedStyle(photo).objectFit).toBe('cover');
+
+    let opened = 0;
+    for (const label of ['Disable account', 'Force identity check', 'Erase']) {
+      const btn = buttonByText(drawer, label, '.ud-actions button, button');
+      if (!btn || btn.disabled) continue;
+      opened++;
+      click(btn);
+      fixture.detectChanges();
+      const backdrop = document.body.querySelector('.g-modal-backdrop') as HTMLElement;
+      expect(backdrop).toBeTruthy();
+      // Rendered at the <body> root, outside the drawer, so no parent panel can cover it.
+      expect(backdrop.parentElement).toBe(document.body);
+      expect(drawer.contains(backdrop)).toBe(false);
+      const zModal = Number(getComputedStyle(backdrop).zIndex);
+      const zDrawer = Number(getComputedStyle(panel).zIndex);
+      expect(zModal).toBeGreaterThan(zDrawer);
+      // Modal comes after the drawer in DOM order too, so it paints on top.
+      expect(panel.compareDocumentPosition(backdrop) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      click(buttonByText(backdrop, 'Cancel'));
+      fixture.detectChanges();
+      expect(document.body.querySelector('.g-modal-backdrop')).toBeNull();
+    }
+    expect(opened).toBeGreaterThanOrEqual(2);
+  });
+
+  it('Security & devices lists active and up to 10 inactive devices with IP, MAC and IP location', async () => {
+    TestBed.configureTestingModule({ imports: [AdminUsers], providers: [provideRouter([])] });
+    const insights = TestBed.inject(AdminInsightsService);
+    const ops = TestBed.inject(AdminUserOpsService);
+    const audit = TestBed.inject(AdminAuditService);
+
+    // Every member: inactive list is capped at 10, most recent first, with full device details.
+    let maxSeen = 0;
+    for (const m of insights.members()) {
+      const list = ops.inactiveDevicesOf(m);
+      maxSeen = Math.max(maxSeen, list.length);
+      expect(list.length).toBeLessThanOrEqual(10);
+      for (let i = 1; i < list.length; i++) expect(Date.parse(list[i - 1].lastSeenUtc)).toBeGreaterThanOrEqual(Date.parse(list[i].lastSeenUtc));
+      for (const d of list) {
+        expect(d.active).toBe(false);
+        expect(d.ipFull).toMatch(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
+        expect(d.mac).toMatch(/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/);
+        expect(d.deviceName).toBeTruthy();
+        expect(d.country).toBeTruthy();
+        expect(d.city).toBeTruthy();
+      }
+    }
+    expect(maxSeen).toBe(10);
+
+    // IP geolocation resolves neighbourhoods to the metro + state.
+    const kolkatan = insights.members().find((m) => m.city.endsWith(', Kolkata'));
+    if (kolkatan) {
+      const d = ops.inactiveDevicesOf(kolkatan).find((x) => x.country === 'India' && x.city === 'Kolkata');
+      if (d) expect(d.region).toBe('West Bengal');
+    }
+
+    // Open the Manage drawer for a member with an active session
+    const target = insights.members().find((m) => ops.sessionsOf(m).length > 0 && m.accountState !== 'disabled')!;
+    const f2 = TestBed.createComponent(AdminUserDrawer);
+    f2.componentRef.setInput('userId', target.id);
+    f2.detectChanges();
+    const drawer: HTMLElement = f2.nativeElement;
+    click(buttonByText(drawer, 'Security & devices', '.ud-tabs button, button'));
+    f2.detectChanges();
+
+    const heads = [...drawer.querySelectorAll('.ud-section-head h4')].map((h) => h.textContent ?? '');
+    expect(heads.some((h) => h.includes('Active sessions & devices'))).toBe(true);
+    expect(heads.some((h) => h.includes('Inactive sessions & devices'))).toBe(true);
+    const inactiveCount = drawer.querySelectorAll('.ud-device.inactive').length;
+    expect(inactiveCount).toBe(ops.inactiveDevicesOf(target).length);
+    expect(inactiveCount).toBeLessThanOrEqual(10);
+    const labels = [...drawer.querySelectorAll('.ud-device-grid dt')].map((d) => d.textContent?.trim());
+    for (const l of ['IP address', 'MAC address', 'Location (IP)', 'Country', 'ISP / network']) expect(labels).toContain(l);
+
+    // IP & MAC masked until revealed (audited)
+    const firstIp = drawer.querySelector('.ud-device-grid dd.mono')!;
+    expect(firstIp.textContent).toContain('•••');
+    click(buttonByText(drawer, 'Reveal IP & MAC'));
+    f2.detectChanges();
+    expect(drawer.querySelector('.ud-device-grid dd.mono')!.textContent).not.toContain('•••');
+    expect(audit.entries()[0].category).toBe('privacy');
+
+    // Revoking an active session moves it into the inactive group
+    const activeBefore = drawer.querySelectorAll('.ud-device:not(.inactive)').length;
+    click(buttonByText(drawer.querySelector('.ud-device:not(.inactive)') as HTMLElement, 'Revoke'));
+    f2.detectChanges();
+    expect(drawer.querySelectorAll('.ud-device:not(.inactive)').length).toBe(activeBefore - 1);
+    const revoked = ops.inactiveDevicesOf(target).find((d) => d.endReason === 'Revoked by admin');
+    expect(revoked).toBeTruthy();
+    expect(drawer.textContent).toContain('Revoked by admin');
+
+    // CSV export
+    click(buttonByText(drawer, 'Export devices'));
+    expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
   });
 });

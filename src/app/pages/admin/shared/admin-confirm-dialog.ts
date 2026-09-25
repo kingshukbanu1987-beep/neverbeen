@@ -1,4 +1,5 @@
 import { Component, input, output, signal } from '@angular/core';
+import { OverlayPortal } from './overlay-portal';
 
 /**
  * Reusable confirmation dialog for destructive admin actions
@@ -6,8 +7,9 @@ import { Component, input, output, signal } from '@angular/core';
  */
 @Component({
   selector: 'app-admin-confirm-dialog',
+  imports: [OverlayPortal],
   template: `
-    <div class="g-modal-backdrop" (click)="cancelled.emit()">
+    <div class="g-modal-backdrop" appOverlayPortal (click)="cancelled.emit()">
       <div class="g-modal" role="dialog" aria-modal="true" [attr.aria-label]="heading()" (click)="$event.stopPropagation()">
         <h3>{{ heading() }}</h3>
         <p>{{ message() }}</p>

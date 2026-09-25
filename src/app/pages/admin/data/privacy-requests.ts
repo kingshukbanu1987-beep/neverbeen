@@ -1,3 +1,4 @@
+import { OverlayPortal } from '../shared/overlay-portal';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AdminDataOpsService, PRIVACY_TYPES, PrivacyRequest, PrivacyStatus, PrivacyType } from '../shared/admin-data-ops.service';
@@ -17,7 +18,7 @@ const STATUS_META: Record<PrivacyStatus, { label: string; tone: string }> = {
 /** Data-subject request (DSAR) inbox — GDPR / DPDP Act / CCPA with 30-day SLA tracking and one-click fulfilment. */
 @Component({
   selector: 'app-admin-privacy-requests',
-  imports: [AdminConfirmDialog],
+  imports: [AdminConfirmDialog, OverlayPortal],
   styleUrls: ['../shared/admin-grid.css', './data.css'],
   template: `
     <div class="dm-dsar-summary">
@@ -153,7 +154,7 @@ const STATUS_META: Record<PrivacyStatus, { label: string; tone: string }> = {
     }
 
     @if (pendingErase(); as r) {
-      <div class="g-modal-backdrop" (click)="pendingErase.set(null)">
+      <div class="g-modal-backdrop" appOverlayPortal (click)="pendingErase.set(null)">
         <div class="g-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
           <h3>Erase {{ r.userName }}?</h3>
           <p>The profile is permanently removed. Abuse reports and the moderation record are kept without the name (legal obligation).</p>

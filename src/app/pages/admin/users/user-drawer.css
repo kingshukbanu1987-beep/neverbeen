@@ -66,11 +66,35 @@
   gap: 1rem;
 }
 
+/* Profile photo: the picture fills the whole circle (centred, cropped to cover, faces kept in
+   frame) instead of the 38px table thumbnail sitting in the corner of a 72px ring. */
 .ud-avatar {
-  width: 72px !important;
-  height: 72px !important;
-  border: 3px solid rgba(255, 255, 255, 0.85);
+  display: block;
+  width: 78px;
+  height: 78px;
+  box-sizing: border-box;
+  padding: 3px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
+.ud-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 30%;
+  background: #cbd5e1;
+  display: block;
+}
+
+.ud-avatar .dot {
+  right: 3px;
+  bottom: 3px;
+  width: 15px;
+  height: 15px;
+  border: 3px solid #1e293b;
 }
 
 .ud-id-meta h3 {
@@ -613,4 +637,169 @@
   font-weight: 700;
   color: #4f46e5;
   text-decoration: none;
+}
+
+/* ---------------- Security & devices: active + inactive device cards ---------------- */
+.ud-dev-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.ud-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: #94a3b8;
+  margin-right: 0.3rem;
+  vertical-align: middle;
+}
+
+.ud-dot.live {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.ud-inactive-head {
+  flex-wrap: wrap;
+  row-gap: 0.15rem;
+  margin-top: 1.3rem;
+}
+
+.ud-device {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 0.8rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #10b981;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.55rem;
+}
+
+.ud-device.inactive {
+  border-left-color: #cbd5e1;
+  background: #fcfdfe;
+}
+
+.ud-device.risky {
+  border-color: #fecaca;
+  border-left-color: #ef4444;
+  background: #fff7f7;
+}
+
+.ud-device > :not(.ud-device-actions) {
+  grid-column: 1;
+}
+
+.ud-device-actions {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.ud-device-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.ud-device-title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.86rem;
+}
+
+.ud-device-title small {
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.ud-device-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem 0.9rem;
+  margin: 0.2rem 0 0;
+}
+
+.ud-device-grid div {
+  min-width: 0;
+}
+
+.ud-device-grid dt {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.ud-device-grid dd {
+  margin: 0.05rem 0 0;
+  font-size: 0.8rem;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.ud-device-grid dd.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+}
+
+.ud-device .ud-risk {
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.ud-end {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.ud-end[data-reason='Revoked by admin'],
+.ud-end[data-reason='Signed out of all devices (admin)'] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ud-end[data-reason='Session expired'] {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.ud-footnote {
+  margin: 0.6rem 0 0;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .ud-device {
+    grid-template-columns: 1fr;
+  }
+  .ud-device-actions {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ud-device-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

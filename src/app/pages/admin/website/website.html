@@ -199,7 +199,7 @@
 }
 
 @if (publishOpen()) {
-  <div class="g-modal-backdrop" (click)="publishOpen.set(false)">
+  <div class="g-modal-backdrop" appOverlayPortal (click)="publishOpen.set(false)">
     <div class="g-modal wm-publish-modal" role="dialog" aria-modal="true" aria-label="Publish changes" (click)="$event.stopPropagation()">
       <h3>Publish {{ pending().length }} change(s)?</h3>
       <p>These changes go live for every visitor immediately. A revision is saved so you can roll back.</p>

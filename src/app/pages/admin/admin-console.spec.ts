@@ -70,7 +70,7 @@ describe('Admin Console', () => {
     const before = new Set(moderation.disabledUserIds());
     (rows[0].querySelector('.g-btn.danger') as HTMLButtonElement).click();
     fixture.detectChanges();
-    const confirm = fixture.nativeElement.querySelector('.g-modal .g-btn.danger') as HTMLButtonElement;
+    const confirm = document.body.querySelector('.g-modal .g-btn.danger') as HTMLButtonElement;
     expect(confirm).toBeTruthy();
     confirm.click();
     fixture.detectChanges();

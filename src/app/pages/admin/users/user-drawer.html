@@ -205,28 +205,76 @@
               <p class="ud-alert">🔑 Password reset required at next sign-in. <button type="button" class="g-link-btn" (click)="ops.clearPasswordReset(m.id)">Cancel</button></p>
             }
           }
+          <div class="ud-dev-toolbar">
+            <button type="button" class="g-icon-btn" [class.on]="revealPii()" (click)="toggleReveal()">{{ revealPii() ? '🙈 Mask IP & MAC' : '👁 Reveal IP & MAC' }}</button>
+            <button type="button" class="g-icon-btn" (click)="exportDevices()">⤓ Export devices (CSV)</button>
+          </div>
+
+          <!-- Active sessions -->
           <div class="ud-section-head">
-            <h4>Active sessions & devices ({{ sessions().length }})</h4>
+            <h4><span class="ud-dot live"></span> Active sessions & devices ({{ sessions().length }})</h4>
             @if (sessions().length) {
               <button type="button" class="g-btn" (click)="pending.set('signout')">Sign out all</button>
             }
           </div>
           @for (s of sessions(); track s.id) {
-            <div class="ud-session" [class.risky]="s.risk">
-              <span class="ud-session-icon">{{ s.icon }}</span>
-              <div>
-                <strong>{{ s.device }} · {{ s.browser }}</strong>
-                <small>{{ s.platform }} · {{ s.city }}, {{ s.country }} · IP {{ s.ip }}</small>
-                <small>Started {{ timeAgo(s.startedUtc) }} · last seen {{ s.active ? 'now' : timeAgo(s.lastSeenUtc) }}</small>
-                @if (s.risk) {
-                  <small class="ud-risk">⚠ {{ s.risk }}</small>
-                }
+            <div class="ud-device" [class.risky]="s.risk">
+              <ng-container *ngTemplateOutlet="deviceCard; context: { $implicit: s }" />
+              <div class="ud-device-actions">
+                <span class="g-badge ok">{{ s.active ? 'Online now' : 'Signed in' }}</span>
+                <button type="button" class="g-btn" (click)="ops.revokeSession(s)">Revoke</button>
               </div>
-              <button type="button" class="g-btn" (click)="ops.revokeSession(s)">Revoke</button>
             </div>
           } @empty {
             <p class="g-muted ud-empty">No active sessions.</p>
           }
+
+          <!-- Inactive sessions -->
+          <div class="ud-section-head ud-inactive-head">
+            <h4><span class="ud-dot"></span> Inactive sessions & devices ({{ inactiveDevices().length }})</h4>
+            <small class="g-muted">Last {{ inactiveLimit }} devices used to access the community · most recent first</small>
+          </div>
+          @for (d of inactiveDevices(); track d.id) {
+            <div class="ud-device inactive" [class.risky]="d.risk">
+              <ng-container *ngTemplateOutlet="deviceCard; context: { $implicit: d }" />
+              <div class="ud-device-actions">
+                <span class="ud-end" [attr.data-reason]="d.endReason">{{ d.endReason }}</span>
+                <small class="g-muted">{{ shortDate(d.endedUtc) }}</small>
+              </div>
+            </div>
+          } @empty {
+            <p class="g-muted ud-empty">No earlier devices on record.</p>
+          }
+          <p class="ud-footnote">
+            ⓘ IP location is resolved to city / region level. Web browsers never expose a device’s hardware MAC address — in production this value comes from the
+            NeverBeen mobile app or a device fingerprint. Device data in this console is demo data.
+          </p>
+
+          <ng-template #deviceCard let-d>
+            <div class="ud-device-head">
+              <span class="ud-session-icon" aria-hidden="true">{{ d.icon }}</span>
+              <div class="ud-device-title">
+                <strong>{{ d.deviceName }}</strong>
+                <small>{{ d.device }} · {{ d.kind }} · {{ d.platform }} · {{ d.browser }}</small>
+              </div>
+            </div>
+            <dl class="ud-device-grid">
+              <div><dt>IP address</dt><dd class="mono">{{ ipOf(d) }}</dd></div>
+              <div><dt>MAC address</dt><dd class="mono">{{ macOf(d) }}</dd></div>
+              <div><dt>Location (IP)</dt><dd>{{ d.city }}{{ d.region && d.region !== d.city ? ', ' + d.region : '' }}</dd></div>
+              <div><dt>Country</dt><dd>{{ flagOf(d.country) }} {{ d.country }}</dd></div>
+              <div><dt>ISP / network</dt><dd>{{ d.isp }}</dd></div>
+              <div><dt>Time zone</dt><dd>{{ d.timezone }}</dd></div>
+              <div><dt>First seen</dt><dd>{{ shortDate(d.startedUtc) }}</dd></div>
+              <div><dt>Last active</dt><dd>{{ d.active ? 'Now' : timeAgo(d.lastSeenUtc) }}</dd></div>
+              @if (asInactive(d); as i) {
+                <div><dt>Sign-ins</dt><dd>{{ i.signIns }}</dd></div>
+              }
+            </dl>
+            @if (d.risk) {
+              <small class="ud-risk">⚠ {{ d.risk }}</small>
+            }
+          </ng-template>
         }
 
         @case ('notes') {
@@ -271,7 +319,7 @@
 
 @if (pending(); as p) {
   @if (p === 'erase') {
-    <div class="g-modal-backdrop" (click)="pending.set(null)">
+    <div class="g-modal-backdrop" appOverlayPortal (click)="pending.set(null)">
       <div class="g-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
         <h3>Erase {{ member()?.fullName }}?</h3>
         <p>Right to erasure (GDPR Art. 17 / DPDP Act §12). The profile is removed permanently. Abuse reports and the moderation record are retained without the name for legal obligations.</p>

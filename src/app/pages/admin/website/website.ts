@@ -1,3 +1,4 @@
+import { OverlayPortal } from '../shared/overlay-portal';
 import { Component, DestroyRef, ElementRef, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,7 +26,7 @@ const DEVICE_WIDTH: Record<Device, number> = { desktop: 1280, tablet: 820, mobil
  */
 @Component({
   selector: 'app-admin-website',
-  imports: [CmsFieldEditor, AdminConfirmDialog, AdminAuditLog],
+  imports: [CmsFieldEditor, AdminConfirmDialog, AdminAuditLog, OverlayPortal],
   styleUrls: ['../shared/admin-grid.css', './website.css'],
   templateUrl: './website.html',
 })
