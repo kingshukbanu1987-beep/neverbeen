@@ -1,0 +1,392 @@
+<div class="mx" [class.reading]="!!open()">
+  <!-- ============================ Header ============================ -->
+  <header class="mx-head">
+    <div class="mx-title">
+      <h2>{{ isInbox ? '📥 Inbox' : '📤 Sent' }}</h2>
+      <p>
+        @if (isInbox) {
+          <b>{{ unread() }}</b> unread ·
+        }
+        {{ source().length }} {{ source().length === 1 ? 'message' : 'messages' }}
+        {{ isInbox ? 'from other admins' : 'sent to other admins' }}
+      </p>
+    </div>
+    <label class="mx-search">
+      <span aria-hidden="true">🔍</span>
+      <input
+        #searchBox
+        type="search"
+        [placeholder]="isInbox ? 'Search people, subjects, messages, files…  ( / )' : 'Search sent mail…  ( / )'"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+        aria-label="Search mail"
+      />
+      @if (query()) {
+        <button type="button" class="mx-clear" (click)="query.set('')" aria-label="Clear search">✕</button>
+      }
+    </label>
+    <a class="g-btn dark mx-compose-btn" routerLink="/admin/mail/compose">✏️ Compose</a>
+  </header>
+
+  <div class="mx-body">
+    <!-- ============================ List ============================ -->
+    <section class="mx-list-col" aria-label="Messages">
+      <div class="mx-toolbar">
+        <label class="mx-check" title="Select all">
+          <input type="checkbox" [checked]="allChecked()" [indeterminate]="someChecked() && !allChecked()" (change)="toggleAll()" aria-label="Select all" />
+        </label>
+        @if (someChecked()) {
+          <div class="mx-bulk" role="toolbar" aria-label="Bulk actions">
+            <span class="mx-bulk-count">{{ selected().size }} selected</span>
+            @if (isInbox) {
+              <button type="button" (click)="bulk('read')" title="Mark as read">✉️ Read</button>
+              <button type="button" (click)="bulk('unread')" title="Mark as unread">📩 Unread</button>
+            }
+            <button type="button" (click)="bulk('star')" title="Star">★ Star</button>
+            <button type="button" (click)="bulk('unstar')" title="Remove star">☆</button>
+            <button type="button" class="danger" (click)="bulk('delete')" title="Delete">🗑 Delete</button>
+          </div>
+        } @else {
+          <div class="mx-chips" role="tablist" aria-label="Filter">
+            @for (f of filters; track f.key) {
+              @if (isInbox || f.key !== 'unread') {
+                <button type="button" role="tab" [class.on]="filter() === f.key" [attr.aria-selected]="filter() === f.key" (click)="filter.set(f.key)">
+                  {{ f.label }}
+                  @if (f.key === 'unread' && unread()) {
+                    <b>{{ unread() }}</b>
+                  }
+                </button>
+              }
+            }
+          </div>
+          <div class="mx-tools">
+            <select [value]="label()" (change)="label.set($any($event.target).value)" aria-label="Filter by label">
+              <option value="">🏷 All labels</option>
+              @for (l of labelKeys; track l) {
+                <option [value]="l">{{ labels[l].label }}</option>
+              }
+            </select>
+            <button type="button" class="mx-icon" (click)="sort.set(sort() === 'newest' ? 'oldest' : 'newest')" [title]="sort() === 'newest' ? 'Newest first' : 'Oldest first'">
+              {{ sort() === 'newest' ? '↓ New' : '↑ Old' }}
+            </button>
+            @if (isInbox) {
+              <button type="button" class="mx-icon" (click)="checkNew()" title="Check for new mail">⟳</button>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="mx-list">
+        @for (g of groups(); track g.label) {
+          <h4 class="mx-group">{{ g.label }}</h4>
+          @for (m of g.items; track m.id) {
+            <div
+              class="mx-row"
+              role="button"
+              tabindex="0"
+              [class.unread]="isInbox && !m.read"
+              [class.active]="m.id === openId()"
+              [class.checked]="selected().has(m.id)"
+              (click)="openMsg(m)"
+              (keydown.enter)="openMsg(m)"
+              [attr.aria-label]="rowName(m) + ': ' + m.subject"
+            >
+              <input type="checkbox" class="mx-row-check" [checked]="selected().has(m.id)" (click)="$event.stopPropagation()" (change)="toggleSel(m.id)" [attr.aria-label]="'Select ' + m.subject" />
+              <span class="mx-avatar" [style.background]="rowAvatar(m).color">
+                {{ initials(rowAvatar(m).name) }}
+                @if (rowAvatar(m).online) {
+                  <i class="mx-online" title="Online"></i>
+                }
+              </span>
+              <div class="mx-row-main">
+                <div class="mx-row-top">
+                  <strong class="mx-who">{{ rowName(m) }}</strong>
+                  @if (threadCount(m) > 1) {
+                    <span class="mx-count" title="Messages in this conversation">{{ threadCount(m) }}</span>
+                  }
+                  <span class="mx-time" [title]="fullDate(m.sentAtUtc)">{{ listTime(m.sentAtUtc) }}</span>
+                </div>
+                <div class="mx-subject">
+                  @if (m.important) {
+                    <span class="mx-imp" title="High importance">!</span>
+                  }
+                  {{ m.subject }}
+                </div>
+                <div class="mx-snippet">{{ mail.snippetOf(m) }}</div>
+                @if (m.labels.length || m.attachments.length) {
+                  <div class="mx-row-meta">
+                    @for (l of m.labels; track l) {
+                      <span class="mx-label" [style.--c]="labels[l].color">{{ labels[l].label }}</span>
+                    }
+                    @if (m.attachments.length) {
+                      <span class="mx-clip" [title]="m.attachments.length + ' attachment(s)'">📎 {{ m.attachments.length }}</span>
+                    }
+                    @if (!isInbox) {
+                      <span class="mx-receipt-mini" [class.all]="receipt(m).unread.length === 0" [title]="'Read by ' + receipt(m).read.length + ' of ' + (m.to.length + m.cc.length + m.bcc.length)">
+                        {{ receipt(m).read.length ? '✓✓' : '✓' }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+              <button type="button" class="mx-star" [class.on]="m.starred" (click)="star($event, m)" [attr.aria-label]="m.starred ? 'Unstar' : 'Star'" [title]="m.starred ? 'Starred' : 'Star'">
+                {{ m.starred ? '★' : '☆' }}
+              </button>
+              <div class="mx-row-hover" (click)="$event.stopPropagation()">
+                @if (isInbox) {
+                  <button type="button" (click)="markRead([m.id], !m.read)" [title]="m.read ? 'Mark as unread' : 'Mark as read'">{{ m.read ? '📩' : '✉️' }}</button>
+                }
+                <button type="button" (click)="remove([m.id])" title="Delete">🗑</button>
+              </div>
+            </div>
+          }
+        } @empty {
+          <div class="mx-empty-list">
+            @if (source().length) {
+              <p>🔎 No messages match your search or filters.</p>
+              <button type="button" class="g-btn" (click)="clearFilters()">Clear filters</button>
+            } @else {
+              <p>{{ isInbox ? '🎉 Your inbox is empty.' : 'You haven’t sent any messages yet.' }}</p>
+              <a class="g-btn dark" routerLink="/admin/mail/compose">✏️ Write a message</a>
+            }
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- ============================ Reading pane ============================ -->
+    <section class="mx-read" aria-label="Conversation">
+      @if (open(); as o) {
+        <div class="mx-read-bar">
+          <button type="button" class="mx-back" (click)="closeMsg()" title="Back to list (Esc)">← Back</button>
+          <button type="button" (click)="reply('reply', latest()!)" title="Reply (r)">↩ Reply</button>
+          @if (canReplyAll(o)) {
+            <button type="button" (click)="reply('replyAll', latest()!)" title="Reply all (a)">↩↩ Reply all</button>
+          }
+          <button type="button" (click)="reply('forward', o)" title="Forward (f)">↪ Forward</button>
+          <span class="mx-sep"></span>
+          <button type="button" [class.on]="o.starred" (click)="mail.toggleStar(o.id)" title="Star (s)">{{ o.starred ? '★' : '☆' }}</button>
+          <button type="button" [class.on]="o.important" (click)="mail.setImportant(o.id, !o.important)" title="Mark as important">❗</button>
+          @if (isInbox) {
+            <button type="button" (click)="markUnreadAndClose(o)" title="Mark as unread (u)">📩</button>
+          }
+          <button type="button" (click)="remove([o.id])" title="Delete (#)">🗑</button>
+          <span class="mx-pos">
+            <button type="button" (click)="step(-1)" [disabled]="position() <= 0" aria-label="Newer" title="Newer (k)">‹</button>
+            {{ position() + 1 }} of {{ list().length }}
+            <button type="button" (click)="step(1)" [disabled]="position() >= list().length - 1" aria-label="Older" title="Older (j)">›</button>
+          </span>
+        </div>
+
+        <div class="mx-read-scroll">
+          <div class="mx-read-head">
+            <h3>
+              @if (o.important) {
+                <span class="mx-imp big" title="High importance">!</span>
+              }
+              {{ o.subject }}
+            </h3>
+            <div class="mx-read-labels">
+              @for (l of o.labels; track l) {
+                <span class="mx-label" [style.--c]="labels[l].color">{{ labels[l].label }}</span>
+              }
+              <span class="mx-folder-tag">{{ o.folder === 'inbox' ? 'Inbox' : 'Sent' }}</span>
+              @if (thread().length > 1) {
+                <span class="mx-folder-tag">💬 {{ thread().length }} messages</span>
+              }
+            </div>
+          </div>
+
+          @for (t of thread(); track t.id; let i = $index) {
+            @if (isExpanded(t, i)) {
+              <article class="mx-msg" [class.mine]="t.from === ME">
+                <header class="mx-msg-head">
+                  <span class="mx-avatar lg" [style.background]="person(t.from).color">
+                    {{ initials(person(t.from).name) }}
+                    @if (person(t.from).online) {
+                      <i class="mx-online"></i>
+                    }
+                  </span>
+                  <div class="mx-msg-who">
+                    <div>
+                      <strong>{{ t.from === ME ? 'You' : person(t.from).name }}</strong>
+                      <span class="mx-email">&lt;{{ person(t.from).email }}&gt;</span>
+                    </div>
+                    <button type="button" class="mx-to" (click)="toggleDetails(t.id)" [attr.aria-expanded]="showDetails().has(t.id)">
+                      <span>to {{ recipients(t, 'to') }}</span>
+                      @if (t.cc.length) {
+                        <span>, cc {{ recipients(t, 'cc') }}</span>
+                      }
+                      <span aria-hidden="true"> ▾</span>
+                    </button>
+                    @if (showDetails().has(t.id)) {
+                      <dl class="mx-details">
+                        <dt>From</dt>
+                        <dd>{{ person(t.from).name }} &lt;{{ person(t.from).email }}&gt; · {{ person(t.from).title }}</dd>
+                        <dt>To</dt>
+                        <dd>
+                          @for (id of t.to; track id; let last = $last) {
+                            {{ person(id).name }} &lt;{{ person(id).email }}&gt;{{ last ? '' : ', ' }}
+                          }
+                        </dd>
+                        @if (t.cc.length) {
+                          <dt>Cc</dt>
+                          <dd>
+                            @for (id of t.cc; track id; let last = $last) {
+                              {{ person(id).name }} &lt;{{ person(id).email }}&gt;{{ last ? '' : ', ' }}
+                            }
+                          </dd>
+                        }
+                        @if (t.bcc.length && t.from === ME) {
+                          <dt>Bcc</dt>
+                          <dd>{{ recipients(t, 'bcc') }}</dd>
+                        }
+                        <dt>Date</dt>
+                        <dd>{{ fullDate(t.sentAtUtc) }}</dd>
+                        <dt>Security</dt>
+                        <dd>🔒 Internal · admin-only</dd>
+                      </dl>
+                    }
+                  </div>
+                  <div class="mx-msg-time">
+                    <span [title]="fullDate(t.sentAtUtc)">{{ fullDate(t.sentAtUtc) }}</span>
+                    <small>{{ timeAgo(t.sentAtUtc) }}</small>
+                    <button type="button" class="mx-mini" (click)="reply('reply', t)" title="Reply to this message">↩</button>
+                  </div>
+                </header>
+
+                <div class="mx-msg-body" [innerHTML]="html(t.body)"></div>
+
+                @if (t.attachments.length) {
+                  <div class="mx-atts">
+                    <div class="mx-atts-head">
+                      <span>📎 {{ t.attachments.length }} attachment{{ t.attachments.length === 1 ? '' : 's' }} · {{ totalSize(t.attachments) }}</span>
+                      @if (t.attachments.length > 1) {
+                        <button type="button" class="g-link-btn" (click)="downloadAll(t.attachments)">⤓ Download all</button>
+                      }
+                    </div>
+                    <div class="mx-att-grid">
+                      @for (a of t.attachments; track a.id; let ai = $index) {
+                        @if (isImage(a.mime, a.name) && a.dataUrl) {
+                          <figure class="mx-att image">
+                            <button type="button" class="mx-thumb" (click)="openPreview(t.attachments, ai)" [attr.aria-label]="'Preview ' + a.name">
+                              <img [src]="a.dataUrl" [alt]="a.name" loading="lazy" />
+                            </button>
+                            <figcaption>
+                              <span class="mx-att-name" [title]="a.name">{{ a.name }}</span>
+                              <small>{{ formatBytes(a.size) }}</small>
+                              <button type="button" class="mx-mini" (click)="download(a)" [attr.aria-label]="'Download ' + a.name" title="Download">⤓</button>
+                            </figcaption>
+                          </figure>
+                        } @else {
+                          <div class="mx-att file" [style.--c]="fileKind(a.mime, a.name).color">
+                            <span class="mx-att-icon">{{ fileKind(a.mime, a.name).icon }}</span>
+                            <div class="mx-att-info">
+                              <span class="mx-att-name" [title]="a.name">{{ a.name }}</span>
+                              <small>{{ fileKind(a.mime, a.name).label }} · {{ formatBytes(a.size) }}</small>
+                            </div>
+                            @if (canPreview(a)) {
+                              <button type="button" class="mx-mini" (click)="openPreview(t.attachments, ai)" [attr.aria-label]="'Preview ' + a.name" title="Preview">👁</button>
+                              <button type="button" class="mx-mini" (click)="download(a)" [attr.aria-label]="'Download ' + a.name" title="Download">⤓</button>
+                            } @else {
+                              <small class="mx-att-note" title="Sample file in this demo — its contents are not stored">sample</small>
+                            }
+                          </div>
+                        }
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (t.from === ME) {
+                  <div class="mx-receipt">
+                    @if (receipt(t).read.length) {
+                      <span class="ok">✓✓ Read by {{ receipt(t).read.join(', ') }}</span>
+                    }
+                    @if (receipt(t).unread.length) {
+                      <span>✓ Delivered to {{ receipt(t).unread.join(', ') }}</span>
+                    }
+                  </div>
+                }
+              </article>
+            } @else {
+              <button type="button" class="mx-msg-collapsed" (click)="toggleExpanded(t.id)">
+                <span class="mx-avatar sm" [style.background]="person(t.from).color">{{ initials(person(t.from).name) }}</span>
+                <strong>{{ t.from === ME ? 'You' : person(t.from).name }}</strong>
+                <span class="mx-snippet">{{ mail.snippetOf(t) }}</span>
+                <span class="mx-time">{{ listTime(t.sentAtUtc) }}</span>
+              </button>
+            }
+          }
+
+          <!-- Quick reply -->
+          <div class="mx-quick">
+            <span class="mx-avatar sm" [style.background]="mail.me.color">A</span>
+            <div class="mx-quick-box">
+              <textarea
+                rows="3"
+                [placeholder]="'Reply to ' + (o.from === ME ? person(o.to[0]).name : person(o.from).name) + '…  (Ctrl + Enter to send)'"
+                [value]="quickReply()"
+                (input)="quickReply.set($any($event.target).value)"
+                (keydown)="onQuickKey($event)"
+                aria-label="Quick reply"
+              ></textarea>
+              <div class="mx-quick-actions">
+                <button type="button" class="g-link-btn" (click)="reply('reply', latest()!)">Open full editor ↗</button>
+                <button type="button" class="g-btn dark" [disabled]="!quickReply().trim()" (click)="sendQuickReply()">➤ Send reply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="mx-read-empty">
+          <div class="mx-read-empty-art" aria-hidden="true">{{ isInbox ? '📬' : '📤' }}</div>
+          <h3>{{ isInbox ? 'Select a message to read' : 'Select a sent message' }}</h3>
+          <p>{{ isInbox ? 'Messages from other NeverBeen admins appear here.' : 'See who has read your messages and follow up.' }}</p>
+          <ul class="mx-keys">
+            <li><kbd>j</kbd>/<kbd>k</kbd> next / previous</li>
+            <li><kbd>r</kbd> reply · <kbd>a</kbd> reply all · <kbd>f</kbd> forward</li>
+            <li><kbd>s</kbd> star · <kbd>#</kbd> delete · <kbd>/</kbd> search · <kbd>c</kbd> compose</li>
+          </ul>
+        </div>
+      }
+    </section>
+  </div>
+</div>
+
+<!-- ============================ Attachment preview ============================ -->
+@if (previewItem(); as a) {
+  <div class="mx-lightbox" appOverlayPortal (click)="closePreview()" role="dialog" aria-modal="true" [attr.aria-label]="'Preview ' + a.name">
+    <div class="mx-lb-bar" (click)="$event.stopPropagation()">
+      <span class="mx-lb-name">{{ fileKind(a.mime, a.name).icon }} {{ a.name }} <small>{{ formatBytes(a.size) }}</small></span>
+      @if (preview()!.items.length > 1) {
+        <span class="mx-lb-count">{{ preview()!.index + 1 }} / {{ preview()!.items.length }}</span>
+      }
+      <button type="button" (click)="download(a)">⤓ Download</button>
+      <button type="button" (click)="closePreview()" aria-label="Close preview">✕</button>
+    </div>
+    <div class="mx-lb-stage" (click)="$event.stopPropagation()">
+      @if (isImage(a.mime, a.name)) {
+        <img [src]="a.dataUrl" [alt]="a.name" />
+      } @else if (previewPdf()) {
+        <iframe [src]="previewPdf()" [title]="a.name"></iframe>
+      } @else {
+        <pre class="mx-lb-text">{{ previewText() }}</pre>
+      }
+    </div>
+    @if (preview()!.items.length > 1) {
+      <button type="button" class="mx-lb-nav prev" (click)="$event.stopPropagation(); previewStep(-1)" aria-label="Previous attachment">‹</button>
+      <button type="button" class="mx-lb-nav next" (click)="$event.stopPropagation(); previewStep(1)" aria-label="Next attachment">›</button>
+    }
+  </div>
+}
+
+@if (notice(); as n) {
+  <div class="mx-notice" role="status" appOverlayPortal>
+    <span>{{ n.text }}</span>
+    @if (n.undo) {
+      <button type="button" (click)="undoNotice()">Undo</button>
+    }
+    <button type="button" class="x" (click)="notice.set(null)" aria-label="Dismiss">✕</button>
+  </div>
+}

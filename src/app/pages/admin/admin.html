@@ -38,6 +38,39 @@
             <span class="nav-flag draft" title="Unpublished website changes">{{ cms.pendingChanges().length }}</span>
           }
         </a>
+
+        @if (item.path === 'dashboard') {
+          <!-- Mail: Inbox · Sent · Compose (messages between admins) -->
+          <div class="nav-group" [class.open]="mailOpen()" [class.current]="inMail()">
+            <button type="button" class="nav-group-head" (click)="toggleMail()" [attr.aria-expanded]="mailOpen()" aria-controls="admin-mail-nav" title="Messages between admins">
+              <span class="nav-icon" aria-hidden="true">✉️</span>
+              <span class="nav-text">
+                <strong>Mail</strong>
+                <small>Inbox, sent & compose</small>
+              </span>
+              @if (!mailOpen() && mail.unreadCount()) {
+                <span class="nav-flag mail" [title]="mail.unreadCount() + ' unread'">{{ mail.unreadCount() }}</span>
+              }
+              <span class="nav-chevron" aria-hidden="true">▾</span>
+            </button>
+            @if (mailOpen()) {
+              <div class="nav-sub" id="admin-mail-nav">
+                @for (sub of mailItems; track sub.path) {
+                  <a [routerLink]="'/admin/' + sub.path" routerLinkActive="active" [title]="sub.hint">
+                    <span class="nav-sub-icon" aria-hidden="true">{{ sub.icon }}</span>
+                    <span class="nav-sub-label">{{ sub.label }}</span>
+                    @if (sub.path === 'mail/inbox' && mail.unreadCount()) {
+                      <span class="nav-count" [title]="mail.unreadCount() + ' unread'">{{ mail.unreadCount() }}</span>
+                    }
+                    @if (sub.path === 'mail/compose' && mail.draft()) {
+                      <span class="nav-count draft" title="You have an unsent draft">Draft</span>
+                    }
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
       }
     </nav>
 

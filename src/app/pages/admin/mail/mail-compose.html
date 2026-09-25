@@ -1,0 +1,288 @@
+<div class="mc" (keydown)="onGlobalKey($event)">
+  <header class="mx-head">
+    <div class="mx-title">
+      <h2>✏️ {{ heading() }}</h2>
+      <p>Send a private message to other NeverBeen admins — only admins can receive admin mail.</p>
+    </div>
+    <div class="mc-status" role="status">
+      @if (uploading()) {
+        <span class="mc-dot busy"></span> Uploading attachments…
+      } @else if (savedAt()) {
+        <span class="mc-dot"></span> Draft saved · {{ savedLabel() }}
+      } @else {
+        <span class="mc-dot idle"></span> Drafts save automatically
+      }
+    </div>
+    <a class="g-btn" routerLink="/admin/mail/inbox">← Inbox</a>
+  </header>
+
+  @if (restored()) {
+    <div class="mc-banner">
+      <span>📝 We restored your unsent draft{{ savedAt() ? ' from ' + savedLabel() : '' }}.</span>
+      <button type="button" class="g-link-btn" (click)="startFresh()">Start a new message instead</button>
+    </div>
+  }
+
+  <div class="mc-grid">
+    <!-- ============================ Message ============================ -->
+    <section
+      class="mc-card"
+      [class.dragging]="dragging()"
+      (dragenter)="onDragEnter($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDropFiles($event)"
+      aria-label="New message"
+    >
+      @if (dragging()) {
+        <div class="mc-drop-overlay" aria-hidden="true">
+          <span>📎</span>
+          <strong>Drop files to attach</strong>
+          <small>{{ rules.label }}</small>
+        </div>
+      }
+
+      <app-mail-recipients
+        #toField
+        field="to"
+        label="To"
+        [(ids)]="to"
+        [(invalid)]="badTo"
+        [taken]="othersThan('to')"
+        (added)="claimed($event, 'to')"
+        (moved)="move($event)"
+      >
+        <span class="rc-toggles">
+          @if (!showCc()) {
+            <button type="button" (click)="$event.stopPropagation(); showCc.set(true)" title="Add Cc recipients">Cc</button>
+          }
+          @if (!showBcc()) {
+            <button type="button" (click)="$event.stopPropagation(); showBcc.set(true)" title="Add Bcc recipients (hidden from others)">Bcc</button>
+          }
+        </span>
+      </app-mail-recipients>
+
+      @if (showCc()) {
+        <app-mail-recipients
+          field="cc"
+          label="Cc"
+          placeholder="Keep other admins in the loop…"
+          [(ids)]="cc"
+          [(invalid)]="badCc"
+          [taken]="othersThan('cc')"
+          (added)="claimed($event, 'cc')"
+          (moved)="move($event)"
+        />
+      }
+      @if (showBcc()) {
+        <app-mail-recipients
+          field="bcc"
+          label="Bcc"
+          placeholder="Hidden from the other recipients…"
+          [(ids)]="bcc"
+          [(invalid)]="badBcc"
+          [taken]="othersThan('bcc')"
+          (added)="claimed($event, 'bcc')"
+          (moved)="move($event)"
+        />
+      }
+
+      <div class="mc-subject">
+        <label for="mc-subject">Subject</label>
+        <input
+          id="mc-subject"
+          type="text"
+          maxlength="200"
+          placeholder="What is this about?"
+          [value]="subject()"
+          (input)="subject.set($any($event.target).value)"
+        />
+        <span class="mc-count" [class.warn]="subject().length > 180">{{ subject().length }}/200</span>
+        <button type="button" class="mc-flag" [class.on]="important()" (click)="important.set(!important())" [attr.aria-pressed]="important()" title="Mark as high importance">
+          ❗ {{ important() ? 'High importance' : 'Importance' }}
+        </button>
+      </div>
+
+      <div class="mc-toolbar" role="toolbar" aria-label="Formatting">
+        <button type="button" (click)="format('bold')" title="Bold (Ctrl + B)" aria-label="Bold"><b>B</b></button>
+        <button type="button" (click)="format('italic')" title="Italic (Ctrl + I)" aria-label="Italic"><i>I</i></button>
+        <button type="button" (click)="format('ul')" title="Bulleted list" aria-label="Bulleted list">•≡</button>
+        <button type="button" (click)="format('ol')" title="Numbered list" aria-label="Numbered list">1≡</button>
+        <button type="button" (click)="format('quote')" title="Quote" aria-label="Quote">❝</button>
+        <button type="button" (click)="format('link')" title="Insert link" aria-label="Insert link">🔗</button>
+        <span class="mc-emoji-wrap">
+          <button type="button" (click)="showEmoji.set(!showEmoji())" [class.on]="showEmoji()" title="Emoji" aria-label="Emoji">😊</button>
+          @if (showEmoji()) {
+            <span class="mc-emoji" role="menu">
+              @for (e of emojis; track e) {
+                <button type="button" role="menuitem" (click)="insertEmoji(e)">{{ e }}</button>
+              }
+            </span>
+          }
+        </span>
+        <span class="mc-tool-sep"></span>
+        <button type="button" (click)="pickFiles()" title="Attach documents" aria-label="Attach files">📎</button>
+        <button type="button" (click)="pickFiles(true)" title="Add pictures" aria-label="Add pictures">🖼️</button>
+        <span class="mc-tabs" role="tablist">
+          <button type="button" role="tab" [class.on]="!previewMode()" [attr.aria-selected]="!previewMode()" (click)="previewMode.set(false)">Write</button>
+          <button type="button" role="tab" [class.on]="previewMode()" [attr.aria-selected]="previewMode()" (click)="previewMode.set(true)">Preview</button>
+        </span>
+      </div>
+
+      @if (previewMode()) {
+        <div class="mc-preview mx-msg-body" [innerHTML]="bodyHtml()"></div>
+      } @else {
+        <textarea
+          #bodyBox
+          class="mc-body"
+          aria-label="Message"
+          placeholder="Write your message…  **bold**, _italic_, - lists and links are supported. Paste a screenshot to attach it."
+          [value]="body()"
+          (input)="body.set($any($event.target).value)"
+          (keydown)="onBodyKey($event)"
+          (paste)="onPaste($event)"
+        ></textarea>
+        @if (signature()) {
+          <div class="mc-sig" title="Added to the end of your message">— admin · Super Administrator · NeverBeen Admin Console</div>
+        }
+      }
+
+      <!-- Attachments -->
+      @if (uploads().length) {
+        <div class="mc-atts" aria-label="Attachments">
+          @for (u of uploads(); track u.att.id) {
+            <div class="mc-att" [class.done]="u.done" [style.--c]="fileKind(u.att.mime, u.att.name).color">
+              @if (isImage(u.att.mime, u.att.name) && u.att.dataUrl) {
+                <img [src]="u.att.dataUrl" [alt]="u.att.name" />
+              } @else {
+                <span class="mc-att-icon">{{ fileKind(u.att.mime, u.att.name).icon }}</span>
+              }
+              <div class="mc-att-info">
+                <span class="mc-att-name" [title]="u.att.name">{{ u.att.name }}</span>
+                <small>{{ fileKind(u.att.mime, u.att.name).label }} · {{ formatBytes(u.att.size) }}{{ u.done ? '' : ' · ' + u.progress + '%' }}</small>
+                @if (!u.done) {
+                  <span class="mc-progress"><i [style.width.%]="u.progress"></i></span>
+                }
+              </div>
+              <button type="button" class="mc-att-x" (click)="removeUpload(u.att.id)" [attr.aria-label]="'Remove ' + u.att.name" title="Remove">×</button>
+            </div>
+          }
+        </div>
+      }
+      <button type="button" class="mc-dropzone" (click)="pickFiles()">
+        <span>📎 <b>Drag & drop</b> documents or pictures here, paste a screenshot, or <u>browse</u></span>
+        <small>{{ rules.label }} · max {{ rules.maxFiles }} files</small>
+      </button>
+
+      @if (fileErrors().length) {
+        <ul class="mc-errors files" role="alert">
+          @for (e of fileErrors(); track e) {
+            <li>{{ e }}</li>
+          }
+        </ul>
+      }
+      @if (errors().length) {
+        <ul class="mc-errors" role="alert">
+          @for (e of errors(); track e) {
+            <li>{{ e }}</li>
+          }
+        </ul>
+      }
+
+      <footer class="mc-foot">
+        <button type="button" class="g-btn dark mc-send" (click)="trySend()" [disabled]="uploading()" title="Send (Ctrl + Enter)">
+          ➤ Send
+          @if (allRecipients().length) {
+            <small>to {{ allRecipients().length }}</small>
+          }
+        </button>
+        <label class="mc-opt"><input type="checkbox" [checked]="signature()" (change)="signature.set(!signature())" /> Signature</label>
+        <label class="mc-opt"><input type="checkbox" [checked]="requestReceipt()" (change)="requestReceipt.set(!requestReceipt())" /> Request read receipt</label>
+        <span class="mc-foot-info">
+          {{ wordCount() }} word{{ wordCount() === 1 ? '' : 's' }}
+          @if (uploads().length) {
+            · 📎 {{ uploads().length }} · {{ formatBytes(totalBytes()) }} of {{ formatBytes(rules.maxTotalBytes) }}
+          }
+        </span>
+        <button type="button" class="g-icon-btn mc-discard" (click)="askDiscard()" title="Discard draft">🗑 Discard</button>
+      </footer>
+
+      <input #fileInput type="file" multiple hidden [accept]="rules.accept" (change)="onFilesChosen($event)" />
+      <input #imageInput type="file" multiple hidden accept="image/*" (change)="onFilesChosen($event)" />
+    </section>
+
+    <!-- ============================ Directory ============================ -->
+    <aside class="mc-side" aria-label="Admin directory">
+      <div class="mc-help">
+        <h4>How to add admins</h4>
+        <ol>
+          <li><b>Type</b> a name, email, team or role in <b>To</b> or <b>Cc</b> and pick from the suggestions (<kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd>).</li>
+          <li><b>Paste</b> several addresses separated by commas.</li>
+          <li><b>Click To / Cc</b> next to an admin below, or add a whole <b>team</b>.</li>
+          <li><b>Drag</b> a chip between To, Cc and Bcc. <kbd>Backspace</kbd> removes the last one.</li>
+        </ol>
+      </div>
+
+      <div class="mc-dir">
+        <div class="mc-dir-head">
+          <h4>Admin directory</h4>
+          <small>{{ mail.admins.length }} admins</small>
+        </div>
+        <label class="mx-search small">
+          <span aria-hidden="true">🔍</span>
+          <input type="search" placeholder="Find an admin…" [value]="dirQuery()" (input)="dirQuery.set($any($event.target).value)" aria-label="Find an admin" />
+        </label>
+
+        <div class="mc-teams">
+          @for (g of groups; track g.id) {
+            <span class="mc-team">
+              <span class="mc-team-name">{{ g.icon }} {{ g.name }} <small>{{ g.members.length }}</small></span>
+              <button type="button" (click)="addGroup(g.id, 'to')" [attr.aria-label]="'Add ' + g.name + ' to To'">+ To</button>
+              <button type="button" (click)="addGroup(g.id, 'cc')" [attr.aria-label]="'Add ' + g.name + ' to Cc'">+ Cc</button>
+            </span>
+          }
+        </div>
+
+        <ul class="mc-people">
+          @for (a of directory(); track a.id) {
+            <li [class.added]="!!lineOf(a.id)">
+              <span class="mx-avatar" [style.background]="a.color">
+                {{ initials(a.name) }}
+                @if (a.online) {
+                  <i class="mx-online" title="Online"></i>
+                }
+              </span>
+              <span class="mc-person">
+                <strong>{{ a.name }}</strong>
+                <small>{{ a.title }}</small>
+                <small class="mc-email">{{ a.email }}</small>
+              </span>
+              <span class="mc-person-actions">
+                <button type="button" [class.on]="lineOf(a.id) === 'to'" (click)="toggleLine(a.id, 'to')" [attr.aria-label]="(lineOf(a.id) === 'to' ? 'Remove ' : 'Add ') + a.name + ' to To'">
+                  {{ lineOf(a.id) === 'to' ? '✓ To' : 'To' }}
+                </button>
+                <button type="button" [class.on]="lineOf(a.id) === 'cc'" (click)="toggleLine(a.id, 'cc')" [attr.aria-label]="(lineOf(a.id) === 'cc' ? 'Remove ' : 'Add ') + a.name + ' to Cc'">
+                  {{ lineOf(a.id) === 'cc' ? '✓ Cc' : 'Cc' }}
+                </button>
+              </span>
+            </li>
+          } @empty {
+            <li class="mc-none">No admin matches “{{ dirQuery() }}”.</li>
+          }
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  @if (confirm(); as c) {
+    <app-admin-confirm-dialog
+      [heading]="confirmText(c).heading"
+      [message]="confirmText(c).message"
+      [confirmLabel]="confirmText(c).label"
+      [tone]="confirmText(c).tone"
+      [withReason]="false"
+      (confirmed)="confirmed()"
+      (cancelled)="cancelled()"
+    />
+  }
+</div>

@@ -68,6 +68,25 @@ export const adminRoutes: Routes = [
         title: 'Dashboard — NeverBeen Admin',
         loadComponent: () => import('./dashboard/dashboard').then((m) => m.AdminDashboard),
       },
+      // Admin Mail — private messages between administrators (side panel → Mail).
+      { path: 'mail', pathMatch: 'full', redirectTo: 'mail/inbox' },
+      {
+        path: 'mail/inbox',
+        title: 'Inbox — NeverBeen Admin',
+        data: { folder: 'inbox' },
+        loadComponent: () => import('./mail/mail-folder').then((m) => m.AdminMailFolder),
+      },
+      {
+        path: 'mail/sent',
+        title: 'Sent — NeverBeen Admin',
+        data: { folder: 'sent' },
+        loadComponent: () => import('./mail/mail-folder').then((m) => m.AdminMailFolder),
+      },
+      {
+        path: 'mail/compose',
+        title: 'Compose — NeverBeen Admin',
+        loadComponent: () => import('./mail/mail-compose').then((m) => m.AdminMailCompose),
+      },
       { path: 'users', title: 'User Management — NeverBeen Admin', loadComponent: () => import('./users/users').then((m) => m.AdminUsers) },
       { path: 'data', title: 'Data Management — NeverBeen Admin', loadComponent: () => import('./data/data').then((m) => m.AdminData) },
       { path: 'website', title: 'Website Management — NeverBeen Admin', loadComponent: () => import('./website/website').then((m) => m.AdminWebsite) },

@@ -48,9 +48,13 @@ export class Navbar {
       });
   }
 
+  /**
+   * Compact header (smaller bar + 50% logo) on the Community, member profiles and the whole
+   * Admin Console, so as much of the working area as possible is visible.
+   */
   protected readonly isCompactLogo = computed(() => {
     const url = this.currentUrl();
-    return url.includes('/community') || url.includes('/profile');
+    return url.includes('/community') || url.includes('/profile') || /^\/admin(\/|\?|#|$)/.test(url);
   });
 
   private readonly allLinks: NavLink[] = [

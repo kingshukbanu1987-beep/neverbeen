@@ -1,5 +1,8 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import { AdminMailService } from './mail/admin-mail.service';
 import { AdminAuthService } from '../../services/admin-auth.service';
 import { AdminInsightsService } from './shared/admin-insights.service';
 import { MaintenanceService } from '../../services/maintenance.service';
@@ -41,6 +44,31 @@ export class AdminLayout {
   protected readonly toast = this.insights.toast;
   protected readonly maintenance = inject(MaintenanceService);
   protected readonly cms = inject(SiteConfigService);
+  protected readonly mail = inject(AdminMailService);
+  private readonly router = inject(Router);
+
+  /** Sub-items of the collapsible "Mail" group (shown right below Dashboard). */
+  protected readonly mailItems = [
+    { path: 'mail/inbox', label: 'Inbox', icon: '📥', hint: 'Messages from other admins' },
+    { path: 'mail/sent', label: 'Sent', icon: '📤', hint: 'Messages you sent to admins' },
+    { path: 'mail/compose', label: 'Compose', icon: '✏️', hint: 'Write to one or more admins' },
+  ];
+
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+  protected readonly inMail = computed(() => this.url().startsWith('/admin/mail'));
+  private readonly mailToggled = signal<boolean | null>(null);
+  /** Open by default; the admin can collapse it (it re-opens while a Mail page is shown). */
+  protected readonly mailOpen = computed(() => this.inMail() || (this.mailToggled() ?? true));
+
+  protected toggleMail(): void {
+    this.mailToggled.set(!this.mailOpen());
+  }
 
   logout(): void {
     this.adminAuth.logout();

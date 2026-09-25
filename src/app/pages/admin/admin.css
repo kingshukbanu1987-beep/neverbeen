@@ -168,6 +168,101 @@
   color: #a7f3d0;
 }
 
+/* ---- Collapsible nav group (Mail → Inbox · Sent · Compose) ---- */
+.nav-group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: none;
+  color: #cbd5e1;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-group-head:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+}
+
+.nav-group.current .nav-group-head {
+  color: #ffffff;
+}
+
+.nav-group.current .nav-group-head .nav-text small {
+  color: #a7f3d0;
+}
+
+.nav-chevron {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+  transform: rotate(-90deg);
+}
+
+.nav-group.open .nav-chevron {
+  transform: none;
+}
+
+.nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0.15rem 0 0.25rem 1.55rem;
+  padding-left: 0.7rem;
+  border-left: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.admin-nav .nav-sub a {
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.nav-sub-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.nav-sub-label {
+  flex: 1;
+}
+
+.nav-count {
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0.22rem 0.45rem;
+  border-radius: 999px;
+  background: #10b981;
+  color: #04261d;
+}
+
+.nav-count.draft {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d;
+  font-weight: 700;
+}
+
+.nav-flag.mail {
+  background: #10b981;
+  color: #04261d;
+  border-color: #10b981;
+}
+
+.nav-flag.mail + .nav-chevron {
+  margin-left: 0.35rem;
+}
+
 .admin-side-foot {
   display: flex;
   flex-direction: column;
@@ -442,6 +537,18 @@
 
   .admin-nav a {
     flex: 1 1 45%;
+  }
+
+  .nav-group {
+    flex: 1 1 100%;
+  }
+
+  .nav-sub {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 0;
+    border-left: none;
+    padding-left: 0;
   }
 
   .admin-side-foot {
