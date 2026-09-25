@@ -1,0 +1,345 @@
+<header class="g-page-head">
+  <div>
+    <h2>Site Downtime</h2>
+    <p>Take the whole website down for critical releases — now or in a scheduled window — and choose exactly what visitors see meanwhile.</p>
+  </div>
+</header>
+
+<!-- ============ Status hero ============ -->
+<section class="mt-status" [attr.data-status]="status()">
+  <div class="mt-status-main">
+    <span class="mt-status-icon" aria-hidden="true">{{ status() === 'down' ? '⛔' : status() === 'scheduled' ? '🗓️' : '✅' }}</span>
+    <div>
+      <small>Website status</small>
+      <h3>
+        @switch (status()) {
+          @case ('down') { DOWN — visitors see the maintenance page }
+          @case ('scheduled') { Online · downtime scheduled }
+          @default { Online — everything is served normally }
+        }
+      </h3>
+      @if (status() !== 'live') {
+        <p>
+          {{ schedule().startUtc | date: 'EEE d MMM, h:mm a' }} →
+          {{ schedule().endUtc ? (schedule().endUtc | date: 'EEE d MMM, h:mm a') : 'until ended manually' }}
+          @if (schedule().reason) {
+            · <em>{{ schedule().reason }}</em>
+          }
+        </p>
+      } @else {
+        <p>/admin and /login always stay reachable, so you can bring the site back at any time.</p>
+      }
+    </div>
+  </div>
+  @if (countdown(); as c) {
+    <div class="mt-status-count">
+      <small>{{ c.label }}</small>
+      <strong>{{ c.value }}</strong>
+      @if (elapsedPct() !== null) {
+        <span class="mt-mini-bar"><span [style.width.%]="elapsedPct()"></span></span>
+      }
+    </div>
+  }
+  <div class="mt-status-actions">
+    @if (status() === 'down') {
+      <button type="button" class="g-btn" (click)="extend(15)">+15 min</button>
+      <button type="button" class="g-btn" (click)="extend(60)">+1 hour</button>
+      <button type="button" class="g-btn success" (click)="confirm.set('end')">⚡ Bring website back online</button>
+    } @else if (status() === 'scheduled') {
+      <button type="button" class="g-btn danger" (click)="confirm.set('cancel')">Cancel scheduled downtime</button>
+    }
+    <a class="g-btn" routerLink="/" target="_blank" title="Open the public site in a new tab">↗ View site</a>
+  </div>
+</section>
+
+<div class="mt-layout">
+  <div class="mt-col">
+    <!-- ============ Timeframe ============ -->
+    <section class="g-panel mt-card">
+      <div class="mt-card-head">
+        <h3>① Downtime window</h3>
+        <p>Times are in your time zone ({{ localTz }}).</p>
+      </div>
+
+      <div class="mt-field">
+        <span class="mt-field-label">Start</span>
+        <div class="wm-seg">
+          <button type="button" [class.active]="startMode() === 'now'" (click)="startMode.set('now')">Immediately</button>
+          <button type="button" [class.active]="startMode() === 'at'" (click)="startMode.set('at')">At a specific time</button>
+        </div>
+        @if (startMode() === 'at') {
+          <input type="datetime-local" class="mt-input" [value]="startAt()" (change)="startAt.set($any($event.target).value)" aria-label="Start time" />
+        }
+      </div>
+
+      <div class="mt-field">
+        <span class="mt-field-label">End</span>
+        <div class="wm-seg">
+          <button type="button" [class.active]="endMode() === 'duration'" (click)="endMode.set('duration')">After a duration</button>
+          <button type="button" [class.active]="endMode() === 'at'" (click)="endMode.set('at')">At a specific time</button>
+          <button type="button" [class.active]="endMode() === 'manual'" (click)="endMode.set('manual')">When I end it</button>
+        </div>
+        @if (endMode() === 'duration') {
+          <div class="mt-chips">
+            @for (d of durations; track d) {
+              <button type="button" class="mt-chip" [class.active]="durationMin() === d" (click)="durationMin.set(d)">{{ formatDuration(d * 60000) }}</button>
+            }
+            <label class="mt-custom">
+              <input type="number" min="1" max="10080" [value]="durationMin()" (change)="durationMin.set(+$any($event.target).value)" aria-label="Custom duration in minutes" />
+              <span>min</span>
+            </label>
+          </div>
+        } @else if (endMode() === 'at') {
+          <input type="datetime-local" class="mt-input" [value]="endAt()" (change)="endAt.set($any($event.target).value)" aria-label="End time" />
+        } @else {
+          <small class="mt-hint">The site stays down until you press “Bring website back online”.</small>
+        }
+      </div>
+
+      @if (startMode() === 'at') {
+        <div class="mt-field">
+          <span class="mt-field-label">Warn visitors beforehand</span>
+          <select class="mt-input" [value]="warnBefore()" (change)="warnBefore.set(+$any($event.target).value)" aria-label="Warning banner">
+            @for (o of warnOptions; track o.value) {
+              <option [value]="o.value">{{ o.label }}</option>
+            }
+          </select>
+          <small class="mt-hint">Shows a “Scheduled maintenance” banner above the site navigation.</small>
+        </div>
+      }
+
+      <div class="mt-field">
+        <span class="mt-field-label">Internal reason / release ticket</span>
+        <input type="text" class="mt-input" placeholder="e.g. Release 4.2 — payments migration" maxlength="120" [value]="reason()" (input)="reason.set($any($event.target).value)" />
+      </div>
+
+      <div class="mt-summary" [class.bad]="window().errors.length">
+        @if (window().errors.length) {
+          @for (e of window().errors; track e) {
+            <p>⚠️ {{ e }}</p>
+          }
+        } @else {
+          <p>
+            <strong>{{ startMode() === 'now' ? 'Now' : (window().start | date: 'EEE d MMM, h:mm a') }}</strong>
+            →
+            <strong>{{ window().end ? (window().end | date: 'EEE d MMM, h:mm a') : 'manual end' }}</strong>
+            @if (window().end) {
+              <span class="g-badge info">{{ formatDuration(window().end! - window().start) }}</span>
+            }
+          </p>
+          <small>UTC: {{ window().start | date: 'yyyy-MM-dd HH:mm' : 'UTC' }} → {{ window().end ? (window().end | date: 'yyyy-MM-dd HH:mm' : 'UTC') : '—' }}</small>
+        }
+      </div>
+
+      <div class="mt-arm">
+        @if (status() !== 'live') {
+          <small class="mt-hint">Arming a new window replaces the current one.</small>
+        }
+        <button type="button" [class]="'g-btn ' + (startMode() === 'now' ? 'danger' : 'violet')" [disabled]="window().errors.length > 0" (click)="requestArm()">
+          {{ startMode() === 'now' ? '⛔ Take website down now' : '🗓️ Schedule downtime' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ Page content ============ -->
+    <section class="g-panel mt-card">
+      <div class="mt-card-head">
+        <h3>② What visitors see</h3>
+        <p>Changes apply instantly — including while the site is down.</p>
+      </div>
+
+      <div class="mt-field">
+        <span class="mt-field-label">Start from a template</span>
+        <div class="mt-templates">
+          @for (t of templates; track t.key) {
+            <button type="button" class="mt-template" [class.active]="page().template === t.key" (click)="applyTemplate(t.key)">
+              <span aria-hidden="true">{{ t.icon }}</span> {{ t.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <label class="mt-field">
+        <span class="mt-field-label">Headline</span>
+        <input type="text" class="mt-input" maxlength="120" [value]="page().title" (input)="updatePage('title', $any($event.target).value)" />
+      </label>
+
+      <label class="mt-field">
+        <span class="mt-field-label">Message</span>
+        <textarea class="mt-input" rows="4" maxlength="800" [value]="page().message" (input)="updatePage('message', $any($event.target).value)"></textarea>
+      </label>
+
+      <div class="mt-field">
+        <span class="mt-field-label">Background</span>
+        <div class="mt-themes">
+          @for (th of themes; track th.key) {
+            <button type="button" class="mt-theme" [class.active]="page().theme === th.key" (click)="updatePage('theme', th.key)" [attr.aria-label]="th.label + ' theme'">
+              <span [style.background]="th.swatch"></span>
+              {{ th.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="mt-field">
+        <span class="mt-field-label">Page elements</span>
+        <div class="mt-toggles">
+          @for (t of toggles; track t.key) {
+            <label class="mt-toggle">
+              <span class="cf-switch sm">
+                <input type="checkbox" [checked]="page()[t.key]" (change)="updatePage(t.key, $any($event.target).checked)" />
+                <span class="track"><span class="thumb"></span></span>
+              </span>
+              <span>
+                <strong>{{ t.label }}</strong>
+                <small>{{ t.hint }}</small>
+              </span>
+            </label>
+          }
+        </div>
+      </div>
+
+      @if (page().showContact) {
+        <label class="mt-field">
+          <span class="mt-field-label">Contact email</span>
+          <input type="email" class="mt-input" [value]="page().contactEmail" (input)="updatePage('contactEmail', $any($event.target).value)" />
+        </label>
+      }
+
+      <label class="mt-field">
+        <span class="mt-field-label">Sign-off</span>
+        <input type="text" class="mt-input" maxlength="80" [value]="page().signature" (input)="updatePage('signature', $any($event.target).value)" />
+      </label>
+
+      <div class="mt-field">
+        <span class="mt-field-label">Status updates ({{ page().updates.length }})</span>
+        <div class="mt-update-row">
+          <input type="text" class="mt-input" placeholder="e.g. Database migration complete — running final checks" maxlength="200" [value]="newUpdate()" (input)="newUpdate.set($any($event.target).value)" (keydown.enter)="postUpdate()" />
+          <button type="button" class="g-btn violet" [disabled]="!newUpdate().trim()" (click)="postUpdate()">Post</button>
+        </div>
+        @if (page().updates.length) {
+          <ul class="mt-updates-admin">
+            @for (u of page().updates; track u.id) {
+              <li>
+                <time>{{ u.atUtc | date: 'd MMM, h:mm a' }}</time>
+                <span>{{ u.text }}</span>
+                <button type="button" class="g-icon-btn danger" (click)="maintenance.removeUpdate(u.id)" aria-label="Remove update">✕</button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+  </div>
+
+  <div class="mt-col">
+    <!-- ============ Preview ============ -->
+    <section class="g-panel mt-card mt-preview-card">
+      <div class="mt-card-head row">
+        <div>
+          <h3>Live preview</h3>
+          <p>Exactly what every visitor will see.</p>
+        </div>
+      </div>
+      <div class="mt-preview">
+        <app-maintenance-page [content]="page()" [schedule]="previewSchedule()" [embedded]="true" />
+      </div>
+    </section>
+
+    <!-- ============ Site-wide ============ -->
+    <section class="g-panel mt-card">
+      <div class="mt-card-head">
+        <h3>③ Apply to every visitor</h3>
+        <p>
+          The Admin Console applies downtime instantly in this browser. To take the site down for everyone on the deployed (static) website, publish the
+          window as <code>maintenance.json</code>.
+        </p>
+      </div>
+      <p class="mt-remote" [attr.data-tone]="remoteStatus().tone">{{ remoteStatus().text }}</p>
+      <ol class="mt-steps">
+        <li>Arm the window above and finish the page content.</li>
+        <li>Download <code>maintenance.json</code> and replace <code>public/maintenance.json</code> in the repository.</li>
+        <li>Deploy — every open tab checks the file every 2 minutes and on each visit, then follows the window automatically (it reopens itself when the window ends).</li>
+      </ol>
+      <div class="mt-arm">
+        <button type="button" class="g-btn" (click)="copyFile()">⧉ Copy JSON</button>
+        <button type="button" class="g-btn dark" (click)="downloadFile()">⤓ Download maintenance.json</button>
+      </div>
+    </section>
+
+    <!-- ============ Subscribers ============ -->
+    <section class="g-panel mt-card">
+      <div class="mt-card-head row">
+        <div>
+          <h3>“Notify me” sign-ups</h3>
+          <p>{{ subscribers().length }} visitor(s) asked to be told when the site is back.</p>
+        </div>
+        <div class="g-actions">
+          <button type="button" class="g-icon-btn" [disabled]="!subscribers().length" (click)="exportSubscribers()">⤓ CSV</button>
+          <button type="button" class="g-icon-btn" [disabled]="!subscribers().length" (click)="clearSubscribers()">Clear</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ History ============ -->
+<section class="g-panel mt-history">
+  <div class="g-toolbar">
+    <strong class="wm-panel-title">Downtime history</strong>
+  </div>
+  <div class="g-table-wrap">
+    <table class="g-table">
+      <thead>
+        <tr>
+          <th>Start</th>
+          <th>End</th>
+          <th>Duration</th>
+          <th>Page headline</th>
+          <th>Reason</th>
+          <th>Outcome</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (h of history(); track h.id) {
+          <tr>
+            <td class="g-nowrap">{{ h.startUtc | date: 'd MMM y, h:mm a' }}</td>
+            <td class="g-nowrap">{{ h.endUtc ? (h.endUtc | date: 'd MMM y, h:mm a') : '—' }}</td>
+            <td>{{ durationOf(h) }}</td>
+            <td>{{ h.title }}</td>
+            <td>{{ h.reason || '—' }}</td>
+            <td>
+              @switch (h.endedBy) {
+                @case ('admin') { <span class="g-badge ok">Ended by admin</span> }
+                @case ('schedule') { <span class="g-badge info">Ended on schedule</span> }
+                @case ('cancelled') { <span class="g-badge">Cancelled</span> }
+                @default { <span class="g-badge danger">In progress / upcoming</span> }
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6"><p class="g-empty">No downtime yet — the website has been online the whole time.</p></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="mt-audit">
+  <h3 class="wm-panel-title">Operations log</h3>
+  <app-admin-audit-log [categories]="auditCategories" />
+</section>
+
+@if (confirm(); as c) {
+  <app-admin-confirm-dialog
+    [heading]="confirmHeading(c)"
+    [message]="confirmMessage(c)"
+    [confirmLabel]="c === 'down' ? 'Take it down' : c === 'schedule' ? 'Schedule' : c === 'end' ? 'Bring it back' : 'Cancel downtime'"
+    [tone]="c === 'end' ? 'success' : c === 'schedule' ? 'violet' : 'danger'"
+    [withReason]="false"
+    (confirmed)="runConfirm()"
+    (cancelled)="confirm.set(null)"
+  />
+}

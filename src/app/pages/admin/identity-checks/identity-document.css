@@ -1,0 +1,349 @@
+:host {
+  display: block;
+}
+
+.iv {
+  min-height: calc(100vh - 64px);
+  background: radial-gradient(circle at 30% 0%, #1e293b, #020617 70%);
+  color: #e2e8f0;
+  padding: 1.2rem clamp(1rem, 3vw, 2rem) 2rem;
+  box-sizing: border-box;
+}
+
+.iv-top {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.1rem;
+}
+
+.iv-back {
+  color: #a5b4fc;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.iv-back:hover {
+  color: #c7d2fe;
+}
+
+.iv-title {
+  flex: 1 1 260px;
+}
+
+.iv-title h1 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.iv-title p {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.iv-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 0.3rem;
+}
+
+.iv-tools button,
+.iv-tools a {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.iv-tools button:hover,
+.iv-tools a:hover,
+.iv-tools button.on {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.iv-tools span {
+  min-width: 3rem;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.iv-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.iv-stage {
+  position: relative;
+  min-height: 620px;
+  border-radius: 22px;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.03) 75%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 28px 28px;
+  background-position:
+    0 0,
+    14px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem 7rem;
+}
+
+.iv-canvas {
+  transition: transform 0.25s ease;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  border-radius: 14px;
+  user-select: none;
+}
+
+.iv-canvas.enhance {
+  filter: contrast(1.6) saturate(1.8) brightness(1.05);
+}
+
+.iv-strip {
+  position: absolute;
+  bottom: 1.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  padding: 0.45rem;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+.iv-strip a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 2px solid transparent;
+}
+
+.iv-strip a.active {
+  border-color: #818cf8;
+  color: #fff;
+}
+
+.iv-strip app-id-document {
+  pointer-events: none;
+}
+
+.iv-watermark {
+  position: absolute;
+  top: 0.8rem;
+  right: 1rem;
+  margin: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  color: rgba(248, 113, 113, 0.75);
+  font-weight: 800;
+}
+
+.iv-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.iv-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  padding: 0.95rem 1rem;
+}
+
+.iv-card h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  display: flex;
+  justify-content: space-between;
+}
+
+.iv-card h3 small {
+  text-transform: none;
+  letter-spacing: 0;
+  color: #cbd5e1;
+}
+
+.iv-member {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.iv-member img {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.iv-member strong {
+  display: block;
+  color: #fff;
+}
+
+.iv-member small {
+  display: block;
+  font-size: 0.74rem;
+  color: #94a3b8;
+}
+
+.iv-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.7rem;
+}
+
+.iv-reason,
+.iv-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.iv-note {
+  font-style: italic;
+}
+
+.iv-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.8rem;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.iv-dl dt {
+  color: #94a3b8;
+}
+
+.iv-dl dd {
+  margin: 0;
+  color: #f8fafc;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.iv-dl dd.bad {
+  color: #fca5a5;
+}
+
+.iv-dl dd.bad::after {
+  content: ' ⚠ mismatch';
+  font-size: 0.7rem;
+}
+
+.iv-dl code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #a5b4fc;
+}
+
+.iv-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.iv-checks li {
+  color: #fca5a5;
+}
+
+.iv-checks li.ok {
+  color: #6ee7b7;
+}
+
+.iv-decide {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.iv-decide .g-btn {
+  justify-content: center;
+}
+
+.iv-decided {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.iv-missing {
+  max-width: 460px;
+  margin: 6rem auto;
+  text-align: center;
+}
+
+.iv-missing h1 {
+  color: #fff;
+}
+
+.iv-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 1300;
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.7rem 1.1rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 1100px) {
+  .iv-main {
+    grid-template-columns: 1fr;
+  }
+
+  .iv-stage {
+    min-height: 480px;
+  }
+}

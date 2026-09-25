@@ -1,0 +1,4 @@
+{
+  "updatedUtc": "1970-01-01T00:00:00.000Z",
+  "schedule": { "enabled": false, "startUtc": null, "endUtc": null, "reason": "", "warnBeforeMinutes": 0 }
+}

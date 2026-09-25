@@ -31,6 +31,12 @@
             <strong>{{ item.label }}</strong>
             <small>{{ item.hint }}</small>
           </span>
+          @if (item.path === 'maintenance' && maintenance.status() !== 'live') {
+            <span class="nav-flag" [class.down]="maintenance.status() === 'down'">{{ maintenance.status() === 'down' ? 'DOWN' : 'Scheduled' }}</span>
+          }
+          @if (item.path === 'website' && cms.pendingChanges().length) {
+            <span class="nav-flag draft" title="Unpublished website changes">{{ cms.pendingChanges().length }}</span>
+          }
         </a>
       }
     </nav>
@@ -63,7 +69,13 @@
         <p>Manage website statistics, repositories, community members and data.</p>
       </div>
       <div class="topbar-status">
-        <span class="status-pill"><span class="live-dot" aria-hidden="true"></span> System Online</span>
+        @if (maintenance.status() === 'down') {
+          <a class="status-pill down" routerLink="/admin/maintenance"><span class="live-dot" aria-hidden="true"></span> Website DOWN for visitors</a>
+        } @else if (maintenance.status() === 'scheduled') {
+          <a class="status-pill scheduled" routerLink="/admin/maintenance">🛠️ Downtime scheduled</a>
+        } @else {
+          <span class="status-pill"><span class="live-dot" aria-hidden="true"></span> System Online</span>
+        }
         <span class="status-pill neutral">{{ onlineCount().length }} members online</span>
       </div>
     </header>

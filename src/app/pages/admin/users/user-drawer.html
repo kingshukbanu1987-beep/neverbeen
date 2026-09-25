@@ -131,7 +131,7 @@
 
         @case ('moderation') {
           <div class="ud-mod-state" [attr.data-tone]="stateTone(m.accountState)">
-            <strong>{{ stateLabel(m.accountState) }}</strong>
+            <strong>{{ action()?.permanent && m.accountState === 'disabled' ? 'Permanently disabled' : stateLabel(m.accountState) }}</strong>
             @if (action(); as a) {
               <span>{{ a.warnings }} warning(s) on record</span>
               @if (a.reason) {
@@ -144,6 +144,21 @@
               <span>No moderation history — clean record.</span>
             }
           </div>
+
+          <h4>Identity verification ({{ idHistory().length }})</h4>
+          @for (s of idHistory(); track s.id) {
+            <div class="ud-report">
+              <strong>🪪 {{ s.documentType }}</strong> · attempt #{{ s.attempt }} · {{ timeAgo(s.submittedAtUtc) }}
+              <span class="g-badge" [class]="'g-badge ' + idStatus[s.status].tone">{{ idStatus[s.status].label }}</span>
+              <p>
+                @for (f of s.files; track f.id) {
+                  <a class="ud-doc-link" [href]="'/admin/identity-document/' + s.id + '/' + f.id" target="_blank" rel="noopener">{{ f.side }} ↗</a>
+                }
+              </p>
+            </div>
+          } @empty {
+            <p class="g-muted ud-empty">No identity documents submitted.</p>
+          }
 
           <h4>Suspicious signals</h4>
           @if (suspicious(); as s) {

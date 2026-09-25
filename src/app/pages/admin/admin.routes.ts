@@ -13,6 +13,20 @@ const underDevelopment = () =>
   import('./under-development/under-development').then((m) => m.AdminUnderDevelopment);
 
 export const adminRoutes: Routes = [
+  // Secure full-page viewer for a submitted identity document (opened in a new tab from the grid).
+  {
+    path: 'identity-document/:submissionId/:fileId',
+    canActivate: [adminGuard],
+    title: 'Identity Document — NeverBeen Admin',
+    loadComponent: () => import('./identity-checks/identity-document').then((m) => m.AdminIdentityDocument),
+  },
+  // Print-ready Website Health report (opened in a new tab → Save as PDF).
+  {
+    path: 'health-report',
+    canActivate: [adminGuard],
+    title: 'Website Health Report — NeverBeen',
+    loadComponent: () => import('./health/health-report').then((m) => m.AdminHealthReport),
+  },
   {
     path: '',
     canActivate: [adminGuard],
@@ -44,6 +58,11 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./abuse-reports/abuse-reports').then((m) => m.AdminAbuseReports),
       },
       {
+        path: 'dashboard/identity-checks',
+        title: 'Identity Check Verification — NeverBeen Admin',
+        loadComponent: () => import('./identity-checks/identity-checks').then((m) => m.AdminIdentityChecks),
+      },
+      {
         path: 'dashboard',
         pathMatch: 'full',
         title: 'Dashboard — NeverBeen Admin',
@@ -51,6 +70,9 @@ export const adminRoutes: Routes = [
       },
       { path: 'users', title: 'User Management — NeverBeen Admin', loadComponent: () => import('./users/users').then((m) => m.AdminUsers) },
       { path: 'data', title: 'Data Management — NeverBeen Admin', loadComponent: () => import('./data/data').then((m) => m.AdminData) },
+      { path: 'website', title: 'Website Management — NeverBeen Admin', loadComponent: () => import('./website/website').then((m) => m.AdminWebsite) },
+      { path: 'maintenance', title: 'Site Downtime — NeverBeen Admin', loadComponent: () => import('./maintenance/maintenance').then((m) => m.AdminMaintenance) },
+      { path: 'health', title: 'Website Health — NeverBeen Admin', loadComponent: () => import('./health/health').then((m) => m.AdminHealth) },
       // Repositories is not built yet.
       { path: 'repositories', title: 'Repositories — NeverBeen Admin', data: { section: 'Repositories' }, loadComponent: underDevelopment },
       { path: '**', redirectTo: 'dashboard' },

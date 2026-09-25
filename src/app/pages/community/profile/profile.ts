@@ -28,6 +28,7 @@ import {
   WorkExperience,
 } from '../../../models/community';
 import { CommunityService } from '../../../services/community.service';
+import { SiteConfigService } from '../../../services/site-config.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 import { UserHoverCard, UserPreviewDirective } from '../../../shared/user-hover-card';
@@ -465,9 +466,21 @@ export class CommunityProfile implements OnInit {
   // NAVIGATION & MOBILE PORTRAIT DRAWER
   // ---------------------------------------------------------------------------
 
+  // Website Management (Admin Console) controls which profile features are switched on.
+  private readonly cms = inject(SiteConfigService);
+  protected profileSectionOn(section: string): boolean {
+    return this.cms.isItemVisible('community.profile', 'sections', section);
+  }
+  protected profileLabel(section: string): string {
+    return this.cms.itemLabel('community.profile', 'sections', section);
+  }
+  protected profileFlag(field: string): boolean {
+    return this.cms.flag('community.profile', field);
+  }
+
   setSection(section: ProfileSection): void {
     this.viewingVisitor.set(null); // Return from visitor view
-    this.activeSection.set(section);
+    this.activeSection.set(this.profileSectionOn(section) ? section : 'journey');
     this.closeMobileSidePanel();
     if (section === 'notifications') {
       this.service.markNotificationsRead();

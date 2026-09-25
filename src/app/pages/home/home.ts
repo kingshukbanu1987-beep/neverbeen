@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { SiteConfigService } from '../../services/site-config.service';
 import { Hero } from '../../home/hero/hero';
 import { HowItWorks } from '../../home/how-it-works/how-it-works';
 import { Destinations } from '../../home/destinations/destinations';
@@ -14,4 +15,7 @@ import { Contact } from '../../home/contact/contact';
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
-export class Home {}
+export class Home {
+  private readonly cms = inject(SiteConfigService);
+  protected readonly sections = computed(() => this.cms.visibleItems('home.layout', 'sections'));
+}

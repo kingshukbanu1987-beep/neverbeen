@@ -1,9 +1,9 @@
 <header class="heading" [class.center]="align() === 'center'" [class.paper]="tone() === 'paper'">
-  @if (eyebrow()) {
-    <p class="eyebrow">{{ eyebrow() }}</p>
+  @if (shownEyebrow()) {
+    <p class="eyebrow">{{ shownEyebrow() }}</p>
   }
-  <h2>{{ title() }}</h2>
-  @if (copy()) {
-    <p class="copy">{{ copy() }}</p>
+  <h2>{{ shownTitle() }}</h2>
+  @if (shownCopy()) {
+    <p class="copy">{{ shownCopy() }}</p>
   }
 </header>

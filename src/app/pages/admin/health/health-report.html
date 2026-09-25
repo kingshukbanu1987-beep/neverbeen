@@ -1,0 +1,466 @@
+<div class="hr-toolbar no-print">
+  <a routerLink="/admin/health" class="hr-tb-btn ghost">← Back to Health</a>
+  <span class="hr-tb-title">
+    {{ spec()?.title ?? 'Health report' }}
+    @if (spec()) {
+      <small>{{ sectionMeta().length }} sections · {{ spec()!.orientation }} A4</small>
+    }
+  </span>
+  <span class="hr-tb-hint">Tip: choose “Save as PDF” as the destination and enable “Background graphics”.</span>
+  <button type="button" class="hr-tb-btn ghost" (click)="close()">Close tab</button>
+  <button type="button" class="hr-tb-btn primary" [disabled]="!spec()" (click)="print()">🖨 Print / Save as PDF</button>
+</div>
+
+@if (!spec() || !d()) {
+  <div class="hr-empty">
+    <h1>No report to show</h1>
+    <p>Build a report from <strong>Admin → Health → Generate report</strong> first.</p>
+    <a routerLink="/admin/health" class="hr-tb-btn primary">Open Health</a>
+  </div>
+} @else {
+  @let s = spec()!;
+  @let r = d()!;
+  <div class="hr-doc" [class.landscape]="s.orientation === 'landscape'" [class.ready]="ready()">
+    <!-- Running footer: fixed elements repeat on every printed page -->
+    <footer class="hr-run-foot">
+      <img src="neverbeen-logo-report.png" alt="" class="hr-foot-logo" />
+      <span>{{ s.title }} · {{ period() }}</span>
+      <span class="hr-foot-mid">Report {{ s.id }} · Generated {{ dateTime(generatedAt) }}</span>
+      <span class="hr-class" [attr.data-c]="s.confidentiality">{{ s.confidentiality }}</span>
+    </footer>
+
+    <!-- ================= COVER ================= -->
+    <section class="hr-cover">
+      <div class="hr-cover-band"></div>
+      <img src="neverbeen-logo-report.png" alt="NeverBeen" class="hr-cover-logo" />
+      <div class="hr-cover-main">
+        <span class="hr-eyebrow">Website Health Report</span>
+        <h1>{{ s.title }}</h1>
+        <p class="hr-cover-period">{{ period() }}</p>
+        <p class="hr-cover-filters">{{ filterText() }}{{ s.compare ? ' · compared with ' + prevPeriod() : '' }}</p>
+      </div>
+      <div class="hr-cover-score">
+        <hc-gauge [value]="r.score" [display]="r.score + ''" label="Health score" [size]="170" />
+        <div>
+          <strong>{{ scoreText() }}</strong>
+          <p>{{ riskCounts().critical }} critical · {{ riskCounts().warning }} warnings · {{ riskCounts().info }} notices</p>
+        </div>
+      </div>
+      <dl class="hr-cover-meta">
+        <div><dt>Prepared by</dt><dd>{{ s.preparedBy }}</dd></div>
+        <div><dt>Generated</dt><dd>{{ dateTime(generatedAt) }}</dd></div>
+        <div><dt>Report ID</dt><dd>{{ s.id }}</dd></div>
+        <div><dt>Classification</dt><dd><span class="hr-class" [attr.data-c]="s.confidentiality">{{ s.confidentiality }}</span></dd></div>
+      </dl>
+      <div class="hr-toc">
+        <h2>Contents</h2>
+        <ol>
+          @for (m of sectionMeta(); track m.key) {
+            <li><span>{{ m.icon }} {{ m.label }}</span><small>{{ m.hint }}</small></li>
+          }
+        </ol>
+      </div>
+      <p class="hr-cover-legal">
+        {{ s.confidentiality === 'Public' ? 'This report may be shared publicly.' : s.confidentiality === 'Confidential' ? 'CONFIDENTIAL — for authorised NeverBeen administrators only. Do not distribute.' : 'For internal NeverBeen use only.' }}
+        Figures combine live browser measurements with modelled traffic for the selected period.
+      </p>
+    </section>
+
+    <!-- ================= BODY (thead repeats as the running header) ================= -->
+    <table class="hr-flow">
+      <thead>
+        <tr>
+          <td>
+            <header class="hr-run-head">
+              <img src="neverbeen-logo-report.png" alt="NeverBeen" class="hr-head-logo" />
+              <div class="hr-head-text">
+                <strong>{{ s.title }}</strong>
+                <span>{{ period() }} · {{ filterText() }}</span>
+              </div>
+              <span class="hr-class" [attr.data-c]="s.confidentiality">{{ s.confidentiality }}</span>
+            </header>
+          </td>
+        </tr>
+      </thead>
+      <tfoot>
+        <tr><td><div class="hr-foot-space"></div></td></tr>
+      </tfoot>
+      <tbody>
+        <tr>
+          <td>
+            <!-- ============ SUMMARY ============ -->
+            @if (has('summary')) {
+              <section class="hr-section">
+                <h2><span class="hr-no">{{ sectionNo('summary') }}</span> Executive summary</h2>
+                <div class="hr-summary">
+                  <div class="hr-score-card">
+                    <hc-gauge [value]="r.score" [display]="r.score + ''" label="Health score" [size]="150" />
+                    <strong>{{ scoreText() }}</strong>
+                  </div>
+                  <div class="hr-summary-text">
+                    <p>
+                      During <strong>{{ period() }}</strong> the site received <strong>{{ fmt('pageViews', r.totals.pageViews) }}</strong> page views from
+                      <strong>{{ fmt('visitors', r.totals.visitors) }}</strong> unique visitors across <strong>{{ fmt('sessions', r.totals.sessions) }}</strong> sessions.
+                      The community gained <strong>{{ fmt('registrations', r.totals.registrations) }}</strong> registrations and <strong>{{ fmt('posts', r.totals.posts) }}</strong> journey posts.
+                      Average page load was <strong>{{ fmt('avgLoadMs', r.totals.avgLoadMs) }}</strong> (p95 {{ fmt('p95LoadMs', r.totals.p95LoadMs) }}), and stored data uses
+                      <strong>{{ r.storagePct }}%</strong> of the browser quota.
+                    </p>
+                    @if (r.risks.length) {
+                      <p class="hr-callout">
+                        <strong>{{ r.risks.length }} item{{ r.risks.length === 1 ? '' : 's' }} need attention</strong>, led by: {{ r.risks[0].title }}.
+                      </p>
+                    } @else {
+                      <p class="hr-callout ok"><strong>No risks detected</strong> — every monitored signal is within its healthy range.</p>
+                    }
+                  </div>
+                </div>
+                <table class="hr-table">
+                  <thead>
+                    <tr>
+                      <th>Metric</th>
+                      <th class="num">This period</th>
+                      @if (s.compare) {
+                        <th class="num">Previous period</th>
+                        <th class="num">Change</th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (k of kpis(); track k.key) {
+                      <tr>
+                        <td>{{ k.label }}</td>
+                        <td class="num strong">{{ k.cur }}</td>
+                        @if (s.compare) {
+                          <td class="num muted">{{ k.prev }}</td>
+                          <td class="num"><span class="hr-delta" [class.good]="k.good === true" [class.bad]="k.good === false">{{ k.delta }}</span></td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+                @if (s.notes) {
+                  <div class="hr-notes">
+                    <h3>Commentary</h3>
+                    <p>{{ s.notes }}</p>
+                  </div>
+                }
+              </section>
+            }
+
+            <!-- ============ RISKS ============ -->
+            @if (has('risks')) {
+              <section class="hr-section">
+                <h2><span class="hr-no">{{ sectionNo('risks') }}</span> Risks & bottlenecks</h2>
+                <p class="hr-lead">{{ riskCounts().critical }} critical, {{ riskCounts().warning }} warnings and {{ riskCounts().info }} notices detected by automated checks.</p>
+                @if (r.risks.length) {
+                  <table class="hr-table risks">
+                    <thead>
+                      <tr>
+                        <th style="width: 13%">Severity</th>
+                        <th style="width: 14%">Area</th>
+                        <th>Finding</th>
+                        <th style="width: 13%" class="num">Metric</th>
+                        @if (s.includeRecommendations) {
+                          <th style="width: 30%">Recommended action</th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (x of r.risks; track x.id) {
+                        <tr>
+                          <td><span class="hr-sev" [attr.data-sev]="x.severity">{{ x.severity === 'critical' ? 'Critical' : x.severity === 'warning' ? 'Warning' : 'Notice' }}</span></td>
+                          <td>{{ x.area }}</td>
+                          <td><strong>{{ x.title }}</strong><br /><span class="muted">{{ x.detail }}</span></td>
+                          <td class="num strong">{{ x.metric }}</td>
+                          @if (s.includeRecommendations) {
+                            <td>{{ x.action }}</td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <p class="hr-callout ok">No risks detected for this period.</p>
+                }
+              </section>
+            }
+
+            <!-- ============ TRAFFIC ============ -->
+            @if (has('traffic')) {
+              <section class="hr-section">
+                <h2><span class="hr-no">{{ sectionNo('traffic') }}</span> Traffic</h2>
+                <div class="hr-kpis">
+                  @for (k of trafficKpis; track k) {
+                    <div class="hr-kpi">
+                      <small>{{ meta[k].label }}</small>
+                      <strong>{{ fmt(k, r.totals[k]) }}</strong>
+                    </div>
+                  }
+                </div>
+                @if (s.includeCharts) {
+                  <figure class="hr-fig">
+                    <figcaption>Page views & unique visitors{{ s.compare ? ' (dashed: previous period)' : '' }}</figcaption>
+                    <hc-chart [labels]="labels()" [series]="trafficSeries()" type="area" [height]="230" [format]="countFormat" ariaLabel="Traffic" />
+                  </figure>
+                  <div class="hr-2col">
+                    <figure class="hr-fig">
+                      <figcaption>Traffic sources</figcaption>
+                      <hc-donut [data]="r.referrers" [size]="140" centerLabel="Sessions" [format]="countFormat" />
+                    </figure>
+                    <figure class="hr-fig">
+                      <figcaption>Devices</figcaption>
+                      <hc-donut [data]="r.devices" [size]="140" centerLabel="Sessions" [format]="countFormat" />
+                    </figure>
+                  </div>
+                  <figure class="hr-fig">
+                    <figcaption>Top countries (visitors)</figcaption>
+                    <hc-bars [data]="r.countries" [limit]="8" [format]="countFormat" />
+                  </figure>
+                }
+                @if (s.includeTables) {
+                  <h3>Top pages</h3>
+                  <table class="hr-table">
+                    <thead>
+                      <tr>
+                        <th>Page</th>
+                        <th class="num">Views</th>
+                        <th class="num">Visitors</th>
+                        <th class="num">Avg time</th>
+                        <th class="num">Bounce</th>
+                        <th class="num">p95 load</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (p of r.pages.slice(0, 12); track p.path) {
+                        <tr>
+                          <td><strong>{{ p.title }}</strong> <span class="muted">{{ p.path }}</span></td>
+                          <td class="num">{{ p.views.toLocaleString() }}</td>
+                          <td class="num">{{ p.visitors.toLocaleString() }}</td>
+                          <td class="num">{{ p.avgTimeSec ? fmt('avgSessionSec', p.avgTimeSec) : '—' }}</td>
+                          <td class="num">{{ p.bounceRate ? p.bounceRate.toFixed(1) + '%' : '—' }}</td>
+                          <td class="num">{{ p.p95LoadMs ? msFormat(p.p95LoadMs) : '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </section>
+            }
+
+            <!-- ============ ACTIVITY ============ -->
+            @if (has('activity')) {
+              <section class="hr-section">
+                <h2><span class="hr-no">{{ sectionNo('activity') }}</span> User activity</h2>
+                <div class="hr-kpis">
+                  <div class="hr-kpi"><small>Daily active</small><strong>{{ r.active.dau }}</strong></div>
+                  <div class="hr-kpi"><small>Weekly active</small><strong>{{ r.active.wau }}</strong></div>
+                  <div class="hr-kpi"><small>Monthly active</small><strong>{{ r.active.mau }}</strong></div>
+                  <div class="hr-kpi"><small>Stickiness</small><strong>{{ r.active.stickiness }}%</strong></div>
+                  <div class="hr-kpi"><small>Registrations</small><strong>{{ fmt('registrations', r.totals.registrations) }}</strong></div>
+                  <div class="hr-kpi"><small>Journey posts</small><strong>{{ fmt('posts', r.totals.posts) }}</strong></div>
+                </div>
+                @if (s.includeCharts) {
+                  <figure class="hr-fig">
+                    <figcaption>Community activity</figcaption>
+                    <hc-chart [labels]="labels()" [series]="activitySeries()" type="bar" [height]="220" [format]="countFormat" ariaLabel="Community activity" />
+                  </figure>
+                  <figure class="hr-fig">
+                    <figcaption>Engagement funnel</figcaption>
+                    <hc-funnel [steps]="r.funnel" />
+                  </figure>
+                }
+                @if (s.includeTables) {
+                  <h3>Weekly retention cohorts</h3>
+                  <table class="hr-table cohort">
+                    <thead>
+                      <tr>
+                        <th>Cohort</th>
+                        <th class="num">Users</th>
+                        @for (w of [0, 1, 2, 3, 4, 5, 6, 7]; track w) {
+                          <th class="num">W{{ w }}</th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (c of r.cohorts; track c.label) {
+                        <tr>
+                          <td>{{ c.label }}</td>
+                          <td class="num">{{ c.size }}</td>
+                          @for (v of c.values; track $index) {
+                            <td class="num" [style.background]="v === null ? 'transparent' : 'rgba(16,185,129,' + (0.08 + (v / 100) * 0.7) + ')'">{{ v === null ? '' : v.toFixed(0) + '%' }}</td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                  <h3>Most active members</h3>
+                  <table class="hr-table">
+                    <thead>
+                      <tr>
+                        <th>Member</th>
+                        <th>Country</th>
+                        <th class="num">Posts</th>
+                        <th class="num">Comments</th>
+                        <th class="num">Likes received</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (m of r.topMembers.slice(0, 10); track m.id) {
+                        <tr>
+                          <td>{{ m.name }}</td>
+                          <td>{{ m.country }}</td>
+                          <td class="num">{{ m.posts }}</td>
+                          <td class="num">{{ m.comments }}</td>
+                          <td class="num">{{ m.likes }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </section>
+            }
+
+            <!-- ============ STORAGE ============ -->
+            @if (has('storage')) {
+              <section class="hr-section">
+                <h2><span class="hr-no">{{ sectionNo('storage') }}</span> Storage</h2>
+                <div class="hr-storage">
+                  <hc-gauge [value]="r.storagePct" [display]="r.storagePct + '%'" label="Quota used" mode="high-bad" [size]="140" />
+                  <div class="hr-kpis tight">
+                    <div class="hr-kpi"><small>Stored (NeverBeen keys)</small><strong>{{ formatBytes(r.storageUsed) }}</strong></div>
+                    <div class="hr-kpi"><small>Quota</small><strong>{{ formatBytes(quotaKb * 1024) }}</strong></div>
+                    <div class="hr-kpi"><small>Growth</small><strong>{{ r.runway.slopeKbPerDay }} KB/day</strong></div>
+                    <div class="hr-kpi"><small>Runway</small><strong>{{ r.runway.days === null ? 'Not growing' : r.runway.days + ' days' }}</strong></div>
+                    @if (r.estimate) {
+                      <div class="hr-kpi"><small>Browser storage (all APIs)</small><strong>{{ formatBytes(r.estimate.usage) }}</strong></div>
+                    }
+                  </div>
+                </div>
+                @if (s.includeCharts) {
+                  <div class="hr-2col wide">
+                    <figure class="hr-fig">
+                      <figcaption>Stored data over time</figcaption>
+                      <hc-chart [labels]="labels()" [series]="storageSeries()" type="area" [height]="200" [format]="kbFormat" [legend]="false" ariaLabel="Stored data" />
+                    </figure>
+                    <figure class="hr-fig">
+                      <figcaption>By dataset (KB)</figcaption>
+                      <hc-donut [data]="storageDonut()" [size]="130" centerLabel="KB" [format]="kbFormat" />
+                    </figure>
+                  </div>
+                }
+                @if (s.includeTables) {
+                  <h3>Largest storage keys</h3>
+                  <table class="hr-table">
+                    <thead>
+                      <tr>
+                        <th>Key</th>
+                        <th>Dataset</th>
+                        <th class="num">Records</th>
+                        <th class="num">Size</th>
+                        <th class="num">Share</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (k of r.storageKeys.slice(0, 15); track k.key) {
+                        <tr>
+                          <td><code>{{ k.key }}</code></td>
+                          <td>{{ k.label }}</td>
+                          <td class="num">{{ k.records ?? '—' }}</td>
+                          <td class="num">{{ formatBytes(k.bytes) }}</td>
+                          <td class="num">{{ k.share.toFixed(1) }}%</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+                @if (s.includeRecommendations) {
+                  <div class="hr-notes">
+                    <h3>Recommendations</h3>
+                    <ul>
+                      @for (t of storageTips(); track t) {
+                        <li>{{ t }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </section>
+            }
+
+            <!-- ============ PERFORMANCE ============ -->
+            @if (has('performance')) {
+              <section class="hr-section">
+                <h2><span class="hr-no">{{ sectionNo('performance') }}</span> Performance</h2>
+                <table class="hr-table">
+                  <thead>
+                    <tr>
+                      <th>Measurement (this browser session)</th>
+                      <th class="num">Value</th>
+                      <th>Rating</th>
+                      <th class="num">Good ≤</th>
+                      <th>What it means</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (v of r.vitals; track v.key) {
+                      <tr>
+                        <td><strong>{{ v.label }}</strong></td>
+                        <td class="num strong">{{ vitalText(v) }}</td>
+                        <td><span class="hr-rating" [attr.data-r]="rating(v)">{{ rating(v) }}</span></td>
+                        <td class="num muted">{{ vitalText({ value: v.good, unit: v.unit }) }}</td>
+                        <td class="muted">{{ v.hint }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+                @if (s.includeCharts) {
+                  <figure class="hr-fig">
+                    <figcaption>Page load time — average vs p95 (target 3 s)</figcaption>
+                    <hc-chart [labels]="labels()" [series]="perfSeries()" type="line" [height]="210" [format]="msFormat" [threshold]="{ value: 3000, label: '3 s target' }" ariaLabel="Load time" />
+                  </figure>
+                  <div class="hr-2col">
+                    <figure class="hr-fig">
+                      <figcaption>Slowest pages (p95)</figcaption>
+                      <hc-bars [data]="slowPages()" [format]="msFormat" />
+                    </figure>
+                    <figure class="hr-fig">
+                      <figcaption>JavaScript errors ({{ fmt('errors', r.totals.errors) }})</figcaption>
+                      <hc-chart [labels]="labels()" [series]="errorSeries()" type="bar" [height]="180" [format]="countFormat" [legend]="false" ariaLabel="Errors" />
+                    </figure>
+                  </div>
+                }
+                @if (s.includeTables && r.resources.largest.length) {
+                  <h3>Largest resources ({{ r.resources.count }} requests · {{ r.resources.totalKb }} KB)</h3>
+                  <table class="hr-table">
+                    <thead>
+                      <tr>
+                        <th>Resource</th>
+                        <th>Type</th>
+                        <th class="num">Size</th>
+                        <th class="num">Duration</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (x of r.resources.largest.slice(0, 10); track $index) {
+                        <tr>
+                          <td class="hr-ellipsis">{{ x.name }}</td>
+                          <td>{{ x.type }}</td>
+                          <td class="num">{{ x.sizeKb }} KB</td>
+                          <td class="num">{{ x.durationMs }} ms</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
+              </section>
+            }
+
+            <div class="hr-end">
+              <span>— End of report —</span>
+              <small>Generated by NeverBeen Admin Console · {{ dateTime(generatedAt) }} · {{ s.preparedBy }}</small>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+}

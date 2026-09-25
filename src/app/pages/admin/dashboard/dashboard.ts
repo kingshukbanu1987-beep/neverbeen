@@ -6,6 +6,7 @@ import { AdminUserSearch } from './user-search';
 import { AdminCountryChart } from './country-chart';
 import { AdminRegistrationChart } from './registration-chart';
 import { AdminSuspiciousUsers } from './suspicious-users';
+import { AdminIdentityService } from '../shared/admin-identity.service';
 
 interface ActivityDay {
   label: string;
@@ -40,17 +41,26 @@ export class AdminDashboard {
   private readonly community = inject(CommunityService);
   private readonly insights = inject(AdminInsightsService);
   private readonly router = inject(Router);
+  private readonly identity = inject(AdminIdentityService);
   protected readonly timeAgo = timeAgo;
 
   protected readonly statCards = computed<StatCard[]>(() => {
     const pending = this.insights.pendingReports().length;
     const suspicious = this.insights.suspiciousUsers();
     const highRisk = suspicious.filter((s) => s.riskLevel === 'High').length;
+    const idPending = this.identity.pending();
     return [
       { icon: '👥', label: 'Total Members', value: this.insights.members().length, sub: 'registered across the community', glow: 'rgba(16,185,129,0.45)', link: '/admin/dashboard/members/all' },
       { icon: '🟢', label: 'Online Now', value: this.insights.onlineMembers().length, sub: 'members active at this moment', glow: 'rgba(34,197,94,0.45)', link: '/admin/dashboard/members/online' },
       { icon: '✅', label: 'Verified Members', value: this.insights.verifiedMembers().length, sub: 'identity-checked accounts', glow: 'rgba(29,155,240,0.45)', link: '/admin/dashboard/members/verified' },
-      { icon: '📝', label: 'Total Journey Posts', value: this.community.journeyPosts().length, sub: 'made by all users across the community', glow: 'rgba(99,102,241,0.45)' },
+      {
+        icon: '🪪',
+        label: 'Identity Check Verification',
+        value: idPending.length,
+        sub: `${idPending.filter((s) => s.trigger === 'disabled').length} disabled · ${idPending.filter((s) => s.trigger === 'identity_required').length} forced checks awaiting review`,
+        glow: 'rgba(139,92,246,0.45)',
+        link: '/admin/dashboard/identity-checks',
+      },
       { icon: '🚩', label: 'Abuse Reports', value: this.insights.reports().length, sub: `${pending} awaiting a decision`, glow: 'rgba(239,68,68,0.45)', link: '/admin/dashboard/abuse-reports' },
       { icon: '🕵️', label: 'Suspicious Users', value: suspicious.length, sub: `${highRisk} high-risk accounts`, glow: 'rgba(245,158,11,0.5)', action: () => this.scrollTo('suspicious-users') },
     ];

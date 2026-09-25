@@ -605,3 +605,12 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ud-doc-link {
+  display: inline-block;
+  margin-right: 0.6rem;
+  font-style: normal;
+  font-weight: 700;
+  color: #4f46e5;
+  text-decoration: none;
+}

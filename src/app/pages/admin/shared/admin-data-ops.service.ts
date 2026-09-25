@@ -20,6 +20,7 @@ import {
 import { ADMIN_AUDIT_KEY, AdminAuditService } from '../../../services/admin-audit.service';
 import { ADMIN_USER_OPS_KEY, AdminUserOpsService } from './admin-user-ops.service';
 import { AdminInsightsService, seeded } from './admin-insights.service';
+import { ADMIN_IDENTITY_KEY, AdminIdentityService } from './admin-identity.service';
 import type { AuthorInfo, JourneyComment, JourneyPost } from '../../../models/community';
 
 export const ADMIN_DATA_OPS_KEY = 'neverbeen_admin_data_ops';
@@ -244,6 +245,7 @@ export class AdminDataOpsService {
   private readonly audit = inject(AdminAuditService);
   private readonly userOps = inject(AdminUserOpsService);
   private readonly insights = inject(AdminInsightsService);
+  private readonly identity = inject(AdminIdentityService);
 
   readonly state = signal<DataOpsState>(this.load());
   /** Bumped whenever localStorage changes outside signals (so storage numbers refresh). */
@@ -408,6 +410,22 @@ export class AdminDataOpsService {
         { path: 'roles · tags · matrix', cls: 'Internal' },
       ],
       read: () => this.userOps.state(),
+    },
+    {
+      key: ADMIN_IDENTITY_KEY,
+      label: 'Identity documents',
+      icon: '🪪',
+      description: 'Identity documents (ID, selfie) submitted for account verification, with review decisions.',
+      classification: 'PII',
+      owner: 'Admin',
+      clearable: false,
+      fields: [
+        { path: 'submissions[].documentNumber', cls: 'PII', note: 'Government ID number' },
+        { path: 'submissions[].dobOnDocument', cls: 'PII' },
+        { path: 'submissions[].files (ID images, selfie)', cls: 'Sensitive', note: 'Biometric data' },
+        { path: 'submissions[].nameOnDocument', cls: 'PII' },
+      ],
+      read: () => this.identity.state(),
     },
     {
       key: ADMIN_AUDIT_KEY,
@@ -686,6 +704,7 @@ export class AdminDataOpsService {
     );
     this.community.adminDeleteCompanion(id);
     this.userOps.forget(id);
+    this.identity.forget(id);
     this.refreshStorage();
     this.audit.log({
       category: 'privacy',

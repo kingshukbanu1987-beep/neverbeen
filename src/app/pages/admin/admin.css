@@ -314,6 +314,57 @@
   padding: 0.35rem 0.85rem;
 }
 
+.status-pill.down {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+  text-decoration: none;
+}
+
+.status-pill.down .live-dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+.status-pill.scheduled {
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  text-decoration: none;
+}
+
+.nav-flag {
+  margin-left: auto;
+  flex: none;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.nav-flag.down {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.55);
+  animation: nav-flag-pulse 1.6s ease-in-out infinite;
+}
+
+.nav-flag.draft {
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(129, 140, 248, 0.5);
+}
+
+@keyframes nav-flag-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
 .status-pill.neutral {
   color: #475569;
   background: rgba(100, 116, 139, 0.08);

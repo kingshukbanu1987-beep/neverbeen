@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { SiteConfigService } from '../../services/site-config.service';
 import { galleryItems } from '../../models/site-content';
 import { SectionHeading } from '../../shared/section-heading/section-heading';
 
@@ -9,5 +10,11 @@ import { SectionHeading } from '../../shared/section-heading/section-heading';
   styleUrl: './gallery.css',
 })
 export class Gallery {
-  protected readonly items = galleryItems;
+  private readonly cms = inject(SiteConfigService);
+  protected readonly items = computed(() =>
+    this.cms
+      .visibleItems('home.gallery', 'items')
+      .map((i) => galleryItems.find((g) => g.title === i.id))
+      .filter((g): g is (typeof galleryItems)[number] => !!g),
+  );
 }

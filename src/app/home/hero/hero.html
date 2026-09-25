@@ -1,21 +1,21 @@
 <section class="hero" id="home">
   <div class="container layout">
     <div class="copy">
-      <p class="eyebrow">Travel photography, imagined</p>
-      <h1>Go Anywhere. Even Where You've Never Been.</h1>
-      <p class="lede">
-        Create stunning AI vacation photos of yourself in the world's most beautiful destinations. Nobody will know or detect that the places you have never been.
-      </p>
-      <div class="actions">
-        <!-- Connect is the primary call-to-action: first, wearing the former Dream Destinations look -->
-        <a routerLink="/community" class="btn btn-dream">Connect to NeverBeen Community</a>
-        <a routerLink="/founder" class="btn btn-founder">Know the Founder</a>
-        <a routerLink="/" fragment="contact" class="btn btn-primary">Create My Vacation</a>
-        <!-- Dream Destinations now wears the Explore Gallery (ghost) look -->
-        <a routerLink="/" fragment="destinations" class="btn btn-ghost">Dream Destinations</a>
-        <a routerLink="/collection" class="btn btn-ghost">Neverbeen Collection</a>
-        <a routerLink="/" fragment="gallery" class="btn btn-ghost">Explore Gallery</a>
-      </div>
+      @if (eyebrow()) {
+        <p class="eyebrow">{{ eyebrow() }}</p>
+      }
+      <h1>{{ title() }}</h1>
+      @if (lede()) {
+        <p class="lede">{{ lede() }}</p>
+      }
+      <!-- Buttons, labels and order are managed in Admin Console → Website Management. -->
+      @if (buttons().length) {
+        <div class="actions">
+          @for (b of buttons(); track b.id) {
+            <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{ b.label }}</a>
+          }
+        </div>
+      }
     </div>
     <figure class="frame">
       <img [src]="destination().image" [alt]="destination().caption" />

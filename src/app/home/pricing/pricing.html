@@ -1,13 +1,14 @@
 <section class="pricing" id="pricing">
   <div class="container">
     <app-section-heading
+      cmsKey="home.pricing"
       align="center"
       eyebrow="Collections"
       title="Pricing"
       copy="Simple plans for a first postcard, a full trip, or a season of elsewhere."
     />
     <div class="grid">
-      @for (plan of plans; track plan.name) {
+      @for (plan of plans(); track $index) {
         <app-pricing-card [plan]="plan" [isSelected]="selectedPlan() === plan.name" (selected)="choosePlan($event)" />
       }
     </div>

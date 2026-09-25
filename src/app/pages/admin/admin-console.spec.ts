@@ -37,7 +37,7 @@ describe('Admin Console', () => {
     const text = el.textContent ?? '';
 
     const labels = [...el.querySelectorAll('.stat-label')].map((n) => n.textContent?.trim());
-    expect(labels).toEqual(['Total Members', 'Online Now', 'Verified Members', 'Total Journey Posts', 'Abuse Reports', 'Suspicious Users']);
+    expect(labels).toEqual(['Total Members', 'Online Now', 'Verified Members', 'Identity Check Verification', 'Abuse Reports', 'Suspicious Users']);
     expect(text).not.toContain('Pending Requests');
     expect(text).not.toContain('Total Likes');
     expect(text).not.toContain('Latest Journey Posts');
@@ -67,6 +67,7 @@ describe('Admin Console', () => {
     const rows = fixture.nativeElement.querySelectorAll('.us-row');
     expect(rows.length).toBeGreaterThan(0);
 
+    const before = new Set(moderation.disabledUserIds());
     (rows[0].querySelector('.g-btn.danger') as HTMLButtonElement).click();
     fixture.detectChanges();
     const confirm = fixture.nativeElement.querySelector('.g-modal .g-btn.danger') as HTMLButtonElement;
@@ -74,7 +75,7 @@ describe('Admin Console', () => {
     confirm.click();
     fixture.detectChanges();
 
-    const disabledId = moderation.disabledUserIds()[0];
+    const disabledId = moderation.disabledUserIds().find((id) => !before.has(id));
     expect(disabledId).toBeDefined();
     expect(community.visibleCompanions().some((c) => c.id === disabledId)).toBe(false);
   });

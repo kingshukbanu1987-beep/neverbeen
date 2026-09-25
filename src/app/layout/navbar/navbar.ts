@@ -2,6 +2,15 @@ import { Component, DestroyRef, ElementRef, afterNextRender, computed, inject, s
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgOptimizedImage } from '@angular/common';
 import { filter } from 'rxjs/operators';
+import { SiteConfigService } from '../../services/site-config.service';
+
+interface NavLink {
+  id: string;
+  label: string;
+  path: string;
+  fragment: string | undefined;
+  icon: string;
+}
 
 @Component({
   selector: 'app-navbar',
@@ -11,6 +20,7 @@ import { filter } from 'rxjs/operators';
 })
 export class Navbar {
   private readonly router = inject(Router);
+  private readonly cms = inject(SiteConfigService);
   protected readonly open = signal(false);
   protected readonly currentUrl = signal(this.router.url || '');
 
@@ -43,20 +53,31 @@ export class Navbar {
     return url.includes('/community') || url.includes('/profile');
   });
 
-  protected readonly links = [
-    { label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },
-    { label: 'How', path: '/', fragment: 'how-it-works', icon: 'cog' },
-    { label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
-    { label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
-    { label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
-    { label: 'Live', path: '/travel-feeds', fragment: undefined, icon: 'live' },
-    { label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },
-    { label: 'FAQ', path: '/', fragment: 'faq', icon: 'help-circle' },
-    { label: 'Admin', path: '/login', fragment: undefined, icon: 'log-in' },
-    { label: 'Founder', path: '/', fragment: 'owner', icon: 'user' },
-    { label: 'Contact', path: '/', fragment: 'contact', icon: 'mail' },
-    { label: 'Feedback', path: '/feedback', fragment: undefined, icon: 'message-square' },
+  private readonly allLinks: NavLink[] = [
+    { id: 'home', label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },
+    { id: 'how', label: 'How', path: '/', fragment: 'how-it-works', icon: 'cog' },
+    { id: 'audience', label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
+    { id: 'collection', label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
+    { id: 'destinations', label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
+    { id: 'live', label: 'Live', path: '/travel-feeds', fragment: undefined, icon: 'live' },
+    { id: 'pricing', label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },
+    { id: 'faq', label: 'FAQ', path: '/', fragment: 'faq', icon: 'help-circle' },
+    { id: 'admin', label: 'Admin', path: '/login', fragment: undefined, icon: 'log-in' },
+    { id: 'founder', label: 'Founder', path: '/', fragment: 'owner', icon: 'user' },
+    { id: 'contact', label: 'Contact', path: '/', fragment: 'contact', icon: 'mail' },
+    { id: 'feedback', label: 'Feedback', path: '/feedback', fragment: undefined, icon: 'message-square' },
   ];
+
+  /** Menu options in the order, wording and visibility published in Website Management. */
+  protected readonly links = computed(() =>
+    this.cms
+      .visibleItems('global.navbar', 'links')
+      .map((item) => {
+        const base = this.allLinks.find((l) => l.id === item.id);
+        return base ? { ...base, label: item.label } : null;
+      })
+      .filter((l): l is NavLink => l !== null),
+  );
 
   toggle(): void {
     this.open.update((value) => !value);

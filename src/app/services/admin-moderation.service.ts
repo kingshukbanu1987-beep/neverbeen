@@ -33,6 +33,8 @@ export interface AccountModeration {
   restrictedUntilUtc?: string;
   restrictions?: RestrictionScope[];
   reason?: string;
+  /** Set when an administrator permanently disabled the account (e.g. failed identity verification). */
+  permanent?: boolean;
   updatedAtUtc: string;
 }
 
@@ -120,8 +122,23 @@ export class AdminModerationService {
     this.audit.log({ category: 'account', action: 'Account disabled', targetId: userId, details: reason });
   }
 
+  /** Disable with no way back for the member (identity verification failed, fraud…). */
+  permanentlyDisable(userId: number, reason = 'Permanently disabled by administrator'): void {
+    this.patch(userId, { state: 'disabled', permanent: true, reason });
+    this.audit.log({ category: 'account', action: 'Account permanently disabled', targetId: userId, details: reason });
+  }
+
+  /** Seed demo moderation records (no audit entries); never overwrites an existing record. */
+  seedAccountActions(actions: AccountModeration[]): void {
+    const current = this.accountActions();
+    const fresh = actions.filter((a) => !current[a.userId]);
+    if (!fresh.length) return;
+    this.accountActions.set({ ...current, ...Object.fromEntries(fresh.map((a) => [a.userId, a])) });
+    save(ADMIN_ACCOUNT_ACTIONS_KEY, this.accountActions());
+  }
+
   enableAccount(userId: number): void {
-    this.patch(userId, { state: 'active', reason: 'Re-enabled by administrator', restrictedUntilUtc: undefined, restrictions: undefined });
+    this.patch(userId, { state: 'active', permanent: false, reason: 'Re-enabled by administrator', restrictedUntilUtc: undefined, restrictions: undefined });
     this.audit.log({ category: 'account', action: 'Account re-enabled', targetId: userId });
   }
 
@@ -154,7 +171,7 @@ export class AdminModerationService {
   }
 
   forceIdentityConfirmation(userId: number, reason = 'Identity confirmation required'): void {
-    this.patch(userId, { state: 'identity_required', reason });
+    this.patch(userId, { state: 'identity_required', permanent: false, reason });
     this.audit.log({ category: 'security', action: 'Identity confirmation required', targetId: userId, details: reason });
   }
 

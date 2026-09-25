@@ -13,6 +13,7 @@ import {
 import { AdminAuditService, AUDIT_CATEGORY_META } from '../../../services/admin-audit.service';
 import { CommunityService } from '../../../services/community.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
+import { AdminIdentityService, IDENTITY_STATUS_META } from '../shared/admin-identity.service';
 import type { JourneyComment } from '../../../models/community';
 
 type Tab = 'overview' | 'activity' | 'moderation' | 'security' | 'notes';
@@ -40,6 +41,7 @@ export class AdminUserDrawer {
   private readonly dataOps = inject(AdminDataOpsService);
   private readonly audit = inject(AdminAuditService);
   private readonly community = inject(CommunityService);
+  private readonly identity = inject(AdminIdentityService);
 
   readonly userId = input.required<number>();
   readonly closed = output<void>();
@@ -53,6 +55,7 @@ export class AdminUserDrawer {
   protected readonly timeAgo = timeAgo;
   protected readonly shortDate = shortDate;
   protected readonly susMeta = SUSPICIOUS_META;
+  protected readonly idStatus = IDENTITY_STATUS_META;
 
   protected readonly tab = signal<Tab>('overview');
   protected readonly revealPii = signal(false);
@@ -96,6 +99,7 @@ export class AdminUserDrawer {
   });
   protected readonly suspicious = computed(() => this.insights.suspiciousUsers().find((s) => s.member.id === this.userId()));
   protected readonly reportsAgainst = computed(() => this.insights.reports().filter((r) => r.reported.id === this.userId()));
+  protected readonly idHistory = computed(() => this.identity.historyOf(this.userId()));
   protected readonly reportsFiled = computed(() => this.insights.reports().filter((r) => r.reporter.id === this.userId()));
 
   protected readonly details = computed(() => {

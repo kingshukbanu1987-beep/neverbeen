@@ -1,0 +1,657 @@
+<header class="g-page-head">
+  <div>
+    <h2>Website Health</h2>
+    <p>Traffic, user activity, storage and performance — with bottleneck & risk detection and exportable reports.</p>
+  </div>
+  <div class="hl-head-actions">
+    <label class="hl-auto" title="Re-read live browser metrics every 30 seconds">
+      <span class="cf-switch sm">
+        <input type="checkbox" [checked]="autoRefresh()" (change)="autoRefresh.set($any($event.target).checked)" />
+        <span class="track"><span class="thumb"></span></span>
+      </span>
+      Auto-refresh
+    </label>
+    <button type="button" class="g-btn" (click)="refresh()" title="Refresh live metrics">⟳ Refresh</button>
+    <button type="button" class="g-btn violet" (click)="reportOpen.set(true)">📄 Generate report</button>
+  </div>
+</header>
+
+<!-- ============ Control bar ============ -->
+<section class="hl-controls g-panel" aria-label="Health filters">
+  <div class="hl-control">
+    <span class="hl-control-label">Period</span>
+    <div class="wm-seg">
+      @for (r of rangeOptions; track r.key) {
+        <button type="button" [class.active]="range() === r.key" (click)="setRange(r.key)">{{ r.label }}</button>
+      }
+    </div>
+  </div>
+  @if (range() === 'custom') {
+    <div class="hl-control">
+      <span class="hl-control-label">From – to</span>
+      <div class="hl-dates">
+        <input type="date" [value]="from()" [max]="to()" (change)="from.set($any($event.target).value)" aria-label="From date" />
+        <span>→</span>
+        <input type="date" [value]="to()" [min]="from()" [max]="todayIso" (change)="to.set($any($event.target).value)" aria-label="To date" />
+      </div>
+    </div>
+  }
+  <div class="hl-control">
+    <span class="hl-control-label">Granularity</span>
+    <select class="hl-select" [value]="granChoice()" (change)="granChoice.set($any($event.target).value)" aria-label="Granularity">
+      <option value="auto">Auto ({{ granLabel[granularity()] }})</option>
+      @for (g of allowedGran(); track g) {
+        <option [value]="g">{{ granLabel[g] }}</option>
+      }
+    </select>
+  </div>
+  <div class="hl-control">
+    <span class="hl-control-label">Device</span>
+    <select class="hl-select" [value]="device()" (change)="device.set($any($event.target).value)" aria-label="Device filter">
+      <option value="all">All devices</option>
+      <option value="desktop">Desktop</option>
+      <option value="mobile">Mobile</option>
+      <option value="tablet">Tablet</option>
+    </select>
+  </div>
+  <div class="hl-control">
+    <span class="hl-control-label">Country</span>
+    <select class="hl-select" [value]="country()" (change)="country.set($any($event.target).value)" aria-label="Country filter">
+      <option value="all">All countries</option>
+      @for (c of data.countries(); track c) {
+        <option [value]="c">{{ c }}</option>
+      }
+    </select>
+  </div>
+  <label class="hl-control hl-compare">
+    <span class="cf-switch sm">
+      <input type="checkbox" [checked]="compare()" (change)="compare.set($any($event.target).checked)" />
+      <span class="track"><span class="thumb"></span></span>
+    </span>
+    Compare with previous period
+  </label>
+  <span class="hl-period">{{ periodText() }} · updated {{ timeAgo(iso(lastRefreshed())) }}</span>
+</section>
+
+<!-- ============ Health overview ============ -->
+<section class="hl-overview">
+  <div class="g-panel hl-score">
+    <hc-gauge [value]="score()" [display]="score() + ''" label="Health score" [size]="190" />
+    <div>
+      <strong [attr.data-tone]="score() >= 70 ? 'ok' : score() >= 50 ? 'warn' : 'bad'">{{ scoreText() }}</strong>
+      <p>{{ riskCounts().critical }} critical · {{ riskCounts().warning }} warnings · {{ riskCounts().info }} notices</p>
+      <button type="button" class="g-link-btn" (click)="setTab('risks')">Review risks →</button>
+    </div>
+  </div>
+  <div class="hl-top-risks">
+    @for (r of openRisks().slice(0, 3); track r.id) {
+      <button type="button" class="hl-risk-chip" [attr.data-sev]="r.severity" (click)="setTab('risks')">
+        <span class="hl-sev-dot"></span>
+        <span class="hl-risk-text">
+          <strong>{{ r.title }}</strong>
+          <small>{{ r.area }} · {{ r.metric }}</small>
+        </span>
+      </button>
+    } @empty {
+      <div class="hl-all-good">✅ No open risks — every monitored signal is within its healthy range.</div>
+    }
+  </div>
+</section>
+
+<div class="wm-tabs-row">
+  <nav class="g-tabs" role="tablist" aria-label="Health sections">
+    @for (t of tabs; track t.key) {
+      <button type="button" role="tab" [class.active]="tab() === t.key" [attr.aria-selected]="tab() === t.key" (click)="setTab(t.key)">
+        {{ t.icon }} {{ t.label }}
+        @if (t.key === 'risks' && openRisks().length) {
+          <span class="count">{{ openRisks().length }}</span>
+        }
+      </button>
+    }
+  </nav>
+</div>
+
+@switch (tab()) {
+  <!-- ======================================================= TRAFFIC -->
+  @case ('traffic') {
+    <div class="hl-kpis">
+      @for (k of trafficKpis; track k) {
+        <div class="hl-kpi">
+          <small>{{ meta[k].label }}</small>
+          <strong>{{ fmt(k, totals()[k]) }}</strong>
+          <div class="hl-kpi-foot">
+            @if (compare()) {
+              <span class="hl-delta" [class.good]="delta(k).good === true" [class.bad]="delta(k).good === false">{{ delta(k).text }}</span>
+            }
+            <hc-spark [values]="spark(k)" [color]="meta[k].color" [width]="96" [height]="30" />
+          </div>
+        </div>
+      }
+    </div>
+
+    <section class="g-panel hl-card">
+      <div class="hl-card-head">
+        <div>
+          <h3>Traffic over time</h3>
+          <p>{{ granLabel[granularity()] }} · {{ periodText() }}{{ compare() ? ' · dashed = previous period' : '' }}</p>
+        </div>
+        <div class="hl-card-tools">
+          <div class="hl-chips">
+            @for (k of trafficChoices; track k) {
+              <button type="button" class="hl-chip" [class.on]="trafficMetrics().has(k)" [style.--chip]="meta[k].color" (click)="toggleMetric(trafficMetrics, k)">{{ meta[k].label }}</button>
+            }
+          </div>
+          <div class="wm-seg" role="radiogroup" aria-label="Chart type">
+            <button type="button" [class.active]="trafficType() === 'area'" (click)="trafficType.set('area')" title="Area">◭</button>
+            <button type="button" [class.active]="trafficType() === 'line'" (click)="trafficType.set('line')" title="Line">〰</button>
+            <button type="button" [class.active]="trafficType() === 'bar'" (click)="trafficType.set('bar')" title="Bars">▥</button>
+          </div>
+          <button type="button" class="g-icon-btn" [class.on]="trafficSmooth()" (click)="trafficSmooth.set(!trafficSmooth())" title="Moving average">∿ Smooth</button>
+          <button type="button" class="g-icon-btn" (click)="exportSeries(trafficChoices, 'traffic')" title="Export CSV">⤓</button>
+        </div>
+      </div>
+      <hc-chart [labels]="labels()" [series]="trafficSeries()" [type]="trafficType()" [height]="300" [format]="countFormat" ariaLabel="Traffic over time" />
+    </section>
+
+    <div class="hl-grid-2">
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>When visitors arrive</h3>
+            <p>Visitors by weekday and hour (your local time).</p>
+          </div>
+        </div>
+        <hc-heatmap [grid]="heatmap()" [format]="countFormat" />
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Where sessions come from</h3>
+            <p>Share of {{ fmt('sessions', totals().sessions) }} sessions.</p>
+          </div>
+          <div class="wm-seg">
+            <button type="button" [class.active]="breakdown() === 'referrers'" (click)="breakdown.set('referrers')">Sources</button>
+            <button type="button" [class.active]="breakdown() === 'devices'" (click)="breakdown.set('devices')">Devices</button>
+            <button type="button" [class.active]="breakdown() === 'browsers'" (click)="breakdown.set('browsers')">Browsers</button>
+          </div>
+        </div>
+        <hc-donut [data]="breakdownData()" centerLabel="Sessions" [format]="countFormat" />
+      </section>
+    </div>
+
+    <div class="hl-grid-2 wide-left">
+      <section class="g-panel">
+        <div class="g-toolbar">
+          <div>
+            <strong class="wm-panel-title">Top pages</strong>
+            <small class="g-muted">Includes page views tracked live in this browser (●).</small>
+          </div>
+          <span class="g-toolbar-spacer"></span>
+          <label class="g-search">
+            <input type="search" placeholder="Filter pages…" [value]="pageSearch()" (input)="pageSearch.set($any($event.target).value); pagePage.set(1)" aria-label="Filter pages" />
+          </label>
+          <button type="button" class="g-icon-btn" (click)="exportPages()">⤓ CSV</button>
+        </div>
+        <div class="g-table-wrap">
+          <table class="g-table compact">
+            <thead>
+              <tr>
+                <th><button type="button" class="hl-sort" (click)="sortPages('path')">Page {{ sortIcon(pageSort(), 'path') }}</button></th>
+                <th class="num"><button type="button" class="hl-sort" (click)="sortPages('views')">Views {{ sortIcon(pageSort(), 'views') }}</button></th>
+                <th class="num"><button type="button" class="hl-sort" (click)="sortPages('visitors')">Visitors {{ sortIcon(pageSort(), 'visitors') }}</button></th>
+                <th class="num"><button type="button" class="hl-sort" (click)="sortPages('avgTimeSec')">Avg time {{ sortIcon(pageSort(), 'avgTimeSec') }}</button></th>
+                <th class="num"><button type="button" class="hl-sort" (click)="sortPages('bounceRate')">Bounce {{ sortIcon(pageSort(), 'bounceRate') }}</button></th>
+                <th class="num"><button type="button" class="hl-sort" (click)="sortPages('p95LoadMs')">p95 load {{ sortIcon(pageSort(), 'p95LoadMs') }}</button></th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of pagesView(); track p.path) {
+                <tr>
+                  <td>
+                    <strong class="hl-page-title">{{ p.title }}</strong>
+                    <small class="g-muted wm-block">{{ p.path }} @if (p.realViews) { <span class="hl-live" title="Tracked in this browser">● {{ p.realViews }}</span> }</small>
+                  </td>
+                  <td class="num">{{ p.views.toLocaleString() }}</td>
+                  <td class="num">{{ p.visitors.toLocaleString() }}</td>
+                  <td class="num">{{ p.avgTimeSec ? fmt('avgSessionSec', p.avgTimeSec) : '—' }}</td>
+                  <td class="num">{{ p.bounceRate ? p.bounceRate.toFixed(1) + '%' : '—' }}</td>
+                  <td class="num"><span [class]="'hl-load ' + (p.p95LoadMs > 3500 ? 'bad' : p.p95LoadMs > 2500 ? 'warn' : 'ok')">{{ p.p95LoadMs ? msFormat(p.p95LoadMs) : '—' }}</span></td>
+                  <td>@if (p.trend.length) { <hc-spark [values]="p.trend" [width]="80" [height]="24" color="#6366f1" /> }</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="g-pager">
+          <span>{{ pagesFiltered().length }} pages</span>
+          <span class="g-toolbar-spacer"></span>
+          <select class="hl-select sm" [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value); pagePage.set(1)" aria-label="Rows per page">
+            <option value="8">8 / page</option>
+            <option value="15">15 / page</option>
+            <option value="50">50 / page</option>
+          </select>
+          <button type="button" class="g-icon-btn" [disabled]="pagePage() <= 1" (click)="pagePage.set(pagePage() - 1)">‹</button>
+          <span>{{ pagePage() }} / {{ pageCount() }}</span>
+          <button type="button" class="g-icon-btn" [disabled]="pagePage() >= pageCount()" (click)="pagePage.set(pagePage() + 1)">›</button>
+        </div>
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Top countries</h3>
+            <p>Visitors by country (from member geography).</p>
+          </div>
+        </div>
+        <hc-bars [data]="countriesData()" [format]="countFormat" />
+      </section>
+    </div>
+  }
+
+  <!-- ======================================================= ACTIVITY -->
+  @case ('activity') {
+    <div class="hl-kpis">
+      <div class="hl-kpi"><small>Online now</small><strong>{{ active().online }}</strong><span class="hl-kpi-sub">live members</span></div>
+      <div class="hl-kpi"><small>Daily active</small><strong>{{ active().dau }}</strong><span class="hl-kpi-sub">last 24 hours</span></div>
+      <div class="hl-kpi"><small>Weekly active</small><strong>{{ active().wau }}</strong><span class="hl-kpi-sub">last 7 days</span></div>
+      <div class="hl-kpi"><small>Monthly active</small><strong>{{ active().mau }}</strong><span class="hl-kpi-sub">of {{ active().total }} members</span></div>
+      <div class="hl-kpi"><small>Stickiness</small><strong>{{ active().stickiness }}%</strong><span class="hl-kpi-sub">DAU ÷ MAU</span></div>
+      @for (k of activityChoices; track k) {
+        <div class="hl-kpi">
+          <small>{{ meta[k].label }}</small>
+          <strong>{{ fmt(k, totals()[k]) }}</strong>
+          <div class="hl-kpi-foot">
+            @if (compare()) {
+              <span class="hl-delta" [class.good]="delta(k).good === true" [class.bad]="delta(k).good === false">{{ delta(k).text }}</span>
+            }
+            <hc-spark [values]="spark(k)" [color]="meta[k].color" [width]="80" [height]="28" />
+          </div>
+        </div>
+      }
+    </div>
+
+    <section class="g-panel hl-card">
+      <div class="hl-card-head">
+        <div>
+          <h3>Community activity</h3>
+          <p>{{ granLabel[granularity()] }} sign-ins, registrations, journey posts and comments.</p>
+        </div>
+        <div class="hl-card-tools">
+          <div class="hl-chips">
+            @for (k of activityChoices; track k) {
+              <button type="button" class="hl-chip" [class.on]="activityMetrics().has(k)" [style.--chip]="meta[k].color" (click)="toggleMetric(activityMetrics, k)">{{ meta[k].label }}</button>
+            }
+          </div>
+          <div class="wm-seg">
+            <button type="button" [class.active]="activityType() === 'bar'" (click)="activityType.set('bar')">▥</button>
+            <button type="button" [class.active]="activityType() === 'area'" (click)="activityType.set('area')">◭</button>
+            <button type="button" [class.active]="activityType() === 'line'" (click)="activityType.set('line')">〰</button>
+          </div>
+          <button type="button" class="g-icon-btn" (click)="exportSeries(activityChoices, 'activity')">⤓</button>
+        </div>
+      </div>
+      <hc-chart [labels]="labels()" [series]="activitySeries()" [type]="activityType()" [height]="280" [format]="countFormat" ariaLabel="Community activity" />
+    </section>
+
+    <div class="hl-grid-2">
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Engagement funnel</h3>
+            <p>From first visit to first journey post — find where people drop off.</p>
+          </div>
+        </div>
+        <hc-funnel [steps]="funnel()" />
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Weekly retention cohorts</h3>
+            <p>% of each week's new members still active N weeks later.</p>
+          </div>
+        </div>
+        <div class="hl-cohort-wrap">
+          <table class="hl-cohort">
+            <thead>
+              <tr>
+                <th>Cohort</th>
+                <th>Users</th>
+                @for (w of [0, 1, 2, 3, 4, 5, 6, 7]; track w) {
+                  <th>W{{ w }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of cohorts(); track c.label) {
+                <tr>
+                  <td>{{ c.label }}</td>
+                  <td>{{ c.size }}</td>
+                  @for (v of c.values; track $index) {
+                    <td [style.background]="cohortColor(v)" [class.dark]="v !== null && v > 55">{{ v === null ? '' : v.toFixed(0) + '%' }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section class="g-panel">
+      <div class="g-toolbar">
+        <strong class="wm-panel-title">Most active members</strong>
+        <span class="g-toolbar-spacer"></span>
+        <label class="g-search">
+          <input type="search" placeholder="Search members…" [value]="memberSearch()" (input)="memberSearch.set($any($event.target).value); memberPage.set(1)" aria-label="Search members" />
+        </label>
+      </div>
+      <div class="g-table-wrap">
+        <table class="g-table compact">
+          <thead>
+            <tr>
+              <th><button type="button" class="hl-sort" (click)="sortMembers('name')">Member {{ sortIcon(memberSort(), 'name') }}</button></th>
+              <th>Country</th>
+              <th class="num"><button type="button" class="hl-sort" (click)="sortMembers('posts')">Posts {{ sortIcon(memberSort(), 'posts') }}</button></th>
+              <th class="num"><button type="button" class="hl-sort" (click)="sortMembers('comments')">Comments {{ sortIcon(memberSort(), 'comments') }}</button></th>
+              <th class="num"><button type="button" class="hl-sort" (click)="sortMembers('likes')">Likes received {{ sortIcon(memberSort(), 'likes') }}</button></th>
+              <th>Last active</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of membersView(); track m.id) {
+              <tr>
+                <td>
+                  <span class="g-member">
+                    <img class="g-avatar" [src]="m.photo" alt="" width="28" height="28" />
+                    <span class="g-member-meta"><strong>{{ m.name }}</strong></span>
+                    @if (m.online) {
+                      <span class="hl-live">● online</span>
+                    }
+                  </span>
+                </td>
+                <td>{{ m.country }}</td>
+                <td class="num">{{ m.posts }}</td>
+                <td class="num">{{ m.comments }}</td>
+                <td class="num">{{ m.likes }}</td>
+                <td>{{ timeAgo(m.lastActiveUtc) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="g-pager">
+        <span>{{ membersFiltered().length }} members</span>
+        <span class="g-toolbar-spacer"></span>
+        <button type="button" class="g-icon-btn" [disabled]="memberPage() <= 1" (click)="memberPage.set(memberPage() - 1)">‹</button>
+        <span>{{ memberPage() }} / {{ memberPages() }}</span>
+        <button type="button" class="g-icon-btn" [disabled]="memberPage() >= memberPages()" (click)="memberPage.set(memberPage() + 1)">›</button>
+      </div>
+    </section>
+  }
+
+  <!-- ======================================================= STORAGE -->
+  @case ('storage') {
+    <div class="hl-grid-3">
+      <section class="g-panel hl-card hl-center">
+        <hc-gauge [value]="data.storagePct()" [display]="data.storagePct() + '%'" label="localStorage quota used" mode="high-bad" />
+        <p class="hl-gauge-note">{{ formatBytes(data.storageUsed()) }} of {{ formatBytes(quotaKb * 1024) }} (NeverBeen keys)</p>
+      </section>
+      <section class="g-panel hl-card hl-center">
+        @if (estimatePct() !== null) {
+          <hc-gauge [value]="estimatePct()!" [display]="estimatePct() + '%'" label="Browser storage (all APIs)" mode="high-bad" />
+          <p class="hl-gauge-note">{{ formatBytes(data.storageEstimate()!.usage) }} of {{ formatBytes(data.storageEstimate()!.quota) }} · navigator.storage.estimate()</p>
+        } @else {
+          <p class="g-empty">The Storage API estimate isn't available in this browser.</p>
+        }
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-stat-list">
+          <div><small>Growth rate</small><strong>{{ data.storageRunway().slopeKbPerDay }} KB/day</strong></div>
+          <div><small>Runway until full</small><strong [class.bad]="data.storageRunway().days !== null && data.storageRunway().days! < 120">{{ data.storageRunway().days === null ? 'Not growing' : data.storageRunway().days + ' days' }}</strong></div>
+          <div><small>Stored keys</small><strong>{{ storageKeys().length }}</strong></div>
+          <div><small>Largest key</small><strong>{{ storageKeys()[0] ? formatBytes(storageKeys()[0].bytes) : '—' }}</strong></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="hl-grid-2 wide-left">
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Stored data over time</h3>
+            <p>Modelled history ending at today's measured usage · red line = 5 MB quota.</p>
+          </div>
+        </div>
+        <hc-chart [labels]="labels()" [series]="storageSeries()" type="area" [height]="260" [format]="kbFormat" [threshold]="data.storagePct() > 40 ? { value: quotaKb, label: '5 MB quota' } : null" [legend]="false" ariaLabel="Stored data over time" />
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Storage by dataset</h3>
+            <p>Measured now, in KB.</p>
+          </div>
+        </div>
+        <hc-donut [data]="storageDonut()" centerLabel="KB stored" [format]="kbFormat" />
+      </section>
+    </div>
+
+    <div class="hl-grid-2 wide-left">
+      <section class="g-panel">
+        <div class="g-toolbar">
+          <strong class="wm-panel-title">Storage keys</strong>
+          <span class="g-toolbar-spacer"></span>
+          <label class="g-search">
+            <input type="search" placeholder="Filter keys…" [value]="storageSearch()" (input)="storageSearch.set($any($event.target).value)" aria-label="Filter storage keys" />
+          </label>
+          <button type="button" class="g-icon-btn" (click)="exportStorage()">⤓ CSV</button>
+        </div>
+        <div class="g-table-wrap hl-scroll">
+          <table class="g-table compact">
+            <thead>
+              <tr>
+                <th><button type="button" class="hl-sort" (click)="sortStorage('key')">Key {{ sortIcon(storageSort(), 'key') }}</button></th>
+                <th>Dataset</th>
+                <th class="num"><button type="button" class="hl-sort" (click)="sortStorage('records')">Records {{ sortIcon(storageSort(), 'records') }}</button></th>
+                <th class="num"><button type="button" class="hl-sort" (click)="sortStorage('bytes')">Size {{ sortIcon(storageSort(), 'bytes') }}</button></th>
+                <th>Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (k of storageRows(); track k.key) {
+                <tr>
+                  <td><code class="hl-code">{{ k.key }}</code></td>
+                  <td>{{ k.label }}</td>
+                  <td class="num">{{ k.records ?? '—' }}</td>
+                  <td class="num">{{ formatBytes(k.bytes) }}</td>
+                  <td>
+                    <span class="hl-share"><span [style.width.%]="k.share"></span></span>
+                    <small class="g-muted">{{ k.share.toFixed(1) }}%</small>
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5"><p class="g-empty">No stored keys.</p></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Recommendations</h3>
+            <p>Keep storage healthy.</p>
+          </div>
+        </div>
+        <ul class="hl-tips">
+          @for (t of storageTips(); track t) {
+            <li>{{ t }}</li>
+          }
+        </ul>
+      </section>
+    </div>
+  }
+
+  <!-- ======================================================= PERFORMANCE -->
+  @case ('performance') {
+    <div class="hl-vitals">
+      @for (v of vitals(); track v.key) {
+        <div class="hl-vital" [attr.data-rating]="rating(v)">
+          <small>{{ v.label }}</small>
+          <strong>{{ vitalText(v) }}</strong>
+          <span class="hl-vital-foot">
+            <span class="hl-vital-badge">{{ rating(v) === 'good' ? 'Good' : rating(v) === 'ni' ? 'Needs improvement' : rating(v) === 'poor' ? 'Poor' : 'Not available' }}</span>
+            <span class="g-muted">{{ v.hint }}</span>
+          </span>
+        </div>
+      }
+    </div>
+    <p class="hl-note">Vitals above are measured live in this browser session (Navigation Timing, Paint, LCP & Layout-Shift APIs).</p>
+
+    <section class="g-panel hl-card">
+      <div class="hl-card-head">
+        <div>
+          <h3>Page load time</h3>
+          <p>Average vs 95th percentile · red line = 3 s target.</p>
+        </div>
+        <div class="hl-card-tools">
+          <div class="wm-seg">
+            <button type="button" [class.active]="perfType() === 'line'" (click)="perfType.set('line')">〰</button>
+            <button type="button" [class.active]="perfType() === 'area'" (click)="perfType.set('area')">◭</button>
+            <button type="button" [class.active]="perfType() === 'bar'" (click)="perfType.set('bar')">▥</button>
+          </div>
+          <button type="button" class="g-icon-btn" (click)="exportSeries(['avgLoadMs', 'p95LoadMs', 'errors'], 'performance')">⤓</button>
+        </div>
+      </div>
+      <hc-chart [labels]="labels()" [series]="perfSeries()" [type]="perfType()" [height]="280" [format]="msFormat" [threshold]="{ value: 3000, label: '3 s target' }" ariaLabel="Page load time" />
+    </section>
+
+    <div class="hl-grid-2">
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Slowest pages (bottlenecks)</h3>
+            <p>Estimated p95 load time per page.</p>
+          </div>
+        </div>
+        <hc-bars [data]="slowPages()" [format]="msFormat" />
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>JavaScript errors</h3>
+            <p>{{ fmt('errors', totals().errors) }} errors · {{ totals().pageViews ? ((totals().errors / totals().pageViews) * 1000).toFixed(2) : '0' }} per 1,000 views</p>
+          </div>
+        </div>
+        <hc-chart [labels]="labels()" [series]="errorSeries()" type="bar" [height]="220" [format]="countFormat" ariaLabel="JavaScript errors" />
+      </section>
+    </div>
+
+    <div class="hl-grid-2 wide-left">
+      <section class="g-panel">
+        <div class="g-toolbar">
+          <div>
+            <strong class="wm-panel-title">Largest resources</strong>
+            <small class="g-muted">{{ resources().count }} requests · {{ resources().totalKb }} KB transferred in this session</small>
+          </div>
+        </div>
+        <div class="g-table-wrap hl-scroll">
+          <table class="g-table compact">
+            <thead>
+              <tr>
+                <th>Resource</th>
+                <th>Type</th>
+                <th class="num">Size</th>
+                <th class="num">Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of resources().largest; track $index) {
+                <tr>
+                  <td class="hl-res-name" [title]="r.name">{{ r.name }}</td>
+                  <td>{{ r.type }}</td>
+                  <td class="num">{{ r.sizeKb }} KB</td>
+                  <td class="num"><span [class]="'hl-load ' + (r.durationMs > 1000 ? 'bad' : r.durationMs > 400 ? 'warn' : 'ok')">{{ r.durationMs }} ms</span></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4"><p class="g-empty">Resource Timing isn't available.</p></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="g-panel hl-card">
+        <div class="hl-card-head">
+          <div>
+            <h3>Resource mix</h3>
+            <p>By {{ resourceMode() === 'size' ? 'transferred KB' : 'request count' }}.</p>
+          </div>
+          <div class="wm-seg">
+            <button type="button" [class.active]="resourceMode() === 'size'" (click)="resourceMode.set('size')">Size</button>
+            <button type="button" [class.active]="resourceMode() === 'count'" (click)="resourceMode.set('count')">Count</button>
+          </div>
+        </div>
+        <hc-donut [data]="resourceMode() === 'size' ? resources().sizeByType : resources().byType" [centerLabel]="resourceMode() === 'size' ? 'KB' : 'requests'" />
+      </section>
+    </div>
+  }
+
+  <!-- ======================================================= RISKS -->
+  @case ('risks') {
+    <section class="g-panel">
+      <div class="g-toolbar">
+        <div class="wm-seg">
+          <button type="button" [class.active]="riskSeverity() === 'all'" (click)="riskSeverity.set('all')">All</button>
+          <button type="button" [class.active]="riskSeverity() === 'critical'" (click)="riskSeverity.set('critical')">Critical ({{ riskCounts().critical }})</button>
+          <button type="button" [class.active]="riskSeverity() === 'warning'" (click)="riskSeverity.set('warning')">Warnings ({{ riskCounts().warning }})</button>
+          <button type="button" [class.active]="riskSeverity() === 'info'" (click)="riskSeverity.set('info')">Notices ({{ riskCounts().info }})</button>
+        </div>
+        <select class="hl-select" [value]="riskArea()" (change)="riskArea.set($any($event.target).value)" aria-label="Area">
+          <option value="all">All areas</option>
+          @for (a of riskAreas; track a) {
+            <option [value]="a">{{ a }}</option>
+          }
+        </select>
+        <span class="g-toolbar-spacer"></span>
+        <label class="hl-auto">
+          <span class="cf-switch sm">
+            <input type="checkbox" [checked]="showAck()" (change)="showAck.set($any($event.target).checked)" />
+            <span class="track"><span class="thumb"></span></span>
+          </span>
+          Show acknowledged
+        </label>
+      </div>
+      <div class="hl-risks">
+        @for (r of risksView(); track r.id) {
+          <article class="hl-risk" [attr.data-sev]="r.severity" [class.acked]="ack().has(r.id)">
+            <div class="hl-risk-side">
+              <span class="hl-sev">{{ r.severity === 'critical' ? 'Critical' : r.severity === 'warning' ? 'Warning' : 'Notice' }}</span>
+              <strong class="hl-risk-metric">{{ r.metric }}</strong>
+            </div>
+            <div class="hl-risk-body">
+              <small>{{ r.area }}</small>
+              <h4>{{ r.title }}</h4>
+              <p>{{ r.detail }}</p>
+              <p class="hl-risk-action">💡 {{ r.action }}</p>
+            </div>
+            <button type="button" class="g-btn" (click)="toggleAck(r.id)">{{ ack().has(r.id) ? 'Re-open' : '✓ Acknowledge' }}</button>
+          </article>
+        } @empty {
+          <p class="g-empty">No risks match the filters. 🎉</p>
+        }
+      </div>
+    </section>
+  }
+}
+
+@if (reportOpen()) {
+  <app-health-report-builder
+    [range]="range()"
+    [from]="from()"
+    [to]="to()"
+    [granularity]="granularity()"
+    [device]="device()"
+    [country]="country()"
+    [compare]="compare()"
+    (closed)="reportOpen.set(false)"
+  />
+}
