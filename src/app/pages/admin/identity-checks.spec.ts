@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, ActivatedRoute, convertToParamMap } from '@angular/router';
+import { provideRouter, ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { AdminDashboard } from './dashboard/dashboard';
 import { AdminIdentityChecks } from './identity-checks/identity-checks';
@@ -62,7 +62,7 @@ describe('Identity Check Verification', () => {
 
     const confirm = () => {
       fixture.detectChanges();
-      (el.querySelector('app-admin-confirm-dialog .g-modal-actions .g-btn:last-child') as HTMLButtonElement).click();
+      (document.body.querySelector('.g-modal-backdrop .g-modal-actions .g-btn:last-child') as HTMLButtonElement).click();
       fixture.detectChanges();
     };
 
@@ -116,5 +116,66 @@ describe('Identity Check Verification', () => {
     buttonByText(el, 'Enable account');
     buttonByText(el, 'Permanently disable account');
     buttonByText(el, 'Force identity check again');
+  });
+
+  it('document page is a clear full-screen viewer: fit/zoom/rotate, prev/next, comparison and file details', async () => {
+    const params = new BehaviorSubject(convertToParamMap({}));
+    TestBed.configureTestingModule({
+      imports: [AdminIdentityDocument],
+      providers: [provideRouter([]), { provide: ActivatedRoute, useValue: { paramMap: params, snapshot: {} } }],
+    });
+    const identity = TestBed.inject(AdminIdentityService);
+    const router = TestBed.inject(Router);
+    const nav = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const sub = identity.pending().find((x) => x.files.length > 1)!;
+    params.next(convertToParamMap({ submissionId: String(sub.id), fileId: sub.files[0].id }));
+    const fixture = TestBed.createComponent(AdminIdentityDocument);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    // Details panel: document vs profile comparison + file information
+    const compare = [...el.querySelectorAll('.iv-compare tbody th')].map((t) => t.textContent?.trim());
+    expect(compare).toEqual(['Full name', 'Date of birth', 'Gender', 'Country']);
+    expect(el.querySelector('.iv-compare')?.textContent).toContain(sub.nameOnDocument);
+    const dts = [...el.querySelectorAll('.iv-dl dt')].map((d) => d.textContent?.trim());
+    for (const l of ['Number', 'Issued on', 'Expires', 'File name', 'Format', 'Size', 'Submitted', 'Attempt']) expect(dts).toContain(l);
+    expect(el.querySelector('.iv-nav span')?.textContent?.trim()).toBe(`1 / ${sub.files.length}`);
+
+    // Fit by default; zoom in switches to a manual zoom level and resizes the document
+    const zoomLabel = () => el.querySelector('.iv-zoom')!.textContent!.trim();
+    const canvas = () => el.querySelector('.iv-canvas') as HTMLElement;
+    expect(el.querySelector('.iv-tools button.on')?.textContent).toContain('Fit');
+    const fitWidth = parseInt(canvas().style.width, 10);
+    buttonByText(el, '＋').click();
+    fixture.detectChanges();
+    expect(parseInt(canvas().style.width, 10)).toBeGreaterThan(fitWidth);
+    buttonByText(el, '1:1').click();
+    fixture.detectChanges();
+    expect(zoomLabel()).toBe('100%');
+    expect(canvas().style.width).toBe('640px');
+
+    // Rotating swaps the layout box so the stage scrolls correctly
+    const box = el.querySelector('.iv-box') as HTMLElement;
+    const [w, h] = [box.style.width, box.style.height];
+    (el.querySelector('.iv-tools button[aria-label="Rotate right"]') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(box.style.width).toBe(h);
+    expect(box.style.height).toBe(w);
+    expect(canvas().style.transform).toContain('rotate(90deg)');
+
+    // Keyboard: → opens the next document of the submission, 0 fits again
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+    expect(nav).toHaveBeenCalledWith(['/admin/identity-document', sub.id, sub.files[1].id], { replaceUrl: true });
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: '0' }));
+    fixture.detectChanges();
+    expect(el.querySelector('.iv-tools button.on')?.textContent).toContain('Fit');
+
+    // Details panel can be hidden for a bigger document
+    buttonByText(el, 'Details').click();
+    fixture.detectChanges();
+    expect(el.querySelector('.iv-side')).toBeNull();
+    expect(el.querySelector('.iv')?.classList.contains('no-details')).toBe(true);
   });
 });

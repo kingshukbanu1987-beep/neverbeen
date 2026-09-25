@@ -1,150 +1,35 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { AdminIdentityService, IDENTITY_STATUS_META, IDENTITY_TRIGGER_META, checksPassed } from '../shared/admin-identity.service';
+import { AdminIdentityService, IDENTITY_STATUS_META, IDENTITY_TRIGGER_META, IdentityFile, checksPassed } from '../shared/admin-identity.service';
 import { AdminInsightsService, shortDate, timeAgo } from '../shared/admin-insights.service';
 import { accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
-import { IdDocument } from './id-document';
+import { IdDocument, docNaturalSize } from './id-document';
 
-/** Full-page, secure viewer for one submitted identity document (opened in a new tab from the grid). */
+type Zoom = 'fit' | number;
+
+const DAY = 86_400_000;
+
+/**
+ * Clear, full-screen viewer for one submitted identity document. Opened in a new
+ * browser tab from Admin → Dashboard → Identity Check Verification and rendered
+ * without the website / admin chrome: large fit-to-screen document with zoom,
+ * pan, rotate and enhance, a thumbnail strip for the other files, and a details
+ * panel (document vs. profile comparison, file info, automated checks, history
+ * and the review decision).
+ */
 @Component({
   selector: 'app-admin-identity-document',
   imports: [RouterLink, IdDocument, AdminConfirmDialog],
   styleUrls: ['../shared/admin-grid.css', './identity-document.css'],
-  template: `
-    <div class="iv">
-      @if (submission(); as s) {
-        <header class="iv-top">
-          <a class="iv-back" routerLink="/admin/dashboard/identity-checks">← Identity Check Verification</a>
-          <div class="iv-title">
-            <h1>{{ s.documentType }} · {{ file()?.side }}</h1>
-            <p>{{ member()?.fullName ?? 'Deleted member' }} · {{ file()?.name }} · {{ sizeLabel() }}</p>
-          </div>
-          <div class="iv-tools" role="toolbar" aria-label="Document tools">
-            <button type="button" (click)="zoomBy(-0.25)" aria-label="Zoom out">−</button>
-            <span>{{ Math.round(zoom() * 100) }}%</span>
-            <button type="button" (click)="zoomBy(0.25)" aria-label="Zoom in">＋</button>
-            <button type="button" (click)="zoom.set(1); rotation.set(0)" title="Reset">⤢ Fit</button>
-            <button type="button" (click)="rotation.set((rotation() + 90) % 360)" title="Rotate">⟳ Rotate</button>
-            <button type="button" [class.on]="enhance()" (click)="enhance.set(!enhance())" title="Boost contrast to spot edits">◐ Enhance</button>
-            @if (file()?.dataUrl) {
-              <a [href]="file()!.dataUrl" [download]="file()!.name">⤓ Download</a>
-            }
-          </div>
-        </header>
-
-        <div class="iv-main">
-          <section class="iv-stage">
-            <div class="iv-canvas" [class.enhance]="enhance()" [style.transform]="'rotate(' + rotation() + 'deg) scale(' + zoom() + ')'">
-              @if (file(); as f) {
-                <app-id-document [submission]="s" [file]="f" [photo]="member()?.photo ?? ''" [width]="f.side === 'Selfie' ? 420 : 640" />
-              }
-            </div>
-            <nav class="iv-strip" aria-label="Other documents in this submission">
-              @for (f of s.files; track f.id) {
-                <a [routerLink]="['/admin/identity-document', s.id, f.id]" [class.active]="f.id === file()?.id" replaceUrl>
-                  <app-id-document [submission]="s" [file]="f" [photo]="member()?.photo ?? ''" [width]="f.side === 'Selfie' ? 48 : 96" />
-                  <span>{{ f.side }}</span>
-                </a>
-              }
-            </nav>
-            <p class="iv-watermark">CONFIDENTIAL · Viewed by admin · {{ viewedAt }}</p>
-          </section>
-
-          <aside class="iv-side">
-            <div class="iv-card">
-              <div class="iv-member">
-                <img [src]="member()?.photo" alt="" />
-                <div>
-                  <strong>{{ member()?.fullName ?? 'Deleted member' }}</strong>
-                  <small>{{ member()?.email }}</small>
-                  <small>UID {{ member()?.uniqueId }}</small>
-                </div>
-              </div>
-              <div class="iv-badges">
-                <span class="g-badge" [class]="'g-badge ' + triggerMeta[s.trigger].tone">{{ triggerMeta[s.trigger].icon }} {{ triggerMeta[s.trigger].label }}</span>
-                @if (member(); as m) {
-                  <span class="g-badge">Account: {{ stateLabel(m.accountState) }}</span>
-                }
-                <span class="g-badge" [class]="'g-badge ' + statusMeta[s.status].tone">{{ statusMeta[s.status].label }}</span>
-              </div>
-              <p class="iv-reason">{{ s.triggerReason }}</p>
-              @if (s.memberNote) {
-                <p class="iv-note">💬 “{{ s.memberNote }}”</p>
-              }
-            </div>
-
-            <div class="iv-card">
-              <h3>Document details</h3>
-              <dl class="iv-dl">
-                <dt>Type</dt><dd>{{ s.documentType }}</dd>
-                <dt>Number</dt><dd><code>{{ s.documentNumber }}</code></dd>
-                <dt>Name on document</dt><dd [class.bad]="!s.checks.nameMatch">{{ s.nameOnDocument }}</dd>
-                <dt>Name on profile</dt><dd>{{ member()?.fullName ?? '—' }}</dd>
-                <dt>Date of birth</dt><dd [class.bad]="!s.checks.dobMatch">{{ s.dobOnDocument }}</dd>
-                <dt>Issued</dt><dd>{{ s.issuedOn }}</dd>
-                @if (s.expiresOn) {
-                  <dt>Expires</dt><dd [class.bad]="!s.checks.notExpired">{{ s.expiresOn }}</dd>
-                }
-                <dt>Country</dt><dd>{{ s.issuingCountry }}</dd>
-                <dt>Submitted</dt><dd>{{ shortDate(s.submittedAtUtc) }} ({{ timeAgo(s.submittedAtUtc) }}) · attempt #{{ s.attempt }}</dd>
-              </dl>
-            </div>
-
-            <div class="iv-card">
-              <h3>Automated checks <small>{{ passed().passed }}/{{ passed().total }} passed</small></h3>
-              <ul class="iv-checks">
-                <li [class.ok]="s.checks.nameMatch">{{ s.checks.nameMatch ? '✓' : '✕' }} Name matches profile</li>
-                <li [class.ok]="s.checks.dobMatch">{{ s.checks.dobMatch ? '✓' : '✕' }} Date of birth matches profile</li>
-                <li [class.ok]="s.checks.notExpired">{{ s.checks.notExpired ? '✓' : '✕' }} Document within validity</li>
-                <li [class.ok]="s.checks.faceMatch >= 80">{{ s.checks.faceMatch >= 80 ? '✓' : '✕' }} Face match {{ s.checks.faceMatch }}%</li>
-                <li [class.ok]="s.checks.liveness">{{ s.checks.liveness ? '✓' : '✕' }} Selfie liveness</li>
-                <li [class.ok]="s.checks.tamperFree">{{ s.checks.tamperFree ? '✓' : '✕' }} No signs of tampering</li>
-              </ul>
-            </div>
-
-            <div class="iv-card iv-decide">
-              <h3>Decision</h3>
-              @if (s.decidedAtUtc) {
-                <p class="iv-decided">{{ statusMeta[s.status].label }} — {{ s.decisionNote }} · {{ timeAgo(s.decidedAtUtc) }}</p>
-              }
-              @if (s.status === 'pending' || s.status === 'resubmit_requested') {
-                <button type="button" class="g-btn success" (click)="pending.set('enable')">✓ Enable account</button>
-                <button type="button" class="g-btn danger" (click)="pending.set('disable')">⛔ Permanently disable account</button>
-                <button type="button" class="g-btn violet" [disabled]="s.status === 'resubmit_requested'" (click)="pending.set('recheck')">🔁 Force identity check again</button>
-              }
-            </div>
-          </aside>
-        </div>
-
-        @if (pending(); as p) {
-          <app-admin-confirm-dialog
-            [heading]="p === 'enable' ? 'Enable this account?' : p === 'disable' ? 'Permanently disable this account?' : 'Force identity check again?'"
-            [message]="p === 'enable' ? 'The member gets full access back immediately.' : p === 'disable' ? 'The member can no longer use NeverBeen or appeal with new documents.' : 'The member stays locked out until they submit new documents.'"
-            [confirmLabel]="p === 'enable' ? 'Enable account' : p === 'disable' ? 'Permanently disable' : 'Request new documents'"
-            [tone]="p === 'enable' ? 'success' : p === 'disable' ? 'danger' : 'violet'"
-            [reasonPlaceholder]="p === 'enable' ? 'Optional note' : 'Reason shown to other admins'"
-            (confirmed)="decide($event)"
-            (cancelled)="pending.set(null)"
-          />
-        }
-      } @else {
-        <div class="iv-missing">
-          <h1>Document not found</h1>
-          <p>This submission no longer exists or was erased.</p>
-          <a class="g-btn dark" routerLink="/admin/dashboard/identity-checks">Back to Identity Check Verification</a>
-        </div>
-      }
-    </div>
-    @if (toast(); as t) {
-      <div class="iv-toast" role="status">{{ t }}</div>
-    }
-  `,
+  templateUrl: './identity-document.html',
+  host: { '(document:keydown)': 'onKey($event)' },
 })
 export class AdminIdentityDocument {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly identity = inject(AdminIdentityService);
   private readonly insights = inject(AdminInsightsService);
 
@@ -157,10 +42,18 @@ export class AdminIdentityDocument {
   protected readonly toast = this.insights.toast;
   protected readonly viewedAt = new Date().toLocaleString();
 
-  protected readonly zoom = signal(1);
+  protected readonly zoomMode = signal<Zoom>('fit');
   protected readonly rotation = signal(0);
   protected readonly enhance = signal(false);
+  protected readonly grayscale = signal(false);
+  protected readonly showDetails = signal(true);
+  protected readonly showKeys = signal(false);
+  protected readonly isFullscreen = signal(false);
+  protected readonly copied = signal(false);
   protected readonly pending = signal<'enable' | 'disable' | 'recheck' | null>(null);
+
+  private readonly stageRef = viewChild<ElementRef<HTMLElement>>('stage');
+  private readonly stageSize = signal({ w: 900, h: 620 });
 
   private readonly params = toSignal(this.route.paramMap.pipe(map((p) => ({ sid: Number(p.get('submissionId')), fid: p.get('fileId') ?? '' }))), {
     initialValue: { sid: 0, fid: '' },
@@ -171,11 +64,87 @@ export class AdminIdentityDocument {
     const s = this.submission();
     return s?.files.find((f) => f.id === this.params().fid) ?? s?.files[0];
   });
+  protected readonly fileIndex = computed(() => {
+    const s = this.submission();
+    const f = this.file();
+    return s && f ? s.files.findIndex((x) => x.id === f.id) : -1;
+  });
   protected readonly member = computed(() => (this.submission() ? this.insights.member(this.submission()!.userId) : undefined));
   protected readonly passed = computed(() => checksPassed(this.submission()!.checks));
+  protected readonly history = computed(() => {
+    const s = this.submission();
+    return s ? this.identity.historyOf(s.userId).slice().sort((a, b) => b.submittedAtUtc.localeCompare(a.submittedAtUtc)) : [];
+  });
+
+  // ------------------------------------------------------------------ sizing
+  protected readonly natural = computed(() => {
+    const s = this.submission();
+    const f = this.file();
+    return s && f ? docNaturalSize(s, f) : { w: 640, h: 404 };
+  });
+  private readonly rotated = computed(() => this.rotation() % 180 !== 0);
+  /** Scale that fits the whole document inside the stage (never upscales past 250%). */
+  protected readonly fitScale = computed(() => {
+    const { w, h } = this.natural();
+    const box = this.stageSize();
+    const pad = 64;
+    const [dw, dh] = this.rotated() ? [h, w] : [w, h];
+    return Math.max(0.2, Math.min(2.5, (box.w - pad) / dw, (box.h - pad) / dh));
+  });
+  protected readonly scale = computed(() => (this.zoomMode() === 'fit' ? this.fitScale() : (this.zoomMode() as number)));
+  protected readonly renderW = computed(() => Math.round(this.natural().w * this.scale()));
+  protected readonly renderH = computed(() => Math.round(this.natural().h * this.scale()));
+  /** Layout box of the (possibly rotated) document so the stage can scroll correctly. */
+  protected readonly boxW = computed(() => (this.rotated() ? this.renderH() : this.renderW()));
+  protected readonly boxH = computed(() => (this.rotated() ? this.renderW() : this.renderH()));
+
+  // ------------------------------------------------------------------ details
   protected readonly sizeLabel = computed(() => {
     const b = this.file()?.sizeBytes ?? 0;
     return b > 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.round(b / 1024)} KB`;
+  });
+  protected readonly formatLabel = computed(() => {
+    const m = this.file()?.mime ?? '';
+    return m === 'application/pdf' ? 'PDF document' : m.startsWith('image/') ? `${m.slice(6).toUpperCase()} image` : m || '—';
+  });
+  protected readonly docAge = computed(() => {
+    const dob = Date.parse(this.submission()?.dobOnDocument ?? '');
+    if (Number.isNaN(dob)) return null;
+    return Math.floor((Date.now() - dob) / (365.25 * DAY));
+  });
+  protected readonly expiry = computed(() => {
+    const s = this.submission();
+    const t = Date.parse(s?.expiresOn ?? '');
+    if (!s?.expiresOn || Number.isNaN(t)) return { text: 'No expiry', tone: 'muted' };
+    const days = Math.round((t - Date.now()) / DAY);
+    if (days < 0) return { text: `Expired ${Math.abs(days)} days ago`, tone: 'bad' };
+    if (days < 90) return { text: `Expires in ${days} days`, tone: 'warn' };
+    const years = (days / 365).toFixed(1);
+    return { text: `Valid · ${years} years left`, tone: 'ok' };
+  });
+  /** Side-by-side comparison of what the document says vs. the community profile. */
+  protected readonly comparison = computed(() => {
+    const s = this.submission();
+    const m = this.member();
+    if (!s) return [];
+    const norm = (v: string) => (v || '').trim().toLowerCase();
+    const genderDoc = s.genderOnDocument || '—';
+    const genderProfile = m?.gender || '—';
+    return [
+      { label: 'Full name', doc: s.nameOnDocument, profile: m?.fullName ?? '—', ok: s.checks.nameMatch as boolean | null },
+      { label: 'Date of birth', doc: `${s.dobOnDocument}${this.docAge() !== null ? ` (age ${this.docAge()})` : ''}`, profile: m ? `Age ${m.age}` : '—', ok: s.checks.dobMatch as boolean | null },
+      {
+        label: 'Gender',
+        doc: genderDoc,
+        profile: genderProfile,
+        ok: genderProfile === 'Not specified' || genderProfile === '—' ? null : norm(genderDoc)[0] === norm(genderProfile)[0],
+      },
+      { label: 'Country', doc: s.issuingCountry, profile: m?.country ?? '—', ok: m ? norm(s.issuingCountry) === norm(m.country) : null },
+    ];
+  });
+  protected readonly faceTone = computed(() => {
+    const f = this.submission()?.checks.faceMatch ?? 0;
+    return f >= 80 ? 'ok' : f >= 60 ? 'warn' : 'bad';
   });
 
   constructor() {
@@ -189,16 +158,164 @@ export class AdminIdentityDocument {
       lastLogged = key;
       untracked(() => {
         this.identity.logView(s, f);
-        this.zoom.set(1);
+        this.zoomMode.set('fit');
         this.rotation.set(0);
       });
     });
+
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const el = this.stageRef()?.nativeElement;
+      const measure = () => {
+        const w = el?.clientWidth || window.innerWidth * 0.66;
+        const h = el?.clientHeight || window.innerHeight - 200;
+        if (w > 0 && h > 0) this.stageSize.set({ w, h });
+      };
+      measure();
+      if (el && typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+        destroyRef.onDestroy(() => ro.disconnect());
+      }
+      const onFs = () => this.isFullscreen.set(!!document.fullscreenElement);
+      document.addEventListener('fullscreenchange', onFs);
+      destroyRef.onDestroy(() => document.removeEventListener('fullscreenchange', onFs));
+    });
   }
 
-  protected zoomBy(delta: number): void {
-    this.zoom.set(Math.min(3, Math.max(0.5, +(this.zoom() + delta).toFixed(2))));
+  // ------------------------------------------------------------------ zoom / pan / rotate
+  protected zoomBy(factor: number): void {
+    const next = Math.min(4, Math.max(0.2, +(this.scale() * factor).toFixed(3)));
+    this.zoomMode.set(next);
   }
 
+  protected actualSize(): void {
+    this.zoomMode.set(1);
+  }
+
+  protected fit(): void {
+    this.zoomMode.set('fit');
+  }
+
+  protected rotate(delta: number): void {
+    this.rotation.set((this.rotation() + delta + 360) % 360);
+  }
+
+  protected onWheel(e: WheelEvent): void {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    this.zoomBy(e.deltaY < 0 ? 1.1 : 1 / 1.1);
+  }
+
+  private drag: { x: number; y: number; left: number; top: number } | null = null;
+  protected readonly dragging = signal(false);
+
+  protected onPointerDown(e: PointerEvent): void {
+    const el = this.stageRef()?.nativeElement;
+    if (!el || e.button !== 0) return;
+    if (el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight) return;
+    this.drag = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
+    this.dragging.set(true);
+    el.setPointerCapture?.(e.pointerId);
+  }
+
+  protected onPointerMove(e: PointerEvent): void {
+    const el = this.stageRef()?.nativeElement;
+    if (!el || !this.drag) return;
+    el.scrollLeft = this.drag.left - (e.clientX - this.drag.x);
+    el.scrollTop = this.drag.top - (e.clientY - this.drag.y);
+  }
+
+  protected onPointerUp(): void {
+    this.drag = null;
+    this.dragging.set(false);
+  }
+
+  protected toggleFullscreen(): void {
+    try {
+      if (document.fullscreenElement) void document.exitFullscreen();
+      else void document.documentElement.requestFullscreen?.();
+    } catch {
+      /* not supported */
+    }
+  }
+
+  // ------------------------------------------------------------------ navigation
+  protected go(delta: number): void {
+    const s = this.submission();
+    if (!s || s.files.length < 2) return;
+    const i = (this.fileIndex() + delta + s.files.length) % s.files.length;
+    this.open(s.files[i]);
+  }
+
+  protected open(f: IdentityFile): void {
+    const s = this.submission();
+    if (s) void this.router.navigate(['/admin/identity-document', s.id, f.id], { replaceUrl: true });
+  }
+
+  protected closeTab(): void {
+    // Opened in a new tab from the dashboard → close it; otherwise go back to the grid.
+    if (window.opener) window.close();
+    else void this.router.navigateByUrl('/admin/dashboard/identity-checks');
+  }
+
+  protected copyNumber(): void {
+    const n = this.submission()?.documentNumber ?? '';
+    void navigator.clipboard?.writeText(n).catch(() => undefined);
+    this.copied.set(true);
+    setTimeout(() => this.copied.set(false), 1500);
+  }
+
+  protected onKey(e: KeyboardEvent): void {
+    const t = e.target as HTMLElement | null;
+    if (this.pending() || (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    switch (e.key) {
+      case 'ArrowRight':
+        this.go(1);
+        break;
+      case 'ArrowLeft':
+        this.go(-1);
+        break;
+      case '+':
+      case '=':
+        this.zoomBy(1.25);
+        break;
+      case '-':
+      case '_':
+        this.zoomBy(0.8);
+        break;
+      case '0':
+        this.fit();
+        break;
+      case '1':
+        this.actualSize();
+        break;
+      case 'r':
+      case 'R':
+        this.rotate(e.shiftKey ? -90 : 90);
+        break;
+      case 'e':
+      case 'E':
+        this.enhance.set(!this.enhance());
+        break;
+      case 'f':
+      case 'F':
+        this.toggleFullscreen();
+        break;
+      case 'i':
+      case 'I':
+        this.showDetails.set(!this.showDetails());
+        break;
+      case '?':
+        this.showKeys.set(!this.showKeys());
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+  }
+
+  // ------------------------------------------------------------------ decision
   protected decide(reason: string): void {
     const s = this.submission();
     const p = this.pending();

@@ -21,6 +21,11 @@ const THEMES: Record<IdentitySubmission['documentType'], DocTheme> = {
   'National ID Card': { authority: 'National Registration Authority', title: 'NATIONAL IDENTITY CARD', band: 'linear-gradient(90deg,#15803d,#65a30d)', accent: '#166534', paper: '#f7fee7', ink: '#1f2937' },
 };
 
+/** Natural (100%) pixel size of a rendered document. */
+export function docNaturalSize(s: IdentitySubmission, f: IdentityFile): { w: number; h: number } {
+  return f.side === 'Selfie' ? { w: 640, h: 800 } : s.documentType === 'Passport' && f.side === 'Front' ? { w: 640, h: 450 } : { w: 640, h: 404 };
+}
+
 /**
  * Renders a submitted identity document. Real uploads (dataUrl) are shown as-is;
  * demo submissions are drawn as a realistic document from the submission data.
@@ -401,7 +406,7 @@ export class IdDocument {
   readonly width = input<number>(640);
 
   protected readonly theme = computed(() => THEMES[this.submission().documentType] ?? THEMES['National ID Card']);
-  protected readonly natural = computed(() => (this.file().side === 'Selfie' ? { w: 640, h: 800 } : this.submission().documentType === 'Passport' && this.file().side === 'Front' ? { w: 640, h: 450 } : { w: 640, h: 404 }));
+  protected readonly natural = computed(() => docNaturalSize(this.submission(), this.file()));
   protected readonly scale = computed(() => this.width() / this.natural().w);
   protected readonly height = computed(() => Math.round(this.natural().h * this.scale()));
   protected readonly safeUrl = computed<SafeResourceUrl>(() => this.sanitizer.bypassSecurityTrustResourceUrl(this.file().dataUrl ?? ''));

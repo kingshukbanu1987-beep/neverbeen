@@ -28,8 +28,15 @@ export class App {
   /** Visitors see only the maintenance page while the site is down (admins keep /admin and /login). */
   protected readonly showMaintenance = computed(() => this.maintenance.isDown() && !this.cms.previewMode && !isBypassPath(this.url()));
   protected readonly showAnnouncement = computed(() => !isBypassPath(this.url()));
-  /** Print-only pages (Admin → Health report) render without the site chrome. */
-  protected readonly bare = computed(() => this.url().split(/[?#]/)[0].endsWith('/admin/health-report'));
+  /**
+   * Stand-alone admin pages opened in their own tab render without the website chrome
+   * (navbar, announcement bar, footer): the printable Health report and the full-screen
+   * identity document viewer.
+   */
+  protected readonly bare = computed(() => {
+    const path = this.url().split(/[?#]/)[0];
+    return path.endsWith('/admin/health-report') || path.includes('/admin/identity-document/');
+  });
 
   constructor() {
     this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe((e) => {
