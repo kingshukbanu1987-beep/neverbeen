@@ -34,6 +34,7 @@ import { TranslatableTextDirective } from '../../../shared/translate/translatabl
 import { UserHoverCard, UserPreviewDirective } from '../../../shared/user-hover-card';
 import { CommentThreadComponent } from './comment-item';
 import { SelectValueSync } from '../../../shared/select-value-sync';
+import { AnnouncementInboxService, AnnouncementNotice, noticeTime, viewerProfile } from '../../../services/announcement-inbox.service';
 
 export type ProfileSection =
   | 'journey'
@@ -469,6 +470,50 @@ export class CommunityProfile implements OnInit {
 
   // Website Management (Admin Console) controls which profile features are switched on.
   private readonly cms = inject(SiteConfigService);
+
+  /* ---------- Admin announcements in Notifications ---------- */
+  private readonly announcementInbox = inject(AnnouncementInboxService);
+  /** Audience profile of the signed-in member (decides which announcements reach them). */
+  private readonly noticeViewer = computed(() => viewerProfile(this.service.currentUser(), this.service.profile() as Parameters<typeof viewerProfile>[1]));
+  /** Live announcements for this member (until they clear them). Updates automatically when admins publish. */
+  protected readonly adminNotices = computed(() => this.announcementInbox.noticesFor(this.noticeViewer()));
+  protected readonly unreadNoticeCount = computed(() => this.adminNotices().filter((n) => n.unread).length);
+  /** Side-panel badge: unread member notifications + unread announcements. */
+  protected readonly notifBadgeCount = computed(() => this.service.unreadNotificationCount() + this.unreadNoticeCount());
+  /** Announcements that were unread when the Notifications section was opened (kept highlighted). */
+  private readonly freshNoticeIds = signal<Set<string>>(new Set());
+  protected readonly noticeTime = noticeTime;
+
+  protected isFreshNotice(n: AnnouncementNotice): boolean {
+    return n.unread || this.freshNoticeIds().has(n.a.id);
+  }
+
+  private markNoticesRead(): void {
+    const v = this.noticeViewer();
+    if (!v) return;
+    const unread = this.adminNotices().filter((n) => n.unread).map((n) => n.a.id);
+    if (!unread.length) return;
+    this.freshNoticeIds.update((s) => new Set([...s, ...unread]));
+    this.announcementInbox.markRead(v.id, unread);
+  }
+
+  clearNotice(id: string): void {
+    const v = this.noticeViewer();
+    if (v) this.announcementInbox.clear(v.id, id);
+  }
+
+  clearAllNotices(): void {
+    const v = this.noticeViewer();
+    if (v) this.announcementInbox.clearAll(v.id, this.adminNotices().map((n) => n.a.id));
+  }
+
+  openNoticeCta(n: AnnouncementNotice): void {
+    const v = this.noticeViewer();
+    if (v) this.announcementInbox.markRead(v.id, [n.a.id]);
+    if (!n.a.ctaUrl) return;
+    if (n.external) window.open(n.a.ctaUrl, '_blank', 'noopener');
+    else this.router.navigateByUrl(n.a.ctaUrl);
+  }
   protected profileSectionOn(section: string): boolean {
     return this.cms.isItemVisible('community.profile', 'sections', section);
   }
@@ -484,7 +529,11 @@ export class CommunityProfile implements OnInit {
     this.activeSection.set(this.profileSectionOn(section) ? section : 'journey');
     this.closeMobileSidePanel();
     if (section === 'notifications') {
+      this.announcementInbox.refresh();
       this.service.markNotificationsRead();
+      this.markNoticesRead();
+    } else {
+      this.freshNoticeIds.set(new Set());
     }
   }
 

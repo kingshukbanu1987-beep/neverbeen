@@ -88,6 +88,18 @@
           }
         </a>
 
+        @if (item.path === 'users' && inUsers()) {
+          <!-- User Management: directory + insights (A–E) -->
+          <div class="nav-sub nav-sub-users" id="admin-users-nav" aria-label="User Management sections">
+            @for (sub of userItems; track sub.tab) {
+              <a routerLink="/admin/users" [queryParams]="{ tab: sub.tab === 'directory' ? null : sub.tab }" [class.active]="usersTab() === sub.tab" [title]="sub.hint" [attr.data-tab]="sub.tab">
+                <span class="nav-sub-icon" aria-hidden="true">{{ sub.icon }}</span>
+                <span class="nav-sub-label">{{ sub.label }}</span>
+              </a>
+            }
+          </div>
+        }
+
         @if (item.path === 'dashboard') {
           <!-- Mail: Inbox · Sent · Compose (messages between admins) -->
           <div class="nav-group" [class.open]="mailOpen()" [class.current]="inMail()">

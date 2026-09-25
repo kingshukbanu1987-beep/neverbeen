@@ -5,7 +5,7 @@ import {
   AdminModerationService,
   ReportDecision,
 } from '../../../services/admin-moderation.service';
-import type { AbuseReport, JourneyComment, JourneyPost } from '../../../models/community';
+import type { AbuseReport, Companion, JourneyComment, JourneyPost } from '../../../models/community';
 
 /* ------------------------------------------------------------------------ */
 /*  Types                                                                   */
@@ -346,6 +346,34 @@ export class AdminInsightsService {
     return { posts, comments, likes };
   });
 
+  /**
+   * Seed companions plus the account signed in to the community on this browser. The live
+   * account isn't part of the companion dataset, but admins must be able to find it,
+   * manage it and target it with announcements.
+   */
+  private readonly memberSources = computed<Companion[]>(() => {
+    const companions = this.community.companions();
+    const user = this.community.currentUser();
+    if (!user || companions.some((c) => Number(c.id) === Number(user.id))) return companions;
+    const prof = this.community.profile();
+    const self = this.community.getCurrentUserAsCompanion();
+    const about = prof?.aboutMeDetails ?? user.aboutMeDetails;
+    return [
+      {
+        ...self,
+        country: (prof?.countryName || prof?.country || self.country || '').trim(),
+        city: (prof?.cityName || prof?.city || self.city || '').trim(),
+        verifiedEmail: prof?.verifiedEmail || user.verifiedEmail || prof?.email || user.email || undefined,
+        aboutMeDetails: {
+          ...(about ?? {}),
+          gender: about?.gender || prof?.gender,
+          dateOfBirth: about?.dateOfBirth || prof?.dateOfBirth,
+        },
+      },
+      ...companions,
+    ];
+  });
+
   readonly members = computed<MemberInsight[]>(() => {
     const stats = this.contentStats();
     // Touch accountActions so account state stays reactive.
@@ -353,7 +381,7 @@ export class AdminInsightsService {
     const now = Date.now();
     const end = Math.min(now, ANALYTICS_END);
 
-    return this.community.companions().map((c, index) => {
+    return this.memberSources().map((c, index) => {
       const id = Number(c.id);
       const rand = seeded(id + 17);
       const dob = c.aboutMeDetails?.dateOfBirth ? new Date(c.aboutMeDetails.dateOfBirth) : null;

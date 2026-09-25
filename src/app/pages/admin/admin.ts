@@ -65,6 +65,16 @@ export class AdminLayout {
     { path: 'mail/compose', label: 'Compose', icon: '✏️', hint: 'Write to one or more admins' },
   ];
 
+  /** Sub-items shown below "User Management" while it is open. */
+  protected readonly userItems = [
+    { tab: 'directory', label: 'Directory', icon: '👥', hint: 'All accounts, segments & bulk actions' },
+    { tab: 'registrations', label: 'Registrations statistics', icon: '📈', hint: 'User registrations over time by geography, gender & age' },
+    { tab: 'active', label: 'Daily active users', icon: '⚡', hint: 'DAU / WAU / MAU by geography, gender & age' },
+    { tab: 'engagement', label: 'Most active / inactive', icon: '🔥', hint: 'Leaderboards of the most and least active users' },
+    { tab: 'disabled', label: 'Disabled users', icon: '⛔', hint: 'Disabled accounts over time, reasons & reinstatements' },
+    { tab: 'new', label: 'New users', icon: '🌱', hint: 'New users today, this week, month, year & last 5 years' },
+  ];
+
   private readonly url = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -73,6 +83,12 @@ export class AdminLayout {
     { initialValue: this.router.url },
   );
   protected readonly inMail = computed(() => this.url().startsWith('/admin/mail'));
+  protected readonly inUsers = computed(() => /^\/admin\/users(\?|$|\/)/.test(this.url()));
+  /** Current User Management tab (from ?tab=). */
+  protected readonly usersTab = computed(() => {
+    const m = /[?&]tab=([^&#]+)/.exec(this.url());
+    return m ? decodeURIComponent(m[1]) : 'directory';
+  });
   private readonly mailToggled = signal<boolean | null>(null);
   /** Open by default; the admin can collapse it (it re-opens while a Mail page is shown). */
   protected readonly mailOpen = computed(() => this.inMail() || (this.mailToggled() ?? true));

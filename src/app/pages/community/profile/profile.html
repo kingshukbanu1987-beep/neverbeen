@@ -427,8 +427,8 @@
               </svg>
             </span>
             <span class="menu-label">{{ profileLabel('notifications') }}</span>
-            @if (service.unreadNotificationCount() > 0) {
-              <span class="notif-count-badge">{{ service.unreadNotificationCount() }}</span>
+            @if (notifBadgeCount() > 0) {
+              <span class="notif-count-badge">{{ notifBadgeCount() }}</span>
             }
           </button>
           }
@@ -2546,8 +2546,51 @@
           <section class="section-pane notifications-pane">
             <header class="section-top-bar">
               <h1 class="section-title">Notifications</h1>
-              <span class="notifs-status-tag">Companionship &amp; Journey Activity</span>
+              <span class="notifs-status-tag">Announcements, Companionship &amp; Journey Activity</span>
             </header>
+
+            <!-- Announcements from the NeverBeen team (Admin Console → Announcement) -->
+            @if (adminNotices().length) {
+              <div class="ann-notices" aria-label="Announcements">
+                <div class="ann-notices-head">
+                  <span class="ann-notices-title">📣 Announcements <b>{{ adminNotices().length }}</b></span>
+                  <button type="button" class="ann-clear-all" (click)="clearAllNotices()">Clear all</button>
+                </div>
+                @for (n of adminNotices(); track n.a.id) {
+                  <article class="notification-card ann-notice" [class.unread]="isFreshNotice(n)" [attr.data-priority]="n.a.priority" [attr.data-category]="n.a.category" [attr.data-id]="n.a.id">
+                    <span class="ann-notice-icon" aria-hidden="true">{{ n.categoryIcon }}</span>
+                    <div class="notif-content">
+                      <div class="ann-notice-meta">
+                        <strong class="ann-notice-from">NeverBeen Team</strong>
+                        <span class="ann-chip">{{ n.categoryLabel }}</span>
+                        @if (n.a.priority !== 'normal') {
+                          <span class="ann-chip" [class.critical]="n.a.priority === 'critical'" [class.high]="n.a.priority === 'high'">{{ n.priorityLabel }}</span>
+                        }
+                        @if (isFreshNotice(n)) {
+                          <span class="ann-new">New</span>
+                        }
+                      </div>
+                      <h3 class="ann-notice-title">{{ n.a.title }}</h3>
+                      <p class="notif-text ann-notice-body" [innerHTML]="n.html"></p>
+                      <div class="ann-notice-foot">
+                        <span class="notif-time" [title]="n.a.sendAtUtc">{{ formatTime(n.a.sendAtUtc) }} · {{ noticeTime(n.a.sendAtUtc) }}</span>
+                        @if (n.a.ctaLabel && n.a.ctaUrl) {
+                          <button type="button" class="btn-primary-action btn-sm ann-cta" (click)="openNoticeCta(n)">{{ n.a.ctaLabel }} →</button>
+                        }
+                      </div>
+                    </div>
+                    <button type="button" class="ann-notice-clear" (click)="clearNotice(n.a.id)" [attr.aria-label]="'Clear announcement: ' + n.a.title" title="Clear from my notifications">×</button>
+                  </article>
+                }
+              </div>
+            }
+
+            @if (!adminNotices().length && !service.notifications().length) {
+              <div class="ann-empty">
+                <span aria-hidden="true">🔔</span>
+                <p>You're all caught up — new announcements and activity will appear here automatically.</p>
+              </div>
+            }
 
             <div class="notifications-list">
               @for (notif of service.notifications(); track notif.id) {

@@ -13,6 +13,7 @@ import { ManageUserService } from './manage-user.service';
       class="mu-btn"
       [class.sm]="size() === 'sm'"
       [class.on-dark]="tone() === 'dark'"
+      [class.seg]="variant() === 'segment'"
       (click)="open($event)"
       [attr.aria-label]="'Manage ' + (name() || 'user')"
       [title]="'Open ' + (name() || 'this user') + '’s account in the Manage window'"
@@ -73,6 +74,27 @@ import { ManageUserService } from './manage-user.service';
       width: 12px;
       height: 12px;
     }
+    /* Flush segment inside a joined action group (the group draws the border). */
+    .mu-btn.seg {
+      height: 100%;
+      padding: 0 0.7rem;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: #4338ca;
+      font-size: 0.74rem;
+      box-shadow: none;
+      transform: none;
+    }
+    .mu-btn.seg:hover {
+      background: #eef2ff;
+      color: #312e81;
+      box-shadow: none;
+      transform: none;
+    }
+    .mu-btn.seg:focus-visible {
+      outline-offset: -3px;
+    }
     .mu-btn.on-dark {
       background: rgba(255, 255, 255, 0.12);
       border-color: rgba(255, 255, 255, 0.3);
@@ -87,6 +109,8 @@ export class ManageUserButton {
   readonly name = input<string>('');
   readonly size = input<'md' | 'sm'>('md');
   readonly tone = input<'light' | 'dark'>('light');
+  /** 'segment' = borderless, for use inside a joined button group. */
+  readonly variant = input<'default' | 'segment'>('default');
 
   protected open(e: Event): void {
     // Rows / tiles around the button are often clickable themselves.

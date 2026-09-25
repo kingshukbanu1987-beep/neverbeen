@@ -40,28 +40,34 @@ import { ManageUserButton } from '../shared/manage-user-button';
               <p class="us-empty">No member matches “{{ term() }}”.</p>
             } @else {
               @for (m of matches().slice(0, 8); track m.id) {
-                <div class="us-row" [class.is-disabled]="m.accountState === 'disabled'">
-                  <span class="g-avatar">
-                    <img [src]="m.photo" [alt]="m.fullName" />
-                    <i class="dot" [class.on]="m.isOnline"></i>
+                <div class="us-row" [class.is-disabled]="m.accountState === 'disabled'" [attr.data-state]="m.accountState">
+                  <span class="us-photo">
+                    @if (m.photo) {
+                      <img [src]="m.photo" [alt]="m.fullName" loading="lazy" />
+                    } @else {
+                      <span class="us-initial">{{ m.fullName[0] }}</span>
+                    }
+                    <i class="us-online" [class.on]="m.isOnline" [title]="m.isOnline ? 'Online now' : 'Offline'"></i>
                   </span>
                   <span class="us-meta">
-                    <strong>
-                      {{ m.fullName }}
+                    <span class="us-name-row">
+                      <strong>{{ m.fullName }}</strong>
                       @if (m.isVerified) {
                         <span class="g-tick" title="Verified">✓</span>
                       }
-                    </strong>
-                    <small>{{ m.profession }} · {{ m.city ? m.city + ', ' : '' }}{{ m.country }}</small>
-                    <small class="mono">UID {{ m.uniqueId }} · {{ m.email }} · joined {{ shortDate(m.registeredAtUtc) }}</small>
+                      <span class="us-state" [class]="'us-state ' + stateTone(m.accountState)">{{ stateLabel(m.accountState) }}</span>
+                    </span>
+                    <small class="us-sub">{{ m.profession }}<i aria-hidden="true">·</i>📍 {{ m.city ? m.city + ', ' : '' }}{{ m.country }}</small>
+                    <small class="us-mono">UID {{ m.uniqueId }}<i aria-hidden="true">·</i>{{ m.email }}<i aria-hidden="true">·</i>joined {{ shortDate(m.registeredAtUtc) }}</small>
                   </span>
-                  <span class="g-badge" [class]="'g-badge ' + stateTone(m.accountState)">{{ stateLabel(m.accountState) }}</span>
-                  <app-manage-user-btn [userId]="m.id" [name]="m.fullName" />
-                  @if (m.accountState === 'disabled') {
-                    <button type="button" class="g-btn success" (click)="insights.enable(m.id)">Enable</button>
-                  } @else {
-                    <button type="button" class="g-btn danger" (click)="target.set(m)">⛔ Disable account</button>
-                  }
+                  <span class="us-actions" role="group" [attr.aria-label]="'Actions for ' + m.fullName">
+                    <app-manage-user-btn [userId]="m.id" [name]="m.fullName" variant="segment" />
+                    @if (m.accountState === 'disabled') {
+                      <button type="button" class="us-act enable" (click)="insights.enable(m.id)" [attr.aria-label]="'Enable ' + m.fullName">✓ Enable</button>
+                    } @else {
+                      <button type="button" class="us-act disable" (click)="target.set(m)" [attr.aria-label]="'Disable ' + m.fullName">⛔ Disable</button>
+                    }
+                  </span>
                 </div>
               }
               @if (matches().length > 8) {
@@ -155,51 +161,217 @@ import { ManageUserButton } from '../shared/manage-user-button';
         white-space: nowrap;
       }
       .us-results {
-        margin-top: 0.5rem;
-        background: #ffffff;
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 24px 48px -24px rgba(15, 23, 42, 0.6);
+        margin-top: 0.45rem;
+        padding: 0.3rem;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 16px;
+        box-shadow:
+          0 0 0 1px rgba(15, 23, 42, 0.04),
+          0 28px 56px -28px rgba(15, 23, 42, 0.65);
         color: #0f172a;
-        max-height: 420px;
+        max-height: 440px;
         overflow-y: auto;
+        scrollbar-width: thin;
       }
       .us-row {
+        position: relative;
         display: grid;
-        grid-template-columns: auto 1fr auto auto;
-        gap: 0.7rem;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 0.75rem;
         align-items: center;
-        padding: 0.6rem 0.8rem;
-        border-bottom: 1px solid #f1f5f9;
+        padding: 0.5rem 0.6rem;
+        border-radius: 12px;
+        transition: background 0.15s ease;
+      }
+      .us-row + .us-row {
+        margin-top: 2px;
+      }
+      .us-row::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 10px;
+        bottom: 10px;
+        width: 3px;
+        border-radius: 3px;
+        background: linear-gradient(180deg, #10b981, #6366f1);
+        opacity: 0;
+        transition: opacity 0.15s ease;
       }
       .us-row:hover {
-        background: #f8fafc;
+        background: linear-gradient(90deg, #f5f7ff, #f8fafc 60%);
+      }
+      .us-row:hover::before {
+        opacity: 1;
       }
       .us-row.is-disabled {
-        background: #fef2f2;
+        background: #fff5f5;
+      }
+      .us-row.is-disabled .us-photo img {
+        filter: grayscale(0.85);
+        opacity: 0.75;
+      }
+      .us-photo {
+        position: relative;
+        flex: 0 0 auto;
+        width: 50px;
+        height: 50px;
+      }
+      .us-photo img,
+      .us-initial {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        object-fit: cover;
+        display: block;
+        background: #e2e8f0;
+        box-shadow:
+          0 0 0 2px #ffffff,
+          0 6px 14px -8px rgba(15, 23, 42, 0.55);
+      }
+      .us-initial {
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: #ffffff;
+        background: linear-gradient(135deg, #6366f1, #10b981);
+      }
+      .us-online {
+        position: absolute;
+        right: -3px;
+        bottom: -3px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #cbd5e1;
+        border: 2.5px solid #ffffff;
+      }
+      .us-online.on {
+        background: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
       }
       .us-meta {
         display: flex;
         flex-direction: column;
+        gap: 0.08rem;
         min-width: 0;
         line-height: 1.3;
       }
-      .us-meta strong {
-        font-size: 0.86rem;
+      .us-name-row {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-width: 0;
+      }
+      .us-name-row strong {
+        font-size: 0.9rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .us-state {
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        gap: 0.28rem;
+        flex: 0 0 auto;
+        font-size: 0.64rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        padding: 0.12rem 0.5rem 0.12rem 0.42rem;
+        border-radius: 999px;
+        color: #475569;
+        background: #f1f5f9;
       }
-      .us-meta small {
+      .us-state::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .us-state.ok {
+        color: #047857;
+        background: #d1fae5;
+      }
+      .us-state.danger {
+        color: #b91c1c;
+        background: #fee2e2;
+      }
+      .us-state.warn {
+        color: #92400e;
+        background: #fef3c7;
+      }
+      .us-state.violet {
+        color: #6d28d9;
+        background: #ede9fe;
+      }
+      .us-sub,
+      .us-mono {
         font-size: 0.72rem;
         color: #64748b;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .us-meta .mono {
-        font-variant-numeric: tabular-nums;
+      .us-mono {
+        font-size: 0.68rem;
         color: #94a3b8;
+        font-variant-numeric: tabular-nums;
+      }
+      .us-sub i,
+      .us-mono i {
+        font-style: normal;
+        margin: 0 0.35rem;
+        color: #cbd5e1;
+      }
+      .us-actions {
+        display: inline-flex;
+        align-items: stretch;
+        height: 32px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow:
+          0 0 0 1px #e2e8f0,
+          0 4px 10px -8px rgba(15, 23, 42, 0.45);
+      }
+      .us-act {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0 0.75rem;
+        border: 0;
+        border-left: 1px solid #e2e8f0;
+        background: transparent;
+        font: inherit;
+        font-size: 0.74rem;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .us-act.disable {
+        color: #b91c1c;
+      }
+      .us-act.disable:hover {
+        color: #ffffff;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+      }
+      .us-act.enable {
+        color: #047857;
+      }
+      .us-act.enable:hover {
+        color: #ffffff;
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+      .us-act:focus-visible {
+        outline: 3px solid rgba(99, 102, 241, 0.45);
+        outline-offset: -3px;
       }
       .us-empty,
       .us-more {
@@ -214,7 +386,11 @@ import { ManageUserButton } from '../shared/manage-user-button';
           grid-template-columns: 1fr;
         }
         .us-row {
-          grid-template-columns: auto 1fr;
+          grid-template-columns: auto minmax(0, 1fr);
+        }
+        .us-actions {
+          grid-column: 1 / -1;
+          justify-self: end;
         }
       }
     `,

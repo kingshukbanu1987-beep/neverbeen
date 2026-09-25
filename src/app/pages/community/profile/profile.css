@@ -2289,6 +2289,161 @@
   margin-top: 0.35rem;
 }
 
+/* Admin announcements in Notifications */
+.ann-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+}
+.ann-notices-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ann-notices-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+}
+.ann-notices-title b {
+  margin-left: 0.25rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  color: #fff;
+  background: #6366f1;
+}
+.ann-clear-all {
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748b;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.ann-clear-all:hover {
+  color: #dc2626;
+}
+.ann-notice {
+  position: relative;
+  border-left: 4px solid #6366f1;
+  animation: annIn 0.35s ease-out;
+}
+.ann-notice.unread {
+  background: linear-gradient(90deg, #eef2ff, #ffffff 70%);
+  border-color: #c7d2fe;
+  border-left-color: #6366f1;
+}
+.ann-notice[data-priority='high'] {
+  border-left-color: #f59e0b;
+}
+.ann-notice[data-priority='critical'] {
+  border-left-color: #ef4444;
+}
+.ann-notice[data-priority='critical'].unread {
+  background: linear-gradient(90deg, #fef2f2, #ffffff 70%);
+  border-color: #fecaca;
+  border-left-color: #ef4444;
+}
+@keyframes annIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.ann-notice-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  font-size: 1.15rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0e7ff, #fce7f3);
+}
+.ann-notice-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.15rem;
+}
+.ann-notice-from {
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+.ann-chip {
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  color: #475569;
+  background: #f1f5f9;
+}
+.ann-chip.high {
+  color: #92400e;
+  background: #fef3c7;
+}
+.ann-chip.critical {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+.ann-new {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+}
+.ann-notice-title {
+  margin: 0.1rem 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.ann-notice-body {
+  line-height: 1.45;
+}
+.ann-notice-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.2rem;
+}
+.ann-notice-clear {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #94a3b8;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.ann-notice-clear:hover {
+  color: #dc2626;
+  background: #fee2e2;
+}
+.ann-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+.ann-empty span {
+  font-size: 2rem;
+}
+
 .about-overview-card,
 .edit-profile-card,
 .settings-card {

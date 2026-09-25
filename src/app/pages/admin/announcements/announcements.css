@@ -2376,3 +2376,22 @@ td.an-author .an-av {
     grid-template-columns: 1fr;
   }
 }
+
+/* Notifications channel is always on (every live announcement reaches members' Notifications). */
+.an-channel.locked {
+  cursor: default;
+}
+
+.an-channel.locked::after {
+  content: 'Always on';
+  position: absolute;
+  top: 6px;
+  right: 30px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #047857;
+  background: #d1fae5;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+}

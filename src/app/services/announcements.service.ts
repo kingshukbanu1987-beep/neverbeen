@@ -95,7 +95,7 @@ export const ANN_PRIORITY_META: Record<AnnPriority, { label: string; tone: strin
 
 export const ANN_CHANNEL_META: Record<AnnChannel, { label: string; icon: string; hint: string }> = {
   banner: { label: 'In-app banner', icon: '🪧', hint: 'Slim banner at the top of the website' },
-  inbox: { label: 'Notifications', icon: '🔔', hint: 'Bell / notification centre' },
+  inbox: { label: 'Notifications', icon: '🔔', hint: 'Always on — shown in every recipient’s profile → Notifications' },
   push: { label: 'Push', icon: '📱', hint: 'Mobile & browser push notification' },
   email: { label: 'Email', icon: '✉️', hint: 'Sent to the member’s verified email' },
 };
@@ -228,11 +228,51 @@ export class AnnouncementsService {
    */
   readonly ready: Promise<void> = this.stored ? Promise.resolve() : this.loadSeed();
   readonly dismissed = signal<string[]>(this.loadDismissed());
+  /**
+   * Set when the last change could not be written to browser storage (e.g. storage full).
+   * The change still applies in this tab, but other tabs / reloads won't see it.
+   */
+  readonly saveError = signal<string | null>(null);
 
   constructor() {
     if (typeof window === 'undefined') return;
-    const id = window.setInterval(() => this.now.set(Date.now()), 30_000);
-    inject(DestroyRef).onDestroy(() => window.clearInterval(id));
+    // Every tick also re-reads storage: `storage` events are not delivered to every tab
+    // (e.g. background / discarded tabs, some privacy modes), so polling is the safety net.
+    const id = window.setInterval(() => this.resync(), 30_000);
+    // Another tab (e.g. the Admin Console) published / changed announcements → deliver them here too.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === ANNOUNCEMENTS_KEY || e.key === null) {
+        this.resync();
+      } else if (e.key === ANNOUNCEMENTS_DISMISSED_KEY) {
+        this.dismissed.set(this.loadDismissed());
+      }
+    };
+    const onFocus = () => this.resync();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') this.resync();
+    };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    inject(DestroyRef).onDestroy(() => {
+      window.clearInterval(id);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    });
+  }
+
+  /** Pick up announcements published from another tab / window and refresh the clock. */
+  resync(): void {
+    const raw = this.readRaw();
+    if (raw !== null && raw !== this.lastRaw) {
+      const next = this.parse(raw);
+      if (next) {
+        this.lastRaw = raw;
+        this.items.set(next);
+      }
+    }
+    this.now.set(Date.now());
   }
 
   readonly scheduledCount = computed(() => {
@@ -260,6 +300,8 @@ export class AnnouncementsService {
     const r = (Date.now() % 997) / 997;
     const a: Announcement = {
       ...input,
+      // Every announcement is delivered to members' Notifications.
+      channels: input.channels.includes('inbox') ? input.channels : ['inbox', ...input.channels],
       id: 'an-' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
       createdBy: by,
       pinned: input.pinned ?? false,
@@ -269,6 +311,7 @@ export class AnnouncementsService {
       history: [{ atUtc: now, by, action: input.state === 'draft' ? 'Saved as draft' : Date.parse(input.sendAtUtc) > Date.now() + 60_000 ? 'Scheduled' : 'Published' }],
     };
     this.items.update((l) => [a, ...l]);
+    this.now.set(Date.now()); // a just-published announcement is live immediately
     this.persist();
     return a;
   }
@@ -284,6 +327,7 @@ export class AnnouncementsService {
         return out;
       }),
     );
+    this.now.set(Date.now());
     this.persist();
     return out;
   }
@@ -340,17 +384,31 @@ export class AnnouncementsService {
     }
   }
 
-  private load(): Announcement[] | null {
+  /** The raw stored JSON last read from / written to storage by this tab. */
+  private lastRaw: string | null = null;
+
+  private readRaw(): string | null {
     try {
-      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(ANNOUNCEMENTS_KEY) : null;
-      if (raw) {
-        const parsed = JSON.parse(raw) as Stored;
-        if (Array.isArray(parsed?.items)) return parsed.items;
-      }
+      return typeof localStorage !== 'undefined' ? localStorage.getItem(ANNOUNCEMENTS_KEY) : null;
     } catch {
-      /* fall back to seed */
+      return null;
     }
-    return null;
+  }
+
+  private parse(raw: string): Announcement[] | null {
+    try {
+      const parsed = JSON.parse(raw) as Stored;
+      return Array.isArray(parsed?.items) ? parsed.items : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private load(): Announcement[] | null {
+    const raw = this.readRaw();
+    const items = raw ? this.parse(raw) : null;
+    if (items) this.lastRaw = raw;
+    return items;
   }
 
   private async loadSeed(): Promise<void> {
@@ -377,10 +435,29 @@ export class AnnouncementsService {
   }
 
   private persist(): void {
-    try {
-      localStorage.setItem(ANNOUNCEMENTS_KEY, JSON.stringify({ items: this.items() } satisfies Stored));
-    } catch {
-      /* storage full / unavailable — kept in memory */
+    const write = (items: Announcement[]): boolean => {
+      try {
+        const raw = JSON.stringify({ items } satisfies Stored);
+        localStorage.setItem(ANNOUNCEMENTS_KEY, raw);
+        this.lastRaw = raw;
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    if (write(this.items())) {
+      this.saveError.set(null);
+      return;
     }
+    // Storage is nearly full (the community keeps large datasets here) — retry with the
+    // audit history trimmed so the announcements themselves still reach other tabs.
+    const compact = this.items().map((a) => ({ ...a, history: (a.history ?? []).slice(-3) }));
+    if (write(compact)) {
+      this.saveError.set(null);
+      return;
+    }
+    this.saveError.set(
+      'Browser storage is full, so this change is only visible in this tab. Free up site storage and save again to deliver it to members.',
+    );
   }
 }

@@ -68,7 +68,7 @@ describe('Admin Console', () => {
     expect(rows.length).toBeGreaterThan(0);
 
     const before = new Set(moderation.disabledUserIds());
-    (rows[0].querySelector('.g-btn.danger') as HTMLButtonElement).click();
+    (rows[0].querySelector('.us-act.disable') as HTMLButtonElement).click();
     fixture.detectChanges();
     const confirm = document.body.querySelector('.g-modal .g-btn.danger') as HTMLButtonElement;
     expect(confirm).toBeTruthy();

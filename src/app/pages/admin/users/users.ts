@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -10,8 +10,10 @@ import { AdminRolesMatrix } from './roles-matrix';
 import { AdminSessionsSecurity } from './sessions-security';
 import { AdminAuditLog } from '../shared/admin-audit-log';
 import type { AuditCategory } from '../../../services/admin-audit.service';
+import { AdminUserInsights, INSIGHT_SECTIONS, InsightSection } from './insights/user-insights';
 
-type UsersTab = 'directory' | 'roles' | 'sessions' | 'audit';
+type ManageTab = 'directory' | 'roles' | 'sessions' | 'audit';
+type UsersTab = ManageTab | InsightSection;
 
 const DAY = 864e5;
 
@@ -21,7 +23,7 @@ const DAY = 864e5;
  */
 @Component({
   selector: 'app-admin-users',
-  imports: [AdminUserDirectory, AdminUserDrawer, AdminRolesMatrix, AdminSessionsSecurity, AdminAuditLog],
+  imports: [AdminUserDirectory, AdminUserDrawer, AdminRolesMatrix, AdminSessionsSecurity, AdminAuditLog, AdminUserInsights],
   styleUrls: ['../shared/admin-grid.css', './users.css'],
   template: `
     <header class="g-page-head">
@@ -31,6 +33,7 @@ const DAY = 864e5;
       </div>
     </header>
 
+    @if (!isInsight()) {
     <div class="g-kpis um-kpis">
       @for (k of kpis(); track k.label) {
         <div class="g-kpi" [style.--kpi-glow]="k.glow">
@@ -43,6 +46,7 @@ const DAY = 864e5;
         </div>
       }
     </div>
+    }
 
     <div class="um-tabs-row">
       <nav class="g-tabs" role="tablist" aria-label="User management sections">
@@ -52,6 +56,14 @@ const DAY = 864e5;
             @if (t.key === 'sessions' && alertCount()) {
               <span class="count">{{ alertCount() }}</span>
             }
+          </button>
+        }
+      </nav>
+      <nav class="um-insight-tabs" role="tablist" aria-label="User insights">
+        <span class="um-insight-label">📊 Insights</span>
+        @for (t of insightTabs; track t.key) {
+          <button type="button" role="tab" class="um-itab" [class.active]="tab() === t.key" [attr.aria-selected]="tab() === t.key" [attr.data-tab]="t.key" (click)="setTab(t.key)" [title]="t.title">
+            <span aria-hidden="true">{{ t.icon }}</span> {{ t.label }}
           </button>
         }
       </nav>
@@ -69,6 +81,13 @@ const DAY = 864e5;
       }
       @case ('audit') {
         <app-admin-audit-log [categories]="auditCategories" />
+      }
+      @default {
+        @defer (on immediate) {
+          <app-admin-user-insights [section]="insightTab()" />
+        } @placeholder {
+          <div class="um-skeleton" aria-busy="true" aria-label="Loading insights"><i></i><i></i><i></i></div>
+        }
       }
     }
 
@@ -89,6 +108,7 @@ export class AdminUsers {
     { key: 'sessions', label: 'Sessions & security', icon: '🔐' },
     { key: 'audit', label: 'Audit log', icon: '🧾' },
   ];
+  protected readonly insightTabs = INSIGHT_SECTIONS;
   protected readonly auditCategories: AuditCategory[] = ['account', 'moderation', 'role', 'security'];
 
   private readonly query = toSignal(this.route.queryParamMap.pipe(map((p) => ({ tab: p.get('tab'), user: p.get('user') }))), {
@@ -99,8 +119,18 @@ export class AdminUsers {
 
   protected readonly tab = computed<UsersTab>(() => {
     const t = this.localTab() ?? this.query().tab;
-    return this.tabs.some((x) => x.key === t) ? (t as UsersTab) : 'directory';
+    return this.tabs.some((x) => x.key === t) || INSIGHT_SECTIONS.some((x) => x.key === t) ? (t as UsersTab) : 'directory';
   });
+  protected readonly isInsight = computed(() => INSIGHT_SECTIONS.some((x) => x.key === this.tab()));
+  protected readonly insightTab = computed<InsightSection>(() => (this.isInsight() ? (this.tab() as InsightSection) : 'registrations'));
+
+  constructor() {
+    // A new ?tab= in the URL (e.g. from the side panel) wins over the last clicked tab.
+    effect(() => {
+      this.query().tab;
+      untracked(() => this.localTab.set(null));
+    });
+  }
 
   protected readonly openId = computed<number | null>(() => {
     const local = this.localOpen();

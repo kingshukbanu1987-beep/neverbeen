@@ -117,7 +117,7 @@ export class AdminAnnouncementComposer {
     this.body.set(src.body);
     this.category.set(src.category);
     this.priority.set(src.priority);
-    this.channels.set([...src.channels]);
+    this.channels.set(src.channels.includes('inbox') ? [...src.channels] : ['inbox', ...src.channels]);
     this.ctaLabel.set(src.ctaLabel ?? '');
     this.ctaUrl.set(src.ctaUrl ?? '');
     this.pinned.set(editable ? src.pinned : false);
@@ -343,6 +343,7 @@ export class AdminAnnouncementComposer {
   /* -------------------------------- delivery -------------------------------- */
 
   protected toggleChannel(c: AnnChannel): void {
+    if (c === 'inbox') return; // always delivered to Notifications
     const cur = this.channels();
     this.channels.set(cur.includes(c) ? cur.filter((x) => x !== c) : this.channelKeys.filter((k) => k === c || cur.includes(k)));
   }
@@ -407,7 +408,14 @@ export class AdminAnnouncementComposer {
     this.confirming.set(false);
     const a = this.save('published');
     const scheduled = this.schedule() === 'later';
-    this.insights.notify(scheduled ? `Announcement scheduled for ${this.reach().toLocaleString()} user(s).` : `Announcement published to ${this.reach().toLocaleString()} user(s).`);
+    const failed = this.svc.saveError();
+    this.insights.notify(
+      failed
+        ? `⚠ Published here, but not saved: ${failed}`
+        : scheduled
+          ? `Announcement scheduled for ${this.reach().toLocaleString()} user(s).`
+          : `Announcement published to ${this.reach().toLocaleString()} user(s).`,
+    );
     this.router.navigate(['/admin/announcements'], { queryParams: { a: a.id } });
   }
 

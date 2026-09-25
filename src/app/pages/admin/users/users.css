@@ -34,7 +34,79 @@
 }
 
 .um-tabs-row {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin-bottom: 0.6rem;
+}
+
+/* Insights tab group (A–E) */
+.um-insight-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eef2ff, #ecfdf5);
+  border: 1px solid #e0e7ff;
+}
+
+.um-insight-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4338ca;
+  padding: 0 0.45rem 0 0.35rem;
+}
+
+.um-itab {
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #3730a3;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.um-itab:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.um-itab.active {
+  color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 4px 14px -6px rgba(79, 70, 229, 0.7);
+}
+
+.um-skeleton {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.um-skeleton i {
+  display: block;
+  height: 90px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #f1f5f9, #e2e8f0, #f1f5f9);
+  background-size: 200% 100%;
+  animation: umShimmer 1.2s linear infinite;
+}
+
+.um-skeleton i:last-child {
+  height: 280px;
+}
+
+@keyframes umShimmer {
+  to {
+    background-position: -200% 0;
+  }
 }
 
 /* ---------- Segments ---------- */

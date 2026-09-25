@@ -76,9 +76,9 @@ describe('Admin Console — Manage everywhere, Announcements, live admins, Whats
     expect(rows.length).toBeGreaterThan(0);
     rows.forEach((r) => {
       expect(r.querySelector('app-manage-user-btn button')?.textContent).toContain('Manage');
-      expect(r.querySelector('.g-btn.danger, .g-btn.success')).toBeTruthy(); // existing Disable / Enable stays
+      expect(r.querySelector('.us-actions .us-act.disable, .us-actions .us-act.enable')).toBeTruthy(); // Disable / Enable stays
     });
-    const name = rows[0].querySelector('.us-meta strong')?.textContent?.trim().replace('✓', '').trim();
+    const name = rows[0].querySelector('.us-name-row strong')?.textContent?.trim().replace('✓', '').trim();
     (rows[0].querySelector('app-manage-user-btn button') as HTMLButtonElement).click();
     fixture.detectChanges();
     const drawer = el.querySelector('.ud') as HTMLElement;

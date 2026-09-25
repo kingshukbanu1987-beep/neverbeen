@@ -257,7 +257,7 @@
         <header><span class="an-step-n">3</span><div><h3>Delivery</h3><p>Where and when users receive it.</p></div></header>
         <div class="an-channels">
           @for (c of channelKeys; track c) {
-            <button type="button" class="an-channel" [class.on]="channels().includes(c)" [attr.aria-pressed]="channels().includes(c)" (click)="toggleChannel(c)">
+            <button type="button" class="an-channel" [class.on]="channels().includes(c) || c === 'inbox'" [class.locked]="c === 'inbox'" [attr.aria-pressed]="channels().includes(c) || c === 'inbox'" [attr.aria-disabled]="c === 'inbox' ? 'true' : null" (click)="toggleChannel(c)">
               <span>{{ chMeta[c].icon }}</span>
               <b>{{ chMeta[c].label }}</b>
               <small>{{ chMeta[c].hint }}</small>
