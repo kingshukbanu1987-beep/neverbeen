@@ -3,6 +3,7 @@ import { AdminInsightsService, MemberInsight, downloadCsv, shortDate, timeAgo } 
 import { AdminUserOpsService, ROLES, UserRole, roleLabel, roleMeta } from '../shared/admin-user-ops.service';
 import { AccountState, AdminModerationService, accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 type Segment =
   | 'all'
@@ -43,7 +44,7 @@ const SEGMENTS: { key: Segment; label: string; icon: string }[] = [
 /** User Management › Directory — segments, advanced filters, multi-select bulk actions. */
 @Component({
   selector: 'app-admin-user-directory',
-  imports: [AdminConfirmDialog],
+  imports: [SelectValueSync, AdminConfirmDialog],
   templateUrl: './user-directory.html',
   styleUrls: ['../shared/admin-grid.css', './users.css'],
 })

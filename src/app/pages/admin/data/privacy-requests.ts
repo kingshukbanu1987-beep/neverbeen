@@ -5,6 +5,7 @@ import { AdminDataOpsService, PRIVACY_TYPES, PrivacyRequest, PrivacyStatus, Priv
 import { AdminInsightsService, shortDate, timeAgo } from '../shared/admin-insights.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { daysUntil } from './format';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 type StatusFilter = 'open' | 'all' | PrivacyStatus;
 
@@ -18,7 +19,7 @@ const STATUS_META: Record<PrivacyStatus, { label: string; tone: string }> = {
 /** Data-subject request (DSAR) inbox — GDPR / DPDP Act / CCPA with 30-day SLA tracking and one-click fulfilment. */
 @Component({
   selector: 'app-admin-privacy-requests',
-  imports: [AdminConfirmDialog, OverlayPortal],
+  imports: [SelectValueSync, AdminConfirmDialog, OverlayPortal],
   styleUrls: ['../shared/admin-grid.css', './data.css'],
   template: `
     <div class="dm-dsar-summary">

@@ -16,6 +16,7 @@ import { downloadJson } from '../shared/admin-data-ops.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { AdminAuditLog } from '../shared/admin-audit-log';
 import { MaintenancePage } from '../../../layout/maintenance-page/maintenance-page';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 type StartMode = 'now' | 'at';
 type EndMode = 'duration' | 'at' | 'manual';
@@ -43,7 +44,7 @@ export function formatDuration(ms: number): string {
  */
 @Component({
   selector: 'app-admin-maintenance',
-  imports: [DatePipe, RouterLink, AdminConfirmDialog, AdminAuditLog, MaintenancePage],
+  imports: [SelectValueSync, DatePipe, RouterLink, AdminConfirmDialog, AdminAuditLog, MaintenancePage],
   styleUrls: ['../shared/admin-grid.css', '../website/website.css', './maintenance.css'],
   templateUrl: './maintenance.html',
 })

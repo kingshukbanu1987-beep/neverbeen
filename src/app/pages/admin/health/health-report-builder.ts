@@ -6,6 +6,7 @@ import { downloadBlob } from './xlsx';
 import { AdminAuditService } from '../../../services/admin-audit.service';
 import { AdminAuthService } from '../../../services/admin-auth.service';
 import { AdminInsightsService } from '../shared/admin-insights.service';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 const PRESET_KEY = 'neverbeen_health_report_presets';
 
@@ -21,7 +22,7 @@ interface ReportPreset {
  */
 @Component({
   selector: 'app-health-report-builder',
-  imports: [OverlayPortal],
+  imports: [SelectValueSync, OverlayPortal],
   styleUrls: ['../shared/admin-grid.css', '../website/website.css', './health-report-builder.css'],
   template: `
     <div class="g-modal-backdrop" appOverlayPortal (click)="closed.emit()">

@@ -33,6 +33,7 @@ import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-m
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 import { UserHoverCard, UserPreviewDirective } from '../../../shared/user-hover-card';
 import { CommentThreadComponent } from './comment-item';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 export type ProfileSection =
   | 'journey'
@@ -48,7 +49,7 @@ export type ProfileSection =
 @Component({
   selector: 'app-community-profile',
   standalone: true,
-  imports: [
+  imports: [SelectValueSync, 
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

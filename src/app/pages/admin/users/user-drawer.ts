@@ -18,6 +18,7 @@ import { CommunityService } from '../../../services/community.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { AdminIdentityService, IDENTITY_STATUS_META } from '../shared/admin-identity.service';
 import type { JourneyComment } from '../../../models/community';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 type Tab = 'overview' | 'activity' | 'moderation' | 'security' | 'notes';
 type Pending = 'disable' | 'identity' | 'erase' | 'signout' | null;
@@ -33,7 +34,7 @@ interface TimelineItem {
 /** User 360° drawer — full profile, activity, moderation, security/devices, notes/tags and every account control. */
 @Component({
   selector: 'app-admin-user-drawer',
-  imports: [AdminConfirmDialog, NgTemplateOutlet, OverlayPortal],
+  imports: [SelectValueSync, AdminConfirmDialog, NgTemplateOutlet, OverlayPortal],
   templateUrl: './user-drawer.html',
   styleUrls: ['../shared/admin-grid.css', './user-drawer.css'],
 })

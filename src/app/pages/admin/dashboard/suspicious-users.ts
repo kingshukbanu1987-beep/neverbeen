@@ -9,13 +9,14 @@ import {
 } from '../shared/admin-insights.service';
 import { AccountState, accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 type SortKey = 'risk' | 'name' | 'flags' | 'last';
 
 /** Dashboard section: grid of members flagged by content scans, reports and behaviour signals. */
 @Component({
   selector: 'app-admin-suspicious-users',
-  imports: [AdminConfirmDialog],
+  imports: [SelectValueSync, AdminConfirmDialog],
   template: `
     <section class="g-panel" id="suspicious-users">
       <header class="sus-head">

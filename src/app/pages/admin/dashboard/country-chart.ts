@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { AGE_GROUPS, AdminInsightsService, PROFESSION_CATEGORIES } from '../shared/admin-insights.service';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 interface CountryRow {
   country: string;
@@ -16,6 +17,7 @@ const DONUT_COLORS = ['#10b981', '#6366f1', '#f59e0b', '#ec4899', '#0ea5e9', '#9
 /** H — Country-wise member statistics with Gender / Age group / Profession / Verification filters. */
 @Component({
   selector: 'app-admin-country-chart',
+  imports: [SelectValueSync],
   template: `
     <section class="c-card">
       <header class="c-head">

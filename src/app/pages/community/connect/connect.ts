@@ -3,6 +3,7 @@ import { SiteConfigService } from '../../../services/site-config.service';
 import { Router, RouterLink } from '@angular/router';
 import { CommunityService, FacebookIdentity, GoogleIdentity } from '../../../services/community.service';
 import { TranslationService } from '../../../services/translation.service';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 type GoogleButtonStep = Extract<
   Awaited<ReturnType<CommunityService['signInWithGoogle']>>,
@@ -11,7 +12,7 @@ type GoogleButtonStep = Extract<
 
 @Component({
   selector: 'app-community-connect',
-  imports: [RouterLink],
+  imports: [SelectValueSync, RouterLink],
   templateUrl: './connect.html',
   styleUrl: './connect.css',
 })

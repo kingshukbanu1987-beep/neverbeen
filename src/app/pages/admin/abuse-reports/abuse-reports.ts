@@ -12,6 +12,7 @@ import {
   accountStateLabel,
 } from '../../../services/admin-moderation.service';
 import { CommunityService } from '../../../services/community.service';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 interface DraftDecision {
   decision: ReportDecisionType | '';
@@ -29,7 +30,7 @@ type Tab = 'pending' | 'resolved' | 'all';
  */
 @Component({
   selector: 'app-admin-abuse-reports',
-  imports: [RouterLink],
+  imports: [SelectValueSync, RouterLink],
   templateUrl: './abuse-reports.html',
   styleUrls: ['../shared/admin-grid.css', './abuse-reports.css'],
 })

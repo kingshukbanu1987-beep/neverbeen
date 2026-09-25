@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { AdminInsightsService } from '../shared/admin-insights.service';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 interface Bucket {
   key: string;
@@ -13,6 +14,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 /** I — Member registration statistics with Country / Year / Month / Date filters. */
 @Component({
   selector: 'app-admin-registration-chart',
+  imports: [SelectValueSync],
   template: `
     <section class="c-card">
       <header class="c-head">

@@ -3,6 +3,7 @@ import { AdminDataOpsService, isPiiField, maskValue } from '../shared/admin-data
 import { AdminInsightsService } from '../shared/admin-insights.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { CLASS_TONE } from './format';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 interface ExplorerRecord {
   index: number | string;
@@ -35,7 +36,7 @@ function titleOf(r: unknown, fallback: string): { title: string; subtitle: strin
 /** Browse any dataset record-by-record with PII masking, search and record deletion. */
 @Component({
   selector: 'app-admin-data-explorer',
-  imports: [AdminConfirmDialog],
+  imports: [SelectValueSync, AdminConfirmDialog],
   styleUrls: ['../shared/admin-grid.css', './data.css'],
   template: `
     <section class="g-panel">

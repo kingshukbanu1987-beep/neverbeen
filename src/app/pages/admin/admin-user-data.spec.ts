@@ -356,4 +356,59 @@ describe('Admin User & Data Management', () => {
     click(buttonByText(drawer, 'Export devices'));
     expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
   });
+  it("Manage drawer's Role dropdown shows the user's actual role (not the first option)", async () => {
+    TestBed.configureTestingModule({ imports: [AdminUserDrawer], providers: [provideRouter([])] });
+    const insights = TestBed.inject(AdminInsightsService);
+    const ops = TestBed.inject(AdminUserOpsService);
+    const byRole = new Map<string, number>();
+    for (const m of insights.members()) if (!byRole.has(ops.roleOf(m.id))) byRole.set(ops.roleOf(m.id), m.id);
+    // Non-default roles present in the seed (the Administrator is the separate admin login, not a member).
+    for (const r of ['moderator', 'ambassador', 'creator']) expect(byRole.has(r)).toBe(true);
+
+    // Each "Manage" click opens a brand-new drawer, so check the very first render for every role.
+    for (const [role, id] of byRole) {
+      const f = TestBed.createComponent(AdminUserDrawer);
+      f.componentRef.setInput('userId', id);
+      f.detectChanges();
+      await f.whenStable();
+      const root: HTMLElement = f.nativeElement;
+      const sel = root.querySelector('.ud-role select') as HTMLSelectElement;
+      expect(sel.value).toBe(role);
+      const badge = root.querySelector('.ud-badges .g-badge:nth-child(2)')!.textContent!.trim();
+      expect(badge).toContain(sel.selectedOptions[0].textContent!.trim().split(' ').pop()!);
+      f.destroy();
+    }
+
+    // Changing the role updates the stored role, the badge and the dropdown together.
+    const [, memberId] = [...byRole].find(([r]) => r === 'member')!;
+    const fixture = TestBed.createComponent(AdminUserDrawer);
+    const el: HTMLElement = fixture.nativeElement;
+    const select = () => el.querySelector('.ud-role select') as HTMLSelectElement;
+    fixture.componentRef.setInput('userId', memberId);
+    fixture.detectChanges();
+    select().value = 'moderator';
+    select().dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(ops.roleOf(memberId)).toBe('moderator');
+    expect(select().value).toBe('moderator');
+    expect(el.querySelector('.ud-badges')!.textContent).toContain('Moderator');
+  });
+
+  it('Directory role filter keeps the chosen role selected', async () => {
+    TestBed.configureTestingModule({ imports: [AdminUsers], providers: [provideRouter([])] });
+    const fixture = TestBed.createComponent(AdminUsers);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const roleFilter = [...el.querySelectorAll('app-admin-user-directory select')].find((s) =>
+      [...(s as HTMLSelectElement).options].some((o) => o.textContent?.includes('All roles')),
+    ) as HTMLSelectElement;
+    roleFilter.value = 'moderator';
+    roleFilter.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(roleFilter.value).toBe('moderator');
+    const badges = [...el.querySelectorAll('app-admin-user-directory tbody tr td .g-badge')].map((b) => b.textContent ?? '');
+    expect(badges.some((b) => b.includes('Moderator'))).toBe(true);
+  });
 });

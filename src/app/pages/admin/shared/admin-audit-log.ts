@@ -1,10 +1,12 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { AdminAuditService, AUDIT_CATEGORY_META, AuditCategory } from '../../../services/admin-audit.service';
 import { downloadCsv, timeAgo } from './admin-insights.service';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 /** Searchable, filterable audit trail of admin actions — reused by User & Data Management. */
 @Component({
   selector: 'app-admin-audit-log',
+  imports: [SelectValueSync],
   styleUrls: ['./admin-grid.css', '../users/users.css'],
   template: `
     <section class="g-panel">

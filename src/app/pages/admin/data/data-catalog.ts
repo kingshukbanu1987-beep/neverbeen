@@ -3,11 +3,12 @@ import { AdminDataOpsService, DatasetInfo, STORAGE_QUOTA } from '../shared/admin
 import { AdminInsightsService } from '../shared/admin-insights.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { CLASS_TONE, formatBytes } from './format';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 /** Dataset catalog: storage meter, classification, owner, PII inventory, export & clear. */
 @Component({
   selector: 'app-admin-data-catalog',
-  imports: [AdminConfirmDialog],
+  imports: [SelectValueSync, AdminConfirmDialog],
   styleUrls: ['../shared/admin-grid.css', './data.css'],
   template: `
     <section class="g-panel dm-storage">

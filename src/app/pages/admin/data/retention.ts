@@ -2,11 +2,12 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { AdminDataOpsService, RETENTION_OPTIONS, RetentionPolicy } from '../shared/admin-data-ops.service';
 import { AdminInsightsService, timeAgo } from '../shared/admin-insights.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 /** Retention policies — how long each dataset is kept, what happens after, and auto-purge. */
 @Component({
   selector: 'app-admin-retention',
-  imports: [AdminConfirmDialog],
+  imports: [SelectValueSync, AdminConfirmDialog],
   styleUrls: ['../shared/admin-grid.css', './data.css'],
   template: `
     <section class="g-panel">
