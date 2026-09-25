@@ -99,9 +99,17 @@ export class AdminAnnouncementComposer {
   constructor() {
     const q = this.route.snapshot.queryParamMap;
     const editId = q.get('edit');
-    const copyId = q.get('copy');
-    const src = this.svc.byId(editId ?? copyId);
+    const id = editId ?? q.get('copy');
+    if (!id) return;
+    if (this.svc.byId(id)) this.prefill(id, !!editId);
+    // Opened directly on a fresh session: the sample announcements may still be loading.
+    else this.svc.ready.then(() => this.prefill(id, !!editId));
+  }
+
+  private prefill(id: string, isEdit: boolean): void {
+    const src = this.svc.byId(id);
     if (!src) return;
+    const editId = isEdit ? id : null;
     const editable = !!editId && ['draft', 'scheduled'].includes(statusOf(src));
     if (editable) this.editId.set(src.id);
     else this.copiedFrom.set(src.title);

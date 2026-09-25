@@ -142,8 +142,9 @@ describe('Admin Console — Manage everywhere, Announcements, live admins, Whats
 
   /* ------------------------------ C + side panel ------------------------------ */
 
-  it('C: side panel shows live admins next to live members; Announcement and WhatsApp follow Mail', () => {
+  it('C: side panel shows live admins next to live members; Announcement and WhatsApp follow Mail', async () => {
     TestBed.configureTestingModule({ imports: [AdminLayout], providers: [provideRouter([])] });
+    await TestBed.inject(AnnouncementsService).ready;
     const fixture = TestBed.createComponent(AdminLayout);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
@@ -197,8 +198,9 @@ describe('Admin Console — Manage everywhere, Announcements, live admins, Whats
     expect(describeAudience({ ...emptyAudience('users'), userIds: [1, 2], groupNames: ['Top contributors'] })).toBe('2 selected users · Top contributors');
   });
 
-  it('B: seeded announcements from other admins in every status; banner only reaches matching visitors', () => {
+  it('B: seeded announcements from other admins in every status; banner only reaches matching visitors', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    await TestBed.inject(AnnouncementsService).ready;
     const svc = TestBed.inject(AnnouncementsService);
     const items = svc.items();
     expect(items.length).toBe(16);
@@ -217,8 +219,30 @@ describe('Admin Console — Manage everywhere, Announcements, live admins, Whats
     expect(svc.forViewer({ id: 1, country: 'Italy', city: 'Milan', gender: 'Female', age: 30, isVerified: true })).toEqual([]);
   });
 
-  it('B: grid — KPIs, status tabs, search, sort, details drawer (with Manage), cancel & delete with Undo', () => {
+  it('B: sample announcements load lazily and never overwrite one published meanwhile', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const svc = TestBed.inject(AnnouncementsService);
+    const mine = svc.create({
+      title: 'Published before the samples arrived',
+      body: 'Hello',
+      category: 'general',
+      priority: 'normal',
+      channels: ['inbox'],
+      audience: emptyAudience('all'),
+      state: 'published',
+      sendAtUtc: new Date().toISOString(),
+      expiresAtUtc: null,
+    });
+    await svc.ready;
+    expect(svc.items().length).toBe(17);
+    expect(svc.items()[0].id).toBe(mine.id);
+    const saved = JSON.parse(localStorage.getItem(ANNOUNCEMENTS_KEY)!).items;
+    expect(saved.length).toBe(17);
+  });
+
+  it('B: grid — KPIs, status tabs, search, sort, details drawer (with Manage), cancel & delete with Undo', async () => {
     TestBed.configureTestingModule({ imports: [AdminAnnouncements], providers: [provideRouter([]), route()] });
+    await TestBed.inject(AnnouncementsService).ready;
     const nav = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const svc = TestBed.inject(AnnouncementsService);
     const audit = TestBed.inject(AdminAuditService);
@@ -302,6 +326,7 @@ describe('Admin Console — Manage everywhere, Announcements, live admins, Whats
 
   it('B: composer — targeted audience by geography/gender/age with live reach, then publish to users', async () => {
     TestBed.configureTestingModule({ imports: [AdminAnnouncementComposer], providers: [provideRouter([]), route()] });
+    await TestBed.inject(AnnouncementsService).ready;
     const nav = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const svc = TestBed.inject(AnnouncementsService);
     const members = TestBed.inject(AdminInsightsService).members();
@@ -374,8 +399,9 @@ describe('Admin Console — Manage everywhere, Announcements, live admins, Whats
     expect(TestBed.inject(AdminAuditService).entries()[0].action).toBe('Published announcement');
   });
 
-  it('B: composer — particular users (search, groups, Manage) and scheduling', () => {
+  it('B: composer — particular users (search, groups, Manage) and scheduling', async () => {
     TestBed.configureTestingModule({ imports: [AdminAnnouncementComposer], providers: [provideRouter([]), route()] });
+    await TestBed.inject(AnnouncementsService).ready;
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const svc = TestBed.inject(AnnouncementsService);
     const fixture = TestBed.createComponent(AdminAnnouncementComposer);
@@ -420,8 +446,9 @@ describe('Admin Console — Manage everywhere, Announcements, live admins, Whats
     expect(statusOf(a)).toBe('scheduled');
   });
 
-  it('B: editing a scheduled announcement and duplicating a sent one pre-fill the composer', () => {
+  it('B: editing a scheduled announcement and duplicating a sent one pre-fill the composer', async () => {
     TestBed.configureTestingModule({ imports: [AdminAnnouncementComposer], providers: [provideRouter([]), route({ edit: 'an-1009' })] });
+    await TestBed.inject(AnnouncementsService).ready;
     const f1 = TestBed.createComponent(AdminAnnouncementComposer);
     f1.detectChanges();
     const el: HTMLElement = f1.nativeElement;
