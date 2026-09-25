@@ -1,0 +1,423 @@
+<section class="an-page">
+  <header class="an-hero">
+    <div class="an-hero-text">
+      <a class="an-back" routerLink="/admin/announcements">← All announcements</a>
+      <h2>{{ editId() ? '✏️ Edit announcement' : '📣 New announcement' }}</h2>
+      <p>
+        @if (copiedFrom(); as c) {
+          Duplicated from “{{ c }}”. Adjust anything, then publish.
+        } @else {
+          Write the message, choose exactly who receives it, preview it on every channel and publish now or later.
+        }
+      </p>
+    </div>
+    <div class="an-hero-actions">
+      <button type="button" class="an-btn ghost" (click)="discard()">Cancel</button>
+      <button type="button" class="an-btn ghost" (click)="sendTest()" title="Send a preview to your own admin account">🧪 Send test to me</button>
+      <button type="button" class="an-btn ghost" (click)="saveDraft()">💾 Save draft</button>
+      <button type="button" class="an-btn primary" (click)="publish()">{{ schedule() === 'later' ? '⏱ Schedule' : '🚀 Publish' }}</button>
+    </div>
+  </header>
+
+  @if (errors().length) {
+    <div class="an-errors" role="alert">
+      <strong>Please fix the following:</strong>
+      <ul>
+        @for (e of errors(); track e) {
+          <li>{{ e }}</li>
+        }
+      </ul>
+    </div>
+  }
+
+  <div class="an-compose">
+    <div class="an-compose-main">
+      <!-- 1. Message -->
+      <section class="an-step">
+        <header><span class="an-step-n">1</span><div><h3>Message</h3><p>What should users see?</p></div></header>
+        <label class="an-field">
+          <span>Title <em [class.warn]="titleLeft() < 10">{{ titleLeft() }}</em></span>
+          <input id="an-title" type="text" [value]="title()" (input)="title.set($any($event.target).value)" [attr.maxlength]="limits.title" placeholder="e.g. New safety features for meetups" />
+        </label>
+        <div class="an-field">
+          <span>Message <em [class.warn]="bodyLeft() < 40">{{ bodyLeft() }}</em></span>
+          <div class="an-editor">
+            <div class="an-editor-bar">
+              <button type="button" (click)="insertFormat(bodyEl, 'bold')" aria-label="Bold" title="Bold (**text**)"><b>B</b></button>
+              @for (em of ['📣', '✨', '🛡️', '🎉', '⚠️', '✈️', '🌍', '❤️']; track em) {
+                <button type="button" (click)="insertFormat(bodyEl, 'emoji', em)" [attr.aria-label]="'Insert ' + em">{{ em }}</button>
+              }
+            </div>
+            <textarea #bodyEl id="an-body" rows="5" [value]="body()" (input)="body.set($any($event.target).value)" [attr.maxlength]="limits.body" placeholder="Write the announcement. Use **bold** for emphasis; links like https://… become clickable."></textarea>
+          </div>
+        </div>
+        <div class="an-field">
+          <span>Category</span>
+          <div class="an-pills">
+            @for (c of categories; track c) {
+              <button type="button" class="an-pill" [class.on]="category() === c" (click)="category.set(c)">{{ catMeta[c].icon }} {{ catMeta[c].label }}</button>
+            }
+          </div>
+        </div>
+        <div class="an-row2">
+          <div class="an-field">
+            <span>Priority</span>
+            <div class="an-seg wide" role="radiogroup" aria-label="Priority">
+              @for (p of priorities; track p) {
+                <button type="button" role="radio" [attr.aria-checked]="priority() === p" [class.on]="priority() === p" [attr.data-p]="p" (click)="priority.set(p)">{{ prMeta[p].label }}</button>
+              }
+            </div>
+          </div>
+          <label class="an-check-line">
+            <input type="checkbox" [checked]="pinned()" (change)="pinned.set($any($event.target).checked)" />
+            <span>📌 Pin to the top of the admin list</span>
+          </label>
+        </div>
+        <div class="an-row2">
+          <label class="an-field">
+            <span>Button label <small>(optional)</small></span>
+            <input type="text" [value]="ctaLabel()" (input)="ctaLabel.set($any($event.target).value)" [attr.maxlength]="limits.cta" placeholder="e.g. Learn more" />
+          </label>
+          <label class="an-field">
+            <span>Button link</span>
+            <input type="text" [value]="ctaUrl()" (input)="ctaUrl.set($any($event.target).value)" placeholder="/help or https://…" [disabled]="!ctaLabel().trim()" />
+          </label>
+        </div>
+      </section>
+
+      <!-- 2. Audience -->
+      <section class="an-step">
+        <header><span class="an-step-n">2</span><div><h3>Audience</h3><p>Send to everyone, filter by criteria, or pick particular users.</p></div></header>
+        <div class="an-modes" role="radiogroup" aria-label="Audience">
+          <button type="button" role="radio" class="an-mode" [class.on]="mode() === 'all'" [attr.aria-checked]="mode() === 'all'" (click)="setMode('all')">
+            <span class="an-mode-ico">🌍</span><b>All users</b><small>Every member ({{ totalUsers().toLocaleString() }})</small>
+          </button>
+          <button type="button" role="radio" class="an-mode" [class.on]="mode() === 'filtered'" [attr.aria-checked]="mode() === 'filtered'" (click)="setMode('filtered')">
+            <span class="an-mode-ico">🎯</span><b>Targeted</b><small>Geography · country · city · gender · age</small>
+          </button>
+          <button type="button" role="radio" class="an-mode" [class.on]="mode() === 'users'" [attr.aria-checked]="mode() === 'users'" (click)="setMode('users')">
+            <span class="an-mode-ico">👤</span><b>Particular users</b><small>One user or a group of users</small>
+          </button>
+        </div>
+
+        @if (mode() === 'filtered') {
+          <div class="an-filters">
+            <div class="an-filter">
+              <h4>🗺️ Geography <small>world region</small></h4>
+              <div class="an-pills">
+                @for (r of regionOptions(); track r.name) {
+                  <button type="button" class="an-pill" [class.on]="regions().includes(r.name)" [class.zero]="!r.count" (click)="toggleRegion(r.name)">
+                    {{ r.icon }} {{ r.name }} <i>{{ r.count }}</i>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="an-filter">
+              <h4>🏳️ Country @if (countries().length) {<small>{{ countries().length }} selected</small>}</h4>
+              <input class="an-mini-search" type="search" placeholder="Find a country…" [value]="countryQuery()" (input)="countryQuery.set($any($event.target).value)" aria-label="Find a country" />
+              <div class="an-pills">
+                @for (c of countryOptions(); track c.name) {
+                  <button type="button" class="an-pill" [class.on]="countries().includes(c.name)" (click)="toggleIn(countries, c.name)">{{ c.name }} <i>{{ c.count }}</i></button>
+                } @empty {
+                  <small class="g-muted">No countries match.</small>
+                }
+              </div>
+            </div>
+
+            <div class="an-filter">
+              <h4>🏙️ City @if (cities().length) {<small>{{ cities().length }} selected</small>}</h4>
+              <input class="an-mini-search" type="search" placeholder="Find a city…" [value]="cityQuery()" (input)="cityQuery.set($any($event.target).value)" aria-label="Find a city" />
+              <div class="an-pills">
+                @for (c of cityOptions(); track c.name) {
+                  <button type="button" class="an-pill" [class.on]="cities().includes(c.name)" (click)="toggleIn(cities, c.name)">{{ c.name }} <i>{{ c.count }}</i></button>
+                } @empty {
+                  <small class="g-muted">No cities match.</small>
+                }
+              </div>
+            </div>
+
+            <div class="an-filter-row">
+              <div class="an-filter">
+                <h4>⚧ Gender</h4>
+                <div class="an-pills">
+                  @for (g of genderOptions(); track g.name) {
+                    <button type="button" class="an-pill" [class.on]="genders().includes(g.name)" [class.zero]="!g.count" (click)="toggleIn(genders, g.name)">{{ g.name }} <i>{{ g.count }}</i></button>
+                  }
+                </div>
+              </div>
+              <div class="an-filter">
+                <h4>🎂 Age</h4>
+                <div class="an-pills">
+                  @for (p of agePresets; track p.label) {
+                    <button type="button" class="an-pill" [class.on]="ageMin() === p.min && ageMax() === p.max" (click)="setAge(p.min, p.max)">{{ p.label }}</button>
+                  }
+                </div>
+                <div class="an-age">
+                  <label>From <input type="number" min="13" max="100" [value]="ageMin() ?? ''" (change)="ageInput('min', $any($event.target).value)" aria-label="Minimum age" /></label>
+                  <label>to <input type="number" min="13" max="100" [value]="ageMax() ?? ''" (change)="ageInput('max', $any($event.target).value)" aria-label="Maximum age" /></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="an-filter-foot">
+              <label class="an-check-line">
+                <input type="checkbox" [checked]="verifiedOnly()" (change)="verifiedOnly.set($any($event.target).checked)" />
+                <span>✓ Identity-verified members only</span>
+              </label>
+              @if (filterCount()) {
+                <button type="button" class="an-link" (click)="clearFilters()">✕ Clear {{ filterCount() }} filter(s)</button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (mode() === 'users') {
+          <div class="an-users-pick">
+            <div class="an-user-search">
+              <label class="an-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+                <input id="an-user-q" type="search" placeholder="Add a user — name, email, 20-digit UID or city…" [value]="userQuery()" (input)="userQuery.set($any($event.target).value)" (keydown)="onUserKey($event)" aria-label="Find a user" autocomplete="off" />
+              </label>
+              @if (userQuery().trim()) {
+                <ul class="an-results" role="listbox">
+                  @for (m of userResults(); track m.id) {
+                    <li>
+                      <button type="button" class="an-result" (click)="addUser(m)">
+                        <span class="g-avatar"><img [src]="m.photo" [alt]="m.fullName" /></span>
+                        <span class="an-user-meta"><b>{{ m.fullName }}</b><small>{{ m.email }} · {{ m.city || m.country }}</small></span>
+                        <span class="an-add">＋ Add</span>
+                      </button>
+                      <app-manage-user-btn [userId]="m.id" [name]="m.fullName" size="sm" />
+                    </li>
+                  } @empty {
+                    <li class="g-muted an-noresult">No users match “{{ userQuery() }}”.</li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <div class="an-groups">
+              <h4>👥 Add a group of users</h4>
+              <div class="an-group-grid">
+                @for (x of groups(); track x.g.id) {
+                  <button type="button" class="an-group" [class.added]="groupNames().includes(x.g.name)" [disabled]="!x.count" (click)="addGroup(x.g)" [title]="x.g.hint">
+                    <span>{{ x.g.icon }}</span>
+                    <b>{{ x.g.name }}</b>
+                    <small>{{ x.count }} user{{ x.count === 1 ? '' : 's' }}</small>
+                  </button>
+                }
+              </div>
+              <button type="button" class="an-link" (click)="pasteOpen.set(!pasteOpen())">{{ pasteOpen() ? '− Hide' : '＋ Paste a list of UIDs / emails / names' }}</button>
+              @if (pasteOpen()) {
+                <div class="an-paste">
+                  <textarea rows="3" [value]="pasteText()" (input)="pasteText.set($any($event.target).value)" placeholder="One per line or comma-separated" aria-label="Paste users"></textarea>
+                  <button type="button" class="an-btn ghost sm" (click)="applyPaste()">Add users</button>
+                  @if (pasteResult(); as pr) {
+                    <small class="g-muted">{{ pr }}</small>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="an-selected">
+              <div class="an-selected-head">
+                <b>{{ userIds().length }} selected user{{ userIds().length === 1 ? '' : 's' }}</b>
+                @if (groupNames().length) {
+                  <small>incl. {{ groupNames().join(', ') }}</small>
+                }
+                @if (userIds().length) {
+                  <button type="button" class="an-link" (click)="clearUsers()">Clear all</button>
+                }
+              </div>
+              @if (selectedUsers().length) {
+                <ul class="an-chips">
+                  @for (m of selectedUsers().slice(0, 60); track m.id) {
+                    <li class="an-user-chip">
+                      <img [src]="m.photo" [alt]="m.fullName" />
+                      <span>{{ m.fullName }}</span>
+                      <app-manage-user-btn [userId]="m.id" [name]="m.fullName" size="sm" />
+                      <button type="button" class="an-x" (click)="removeUser(m.id)" [attr.aria-label]="'Remove ' + m.fullName">✕</button>
+                    </li>
+                  }
+                  @if (selectedUsers().length > 60) {
+                    <li class="an-more">+ {{ selectedUsers().length - 60 }} more</li>
+                  }
+                </ul>
+              } @else {
+                <p class="an-note">Search above to add a particular user, or add a whole group.</p>
+              }
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- 3. Delivery -->
+      <section class="an-step">
+        <header><span class="an-step-n">3</span><div><h3>Delivery</h3><p>Where and when users receive it.</p></div></header>
+        <div class="an-channels">
+          @for (c of channelKeys; track c) {
+            <button type="button" class="an-channel" [class.on]="channels().includes(c)" [attr.aria-pressed]="channels().includes(c)" (click)="toggleChannel(c)">
+              <span>{{ chMeta[c].icon }}</span>
+              <b>{{ chMeta[c].label }}</b>
+              <small>{{ chMeta[c].hint }}</small>
+              <i class="an-tick" aria-hidden="true">✓</i>
+            </button>
+          }
+        </div>
+        <div class="an-row2">
+          <div class="an-field">
+            <span>Send</span>
+            <div class="an-seg wide">
+              <button type="button" [class.on]="schedule() === 'now'" (click)="schedule.set('now')">⚡ Now</button>
+              <button type="button" [class.on]="schedule() === 'later'" (click)="schedule.set('later')">⏱ Schedule</button>
+            </div>
+            @if (schedule() === 'later') {
+              <input id="an-send-at" type="datetime-local" [value]="sendAt()" (input)="sendAt.set($any($event.target).value)" aria-label="Send at" />
+            }
+          </div>
+          <div class="an-field">
+            <span>Ends</span>
+            <select [value]="expiry()" (change)="expiry.set($any($event.target).value)" aria-label="Ends">
+              <option value="1">After 1 day</option>
+              <option value="3">After 3 days</option>
+              <option value="7">After 7 days</option>
+              <option value="14">After 14 days</option>
+              <option value="30">After 30 days</option>
+              <option value="custom">On a date…</option>
+              <option value="none">Never (until ended manually)</option>
+            </select>
+            @if (expiry() === 'custom') {
+              <input type="datetime-local" [value]="expiresAt()" (input)="expiresAt.set($any($event.target).value)" aria-label="Ends at" />
+            }
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right: live reach + preview -->
+    <aside class="an-compose-side">
+      <section class="an-reach" [attr.data-mode]="mode()">
+        <small>Estimated reach</small>
+        <div class="an-reach-num">
+          <strong>{{ reach().toLocaleString() }}</strong>
+          <span>of {{ totalUsers().toLocaleString() }} users · {{ reachPct() }}%</span>
+        </div>
+        <span class="an-reach-bar"><i [style.width.%]="reachPct()"></i></span>
+        <p class="an-reach-label">{{ audienceLabel() }}</p>
+        @if (sample().length) {
+          <div class="an-faces">
+            @for (m of sample(); track m.id) {
+              <img [src]="m.photo" [alt]="m.fullName" [title]="m.fullName" />
+            }
+            @if (reach() > sample().length) {
+              <span>+{{ (reach() - sample().length).toLocaleString() }}</span>
+            }
+          </div>
+        }
+        @if (reach()) {
+          <div class="an-reach-bd">
+            @for (group of [
+              { title: 'Countries', rows: bd().countries },
+              { title: 'Gender', rows: bd().genders },
+              { title: 'Age', rows: bd().ages }
+            ]; track group.title) {
+              <div>
+                <h5>{{ group.title }}</h5>
+                @for (x of group.rows; track x.label) {
+                  <div class="an-bd-row"><span>{{ x.label }}</span><span class="an-bd-bar"><i [style.width.%]="x.pct"></i></span><b>{{ x.count.toLocaleString() }}</b></div>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="an-reach-zero">⚠️ Nobody matches yet.</p>
+        }
+      </section>
+
+      <section class="an-preview">
+        <div class="an-preview-tabs" role="tablist" aria-label="Preview">
+          @for (t of channelKeys; track t) {
+            <button type="button" role="tab" [class.on]="previewTab() === t" [class.off]="!channels().includes(t)" [attr.aria-selected]="previewTab() === t" (click)="previewTab.set(t)">{{ chMeta[t].icon }} {{ chMeta[t].label }}</button>
+          }
+        </div>
+        @if (!channels().includes(previewTab())) {
+          <p class="an-note">This channel is not selected — shown for reference only.</p>
+        }
+        @switch (previewTab()) {
+          @case ('banner') {
+            <div class="an-pv-site">
+              <div class="an-pv-banner" [attr.data-tone]="catMeta[category()].tone" [attr.data-p]="priority()">
+                <span>{{ catMeta[category()].icon }} <b>{{ title() || 'Your title' }}</b> — {{ plain(body()).slice(0, 110) || 'Your message' }}{{ body().length > 110 ? '…' : '' }}</span>
+                @if (ctaLabel()) {
+                  <u>{{ ctaLabel() }} →</u>
+                }
+                <i>×</i>
+              </div>
+              <div class="an-pv-nav"><span class="an-pv-logo"></span><span></span><span></span><span></span></div>
+              <div class="an-pv-page"><span></span><span></span><span class="short"></span></div>
+            </div>
+          }
+          @case ('push') {
+            <div class="an-pv-phone">
+              <div class="an-pv-time">{{ '09:41' }}</div>
+              <div class="an-pv-push">
+                <span class="an-pv-app">NB</span>
+                <div>
+                  <small>NEVERBEEN · now</small>
+                  <b>{{ title() || 'Your title' }}</b>
+                  <p>{{ plain(body()).slice(0, 140) || 'Your message' }}{{ body().length > 140 ? '…' : '' }}</p>
+                </div>
+              </div>
+            </div>
+          }
+          @case ('inbox') {
+            <div class="an-pv-inbox">
+              <div class="an-pv-inbox-head">🔔 Notifications <span>1 new</span></div>
+              <div class="an-pv-note" [attr.data-p]="priority()">
+                <span class="an-pv-dot"></span>
+                <div>
+                  <b>{{ catMeta[category()].icon }} {{ title() || 'Your title' }}</b>
+                  <p [innerHTML]="render(body() || 'Your message')"></p>
+                  @if (ctaLabel()) {
+                    <span class="an-cta">{{ ctaLabel() }} →</span>
+                  }
+                  <small>Just now · from the NeverBeen team</small>
+                </div>
+              </div>
+            </div>
+          }
+          @case ('email') {
+            <div class="an-pv-email">
+              <div class="an-pv-email-head">
+                <small>From: NeverBeen &lt;hello&#64;neverbeen.com&gt;</small>
+                <b>{{ title() || 'Your title' }}</b>
+              </div>
+              <div class="an-pv-email-body">
+                <div class="an-pv-email-brand">NeverBeen</div>
+                <h4>{{ title() || 'Your title' }}</h4>
+                <p [innerHTML]="render(body() || 'Your message')"></p>
+                @if (ctaLabel()) {
+                  <span class="an-pv-email-btn">{{ ctaLabel() }}</span>
+                }
+                <small>You’re receiving this because you’re a NeverBeen member. Manage notifications in Settings.</small>
+              </div>
+            </div>
+          }
+        }
+      </section>
+    </aside>
+  </div>
+</section>
+
+@if (confirming()) {
+  <app-admin-confirm-dialog
+    [heading]="schedule() === 'later' ? 'Schedule this announcement?' : 'Publish this announcement?'"
+    [message]="confirmMessage()"
+    [confirmLabel]="schedule() === 'later' ? 'Schedule' : 'Publish now'"
+    tone="success"
+    [withReason]="false"
+    (confirmed)="confirmPublish()"
+    (cancelled)="confirming.set(false)"
+  />
+}

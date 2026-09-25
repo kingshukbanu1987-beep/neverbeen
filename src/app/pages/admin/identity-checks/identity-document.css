@@ -782,3 +782,16 @@ kbd {
     display: none;
   }
 }
+
+.iv-manage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.8rem;
+}
+.iv-manage {
+  margin-top: 0.6rem;
+}
+.iv-manage .iv-link {
+  margin-top: 0;
+}

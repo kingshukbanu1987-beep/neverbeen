@@ -13,6 +13,7 @@ import {
 import { AccountState, accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { SelectValueSync } from '../../../shared/select-value-sync';
+import { ManageUserButton } from '../shared/manage-user-button';
 
 type Mode = 'all' | 'verified' | 'online';
 type SortKey = 'name' | 'location' | 'age' | 'profession' | 'joined' | 'posts' | 'lastActive';
@@ -29,7 +30,7 @@ const MODE_META: Record<Mode, { title: string; subtitle: string; csv: string }> 
  */
 @Component({
   selector: 'app-admin-members',
-  imports: [SelectValueSync, RouterLink, RouterLinkActive, AdminConfirmDialog],
+  imports: [SelectValueSync, ManageUserButton, RouterLink, RouterLinkActive, AdminConfirmDialog],
   templateUrl: './members.html',
   styleUrls: ['../shared/admin-grid.css'],
 })

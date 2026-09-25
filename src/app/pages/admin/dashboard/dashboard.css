@@ -519,3 +519,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+.report-tile {
+  cursor: pointer;
+}
+
+.report-tile:focus-visible {
+  outline: 3px solid rgba(239, 68, 68, 0.35);
+  outline-offset: 2px;
+}
+
+.rt-manage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed #fecaca;
+}
+
+.rt-manage small {
+  font-size: 0.64rem;
+  color: #94a3b8;
+  margin-right: 0.35rem;
+}
+
+.hl-title app-manage-user-btn {
+  vertical-align: middle;
+  margin: 0 0.3rem;
+}

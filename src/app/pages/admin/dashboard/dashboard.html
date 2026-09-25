@@ -88,6 +88,9 @@
             <div class="hl-body">
               <p class="hl-title">
                 <strong>{{ h.post.author.fullName ?? 'Member' }}</strong>
+                @if (h.post.author.id) {
+                  <app-manage-user-btn [userId]="h.post.author.id" [name]="h.post.author.fullName ?? 'Member'" size="sm" />
+                }
                 <span class="hl-time">{{ timeAgo(h.post.createdAtUtc) }}</span>
                 @if (h.post.location) {
                   <span class="hl-time">· 📍 {{ h.post.location }}</span>
@@ -123,7 +126,14 @@
   } @else {
     <div class="report-tiles">
       @for (r of latestReports(); track r.id) {
-        <a class="report-tile" routerLink="/admin/dashboard/abuse-reports" [queryParams]="{ report: r.id }">
+        <div
+          class="report-tile"
+          role="link"
+          tabindex="0"
+          [attr.aria-label]="'Open report: ' + r.reporter.fullName + ' reported ' + r.reported.fullName"
+          (click)="openReport(r.id)"
+          (keydown.enter)="openReport(r.id)"
+        >
           <span class="rt-top">
             <span class="rt-reason">{{ r.reason }}</span>
             <span class="rt-time">{{ timeAgo(r.createdAtUtc) }}</span>
@@ -135,7 +145,13 @@
             <span class="rt-names"><b>{{ r.reporter.fullName }}</b> reported <b>{{ r.reported.fullName }}</b></span>
           </span>
           <span class="rt-quote">“{{ r.contentExcerpt }}”</span>
-        </a>
+          <span class="rt-manage">
+            <app-manage-user-btn [userId]="r.reporter.id" [name]="r.reporter.fullName" size="sm" />
+            <small>reporter</small>
+            <app-manage-user-btn [userId]="r.reported.id" [name]="r.reported.fullName" size="sm" />
+            <small>reported</small>
+          </span>
+        </div>
       }
     </div>
   }

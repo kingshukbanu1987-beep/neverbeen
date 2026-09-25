@@ -2,13 +2,59 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SiteConfigService } from '../../services/site-config.service';
 import { MaintenanceService } from '../../services/maintenance.service';
+import { ANN_CATEGORY_META, AnnouncementsService, AudienceProfile } from '../../services/announcements.service';
+import { NavigationEnd, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, merge, fromEvent, of } from 'rxjs';
+
+// Read the signed-in community member straight from storage (same keys as CommunityService)
+// so the site banner doesn't pull the large community dataset into the initial bundle.
+const USER_KEY = 'neverbeen_current_user';
+const PROFILE_KEY = 'neverbeen_user_profile';
+
+interface StoredMember {
+  id?: number | string;
+  country?: string;
+  countryName?: string;
+  city?: string;
+  cityName?: string;
+  isVerified?: boolean;
+  aboutMeDetails?: { gender?: string; dateOfBirth?: string };
+}
+
+function readJson(key: string): StoredMember | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as StoredMember) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Current visitor's targeting profile, or null when signed out. */
+export function storedViewer(): AudienceProfile | null {
+  const u = readJson(USER_KEY);
+  if (!u || u.id === undefined || u.id === null) return null;
+  const p = readJson(PROFILE_KEY) ?? {};
+  const about = p.aboutMeDetails ?? u.aboutMeDetails;
+  const dob = about?.dateOfBirth ? Date.parse(about.dateOfBirth) : NaN;
+  return {
+    id: Number(u.id),
+    country: (p.country || p.countryName || u.country || '').trim(),
+    city: (p.city || p.cityName || u.city || '').trim(),
+    gender: about?.gender ?? '',
+    age: Number.isFinite(dob) ? Math.floor((Date.now() - dob) / (365.25 * 86_400_000)) : null,
+    isVerified: u.isVerified === true || p.isVerified === true,
+  };
+}
 
 const DISMISS_KEY = 'neverbeen_announcement_dismissed';
 
 /**
  * Slim site-wide banner above the navigation. Shows (in priority order) an
- * upcoming scheduled-downtime warning, then the announcement configured in
- * Admin Console → Website Management.
+ * upcoming scheduled-downtime warning, then a live Admin Console → Announcement
+ * (In-app banner channel) addressed to this visitor, then the announcement
+ * configured in Admin Console → Website Management.
  */
 @Component({
   selector: 'app-announcement-bar',
@@ -21,6 +67,22 @@ const DISMISS_KEY = 'neverbeen_announcement_dismissed';
           <strong>Scheduled maintenance</strong> in about {{ w.minutes }} min — NeverBeen will be briefly unavailable from
           {{ time(w.startUtc) }}@if (w.endUtc) {<span> to {{ time(w.endUtc) }}</span>}.
         </p>
+      </div>
+    } @else if (adminNotice(); as n) {
+      <div [class]="'ab ab-admin ab-' + n.tone" [class.ab-critical]="n.a.priority === 'critical'" role="region" aria-label="Announcement from NeverBeen">
+        <p>
+          <span class="ab-icon" aria-hidden="true">{{ n.icon }}</span>
+          <strong>{{ n.a.title }}</strong>
+          <span class="ab-text"> — {{ n.text }}</span>
+          @if (n.a.ctaLabel && n.a.ctaUrl) {
+            @if (n.external) {
+              <a [href]="n.a.ctaUrl" target="_blank" rel="noopener">{{ n.a.ctaLabel }} →</a>
+            } @else {
+              <a [routerLink]="n.a.ctaUrl">{{ n.a.ctaLabel }} →</a>
+            }
+          }
+        </p>
+        <button type="button" class="ab-close" aria-label="Dismiss announcement" (click)="announcements.dismiss(n.a.id)">×</button>
       </div>
     } @else if (announcement(); as a) {
       <div [class]="'ab ab-' + a.tone" role="region" aria-label="Announcement">
@@ -60,6 +122,11 @@ const DISMISS_KEY = 'neverbeen_announcement_dismissed';
     .ab-success { background: linear-gradient(90deg, #065f46, #10b981); }
     .ab-warning { background: linear-gradient(90deg, #92400e, #f59e0b); }
     .ab-icon { font-size: 1rem; }
+    .ab-admin.ab-danger, .ab-critical { background: linear-gradient(90deg, #991b1b, #ef4444); }
+    .ab-admin.ab-violet { background: linear-gradient(90deg, #4c1d95, #8b5cf6); }
+    .ab-admin.ab-ok { background: linear-gradient(90deg, #065f46, #10b981); }
+    .ab-admin.ab-warn { background: linear-gradient(90deg, #92400e, #f59e0b); }
+    .ab-admin .ab-icon { margin-right: 0.3rem; }
     .ab-close {
       position: absolute;
       right: 0.6rem;
@@ -83,7 +150,34 @@ export class AnnouncementBar {
   private readonly maintenance = inject(MaintenanceService);
   private readonly dismissed = signal(this.readDismissed());
 
+  protected readonly announcements = inject(AnnouncementsService);
+  private readonly router = inject(Router);
+
   protected readonly warning = this.maintenance.upcomingWarning;
+
+  /** Who is looking at the site — refreshed on navigation / other tabs signing in or out. */
+  private readonly viewer = toSignal(
+    merge(
+      of(null),
+      this.router.events.pipe(filter((e) => e instanceof NavigationEnd)),
+      typeof window !== 'undefined' ? fromEvent(window, 'storage') : of(null),
+    ).pipe(map(() => storedViewer())),
+    { initialValue: null },
+  );
+
+  /** Live admin announcement (banner channel) for this visitor. */
+  protected readonly adminNotice = computed(() => {
+    const a = this.announcements.forViewer(this.viewer())[0];
+    if (!a) return null;
+    const meta = ANN_CATEGORY_META[a.category];
+    return {
+      a,
+      icon: meta.icon,
+      tone: a.priority === 'critical' ? 'danger' : meta.tone || 'info',
+      text: a.body.replace(/\*\*(.+?)\*\*/g, '$1'),
+      external: /^https?:\/\//i.test(a.ctaUrl ?? ''),
+    };
+  });
 
   protected readonly announcement = computed(() => {
     if (!this.cms.flag('global.announcement', 'enabled')) return null;

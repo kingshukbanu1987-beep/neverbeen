@@ -92,8 +92,8 @@
 .wm-tree {
   padding: 0.7rem;
   position: sticky;
-  top: calc(var(--site-nav-h, 0px) + 5rem);
-  max-height: calc(100vh - var(--site-nav-h, 0px) - 6rem);
+  top: calc(var(--site-nav-h, 0px) + 3.6rem);
+  max-height: calc(100vh - var(--site-nav-h, 0px) - 4.4rem);
   overflow: auto;
 }
 
@@ -243,7 +243,7 @@
 /* Preview */
 .wm-preview {
   position: sticky;
-  top: calc(var(--site-nav-h, 0px) + 5rem);
+  top: calc(var(--site-nav-h, 0px) + 3.6rem);
 }
 
 .wm-preview-bar {

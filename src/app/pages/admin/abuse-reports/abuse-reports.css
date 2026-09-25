@@ -307,3 +307,8 @@
     transform: rotate(90deg);
   }
 }
+
+.ar-manage {
+  display: flex;
+  margin-top: 0.35rem;
+}

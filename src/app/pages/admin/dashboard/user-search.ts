@@ -2,16 +2,17 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { AdminInsightsService, MemberInsight, shortDate } from '../shared/admin-insights.service';
 import { AccountState, accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
+import { ManageUserButton } from '../shared/manage-user-button';
 
 /** K — Find any user by name / UID / email / city and disable (or re-enable) their account. */
 @Component({
   selector: 'app-admin-user-search',
-  imports: [AdminConfirmDialog],
+  imports: [AdminConfirmDialog, ManageUserButton],
   template: `
     <section class="us-card">
       <div class="us-intro">
         <h3>🔎 Find a user</h3>
-        <p>Search any member and disable their account instantly.</p>
+        <p>Search any member — open <b>Manage</b> for full account details, or disable the account instantly.</p>
       </div>
       <div class="us-box-wrap">
         <label class="us-box" [class.open]="term().length > 0">
@@ -55,6 +56,7 @@ import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
                     <small class="mono">UID {{ m.uniqueId }} · {{ m.email }} · joined {{ shortDate(m.registeredAtUtc) }}</small>
                   </span>
                   <span class="g-badge" [class]="'g-badge ' + stateTone(m.accountState)">{{ stateLabel(m.accountState) }}</span>
+                  <app-manage-user-btn [userId]="m.id" [name]="m.fullName" />
                   @if (m.accountState === 'disabled') {
                     <button type="button" class="g-btn success" (click)="insights.enable(m.id)">Enable</button>
                   } @else {

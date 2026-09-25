@@ -7,6 +7,7 @@ import { AdminCountryChart } from './country-chart';
 import { AdminRegistrationChart } from './registration-chart';
 import { AdminSuspiciousUsers } from './suspicious-users';
 import { AdminIdentityService } from '../shared/admin-identity.service';
+import { ManageUserButton } from '../shared/manage-user-button';
 
 interface ActivityDay {
   label: string;
@@ -33,7 +34,7 @@ interface StatCard {
  */
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [RouterLink, AdminUserSearch, AdminCountryChart, AdminRegistrationChart, AdminSuspiciousUsers],
+  imports: [RouterLink, ManageUserButton, AdminUserSearch, AdminCountryChart, AdminRegistrationChart, AdminSuspiciousUsers],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -107,6 +108,10 @@ export class AdminDashboard {
   protected openCard(card: StatCard): void {
     if (card.link) this.router.navigateByUrl(card.link);
     else card.action?.();
+  }
+
+  protected openReport(id: number): void {
+    this.router.navigate(['/admin/dashboard/abuse-reports'], { queryParams: { report: id } });
   }
 
   private scrollTo(id: string): void {

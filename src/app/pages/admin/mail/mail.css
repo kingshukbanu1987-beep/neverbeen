@@ -107,7 +107,7 @@ kbd {
   display: grid;
   grid-template-columns: minmax(330px, 420px) minmax(0, 1fr);
   gap: 0;
-  height: calc(100vh - var(--site-nav-h, 0px) - 190px);
+  height: calc(100vh - var(--site-nav-h, 0px) - 150px);
   min-height: 560px;
   background: #fff;
   border: 1px solid var(--mx-line);
@@ -1803,7 +1803,7 @@ kbd {
   flex-direction: column;
   gap: 0.8rem;
   position: sticky;
-  top: calc(var(--site-nav-h, 0px) + 100px);
+  top: calc(var(--site-nav-h, 0px) + 62px);
 }
 
 .mc-help,

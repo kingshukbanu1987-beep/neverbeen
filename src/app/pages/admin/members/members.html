@@ -183,6 +183,7 @@
               <td><span class="g-badge" [class]="'g-badge ' + stateTone(m.accountState)">{{ stateLabel(m.accountState) }}</span></td>
               <td>
                 <div class="g-actions">
+                  <app-manage-user-btn [userId]="m.id" [name]="m.fullName" />
                   @if (m.accountState === 'disabled') {
                     <button type="button" class="g-btn success" (click)="enable(m)">Enable</button>
                   } @else {
@@ -221,6 +222,7 @@
           </div>
           <div class="g-card-foot">
             <span>Joined {{ shortDate(m.registeredAtUtc) }} · {{ m.postCount }} posts</span>
+            <app-manage-user-btn [userId]="m.id" [name]="m.fullName" size="sm" />
             @if (m.accountState === 'disabled') {
               <button type="button" class="g-btn success" (click)="enable(m)">Enable</button>
             } @else {

@@ -92,6 +92,7 @@
                     <small>{{ r.m?.email }}</small>
                     <small class="ic-uid">UID {{ r.m?.uniqueId }} · {{ r.m?.city ? r.m?.city + ', ' : '' }}{{ r.m?.country }}</small>
                     @if (r.m) {
+                      <span class="ic-manage"><app-manage-user-btn [userId]="r.m.id" [name]="r.m.fullName" size="sm" /></span>
                       <span class="g-badge ic-state" [class]="'g-badge ic-state ' + (r.m.accountState === 'active' ? 'ok' : r.m.accountState === 'disabled' ? 'danger' : 'violet')">{{ stateLabel(r.m.accountState) }}</span>
                     }
                   </span>

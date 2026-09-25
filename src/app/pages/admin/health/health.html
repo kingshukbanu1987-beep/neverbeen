@@ -367,6 +367,7 @@
                     @if (m.online) {
                       <span class="hl-live">● online</span>
                     }
+                    <app-manage-user-btn [userId]="m.id" [name]="m.name" size="sm" />
                   </span>
                 </td>
                 <td>{{ m.country }}</td>

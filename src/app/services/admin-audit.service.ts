@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 export const ADMIN_AUDIT_KEY = 'neverbeen_admin_audit_log';
 const MAX_ENTRIES = 1000;
 
-export type AuditCategory = 'moderation' | 'account' | 'role' | 'security' | 'data' | 'privacy' | 'website' | 'operations' | 'mail';
+export type AuditCategory = 'moderation' | 'account' | 'role' | 'security' | 'data' | 'privacy' | 'website' | 'operations' | 'mail' | 'announcement';
 
 export interface AuditEntry {
   id: number;
@@ -26,6 +26,7 @@ export const AUDIT_CATEGORY_META: Record<AuditCategory, { label: string; icon: s
   website: { label: 'Website', icon: '🌐' },
   operations: { label: 'Operations', icon: '🚧' },
   mail: { label: 'Mail', icon: '✉️' },
+  announcement: { label: 'Announcements', icon: '📣' },
 };
 
 /**

@@ -64,7 +64,7 @@ type SessionFilter = 'all' | 'risky' | 'active';
                     }
                   </td>
                   <td>
-                    <div class="g-actions"><button type="button" class="g-btn" (click)="revoke(row.session)">Revoke</button></div>
+                    <div class="g-actions"><button type="button" class="g-btn dark" (click)="manage.emit(row.member.id)">👤 Manage</button><button type="button" class="g-btn" (click)="revoke(row.session)">Revoke</button></div>
                   </td>
                 </tr>
               } @empty {
@@ -103,7 +103,7 @@ type SessionFilter = 'all' | 'risky' | 'active';
               } @else {
                 <button type="button" class="g-btn" (click)="reset(a.member.id)">🔑 Reset</button>
               }
-              <button type="button" class="g-btn dark" (click)="manage.emit(a.member.id)">View</button>
+              <button type="button" class="g-btn dark" (click)="manage.emit(a.member.id)">👤 Manage</button>
             </div>
           } @empty {
             <p class="g-empty">No failed-login bursts detected.</p>

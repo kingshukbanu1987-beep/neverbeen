@@ -7,6 +7,8 @@ import { AdminInsightsService, shortDate, timeAgo } from '../shared/admin-insigh
 import { accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { IdDocument, docNaturalSize } from './id-document';
+import { ManageUserButton } from '../shared/manage-user-button';
+import { AdminManageUserHost } from '../users/manage-user-host';
 
 type Zoom = 'fit' | number;
 
@@ -22,7 +24,7 @@ const DAY = 86_400_000;
  */
 @Component({
   selector: 'app-admin-identity-document',
-  imports: [RouterLink, IdDocument, AdminConfirmDialog],
+  imports: [RouterLink, IdDocument, AdminConfirmDialog, ManageUserButton, AdminManageUserHost],
   styleUrls: ['../shared/admin-grid.css', './identity-document.css'],
   templateUrl: './identity-document.html',
   host: { '(document:keydown)': 'onKey($event)' },

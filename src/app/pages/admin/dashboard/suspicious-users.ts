@@ -10,13 +10,14 @@ import {
 import { AccountState, accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { SelectValueSync } from '../../../shared/select-value-sync';
+import { ManageUserButton } from '../shared/manage-user-button';
 
 type SortKey = 'risk' | 'name' | 'flags' | 'last';
 
 /** Dashboard section: grid of members flagged by content scans, reports and behaviour signals. */
 @Component({
   selector: 'app-admin-suspicious-users',
-  imports: [SelectValueSync, AdminConfirmDialog],
+  imports: [SelectValueSync, ManageUserButton, AdminConfirmDialog],
   template: `
     <section class="g-panel" id="suspicious-users">
       <header class="sus-head">
@@ -135,6 +136,7 @@ type SortKey = 'risk' | 'name' | 'flags' | 'last';
                   </td>
                   <td>
                     <div class="g-actions sus-actions">
+                      <app-manage-user-btn [userId]="row.member.id" [name]="row.member.fullName" />
                       @if (row.member.accountState === 'disabled') {
                         <button type="button" class="g-btn success" (click)="insights.enable(row.member.id)">Re-enable</button>
                       } @else {

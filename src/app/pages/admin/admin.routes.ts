@@ -87,6 +87,20 @@ export const adminRoutes: Routes = [
         title: 'Compose — NeverBeen Admin',
         loadComponent: () => import('./mail/mail-compose').then((m) => m.AdminMailCompose),
       },
+      // Announcements published to all / targeted users (side panel → Announcement, after Mail).
+      {
+        path: 'announcements',
+        pathMatch: 'full',
+        title: 'Announcements — NeverBeen Admin',
+        loadComponent: () => import('./announcements/announcements').then((m) => m.AdminAnnouncements),
+      },
+      {
+        path: 'announcements/new',
+        title: 'New Announcement — NeverBeen Admin',
+        loadComponent: () => import('./announcements/announcement-composer').then((m) => m.AdminAnnouncementComposer),
+      },
+      // WhatsApp Web (opens docked over the wide panel; linked by scanning the QR code).
+      { path: 'whatsapp', title: 'WhatsApp — NeverBeen Admin', loadComponent: () => import('./whatsapp/whatsapp').then((m) => m.AdminWhatsApp) },
       { path: 'users', title: 'User Management — NeverBeen Admin', loadComponent: () => import('./users/users').then((m) => m.AdminUsers) },
       { path: 'data', title: 'Data Management — NeverBeen Admin', loadComponent: () => import('./data/data').then((m) => m.AdminData) },
       { path: 'website', title: 'Website Management — NeverBeen Admin', loadComponent: () => import('./website/website').then((m) => m.AdminWebsite) },

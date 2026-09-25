@@ -14,6 +14,7 @@ import { accountStateLabel } from '../../../services/admin-moderation.service';
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { IdDocument } from './id-document';
 import { SelectValueSync } from '../../../shared/select-value-sync';
+import { ManageUserButton } from '../shared/manage-user-button';
 
 type Tab = 'pending' | 'resubmit_requested' | 'approved' | 'rejected' | 'all';
 type Pending = { kind: 'enable' | 'disable' | 'recheck'; sub: IdentitySubmission } | null;
@@ -29,7 +30,7 @@ interface Row {
 /** Admin > Dashboard > Identity Check Verification — review submitted identity documents. */
 @Component({
   selector: 'app-admin-identity-checks',
-  imports: [SelectValueSync, RouterLink, AdminConfirmDialog, IdDocument],
+  imports: [SelectValueSync, ManageUserButton, RouterLink, AdminConfirmDialog, IdDocument],
   templateUrl: './identity-checks.html',
   styleUrls: ['../shared/admin-grid.css', './identity-checks.css'],
 })

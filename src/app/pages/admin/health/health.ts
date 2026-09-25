@@ -23,6 +23,7 @@ import { downloadCsv, timeAgo } from '../shared/admin-insights.service';
 import { STORAGE_QUOTA } from '../shared/admin-data-ops.service';
 import { formatBytes } from '../data/format';
 import { SelectValueSync } from '../../../shared/select-value-sync';
+import { ManageUserButton } from '../shared/manage-user-button';
 
 type HealthTab = 'traffic' | 'activity' | 'storage' | 'performance' | 'risks';
 type ChartType = 'line' | 'area' | 'bar';
@@ -38,7 +39,7 @@ const GRAN_LABEL: Record<Granularity, string> = { hour: 'Hourly', day: 'Daily', 
  */
 @Component({
   selector: 'app-admin-health',
-  imports: [SelectValueSync, HcChart, HcDonut, HcHeatmap, HcBars, HcGauge, HcSpark, HcFunnel, HealthReportBuilder],
+  imports: [SelectValueSync, ManageUserButton, HcChart, HcDonut, HcHeatmap, HcBars, HcGauge, HcSpark, HcFunnel, HealthReportBuilder],
   styleUrls: ['../shared/admin-grid.css', '../website/website.css', './health.css'],
   templateUrl: './health.html',
 })

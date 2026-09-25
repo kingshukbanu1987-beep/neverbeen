@@ -91,6 +91,7 @@
                   </strong>
                   <small>{{ r.reporter.location }}</small>
                   <small>{{ r.reporter.email }}</small>
+                  <span class="ar-manage"><app-manage-user-btn [userId]="r.reporter.id" [name]="r.reporter.fullName" size="sm" /></span>
                 </span>
               </div>
             </div>
@@ -118,6 +119,7 @@
                       <span class="g-badge danger">{{ r.reportsAgainstMember }} reports against</span>
                     }
                   </span>
+                  <span class="ar-manage"><app-manage-user-btn [userId]="r.reported.id" [name]="r.reported.fullName" size="sm" /></span>
                 </span>
               </div>
             </div>

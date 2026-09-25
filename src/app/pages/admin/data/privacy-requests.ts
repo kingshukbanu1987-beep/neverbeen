@@ -6,6 +6,7 @@ import { AdminInsightsService, shortDate, timeAgo } from '../shared/admin-insigh
 import { AdminConfirmDialog } from '../shared/admin-confirm-dialog';
 import { daysUntil } from './format';
 import { SelectValueSync } from '../../../shared/select-value-sync';
+import { ManageUserButton } from '../shared/manage-user-button';
 
 type StatusFilter = 'open' | 'all' | PrivacyStatus;
 
@@ -19,7 +20,7 @@ const STATUS_META: Record<PrivacyStatus, { label: string; tone: string }> = {
 /** Data-subject request (DSAR) inbox — GDPR / DPDP Act / CCPA with 30-day SLA tracking and one-click fulfilment. */
 @Component({
   selector: 'app-admin-privacy-requests',
-  imports: [SelectValueSync, AdminConfirmDialog, OverlayPortal],
+  imports: [SelectValueSync, ManageUserButton, AdminConfirmDialog, OverlayPortal],
   styleUrls: ['../shared/admin-grid.css', './data.css'],
   template: `
     <div class="dm-dsar-summary">
@@ -106,6 +107,9 @@ const STATUS_META: Record<PrivacyStatus, { label: string; tone: string }> = {
                 <span class="dm-sla" [attr.data-level]="slaLevel(r)">{{ slaText(r) }}</span>
               }
               <small class="g-muted">Received {{ shortDate(r.receivedUtc) }}</small>
+              @if (memberExists(r.userId)) {
+                <app-manage-user-btn [userId]="r.userId" [name]="r.userName" size="sm" />
+              }
               @if (r.status === 'new' || r.status === 'in_progress') {
                 <div class="dm-req-actions">
                   @if (r.status === 'new') {
@@ -277,6 +281,10 @@ export class AdminPrivacyRequests {
   protected fulfilExport(r: PrivacyRequest): void {
     this.dataOps.exportUserPackage(r.userId);
     this.complete(r, r.type === 'portability' ? 'Machine-readable JSON package delivered.' : 'Copy of personal data delivered to the member.');
+  }
+
+  protected memberExists(id: number): boolean {
+    return !!this.insights.member(id);
   }
 
   protected openProfile(r: PrivacyRequest): void {

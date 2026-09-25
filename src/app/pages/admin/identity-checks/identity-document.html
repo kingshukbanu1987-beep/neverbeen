@@ -127,7 +127,10 @@
               <p class="iv-note">💬 “{{ s.memberNote }}”</p>
             }
             @if (member(); as m) {
-              <a class="iv-link" [href]="'/admin/users?user=' + m.id" target="_blank" rel="noopener">Open in User Management ↗</a>
+              <div class="iv-manage">
+                <app-manage-user-btn [userId]="m.id" [name]="m.fullName" tone="dark" />
+                <a class="iv-link" [href]="'/admin/users?user=' + m.id" target="_blank" rel="noopener">Open in User Management ↗</a>
+              </div>
             }
           </div>
 
@@ -278,3 +281,5 @@
 @if (toast(); as t) {
   <div class="iv-toast" role="status">{{ t }}</div>
 }
+
+<app-admin-manage-user-host />

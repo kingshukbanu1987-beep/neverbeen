@@ -3,6 +3,10 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { AdminMailService } from './mail/admin-mail.service';
+import { AdminPresenceService } from './shared/admin-presence.service';
+import { AdminManageUserHost } from './users/manage-user-host';
+import { AnnouncementsService } from '../../services/announcements.service';
+import { timeAgo } from './shared/admin-insights.service';
 import { AdminAuthService } from '../../services/admin-auth.service';
 import { AdminInsightsService } from './shared/admin-insights.service';
 import { MaintenanceService } from '../../services/maintenance.service';
@@ -21,7 +25,7 @@ interface AdminNavItem {
  */
 @Component({
   selector: 'app-admin-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AdminManageUserHost],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })
@@ -31,6 +35,8 @@ export class AdminLayout {
 
   protected readonly navItems: AdminNavItem[] = [
     { path: 'dashboard', label: 'Dashboard', icon: '📊', hint: 'Website statistics & activity' },
+    { path: 'announcements', label: 'Announcement', icon: '📣', hint: 'Publish notices to all or targeted users' },
+    { path: 'whatsapp', label: 'WhatsApp', icon: '🟢', hint: 'Open WhatsApp Web — scan the QR to sign in' },
     { path: 'repositories', label: 'Repositories', icon: '🗄️', hint: 'Connected git repos & integrations' },
     { path: 'users', label: 'User Management', icon: '👥', hint: 'Accounts, roles, security & audit' },
     { path: 'data', label: 'Data Management', icon: '💾', hint: 'Privacy, retention, quality & backups' },
@@ -45,6 +51,11 @@ export class AdminLayout {
   protected readonly maintenance = inject(MaintenanceService);
   protected readonly cms = inject(SiteConfigService);
   protected readonly mail = inject(AdminMailService);
+  protected readonly presence = inject(AdminPresenceService);
+  protected readonly announcements = inject(AnnouncementsService);
+  protected readonly timeAgo = timeAgo;
+  /** Side panel "Live admins" list (expanded by clicking the counter). */
+  protected readonly adminsOpen = signal(false);
   private readonly router = inject(Router);
 
   /** Sub-items of the collapsible "Mail" group (shown right below Dashboard). */
