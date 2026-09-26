@@ -23,7 +23,17 @@ export type CommunityThemeId =
   | 'mountain-escape'
   | 'ocean-breeze'
   | 'dreamscape'
-  | 'boarding-pass';
+  | 'boarding-pass'
+  | 'cosmic'
+  | 'pixel-world'
+  | 'social-snap'
+  | 'retro-90s'
+  | 'graffiti'
+  | 'fantasy'
+  | 'disney-world'
+  | 'peppa-pig'
+  | 'dino-world'
+  | 'unicorn-magic';
 
 export interface CommunityTheme {
   id: CommunityThemeId;
@@ -59,7 +69,8 @@ export const COMMUNITY_THEMES: readonly CommunityTheme[] = [
     palette: 'White · icy blue',
     audience: 'Snow destinations',
     mode: 'light',
-    preview: 'radial-gradient(circle at 25% 30%, #ffffff 0 3px, transparent 4px), radial-gradient(circle at 70% 65%, #ffffff 0 2px, transparent 3px), linear-gradient(135deg, #eaf6ff 0%, #bfe3fa 55%, #7cc0ec 100%)',
+    preview:
+      'radial-gradient(circle at 25% 30%, #ffffff 0 3px, transparent 4px), radial-gradient(circle at 70% 65%, #ffffff 0 2px, transparent 3px), linear-gradient(135deg, #eaf6ff 0%, #bfe3fa 55%, #7cc0ec 100%)',
     surface: '#ffffff',
     accent: '#2a8bd4',
   },
@@ -114,7 +125,8 @@ export const COMMUNITY_THEMES: readonly CommunityTheme[] = [
     palette: 'Pink · white · soft pastel',
     audience: 'Japan / Asia travel',
     mode: 'light',
-    preview: 'radial-gradient(circle at 30% 35%, #ffffff 0 3px, transparent 4px), linear-gradient(135deg, #fff8fa 0%, #fbd3e1 50%, #ec6f9b 80%, #b7a1f0 100%)',
+    preview:
+      'radial-gradient(circle at 30% 35%, #ffffff 0 3px, transparent 4px), linear-gradient(135deg, #fff8fa 0%, #fbd3e1 50%, #ec6f9b 80%, #b7a1f0 100%)',
     surface: '#ffffff',
     accent: '#e0457b',
   },
@@ -147,7 +159,8 @@ export const COMMUNITY_THEMES: readonly CommunityTheme[] = [
     palette: 'Blue · turquoise · waves',
     audience: 'Beach & island travelers',
     mode: 'light',
-    preview: 'repeating-radial-gradient(circle at 50% 130%, rgba(255,255,255,0.35) 0 2px, transparent 2px 9px), linear-gradient(135deg, #cdf0fa 0%, #06b6d4 50%, #0284c7 80%, #1d4ed8 100%)',
+    preview:
+      'repeating-radial-gradient(circle at 50% 130%, rgba(255,255,255,0.35) 0 2px, transparent 2px 9px), linear-gradient(135deg, #cdf0fa 0%, #06b6d4 50%, #0284c7 80%, #1d4ed8 100%)',
     surface: '#ffffff',
     accent: '#0284c7',
   },
@@ -169,11 +182,129 @@ export const COMMUNITY_THEMES: readonly CommunityTheme[] = [
     palette: 'Navy · ticket paper · amber',
     audience: 'Aviation-inspired profile',
     mode: 'light',
-    preview: 'linear-gradient(90deg, #0b1f3a 0 38%, #fffdf6 38% 100%), repeating-linear-gradient(0deg, #e8590c 0 3px, transparent 3px 6px)',
+    preview:
+      'linear-gradient(90deg, #0b1f3a 0 38%, #fffdf6 38% 100%), repeating-linear-gradient(0deg, #e8590c 0 3px, transparent 3px 6px)',
     surface: '#fffdf6',
     accent: '#0b3d91',
   },
+  {
+    id: 'cosmic',
+    name: 'Cosmic',
+    icon: '🪐',
+    palette: 'Galaxy gradients · orbiting planets',
+    audience: 'For the stargazers',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #10112d, #7850ba 60%, #268ca8)',
+    surface: '#1c1c3b',
+    accent: '#7850ba',
+  },
+  {
+    id: 'pixel-world',
+    name: 'Pixel World',
+    icon: '👾',
+    palette: 'Pixel landscapes · arcade colors',
+    audience: 'An adventure, one pixel at a time',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #161e35, #5a55b3 60%, #257c6e)',
+    surface: '#232d49',
+    accent: '#5a55b3',
+  },
+  {
+    id: 'social-snap',
+    name: 'Social Snap',
+    icon: '📷',
+    palette: 'Photo collage · sunset pink',
+    audience: 'Your life in little snapshots',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #fff1f4, #b52f68 60%, #7046b8)',
+    surface: '#fffafb',
+    accent: '#b52f68',
+  },
+  {
+    id: 'retro-90s',
+    name: 'Retro 90s',
+    icon: '📼',
+    palette: 'Vintage peach · nostalgic graphics',
+    audience: 'Rewind to the good times',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #f2dfc5, #895068 60%, #326c68)',
+    surface: '#fff8eb',
+    accent: '#895068',
+  },
+  {
+    id: 'graffiti',
+    name: 'Graffiti',
+    icon: '🎨',
+    palette: 'Spray paint · street-art energy',
+    audience: 'Leave your colorful mark',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #192330, #ab3c75 60%, #237b70)',
+    surface: '#252e40',
+    accent: '#ab3c75',
+  },
+  {
+    id: 'fantasy',
+    name: 'Fantasy',
+    icon: '🪄',
+    palette: 'Magical gradients · enchanted castles',
+    audience: 'A little everyday magic',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #f3e6fa, #7c3eb0 60%, #277b85)',
+    surface: '#fffbff',
+    accent: '#7c3eb0',
+  },
+  {
+    id: 'disney-world',
+    name: 'Disney World',
+    icon: '🏰',
+    palette: 'Elsa · Cinderella · Ariel · Simba',
+    audience: 'Step into a storybook adventure',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #ece9fc, #6850ac 60%, #276b9b)',
+    surface: '#fdfbff',
+    accent: '#6850ac',
+  },
+  {
+    id: 'peppa-pig',
+    name: 'Peppa Pig',
+    icon: '🐷',
+    palette: 'Peppa & family · sunny playtime',
+    audience: 'Little adventures, big smiles',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #fff0f6, #b53670 60%, #287752)',
+    surface: '#fffafd',
+    accent: '#b53670',
+  },
+  {
+    id: 'dino-world',
+    name: 'Dino World',
+    icon: '🦕',
+    palette: 'Dinosaurs · jungle · volcanoes',
+    audience: 'Explore the prehistoric wild',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #e9f0df, #286b53 60%, #9a542d)',
+    surface: '#fcfff6',
+    accent: '#286b53',
+  },
+  {
+    id: 'unicorn-magic',
+    name: 'Unicorn Magic',
+    icon: '🦄',
+    palette: 'Rainbows · stars · unicorns',
+    audience: 'Follow your own rainbow',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #f8eafb, #97459c 60%, #456caf)',
+    surface: '#fffbff',
+    accent: '#97459c',
+  },
 ];
+
+/** Local, decorative artwork shared by theme previews and the scene token sheet. */
+export function communityThemeArtwork(id: CommunityThemeId): string | null {
+  if (id === 'default') return null;
+  const extension = id === 'social-snap' || id === 'peppa-pig' ? 'webp' : 'svg';
+  return `/images/community-themes/${id}.${extension}`;
+}
 
 export const COMMUNITY_THEME_KEY = 'neverbeen_community_theme';
 const THEME_IDS = new Set<string>(COMMUNITY_THEMES.map((t) => t.id));
@@ -193,7 +324,9 @@ export class CommunityThemeService {
     const id = this.community.currentUser()?.id;
     return id === undefined || id === null ? 'guest' : String(id);
   });
-  readonly themeId = computed<CommunityThemeId>(() => communityTheme(this.choices()[this.userKey()]).id);
+  readonly themeId = computed<CommunityThemeId>(
+    () => communityTheme(this.choices()[this.userKey()]).id,
+  );
   readonly theme = computed(() => communityTheme(this.themeId()));
 
   constructor() {
@@ -254,13 +387,13 @@ export class CommunityThemeService {
 
   private load(): Record<string, CommunityThemeId> {
     try {
-      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(COMMUNITY_THEME_KEY) : null;
+      const raw =
+        typeof localStorage !== 'undefined' ? localStorage.getItem(COMMUNITY_THEME_KEY) : null;
       const parsed = raw ? JSON.parse(raw) : {};
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-      return Object.fromEntries(Object.entries(parsed).filter(([, v]) => typeof v === 'string' && THEME_IDS.has(v))) as Record<
-        string,
-        CommunityThemeId
-      >;
+      return Object.fromEntries(
+        Object.entries(parsed).filter(([, v]) => typeof v === 'string' && THEME_IDS.has(v)),
+      ) as Record<string, CommunityThemeId>;
     } catch {
       return {};
     }

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
-import { COMMUNITY_THEMES, COMMUNITY_THEME_KEY, CommunityThemeService } from './community-themes';
+import { COMMUNITY_THEMES, COMMUNITY_THEME_KEY, CommunityThemeService, communityTheme, communityThemeArtwork } from './community-themes';
 import { CommunityService, TOKEN_KEY, deleteCookie } from '../../services/community.service';
 
 @Component({ template: '' })
@@ -61,7 +61,7 @@ describe('Community theme dropdown', () => {
     expect(el.querySelector('.ctp-trigger')).toBeNull();
   });
 
-  it('lists the twelve themes with their colours and audience, Default first', async () => {
+  it('lists all twenty-two themes with their colours and audience, Default first', async () => {
     const { el, fixture } = await navbarAt('/community/profile');
     openPicker(el);
     fixture.detectChanges();
@@ -81,6 +81,16 @@ describe('Community theme dropdown', () => {
       'Ocean Breeze',
       'Dreamscape',
       'Boarding Pass',
+      'Cosmic',
+      'Pixel World',
+      'Social Snap',
+      'Retro 90s',
+      'Graffiti',
+      'Fantasy',
+      'Disney World',
+      'Peppa Pig',
+      'Dino World',
+      'Unicorn Magic',
     ]);
     const byId = (id: string) => text(options.find((o) => o.dataset['theme'] === id));
     expect(byId('winter-wonderland')).toContain('Snow destinations');
@@ -132,6 +142,47 @@ describe('Community theme dropdown', () => {
     fixture.detectChanges();
     expect(root().hasAttribute('data-ctheme')).toBe(false);
     expect(JSON.parse(localStorage.getItem(COMMUNITY_THEME_KEY)!)).toEqual({});
+  });
+
+  it('provides local artwork for every non-default theme and renders decorative previews', async () => {
+    const { el, fixture } = await navbarAt('/community');
+    openPicker(el);
+    fixture.detectChanges();
+    expect(new Set(COMMUNITY_THEMES.map((t) => t.id)).size).toBe(22);
+    expect(communityThemeArtwork('default')).toBeNull();
+    expect(el.querySelector('[data-theme="default"] img')).toBeNull();
+    for (const theme of COMMUNITY_THEMES.slice(1)) {
+      const preview = el.querySelector(`[data-theme="${theme.id}"] .ctp-scene-preview`);
+      expect(preview?.getAttribute('src')).toBe(communityThemeArtwork(theme.id));
+      expect(preview?.getAttribute('alt')).toBe('');
+    }
+  });
+
+  it('applies and persists every new world, including the correct light or dark mode', async () => {
+    const { el, fixture } = await navbarAt('/community/profile');
+    for (const theme of COMMUNITY_THEMES.slice(12)) {
+      openPicker(el);
+      fixture.detectChanges();
+      (el.querySelector(`[data-theme="${theme.id}"]`) as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(root().getAttribute('data-ctheme')).toBe(theme.id);
+      expect(root().getAttribute('data-ctheme-mode')).toBe(theme.mode);
+      expect(JSON.parse(localStorage.getItem(COMMUNITY_THEME_KEY)!)).toEqual({ guest: theme.id });
+    }
+    openPicker(el);
+    fixture.detectChanges();
+    (el.querySelector('[data-theme="default"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(root().hasAttribute('data-ctheme')).toBe(false);
+    expect(root().hasAttribute('data-ctheme-mode')).toBe(false);
+  });
+
+  it('restores a saved new theme on load and ignores unrecognized theme IDs', async () => {
+    localStorage.setItem(COMMUNITY_THEME_KEY, JSON.stringify({ guest: 'cosmic', invalid: 'not-a-theme' }));
+    const { el } = await navbarAt('/community');
+    expect(root().getAttribute('data-ctheme')).toBe('cosmic');
+    expect(text(el.querySelector('.ctp-trigger'))).toContain('Cosmic');
+    expect(communityTheme('not-a-theme').id).toBe('default');
   });
 
   it('keeps a separate theme per member', async () => {

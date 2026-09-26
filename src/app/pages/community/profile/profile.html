@@ -620,14 +620,15 @@
                 </button>
 
                 <div class="accessory-item">
-                  <span class="accessory-lbl">Travel Mood:</span>
-                  <select [(ngModel)]="selectedMood" class="select-mood">
-                    <option value="✈️ Traveling">✈️ Traveling</option>
-                    <option value="🏔️ Hiking">🏔️ Hiking</option>
-                    <option value="🌿 Serene">🌿 Serene</option>
-                    <option value="📸 Photographing">📸 Photographing</option>
-                    <option value="☕ Exploring Cafes">☕ Exploring Cafes</option>
-                    <option value="🌊 Coastal Chill">🌊 Coastal Chill</option>
+                  <label class="accessory-lbl" for="journey-travel-mood">Travel Mood:</label>
+                  <select id="journey-travel-mood" [(ngModel)]="selectedMood" class="select-mood">
+                    @for (group of travelMoodGroups; track group.label) {
+                      <optgroup [label]="group.label">
+                        @for (mood of group.moods; track mood) {
+                          <option [value]="mood">{{ mood }}</option>
+                        }
+                      </optgroup>
+                    }
                   </select>
                 </div>
 

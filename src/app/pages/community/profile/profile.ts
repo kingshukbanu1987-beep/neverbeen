@@ -36,6 +36,8 @@ import { CommentThreadComponent } from './comment-item';
 import { SelectValueSync } from '../../../shared/select-value-sync';
 import { AnnouncementInboxService, AnnouncementNotice, noticeTime, viewerProfile } from '../../../services/announcement-inbox.service';
 
+import { TRAVEL_MOOD_GROUPS } from './travel-moods';
+
 export type ProfileSection =
   | 'journey'
   | 'about'
@@ -109,6 +111,7 @@ export class CommunityProfile implements OnInit {
 
   // Journey state
   protected newJourneyText = '';
+  protected readonly travelMoodGroups = TRAVEL_MOOD_GROUPS;
   protected selectedMood = '✈️ Traveling';
   protected destinationSearchInput = '';
   protected readonly destinationSuggestions = signal<GoogleMapLocation[]>([]);
