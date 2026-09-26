@@ -1,0 +1,271 @@
+<div class="g-page-head">
+  <div>
+    <a class="g-back" routerLink="/admin/dashboard">← Dashboard</a>
+    <h2>{{ meta().title }}</h2>
+    <p>{{ meta().subtitle }}</p>
+  </div>
+  <nav class="g-tabs" aria-label="Member lists">
+    <a routerLink="/admin/dashboard/members/all" routerLinkActive="active">👥 Total Members <span class="count">{{ counts().all }}</span></a>
+    <a routerLink="/admin/dashboard/members/verified" routerLinkActive="active">✅ Verified <span class="count">{{ counts().verified }}</span></a>
+    <a routerLink="/admin/dashboard/members/online" routerLinkActive="active">🟢 Online Now <span class="count">{{ counts().online }}</span></a>
+  </nav>
+</div>
+
+<div class="g-kpis">
+  @for (k of kpis(); track k.label) {
+    <div class="g-kpi" [style.--kpi-glow]="k.glow">
+      <small>{{ k.label }}</small>
+      <strong>{{ k.value }}</strong>
+    </div>
+  }
+</div>
+
+<section class="g-panel">
+  <!-- Toolbar -->
+  <div class="g-toolbar">
+    <label class="g-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+      </svg>
+      <input type="search" placeholder="Search name, UID, email, city…" [value]="search()" (input)="set(search, $event)" aria-label="Search members" />
+    </label>
+
+    <label class="g-select">
+      <span>Country</span>
+      <select [value]="country()" (change)="set(country, $event)">
+        <option value="">All countries</option>
+        @for (c of countries(); track c) {
+          <option [value]="c">{{ c }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="g-select">
+      <span>Gender</span>
+      <select [value]="gender()" (change)="set(gender, $event)">
+        <option value="">All</option>
+        @for (g of genders(); track g) {
+          <option [value]="g">{{ g }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="g-select">
+      <span>Age group</span>
+      <select [value]="ageGroup()" (change)="set(ageGroup, $event)">
+        <option value="">All ages</option>
+        @for (a of ageGroups; track a) {
+          <option [value]="a">{{ a }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="g-select">
+      <span>Profession</span>
+      <select [value]="profession()" (change)="set(profession, $event)">
+        <option value="">All professions</option>
+        @for (p of professionCategories; track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select>
+    </label>
+
+    @if (mode() !== 'verified') {
+      <label class="g-select">
+        <span>Verification</span>
+        <select [value]="verification()" (change)="set(verification, $event)">
+          <option value="">Any</option>
+          <option value="verified">Verified</option>
+          <option value="unverified">Unverified</option>
+        </select>
+      </label>
+    }
+
+    <label class="g-select">
+      <span>Account</span>
+      <select [value]="account()" (change)="set(account, $event)">
+        <option value="">Any status</option>
+        @for (s of accountStates; track s) {
+          <option [value]="s">{{ stateLabel(s) }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="g-select">
+      <span>Joined</span>
+      <select [value]="joined()" (change)="set(joined, $event)">
+        <option value="">Any time</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="365">Last 12 months</option>
+      </select>
+    </label>
+
+    <span class="g-toolbar-spacer"></span>
+
+    <button type="button" class="g-icon-btn" [class.on]="view() === 'table'" (click)="view.set('table')" title="Table view">☰ Table</button>
+    <button type="button" class="g-icon-btn" [class.on]="view() === 'cards'" (click)="view.set('cards')" title="Card view">▦ Cards</button>
+    @if (view() === 'table') {
+      <button type="button" class="g-icon-btn" [class.on]="compact()" (click)="compact.set(!compact())" title="Toggle compact rows">↕ Compact</button>
+    }
+    <button type="button" class="g-icon-btn" (click)="exportCsv()" title="Download the filtered list as CSV">⤓ Export CSV</button>
+  </div>
+
+  @if (activeFilters().length) {
+    <div class="g-active">
+      <span>Active filters:</span>
+      @for (f of activeFilters(); track f.label) {
+        <button type="button" class="g-chip" (click)="f.clear()">{{ f.label }} ✕</button>
+      }
+      <button type="button" class="g-link-btn" (click)="clearAll()">Clear all</button>
+    </div>
+  }
+
+  @if (filtered().length === 0) {
+    <p class="g-empty">No members match these filters.</p>
+  } @else if (view() === 'table') {
+    <div class="g-table-wrap">
+      <table class="g-table" [class.compact]="compact()">
+        <thead>
+          <tr>
+            <th class="sortable" [class.sorted]="sortKey() === 'name'" (click)="sortBy('name')">Member <span class="arrow">{{ arrow('name') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'location'" (click)="sortBy('location')">Location <span class="arrow">{{ arrow('location') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'age'" (click)="sortBy('age')">Gender · Age <span class="arrow">{{ arrow('age') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'profession'" (click)="sortBy('profession')">Profession <span class="arrow">{{ arrow('profession') }}</span></th>
+            <th>Verification</th>
+            <th class="sortable" [class.sorted]="sortKey() === 'lastActive'" (click)="sortBy('lastActive')">Activity <span class="arrow">{{ arrow('lastActive') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'joined'" (click)="sortBy('joined')">Joined <span class="arrow">{{ arrow('joined') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'posts'" (click)="sortBy('posts')">Posts <span class="arrow">{{ arrow('posts') }}</span></th>
+            <th>Account</th>
+            <th style="text-align: right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of paged(); track m.id) {
+            <tr [class.is-disabled]="m.accountState === 'disabled'">
+              <td>
+                <div class="g-member">
+                  <span class="g-avatar">
+                    <img [src]="m.photo" [alt]="m.fullName" loading="lazy" />
+                    <i class="dot" [class.on]="m.isOnline"></i>
+                  </span>
+                  <span class="g-member-meta">
+                    <strong>
+                      {{ m.fullName }}
+                      @if (m.isVerified) {
+                        <span class="g-tick" title="Verified">✓</span>
+                      }
+                    </strong>
+                    <small>UID {{ m.uniqueId }}</small>
+                  </span>
+                </div>
+              </td>
+              <td class="g-nowrap">{{ m.city }}<br /><small class="g-muted">{{ m.country }}</small></td>
+              <td class="g-nowrap">{{ m.gender }} · {{ m.age }}<br /><small class="g-muted">{{ m.ageGroup }}</small></td>
+              <td>{{ m.profession }}<br /><small class="g-muted">{{ m.professionCategory }}</small></td>
+              <td>
+                @if (m.isVerified) {
+                  <span class="g-badge info">✓ Verified</span>
+                } @else {
+                  <span class="g-badge">Unverified</span>
+                }
+              </td>
+              <td class="g-nowrap">
+                @if (m.isOnline) {
+                  <span class="g-badge ok">● {{ m.activeStatus }}</span>
+                } @else {
+                  <span class="g-muted">{{ timeAgo(m.lastActiveUtc) }}</span>
+                }
+              </td>
+              <td class="g-nowrap g-muted">{{ shortDate(m.registeredAtUtc) }}</td>
+              <td>{{ m.postCount }}</td>
+              <td><span class="g-badge" [class]="'g-badge ' + stateTone(m.accountState)">{{ stateLabel(m.accountState) }}</span></td>
+              <td>
+                <div class="g-actions">
+                  <app-manage-user-btn [userId]="m.id" [name]="m.fullName" />
+                  @if (m.accountState === 'disabled') {
+                    <button type="button" class="g-btn success" (click)="enable(m)">Enable</button>
+                  } @else {
+                    <button type="button" class="g-btn danger" (click)="askDisable(m)">Disable</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="g-cards">
+      @for (m of paged(); track m.id) {
+        <article class="g-card" [class.is-disabled]="m.accountState === 'disabled'">
+          <div class="g-member">
+            <span class="g-avatar">
+              <img [src]="m.photo" [alt]="m.fullName" loading="lazy" />
+              <i class="dot" [class.on]="m.isOnline"></i>
+            </span>
+            <span class="g-member-meta">
+              <strong>
+                {{ m.fullName }}
+                @if (m.isVerified) {
+                  <span class="g-tick" title="Verified">✓</span>
+                }
+              </strong>
+              <small>{{ m.profession }}</small>
+            </span>
+          </div>
+          <div class="g-card-row">
+            <span class="g-badge">📍 {{ m.city || m.country }}</span>
+            <span class="g-badge">{{ m.gender }} · {{ m.age }}</span>
+            <span class="g-badge" [class]="'g-badge ' + stateTone(m.accountState)">{{ stateLabel(m.accountState) }}</span>
+          </div>
+          <div class="g-card-foot">
+            <span>Joined {{ shortDate(m.registeredAtUtc) }} · {{ m.postCount }} posts</span>
+            <app-manage-user-btn [userId]="m.id" [name]="m.fullName" size="sm" />
+            @if (m.accountState === 'disabled') {
+              <button type="button" class="g-btn success" (click)="enable(m)">Enable</button>
+            } @else {
+              <button type="button" class="g-btn danger" (click)="askDisable(m)">Disable</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <footer class="g-foot">
+    <span>
+      Showing {{ filtered().length ? (currentPage() - 1) * pageSize() + 1 : 0 }}–{{ (currentPage() - 1) * pageSize() + paged().length }}
+      of {{ filtered().length }}
+    </span>
+    <label class="g-select" style="flex-direction: row; align-items: center; gap: 0.4rem">
+      <span>Rows</span>
+      <select [value]="pageSize()" (change)="setPageSize($event)">
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+    </label>
+    <div class="g-pager">
+      <button type="button" [disabled]="currentPage() === 1" (click)="page.set(1)" aria-label="First page">«</button>
+      <button type="button" [disabled]="currentPage() === 1" (click)="page.set(currentPage() - 1)" aria-label="Previous page">‹</button>
+      @for (n of pageNumbers(); track n) {
+        <button type="button" [class.current]="n === currentPage()" (click)="page.set(n)">{{ n }}</button>
+      }
+      <button type="button" [disabled]="currentPage() === totalPages()" (click)="page.set(currentPage() + 1)" aria-label="Next page">›</button>
+      <button type="button" [disabled]="currentPage() === totalPages()" (click)="page.set(totalPages())" aria-label="Last page">»</button>
+    </div>
+  </footer>
+</section>
+
+@if (confirmTarget(); as m) {
+  <app-admin-confirm-dialog
+    heading="Disable this account?"
+    [message]="m.fullName + ' (' + (m.city || m.country) + ') will be signed out and hidden from the community until an admin re-enables the account.'"
+    confirmLabel="Disable account"
+    (confirmed)="confirmDisable($event)"
+    (cancelled)="confirmTarget.set(null)"
+  />
+}

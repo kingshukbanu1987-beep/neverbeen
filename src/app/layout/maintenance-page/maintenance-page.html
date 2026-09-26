@@ -1,0 +1,84 @@
+<section class="mt-shell" role="main" aria-labelledby="mt-title">
+  <div class="mt-orbs" aria-hidden="true">
+    <span class="orb o1"></span>
+    <span class="orb o2"></span>
+    <span class="orb o3"></span>
+    <span class="mt-grid"></span>
+  </div>
+
+  <div class="mt-card">
+    @if (page().showLogo) {
+      <img class="mt-logo" src="/neverbeen-logo.png" alt="NeverBeen" width="150" height="75" />
+    }
+
+    <span class="mt-pill"><span class="mt-pulse" aria-hidden="true"></span> Updates in progress</span>
+
+    <h1 id="mt-title">{{ page().title }}</h1>
+    <p class="mt-message">{{ page().message }}</p>
+
+    @if (page().showCountdown && remaining(); as r) {
+      <div class="mt-countdown" role="timer" aria-live="off">
+        @if (r.done) {
+          <p class="mt-back">Almost there — the site will reopen any second.</p>
+        } @else {
+          <p class="mt-label">We expect to be back in</p>
+          <div class="mt-tiles">
+            @if (r.d) {
+              <div><strong>{{ r.d }}</strong><small>days</small></div>
+            }
+            <div><strong>{{ pad(r.h) }}</strong><small>hours</small></div>
+            <div><strong>{{ pad(r.m) }}</strong><small>minutes</small></div>
+            <div><strong>{{ pad(r.s) }}</strong><small>seconds</small></div>
+          </div>
+          <p class="mt-eta">Back online around {{ schedule().endUtc | date: 'EEE d MMM, h:mm a' }}</p>
+        }
+      </div>
+    }
+
+    @if (page().showProgress && progress() !== null) {
+      <div class="mt-progress" role="progressbar" [attr.aria-valuenow]="progress()" aria-valuemin="0" aria-valuemax="100" aria-label="Update progress">
+        <div class="mt-bar"><span [style.width.%]="progress()"></span></div>
+        <small>{{ progress() }}% of the maintenance window completed</small>
+      </div>
+    }
+
+    @if (page().showUpdates && page().updates.length) {
+      <div class="mt-updates">
+        <p class="mt-label">Status updates</p>
+        <ol>
+          @for (u of page().updates; track u.id) {
+            <li>
+              <time [attr.datetime]="u.atUtc">{{ u.atUtc | date: 'h:mm a' }}</time>
+              <span>{{ u.text }}</span>
+            </li>
+          }
+        </ol>
+      </div>
+    }
+
+    @if (page().showNotify) {
+      <form class="mt-notify" (submit)="notify($event)">
+        <label for="mt-email">Tell me when NeverBeen is back</label>
+        <div class="mt-notify-row">
+          <input id="mt-email" type="email" placeholder="you@example.com" [value]="email()" (input)="onEmail($event)" autocomplete="email" />
+          <button type="submit">Notify me</button>
+        </div>
+        @if (subscribed() === 'ok') {
+          <small class="ok">✓ Thanks — we will email you the moment we are back.</small>
+        } @else if (subscribed() === 'invalid') {
+          <small class="bad">Please enter a valid email address.</small>
+        }
+      </form>
+    }
+
+    @if (page().showContact && page().contactEmail) {
+      <p class="mt-contact">Urgent? Write to <a [href]="'mailto:' + page().contactEmail">{{ page().contactEmail }}</a></p>
+    }
+
+    @if (page().signature) {
+      <p class="mt-sign">{{ page().signature }}</p>
+    }
+  </div>
+
+  <p class="mt-foot">© {{ year }} NeverBeen · Portraits of elsewhere</p>
+</section>

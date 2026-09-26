@@ -1,7 +1,16 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import { AdminMailService } from './mail/admin-mail.service';
+import { AdminPresenceService } from './shared/admin-presence.service';
+import { AdminManageUserHost } from './users/manage-user-host';
+import { AnnouncementsService } from '../../services/announcements.service';
+import { timeAgo } from './shared/admin-insights.service';
 import { AdminAuthService } from '../../services/admin-auth.service';
-import { CommunityService } from '../../services/community.service';
+import { AdminInsightsService } from './shared/admin-insights.service';
+import { MaintenanceService } from '../../services/maintenance.service';
+import { SiteConfigService } from '../../services/site-config.service';
 
 interface AdminNavItem {
   path: string;
@@ -16,23 +25,77 @@ interface AdminNavItem {
  */
 @Component({
   selector: 'app-admin-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AdminManageUserHost],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })
 export class AdminLayout {
   protected readonly adminAuth = inject(AdminAuthService);
-  protected readonly community = inject(CommunityService);
+  protected readonly insights = inject(AdminInsightsService);
 
   protected readonly navItems: AdminNavItem[] = [
     { path: 'dashboard', label: 'Dashboard', icon: '📊', hint: 'Website statistics & activity' },
+    { path: 'announcements', label: 'Announcement', icon: '📣', hint: 'Publish notices to all or targeted users' },
+    { path: 'whatsapp', label: 'WhatsApp', icon: '🟢', hint: 'Open WhatsApp Web — scan the QR to sign in' },
     { path: 'repositories', label: 'Repositories', icon: '🗄️', hint: 'Connected git repos & integrations' },
-    { path: 'users', label: 'User Management', icon: '👥', hint: 'Community member profiles' },
-    { path: 'data', label: 'Data Management', icon: '💾', hint: 'Datasets, storage & backups' },
+    { path: 'users', label: 'User Management', icon: '👥', hint: 'Accounts, roles, security & audit' },
+    { path: 'data', label: 'Data Management', icon: '💾', hint: 'Privacy, retention, quality & backups' },
+    { path: 'website', label: 'Website Management', icon: '🌐', hint: 'Edit Home, Community & site-wide components' },
+    { path: 'maintenance', label: 'Site Downtime', icon: '🚧', hint: 'Take the website down for critical releases' },
+    { path: 'health', label: 'Health', icon: '🩺', hint: 'Traffic, activity, storage & performance' },
   ];
 
-  protected readonly onlineCount = this.community.onlineCompanions;
-  protected readonly memberCount = this.community.companions.asReadonly();
+  protected readonly onlineCount = this.insights.onlineMembers;
+  protected readonly memberCount = this.insights.members;
+  protected readonly toast = this.insights.toast;
+  protected readonly maintenance = inject(MaintenanceService);
+  protected readonly cms = inject(SiteConfigService);
+  protected readonly mail = inject(AdminMailService);
+  protected readonly presence = inject(AdminPresenceService);
+  protected readonly announcements = inject(AnnouncementsService);
+  protected readonly timeAgo = timeAgo;
+  /** Side panel "Live admins" list (expanded by clicking the counter). */
+  protected readonly adminsOpen = signal(false);
+  private readonly router = inject(Router);
+
+  /** Sub-items of the collapsible "Mail" group (shown right below Dashboard). */
+  protected readonly mailItems = [
+    { path: 'mail/inbox', label: 'Inbox', icon: '📥', hint: 'Messages from other admins' },
+    { path: 'mail/sent', label: 'Sent', icon: '📤', hint: 'Messages you sent to admins' },
+    { path: 'mail/compose', label: 'Compose', icon: '✏️', hint: 'Write to one or more admins' },
+  ];
+
+  /** Sub-items shown below "User Management" while it is open. */
+  protected readonly userItems = [
+    { tab: 'directory', label: 'Directory', icon: '👥', hint: 'All accounts, segments & bulk actions' },
+    { tab: 'registrations', label: 'Registrations statistics', icon: '📈', hint: 'User registrations over time by geography, gender & age' },
+    { tab: 'active', label: 'Daily active users', icon: '⚡', hint: 'DAU / WAU / MAU by geography, gender & age' },
+    { tab: 'engagement', label: 'Most active / inactive', icon: '🔥', hint: 'Leaderboards of the most and least active users' },
+    { tab: 'disabled', label: 'Disabled users', icon: '⛔', hint: 'Disabled accounts over time, reasons & reinstatements' },
+    { tab: 'new', label: 'New users', icon: '🌱', hint: 'New users today, this week, month, year & last 5 years' },
+  ];
+
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+  protected readonly inMail = computed(() => this.url().startsWith('/admin/mail'));
+  protected readonly inUsers = computed(() => /^\/admin\/users(\?|$|\/)/.test(this.url()));
+  /** Current User Management tab (from ?tab=). */
+  protected readonly usersTab = computed(() => {
+    const m = /[?&]tab=([^&#]+)/.exec(this.url());
+    return m ? decodeURIComponent(m[1]) : 'directory';
+  });
+  private readonly mailToggled = signal<boolean | null>(null);
+  /** Open by default; the admin can collapse it (it re-opens while a Mail page is shown). */
+  protected readonly mailOpen = computed(() => this.inMail() || (this.mailToggled() ?? true));
+
+  protected toggleMail(): void {
+    this.mailToggled.set(!this.mailOpen());
+  }
 
   logout(): void {
     this.adminAuth.logout();

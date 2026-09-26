@@ -1,295 +1,188 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { CommunityService } from '../../../services/community.service';
-import type { Companion, CurrentUser } from '../../../models/community';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { AdminInsightsService } from '../shared/admin-insights.service';
+import { AdminUserOpsService } from '../shared/admin-user-ops.service';
+import { AdminUserDirectory } from './user-directory';
+import { AdminUserDrawer } from './user-drawer';
+import { AdminRolesMatrix } from './roles-matrix';
+import { AdminSessionsSecurity } from './sessions-security';
+import { AdminAuditLog } from '../shared/admin-audit-log';
+import type { AuditCategory } from '../../../services/admin-audit.service';
+import { AdminUserInsights, INSIGHT_SECTIONS, InsightSection } from './insights/user-insights';
 
-interface MemberRow {
-  id: number;
-  fullName: string;
-  profilePhotoUrl: string;
-  profession: string;
-  location: string;
-  isOnline: boolean;
-  status: Companion['status'];
-  isVerified: boolean;
-  isProfileLocked: boolean;
-  postCount: number;
-  isCurrentUser: boolean;
-}
+type ManageTab = 'directory' | 'roles' | 'sessions' | 'audit';
+type UsersTab = ManageTab | InsightSection;
 
-type FilterKey = 'all' | 'online' | 'verified' | 'locked' | 'pending';
+const DAY = 864e5;
 
 /**
- * Admin > User Management — community member profile management:
- * search, filter and verify / lock / delete any member profile.
- * Mutations persist to the same localStorage datasets the community uses.
+ * Admin > User Management — directory with segments & bulk actions, a User 360° drawer,
+ * roles/permissions (RBAC), sessions & security monitoring and an audit trail.
  */
 @Component({
   selector: 'app-admin-users',
+  imports: [AdminUserDirectory, AdminUserDrawer, AdminRolesMatrix, AdminSessionsSecurity, AdminAuditLog, AdminUserInsights],
+  styleUrls: ['../shared/admin-grid.css', './users.css'],
   template: `
-    <div class="admin-page-head">
-      <h2>User Profile Management</h2>
-      <p>Review, verify, lock or remove community member profiles.</p>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="user-toolbar">
-      <label class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"></circle>
-          <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
-        </svg>
-        <input
-          type="search"
-          placeholder="Search by name, profession or city…"
-          [value]="searchTerm()"
-          (input)="onSearch($event)"
-          aria-label="Search members"
-        />
-      </label>
-
-      <div class="filter-chips" role="group" aria-label="Filter members">
-        @for (chip of filterChips; track chip.key) {
-          <button
-            type="button"
-            class="chip"
-            [class.active]="filter() === chip.key"
-            (click)="filter.set(chip.key)"
-          >
-            {{ chip.label }}
-            <span class="chip-count">{{ chipCount(chip.key) }}</span>
-          </button>
-        }
+    <header class="g-page-head">
+      <div>
+        <h2>User Management</h2>
+        <p>Know every member at a glance and control their account — roles, access, security and privacy.</p>
       </div>
-    </div>
+    </header>
 
-    <div class="user-panel">
-      @if (filteredMembers().length === 0) {
-        <p class="empty-note">No members match this search or filter.</p>
-      } @else {
-        <div class="user-table-wrap">
-          <table class="user-table">
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Posts</th>
-                <th>Flags</th>
-                <th class="actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (member of filteredMembers(); track member.id) {
-                <tr [class.current-user]="member.isCurrentUser">
-                  <td class="member-cell">
-                    <img [src]="member.profilePhotoUrl" [alt]="'Photo of ' + member.fullName" />
-                    <div class="member-meta">
-                      <strong>
-                        {{ member.fullName }}
-                        @if (member.isCurrentUser) {
-                          <span class="you-tag">YOU</span>
-                        }
-                      </strong>
-                      <small>{{ member.profession }}</small>
-                    </div>
-                  </td>
-                  <td class="muted">{{ member.location }}</td>
-                  <td><span class="status-chip" [attr.data-status]="member.status">{{ statusLabel(member.status) }}</span></td>
-                  <td class="muted">{{ member.postCount }}</td>
-                  <td class="flags-cell">
-                    @if (member.isVerified) {
-                      <span class="flag ok" title="Identity verified">✓ Verified</span>
-                    } @else {
-                      <span class="flag" title="Not verified">– Unverified</span>
-                    }
-                    @if (member.isProfileLocked) {
-                      <span class="flag warn" title="Profile locked">🔒 Locked</span>
-                    }
-                  </td>
-                  <td class="actions-cell">
-                    <button
-                      type="button"
-                      class="action-btn"
-                      [class.active]="member.isVerified"
-                      (click)="toggleVerify(member)"
-                      [title]="member.isVerified ? 'Remove verification' : 'Verify this member'"
-                    >
-                      {{ member.isVerified ? 'Unverify' : 'Verify' }}
-                    </button>
-                    <button
-                      type="button"
-                      class="action-btn"
-                      [class.active]="member.isProfileLocked"
-                      (click)="toggleLock(member)"
-                      [title]="member.isProfileLocked ? 'Unlock profile' : 'Lock profile'"
-                    >
-                      {{ member.isProfileLocked ? 'Unlock' : 'Lock' }}
-                    </button>
-                    <button
-                      type="button"
-                      class="action-btn danger"
-                      (click)="deleteMember(member)"
-                      [disabled]="member.isCurrentUser"
-                      title="Delete member profile"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+    @if (!isInsight()) {
+    <div class="g-kpis um-kpis">
+      @for (k of kpis(); track k.label) {
+        <div class="g-kpi" [style.--kpi-glow]="k.glow">
+          <small>{{ k.label }}</small>
+          <strong>{{ k.value }}</strong>
+          <span class="um-kpi-sub">{{ k.sub }}</span>
+          @if (k.pct !== undefined) {
+            <span class="um-kpi-bar"><i [style.width.%]="k.pct"></i></span>
+          }
         </div>
       }
     </div>
-
-    @if (confirmation(); as member) {
-      <div class="modal-backdrop" (click)="closeConfirm()">
-        <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-          <h3>Delete member profile?</h3>
-          <p>
-            <strong>{{ member.fullName }}</strong> ({{ member.location }}) will be permanently removed
-            from the companion directory. This cannot be undone.
-          </p>
-          <div class="modal-actions">
-            <button type="button" class="btn-ghost" (click)="closeConfirm()">Cancel</button>
-            <button type="button" class="btn-danger" (click)="confirmDelete()">Yes, delete profile</button>
-          </div>
-        </div>
-      </div>
     }
 
-    @if (toast(); as message) {
-      <div class="admin-toast" role="status">{{ message }}</div>
+    <div class="um-tabs-row">
+      <nav class="g-tabs" role="tablist" aria-label="User management sections">
+        @for (t of tabs; track t.key) {
+          <button type="button" role="tab" [class.active]="tab() === t.key" [attr.aria-selected]="tab() === t.key" (click)="setTab(t.key)">
+            {{ t.icon }} {{ t.label }}
+            @if (t.key === 'sessions' && alertCount()) {
+              <span class="count">{{ alertCount() }}</span>
+            }
+          </button>
+        }
+      </nav>
+      <nav class="um-insight-tabs" role="tablist" aria-label="User insights">
+        <span class="um-insight-label">📊 Insights</span>
+        @for (t of insightTabs; track t.key) {
+          <button type="button" role="tab" class="um-itab" [class.active]="tab() === t.key" [attr.aria-selected]="tab() === t.key" [attr.data-tab]="t.key" (click)="setTab(t.key)" [title]="t.title">
+            <span aria-hidden="true">{{ t.icon }}</span> {{ t.label }}
+          </button>
+        }
+      </nav>
+    </div>
+
+    @switch (tab()) {
+      @case ('directory') {
+        <app-admin-user-directory (manage)="open($event)" />
+      }
+      @case ('roles') {
+        <app-admin-roles-matrix />
+      }
+      @case ('sessions') {
+        <app-admin-sessions-security (manage)="open($event)" />
+      }
+      @case ('audit') {
+        <app-admin-audit-log [categories]="auditCategories" />
+      }
+      @default {
+        @defer (on immediate) {
+          <app-admin-user-insights [section]="insightTab()" />
+        } @placeholder {
+          <div class="um-skeleton" aria-busy="true" aria-label="Loading insights"><i></i><i></i><i></i></div>
+        }
+      }
+    }
+
+    @if (openId(); as id) {
+      <app-admin-user-drawer [userId]="id" (closed)="close()" />
     }
   `,
-  styleUrl: './users.css',
 })
 export class AdminUsers {
-  private readonly community = inject(CommunityService);
+  private readonly insights = inject(AdminInsightsService);
+  private readonly ops = inject(AdminUserOpsService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
-  protected readonly searchTerm = signal('');
-  protected readonly filter = signal<FilterKey>('all');
-  protected readonly confirmation = signal<MemberRow | null>(null);
-  protected readonly toast = signal<string | null>(null);
-
-  protected readonly filterChips: { key: FilterKey; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'online', label: 'Online' },
-    { key: 'verified', label: 'Verified' },
-    { key: 'locked', label: 'Locked' },
-    { key: 'pending', label: 'Pending' },
+  protected readonly tabs: { key: UsersTab; label: string; icon: string }[] = [
+    { key: 'directory', label: 'Directory', icon: '👥' },
+    { key: 'roles', label: 'Roles & permissions', icon: '🎖️' },
+    { key: 'sessions', label: 'Sessions & security', icon: '🔐' },
+    { key: 'audit', label: 'Audit log', icon: '🧾' },
   ];
+  protected readonly insightTabs = INSIGHT_SECTIONS;
+  protected readonly auditCategories: AuditCategory[] = ['account', 'moderation', 'role', 'security'];
 
-  protected readonly allMembers = computed<MemberRow[]>(() => {
-    const current = this.community.currentUser();
-    const rows: MemberRow[] = this.community
-      .companions()
-      .map((c) => this.toRow(c, c.id === current?.id));
-
-    // Make sure the signed-in community member is manageable even if absent from the directory.
-    if (current && !rows.some((r) => r.id === current.id)) {
-      rows.unshift(this.toRow(current as unknown as Companion, true));
-    }
-    return rows;
+  private readonly query = toSignal(this.route.queryParamMap.pipe(map((p) => ({ tab: p.get('tab'), user: p.get('user') }))), {
+    initialValue: { tab: null, user: null },
   });
+  private readonly localTab = signal<UsersTab | null>(null);
+  private readonly localOpen = signal<number | null | undefined>(undefined);
 
-  protected readonly filteredMembers = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const filter = this.filter();
-    return this.allMembers().filter((m) => {
-      if (filter === 'online' && !m.isOnline) return false;
-      if (filter === 'verified' && !m.isVerified) return false;
-      if (filter === 'locked' && !m.isProfileLocked) return false;
-      if (filter === 'pending' && m.status !== 'pending_incoming' && m.status !== 'pending_outgoing') return false;
-      if (!term) return true;
-      return (
-        m.fullName.toLowerCase().includes(term) ||
-        m.profession.toLowerCase().includes(term) ||
-        m.location.toLowerCase().includes(term)
-      );
+  protected readonly tab = computed<UsersTab>(() => {
+    const t = this.localTab() ?? this.query().tab;
+    return this.tabs.some((x) => x.key === t) || INSIGHT_SECTIONS.some((x) => x.key === t) ? (t as UsersTab) : 'directory';
+  });
+  protected readonly isInsight = computed(() => INSIGHT_SECTIONS.some((x) => x.key === this.tab()));
+  protected readonly insightTab = computed<InsightSection>(() => (this.isInsight() ? (this.tab() as InsightSection) : 'registrations'));
+
+  constructor() {
+    // A new ?tab= in the URL (e.g. from the side panel) wins over the last clicked tab.
+    effect(() => {
+      this.query().tab;
+      untracked(() => this.localTab.set(null));
     });
+  }
+
+  protected readonly openId = computed<number | null>(() => {
+    const local = this.localOpen();
+    if (local !== undefined) return local;
+    const u = Number(this.query().user);
+    return Number.isFinite(u) && u > 0 ? u : null;
   });
 
-  onSearch(event: Event): void {
-    this.searchTerm.set((event.target as HTMLInputElement).value);
+  protected readonly alertCount = computed(() => this.ops.loginAlerts().length);
+
+  protected readonly kpis = computed(() => {
+    const members = this.insights.members();
+    const now = Date.now();
+    const total = members.length || 1;
+    const new7 = members.filter((m) => now - Date.parse(m.registeredAtUtc) <= 7 * DAY).length;
+    const active24 = members.filter((m) => m.isOnline || now - Date.parse(m.lastActiveUtc) <= DAY).length;
+    const verified = members.filter((m) => m.isVerified).length;
+    const restricted = members.filter((m) => m.accountState === 'restricted' || m.accountState === 'warned' || m.accountState === 'identity_required').length;
+    const disabled = members.filter((m) => m.accountState === 'disabled').length;
+    this.ops.state();
+    const twoFa = members.filter((m) => this.ops.security(m).twoFactor).length;
+    const pct = (n: number) => Math.round((n / total) * 100);
+    return [
+      { label: 'Total users', value: members.length.toLocaleString(), sub: `${this.ops.roleCounts().moderator + this.ops.roleCounts().admin} staff accounts`, glow: 'rgba(99,102,241,0.16)' },
+      { label: 'New · 7 days', value: new7.toLocaleString(), sub: 'Registrations this week', glow: 'rgba(16,185,129,0.16)' },
+      { label: 'Active · 24h', value: active24.toLocaleString(), sub: `${pct(active24)}% daily active`, pct: pct(active24), glow: 'rgba(14,165,233,0.16)' },
+      { label: 'Verified', value: `${pct(verified)}%`, sub: `${verified.toLocaleString()} identity-verified`, pct: pct(verified), glow: 'rgba(16,185,129,0.16)' },
+      { label: '2FA adoption', value: `${pct(twoFa)}%`, sub: `${twoFa.toLocaleString()} protected accounts`, pct: pct(twoFa), glow: 'rgba(139,92,246,0.16)' },
+      { label: 'Restricted · Disabled', value: `${restricted} · ${disabled}`, sub: 'Accounts under action', glow: 'rgba(239,68,68,0.16)' },
+    ];
+  });
+
+  protected setTab(tab: UsersTab): void {
+    this.localTab.set(tab);
+    this.syncUrl();
   }
 
-  chipCount(key: FilterKey): number {
-    const members = this.allMembers();
-    switch (key) {
-      case 'online':
-        return members.filter((m) => m.isOnline).length;
-      case 'verified':
-        return members.filter((m) => m.isVerified).length;
-      case 'locked':
-        return members.filter((m) => m.isProfileLocked).length;
-      case 'pending':
-        return members.filter((m) => m.status === 'pending_incoming' || m.status === 'pending_outgoing').length;
-      default:
-        return members.length;
-    }
+  protected open(id: number): void {
+    this.localOpen.set(id);
+    this.syncUrl();
   }
 
-  statusLabel(status: Companion['status']): string {
-    switch (status) {
-      case 'connected':
-        return 'Connected';
-      case 'pending_incoming':
-        return 'Request received';
-      case 'pending_outgoing':
-        return 'Request sent';
-      default:
-        return 'No request';
-    }
+  protected close(): void {
+    this.localOpen.set(null);
+    this.syncUrl();
   }
 
-  toggleVerify(member: MemberRow): void {
-    this.community.adminPatchCompanion(member.id, { isVerified: !member.isVerified });
-    this.showToast(`${member.fullName} ${member.isVerified ? 'unverified' : 'verified'}.`);
-  }
-
-  toggleLock(member: MemberRow): void {
-    this.community.adminPatchCompanion(member.id, { isProfileLocked: !member.isProfileLocked });
-    this.showToast(`${member.fullName}'s profile ${member.isProfileLocked ? 'unlocked' : 'locked'}.`);
-  }
-
-  deleteMember(member: MemberRow): void {
-    this.confirmation.set(member);
-  }
-
-  closeConfirm(): void {
-    this.confirmation.set(null);
-  }
-
-  confirmDelete(): void {
-    const member = this.confirmation();
-    if (!member) return;
-    this.community.adminDeleteCompanion(member.id);
-    this.confirmation.set(null);
-    this.showToast(`${member.fullName} was removed from the directory.`);
-  }
-
-  private toRow(companion: Companion, isCurrentUser: boolean): MemberRow {
-    return {
-      id: companion.id,
-      fullName: companion.fullName ?? 'Unnamed member',
-      profilePhotoUrl: companion.profilePhotoUrl ?? '',
-      profession: companion.profession ?? '—',
-      location: [companion.city, companion.country].filter(Boolean).join(', ') || '—',
-      isOnline: companion.isOnline === true,
-      status: companion.status ?? 'none',
-      isVerified: companion.isVerified === true,
-      isProfileLocked: companion.isProfileLocked === true,
-      postCount: this.community.journeyPostCountFor(companion.id),
-      isCurrentUser,
-    };
-  }
-
-  private showToast(message: string): void {
-    this.toast.set(message);
-    window.setTimeout(() => {
-      if (this.toast() === message) this.toast.set(null);
-    }, 2600);
+  private syncUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: this.tab() === 'directory' ? null : this.tab(), user: this.openId() ?? null },
+      replaceUrl: true,
+    });
   }
 }

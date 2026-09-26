@@ -1,0 +1,237 @@
+<header class="g-page-head">
+  <div>
+    <h2>Website Management</h2>
+    <p>Edit, re-order, show or hide every component of the public site — preview the draft live, then publish in one click.</p>
+  </div>
+  <div class="wm-publish-bar" [class.dirty]="pending().length">
+    <span class="wm-state">
+      @if (pending().length) {
+        <span class="wm-dot warn"></span> {{ pending().length }} unpublished change(s)
+      } @else {
+        <span class="wm-dot ok"></span> Live site is up to date
+      }
+    </span>
+    <button type="button" class="g-btn" [disabled]="!pending().length" (click)="confirm.set({ kind: 'discard' })">Discard</button>
+    <button type="button" class="g-btn success" [disabled]="!pending().length" (click)="openPublish()">🚀 Publish</button>
+  </div>
+</header>
+
+<div class="g-kpis">
+  @for (k of kpis(); track k.label) {
+    <div class="g-kpi" [style.--kpi-glow]="k.glow">
+      <small>{{ k.label }}</small>
+      <strong>{{ k.value }}</strong>
+      <span class="wm-kpi-sub">{{ k.sub }}</span>
+    </div>
+  }
+</div>
+
+<div class="wm-tabs-row">
+  <nav class="g-tabs" role="tablist" aria-label="Website management sections">
+    @for (t of tabs; track t.key) {
+      <button type="button" role="tab" [class.active]="tab() === t.key" [attr.aria-selected]="tab() === t.key" (click)="setTab(t.key)">
+        {{ t.icon }} {{ t.label }}
+        @if (t.key === 'history' && revisions().length) {
+          <span class="count">{{ revisions().length }}</span>
+        }
+      </button>
+    }
+  </nav>
+</div>
+
+@switch (tab()) {
+  @case ('editor') {
+    <div class="wm-editor">
+      <!-- ============ Component tree ============ -->
+      <aside class="g-panel wm-tree" aria-label="Website components">
+        <label class="g-search wm-tree-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+          </svg>
+          <input type="search" placeholder="Find a component…" [value]="search()" (input)="search.set($any($event.target).value)" aria-label="Find a component" />
+        </label>
+        @for (p of tree(); track p.key) {
+          <div class="wm-group">
+            <p class="wm-group-title"><span aria-hidden="true">{{ p.icon }}</span> {{ p.label }}</p>
+            @for (c of p.components; track c.key) {
+              <button type="button" class="wm-node" [class.active]="selectedKey() === c.key" (click)="select(c.key)">
+                <span class="wm-node-icon" aria-hidden="true">{{ c.icon }}</span>
+                <span class="wm-node-text">
+                  <strong>{{ c.label }}</strong>
+                  <small>{{ c.fields.length }} setting(s)</small>
+                </span>
+                @if (pendingByComponent().get(c.key); as n) {
+                  <span class="wm-node-badge" title="Unpublished changes">{{ n }}</span>
+                } @else if (cms.isCustomised(c.key)) {
+                  <span class="wm-node-custom" title="Customised"></span>
+                }
+              </button>
+            }
+          </div>
+        } @empty {
+          <p class="g-empty">No component matches “{{ search() }}”.</p>
+        }
+      </aside>
+
+      <!-- ============ Field editor ============ -->
+      <section class="g-panel wm-form" [attr.aria-label]="selected().label + ' settings'">
+        <div class="wm-form-head">
+          <span class="wm-form-icon" aria-hidden="true">{{ selected().icon }}</span>
+          <div>
+            <small class="wm-crumb">{{ pageLabel(selected().page) }}</small>
+            <h3>{{ selected().label }}</h3>
+            <p>{{ selected().description }}</p>
+          </div>
+          @if (cms.isCustomised(selectedKey())) {
+            <button type="button" class="g-btn" (click)="resetComponent()" title="Restore every setting of this component to the shipped default">↺ Reset component</button>
+          }
+        </div>
+        <div class="wm-fields">
+          @for (f of selected().fields; track f.key) {
+            <app-cms-field-editor [component]="selectedKey()" [field]="f.key" />
+          }
+        </div>
+      </section>
+
+      <!-- ============ Live preview ============ -->
+      <section class="g-panel wm-preview" aria-label="Live preview">
+        <div class="wm-preview-bar">
+          <div class="wm-seg" role="radiogroup" aria-label="Preview device">
+            @for (d of devices; track d.key) {
+              <button type="button" role="radio" [attr.aria-checked]="device() === d.key" [class.active]="device() === d.key" (click)="device.set(d.key)" [title]="d.label">{{ d.icon }}</button>
+            }
+          </div>
+          <div class="wm-seg" role="radiogroup" aria-label="Preview version">
+            <button type="button" role="radio" [attr.aria-checked]="previewSource() === 'draft'" [class.active]="previewSource() === 'draft'" (click)="previewSource.set('draft')">Draft</button>
+            <button type="button" role="radio" [attr.aria-checked]="previewSource() === 'live'" [class.active]="previewSource() === 'live'" (click)="previewSource.set('live')">Live</button>
+          </div>
+          <span class="g-toolbar-spacer"></span>
+          <button type="button" class="g-icon-btn" (click)="reloadPreview()" title="Reload preview">⟳</button>
+          <button type="button" class="g-icon-btn" (click)="openPreviewTab()" title="Open the live page in a new tab">↗</button>
+        </div>
+        <div class="wm-url"><span class="wm-url-lock">🔒</span> {{ previewPath() }}</div>
+        <div class="wm-frame-host" #previewHost>
+          <div class="wm-frame-scaler" [style.width.px]="deviceWidth() * scale()" [style.height.px]="720 * scale()">
+            <iframe
+              title="Website preview"
+              [src]="previewUrl()"
+              [style.width.px]="deviceWidth()"
+              [style.height.px]="720"
+              [style.transform]="'scale(' + scale() + ')'"
+            ></iframe>
+          </div>
+        </div>
+        <p class="wm-preview-note">
+          @if (previewSource() === 'draft') {
+            Draft preview — updates live as you type. Visitors still see the published version until you publish.
+          } @else {
+            Showing exactly what visitors see right now.
+          }
+        </p>
+      </section>
+    </div>
+  }
+
+  @case ('history') {
+    <section class="g-panel">
+      <div class="g-toolbar">
+        <div>
+          <strong class="wm-panel-title">Revisions</strong>
+          <small class="g-muted">Every publish is kept ({{ revisions().length }} of 30). Load one into the draft or roll the site back instantly.</small>
+        </div>
+        <span class="g-toolbar-spacer"></span>
+        <button type="button" class="g-icon-btn" (click)="exportConfig()">⤓ Export live config</button>
+        <label class="g-icon-btn wm-file">
+          ⤒ Import config
+          <input type="file" accept="application/json,.json" (change)="importConfig($event)" />
+        </label>
+        <button type="button" class="g-btn danger" (click)="confirm.set({ kind: 'reset' })">Reset all to defaults</button>
+      </div>
+      <div class="g-table-wrap">
+        <table class="g-table">
+          <thead>
+            <tr>
+              <th>Published</th>
+              <th>Note</th>
+              <th>Changes</th>
+              <th>By</th>
+              <th class="g-nowrap">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of revisions(); track r.id; let first = $first) {
+              <tr>
+                <td class="g-nowrap">
+                  {{ timeAgo(r.atUtc) }}
+                  <small class="g-muted wm-block">{{ r.atUtc.slice(0, 16).replace('T', ' ') }} UTC</small>
+                </td>
+                <td>
+                  {{ r.note }}
+                  @if (first) {
+                    <span class="g-badge ok">Live</span>
+                  }
+                </td>
+                <td>{{ r.changes }}</td>
+                <td>{{ r.by }}</td>
+                <td>
+                  <div class="g-actions">
+                    <button type="button" class="g-btn" (click)="loadRevision(r.id)">Load into draft</button>
+                    <button type="button" class="g-btn violet" [disabled]="first" (click)="confirm.set({ kind: 'rollback', revisionId: r.id })">Roll back</button>
+                    <button type="button" class="g-icon-btn" (click)="downloadRevision(r.id)" title="Download JSON">⤓</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5"><p class="g-empty">Nothing published yet — the site uses its shipped design. Make a change in the visual editor and press Publish.</p></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @case ('activity') {
+    <app-admin-audit-log [categories]="auditCategories" />
+  }
+}
+
+@if (publishOpen()) {
+  <div class="g-modal-backdrop" appOverlayPortal (click)="publishOpen.set(false)">
+    <div class="g-modal wm-publish-modal" role="dialog" aria-modal="true" aria-label="Publish changes" (click)="$event.stopPropagation()">
+      <h3>Publish {{ pending().length }} change(s)?</h3>
+      <p>These changes go live for every visitor immediately. A revision is saved so you can roll back.</p>
+      <ul class="wm-change-list">
+        @for (c of pending(); track c.component + c.field) {
+          <li><strong>{{ c.componentLabel }}</strong> › {{ c.fieldLabel }}</li>
+        }
+      </ul>
+      <label class="wm-note-label" for="wm-note">Revision note</label>
+      <input id="wm-note" type="text" class="wm-note" placeholder="e.g. Monsoon campaign hero + new FAQ" [value]="publishNote()" (input)="publishNote.set($any($event.target).value)" (keydown.enter)="publish()" />
+      <div class="g-modal-actions">
+        <button type="button" class="g-btn" (click)="publishOpen.set(false)">Cancel</button>
+        <button type="button" class="g-btn success" (click)="publish()">🚀 Publish now</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirm(); as c) {
+  <app-admin-confirm-dialog
+    [heading]="c.kind === 'discard' ? 'Discard unpublished changes?' : c.kind === 'reset' ? 'Reset every component?' : 'Roll the website back?'"
+    [message]="
+      c.kind === 'discard'
+        ? 'All ' + pending().length + ' draft change(s) will be lost and the editor will match the live site.'
+        : c.kind === 'reset'
+          ? 'Every override is removed from the draft, returning the whole site to its shipped design. Nothing changes for visitors until you publish.'
+          : 'The selected revision is published immediately and replaces the current live configuration.'
+    "
+    [confirmLabel]="c.kind === 'discard' ? 'Discard changes' : c.kind === 'reset' ? 'Reset draft' : 'Roll back now'"
+    [tone]="c.kind === 'rollback' ? 'violet' : 'danger'"
+    [withReason]="false"
+    (confirmed)="runConfirm()"
+    (cancelled)="confirm.set(null)"
+  />
+}

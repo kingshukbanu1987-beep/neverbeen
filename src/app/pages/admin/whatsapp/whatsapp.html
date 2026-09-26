@@ -1,0 +1,122 @@
+<section class="wa" #stage>
+  <header class="wa-bar">
+    <span class="wa-logo" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><path fill="currentColor" d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 7L3 29l6.4-2c2 1.1 4.3 1.7 6.6 1.7 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.4c-2.1 0-4.1-.6-5.9-1.7l-.4-.3-3.8 1.2 1.2-3.7-.3-.4a10.4 10.4 0 0 1-1.7-5.7C5.1 10 10 5.2 16 5.2S26.9 10 26.9 15.8 22 26.4 16 26.4zm6-7.8c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2l-1 1.2c-.2.2-.4.2-.7.1a8.7 8.7 0 0 1-4.3-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.6 5.8 5 2.2.9 3 1 4.1.8.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5 0-.2-.2-.3-.5-.4z" /></svg>
+    </span>
+    <div class="wa-bar-text">
+      <h2>WhatsApp</h2>
+      <p>WhatsApp Web for the admin team — link it once by scanning the QR code with your phone.</p>
+    </div>
+    <span class="wa-state" [attr.data-state]="state()">
+      @switch (state()) {
+        @case ('open') {
+          <i></i> WhatsApp Web is open
+        }
+        @case ('closed') {
+          WhatsApp window closed
+        }
+        @case ('blocked') {
+          Pop-up blocked
+        }
+        @default {
+          Not opened yet
+        }
+      }
+    </span>
+  </header>
+
+  <div class="wa-body">
+    <div class="wa-main">
+      @if (state() === 'open') {
+        <div class="wa-live">
+          <div class="wa-live-icon" aria-hidden="true">🟢</div>
+          <h3>WhatsApp Web is open over this panel</h3>
+          <p>Scan the QR code shown in the WhatsApp window with your phone. Once linked, your chats stay signed in on this browser.</p>
+          <div class="wa-actions">
+            <button type="button" class="wa-btn primary" (click)="focusWindow()">↗ Bring WhatsApp to front</button>
+            <button type="button" class="wa-btn" (click)="redock()" title="Re-open the window so it fits this panel again">⤢ Re-dock over panel</button>
+            <button type="button" class="wa-btn danger" (click)="closeWindow()">✕ Close WhatsApp</button>
+          </div>
+        </div>
+      } @else {
+        <div class="wa-hero">
+          <div class="wa-illus" aria-hidden="true">
+            <div class="wa-laptop">
+              <div class="wa-screen">
+                <span class="wa-qr-hint">QR</span>
+              </div>
+              <div class="wa-base"></div>
+            </div>
+            <div class="wa-phone"><span></span></div>
+            <div class="wa-beam"></div>
+          </div>
+          <h3>Use WhatsApp in the Admin Console</h3>
+          <p>Send and receive WhatsApp messages from here. Your phone does not need to stay online after linking.</p>
+          <div class="wa-actions">
+            <button type="button" class="wa-btn primary big" (click)="open()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 17h4v4"></path></svg>
+              Open WhatsApp Web & scan QR
+            </button>
+            <button type="button" class="wa-btn" (click)="openTab()">Open in a new tab ↗</button>
+          </div>
+          @if (state() === 'blocked') {
+            <p class="wa-warn" role="alert">
+              Your browser blocked the WhatsApp window. Allow pop-ups for this site (icon at the right of the address bar), then click again — or use <b>Open in a new tab</b>.
+            </p>
+          }
+          @if (state() === 'closed') {
+            <p class="wa-note">The WhatsApp window was closed. Open it again any time — you stay linked until you log out from your phone.</p>
+          }
+        </div>
+      }
+
+      <ol class="wa-steps">
+        <li><b>1</b><span>Open <strong>WhatsApp</strong> on your phone.</span></li>
+        <li><b>2</b><span>Tap <strong>Menu ⋮</strong> on Android, or <strong>Settings ⚙</strong> on iPhone.</span></li>
+        <li><b>3</b><span>Tap <strong>Linked devices</strong>, then <strong>Link a device</strong>.</span></li>
+        <li><b>4</b><span>Point your phone at the <strong>QR code</strong> in the WhatsApp Web window to link.</span></li>
+      </ol>
+    </div>
+
+    <aside class="wa-side">
+      <section class="wa-card">
+        <h4>💬 Start a chat</h4>
+        <p>Message any number without saving it as a contact — opens in the WhatsApp window.</p>
+        <label class="wa-field">
+          <span>Phone number (with country code)</span>
+          <input id="wa-phone" type="tel" inputmode="tel" placeholder="+91 98765 43210" [value]="phone()" (input)="phone.set($any($event.target).value); chatError.set(null)" />
+        </label>
+        <label class="wa-field">
+          <span>Message <small>(optional)</small></span>
+          <textarea rows="3" [value]="message()" (input)="message.set($any($event.target).value)" placeholder="Type a message…"></textarea>
+        </label>
+        <div class="wa-templates">
+          @for (t of templates; track t.label) {
+            <button type="button" (click)="message.set(t.text)">{{ t.label }}</button>
+          }
+        </div>
+        @if (chatError(); as e) {
+          <p class="wa-err" role="alert">{{ e }}</p>
+        }
+        <button type="button" class="wa-btn primary full" (click)="startChat()" [disabled]="!phone().trim()">Open chat in WhatsApp</button>
+        @if (recent().length) {
+          <div class="wa-recent">
+            <div class="wa-recent-head"><b>Recent</b><button type="button" (click)="clearRecent()">Clear</button></div>
+            @for (r of recent(); track r.phone) {
+              <button type="button" class="wa-recent-row" (click)="useRecent(r)"><span>{{ r.phone }}</span><small>{{ ago(r.atUtc) }}</small></button>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="wa-card muted">
+        <h4>🔒 Privacy & security</h4>
+        <ul>
+          <li>Chats are end-to-end encrypted between your browser and WhatsApp — NeverBeen never sees them.</li>
+          <li>WhatsApp doesn't allow its website inside other sites, so it opens in its own window docked over this panel.</li>
+          <li>On a shared computer, log out from <b>Linked devices</b> on your phone when you finish.</li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+</section>

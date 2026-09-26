@@ -28,7 +28,7 @@
 
 /* Composer */
 .composer-card {
-  background: #ffffff;
+  background: var(--ct-sf, #ffffff);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 1.6rem;
@@ -79,7 +79,7 @@
 .composer-textarea:focus {
   outline: none;
   border-color: var(--forest);
-  background: #ffffff;
+  background: var(--ct-sf, #ffffff);
   box-shadow: 0 0 0 3px rgba(36, 53, 44, 0.1);
 }
 
@@ -150,7 +150,7 @@
 }
 
 .post-card {
-  background: #ffffff;
+  background: var(--ct-sf, #ffffff);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 1.6rem;
@@ -162,7 +162,7 @@
 }
 
 .post-card:hover {
-  border-color: rgba(36, 53, 44, 0.22);
+  border-color: rgb(var(--ct-ink-rgb, 36 53 44) / 0.22);
 }
 
 .post-header {
@@ -200,7 +200,7 @@
 .author-profession {
   font-size: 0.72rem;
   font-weight: 500;
-  background: rgba(36, 53, 44, 0.08);
+  background: rgb(var(--ct-ink-rgb, 36 53 44) / 0.08);
   color: var(--forest);
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
@@ -225,7 +225,7 @@
 
 .btn-delete:hover {
   color: #dc2626;
-  background: #fee2e2;
+  background: var(--ct-dgs, #fee2e2);
 }
 
 .del-icon {
@@ -243,7 +243,7 @@
 
 /* Post footer */
 .post-footer {
-  border-top: 1px solid rgba(29, 25, 20, 0.07);
+  border-top: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.07);
   padding-top: 0.8rem;
 }
 
@@ -273,10 +273,10 @@
 }
 
 .btn-reaction.reacted {
-  background: rgba(36, 53, 44, 0.08);
+  background: rgb(var(--ct-ink-rgb, 36 53 44) / 0.08);
   color: var(--forest);
   font-weight: 600;
-  border-color: rgba(36, 53, 44, 0.2);
+  border-color: rgb(var(--ct-ink-rgb, 36 53 44) / 0.2);
 }
 
 .rx-icon {
@@ -387,7 +387,7 @@
 }
 
 .btn-reaction-sm {
-  background: #ffffff;
+  background: var(--ct-sf, #ffffff);
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.15rem 0.5rem;
@@ -425,7 +425,7 @@
 .empty-stream {
   text-align: center;
   padding: 4rem 1rem;
-  background: #ffffff;
+  background: var(--ct-sf, #ffffff);
   border-radius: var(--radius);
   border: 1px solid var(--line);
   color: var(--ink-soft);

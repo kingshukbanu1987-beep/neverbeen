@@ -1,0 +1,351 @@
+<div class="ud-backdrop" (click)="closed.emit()"></div>
+<aside class="ud" role="dialog" aria-modal="true" [attr.aria-label]="'Manage ' + (member()?.fullName ?? 'user')">
+  @if (member(); as m) {
+    <header class="ud-hero" [style.background-image]="companion()?.coverPhotoUrl ? 'linear-gradient(180deg, rgba(15,23,42,0.25), rgba(15,23,42,0.85)), url(' + companion()?.coverPhotoUrl + ')' : null">
+      <button type="button" class="ud-close" (click)="closed.emit()" aria-label="Close">✕</button>
+      <div class="ud-id">
+        <span class="g-avatar ud-avatar">
+          <img [src]="m.photo" [alt]="m.fullName" />
+          <i class="dot" [class.on]="m.isOnline"></i>
+        </span>
+        <div class="ud-id-meta">
+          <h3>
+            {{ m.fullName }}
+            @if (m.isVerified) {
+              <span class="g-tick" title="Verified">✓</span>
+            }
+          </h3>
+          <p>{{ m.profession }} · {{ m.city ? m.city + ', ' : '' }}{{ m.country }}</p>
+          <button type="button" class="ud-uid" (click)="copyUid()" title="Copy UID">UID {{ m.uniqueId }} {{ copied() ? '✓ copied' : '⧉' }}</button>
+        </div>
+      </div>
+      <div class="ud-badges">
+        <span class="g-badge" [class]="'g-badge ' + stateTone(m.accountState)">{{ stateLabel(m.accountState) }}</span>
+        <span class="g-badge" [class]="'g-badge ' + roleMeta(role()).tone">{{ roleMeta(role()).icon }} {{ roleMeta(role()).label }}</span>
+        @if (m.isOnline) {
+          <span class="g-badge ok">● Online</span>
+        }
+        @if (suspicious(); as s) {
+          <span class="g-badge danger">Risk {{ s.riskScore }} · {{ s.riskLevel }}</span>
+        }
+        @for (t of tags(); track t) {
+          <span class="g-badge info">🏷 {{ t }}</span>
+        }
+      </div>
+    </header>
+
+    <!-- Account controls -->
+    <section class="ud-controls">
+      <label class="ud-role">
+        <span>Role</span>
+        <select [value]="role()" (change)="setRole($event)">
+          @for (r of roles; track r.key) {
+            <option [value]="r.key">{{ r.icon }} {{ r.label }}</option>
+          }
+        </select>
+      </label>
+      <div class="ud-actions">
+        <button type="button" class="g-btn" (click)="toggleVerify()">{{ m.isVerified ? '✕ Remove verification' : '✓ Verify identity' }}</button>
+        <button type="button" class="g-btn" (click)="toggleLock()">{{ locked() ? '🔓 Unlock profile' : '🔒 Lock profile' }}</button>
+        <button type="button" class="g-btn" (click)="warn()">⚠ Warn</button>
+        <button type="button" class="g-btn" [class.on]="showRestrict()" (click)="showRestrict.set(!showRestrict())">⏳ Restrict…</button>
+        <button type="button" class="g-btn violet" [disabled]="m.accountState === 'identity_required'" (click)="pending.set('identity')">🪪 Force identity check</button>
+        <button type="button" class="g-btn" (click)="resetPassword()">🔑 Force password reset</button>
+        <button type="button" class="g-btn" (click)="pending.set('signout')">⎋ Sign out all devices</button>
+        <button type="button" class="g-btn" (click)="exportData()">⤓ Export data</button>
+        @if (m.accountState === 'disabled') {
+          <button type="button" class="g-btn success" (click)="enable()">✓ Enable account</button>
+        } @else {
+          <button type="button" class="g-btn danger" (click)="pending.set('disable')">⛔ Disable account</button>
+        }
+        <button type="button" class="g-btn ud-erase" (click)="pending.set('erase')">🗑 Erase (GDPR)</button>
+      </div>
+      @if (showRestrict()) {
+        <div class="ud-restrict">
+          <label>
+            <span>Limit access for</span>
+            <select [value]="restrictDays()" (change)="restrictDays.set(+$any($event.target).value)">
+              @for (d of durations; track d.days) {
+                <option [value]="d.days">{{ d.label }}</option>
+              }
+            </select>
+          </label>
+          <div class="ud-scopes">
+            @for (s of scopes; track s.key) {
+              <label><input type="checkbox" [checked]="restrictScopes().includes(s.key)" (change)="toggleScope(s.key, $any($event.target).checked)" /> {{ s.label }}</label>
+            }
+          </div>
+          <button type="button" class="g-btn dark" [disabled]="!restrictScopes().length" (click)="applyRestrict()">Apply restriction</button>
+        </div>
+      }
+    </section>
+
+    <nav class="ud-tabs" role="tablist">
+      @for (t of tabs; track t.key) {
+        <button type="button" role="tab" [class.active]="tab() === t.key" [attr.aria-selected]="tab() === t.key" (click)="tab.set(t.key)">{{ t.label }}</button>
+      }
+    </nav>
+
+    <div class="ud-body">
+      @switch (tab()) {
+        @case ('overview') {
+          <div class="ud-stats">
+            <div><strong>{{ m.postCount }}</strong><small>Posts</small></div>
+            <div><strong>{{ m.commentCount }}</strong><small>Comments</small></div>
+            <div><strong>{{ m.likesReceived }}</strong><small>Likes received</small></div>
+            <div><strong>{{ reportsAgainst().length }}</strong><small>Reports against</small></div>
+          </div>
+          <div class="ud-section-head">
+            <h4>Profile details</h4>
+            <button type="button" class="g-icon-btn" [class.on]="revealPii()" (click)="toggleReveal()">{{ revealPii() ? '🙈 Mask personal data' : '👁 Reveal personal data' }}</button>
+          </div>
+          <dl class="ud-details">
+            @for (d of details(); track d.label) {
+              <div [class.pii]="d.pii">
+                <dt>{{ d.label }} @if (d.pii) {<span class="ud-pii">PII</span>}</dt>
+                <dd>{{ d.value }}</dd>
+              </div>
+            }
+          </dl>
+          @if (companion()?.aboutMeDetails?.intro; as intro) {
+            <h4>About</h4>
+            <p class="ud-intro">{{ intro }}</p>
+          }
+        }
+
+        @case ('activity') {
+          <ol class="ud-timeline">
+            @for (t of timeline(); track $index) {
+              <li [attr.data-tone]="t.tone">
+                <span class="ud-tl-icon">{{ t.icon }}</span>
+                <div>
+                  <p class="ud-tl-title">{{ t.title }} <small>{{ timeAgo(t.at) }}</small></p>
+                  @if (t.detail) {
+                    <p class="ud-tl-detail">{{ t.detail }}</p>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        }
+
+        @case ('moderation') {
+          <div class="ud-mod-state" [attr.data-tone]="stateTone(m.accountState)">
+            <strong>{{ action()?.permanent && m.accountState === 'disabled' ? 'Permanently disabled' : stateLabel(m.accountState) }}</strong>
+            @if (action(); as a) {
+              <span>{{ a.warnings }} warning(s) on record</span>
+              @if (a.reason) {
+                <small>Last action: {{ a.reason }} · {{ timeAgo(a.updatedAtUtc) }}</small>
+              }
+              @if (m.accountState === 'restricted' && a.restrictedUntilUtc) {
+                <small>Restricted until {{ shortDate(a.restrictedUntilUtc) }} — {{ a.restrictions?.join(', ') }}</small>
+              }
+            } @else {
+              <span>No moderation history — clean record.</span>
+            }
+          </div>
+
+          <h4>Identity verification ({{ idHistory().length }})</h4>
+          @for (s of idHistory(); track s.id) {
+            <div class="ud-report">
+              <strong>🪪 {{ s.documentType }}</strong> · attempt #{{ s.attempt }} · {{ timeAgo(s.submittedAtUtc) }}
+              <span class="g-badge" [class]="'g-badge ' + idStatus[s.status].tone">{{ idStatus[s.status].label }}</span>
+              <p>
+                @for (f of s.files; track f.id) {
+                  <a class="ud-doc-link" [href]="'/admin/identity-document/' + s.id + '/' + f.id" target="_blank" rel="noopener">{{ f.side }} ↗</a>
+                }
+              </p>
+            </div>
+          } @empty {
+            <p class="g-muted ud-empty">No identity documents submitted.</p>
+          }
+
+          <h4>Suspicious signals</h4>
+          @if (suspicious(); as s) {
+            @for (sig of s.signals; track sig.type) {
+              <div class="ud-signal" [attr.data-sev]="sig.severity">
+                <strong>{{ susMeta[sig.type].icon }} {{ susMeta[sig.type].label }}</strong>
+                <span>{{ sig.evidence }}</span>
+              </div>
+            }
+          } @else {
+            <p class="g-muted ud-empty">No suspicious activity detected.</p>
+          }
+
+          <h4>Reports against this user ({{ reportsAgainst().length }})</h4>
+          @for (r of reportsAgainst(); track r.id) {
+            <div class="ud-report">
+              <strong>{{ r.reason }}</strong> · by {{ r.reporter.fullName }} · {{ timeAgo(r.createdAtUtc) }}
+              <span class="g-badge" [class.ok]="r.status === 'resolved'" [class.warn]="r.status === 'pending'">{{ r.status }}</span>
+              <p>“{{ r.contentExcerpt }}”</p>
+            </div>
+          } @empty {
+            <p class="g-muted ud-empty">None.</p>
+          }
+
+          <h4>Reports filed by this user ({{ reportsFiled().length }})</h4>
+          @for (r of reportsFiled(); track r.id) {
+            <div class="ud-report"><strong>{{ r.reason }}</strong> · against {{ r.reported.fullName }} · {{ timeAgo(r.createdAtUtc) }}</div>
+          } @empty {
+            <p class="g-muted ud-empty">None.</p>
+          }
+        }
+
+        @case ('security') {
+          @if (security(); as s) {
+            <div class="ud-sec-grid">
+              <div [class.good]="s.emailVerified"><span>✉</span><strong>{{ s.emailVerified ? 'Email verified' : 'Email unverified' }}</strong></div>
+              <div [class.good]="s.twoFactor"><span>🔐</span><strong>{{ s.twoFactor ? '2FA enabled' : '2FA disabled' }}</strong></div>
+              <div [class.good]="m.isVerified"><span>🪪</span><strong>{{ m.isVerified ? 'Identity verified' : 'Identity not verified' }}</strong></div>
+              <div [class.bad]="s.failedLogins24h >= 5"><span>🚫</span><strong>{{ s.failedLogins24h }} failed logins (24h)</strong></div>
+              <div><span>🔑</span><strong>Password changed {{ timeAgo(s.passwordChangedUtc) }}</strong></div>
+              <div><span>🧭</span><strong>Signed up with {{ s.signupMethod }}</strong></div>
+            </div>
+            @if (s.passwordResetRequired) {
+              <p class="ud-alert">🔑 Password reset required at next sign-in. <button type="button" class="g-link-btn" (click)="ops.clearPasswordReset(m.id)">Cancel</button></p>
+            }
+          }
+          <div class="ud-dev-toolbar">
+            <button type="button" class="g-icon-btn" [class.on]="revealPii()" (click)="toggleReveal()">{{ revealPii() ? '🙈 Mask IP & MAC' : '👁 Reveal IP & MAC' }}</button>
+            <button type="button" class="g-icon-btn" (click)="exportDevices()">⤓ Export devices (CSV)</button>
+          </div>
+
+          <!-- Active sessions -->
+          <div class="ud-section-head">
+            <h4><span class="ud-dot live"></span> Active sessions & devices ({{ sessions().length }})</h4>
+            @if (sessions().length) {
+              <button type="button" class="g-btn" (click)="pending.set('signout')">Sign out all</button>
+            }
+          </div>
+          @for (s of sessions(); track s.id) {
+            <div class="ud-device" [class.risky]="s.risk">
+              <ng-container *ngTemplateOutlet="deviceCard; context: { $implicit: s }" />
+              <div class="ud-device-actions">
+                <span class="g-badge ok">{{ s.active ? 'Online now' : 'Signed in' }}</span>
+                <button type="button" class="g-btn" (click)="ops.revokeSession(s)">Revoke</button>
+              </div>
+            </div>
+          } @empty {
+            <p class="g-muted ud-empty">No active sessions.</p>
+          }
+
+          <!-- Inactive sessions -->
+          <div class="ud-section-head ud-inactive-head">
+            <h4><span class="ud-dot"></span> Inactive sessions & devices ({{ inactiveDevices().length }})</h4>
+            <small class="g-muted">Last {{ inactiveLimit }} devices used to access the community · most recent first</small>
+          </div>
+          @for (d of inactiveDevices(); track d.id) {
+            <div class="ud-device inactive" [class.risky]="d.risk">
+              <ng-container *ngTemplateOutlet="deviceCard; context: { $implicit: d }" />
+              <div class="ud-device-actions">
+                <span class="ud-end" [attr.data-reason]="d.endReason">{{ d.endReason }}</span>
+                <small class="g-muted">{{ shortDate(d.endedUtc) }}</small>
+              </div>
+            </div>
+          } @empty {
+            <p class="g-muted ud-empty">No earlier devices on record.</p>
+          }
+          <p class="ud-footnote">
+            ⓘ IP location is resolved to city / region level. Web browsers never expose a device’s hardware MAC address — in production this value comes from the
+            NeverBeen mobile app or a device fingerprint. Device data in this console is demo data.
+          </p>
+
+          <ng-template #deviceCard let-d>
+            <div class="ud-device-head">
+              <span class="ud-session-icon" aria-hidden="true">{{ d.icon }}</span>
+              <div class="ud-device-title">
+                <strong>{{ d.deviceName }}</strong>
+                <small>{{ d.device }} · {{ d.kind }} · {{ d.platform }} · {{ d.browser }}</small>
+              </div>
+            </div>
+            <dl class="ud-device-grid">
+              <div><dt>IP address</dt><dd class="mono">{{ ipOf(d) }}</dd></div>
+              <div><dt>MAC address</dt><dd class="mono">{{ macOf(d) }}</dd></div>
+              <div><dt>Location (IP)</dt><dd>{{ d.city }}{{ d.region && d.region !== d.city ? ', ' + d.region : '' }}</dd></div>
+              <div><dt>Country</dt><dd>{{ flagOf(d.country) }} {{ d.country }}</dd></div>
+              <div><dt>ISP / network</dt><dd>{{ d.isp }}</dd></div>
+              <div><dt>Time zone</dt><dd>{{ d.timezone }}</dd></div>
+              <div><dt>First seen</dt><dd>{{ shortDate(d.startedUtc) }}</dd></div>
+              <div><dt>Last active</dt><dd>{{ d.active ? 'Now' : timeAgo(d.lastSeenUtc) }}</dd></div>
+              @if (asInactive(d); as i) {
+                <div><dt>Sign-ins</dt><dd>{{ i.signIns }}</dd></div>
+              }
+            </dl>
+            @if (d.risk) {
+              <small class="ud-risk">⚠ {{ d.risk }}</small>
+            }
+          </ng-template>
+        }
+
+        @case ('notes') {
+          <h4>Tags</h4>
+          <div class="ud-tags">
+            @for (t of tags(); track t) {
+              <span class="g-chip">{{ t }} <button type="button" (click)="ops.removeTag(m.id, t)" [attr.aria-label]="'Remove ' + t">✕</button></span>
+            } @empty {
+              <span class="g-muted">No tags yet.</span>
+            }
+          </div>
+          <div class="ud-inline-form">
+            <input type="text" list="ud-tag-suggestions" placeholder="Add a tag (e.g. VIP, Watchlist)…" [value]="tagDraft()" (input)="tagDraft.set($any($event.target).value)" (keydown.enter)="addTag()" />
+            <datalist id="ud-tag-suggestions">
+              @for (t of suggestedTags; track t) {
+                <option [value]="t"></option>
+              }
+            </datalist>
+            <button type="button" class="g-btn dark" [disabled]="!tagDraft().trim()" (click)="addTag()">Add tag</button>
+          </div>
+
+          <h4>Private admin notes</h4>
+          <div class="ud-inline-form col">
+            <textarea placeholder="Visible to admins only — context, follow-ups, decisions…" [value]="noteDraft()" (input)="noteDraft.set($any($event.target).value)"></textarea>
+            <button type="button" class="g-btn dark" [disabled]="!noteDraft().trim()" (click)="addNote()">Save note</button>
+          </div>
+          @for (n of notes(); track n.id) {
+            <div class="ud-note">
+              <p>{{ n.text }}</p>
+              <small>{{ n.author }} · {{ timeAgo(n.atUtc) }} <button type="button" class="g-link-btn" (click)="ops.deleteNote(m.id, n.id)">Delete</button></small>
+            </div>
+          } @empty {
+            <p class="g-muted ud-empty">No notes yet.</p>
+          }
+        }
+      }
+    </div>
+  } @else {
+    <div class="ud-body"><p class="g-empty">This user no longer exists.</p></div>
+  }
+</aside>
+
+@if (pending(); as p) {
+  @if (p === 'erase') {
+    <div class="g-modal-backdrop" appOverlayPortal (click)="pending.set(null)">
+      <div class="g-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <h3>Erase {{ member()?.fullName }}?</h3>
+        <p>Right to erasure (GDPR Art. 17 / DPDP Act §12). The profile is removed permanently. Abuse reports and the moderation record are retained without the name for legal obligations.</p>
+        <label class="ud-radio"><input type="radio" name="erase" [checked]="eraseMode() === 'anonymize'" (change)="eraseMode.set('anonymize')" /> <span><b>Anonymise content</b> — keep posts & comments as “Deleted member”</span></label>
+        <label class="ud-radio"><input type="radio" name="erase" [checked]="eraseMode() === 'delete'" (change)="eraseMode.set('delete')" /> <span><b>Delete content</b> — remove all posts & comments too</span></label>
+        <div class="g-modal-actions">
+          <button type="button" class="g-btn" (click)="pending.set(null)">Cancel</button>
+          <button type="button" class="g-btn danger" (click)="confirm('')">Erase permanently</button>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <app-admin-confirm-dialog
+      [heading]="p === 'disable' ? 'Disable this account?' : p === 'identity' ? 'Force identity confirmation?' : 'Sign out of all devices?'"
+      [message]="
+        p === 'disable'
+          ? (member()?.fullName ?? '') + ' will be signed out and hidden from the community until re-enabled.'
+          : p === 'identity'
+            ? (member()?.fullName ?? '') + ' will be locked out until they re-confirm their identity.'
+            : 'Every active session of ' + (member()?.fullName ?? '') + ' will be ended immediately.'
+      "
+      [confirmLabel]="p === 'disable' ? 'Disable account' : p === 'identity' ? 'Require identity check' : 'Sign out everywhere'"
+      [tone]="p === 'disable' ? 'danger' : p === 'identity' ? 'violet' : 'dark'"
+      [withReason]="p === 'disable'"
+      (confirmed)="confirm($event)"
+      (cancelled)="pending.set(null)"
+    />
+  }
+}

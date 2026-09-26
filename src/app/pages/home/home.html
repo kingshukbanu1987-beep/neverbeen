@@ -1,8 +1,13 @@
-<app-hero />
-<app-how-it-works />
-<app-destinations />
-<app-gallery />
-<app-pricing />
-<app-faq />
-<app-owner />
-<app-contact />
+<!-- Section order & visibility are managed in Admin Console → Website Management. -->
+@for (section of sections(); track section.id) {
+  @switch (section.id) {
+    @case ('hero') { <app-hero /> }
+    @case ('how') { <app-how-it-works /> }
+    @case ('destinations') { <app-destinations /> }
+    @case ('gallery') { <app-gallery /> }
+    @case ('pricing') { <app-pricing /> }
+    @case ('faq') { <app-faq /> }
+    @case ('owner') { <app-owner /> }
+    @case ('contact') { <app-contact /> }
+  }
+}

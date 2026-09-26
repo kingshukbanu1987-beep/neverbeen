@@ -1,0 +1,205 @@
+<!-- Saved segments -->
+<div class="um-segments" role="tablist" aria-label="User segments">
+  @for (s of segments; track s.key) {
+    <button type="button" class="um-seg" [class.active]="segment() === s.key" (click)="segment.set(s.key)" role="tab" [attr.aria-selected]="segment() === s.key">
+      <span aria-hidden="true">{{ s.icon }}</span> {{ s.label }}
+      <span class="um-seg-count">{{ segmentCounts()[s.key] }}</span>
+    </button>
+  }
+</div>
+
+<section class="g-panel">
+  <div class="g-toolbar">
+    <label class="g-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+      </svg>
+      <input type="search" placeholder="Search name, email, UID, city or tag…" [value]="search()" (input)="set(search, $event)" aria-label="Search users" />
+    </label>
+    <label class="g-select">
+      <span>Country</span>
+      <select [value]="country()" (change)="set(country, $event)">
+        <option value="">All</option>
+        @for (c of countries(); track c) {
+          <option [value]="c">{{ c }}</option>
+        }
+      </select>
+    </label>
+    <label class="g-select">
+      <span>Role</span>
+      <select [value]="role()" (change)="set(role, $event)">
+        <option value="">All roles</option>
+        @for (r of roles; track r.key) {
+          <option [value]="r.key">{{ r.label }}</option>
+        }
+      </select>
+    </label>
+    <label class="g-select">
+      <span>Account</span>
+      <select [value]="state()" (change)="set(state, $event)">
+        <option value="">Any status</option>
+        @for (s of states; track s) {
+          <option [value]="s">{{ stateLabel(s) }}</option>
+        }
+      </select>
+    </label>
+    <label class="g-select">
+      <span>Tag</span>
+      <select [value]="tag()" (change)="set(tag, $event)">
+        <option value="">Any tag</option>
+        @for (t of allTags(); track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+    </label>
+    <span class="g-toolbar-spacer"></span>
+    <button type="button" class="g-icon-btn" (click)="exportSelected()">⤓ Export {{ selected().size ? 'selected' : 'CSV' }}</button>
+  </div>
+
+  <!-- Bulk action bar -->
+  @if (selected().size > 0) {
+    <div class="um-bulk" role="toolbar" aria-label="Bulk actions">
+      <strong>{{ selected().size }} selected</strong>
+      @if (selected().size < filtered().length) {
+        <button type="button" class="g-link-btn um-linkish" (click)="selectAllFiltered()">Select all {{ filtered().length }}</button>
+      }
+      <span class="um-bulk-sep"></span>
+      <button type="button" class="g-btn" (click)="bulk('verify')">✓ Verify</button>
+      <button type="button" class="g-btn" (click)="bulk('warn')">⚠ Warn</button>
+      <button type="button" class="g-btn" (click)="bulk('restrict')">⏳ Restrict 7d</button>
+      <button type="button" class="g-btn" (click)="bulk('identity')">🪪 Identity check</button>
+      <button type="button" class="g-btn" (click)="bulk('reset')">🔑 Force password reset</button>
+      <button type="button" class="g-btn" (click)="bulk('signout')">⎋ Sign out everywhere</button>
+      <select class="um-bulk-select" (change)="bulkRole($event)" aria-label="Change role">
+        <option value="">🎖 Change role…</option>
+        @for (r of roles; track r.key) {
+          <option [value]="r.key">{{ r.label }}</option>
+        }
+      </select>
+      <select class="um-bulk-select" (change)="bulkTag($event)" aria-label="Add tag">
+        <option value="">🏷 Add tag…</option>
+        @for (t of allTags(); track t) {
+          <option [value]="t">{{ t }}</option>
+        }
+      </select>
+      <button type="button" class="g-btn success" (click)="bulk('enable')">Enable</button>
+      <button type="button" class="g-btn danger" (click)="confirmBulkDisable.set(true)">⛔ Disable</button>
+      <button type="button" class="g-link-btn" (click)="clearSelection()">Clear</button>
+    </div>
+  }
+
+  @if (filtered().length === 0) {
+    <p class="g-empty">No users in this segment match your filters.</p>
+  } @else {
+    <div class="g-table-wrap">
+      <table class="g-table">
+        <thead>
+          <tr>
+            <th style="width: 34px">
+              <input type="checkbox" [checked]="allOnPageSelected()" (change)="togglePage($any($event.target).checked)" aria-label="Select page" />
+            </th>
+            <th class="sortable" [class.sorted]="sortKey() === 'name'" (click)="sortBy('name')">User <span class="arrow">{{ arrow('name') }}</span></th>
+            <th>Role</th>
+            <th>Account</th>
+            <th>Security</th>
+            <th class="sortable" [class.sorted]="sortKey() === 'posts'" (click)="sortBy('posts')">Engagement <span class="arrow">{{ arrow('posts') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'risk'" (click)="sortBy('risk')">Risk <span class="arrow">{{ arrow('risk') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'lastActive'" (click)="sortBy('lastActive')">Last active <span class="arrow">{{ arrow('lastActive') }}</span></th>
+            <th class="sortable" [class.sorted]="sortKey() === 'joined'" (click)="sortBy('joined')">Joined <span class="arrow">{{ arrow('joined') }}</span></th>
+            <th style="text-align: right">Manage</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of paged(); track r.m.id) {
+            <tr [class.is-disabled]="r.m.accountState === 'disabled'" [class.um-selected]="selected().has(r.m.id)">
+              <td>
+                <input type="checkbox" [checked]="selected().has(r.m.id)" (change)="toggle(r.m.id, $any($event.target).checked)" [attr.aria-label]="'Select ' + r.m.fullName" />
+              </td>
+              <td>
+                <button type="button" class="g-member um-member-btn" (click)="manage.emit(r.m.id)">
+                  <span class="g-avatar">
+                    <img [src]="r.m.photo" [alt]="r.m.fullName" loading="lazy" />
+                    <i class="dot" [class.on]="r.m.isOnline"></i>
+                  </span>
+                  <span class="g-member-meta">
+                    <strong>
+                      {{ r.m.fullName }}
+                      @if (r.m.isVerified) {
+                        <span class="g-tick" title="Verified">✓</span>
+                      }
+                    </strong>
+                    <small>{{ r.m.email }}</small>
+                    @if (r.tags.length) {
+                      <span class="um-tags">
+                        @for (t of r.tags; track t) {
+                          <span class="um-tag">{{ t }}</span>
+                        }
+                      </span>
+                    }
+                  </span>
+                </button>
+              </td>
+              <td><span class="g-badge" [class]="'g-badge ' + roleMeta(r.role).tone">{{ roleMeta(r.role).icon }} {{ roleMeta(r.role).label }}</span></td>
+              <td><span class="g-badge" [class]="'g-badge ' + stateTone(r.m.accountState)">{{ stateLabel(r.m.accountState) }}</span></td>
+              <td class="g-nowrap um-sec">
+                <span [class.on]="r.emailVerified" [title]="r.emailVerified ? 'Email verified' : 'Email not verified'">✉</span>
+                <span [class.on]="r.twoFactor" [title]="r.twoFactor ? 'Two-factor authentication on' : '2FA off'">🔐</span>
+                <span [class.on]="r.m.isVerified" [title]="r.m.isVerified ? 'Identity verified' : 'Identity not verified'">🪪</span>
+              </td>
+              <td class="g-nowrap">{{ r.m.postCount }} posts · {{ r.m.commentCount }} comments</td>
+              <td>
+                @if (r.risk > 0) {
+                  <div class="g-risk"><span class="g-risk-bar"><i [style.width.%]="r.risk"></i></span><b>{{ r.risk }}</b></div>
+                } @else {
+                  <span class="g-muted">—</span>
+                }
+              </td>
+              <td class="g-nowrap">
+                @if (r.m.isOnline) {
+                  <span class="g-badge ok">● Online</span>
+                } @else {
+                  <span class="g-muted">{{ timeAgo(r.m.lastActiveUtc) }}</span>
+                }
+              </td>
+              <td class="g-nowrap g-muted">{{ shortDate(r.m.registeredAtUtc) }}</td>
+              <td>
+                <div class="g-actions">
+                  <button type="button" class="g-btn dark" (click)="manage.emit(r.m.id)">Manage →</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <footer class="g-foot">
+    <span>{{ filtered().length }} user(s) · {{ selected().size }} selected</span>
+    <label class="g-select" style="flex-direction: row; align-items: center; gap: 0.4rem">
+      <span>Rows</span>
+      <select [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value)">
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+    </label>
+    <div class="g-pager">
+      <button type="button" [disabled]="currentPage() === 1" (click)="page.set(currentPage() - 1)" aria-label="Previous page">‹</button>
+      <button type="button" class="current">{{ currentPage() }} / {{ totalPages() }}</button>
+      <button type="button" [disabled]="currentPage() === totalPages()" (click)="page.set(currentPage() + 1)" aria-label="Next page">›</button>
+    </div>
+  </footer>
+</section>
+
+@if (confirmBulkDisable()) {
+  <app-admin-confirm-dialog
+    heading="Disable selected accounts?"
+    [message]="selected().size + ' account(s) will be signed out and hidden from the community until re-enabled.'"
+    confirmLabel="Disable accounts"
+    (confirmed)="bulkDisable($event)"
+    (cancelled)="confirmBulkDisable.set(false)"
+  />
+}

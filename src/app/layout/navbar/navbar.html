@@ -3,6 +3,16 @@
     <a routerLink="/" class="logo" [class.compact-logo]="isCompactLogo()" (click)="close()" aria-label="NeverBeen home">
       <img ngSrc="/neverbeen-logo.png" [class.compact-logo]="isCompactLogo()" width="150" height="75" alt="NeverBeen" priority />
     </a>
+    @if (isCommunity()) {
+      <!-- Community theme dropdown: loaded only on Community pages; leaving them restores the default look. -->
+      <div class="theme-slot">
+        @defer (on immediate) {
+          <app-community-theme-picker />
+        } @placeholder {
+          <span class="theme-slot-placeholder" aria-hidden="true"></span>
+        }
+      </div>
+    }
     <button
       type="button"
       class="menu"
@@ -17,13 +27,13 @@
       <span class="line"></span>
     </button>
     <nav id="site-nav" [class.open]="open()">
-      @for (link of links; track link.label) {
+      @for (link of links(); track link.id) {
         <a
           [routerLink]="link.path"
           [fragment]="link.fragment"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: !link.fragment }"
-          [class.login]="link.label === 'Admin'"
+          [class.login]="link.id === 'admin'"
           (click)="close()"
         >
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

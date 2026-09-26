@@ -9,33 +9,105 @@ const adminGuard: CanActivateFn = () => {
   return auth.isAuthed() ? true : router.createUrlTree(['/login']);
 };
 
+const underDevelopment = () =>
+  import('./under-development/under-development').then((m) => m.AdminUnderDevelopment);
+
 export const adminRoutes: Routes = [
+  // Secure full-page viewer for a submitted identity document (opened in a new tab from the grid).
+  {
+    path: 'identity-document/:submissionId/:fileId',
+    canActivate: [adminGuard],
+    title: 'Identity Document — NeverBeen Admin',
+    loadComponent: () => import('./identity-checks/identity-document').then((m) => m.AdminIdentityDocument),
+  },
+  // Print-ready Website Health report (opened in a new tab → Save as PDF).
+  {
+    path: 'health-report',
+    canActivate: [adminGuard],
+    title: 'Website Health Report — NeverBeen',
+    loadComponent: () => import('./health/health-report').then((m) => m.AdminHealthReport),
+  },
   {
     path: '',
     canActivate: [adminGuard],
     loadComponent: () => import('./admin').then((m) => m.AdminLayout),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      // Dashboard drill-down pages live under /admin/dashboard/* so "Dashboard" stays selected in the side panel.
+      {
+        path: 'dashboard/members/all',
+        title: 'All Members — NeverBeen Admin',
+        data: { mode: 'all' },
+        loadComponent: () => import('./members/members').then((m) => m.AdminMembers),
+      },
+      {
+        path: 'dashboard/members/verified',
+        title: 'Verified Members — NeverBeen Admin',
+        data: { mode: 'verified' },
+        loadComponent: () => import('./members/members').then((m) => m.AdminMembers),
+      },
+      {
+        path: 'dashboard/members/online',
+        title: 'Online Now — NeverBeen Admin',
+        data: { mode: 'online' },
+        loadComponent: () => import('./members/members').then((m) => m.AdminMembers),
+      },
+      {
+        path: 'dashboard/abuse-reports',
+        title: 'Abuse Reports — NeverBeen Admin',
+        loadComponent: () => import('./abuse-reports/abuse-reports').then((m) => m.AdminAbuseReports),
+      },
+      {
+        path: 'dashboard/identity-checks',
+        title: 'Identity Check Verification — NeverBeen Admin',
+        loadComponent: () => import('./identity-checks/identity-checks').then((m) => m.AdminIdentityChecks),
+      },
       {
         path: 'dashboard',
+        pathMatch: 'full',
         title: 'Dashboard — NeverBeen Admin',
         loadComponent: () => import('./dashboard/dashboard').then((m) => m.AdminDashboard),
       },
+      // Admin Mail — private messages between administrators (side panel → Mail).
+      { path: 'mail', pathMatch: 'full', redirectTo: 'mail/inbox' },
       {
-        path: 'repositories',
-        title: 'Repositories — NeverBeen Admin',
-        loadComponent: () => import('./repositories/repositories').then((m) => m.AdminRepositories),
+        path: 'mail/inbox',
+        title: 'Inbox — NeverBeen Admin',
+        data: { folder: 'inbox' },
+        loadComponent: () => import('./mail/mail-folder').then((m) => m.AdminMailFolder),
       },
       {
-        path: 'users',
-        title: 'Users — NeverBeen Admin',
-        loadComponent: () => import('./users/users').then((m) => m.AdminUsers),
+        path: 'mail/sent',
+        title: 'Sent — NeverBeen Admin',
+        data: { folder: 'sent' },
+        loadComponent: () => import('./mail/mail-folder').then((m) => m.AdminMailFolder),
       },
       {
-        path: 'data',
-        title: 'Data — NeverBeen Admin',
-        loadComponent: () => import('./data/data').then((m) => m.AdminData),
+        path: 'mail/compose',
+        title: 'Compose — NeverBeen Admin',
+        loadComponent: () => import('./mail/mail-compose').then((m) => m.AdminMailCompose),
       },
+      // Announcements published to all / targeted users (side panel → Announcement, after Mail).
+      {
+        path: 'announcements',
+        pathMatch: 'full',
+        title: 'Announcements — NeverBeen Admin',
+        loadComponent: () => import('./announcements/announcements').then((m) => m.AdminAnnouncements),
+      },
+      {
+        path: 'announcements/new',
+        title: 'New Announcement — NeverBeen Admin',
+        loadComponent: () => import('./announcements/announcement-composer').then((m) => m.AdminAnnouncementComposer),
+      },
+      // WhatsApp Web (opens docked over the wide panel; linked by scanning the QR code).
+      { path: 'whatsapp', title: 'WhatsApp — NeverBeen Admin', loadComponent: () => import('./whatsapp/whatsapp').then((m) => m.AdminWhatsApp) },
+      { path: 'users', title: 'User Management — NeverBeen Admin', loadComponent: () => import('./users/users').then((m) => m.AdminUsers) },
+      { path: 'data', title: 'Data Management — NeverBeen Admin', loadComponent: () => import('./data/data').then((m) => m.AdminData) },
+      { path: 'website', title: 'Website Management — NeverBeen Admin', loadComponent: () => import('./website/website').then((m) => m.AdminWebsite) },
+      { path: 'maintenance', title: 'Site Downtime — NeverBeen Admin', loadComponent: () => import('./maintenance/maintenance').then((m) => m.AdminMaintenance) },
+      { path: 'health', title: 'Website Health — NeverBeen Admin', loadComponent: () => import('./health/health').then((m) => m.AdminHealth) },
+      // Repositories is not built yet.
+      { path: 'repositories', title: 'Repositories — NeverBeen Admin', data: { section: 'Repositories' }, loadComponent: underDevelopment },
       { path: '**', redirectTo: 'dashboard' },
     ],
   },

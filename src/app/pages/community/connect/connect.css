@@ -18,7 +18,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #18241e;
+  background-color: var(--ct-ac2, #18241e);
 }
 
 /* Soft gradient veil so the white card stays readable over the photo */
@@ -56,8 +56,8 @@
   z-index: 1;
   width: 100%;
   max-width: 480px;
-  background: #ffffff;
-  border: 1px solid rgba(29, 25, 20, 0.12);
+  background: var(--ct-sf, #ffffff);
+  border: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.12);
   box-shadow: 0 24px 60px rgba(29, 25, 20, 0.28), 0 4px 16px rgba(0, 0, 0, 0.12);
   border-radius: 24px;
   padding: 2.8rem 2.4rem;
@@ -93,9 +93,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--sand, #f3ece2);
-  border: 1px solid rgba(29, 25, 20, 0.1);
-  color: var(--forest, #24352c);
+  background: var(--sand, var(--ct-sf3, #f3ece2));
+  border: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.1);
+  color: var(--forest, var(--ct-ink, #24352c));
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -110,22 +110,22 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: var(--paper, #faf6f0);
-  border: 1px solid rgba(29, 25, 20, 0.14);
+  background: var(--paper, var(--ct-sf2, #faf6f0));
+  border: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.14);
   border-radius: 9999px;
   padding: 0.3rem 0.55rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .lang-switcher:focus-within {
-  border-color: var(--forest, #24352c);
+  border-color: var(--forest, var(--ct-ac2, #24352c));
   box-shadow: 0 0 0 3px rgba(36, 53, 44, 0.12);
 }
 
 .globe-icon {
   width: 15px;
   height: 15px;
-  color: var(--forest, #24352c);
+  color: var(--forest, var(--ct-ink, #24352c));
   flex-shrink: 0;
 }
 
@@ -137,7 +137,7 @@
   outline: none;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
   padding: 0.15rem 0.1rem;
   padding-right: 0.9rem;
   cursor: pointer;
@@ -153,7 +153,7 @@
   right: 0.55rem;
   width: 12px;
   height: 12px;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   pointer-events: none;
 }
 
@@ -179,7 +179,7 @@
   font-family: var(--serif, 'Cormorant Garamond', Georgia, serif);
   font-size: 2rem;
   font-weight: 600;
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
@@ -187,7 +187,7 @@
 .card-subtitle {
   margin: 0;
   font-size: 0.94rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   line-height: 1.55;
 }
 
@@ -196,8 +196,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--paper, #faf6f0);
-  border: 1px solid rgba(29, 25, 20, 0.1);
+  background: var(--paper, var(--ct-sf2, #faf6f0));
+  border: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.1);
   padding: 0.4rem 0.5rem;
   border-radius: 12px;
   margin-bottom: 1.8rem;
@@ -206,7 +206,7 @@
 .sim-label {
   font-size: 0.78rem;
   font-weight: 500;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   margin-left: 0.5rem;
 }
 
@@ -218,7 +218,7 @@
 .sim-btn {
   background: transparent;
   border: none;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   font-size: 0.78rem;
   font-weight: 600;
   padding: 0.4rem 0.8rem;
@@ -228,11 +228,11 @@
 }
 
 .sim-btn:hover {
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
 }
 
 .sim-btn.active {
-  background: var(--forest, #24352c);
+  background: var(--forest, var(--ct-ac2, #24352c));
   color: #ffffff;
   box-shadow: 0 2px 8px rgba(36, 53, 44, 0.25);
 }
@@ -278,25 +278,25 @@
 }
 
 .btn-google {
-  background: #ffffff;
-  color: #1f2937;
-  border: 1px solid #d1d5db;
+  background: var(--ct-sf, #ffffff);
+  color: var(--ct-ink, #1f2937);
+  border: 1px solid var(--ct-ln2, #d1d5db);
 }
 
 .btn-google:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #9ca3af;
+  background: var(--ct-sf2, #f8fafc);
+  border-color: var(--ct-ln2, #9ca3af);
 }
 
 .btn-facebook {
-  background: #1877f2;
+  background: var(--ct-ac, #1877f2);
   color: #ffffff;
-  border: 1px solid #1877f2;
+  border: 1px solid var(--ct-ac, #1877f2);
 }
 
 .btn-facebook:hover:not(:disabled) {
-  background: #166fe5;
-  border-color: #166fe5;
+  background: var(--ct-ac2, #166fe5);
+  border-color: var(--ct-ac2, #166fe5);
 }
 
 /* D. Make the Facebook "f" clearly visible on the blue button */
@@ -341,9 +341,9 @@
 .google-official-panel {
   margin-top: 1.1rem;
   padding: 1.2rem 1.3rem;
-  border: 1px solid rgba(29, 25, 20, 0.12);
+  border: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.12);
   border-radius: 16px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(250, 247, 242, 0.9));
+  background: linear-gradient(160deg, rgb(var(--ct-sf-rgb, 255 255 255) / 0.95), rgb(var(--ct-sf-rgb, 250 247 242) / 0.9));
   box-shadow: 0 12px 30px rgba(29, 25, 20, 0.08);
   display: flex;
   flex-direction: column;
@@ -367,13 +367,13 @@
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
 }
 
 .google-panel-hint {
   margin: 0;
   font-size: 0.82rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   text-align: center;
   line-height: 1.45;
 }
@@ -388,7 +388,7 @@
 .google-cancel {
   background: none;
   border: none;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -404,7 +404,7 @@
 .google-help {
   width: 100%;
   font-size: 0.74rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
 }
 
 .google-help summary {
@@ -418,7 +418,7 @@
 }
 
 .google-help code {
-  background: rgba(29, 25, 20, 0.07);
+  background: rgb(var(--ct-ink-rgb, 29 25 20) / 0.07);
   padding: 0.08rem 0.35rem;
   border-radius: 6px;
   word-break: break-all;
@@ -426,7 +426,7 @@
 
 /* Footer & Security */
 .card-footer {
-  border-top: 1px solid rgba(29, 25, 20, 0.08);
+  border-top: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.08);
   padding-top: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -440,7 +440,7 @@
   justify-content: center;
   gap: 0.5rem;
   font-size: 0.76rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   line-height: 1.45;
   max-width: 360px;
 }
@@ -453,14 +453,14 @@
 }
 
 .back-link {
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   font-size: 0.85rem;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .back-link:hover {
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
   text-decoration: underline;
 }
 
@@ -475,7 +475,7 @@
 }
 
 .legal-links a {
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   font-weight: 500;
   text-decoration: none;
   padding: 0.1rem 0.15rem;
@@ -484,13 +484,13 @@
 }
 
 .legal-links a:hover {
-  color: var(--forest, #24352c);
-  background: rgba(36, 53, 44, 0.07);
+  color: var(--forest, var(--ct-ink, #24352c));
+  background: rgb(var(--ct-ink-rgb, 36 53 44) / 0.07);
   text-decoration: underline;
 }
 
 .link-dot {
-  color: rgba(29, 25, 20, 0.35);
+  color: rgb(var(--ct-ink-rgb, 29 25 20) / 0.35);
   user-select: none;
 }
 

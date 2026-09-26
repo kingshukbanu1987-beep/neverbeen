@@ -1,7 +1,9 @@
-import { Component, ElementRef, Injector, OnInit, afterNextRender, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, Injector, OnInit, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
+import { SiteConfigService } from '../../../services/site-config.service';
 import { Router, RouterLink } from '@angular/router';
 import { CommunityService, FacebookIdentity, GoogleIdentity } from '../../../services/community.service';
 import { TranslationService } from '../../../services/translation.service';
+import { SelectValueSync } from '../../../shared/select-value-sync';
 
 type GoogleButtonStep = Extract<
   Awaited<ReturnType<CommunityService['signInWithGoogle']>>,
@@ -10,7 +12,7 @@ type GoogleButtonStep = Extract<
 
 @Component({
   selector: 'app-community-connect',
-  imports: [RouterLink],
+  imports: [SelectValueSync, RouterLink],
   templateUrl: './connect.html',
   styleUrl: './connect.css',
 })
@@ -19,6 +21,16 @@ export class CommunityConnect implements OnInit {
   protected readonly translation = inject(TranslationService);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
+  private readonly cms = inject(SiteConfigService);
+
+  /** Sign-in providers in the order / wording published in Website Management. */
+  protected readonly providers = computed(() => this.cms.visibleItems('community.connect', 'providers'));
+  protected cmsText(field: string): string {
+    return this.cms.text('community.connect', field);
+  }
+  protected cmsFlag(field: string): boolean {
+    return this.cms.flag('community.connect', field);
+  }
 
   protected readonly simulateExisting = signal(false);
   protected readonly loadingProvider = signal<string | null>(null);

@@ -1,0 +1,456 @@
+<section class="an-page" [class.compact]="density() === 'compact'">
+  <!-- Header -->
+  <header class="an-hero">
+    <div class="an-hero-text">
+      <h2>📣 Announcements</h2>
+      <p>Publish notices to <b>all users</b> or a targeted audience — by geography, country, city, gender, age, or particular users / groups.</p>
+    </div>
+    <div class="an-hero-actions">
+      <button type="button" class="an-btn ghost" (click)="exportCsv()" title="Export the filtered list to CSV">⤓ Export CSV</button>
+      <a class="an-btn primary" routerLink="/admin/announcements/new">＋ New announcement</a>
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <div class="an-kpis">
+    @for (k of kpis(); track k.label) {
+      <div class="an-kpi" [style.--glow]="k.glow">
+        <span class="an-kpi-icon" aria-hidden="true">{{ k.icon }}</span>
+        <span class="an-kpi-meta">
+          <small>{{ k.label }}</small>
+          <strong>{{ k.value }}</strong>
+          <em>{{ k.sub }}</em>
+        </span>
+      </div>
+    }
+  </div>
+
+  <!-- Grid -->
+  <div class="an-grid-card">
+    <div class="an-tabs" role="tablist" aria-label="Filter by status">
+      @for (t of statusTabs; track t.key) {
+        <button type="button" role="tab" class="an-tab" [class.active]="statusFilter() === t.key" [attr.aria-selected]="statusFilter() === t.key" [attr.data-status]="t.key" (click)="setStatus(t.key)">
+          {{ t.label }} <span class="an-tab-count">{{ counts()[t.key] }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="an-toolbar">
+      <label class="an-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+        <input type="search" placeholder="Search title, message, audience or admin…" [value]="query()" (input)="query.set($any($event.target).value); page.set(1)" aria-label="Search announcements" />
+      </label>
+      <select class="an-select" [value]="category()" (change)="category.set($any($event.target).value); page.set(1)" aria-label="Category" appSelectValueSync>
+        <option value="all">All categories</option>
+        @for (c of categories; track c) {
+          <option [value]="c">{{ catMeta[c].icon }} {{ catMeta[c].label }}</option>
+        }
+      </select>
+      <select class="an-select" [value]="channel()" (change)="channel.set($any($event.target).value); page.set(1)" aria-label="Channel" appSelectValueSync>
+        <option value="all">All channels</option>
+        @for (c of channels; track c) {
+          <option [value]="c">{{ chMeta[c].icon }} {{ chMeta[c].label }}</option>
+        }
+      </select>
+      <select class="an-select" [value]="audienceType()" (change)="audienceType.set($any($event.target).value); page.set(1)" aria-label="Audience type" appSelectValueSync>
+        <option value="any">Any audience</option>
+        <option value="all">🌍 All users</option>
+        <option value="filtered">🎯 Targeted (filters)</option>
+        <option value="users">👤 Particular users</option>
+      </select>
+      <select class="an-select" [value]="author()" (change)="author.set($any($event.target).value); page.set(1)" aria-label="Sent by" appSelectValueSync>
+        <option value="all">Any admin</option>
+        @for (p of authors(); track p.id) {
+          <option [value]="p.id">{{ p.id === 'me' ? 'You' : p.name }}</option>
+        }
+      </select>
+      @if (hasFilters()) {
+        <button type="button" class="an-link" (click)="clearFilters()">✕ Clear</button>
+      }
+      <span class="an-spacer"></span>
+      <div class="an-seg" role="group" aria-label="Row density">
+        <button type="button" [class.on]="density() === 'comfortable'" (click)="density.set('comfortable')" title="Comfortable rows">☰</button>
+        <button type="button" [class.on]="density() === 'compact'" (click)="density.set('compact')" title="Compact rows">≡</button>
+      </div>
+      <div class="an-cols-wrap">
+        <button type="button" class="an-btn ghost sm" (click)="showCols.set(!showCols())" [attr.aria-expanded]="showCols()">▦ Columns</button>
+        @if (showCols()) {
+          <div class="an-pop" role="menu">
+            @for (k of colKeys; track k) {
+              <label><input type="checkbox" [checked]="cols()[k]" (change)="toggleCol(k)" /> {{ colLabels[k] }}</label>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (selected().size > 0) {
+      <div class="an-bulk" role="region" aria-label="Bulk actions">
+        <strong>{{ selected().size }} selected</strong>
+        <button type="button" class="an-btn ghost sm" (click)="bulkPin()">📌 Pin</button>
+        @if (selectedOf('live').length) {
+          <button type="button" class="an-btn ghost sm" (click)="ask('end', selectedOf('live'))">⏹ End {{ selectedOf('live').length }} live</button>
+        }
+        @if (selectedOf('scheduled').length) {
+          <button type="button" class="an-btn ghost sm" (click)="ask('cancel', selectedOf('scheduled'))">⊘ Cancel {{ selectedOf('scheduled').length }} scheduled</button>
+        }
+        <button type="button" class="an-btn ghost sm" (click)="exportCsv(true)">⤓ Export selected</button>
+        <button type="button" class="an-btn danger sm" (click)="ask('delete', selectedIds())">🗑 Delete</button>
+        <button type="button" class="an-link" (click)="clearSelection()">Clear selection</button>
+      </div>
+    }
+
+    <div class="an-table-wrap">
+      <table class="an-table">
+        <thead>
+          <tr>
+            <th class="an-check"><input type="checkbox" [checked]="allOnPageSelected()" (change)="togglePage($any($event.target).checked)" aria-label="Select all on this page" /></th>
+            <th><button type="button" class="an-sort" (click)="setSort('title')">Announcement <i>{{ sortIcon('title') }}</i></button></th>
+            @if (cols().audience) {
+              <th><button type="button" class="an-sort" (click)="setSort('reach')">Audience · reach <i>{{ sortIcon('reach') }}</i></button></th>
+            }
+            @if (cols().channels) {
+              <th>Channels</th>
+            }
+            <th><button type="button" class="an-sort" (click)="setSort('status')">Status <i>{{ sortIcon('status') }}</i></button></th>
+            @if (cols().performance) {
+              <th><button type="button" class="an-sort" (click)="setSort('open')">Performance <i>{{ sortIcon('open') }}</i></button></th>
+            }
+            @if (cols().author) {
+              <th>Sent by</th>
+            }
+            @if (cols().date) {
+              <th><button type="button" class="an-sort" (click)="setSort('date')">Date <i>{{ sortIcon('date') }}</i></button></th>
+            }
+            <th class="an-actions-h"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of paged(); track r.a.id) {
+            <tr class="an-row" [class.selected]="selected().has(r.a.id)" [class.open]="openId() === r.a.id" [attr.data-status]="r.status" (click)="open(r.a.id)">
+              <td class="an-check" (click)="$event.stopPropagation()">
+                <input type="checkbox" [checked]="selected().has(r.a.id)" (change)="toggle(r.a.id, $any($event.target).checked)" [attr.aria-label]="'Select ' + r.a.title" />
+              </td>
+              <td class="an-main">
+                <div class="an-title-line">
+                  @if (r.a.pinned) {
+                    <span class="an-pin" title="Pinned">📌</span>
+                  }
+                  <span class="an-cat" [attr.data-tone]="catMeta[r.a.category].tone" [title]="catMeta[r.a.category].label">{{ catMeta[r.a.category].icon }}</span>
+                  <strong class="an-title">{{ r.a.title }}</strong>
+                  @if (r.a.priority !== 'normal') {
+                    <span class="an-pr" [attr.data-p]="r.a.priority">{{ prMeta[r.a.priority].label }}</span>
+                  }
+                </div>
+                <p class="an-snippet">{{ plain(r.a.body) }}</p>
+              </td>
+              @if (cols().audience) {
+                <td class="an-aud">
+                  <span class="an-aud-chip" [attr.data-mode]="r.a.audience.mode">
+                    {{ r.a.audience.mode === 'all' ? '🌍' : r.a.audience.mode === 'users' ? '👤' : '🎯' }} {{ r.audienceLabel }}
+                  </span>
+                  <small><b>{{ r.reach.toLocaleString() }}</b> recipient{{ r.reach === 1 ? '' : 's' }}</small>
+                </td>
+              }
+              @if (cols().channels) {
+                <td class="an-ch">
+                  @for (c of r.a.channels; track c) {
+                    <span class="an-ch-ico" [title]="chMeta[c].label">{{ chMeta[c].icon }}</span>
+                  }
+                </td>
+              }
+              <td>
+                <span class="an-status" [attr.data-status]="r.status">
+                  <i aria-hidden="true"></i>{{ r.a.endedEarly ? 'Ended early' : stMeta[r.status].label }}
+                </span>
+                @if (r.status === 'scheduled') {
+                  <small class="an-when">Sends {{ relTime(r.a.sendAtUtc, svc.now()) }}</small>
+                } @else if (r.status === 'live' && r.a.expiresAtUtc) {
+                  <small class="an-when">Ends {{ relTime(r.a.expiresAtUtc, svc.now()) }}</small>
+                } @else if (r.status === 'live') {
+                  <small class="an-when">No end date</small>
+                }
+              </td>
+              @if (cols().performance) {
+                <td class="an-perf">
+                  @if (r.stats.delivered) {
+                    <div class="an-perf-bar" [title]="r.stats.opened + ' opened of ' + r.stats.delivered + ' delivered'">
+                      <i class="d" [style.width.%]="pct(r.stats.delivered, r.reach)"></i>
+                      <i class="o" [style.width.%]="pct(r.stats.opened, r.reach)"></i>
+                    </div>
+                    <small>
+                      <b>{{ r.stats.openRate }}%</b> opened
+                      @if (r.a.ctaUrl) {
+                        · <b>{{ r.stats.clickRate }}%</b> CTR
+                      }
+                    </small>
+                  } @else {
+                    <small class="g-muted">—</small>
+                  }
+                </td>
+              }
+              @if (cols().author) {
+                <td class="an-author">
+                  <span class="an-av" [style.background]="r.author.color">{{ r.a.createdBy === 'me' ? 'A' : r.author.name.charAt(0) }}</span>
+                  <span class="an-author-meta"><b>{{ who(r.a.createdBy) }}</b><small>{{ r.author.team }}</small></span>
+                </td>
+              }
+              @if (cols().date) {
+                <td class="an-date">
+                  <b>{{ dateTime(r.a.sendAtUtc) }}</b>
+                  <small>{{ relTime(r.a.sendAtUtc, svc.now()) }}</small>
+                </td>
+              }
+              <td class="an-actions" (click)="$event.stopPropagation()">
+                <div class="an-menu-wrap">
+                  <button type="button" class="an-kebab" (click)="menuFor.set(menuFor() === r.a.id ? null : r.a.id)" [attr.aria-label]="'Actions for ' + r.a.title" [attr.aria-expanded]="menuFor() === r.a.id">⋯</button>
+                  @if (menuFor() === r.a.id) {
+                    <div class="an-pop an-menu" role="menu">
+                      <button type="button" role="menuitem" (click)="open(r.a.id)">👁 View details</button>
+                      @if (r.status === 'draft' || r.status === 'scheduled') {
+                        <button type="button" role="menuitem" (click)="edit(r)">✏️ Edit</button>
+                        <button type="button" role="menuitem" (click)="ask('publish', [r.a.id])">🚀 Publish now</button>
+                      }
+                      <button type="button" role="menuitem" (click)="duplicate(r)">⧉ Duplicate</button>
+                      <button type="button" role="menuitem" (click)="pin(r)">📌 {{ r.a.pinned ? 'Unpin' : 'Pin to top' }}</button>
+                      @if (r.status === 'scheduled') {
+                        <button type="button" role="menuitem" class="danger" (click)="ask('cancel', [r.a.id])">⊘ Cancel sending</button>
+                      }
+                      @if (r.status === 'live') {
+                        <button type="button" role="menuitem" class="danger" (click)="ask('end', [r.a.id])">⏹ End now</button>
+                      }
+                      <button type="button" role="menuitem" class="danger" (click)="ask('delete', [r.a.id])">🗑 Delete</button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="9" class="an-empty">
+                <span aria-hidden="true">🔍</span>
+                <p>No announcements match these filters.</p>
+                <button type="button" class="an-btn ghost sm" (click)="clearFilters()">Clear filters</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="an-foot">
+      <span>
+        Showing {{ filtered().length ? (currentPage() - 1) * pageSize() + 1 : 0 }}–{{ (currentPage() - 1) * pageSize() + paged().length }} of {{ filtered().length }}
+      </span>
+      <label class="an-size">
+        Rows
+        <select [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value); page.set(1)" aria-label="Rows per page" appSelectValueSync>
+          @for (n of [10, 20, 50]; track n) {
+            <option [value]="n">{{ n }}</option>
+          }
+        </select>
+      </label>
+      <div class="an-pager">
+        <button type="button" [disabled]="currentPage() === 1" (click)="page.set(currentPage() - 1)" aria-label="Previous page">‹</button>
+        <span>{{ currentPage() }} / {{ totalPages() }}</span>
+        <button type="button" [disabled]="currentPage() === totalPages()" (click)="page.set(currentPage() + 1)" aria-label="Next page">›</button>
+      </div>
+    </footer>
+  </div>
+</section>
+
+<!-- Details drawer -->
+@if (detail(); as d) {
+  <div class="an-drawer-backdrop" appOverlayPortal (click)="close()"></div>
+  <aside class="an-drawer" appOverlayPortal role="dialog" aria-modal="true" [attr.aria-label]="d.a.title">
+    <header class="an-dr-head" [attr.data-status]="d.status">
+      <div class="an-dr-top">
+        <span class="an-status" [attr.data-status]="d.status"><i aria-hidden="true"></i>{{ d.a.endedEarly ? 'Ended early' : stMeta[d.status].label }}</span>
+        <span class="an-cat-badge">{{ catMeta[d.a.category].icon }} {{ catMeta[d.a.category].label }}</span>
+        @if (d.a.priority !== 'normal') {
+          <span class="an-pr" [attr.data-p]="d.a.priority">{{ prMeta[d.a.priority].label }} priority</span>
+        }
+        <button type="button" class="an-dr-close" (click)="close()" aria-label="Close">✕</button>
+      </div>
+      <h3>{{ d.a.title }}</h3>
+      <p class="an-dr-by">
+        <span class="an-av sm" [style.background]="d.author.color">{{ d.a.createdBy === 'me' ? 'A' : d.author.name.charAt(0) }}</span>
+        {{ who(d.a.createdBy) }} · {{ d.author.title }} ·
+        @if (d.status === 'scheduled') {
+          sends {{ dateTime(d.a.sendAtUtc) }} ({{ relTime(d.a.sendAtUtc, svc.now()) }})
+        } @else if (d.status === 'draft') {
+          draft saved {{ relTime(d.a.updatedAtUtc, svc.now()) }}
+        } @else {
+          sent {{ dateTime(d.a.sendAtUtc) }}
+        }
+      </p>
+      <div class="an-dr-actions">
+        @if (d.status === 'draft' || d.status === 'scheduled') {
+          <button type="button" class="an-btn light sm" (click)="edit(d)">✏️ Edit</button>
+          <button type="button" class="an-btn success sm" (click)="ask('publish', [d.a.id])">🚀 Publish now</button>
+        }
+        <button type="button" class="an-btn light sm" (click)="duplicate(d)">⧉ Duplicate</button>
+        <button type="button" class="an-btn light sm" (click)="pin(d)">📌 {{ d.a.pinned ? 'Unpin' : 'Pin' }}</button>
+        @if (d.status === 'scheduled') {
+          <button type="button" class="an-btn danger sm" (click)="ask('cancel', [d.a.id])">⊘ Cancel</button>
+        }
+        @if (d.status === 'live') {
+          <button type="button" class="an-btn danger sm" (click)="ask('end', [d.a.id])">⏹ End now</button>
+        }
+      </div>
+    </header>
+
+    <div class="an-dr-body">
+      <!-- Preview -->
+      <section class="an-dr-sec">
+        <h4>Message</h4>
+        <div class="an-preview-card" [attr.data-tone]="catMeta[d.a.category].tone">
+          <strong>{{ catMeta[d.a.category].icon }} {{ d.a.title }}</strong>
+          <p [innerHTML]="render(d.a.body)"></p>
+          @if (d.a.ctaLabel) {
+            <span class="an-cta">{{ d.a.ctaLabel }} →</span>
+            <small class="g-muted">{{ d.a.ctaUrl }}</small>
+          }
+        </div>
+        <div class="an-dr-chips">
+          @for (c of d.a.channels; track c) {
+            <span class="an-chip">{{ chMeta[c].icon }} {{ chMeta[c].label }}</span>
+          }
+          <span class="an-chip">⏳ {{ d.a.expiresAtUtc ? 'Ends ' + dateTime(d.a.expiresAtUtc) : 'No end date' }}</span>
+        </div>
+      </section>
+
+      <!-- Performance -->
+      <section class="an-dr-sec">
+        <h4>Delivery & engagement</h4>
+        <div class="an-funnel">
+          @for (f of [
+            { label: 'Recipients', n: d.stats.recipients, cls: 'r' },
+            { label: 'Delivered', n: d.stats.delivered, cls: 'd' },
+            { label: 'Opened', n: d.stats.opened, cls: 'o' },
+            { label: 'Clicked', n: d.stats.clicked, cls: 'c' }
+          ]; track f.label) {
+            <div class="an-funnel-row">
+              <span>{{ f.label }}</span>
+              <span class="an-funnel-bar"><i [class]="f.cls" [style.width.%]="d.stats.recipients ? pct(f.n, d.stats.recipients) : 0"></i></span>
+              <b>{{ f.n.toLocaleString() }}</b>
+              <small>{{ pct(f.n, d.stats.recipients) }}%</small>
+            </div>
+          }
+        </div>
+        @if (curve(); as c) {
+          <div class="an-curve">
+            <div class="an-curve-head"><b>Opens · first 24 hours</b><small>peak ≈ {{ c.peak.toLocaleString() }} in hour 1</small></div>
+            <svg viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="an-curve-g" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#6366f1" stop-opacity="0.45" />
+                  <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <path [attr.d]="c.area" fill="url(#an-curve-g)"></path>
+              <path [attr.d]="c.line" fill="none" stroke="#6366f1" stroke-width="2"></path>
+            </svg>
+          </div>
+        } @else if (d.status === 'scheduled' || d.status === 'draft') {
+          <p class="an-note">📊 Engagement appears here once the announcement is sent.</p>
+        }
+        @if (d.stats.delivered) {
+          <table class="an-mini">
+            <thead>
+              <tr><th>Channel</th><th>Delivered</th><th>Opened</th><th>Rate</th></tr>
+            </thead>
+            <tbody>
+              @for (c of channelRows(); track c.c) {
+                <tr>
+                  <td>{{ chMeta[c.c].icon }} {{ chMeta[c.c].label }}</td>
+                  <td>{{ c.delivered.toLocaleString() }}</td>
+                  <td>{{ c.opened.toLocaleString() }}</td>
+                  <td>{{ c.rate }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <!-- Audience -->
+      <section class="an-dr-sec">
+        <h4>Audience · {{ d.reach.toLocaleString() }} recipient{{ d.reach === 1 ? '' : 's' }}</h4>
+        <p class="an-aud-line"><span class="an-aud-chip" [attr.data-mode]="d.a.audience.mode">{{ d.a.audience.mode === 'all' ? '🌍' : d.a.audience.mode === 'users' ? '👤' : '🎯' }} {{ d.audienceLabel }}</span></p>
+        @if (d.a.audience.mode === 'filtered') {
+          <dl class="an-criteria">
+            @if (d.a.audience.regions.length) {
+              <dt>Geography</dt><dd>{{ d.a.audience.regions.join(', ') }}</dd>
+            }
+            @if (d.a.audience.countries.length) {
+              <dt>Country</dt><dd>{{ d.a.audience.countries.join(', ') }}</dd>
+            }
+            @if (d.a.audience.cities.length) {
+              <dt>City</dt><dd>{{ d.a.audience.cities.join(', ') }}</dd>
+            }
+            @if (d.a.audience.genders.length) {
+              <dt>Gender</dt><dd>{{ d.a.audience.genders.join(', ') }}</dd>
+            }
+            @if (d.a.audience.ageMin !== null || d.a.audience.ageMax !== null) {
+              <dt>Age</dt><dd>{{ d.a.audience.ageMin ?? 'any' }} – {{ d.a.audience.ageMax ?? 'any' }}</dd>
+            }
+            @if (d.a.audience.verifiedOnly) {
+              <dt>Verification</dt><dd>Verified members only</dd>
+            }
+          </dl>
+        }
+        @if (d.a.audience.mode === 'users') {
+          <ul class="an-users">
+            @for (m of detailMembers(); track m.id) {
+              <li>
+                <span class="g-avatar"><img [src]="m.photo" [alt]="m.fullName" loading="lazy" /></span>
+                <span class="an-user-meta"><b>{{ m.fullName }}</b><small>{{ m.city ? m.city + ', ' : '' }}{{ m.country }}</small></span>
+                <app-manage-user-btn [userId]="m.id" [name]="m.fullName" size="sm" />
+              </li>
+            } @empty {
+              <li class="g-muted">The selected users no longer exist.</li>
+            }
+          </ul>
+        } @else if (detailBreakdown(); as b) {
+          <div class="an-breakdown">
+            @for (group of [
+              { title: 'Region', rows: b.regions },
+              { title: 'Top countries', rows: b.countries },
+              { title: 'Gender', rows: b.genders },
+              { title: 'Age', rows: b.ages }
+            ]; track group.title) {
+              <div>
+                <h5>{{ group.title }}</h5>
+                @for (x of group.rows; track x.label) {
+                  <div class="an-bd-row"><span>{{ x.label }}</span><span class="an-bd-bar"><i [style.width.%]="x.pct"></i></span><b>{{ x.pct }}%</b></div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- History -->
+      <section class="an-dr-sec">
+        <h4>History</h4>
+        <ol class="an-history">
+          @for (h of d.a.history.slice().reverse(); track $index) {
+            <li><b>{{ h.action }}</b> · {{ who(h.by) }} <small>{{ dateTime(h.atUtc) }}</small></li>
+          }
+        </ol>
+      </section>
+    </div>
+  </aside>
+}
+
+@if (pendingText(); as t) {
+  <app-admin-confirm-dialog [heading]="t.heading" [message]="t.message" [confirmLabel]="t.label" [tone]="t.tone" [withReason]="false" (confirmed)="confirm()" (cancelled)="pending.set(null)" />
+}
+
+@if (undo(); as u) {
+  <div class="an-undo" appOverlayPortal role="status">
+    <span>{{ u.text }}</span>
+    <button type="button" (click)="undoDelete()">Undo</button>
+  </div>
+}

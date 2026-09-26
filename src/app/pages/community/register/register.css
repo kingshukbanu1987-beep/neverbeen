@@ -54,13 +54,13 @@
   position: relative;
   width: 100%;
   max-width: 720px;
-  background: linear-gradient(165deg, rgba(255, 255, 255, 0.94), rgba(250, 247, 242, 0.88));
+  background: linear-gradient(165deg, rgb(var(--ct-sf-rgb, 255 255 255) / 0.94), rgb(var(--ct-sf-rgb, 250 247 242) / 0.88));
   backdrop-filter: blur(22px) saturate(150%);
   -webkit-backdrop-filter: blur(22px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid rgb(var(--ct-sf-rgb, 255 255 255) / 0.65);
   box-shadow:
     0 32px 80px rgba(4, 10, 8, 0.45),
-    0 2px 0 rgba(255, 255, 255, 0.5) inset;
+    0 2px 0 rgb(var(--ct-sf-rgb, 255 255 255) / 0.5) inset;
   border-radius: 28px;
   padding: 2.8rem 2.6rem;
   animation: regCardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
@@ -85,7 +85,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   font-size: 0.84rem;
   font-weight: 500;
   text-decoration: none;
@@ -94,7 +94,7 @@
 }
 
 .back-link:hover {
-  color: var(--forest, #24352c);
+  color: var(--forest, var(--ct-ink, #24352c));
   transform: translateX(-3px);
 }
 
@@ -102,7 +102,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  background: linear-gradient(120deg, #16a34a, #0d9488);
+  background: linear-gradient(120deg, var(--ct-b1, #16a34a), var(--ct-b2, #0d9488));
   border: none;
   color: #ffffff;
   font-size: 0.72rem;
@@ -112,7 +112,7 @@
   padding: 0.38rem 0.95rem;
   border-radius: 9999px;
   margin-bottom: 0.95rem;
-  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+  box-shadow: 0 6px 18px rgb(var(--ct-b2-rgb, 13 148 136) / 0.35);
 }
 
 .reg-badge::before {
@@ -129,13 +129,13 @@
   font-family: var(--serif, 'Cormorant Garamond', Georgia, serif);
   font-size: clamp(1.9rem, 4vw, 2.45rem);
   font-weight: 600;
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
   letter-spacing: -0.02em;
   line-height: 1.12;
 }
 
 .title-accent {
-  background: linear-gradient(115deg, #16a34a 0%, #0d9488 55%, #0f766e 100%);
+  background: linear-gradient(115deg, var(--ct-b1, #16a34a) 0%, var(--ct-b2, #0d9488) 55%, var(--ct-b3, #0f766e) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -144,7 +144,7 @@
 .reg-subtitle {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   line-height: 1.6;
 }
 
@@ -152,7 +152,7 @@
   margin-top: 1.15rem;
   height: 5px;
   border-radius: 999px;
-  background: rgba(29, 25, 20, 0.08);
+  background: rgb(var(--ct-ink-rgb, 29 25 20) / 0.08);
   overflow: hidden;
 }
 
@@ -161,7 +161,7 @@
   height: 100%;
   width: 38%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #16a34a, #0d9488);
+  background: linear-gradient(90deg, var(--ct-b1, #16a34a), var(--ct-b2, #0d9488));
 }
 
 /* Photo Upload */
@@ -169,8 +169,8 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1.5px dashed rgba(13, 148, 136, 0.4);
+  background: rgb(var(--ct-sf-rgb, 255 255 255) / 0.72);
+  border: 1.5px dashed rgb(var(--ct-b2-rgb, 13 148 136) / 0.4);
   border-radius: 20px;
   padding: 1.4rem 1.6rem;
   margin-bottom: 1.9rem;
@@ -178,8 +178,8 @@
 }
 
 .photo-upload-group:hover {
-  border-color: rgba(13, 148, 136, 0.75);
-  box-shadow: 0 10px 26px rgba(13, 148, 136, 0.1);
+  border-color: rgb(var(--ct-b2-rgb, 13 148 136) / 0.75);
+  box-shadow: 0 10px 26px rgb(var(--ct-b2-rgb, 13 148 136) / 0.1);
 }
 
 .photo-upload-group.has-error {
@@ -193,9 +193,9 @@
   height: 96px;
   border-radius: 50%;
   overflow: hidden;
-  background: linear-gradient(160deg, #ffffff, #f0fdf4);
-  border: 2px solid rgba(13, 148, 136, 0.35);
-  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.18);
+  background: linear-gradient(160deg, var(--ct-sf, #ffffff), #f0fdf4);
+  border: 2px solid rgb(var(--ct-b2-rgb, 13 148 136) / 0.35);
+  box-shadow: 0 8px 20px rgb(var(--ct-b2-rgb, 13 148 136) / 0.18);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -213,7 +213,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   font-size: 0.72rem;
   text-align: center;
   padding: 0.2rem;
@@ -222,13 +222,13 @@
 .camera-icon {
   width: 26px;
   height: 26px;
-  color: #0d9488;
+  color: var(--ct-b2t, #0d9488);
 }
 
 .photo-overlay-btn {
   position: absolute;
   inset: 0;
-  background: rgba(13, 148, 136, 0.55);
+  background: rgb(var(--ct-b2-rgb, 13 148 136) / 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,14 +259,14 @@
   display: block;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
   margin-bottom: 0.3rem;
 }
 
 .photo-hint {
   margin: 0;
   font-size: 0.85rem;
-  color: var(--ink-soft, #5c5348);
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
   line-height: 1.5;
 }
 
@@ -291,7 +291,7 @@
 .field-box label {
   font-size: 0.84rem;
   font-weight: 700;
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
   letter-spacing: 0.01em;
 }
 
@@ -303,44 +303,44 @@
 .field-box select {
   width: 100%;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(29, 25, 20, 0.16);
+  background: rgb(var(--ct-sf-rgb, 255 255 255) / 0.9);
+  border: 1px solid rgb(var(--ct-ink-rgb, 29 25 20) / 0.16);
   border-radius: 14px;
   padding: 0.88rem 1.05rem;
   font-size: 0.94rem;
-  color: var(--ink, #1d1914);
+  color: var(--ink, var(--ct-ink, #1d1914));
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 .field-box input::placeholder {
-  color: #9b9184;
+  color: var(--ct-fa, #9b9184);
 }
 
 .field-box input:focus,
 .field-box select:focus {
   border-color: #0d9488;
-  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.16);
-  background: #ffffff;
+  box-shadow: 0 0 0 4px rgb(var(--ct-b2-rgb, 13 148 136) / 0.16);
+  background: var(--ct-sf, #ffffff);
   transform: translateY(-1px);
 }
 
 .field-box select:disabled {
-  background: rgba(29, 25, 20, 0.05);
-  color: #9b9184;
+  background: rgb(var(--ct-ink-rgb, 29 25 20) / 0.05);
+  color: var(--ct-fa, #9b9184);
   cursor: not-allowed;
 }
 
 .field-box input.invalid,
 .field-box select.invalid {
   border-color: #dc2626;
-  background: #fef2f2;
+  background: var(--ct-dgs, #fef2f2);
   box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
 }
 
 .field-box select option {
-  background: #ffffff;
-  color: var(--ink, #1d1914);
+  background: var(--ct-sf, #ffffff);
+  color: var(--ink, var(--ct-ink, #1d1914));
 }
 
 .field-error-msg {
@@ -351,7 +351,7 @@
 
 .field-hint-msg {
   font-size: 0.76rem;
-  color: #8a8072;
+  color: var(--ct-mu, #8a8072);
   margin-top: 0.15rem;
 }
 
@@ -370,7 +370,7 @@
   gap: 0.55rem;
   width: 100%;
   padding: 1.1rem 1.6rem;
-  background: linear-gradient(120deg, #16a34a 0%, #0d9488 55%, #0f766e 100%);
+  background: linear-gradient(120deg, var(--ct-b1, #16a34a) 0%, var(--ct-b2, #0d9488) 55%, var(--ct-b3, #0f766e) 100%);
   background-size: 160% 100%;
   color: #ffffff;
   border: none;
@@ -379,7 +379,7 @@
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 14px 34px rgba(13, 148, 136, 0.35);
+  box-shadow: 0 14px 34px rgb(var(--ct-b2-rgb, 13 148 136) / 0.35);
   transition: background-position 0.35s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
 }
 
@@ -390,7 +390,7 @@
   left: -80%;
   width: 55%;
   height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  background: linear-gradient(100deg, transparent, rgb(var(--ct-sf-rgb, 255 255 255) / 0.35), transparent);
   transform: skewX(-20deg);
   transition: left 0.55s ease;
 }
@@ -398,7 +398,7 @@
 .btn-create-account:hover:not(:disabled) {
   background-position: 100% 0;
   transform: translateY(-2px);
-  box-shadow: 0 18px 40px rgba(13, 148, 136, 0.45);
+  box-shadow: 0 18px 40px rgb(var(--ct-b2-rgb, 13 148 136) / 0.45);
 }
 
 .btn-create-account:hover:not(:disabled)::after {
@@ -427,7 +427,7 @@
   margin: 1.1rem 0 0;
   text-align: center;
   font-size: 0.78rem;
-  color: #8a8072;
+  color: var(--ct-mu, #8a8072);
   letter-spacing: 0.02em;
 }
 

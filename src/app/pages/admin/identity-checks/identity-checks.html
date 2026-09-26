@@ -1,0 +1,206 @@
+<div class="g-page-head">
+  <div>
+    <a class="g-back" routerLink="/admin/dashboard">← Dashboard</a>
+    <h2>🪪 Identity Check Verification</h2>
+    <p>Documents submitted by members whose account was disabled or who were forced to confirm their identity. Review, then enable, permanently disable or ask again.</p>
+  </div>
+  <nav class="g-tabs" aria-label="Verification status">
+    @for (t of tabs; track t.key) {
+      <button type="button" [class.active]="tab() === t.key" (click)="tab.set(t.key)">{{ t.label }} <span class="count">{{ counts()[t.key] }}</span></button>
+    }
+  </nav>
+</div>
+
+<div class="g-kpis">
+  @for (k of kpis(); track k.label) {
+    <div class="g-kpi" [style.--kpi-glow]="k.glow">
+      <small>{{ k.label }}</small>
+      <strong>{{ k.value }}</strong>
+    </div>
+  }
+</div>
+
+<section class="g-panel">
+  <div class="g-toolbar">
+    <label class="g-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+      </svg>
+      <input type="search" placeholder="Search member, email, UID, name on document…" [value]="search()" (input)="search.set($any($event.target).value)" aria-label="Search submissions" />
+    </label>
+    <label class="g-select">
+      <span>Reason</span>
+      <select [value]="trigger()" (change)="trigger.set($any($event.target).value)">
+        <option value="">All</option>
+        <option value="disabled">⛔ Account disabled</option>
+        <option value="identity_required">🪪 Forced identity check</option>
+      </select>
+    </label>
+    <label class="g-select">
+      <span>Document</span>
+      <select [value]="docType()" (change)="docType.set($any($event.target).value)">
+        <option value="">All types</option>
+        @for (d of docTypes(); track d) {
+          <option [value]="d">{{ d }}</option>
+        }
+      </select>
+    </label>
+    <label class="g-select">
+      <span>Auto-checks</span>
+      <select [value]="checkFilter()" (change)="checkFilter.set($any($event.target).value)">
+        <option value="">Any</option>
+        <option value="clean">All passed</option>
+        <option value="flagged">Has failures</option>
+      </select>
+    </label>
+  </div>
+
+  @if (filtered().length === 0) {
+    <p class="g-empty">
+      @if (tab() === 'pending') {
+        All caught up — no identity documents are waiting for review. 🎉
+      } @else {
+        No submissions match these filters.
+      }
+    </p>
+  } @else {
+    <div class="g-table-wrap">
+      <table class="g-table ic-table">
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Why verification</th>
+            <th>Document details</th>
+            <th>Submitted documents</th>
+            <th>Automated checks</th>
+            <th>Submitted</th>
+            <th style="text-align: right">Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtered(); track r.s.id) {
+            <tr [attr.data-status]="r.s.status">
+              <td>
+                <div class="g-member">
+                  <span class="g-avatar">
+                    <img [src]="r.photo" [alt]="r.m?.fullName ?? ''" loading="lazy" />
+                    <i class="dot" [class.on]="r.m?.isOnline"></i>
+                  </span>
+                  <span class="g-member-meta">
+                    <strong>{{ r.m?.fullName ?? 'Deleted member' }}</strong>
+                    <small>{{ r.m?.email }}</small>
+                    <small class="ic-uid">UID {{ r.m?.uniqueId }} · {{ r.m?.city ? r.m?.city + ', ' : '' }}{{ r.m?.country }}</small>
+                    @if (r.m) {
+                      <span class="ic-manage"><app-manage-user-btn [userId]="r.m.id" [name]="r.m.fullName" size="sm" /></span>
+                      <span class="g-badge ic-state" [class]="'g-badge ic-state ' + (r.m.accountState === 'active' ? 'ok' : r.m.accountState === 'disabled' ? 'danger' : 'violet')">{{ stateLabel(r.m.accountState) }}</span>
+                    }
+                  </span>
+                </div>
+              </td>
+              <td class="ic-why">
+                <span class="g-badge" [class]="'g-badge ' + triggerMeta[r.s.trigger].tone">{{ triggerMeta[r.s.trigger].icon }} {{ triggerMeta[r.s.trigger].label }}</span>
+                <p>{{ r.s.triggerReason }}</p>
+                @if (r.s.memberNote) {
+                  <p class="ic-note">💬 “{{ r.s.memberNote }}”</p>
+                }
+              </td>
+              <td class="ic-doc">
+                <strong>{{ r.s.documentType }}</strong>
+                <code>{{ mask(r.s.documentNumber) }}</code>
+                <dl>
+                  <dt>Name</dt>
+                  <dd [class.bad]="!r.s.checks.nameMatch">{{ r.s.nameOnDocument }}</dd>
+                  <dt>DOB</dt>
+                  <dd [class.bad]="!r.s.checks.dobMatch">{{ r.s.dobOnDocument }}</dd>
+                  @if (r.s.expiresOn) {
+                    <dt>Expiry</dt>
+                    <dd [class.bad]="!r.s.checks.notExpired">{{ r.s.expiresOn }}</dd>
+                  }
+                </dl>
+              </td>
+              <td>
+                <div class="ic-files">
+                  @for (f of r.s.files; track f.id) {
+                    <a
+                      class="ic-file"
+                      [routerLink]="['/admin/identity-document', r.s.id, f.id]"
+                      target="_blank"
+                      rel="noopener"
+                      [title]="'Open ' + f.name + ' in a new page'"
+                    >
+                      <app-id-document [submission]="r.s" [file]="f" [photo]="r.photo" [width]="f.side === 'Selfie' ? 58 : 112" />
+                      <span>{{ f.side }} ↗</span>
+                    </a>
+                  }
+                </div>
+              </td>
+              <td>
+                <div class="ic-checks">
+                  <span [class.ok]="r.s.checks.nameMatch" title="Name on document matches profile">{{ r.s.checks.nameMatch ? '✓' : '✕' }} Name</span>
+                  <span [class.ok]="r.s.checks.dobMatch" title="Date of birth matches profile">{{ r.s.checks.dobMatch ? '✓' : '✕' }} DOB</span>
+                  <span [class.ok]="r.s.checks.notExpired" title="Document is valid">{{ r.s.checks.notExpired ? '✓' : '✕' }} Valid</span>
+                  <span [class.ok]="r.s.checks.liveness" title="Selfie is a live capture">{{ r.s.checks.liveness ? '✓' : '✕' }} Liveness</span>
+                  <span [class.ok]="r.s.checks.tamperFree" title="No signs of editing">{{ r.s.checks.tamperFree ? '✓' : '✕' }} Untampered</span>
+                </div>
+                <div class="ic-face" [attr.data-tone]="faceTone(r.s.checks.faceMatch)">
+                  <span class="ic-face-bar"><i [style.width.%]="r.s.checks.faceMatch"></i></span>
+                  <b>{{ r.s.checks.faceMatch }}%</b> face match
+                </div>
+                <small class="ic-score" [class.bad]="r.passed < r.total">{{ r.passed }}/{{ r.total }} checks passed</small>
+              </td>
+              <td class="g-nowrap">
+                {{ timeAgo(r.s.submittedAtUtc) }}
+                <br /><small class="g-muted">{{ shortDate(r.s.submittedAtUtc) }} · attempt #{{ r.s.attempt }}</small>
+              </td>
+              <td>
+                <div class="ic-decision">
+                  <span class="g-badge" [class]="'g-badge ' + statusMeta[r.s.status].tone">{{ statusMeta[r.s.status].label }}</span>
+                  @if (r.s.decidedAtUtc) {
+                    <small class="g-muted">{{ r.s.decisionNote }} · {{ timeAgo(r.s.decidedAtUtc) }}</small>
+                  }
+                  @if (isOpen(r.s)) {
+                    <div class="ic-actions">
+                      <button type="button" class="g-btn success" (click)="pending.set({ kind: 'enable', sub: r.s })">✓ Enable account</button>
+                      <button type="button" class="g-btn danger" (click)="pending.set({ kind: 'disable', sub: r.s })">⛔ Permanently disable</button>
+                      <button type="button" class="g-btn violet" [disabled]="r.s.status === 'resubmit_requested'" (click)="pending.set({ kind: 'recheck', sub: r.s })">
+                        🔁 Force identity check again
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <footer class="g-foot">
+    <span>{{ filtered().length }} submission(s) · documents open in a new page · every view is recorded in the audit log</span>
+  </footer>
+</section>
+
+@if (pending(); as p) {
+  <app-admin-confirm-dialog
+    [heading]="p.kind === 'enable' ? 'Enable this account?' : p.kind === 'disable' ? 'Permanently disable this account?' : 'Force identity check again?'"
+    [message]="
+      p.kind === 'enable'
+        ? 'The documents look genuine. The member gets full access back immediately.'
+        : p.kind === 'disable'
+          ? 'The member is signed out and can no longer use NeverBeen or appeal with new documents.'
+          : 'The member stays locked out until they submit new identity documents.'
+    "
+    [confirmLabel]="p.kind === 'enable' ? 'Enable account' : p.kind === 'disable' ? 'Permanently disable' : 'Request new documents'"
+    [tone]="p.kind === 'enable' ? 'success' : p.kind === 'disable' ? 'danger' : 'violet'"
+    [reasonPlaceholder]="
+      p.kind === 'enable'
+        ? 'Optional note, e.g. Aadhaar verified against selfie'
+        : p.kind === 'disable'
+          ? 'e.g. Document is edited / belongs to another person'
+          : 'e.g. Photo is blurred — upload a clearer image of the front side'
+    "
+    (confirmed)="confirm($event)"
+    (cancelled)="pending.set(null)"
+  />
+}

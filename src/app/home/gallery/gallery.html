@@ -1,13 +1,14 @@
 <section class="gallery" id="gallery">
   <div class="container">
     <app-section-heading
+      cmsKey="home.gallery"
       tone="ink"
       eyebrow="The proof"
       title="Gallery"
       copy="Example vacation stills—composed like editorial travel photographs, not generated novelties."
     />
     <div class="mosaic">
-      @for (item of items; track item.title) {
+      @for (item of items(); track item.title) {
         <figure>
           <img [src]="item.image" [alt]="item.title + ' in ' + item.location" />
           <figcaption>

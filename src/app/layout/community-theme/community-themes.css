@@ -1,0 +1,559 @@
+/*
+ * Community themes — token sheet (unencapsulated; loaded only with the theme picker, i.e. only
+ * while the member is in the Community). Community styles read these tokens with the original
+ * colour as fallback, so "Default" (no data-ctheme attribute) is the untouched classic look.
+ *
+ * Tokens
+ *   --ct-page   page backdrop (background shorthand)      --ct-bg0   solid page colour
+ *   --ct-sf     card surface   (+ --ct-sf-rgb)             --ct-sf2 / --ct-sf3  subtle / muted fills
+ *   --ct-ln     hairlines      --ct-ln2 stronger lines
+ *   --ct-ink    headings (+ --ct-ink-rgb)  --ct-ink2 body text  --ct-mu muted  --ct-fa faint
+ *   --ct-ac     accent fill (+ --ct-ac-rgb)  --ct-ac2 accent hover/strong  --ct-act accent text
+ *   --ct-acs    accent soft fill  --ct-acl accent line
+ *   --ct-b1..b3 brand gradient stops (banners)  --ct-b2t brand text  --ct-b2-rgb
+ *   --ct-dgs/dgi, --ct-oks/oki, --ct-wns/wni   danger / success / warning soft fill + ink (dark themes)
+ *   --ct-nav-*  website header while in the Community
+ */
+
+/* ============================================================ 1. Winter Wonderland */
+html[data-ctheme='winter-wonderland'] {
+  --ct-bg0: #f2f8fd;
+  --ct-page:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.95) 0 1.6px, transparent 2.2px) 0 0 / 56px 56px,
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.85) 0 1.2px, transparent 1.8px) 0 0 / 38px 38px,
+    radial-gradient(1200px 600px at 8% -10%, #d6ecfd 0%, transparent 60%),
+    radial-gradient(900px 520px at 105% 5%, #e3ebff 0%, transparent 55%),
+    linear-gradient(180deg, #f3f9fd 0%, #e8f2fa 100%);
+  --ct-sf: #ffffff;
+  --ct-sf-rgb: 255 255 255;
+  --ct-sf2: #f6fafd;
+  --ct-sf3: #eaf3fa;
+  --ct-ln: #d9e7f2;
+  --ct-ln2: #b9d1e4;
+  --ct-ink: #0b2540;
+  --ct-ink-rgb: 11 37 64;
+  --ct-ink2: #2b4a68;
+  --ct-mu: #587894;
+  --ct-fa: #8fa9c0;
+  --ct-ac: #2a8bd4;
+  --ct-ac-rgb: 42 139 212;
+  --ct-ac2: #1b6bab;
+  --ct-act: #1b6bab;
+  --ct-acs: #e5f3fd;
+  --ct-acl: #bfe1f7;
+  --ct-b1: #4fb0e8;
+  --ct-b2: #2a8bd4;
+  --ct-b2t: #1b6bab;
+  --ct-b2-rgb: 42 139 212;
+  --ct-b3: #3d5ccc;
+  --ct-nav-bg: rgba(248, 252, 255, 0.86);
+  --ct-nav-ink: #0b2540;
+  --ct-nav-mu: #4d6d8a;
+  --ct-nav-ln: #d9e7f2;
+}
+
+/* ============================================================ 2. City Explorer (dark) */
+html[data-ctheme='city-explorer'] {
+  --ct-bg0: #121418;
+  --ct-page:
+    radial-gradient(900px 520px at 0% 0%, rgba(255, 61, 127, 0.16), transparent 60%),
+    radial-gradient(800px 520px at 100% 0%, rgba(0, 168, 232, 0.14), transparent 60%),
+    radial-gradient(700px 500px at 60% 110%, rgba(124, 77, 255, 0.12), transparent 60%),
+    linear-gradient(180deg, #15171c 0%, #111317 100%);
+  --ct-sf: #1d2027;
+  --ct-sf-rgb: 29 32 39;
+  --ct-sf2: #22262e;
+  --ct-sf3: #2a2f39;
+  --ct-ln: #333946;
+  --ct-ln2: #4a5262;
+  --ct-ink: #f4f6fa;
+  --ct-ink-rgb: 244 246 250;
+  --ct-ink2: #cdd3dd;
+  --ct-mu: #9aa3b2;
+  --ct-fa: #6e7888;
+  --ct-ac: #ff3d7f;
+  --ct-ac-rgb: 255 61 127;
+  --ct-ac2: #e0266a;
+  --ct-act: #ff7aa8;
+  --ct-acs: rgba(255, 61, 127, 0.14);
+  --ct-acl: rgba(255, 61, 127, 0.4);
+  --ct-b1: #ff3d7f;
+  --ct-b2: #7c4dff;
+  --ct-b2t: #b69cff;
+  --ct-b2-rgb: 124 77 255;
+  --ct-b3: #00a8e8;
+  --ct-nav-bg: rgba(17, 19, 23, 0.92);
+  --ct-nav-ink: #f4f6fa;
+  --ct-nav-mu: #aab2bf;
+  --ct-nav-ln: #2a2f39;
+  --ct-nav-pill: rgba(255, 255, 255, 0.06);
+  --ct-nav-pill-solid: #1d2027;
+  --ct-nav-panel: #15171c;
+}
+
+/* ============================================================ 3. Green Nature */
+html[data-ctheme='green-nature'] {
+  --ct-bg0: #f5f2e9;
+  --ct-page:
+    radial-gradient(1000px 520px at 0% 0%, #e1ebd3 0%, transparent 60%),
+    radial-gradient(900px 520px at 100% 100%, #efe2cc 0%, transparent 55%),
+    linear-gradient(180deg, #f6f3ea 0%, #f2eee3 100%);
+  --ct-sf: #fffdf7;
+  --ct-sf-rgb: 255 253 247;
+  --ct-sf2: #f9f6ee;
+  --ct-sf3: #f0ebdd;
+  --ct-ln: #e3dccb;
+  --ct-ln2: #cdc3a9;
+  --ct-ink: #1f2b1d;
+  --ct-ink-rgb: 31 43 29;
+  --ct-ink2: #3c4a35;
+  --ct-mu: #6a705b;
+  --ct-fa: #a29d86;
+  --ct-ac: #3f7d3a;
+  --ct-ac-rgb: 63 125 58;
+  --ct-ac2: #2e5f2a;
+  --ct-act: #2e6a2a;
+  --ct-acs: #e8f1e1;
+  --ct-acl: #c6dcb9;
+  --ct-b1: #6a994e;
+  --ct-b2: #3f7d3a;
+  --ct-b2t: #3f7d3a;
+  --ct-b2-rgb: 63 125 58;
+  --ct-b3: #8a5a2b;
+  --ct-nav-bg: rgba(251, 248, 240, 0.92);
+  --ct-nav-ink: #1f2b1d;
+  --ct-nav-mu: #5b6350;
+  --ct-nav-ln: #e3dccb;
+}
+
+/* ============================================================ 4. Travel Classic */
+html[data-ctheme='travel-classic'] {
+  --ct-bg0: #f4f7fb;
+  --ct-page: linear-gradient(180deg, #eef3f9 0%, #f7f9fc 420px, #ffffff 100%);
+  --ct-sf: #ffffff;
+  --ct-sf-rgb: 255 255 255;
+  --ct-sf2: #f7f9fc;
+  --ct-sf3: #eef3f9;
+  --ct-ln: #e0e7f0;
+  --ct-ln2: #c6d3e2;
+  --ct-ink: #0c1a2e;
+  --ct-ink-rgb: 12 26 46;
+  --ct-ink2: #2b3d55;
+  --ct-mu: #5a6a80;
+  --ct-fa: #94a2b5;
+  --ct-ac: #0b5ed7;
+  --ct-ac-rgb: 11 94 215;
+  --ct-ac2: #0848a8;
+  --ct-act: #0a53be;
+  --ct-acs: #e9f1ff;
+  --ct-acl: #c5dafd;
+  --ct-b1: #0b5ed7;
+  --ct-b2: #1673e6;
+  --ct-b2t: #0a53be;
+  --ct-b2-rgb: 22 115 230;
+  --ct-b3: #0b3a86;
+  --ct-nav-bg: #ffffff;
+  --ct-nav-ink: #0c1a2e;
+  --ct-nav-mu: #4d5d74;
+  --ct-nav-ln: #e0e7f0;
+}
+
+/* ============================================================ 5. Midnight (dark, minimal) */
+html[data-ctheme='midnight'] {
+  --ct-bg0: #0a0a0b;
+  --ct-page: radial-gradient(1200px 500px at 50% -20%, rgba(255, 255, 255, 0.05), transparent 65%), #0a0a0b;
+  --ct-sf: #141416;
+  --ct-sf-rgb: 20 20 22;
+  --ct-sf2: #18181b;
+  --ct-sf3: #1f1f23;
+  --ct-ln: #27272a;
+  --ct-ln2: #3a3a40;
+  --ct-ink: #f4f4f5;
+  --ct-ink-rgb: 244 244 245;
+  --ct-ink2: #d4d4d8;
+  --ct-mu: #a1a1aa;
+  --ct-fa: #71717a;
+  --ct-ac: #3f3f46;
+  --ct-ac-rgb: 161 161 170;
+  --ct-ac2: #52525b;
+  --ct-act: #e4e4e7;
+  --ct-acs: rgba(255, 255, 255, 0.06);
+  --ct-acl: #3f3f46;
+  --ct-b1: #27272a;
+  --ct-b2: #3f3f46;
+  --ct-b2t: #d4d4d8;
+  --ct-b2-rgb: 161 161 170;
+  --ct-b3: #18181b;
+  --ct-nav-bg: rgba(10, 10, 11, 0.92);
+  --ct-nav-ink: #fafafa;
+  --ct-nav-mu: #a1a1aa;
+  --ct-nav-ln: #1f1f23;
+  --ct-nav-pill: rgba(255, 255, 255, 0.05);
+  --ct-nav-pill-solid: #141416;
+  --ct-nav-panel: #0f0f11;
+}
+
+/* ============================================================ 6. Cherry Blossom */
+html[data-ctheme='cherry-blossom'] {
+  --ct-bg0: #fff7fa;
+  --ct-page:
+    radial-gradient(circle at 30% 40%, rgba(244, 143, 177, 0.2) 0 3px, transparent 4px) 0 0 / 96px 96px,
+    radial-gradient(circle at 75% 70%, rgba(236, 111, 155, 0.14) 0 2px, transparent 3px) 0 0 / 64px 64px,
+    radial-gradient(900px 520px at 0% 0%, #ffe1ec 0%, transparent 60%),
+    radial-gradient(800px 520px at 100% 10%, #f1e7ff 0%, transparent 55%),
+    #fff8fa;
+  --ct-sf: #ffffff;
+  --ct-sf-rgb: 255 255 255;
+  --ct-sf2: #fff8fa;
+  --ct-sf3: #fdeef3;
+  --ct-ln: #f6dce5;
+  --ct-ln2: #ecbfce;
+  --ct-ink: #3b1d2a;
+  --ct-ink-rgb: 59 29 42;
+  --ct-ink2: #5f3949;
+  --ct-mu: #8e6475;
+  --ct-fa: #c19aa9;
+  --ct-ac: #e0457b;
+  --ct-ac-rgb: 224 69 123;
+  --ct-ac2: #c22d62;
+  --ct-act: #c22d62;
+  --ct-acs: #fde8f0;
+  --ct-acl: #f7c5d7;
+  --ct-b1: #ec6f9b;
+  --ct-b2: #e0457b;
+  --ct-b2t: #c22d62;
+  --ct-b2-rgb: 224 69 123;
+  --ct-b3: #9b7bea;
+  --ct-nav-bg: rgba(255, 248, 250, 0.9);
+  --ct-nav-ink: #3b1d2a;
+  --ct-nav-mu: #7f5667;
+  --ct-nav-ln: #f6dce5;
+}
+
+/* ============================================================ 7. Tropical Paradise */
+html[data-ctheme='tropical-paradise'] {
+  --ct-bg0: #f0fbf8;
+  --ct-page:
+    radial-gradient(1000px 520px at 0% 0%, #cff4e5 0%, transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, #cdf2f6 0%, transparent 55%),
+    radial-gradient(700px 420px at 50% 110%, #e6f9d9 0%, transparent 60%),
+    linear-gradient(180deg, #f1fbf8 0%, #eefafb 100%);
+  --ct-sf: #ffffff;
+  --ct-sf-rgb: 255 255 255;
+  --ct-sf2: #f4fcfa;
+  --ct-sf3: #e2f6f0;
+  --ct-ln: #cdeee4;
+  --ct-ln2: #a3dccb;
+  --ct-ink: #073229;
+  --ct-ink-rgb: 7 50 41;
+  --ct-ink2: #1f5047;
+  --ct-mu: #4e7b72;
+  --ct-fa: #86aba3;
+  --ct-ac: #0c9c7f;
+  --ct-ac-rgb: 12 156 127;
+  --ct-ac2: #087a64;
+  --ct-act: #087a64;
+  --ct-acs: #dcf7ef;
+  --ct-acl: #a6e9d6;
+  --ct-b1: #1fae63;
+  --ct-b2: #0fb5b0;
+  --ct-b2t: #0a8a86;
+  --ct-b2-rgb: 15 181 176;
+  --ct-b3: #0784b5;
+  --ct-nav-bg: rgba(241, 251, 248, 0.9);
+  --ct-nav-ink: #073229;
+  --ct-nav-mu: #3f6b62;
+  --ct-nav-ln: #cdeee4;
+}
+
+/* ============================================================ 8. Mountain Escape */
+html[data-ctheme='mountain-escape'] {
+  --ct-bg0: #eef1ec;
+  --ct-page:
+    radial-gradient(1100px 480px at 50% -20%, #d8e6ee 0%, transparent 65%),
+    linear-gradient(172deg, transparent 0 62%, rgba(74, 124, 89, 0.07) 62% 100%),
+    linear-gradient(188deg, transparent 0 70%, rgba(45, 106, 138, 0.06) 70% 100%),
+    linear-gradient(180deg, #e9eff1 0%, #eef1ea 45%, #f1eee6 100%);
+  --ct-sf: #fcfdfb;
+  --ct-sf-rgb: 252 253 251;
+  --ct-sf2: #f5f7f3;
+  --ct-sf3: #e9ede5;
+  --ct-ln: #d8ded2;
+  --ct-ln2: #bcc6b3;
+  --ct-ink: #1a292e;
+  --ct-ink-rgb: 26 41 46;
+  --ct-ink2: #36474c;
+  --ct-mu: #5e6e69;
+  --ct-fa: #96a29b;
+  --ct-ac: #2d6a8a;
+  --ct-ac-rgb: 45 106 138;
+  --ct-ac2: #22536d;
+  --ct-act: #22536d;
+  --ct-acs: #e2eef3;
+  --ct-acl: #bad5e1;
+  --ct-b1: #4a7c59;
+  --ct-b2: #2d6a8a;
+  --ct-b2t: #2d6a8a;
+  --ct-b2-rgb: 45 106 138;
+  --ct-b3: #7d5534;
+  --ct-nav-bg: rgba(248, 250, 247, 0.92);
+  --ct-nav-ink: #1a292e;
+  --ct-nav-mu: #52625d;
+  --ct-nav-ln: #d8ded2;
+}
+
+/* ============================================================ 9. Ocean Breeze */
+html[data-ctheme='ocean-breeze'] {
+  --ct-bg0: #effafd;
+  --ct-page:
+    repeating-radial-gradient(ellipse 140% 60% at 50% 120%, rgba(2, 132, 199, 0.05) 0 2px, transparent 2px 30px),
+    radial-gradient(1200px 520px at 50% -15%, #c9eef9 0%, transparent 65%),
+    linear-gradient(180deg, #effafd 0%, #f4fbfe 100%);
+  --ct-sf: #ffffff;
+  --ct-sf-rgb: 255 255 255;
+  --ct-sf2: #f3fbfe;
+  --ct-sf3: #e1f3f9;
+  --ct-ln: #cce9f2;
+  --ct-ln2: #9dd3e3;
+  --ct-ink: #032a3b;
+  --ct-ink-rgb: 3 42 59;
+  --ct-ink2: #1b4b60;
+  --ct-mu: #497486;
+  --ct-fa: #84a9b8;
+  --ct-ac: #0284c7;
+  --ct-ac-rgb: 2 132 199;
+  --ct-ac2: #036aa1;
+  --ct-act: #036aa1;
+  --ct-acs: #e0f4fc;
+  --ct-acl: #a6dff2;
+  --ct-b1: #06b6d4;
+  --ct-b2: #0891b2;
+  --ct-b2t: #0e7490;
+  --ct-b2-rgb: 8 145 178;
+  --ct-b3: #1d4ed8;
+  --ct-nav-bg: rgba(240, 250, 253, 0.9);
+  --ct-nav-ink: #032a3b;
+  --ct-nav-mu: #3d6a7d;
+  --ct-nav-ln: #cce9f2;
+}
+
+/* ============================================================ 10. Dreamscape */
+html[data-ctheme='dreamscape'] {
+  --ct-bg0: #f7f5ff;
+  --ct-page:
+    radial-gradient(900px 560px at 0% 0%, #eadfff 0%, transparent 60%),
+    radial-gradient(900px 560px at 100% 0%, #dbe4ff 0%, transparent 60%),
+    radial-gradient(800px 600px at 50% 110%, #e5d9ff 0%, transparent 60%),
+    #f7f5ff;
+  --ct-sf: #ffffff;
+  --ct-sf-rgb: 255 255 255;
+  --ct-sf2: #faf8ff;
+  --ct-sf3: #f0ebff;
+  --ct-ln: #e3dcfa;
+  --ct-ln2: #c9bcf3;
+  --ct-ink: #1d1645;
+  --ct-ink-rgb: 29 22 69;
+  --ct-ink2: #3c336e;
+  --ct-mu: #6a6295;
+  --ct-fa: #a29cc4;
+  --ct-ac: #7c3aed;
+  --ct-ac-rgb: 124 58 237;
+  --ct-ac2: #6427cf;
+  --ct-act: #6d28d9;
+  --ct-acs: #f1eaff;
+  --ct-acl: #d8c7fd;
+  --ct-b1: #8b5cf6;
+  --ct-b2: #6366f1;
+  --ct-b2t: #4f46e5;
+  --ct-b2-rgb: 99 102 241;
+  --ct-b3: #2563eb;
+  --ct-nav-bg: linear-gradient(100deg, #5b21b6 0%, #4f46e5 55%, #2563eb 100%);
+  --ct-nav-ink: #ffffff;
+  --ct-nav-mu: rgba(255, 255, 255, 0.82);
+  --ct-nav-ln: rgba(255, 255, 255, 0.28);
+  --ct-nav-pill: rgba(255, 255, 255, 0.14);
+  --ct-nav-pill-solid: #4f46e5;
+  --ct-nav-panel: #4c1d95;
+  --ct-logo-chip: rgba(255, 255, 255, 0.95);
+}
+
+/* ============================================================ 11. Boarding Pass */
+html[data-ctheme='boarding-pass'] {
+  --ct-bg0: #edf1f6;
+  --ct-page:
+    repeating-linear-gradient(90deg, rgba(11, 31, 58, 0.035) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(0deg, rgba(11, 31, 58, 0.035) 0 1px, transparent 1px 44px),
+    radial-gradient(900px 420px at 100% 0%, rgba(232, 89, 12, 0.08), transparent 60%),
+    linear-gradient(180deg, #eef2f7 0%, #e9eef5 100%);
+  --ct-sf: #fffdf6;
+  --ct-sf-rgb: 255 253 246;
+  --ct-sf2: #faf7ee;
+  --ct-sf3: #f2eee2;
+  --ct-ln: #e2dbc8;
+  --ct-ln2: #cbc0a4;
+  --ct-ink: #0b1f3a;
+  --ct-ink-rgb: 11 31 58;
+  --ct-ink2: #28405f;
+  --ct-mu: #5b6b82;
+  --ct-fa: #98a3b4;
+  --ct-ac: #0b3d91;
+  --ct-ac-rgb: 11 61 145;
+  --ct-ac2: #082e6f;
+  --ct-act: #0b3d91;
+  --ct-acs: #e8eefb;
+  --ct-acl: #c2d1f0;
+  --ct-b1: #0b3d91;
+  --ct-b2: #174ea6;
+  --ct-b2t: #174ea6;
+  --ct-b2-rgb: 23 78 166;
+  --ct-b3: #e8590c;
+  --ct-nav-bg: #0b1f3a;
+  --ct-nav-ink: #ffffff;
+  --ct-nav-mu: #c7d2e3;
+  --ct-nav-ln: transparent;
+  --ct-nav-pill: rgba(255, 255, 255, 0.08);
+  --ct-nav-pill-solid: #0b1f3a;
+  --ct-nav-panel: #0b1f3a;
+  --ct-logo-chip: #fffdf6;
+}
+
+/* Dark themes: readable status chips + native controls in dark mode. */
+html[data-ctheme-mode='dark'] {
+  --ct-dgs: rgba(248, 113, 113, 0.14);
+  --ct-dgi: #fca5a5;
+  --ct-oks: rgba(52, 211, 153, 0.14);
+  --ct-oki: #6ee7b7;
+  --ct-wns: rgba(251, 191, 36, 0.14);
+  --ct-wni: #fcd34d;
+  --ct-logo-chip: rgba(255, 255, 255, 0.94);
+}
+
+/* ============================================================ Applying a theme */
+
+html[data-ctheme] body {
+  background: var(--ct-bg0);
+}
+
+/* Page area (the footer is outside <main> and keeps the website look). */
+html[data-ctheme] app-root > main {
+  /* Website palette used by some community pages (Connect, Register, Message Book). */
+  --ink: var(--ct-ink);
+  --ink-soft: var(--ct-mu);
+  --line: rgb(var(--ct-ink-rgb) / 0.12);
+  --paper: var(--ct-sf2);
+  --sand: var(--ct-sf3);
+  --sand-deep: var(--ct-ln);
+  --forest: var(--ct-ac2);
+  --forest-deep: var(--ct-ac2);
+  --bronze: var(--ct-act);
+  --gold: var(--ct-b1);
+  --shadow: 0 24px 60px rgb(var(--ct-ink-rgb) / 0.14);
+
+  display: block;
+  color: var(--ct-ink);
+  background: var(--ct-page);
+  background-attachment: fixed;
+}
+
+html[data-ctheme-mode='dark'] app-root > main {
+  color-scheme: dark;
+}
+
+/* Let the theme backdrop show through the page wrappers. */
+html[data-ctheme] app-root > main .community-shell,
+html[data-ctheme] app-root > main app-community-profile {
+  background: transparent;
+}
+
+html[data-ctheme] app-root > main .community-aurora {
+  display: none;
+}
+
+html[data-ctheme] app-root > main ::selection {
+  background: rgb(var(--ct-ac-rgb) / 0.28);
+}
+
+html[data-ctheme] app-root > main :is(input, textarea)::placeholder {
+  color: var(--ct-fa);
+}
+
+/* Smooth cross-fade while switching themes. */
+html[data-ctheme-anim] app-root > main,
+html[data-ctheme-anim] app-root > main *,
+html[data-ctheme-anim] app-navbar .nav,
+html[data-ctheme-anim] app-navbar .nav * {
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    fill 0.35s ease !important;
+}
+
+/* ============================================================ Website header (Community only) */
+
+html[data-ctheme] app-navbar .nav {
+  --nav-icon: var(--ct-nav-ink);
+  background: var(--ct-nav-bg);
+  border-bottom-color: var(--ct-nav-ln);
+  color: var(--ct-nav-ink);
+}
+
+html[data-ctheme] app-navbar .nav nav a {
+  color: var(--ct-nav-mu);
+}
+
+html[data-ctheme] app-navbar .nav nav a:hover,
+html[data-ctheme] app-navbar .nav nav a.active {
+  color: var(--ct-nav-ink);
+}
+
+html[data-ctheme] app-navbar .nav .login {
+  border-color: var(--ct-nav-ln);
+  color: var(--ct-nav-ink) !important;
+}
+
+html[data-ctheme] app-navbar .nav .menu:focus-visible {
+  outline-color: var(--ct-nav-ink);
+}
+
+/* Logo on dark / coloured headers: sits on a light chip so the navy word-mark stays readable. */
+html[data-ctheme] app-navbar .nav .logo img {
+  background: var(--ct-logo-chip, transparent);
+  border-radius: 12px;
+  transition: background-color 0.3s ease;
+}
+
+html[data-ctheme='boarding-pass'] app-navbar .nav,
+html[data-ctheme='dreamscape'] app-navbar .nav,
+html[data-ctheme-mode='dark'] app-navbar .nav {
+  --ct-logo-pad: 3px 10px;
+}
+
+html[data-ctheme='boarding-pass'] app-navbar .nav .logo img,
+html[data-ctheme='dreamscape'] app-navbar .nav .logo img,
+html[data-ctheme-mode='dark'] app-navbar .nav .logo img {
+  padding: var(--ct-logo-pad);
+}
+
+/* Boarding Pass: airline livery stripe + ticket perforation under the header. */
+html[data-ctheme='boarding-pass'] app-navbar .nav {
+  box-shadow: inset 0 -3px 0 #e8590c;
+}
+
+html[data-ctheme='boarding-pass'] app-navbar .nav::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 0;
+  border-top: 2px dashed rgba(11, 31, 58, 0.28);
+  pointer-events: none;
+}
+
+@media (max-width: 860px) {
+  html[data-ctheme] app-navbar .nav nav {
+    background: var(--ct-nav-panel, var(--ct-sf));
+    border-bottom-color: var(--ct-nav-ln);
+  }
+}

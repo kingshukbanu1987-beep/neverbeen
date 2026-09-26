@@ -1,0 +1,285 @@
+<div class="iv" [class.no-details]="!showDetails()">
+  @if (submission(); as s) {
+    <!-- ================= Top bar ================= -->
+    <header class="iv-top">
+      <button type="button" class="iv-back" (click)="closeTab()" title="Close this tab and return to the dashboard">✕ Close</button>
+      <a class="iv-crumb" routerLink="/admin/dashboard/identity-checks">Identity Check Verification</a>
+      <span class="iv-sep">/</span>
+      <div class="iv-title">
+        <h1>{{ s.documentType }} · {{ file()?.side }}</h1>
+        <p>
+          {{ member()?.fullName ?? 'Deleted member' }} · {{ file()?.name }} · {{ sizeLabel() }}
+        </p>
+      </div>
+      <span class="iv-status" [attr.data-tone]="statusMeta[s.status].tone">{{ statusMeta[s.status].label }}</span>
+      <div class="iv-nav" aria-label="Documents in this submission">
+        <button type="button" (click)="go(-1)" [disabled]="s.files.length < 2" aria-label="Previous document" title="Previous (←)">‹</button>
+        <span>{{ fileIndex() + 1 }} / {{ s.files.length }}</span>
+        <button type="button" (click)="go(1)" [disabled]="s.files.length < 2" aria-label="Next document" title="Next (→)">›</button>
+      </div>
+      <button type="button" class="iv-top-btn" [class.on]="showDetails()" (click)="showDetails.set(!showDetails())" title="Show / hide details (I)">
+        ☰ Details
+      </button>
+    </header>
+
+    <div class="iv-main">
+      <!-- ================= Document stage ================= -->
+      <section class="iv-viewer">
+        <div
+          #stage
+          class="iv-stage"
+          [class.pannable]="zoomMode() !== 'fit'"
+          [class.dragging]="dragging()"
+          (wheel)="onWheel($event)"
+          (pointerdown)="onPointerDown($event)"
+          (pointermove)="onPointerMove($event)"
+          (pointerup)="onPointerUp()"
+          (pointercancel)="onPointerUp()"
+          (dblclick)="zoomMode() === 'fit' ? actualSize() : fit()"
+        >
+          <div class="iv-box" [style.width.px]="boxW()" [style.height.px]="boxH()">
+            <div
+              class="iv-canvas"
+              [class.enhance]="enhance()"
+              [class.gray]="grayscale()"
+              [style.width.px]="renderW()"
+              [style.height.px]="renderH()"
+              [style.transform]="'translate(-50%, -50%) rotate(' + rotation() + 'deg)'"
+            >
+              @if (file(); as f) {
+                <app-id-document [submission]="s" [file]="f" [photo]="member()?.photo ?? ''" [width]="renderW()" />
+              }
+              <span class="iv-wm" aria-hidden="true">CONFIDENTIAL · NeverBeen admin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- floating toolbar -->
+        <div class="iv-tools" role="toolbar" aria-label="Document tools">
+          <button type="button" (click)="zoomBy(0.8)" aria-label="Zoom out" title="Zoom out (−)">−</button>
+          <span class="iv-zoom" title="Zoom level">{{ Math.round(scale() * 100) }}%</span>
+          <button type="button" (click)="zoomBy(1.25)" aria-label="Zoom in" title="Zoom in (+)">＋</button>
+          <i class="iv-div"></i>
+          <button type="button" [class.on]="zoomMode() === 'fit'" (click)="fit()" title="Fit to screen (0)">⤢ Fit</button>
+          <button type="button" [class.on]="zoomMode() === 1" (click)="actualSize()" title="Actual size (1)">1:1</button>
+          <i class="iv-div"></i>
+          <button type="button" (click)="rotate(-90)" aria-label="Rotate left" title="Rotate left (Shift+R)">↺</button>
+          <button type="button" (click)="rotate(90)" aria-label="Rotate right" title="Rotate right (R)">↻</button>
+          <i class="iv-div"></i>
+          <button type="button" [class.on]="enhance()" (click)="enhance.set(!enhance())" title="Boost contrast to spot edits (E)">◐ Enhance</button>
+          <button type="button" [class.on]="grayscale()" (click)="grayscale.set(!grayscale())" title="Greyscale">▦ Mono</button>
+          <i class="iv-div"></i>
+          <button type="button" (click)="toggleFullscreen()" [title]="isFullscreen() ? 'Exit full screen (F)' : 'Full screen (F)'">{{ isFullscreen() ? '⤡ Exit' : '⛶ Full screen' }}</button>
+          @if (file()?.dataUrl) {
+            <a [href]="file()!.dataUrl" [download]="file()!.name" title="Download original">⤓</a>
+          }
+          <button type="button" [class.on]="showKeys()" (click)="showKeys.set(!showKeys())" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">⌨</button>
+        </div>
+
+        @if (showKeys()) {
+          <div class="iv-keys" role="note">
+            <strong>Keyboard shortcuts</strong>
+            <span><kbd>←</kbd><kbd>→</kbd> Previous / next document</span>
+            <span><kbd>+</kbd><kbd>−</kbd> Zoom · <kbd>Ctrl</kbd>+scroll</span>
+            <span><kbd>0</kbd> Fit · <kbd>1</kbd> Actual size · double-click toggles</span>
+            <span><kbd>R</kbd> Rotate · <kbd>E</kbd> Enhance · <kbd>F</kbd> Full screen</span>
+            <span><kbd>I</kbd> Details panel · drag to pan when zoomed</span>
+          </div>
+        }
+
+        <!-- thumbnails -->
+        <nav class="iv-strip" aria-label="Other documents in this submission">
+          @for (f of s.files; track f.id) {
+            <a
+              [routerLink]="['/admin/identity-document', s.id, f.id]"
+              [class.active]="f.id === file()?.id"
+              replaceUrl
+              [attr.aria-current]="f.id === file()?.id ? 'page' : null"
+            >
+              <app-id-document [submission]="s" [file]="f" [photo]="member()?.photo ?? ''" [width]="f.side === 'Selfie' ? 44 : 88" />
+              <span>{{ f.side }}</span>
+            </a>
+          }
+          <p class="iv-watermark">Confidential · viewed by admin · {{ viewedAt }} · access is audited</p>
+        </nav>
+      </section>
+
+      <!-- ================= Details panel ================= -->
+      @if (showDetails()) {
+        <aside class="iv-side" aria-label="Document details">
+          <div class="iv-card">
+            <div class="iv-member">
+              <img [src]="member()?.photo" alt="" />
+              <div>
+                <strong>{{ member()?.fullName ?? 'Deleted member' }}</strong>
+                <small>{{ member()?.email }}</small>
+                <small>UID {{ member()?.uniqueId }} · {{ member()?.city ? member()!.city + ', ' : '' }}{{ member()?.country }}</small>
+              </div>
+            </div>
+            <div class="iv-badges">
+              <span [class]="'g-badge ' + triggerMeta[s.trigger].tone">{{ triggerMeta[s.trigger].icon }} {{ triggerMeta[s.trigger].label }}</span>
+              @if (member(); as m) {
+                <span class="g-badge">Account: {{ stateLabel(m.accountState) }}</span>
+              }
+            </div>
+            <p class="iv-reason"><b>Why the check was required:</b> {{ s.triggerReason }}</p>
+            @if (s.memberNote) {
+              <p class="iv-note">💬 “{{ s.memberNote }}”</p>
+            }
+            @if (member(); as m) {
+              <div class="iv-manage">
+                <app-manage-user-btn [userId]="m.id" [name]="m.fullName" tone="dark" />
+                <a class="iv-link" [href]="'/admin/users?user=' + m.id" target="_blank" rel="noopener">Open in User Management ↗</a>
+              </div>
+            }
+          </div>
+
+          <div class="iv-card">
+            <h3>Document vs profile</h3>
+            <table class="iv-compare">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>On document</th>
+                  <th>On profile</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of comparison(); track c.label) {
+                  <tr [class.bad]="c.ok === false">
+                    <th>{{ c.label }}</th>
+                    <td>{{ c.doc }}</td>
+                    <td>{{ c.profile }}</td>
+                    <td class="iv-mark" [attr.data-ok]="c.ok">{{ c.ok === null ? '–' : c.ok ? '✓' : '✕' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="iv-card">
+            <h3>Document details</h3>
+            <dl class="iv-dl">
+              <dt>Type</dt>
+              <dd>{{ s.documentType }}</dd>
+              <dt>Number</dt>
+              <dd>
+                <code>{{ s.documentNumber }}</code>
+                <button type="button" class="iv-copy" (click)="copyNumber()">{{ copied() ? '✓ Copied' : 'Copy' }}</button>
+              </dd>
+              <dt>Issuing country</dt>
+              <dd>{{ s.issuingCountry }}</dd>
+              <dt>Issued on</dt>
+              <dd>{{ s.issuedOn }}</dd>
+              <dt>Expires</dt>
+              <dd>
+                {{ s.expiresOn || '—' }} <span class="iv-pill" [attr.data-tone]="expiry().tone">{{ expiry().text }}</span>
+              </dd>
+              @if (s.address) {
+                <dt>Address</dt>
+                <dd>{{ s.address }}</dd>
+              }
+            </dl>
+          </div>
+
+          <div class="iv-card">
+            <h3>File</h3>
+            <dl class="iv-dl">
+              <dt>File name</dt>
+              <dd class="iv-break">{{ file()?.name }}</dd>
+              <dt>Side</dt>
+              <dd>{{ file()?.side }} ({{ fileIndex() + 1 }} of {{ s.files.length }})</dd>
+              <dt>Format</dt>
+              <dd>{{ formatLabel() }}</dd>
+              <dt>Size</dt>
+              <dd>{{ sizeLabel() }} · {{ natural().w }}×{{ natural().h }} px</dd>
+              <dt>Submitted</dt>
+              <dd>{{ shortDate(s.submittedAtUtc) }} ({{ timeAgo(s.submittedAtUtc) }})</dd>
+              <dt>Attempt</dt>
+              <dd>#{{ s.attempt }}</dd>
+            </dl>
+          </div>
+
+          <div class="iv-card">
+            <h3>Automated checks <small>{{ passed().passed }}/{{ passed().total }} passed</small></h3>
+            <div class="iv-face" [attr.data-tone]="faceTone()">
+              <span>Face match</span>
+              <div class="iv-meter"><i [style.width.%]="s.checks.faceMatch"></i></div>
+              <b>{{ s.checks.faceMatch }}%</b>
+            </div>
+            <ul class="iv-checks">
+              <li [class.ok]="s.checks.nameMatch">{{ s.checks.nameMatch ? '✓' : '✕' }} Name matches profile</li>
+              <li [class.ok]="s.checks.dobMatch">{{ s.checks.dobMatch ? '✓' : '✕' }} Date of birth matches profile</li>
+              <li [class.ok]="s.checks.notExpired">{{ s.checks.notExpired ? '✓' : '✕' }} Document within validity</li>
+              <li [class.ok]="s.checks.faceMatch >= 80">{{ s.checks.faceMatch >= 80 ? '✓' : '✕' }} Face match ≥ 80%</li>
+              <li [class.ok]="s.checks.liveness">{{ s.checks.liveness ? '✓' : '✕' }} Selfie liveness</li>
+              <li [class.ok]="s.checks.tamperFree">{{ s.checks.tamperFree ? '✓' : '✕' }} No signs of tampering</li>
+            </ul>
+          </div>
+
+          @if (history().length > 1) {
+            <div class="iv-card">
+              <h3>Submission history <small>{{ history().length }} attempts</small></h3>
+              <ul class="iv-history">
+                @for (h of history(); track h.id) {
+                  <li [class.current]="h.id === s.id">
+                    <a [routerLink]="['/admin/identity-document', h.id, h.files[0]?.id]" replaceUrl>
+                      <b>#{{ h.attempt }}</b> {{ h.documentType }} · {{ shortDate(h.submittedAtUtc) }}
+                    </a>
+                    <span [class]="'g-badge ' + statusMeta[h.status].tone">{{ statusMeta[h.status].label }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+
+          <div class="iv-card iv-decide">
+            <h3>Decision</h3>
+            @if (s.decidedAtUtc) {
+              <p class="iv-decided">{{ statusMeta[s.status].label }} — {{ s.decisionNote }} · {{ timeAgo(s.decidedAtUtc) }}</p>
+            }
+            @if (s.status === 'pending' || s.status === 'resubmit_requested') {
+              <button type="button" class="g-btn success" (click)="pending.set('enable')">✓ Enable account</button>
+              <button type="button" class="g-btn danger" (click)="pending.set('disable')">⛔ Permanently disable account</button>
+              <button type="button" class="g-btn violet" [disabled]="s.status === 'resubmit_requested'" (click)="pending.set('recheck')">
+                🔁 Force identity check again
+              </button>
+            } @else {
+              <p class="iv-muted">This submission has been decided — no further action needed.</p>
+            }
+          </div>
+        </aside>
+      }
+    </div>
+
+    @if (pending(); as p) {
+      <app-admin-confirm-dialog
+        [heading]="p === 'enable' ? 'Enable this account?' : p === 'disable' ? 'Permanently disable this account?' : 'Force identity check again?'"
+        [message]="
+          p === 'enable'
+            ? 'The member gets full access back immediately.'
+            : p === 'disable'
+              ? 'The member can no longer use NeverBeen or appeal with new documents.'
+              : 'The member stays locked out until they submit new documents.'
+        "
+        [confirmLabel]="p === 'enable' ? 'Enable account' : p === 'disable' ? 'Permanently disable' : 'Request new documents'"
+        [tone]="p === 'enable' ? 'success' : p === 'disable' ? 'danger' : 'violet'"
+        [reasonPlaceholder]="p === 'enable' ? 'Optional note' : 'Reason shown to other admins'"
+        (confirmed)="decide($event)"
+        (cancelled)="pending.set(null)"
+      />
+    }
+  } @else {
+    <div class="iv-missing">
+      <h1>Document not found</h1>
+      <p>This submission no longer exists or was erased.</p>
+      <a class="g-btn dark" routerLink="/admin/dashboard/identity-checks">Back to Identity Check Verification</a>
+    </div>
+  }
+</div>
+@if (toast(); as t) {
+  <div class="iv-toast" role="status">{{ t }}</div>
+}
+
+<app-admin-manage-user-host />

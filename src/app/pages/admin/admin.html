@@ -14,15 +14,61 @@
       </div>
     </div>
 
-    <div class="admin-live-strip">
-      <span class="live-dot" aria-hidden="true"></span>
-      <span>Live • {{ memberCount().length }} members</span>
+    <div class="admin-live">
+      <div class="admin-live-strip">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span>Live • {{ memberCount().length }} members</span>
+      </div>
+      <button
+        type="button"
+        class="admin-live-strip admins"
+        [class.open]="adminsOpen()"
+        (click)="adminsOpen.set(!adminsOpen())"
+        [attr.aria-expanded]="adminsOpen()"
+        aria-controls="admin-live-admins"
+        title="Administrators signed in to the Admin Console right now"
+      >
+        <span class="live-dot admin" aria-hidden="true"></span>
+        <span class="la-label">Live • <b>{{ presence.liveCount() }}</b> admins</span>
+        <span class="la-stack" aria-hidden="true">
+          @for (p of presence.live().slice(0, 4); track p.admin.id) {
+            <i [style.background]="p.admin.color">{{ p.isMe ? 'A' : p.admin.name.charAt(0) }}</i>
+          }
+        </span>
+        <span class="la-chev" aria-hidden="true">▾</span>
+      </button>
+      @if (adminsOpen()) {
+        <ul class="la-list" id="admin-live-admins" aria-label="Admins">
+          @for (p of presence.all(); track p.admin.id) {
+            <li [attr.data-status]="p.status">
+              <span class="la-avatar" [style.background]="p.admin.color">
+                {{ p.isMe ? 'A' : p.admin.name.charAt(0) }}
+                <i class="la-dot" [attr.data-status]="p.status" [title]="p.status"></i>
+              </span>
+              <span class="la-meta">
+                <strong>{{ p.isMe ? 'You (admin)' : p.admin.name }}</strong>
+                <small>
+                  @if (p.status === 'offline') {
+                    Last seen {{ timeAgo(p.sinceUtc) }}
+                  } @else {
+                    {{ p.activity }}
+                  }
+                </small>
+              </span>
+              @if (!p.isMe) {
+                <a class="la-msg" [routerLink]="'/admin/mail/compose'" [queryParams]="{ to: p.admin.id }" [title]="'Message ' + p.admin.name" [attr.aria-label]="'Message ' + p.admin.name">✉</a>
+              }
+            </li>
+          }
+          <li class="la-foot">{{ presence.liveCount() }} of {{ presence.total() }} admins live now</li>
+        </ul>
+      }
     </div>
 
     <nav class="admin-nav">
       @for (item of navItems; track item.path) {
         <a
-          [routerLink]="'/' + item.path"
+          [routerLink]="'/admin/' + item.path"
           routerLinkActive="active"
           [title]="item.hint"
         >
@@ -31,7 +77,61 @@
             <strong>{{ item.label }}</strong>
             <small>{{ item.hint }}</small>
           </span>
+          @if (item.path === 'maintenance' && maintenance.status() !== 'live') {
+            <span class="nav-flag" [class.down]="maintenance.status() === 'down'">{{ maintenance.status() === 'down' ? 'DOWN' : 'Scheduled' }}</span>
+          }
+          @if (item.path === 'announcements' && announcements.scheduledCount()) {
+            <span class="nav-flag draft" [title]="announcements.scheduledCount() + ' scheduled announcement(s)'">{{ announcements.scheduledCount() }}</span>
+          }
+          @if (item.path === 'website' && cms.pendingChanges().length) {
+            <span class="nav-flag draft" title="Unpublished website changes">{{ cms.pendingChanges().length }}</span>
+          }
         </a>
+
+        @if (item.path === 'users' && inUsers()) {
+          <!-- User Management: directory + insights (A–E) -->
+          <div class="nav-sub nav-sub-users" id="admin-users-nav" aria-label="User Management sections">
+            @for (sub of userItems; track sub.tab) {
+              <a routerLink="/admin/users" [queryParams]="{ tab: sub.tab === 'directory' ? null : sub.tab }" [class.active]="usersTab() === sub.tab" [title]="sub.hint" [attr.data-tab]="sub.tab">
+                <span class="nav-sub-icon" aria-hidden="true">{{ sub.icon }}</span>
+                <span class="nav-sub-label">{{ sub.label }}</span>
+              </a>
+            }
+          </div>
+        }
+
+        @if (item.path === 'dashboard') {
+          <!-- Mail: Inbox · Sent · Compose (messages between admins) -->
+          <div class="nav-group" [class.open]="mailOpen()" [class.current]="inMail()">
+            <button type="button" class="nav-group-head" (click)="toggleMail()" [attr.aria-expanded]="mailOpen()" aria-controls="admin-mail-nav" title="Messages between admins">
+              <span class="nav-icon" aria-hidden="true">✉️</span>
+              <span class="nav-text">
+                <strong>Mail</strong>
+                <small>Inbox, sent & compose</small>
+              </span>
+              @if (!mailOpen() && mail.unreadCount()) {
+                <span class="nav-flag mail" [title]="mail.unreadCount() + ' unread'">{{ mail.unreadCount() }}</span>
+              }
+              <span class="nav-chevron" aria-hidden="true">▾</span>
+            </button>
+            @if (mailOpen()) {
+              <div class="nav-sub" id="admin-mail-nav">
+                @for (sub of mailItems; track sub.path) {
+                  <a [routerLink]="'/admin/' + sub.path" routerLinkActive="active" [title]="sub.hint">
+                    <span class="nav-sub-icon" aria-hidden="true">{{ sub.icon }}</span>
+                    <span class="nav-sub-label">{{ sub.label }}</span>
+                    @if (sub.path === 'mail/inbox' && mail.unreadCount()) {
+                      <span class="nav-count" [title]="mail.unreadCount() + ' unread'">{{ mail.unreadCount() }}</span>
+                    }
+                    @if (sub.path === 'mail/compose' && mail.draft()) {
+                      <span class="nav-count draft" title="You have an unsent draft">Draft</span>
+                    }
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
       }
     </nav>
 
@@ -63,13 +163,25 @@
         <p>Manage website statistics, repositories, community members and data.</p>
       </div>
       <div class="topbar-status">
-        <span class="status-pill"><span class="live-dot" aria-hidden="true"></span> System Online</span>
+        @if (maintenance.status() === 'down') {
+          <a class="status-pill down" routerLink="/admin/maintenance"><span class="live-dot" aria-hidden="true"></span> Website DOWN for visitors</a>
+        } @else if (maintenance.status() === 'scheduled') {
+          <a class="status-pill scheduled" routerLink="/admin/maintenance">🛠️ Downtime scheduled</a>
+        } @else {
+          <span class="status-pill"><span class="live-dot" aria-hidden="true"></span> System Online</span>
+        }
         <span class="status-pill neutral">{{ onlineCount().length }} members online</span>
+        <span class="status-pill admins" title="Admins signed in right now">🛡️ {{ presence.liveCount() }} admins live</span>
       </div>
     </header>
 
     <div class="admin-content">
       <router-outlet />
     </div>
+    <app-admin-manage-user-host />
   </main>
 </div>
+
+@if (toast(); as message) {
+  <div class="admin-toast" role="status" aria-live="polite">{{ message }}</div>
+}

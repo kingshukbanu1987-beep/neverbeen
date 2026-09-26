@@ -1,12 +1,13 @@
 <section class="faq" id="faq">
   <div class="container layout">
     <app-section-heading
+      cmsKey="home.faq"
       eyebrow="Before you go"
       title="FAQ"
       copy="The practical questions, answered the way a studio would."
     />
     <div class="list">
-      @for (item of items; track item.question; let i = $index) {
+      @for (item of items(); track $index; let i = $index) {
         <article>
           <button type="button" (click)="toggle(i)" [attr.aria-expanded]="openIndex() === i">
             {{ item.question }}

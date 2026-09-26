@@ -1,5 +1,19 @@
-<app-navbar />
-<main>
+@if (bare()) {
   <router-outlet />
-</main>
-<app-footer />
+} @else if (showMaintenance()) {
+  <!-- Website is down for a critical release (Admin Console → Site Downtime). /admin and /login stay reachable. -->
+  @defer (on immediate) {
+    <app-maintenance-page />
+  } @placeholder {
+    <div class="maintenance-placeholder" aria-busy="true"></div>
+  }
+} @else {
+  @if (showAnnouncement()) {
+    <app-announcement-bar />
+  }
+  <app-navbar />
+  <main>
+    <router-outlet />
+  </main>
+  <app-footer />
+}

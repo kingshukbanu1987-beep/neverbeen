@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { SiteConfigService } from '../../services/site-config.service';
+import type { HowItWorksStep } from '../../models/site-content';
 import { SectionHeading } from '../../shared/section-heading/section-heading';
-import { howItWorksSteps } from '../../models/site-content';
 
 @Component({
   selector: 'app-how-it-works',
@@ -9,5 +10,6 @@ import { howItWorksSteps } from '../../models/site-content';
   styleUrl: './how-it-works.css',
 })
 export class HowItWorks {
-  protected readonly steps = howItWorksSteps;
+  private readonly cms = inject(SiteConfigService);
+  protected readonly steps = computed(() => this.cms.records<HowItWorksStep>('home.how', 'steps'));
 }

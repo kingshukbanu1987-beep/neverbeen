@@ -1,30 +1,45 @@
-<footer class="footer">
+<footer class="footer" id="site-footer">
   <div class="container grid">
     <div>
       <p class="logo">NeverBeen</p>
-      <p class="tag">Vacation photographs of places you have never stood.</p>
+      @if (tagline()) {
+        <p class="tag">{{ tagline() }}</p>
+      }
     </div>
-    <div>
-      <p class="label">Studio</p>
-      <a routerLink="/" fragment="how-it-works">How It Works</a>
-      <a routerLink="/" fragment="destinations">Destinations</a>
-      <a routerLink="/audience">Audience</a>
-      <a routerLink="/collection">Collection</a>
-      <a routerLink="/" fragment="pricing">Pricing</a>
-    </div>
-    <div>
-      <p class="label">Visit</p>
-      <a routerLink="/" fragment="gallery">Gallery</a>
-      <a routerLink="/" fragment="contact">Contact</a>
-      <a routerLink="/login">Admin</a>
-    </div>
-    <div>
-      <p class="label">Support</p>
-      <a routerLink="/help">Help Centre</a>
-      <a routerLink="/privacy">Privacy</a>
-      <a routerLink="/terms">Terms &amp; Condition</a>
-      <a routerLink="/community">Community</a>
-    </div>
+    <!-- Columns (order, titles, visibility) are managed in Admin Console → Website Management. -->
+    @for (col of columns(); track col.id) {
+      @switch (col.id) {
+        @case ('studio') {
+          <div>
+            <p class="label">{{ col.label }}</p>
+            <a routerLink="/" fragment="how-it-works">How It Works</a>
+            <a routerLink="/" fragment="destinations">Destinations</a>
+            <a routerLink="/audience">Audience</a>
+            <a routerLink="/collection">Collection</a>
+            <a routerLink="/" fragment="pricing">Pricing</a>
+          </div>
+        }
+        @case ('visit') {
+          <div>
+            <p class="label">{{ col.label }}</p>
+            <a routerLink="/" fragment="gallery">Gallery</a>
+            <a routerLink="/" fragment="contact">Contact</a>
+            @if (showAdmin()) {
+              <a routerLink="/login">Admin</a>
+            }
+          </div>
+        }
+        @case ('support') {
+          <div>
+            <p class="label">{{ col.label }}</p>
+            <a routerLink="/help">Help Centre</a>
+            <a routerLink="/privacy">Privacy</a>
+            <a routerLink="/terms">Terms &amp; Condition</a>
+            <a routerLink="/community">Community</a>
+          </div>
+        }
+      }
+    }
   </div>
-  <p class="copy">© {{ year }} NeverBeen. Portraits of elsewhere.</p>
+  <p class="copy">© {{ year }} NeverBeen. {{ copyright() }}</p>
 </footer>

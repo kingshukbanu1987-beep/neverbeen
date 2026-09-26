@@ -13,6 +13,8 @@
   --radius: 18px;
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Outfit', system-ui, sans-serif;
+  /* Height of the sticky website header; kept in sync at runtime by the navbar. */
+  --site-nav-h: calc(clamp(110px, 13vw, 170px) + 1px);
 }
 
 *,
