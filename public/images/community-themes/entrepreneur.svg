@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="grad" x2="1" y2="1">
+      <stop stop-color="#4f46e5"/>
+      <stop offset=".55" stop-color="#9333ea"/>
+      <stop offset="1" stop-color="#ff6a3d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#grad)"/>
+  <!-- Soft shapes -->
+  <circle cx="180" cy="170" r="220" fill="#ffffff" opacity=".08"/>
+  <circle cx="1300" cy="780" r="260" fill="#ffffff" opacity=".07"/>
+  <path d="M0 620q360-140 720-60t720-120v520H0Z" fill="#ffffff" opacity=".06"/>
+  <!-- Dot grid -->
+  <g fill="#ffffff" opacity=".22">
+    <circle cx="1180" cy="140" r="6"/><circle cx="1230" cy="140" r="6"/><circle cx="1280" cy="140" r="6"/><circle cx="1330" cy="140" r="6"/>
+    <circle cx="1180" cy="190" r="6"/><circle cx="1230" cy="190" r="6"/><circle cx="1280" cy="190" r="6"/><circle cx="1330" cy="190" r="6"/>
+    <circle cx="1180" cy="240" r="6"/><circle cx="1230" cy="240" r="6"/><circle cx="1280" cy="240" r="6"/><circle cx="1330" cy="240" r="6"/>
+  </g>
+  <!-- Big bold growth arrow -->
+  <g stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".95">
+    <path d="M170 800 430 640 620 720 900 470 1120 540 1290 330"/>
+  </g>
+  <path d="M1290 330l-70 4 36 62Z" fill="#ffffff"/>
+  <g fill="#ffffff" opacity=".95">
+    <circle cx="430" cy="640" r="20"/>
+    <circle cx="620" cy="720" r="20"/>
+    <circle cx="900" cy="470" r="20"/>
+    <circle cx="1120" cy="540" r="20"/>
+  </g>
+  <!-- Accent coins -->
+  <circle cx="260" cy="420" r="64" stroke="#ffffff" stroke-opacity=".5" stroke-width="14" fill="none"/>
+  <circle cx="352" cy="330" r="22" fill="#ffffff" opacity=".4"/>
+  <circle cx="1240" cy="640" r="34" stroke="#ffffff" stroke-opacity=".45" stroke-width="10" fill="none"/>
+  <path d="M90 300q10-26 20 0 26 10 0 20-26 10 0 36-10 26-20 0-26-10 0-20 26-10Z" fill="#ffffff" opacity=".5"/>
+</svg>

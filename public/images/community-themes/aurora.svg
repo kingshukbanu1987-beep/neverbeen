@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="polar" x2="0" y2="1">
+      <stop stop-color="#04070f"/>
+      <stop offset="1" stop-color="#0a1626"/>
+    </linearGradient>
+    <linearGradient id="aur1" x2="0" y2="1">
+      <stop stop-color="#34d399" stop-opacity="0"/>
+      <stop offset=".55" stop-color="#34d399" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#2dd4bf"/>
+    </linearGradient>
+    <linearGradient id="aur2" x2="0" y2="1">
+      <stop stop-color="#818cf8" stop-opacity="0"/>
+      <stop offset=".6" stop-color="#818cf8" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="aur3" x2="0" y2="1">
+      <stop stop-color="#c084fc" stop-opacity="0"/>
+      <stop offset=".65" stop-color="#c084fc" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+  </defs>
+  <rect width="1440" height="960" fill="url(#polar)"/>
+  <!-- Stars -->
+  <g fill="#eaf2f7">
+    <circle cx="120" cy="120" r="2" opacity=".8"/>
+    <circle cx="260" cy="220" r="1.5" opacity=".6"/>
+    <circle cx="420" cy="90" r="2" opacity=".7"/>
+    <circle cx="580" cy="180" r="1.5" opacity=".5"/>
+    <circle cx="760" cy="70" r="2" opacity=".7"/>
+    <circle cx="920" cy="150" r="1.5" opacity=".55"/>
+    <circle cx="1080" cy="90" r="2" opacity=".65"/>
+    <circle cx="1240" cy="190" r="1.5" opacity=".5"/>
+    <circle cx="1380" cy="110" r="2" opacity=".7"/>
+    <circle cx="180" cy="340" r="1.5" opacity=".5"/>
+    <circle cx="1320" cy="340" r="1.5" opacity=".55"/>
+    <circle cx="660" cy="260" r="1.5" opacity=".45"/>
+    <circle cx="340" cy="430" r="1.5" opacity=".4"/>
+    <circle cx="1140" cy="420" r="1.5" opacity=".45"/>
+  </g>
+  <path d="M500 200q4-14 8 0 14 4 0 8-14 4 0 18-4 14-8 0-14-4 0-8 14-4Z" fill="#eaf2f7" opacity=".8"/>
+  <!-- Aurora curtains -->
+  <g filter="url(#soft)">
+    <path d="M-80 560C220 380 460 620 740 440S1260 320 1520 460V120C1240 260 1020 60 760 200S300 300 -80 220Z" fill="url(#aur1)" opacity=".55"/>
+    <path d="M-80 470C260 320 520 520 800 360S1280 240 1520 340V60C1240 180 1000 -20 740 120S300 200 -80 140Z" fill="url(#aur2)" opacity=".45"/>
+    <path d="M-80 620C240 480 520 700 820 540S1300 440 1520 560V300C1260 420 1020 240 760 360S320 420 -80 360Z" fill="url(#aur3)" opacity=".4"/>
+  </g>
+  <!-- Sharp aurora edge lines -->
+  <g stroke="#7ce7bd" stroke-width="3" fill="none" opacity=".5">
+    <path d="M-80 560C220 380 460 620 740 440S1260 320 1520 460"/>
+    <path d="M-80 470C260 320 520 520 800 360S1280 240 1520 340" opacity=".6"/>
+  </g>
+  <!-- Mountains -->
+  <path d="M-40 960V700L240 520l220 220 180-160 260 280v100H-40Z" fill="#071120"/>
+  <path d="M240 520l70 72-58 34-52-56Z" fill="#16324a" opacity=".8"/>
+  <path d="M820 960V760l300-220 320 260v160H820Z" fill="#050b14"/>
+  <path d="M1120 540l74 84-60 36-56-60Z" fill="#142c44" opacity=".8"/>
+  <!-- Pine silhouette row -->
+  <g fill="#03070e">
+    <path d="M60 960v-70l24-44 24 44v70Zm84-14v-58l20-38 20 38v58Zm-168 14v-52l18-34 18 34v52Z"/>
+    <path d="M560 960v-62l22-40 22 40v62Zm96-10v-54l19-35 19 35v54Zm-190 10v-50l17-31 17 31v50Z"/>
+    <path d="M1040 960v-66l23-42 23 42v66Zm90-12v-56l20-37 20 37v56Zm180 12v-52l18-33 18 33v52Z"/>
+  </g>
+  <!-- Snow sparkle on ground -->
+  <g fill="#eaf2f7" opacity=".35">
+    <circle cx="360" cy="920" r="2.5"/><circle cx="700" cy="935" r="2"/><circle cx="1240" cy="925" r="2.5"/>
+    <circle cx="160" cy="940" r="2"/><circle cx="940" cy="945" r="2"/>
+  </g>
+</svg>

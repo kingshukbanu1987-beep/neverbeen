@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="skyw" x2="0" y2="1">
+      <stop stop-color="#eaf3fb"/>
+      <stop offset="1" stop-color="#d3e6f5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#skyw)"/>
+  <circle cx="1180" cy="170" r="86" fill="#fff6d8" opacity=".9"/>
+  <!-- Snow ground -->
+  <path d="M0 960v-240q360-90 720-66t720 66v240H0Z" fill="#ffffff"/>
+  <path d="M0 960v-120q420-60 1440-30v150H0Z" fill="#eef5fb"/>
+  <!-- Houses -->
+  <g>
+    <!-- Red house -->
+    <rect x="220" y="560" width="240" height="200" fill="#b03a3f"/>
+    <path d="M196 566 340 448l144 118Z" fill="#e8565c"/>
+    <path d="M204 560q136-112 272 0l-16 22q-120-98-240 0Z" fill="#ffffff"/>
+    <rect x="252" y="606" width="52" height="52" fill="#ffd97a"/>
+    <rect x="376" y="606" width="52" height="52" fill="#ffd97a"/>
+    <rect x="312" y="656" width="56" height="104" fill="#7c2a2e"/>
+    <g stroke="#e8565c" stroke-width="3"><path d="M278 606v52M332 606v52M302 606v52M252 632h52M376 632h52"/></g>
+    <rect x="382" y="470" width="40" height="66" fill="#e8565c"/>
+    <!-- Green house -->
+    <rect x="560" y="600" width="200" height="160" fill="#3f6b4f"/>
+    <path d="M540 606 660 508l120 98Z" fill="#54856a"/>
+    <path d="M548 600q112-88 224 0l-14 20q-98-74-196 0Z" fill="#ffffff"/>
+    <rect x="588" y="640" width="48" height="48" fill="#ffd97a"/>
+    <rect x="688" y="640" width="48" height="48" fill="#ffd97a"/>
+    <g stroke="#3f6b4f" stroke-width="3"><path d="M612 640v48M588 664h48M712 640v48M688 664h48"/></g>
+    <!-- Blue house -->
+    <rect x="840" y="580" width="190" height="180" fill="#4a6f94"/>
+    <path d="M820 586 935 492l115 94Z" fill="#5f86ab"/>
+    <path d="M828 580q107-82 214 0l-14 20q-93-66-186 0Z" fill="#ffffff"/>
+    <rect x="868" y="622" width="46" height="46" fill="#ffd97a"/>
+    <rect x="956" y="622" width="46" height="46" fill="#ffd97a"/>
+    <rect x="902" y="672" width="50" height="88" fill="#35516c"/>
+  </g>
+  <!-- Fir trees -->
+  <g>
+    <g transform="translate(120 700)">
+      <rect x="-12" y="96" width="24" height="40" fill="#7a5a3b"/>
+      <path d="M0-96 78 22H-78Z" fill="#2f5d47"/><path d="M0-40 92 92H-92Z" fill="#376a51"/><path d="M0 20 104 130H-104Z" fill="#2f5d47"/>
+      <path d="M0-96 40-38H-40Z" fill="#ffffff" opacity=".9"/>
+    </g>
+    <g transform="translate(1300 720) scale(.85)">
+      <rect x="-12" y="96" width="24" height="40" fill="#7a5a3b"/>
+      <path d="M0-96 78 22H-78Z" fill="#2f5d47"/><path d="M0-40 92 92H-92Z" fill="#376a51"/><path d="M0 20 104 130H-104Z" fill="#2f5d47"/>
+      <path d="M0-96 40-38H-40Z" fill="#ffffff" opacity=".9"/>
+    </g>
+    <g transform="translate(1120 760) scale(.6)">
+      <rect x="-12" y="96" width="24" height="40" fill="#7a5a3b"/>
+      <path d="M0-96 78 22H-78Z" fill="#376a51"/><path d="M0-40 92 92H-92Z" fill="#2f5d47"/><path d="M0 20 104 130H-104Z" fill="#376a51"/>
+    </g>
+  </g>
+  <!-- Reindeer -->
+  <g transform="translate(1180 560)" fill="#7a4a2b">
+    <path d="M-70 150q-6-58 22-84 34-32 88-30l40 4 26-58q4-12 16-12h26q14 0 14 14v44l-20 22 8 30q30 26 26 78Z"/>
+    <rect x="-30" y="150" width="18" height="86" rx="8"/>
+    <rect x="16" y="150" width="18" height="86" rx="8"/>
+    <rect x="62" y="150" width="18" height="86" rx="8"/>
+    <rect x="100" y="150" width="18" height="86" rx="8"/>
+    <g stroke="#7a4a2b" stroke-width="9" stroke-linecap="round" fill="none">
+      <path d="M118 40q-8-40 8-64M126 8q10-12 24-16M126 8q-12-8-24-8M146 88q14-26 34-30"/>
+    </g>
+    <ellipse cx="128" cy="66" rx="34" ry="26"/>
+    <circle cx="158" cy="78" r="12" fill="#d33a3a"/>
+    <circle cx="128" cy="58" r="4" fill="#2a1a10"/>
+  </g>
+  <!-- Falling snow -->
+  <g fill="#ffffff" opacity=".9">
+    <circle cx="140" cy="120" r="5"/><circle cx="320" cy="240" r="4"/><circle cx="520" cy="120" r="5"/>
+    <circle cx="700" cy="220" r="4"/><circle cx="880" cy="90" r="5"/><circle cx="1060" cy="260" r="4"/>
+    <circle cx="1280" cy="340" r="5"/><circle cx="420" cy="380" r="4"/><circle cx="240" cy="440" r="4"/>
+    <circle cx="980" cy="420" r="4"/><circle cx="620" cy="330" r="3.5"/><circle cx="1380" cy="140" r="4"/>
+  </g>
+  <g fill="#ffffff" opacity=".55">
+    <circle cx="80" cy="300" r="3"/><circle cx="460" cy="220" r="3"/><circle cx="760" cy="400" r="3"/>
+    <circle cx="1180" cy="80" r="3"/><circle cx="1340" cy="480" r="3"/><circle cx="180" cy="540" r="3"/>
+  </g>
+</svg>

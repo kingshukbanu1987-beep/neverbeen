@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="stage" x2="0" y2="1">
+      <stop stop-color="#120720"/>
+      <stop offset=".7" stop-color="#2a0f42"/>
+      <stop offset="1" stop-color="#3d1660"/>
+    </linearGradient>
+    <radialGradient id="moonglow">
+      <stop stop-color="#ffd166" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="eyeGlow">
+      <stop stop-color="#ff3b3b" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#ff3b3b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#stage)"/>
+  <!-- Crescent moon -->
+  <circle cx="1150" cy="200" r="150" fill="url(#moonglow)"/>
+  <circle cx="1150" cy="200" r="86" fill="#ffd166"/>
+  <circle cx="1186" cy="176" r="74" fill="#1c0f2e"/>
+  <!-- Stars -->
+  <g fill="#e2c4ff">
+    <circle cx="180" cy="140" r="2.5" opacity=".8"/>
+    <circle cx="360" cy="240" r="2" opacity=".6"/>
+    <circle cx="640" cy="120" r="2.5" opacity=".7"/>
+    <circle cx="880" cy="200" r="2" opacity=".6"/>
+    <circle cx="1330" cy="420" r="2.5" opacity=".7"/>
+    <circle cx="520" cy="300" r="2" opacity=".5"/>
+  </g>
+  <!-- Lightning bolt -->
+  <path d="M320 120l-64 120h48l-88 150 30-2 20-96h56l-38 98 112-158h-52l46-112Z" fill="#2de0ff" opacity=".85"/>
+  <!-- Demon: hooded silhouette with glowing eyes and horns -->
+  <g transform="translate(760 400)">
+    <path d="M-190 560q-20-260 60-350 60-66 130-66t130 66q80 90 60 350Z" fill="#0d0517"/>
+    <path d="M-190 560q-20-260 60-350" stroke="#c26bff" stroke-width="4" opacity=".5" fill="none"/>
+    <path d="M190 560q20-260-60-350" stroke="#ff2d78" stroke-width="4" opacity=".5" fill="none"/>
+    <!-- Hood opening -->
+    <ellipse cx="0" cy="-120" rx="128" ry="150" fill="#160a26"/>
+    <!-- Horns -->
+    <path d="M-118-226q-44-28-40-84 34 22 52 62Z" fill="#e8e4f4"/>
+    <path d="M118-226q44-28 40-84-34 22-52 62Z" fill="#e8e4f4"/>
+    <!-- Glowing eyes -->
+    <circle cx="-52" cy="-128" r="34" fill="url(#eyeGlow)"/>
+    <circle cx="52" cy="-128" r="34" fill="url(#eyeGlow)"/>
+    <path d="M-74-134q22 16 46 4" stroke="#ff5a5a" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M30-130q22 12 46-4" stroke="#ff5a5a" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <!-- Mouth hint -->
+    <path d="M-30-64q30 16 60 0" stroke="#ff3b3b" stroke-width="5" stroke-linecap="round" opacity=".5" fill="none"/>
+  </g>
+  <!-- Floating talismans -->
+  <g fill="#f5f1ff" opacity=".92">
+    <g transform="translate(390 480) rotate(-8)"><rect x="-22" y="-56" width="44" height="112" rx="6"/><path d="M0-38v76M-12-24h24" stroke="#c26bff" stroke-width="5" fill="none"/></g>
+    <g transform="translate(1180 520) rotate(7)"><rect x="-20" y="-50" width="40" height="100" rx="6"/><path d="M0-34v68M-11-20h22" stroke="#ff2d78" stroke-width="5" fill="none"/></g>
+    <g transform="translate(1300 680) rotate(-5)"><rect x="-16" y="-40" width="32" height="80" rx="5"/><path d="M0-26v52" stroke="#c26bff" stroke-width="4" fill="none"/></g>
+  </g>
+  <!-- Neon grid floor -->
+  <path d="M0 700h1440" stroke="#ff2d78" stroke-width="4" opacity=".8"/>
+  <g stroke="#ff2d78" stroke-opacity=".4" stroke-width="2.5">
+    <path d="M0 740h1440M0 786h1440M0 838h1440M0 896h1440M0 956h1440"/>
+    <path d="M720 700 720 960M720 700 520 960M720 700 320 960M720 700 120 960M720 700-80 960M720 700 920 960M720 700 1120 960M720 700 1320 960M720 700 1520 960"/>
+  </g>
+  <g stroke="#2de0ff" stroke-opacity=".3" stroke-width="2">
+    <path d="M0 722h1440M0 764h1440M0 814h1440"/>
+  </g>
+  <!-- Sparkles -->
+  <g fill="#c26bff">
+    <path d="M560 620q4-16 8 0 16 4 0 8-16 4 0 24-4 16-8 0-16-4 0-8 16-4Z" opacity=".8"/>
+    <path d="M1060 360q4-16 8 0 16 4 0 8-16 4 0 24-4 16-8 0-16-4 0-8 16-4Z" opacity=".8"/>
+  </g>
+  <g fill="#2de0ff">
+    <path d="M480 200q3-12 6 0 12 3 0 6-12 3 0 18-3 12-6 0-12-3 0-6 12-3Z" opacity=".8"/>
+    <path d="M1280 300q3-12 6 0 12 3 0 6-12 3 0 18-3 12-6 0-12-3 0-6 12-3Z" opacity=".7"/>
+  </g>
+</svg>

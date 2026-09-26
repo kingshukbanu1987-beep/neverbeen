@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="bp" x2="0" y2="1">
+      <stop stop-color="#f1f4f9"/>
+      <stop offset="1" stop-color="#dfe7f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#bp)"/>
+  <!-- Subtle grid -->
+  <g stroke="#c9d6e6" stroke-opacity=".5" stroke-width="1.5">
+    <path d="M180 0v960M360 0v960M540 0v960M720 0v960M900 0v960M1080 0v960M1260 0v960"/>
+    <path d="M0 240h1440M0 480h1440M0 720h1440"/>
+  </g>
+  <!-- Skyline -->
+  <g>
+    <rect x="120" y="620" width="130" height="340" fill="#2f3a48"/>
+    <rect x="270" y="520" width="150" height="440" fill="#232a33"/>
+    <rect x="440" y="660" width="120" height="300" fill="#39424e"/>
+    <rect x="580" y="420" width="170" height="540" fill="#1d4fd7"/>
+    <rect x="770" y="560" width="140" height="400" fill="#2f3a48"/>
+    <rect x="930" y="640" width="130" height="320" fill="#232a33"/>
+    <rect x="1080" y="480" width="150" height="480" fill="#39424e"/>
+    <rect x="1250" y="600" width="130" height="360" fill="#232a33"/>
+    <rect x="640" y="380" width="50" height="40" fill="#1d4fd7"/>
+    <path d="M665 380v-70" stroke="#1d4fd7" stroke-width="8"/>
+  </g>
+  <!-- Windows -->
+  <g fill="#ffffff" opacity=".28">
+    <g>
+      <rect x="140" y="650" width="26" height="20"/><rect x="180" y="650" width="26" height="20"/><rect x="212" y="650" width="22" height="20"/>
+      <rect x="140" y="700" width="26" height="20"/><rect x="180" y="700" width="26" height="20"/><rect x="212" y="700" width="22" height="20"/>
+      <rect x="140" y="750" width="26" height="20"/><rect x="180" y="750" width="26" height="20"/><rect x="212" y="750" width="22" height="20"/>
+    </g>
+    <g>
+      <rect x="292" y="552" width="28" height="22"/><rect x="334" y="552" width="28" height="22"/><rect x="376" y="552" width="28" height="22"/>
+      <rect x="292" y="604" width="28" height="22"/><rect x="334" y="604" width="28" height="22"/><rect x="376" y="604" width="28" height="22"/>
+      <rect x="292" y="656" width="28" height="22"/><rect x="334" y="656" width="28" height="22"/><rect x="376" y="656" width="28" height="22"/>
+      <rect x="292" y="708" width="28" height="22"/><rect x="334" y="708" width="28" height="22"/><rect x="376" y="708" width="28" height="22"/>
+    </g>
+    <g>
+      <rect x="606" y="452" width="30" height="24"/><rect x="652" y="452" width="30" height="24"/><rect x="698" y="452" width="30" height="24"/>
+      <rect x="606" y="512" width="30" height="24"/><rect x="652" y="512" width="30" height="24"/><rect x="698" y="512" width="30" height="24"/>
+      <rect x="606" y="572" width="30" height="24"/><rect x="652" y="572" width="30" height="24"/><rect x="698" y="572" width="30" height="24"/>
+      <rect x="606" y="632" width="30" height="24"/><rect x="652" y="632" width="30" height="24"/><rect x="698" y="632" width="30" height="24"/>
+      <rect x="606" y="692" width="30" height="24"/><rect x="652" y="692" width="30" height="24"/><rect x="698" y="692" width="30" height="24"/>
+    </g>
+    <g>
+      <rect x="792" y="590" width="28" height="22"/><rect x="834" y="590" width="28" height="22"/><rect x="874" y="590" width="24" height="22"/>
+      <rect x="792" y="642" width="28" height="22"/><rect x="834" y="642" width="28" height="22"/><rect x="874" y="642" width="24" height="22"/>
+      <rect x="792" y="694" width="28" height="22"/><rect x="834" y="694" width="28" height="22"/><rect x="874" y="694" width="24" height="22"/>
+    </g>
+    <g>
+      <rect x="1104" y="512" width="28" height="22"/><rect x="1148" y="512" width="28" height="22"/><rect x="1190" y="512" width="24" height="22"/>
+      <rect x="1104" y="564" width="28" height="22"/><rect x="1148" y="564" width="28" height="22"/><rect x="1190" y="564" width="24" height="22"/>
+      <rect x="1104" y="616" width="28" height="22"/><rect x="1148" y="616" width="28" height="22"/><rect x="1190" y="616" width="24" height="22"/>
+      <rect x="1104" y="668" width="28" height="22"/><rect x="1148" y="668" width="28" height="22"/><rect x="1190" y="668" width="24" height="22"/>
+    </g>
+  </g>
+  <!-- Rising chart line -->
+  <path d="M140 700 380 600 560 640 800 430 1040 480 1290 260" stroke="#0f3fa8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <g fill="#ffffff" stroke="#0f3fa8" stroke-width="6">
+    <circle cx="380" cy="600" r="11"/>
+    <circle cx="560" cy="640" r="11"/>
+    <circle cx="800" cy="430" r="11"/>
+    <circle cx="1040" cy="480" r="11"/>
+  </g>
+  <path d="M1290 260l-44 10 20 26Z" fill="#0f3fa8"/>
+  <circle cx="1290" cy="260" r="13" fill="#1d4fd7" stroke="#ffffff" stroke-width="5"/>
+</svg>

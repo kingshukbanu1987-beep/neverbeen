@@ -33,7 +33,23 @@ export type CommunityThemeId =
   | 'disney-world'
   | 'peppa-pig'
   | 'dino-world'
-  | 'unicorn-magic';
+  | 'unicorn-magic'
+  | 'japanese-aesthetic'
+  | 'haunted-house'
+  | 'spooky-night'
+  | 'disco-diva'
+  | 'minions'
+  | 'santas-village'
+  | 'kpop-demon-hunters'
+  | 'fashion-editor'
+  | 'spongebob'
+  | 'business-pro'
+  | 'entrepreneur'
+  | 'digital-earth'
+  | 'aurora'
+  | 'galactic-void'
+  | 'digital-dna'
+  | 'football-arena';
 
 export interface CommunityTheme {
   id: CommunityThemeId;
@@ -297,12 +313,189 @@ export const COMMUNITY_THEMES: readonly CommunityTheme[] = [
     surface: '#fffbff',
     accent: '#97459c',
   },
+  {
+    id: 'japanese-aesthetic',
+    name: 'Japanese Aesthetic',
+    icon: '⛩️',
+    palette: 'Washi pastel · soft sakura',
+    audience: 'Quiet, mindful Japan travel',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #f7f2ea, #eecbd6 60%, #31556f)',
+    surface: '#fffdf9',
+    accent: '#31556f',
+  },
+  {
+    id: 'haunted-house',
+    name: 'Haunted House',
+    icon: '🏚️',
+    palette: 'Moonlit fog · gothic mansion',
+    audience: 'A cold shiver, all night long',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #0b0f18, #24324a 60%, #d9a441)',
+    surface: '#141a26',
+    accent: '#d9a441',
+  },
+  {
+    id: 'spooky-night',
+    name: 'Spooky Night',
+    icon: '🕷️',
+    palette: 'Halloween black · purple · cobwebs',
+    audience: 'For the spookiest night of the year',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #120720, #5b21b6 60%, #ff7a1a)',
+    surface: '#1c0f30',
+    accent: '#a855f7',
+  },
+  {
+    id: 'disco-diva',
+    name: 'Disco Diva',
+    icon: '🪩',
+    palette: 'Chrome sparkle · neon glow',
+    audience: 'The dance floor never closes',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #17131f, #ff4fd8 60%, #4fe3ff)',
+    surface: '#1e1729',
+    accent: '#ff4fd8',
+  },
+  {
+    id: 'minions',
+    name: 'Minions',
+    icon: '🍌',
+    palette: 'Banana yellow · overalls blue',
+    audience: 'Bello! Big, goofy fun',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #fff3a1, #ffd82a 60%, #2f5da8)',
+    surface: '#fffbe8',
+    accent: '#2f5da8',
+  },
+  {
+    id: 'santas-village',
+    name: "Santa's Village",
+    icon: '🦌',
+    palette: 'Snowy village · festive red',
+    audience: 'Holiday cheer, year-round',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #f2f7fc, #cfe2f2 60%, #c1272d)',
+    surface: '#ffffff',
+    accent: '#c1272d',
+  },
+  {
+    id: 'kpop-demon-hunters',
+    name: 'KPop Demon Hunters',
+    icon: '🐉',
+    palette: 'K-pop neon · anime glow',
+    audience: 'Stage-ready for the supernatural',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #14081f, #a855f7 60%, #ff2d78)',
+    surface: '#1e0f31',
+    accent: '#c26bff',
+  },
+  {
+    id: 'fashion-editor',
+    name: 'Fashion Editor',
+    icon: '✂️',
+    palette: 'Editorial ink · gallery white',
+    audience: 'Runway-ready profiles',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #f7f4ee, #e6e0d4 60%, #17181c)',
+    surface: '#fffdf9',
+    accent: '#c3122e',
+  },
+  {
+    id: 'spongebob',
+    name: 'SpongeBob SquarePants',
+    icon: '🧽',
+    palette: 'Bikini Bottom blue · sponge yellow',
+    audience: 'Boo-yeah, always in a good mood',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #d6f2ff, #5ec6f2 60%, #f8e71c)',
+    surface: '#ffffff',
+    accent: '#0b7fbb',
+  },
+  {
+    id: 'business-pro',
+    name: 'Business Pro',
+    icon: '💼',
+    palette: 'Business blue · charcoal',
+    audience: 'Polished, structured, professional',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #f1f4f9, #1d4fd7 60%, #232a33)',
+    surface: '#ffffff',
+    accent: '#1d4fd7',
+  },
+  {
+    id: 'entrepreneur',
+    name: 'Entrepreneur',
+    icon: '🚀',
+    palette: 'Bold gradients · go-getter energy',
+    audience: 'Builders, dreamers, doers',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #4f46e5, #9333ea 55%, #ff6a3d)',
+    surface: '#ffffff',
+    accent: '#4f46e5',
+  },
+  {
+    id: 'digital-earth',
+    name: 'Digital Earth',
+    icon: '🌍',
+    palette: 'Glowing globe · connection arcs',
+    audience: 'See your world from above',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #071019, #14506b 60%, #22d3ee)',
+    surface: '#0d1826',
+    accent: '#22d3ee',
+  },
+  {
+    id: 'aurora',
+    name: 'Aurora',
+    icon: '🌌',
+    palette: 'Dark sky · northern lights',
+    audience: 'Chase the polar glow',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #050914, #134e4a 55%, #34d399)',
+    surface: '#0a1120',
+    accent: '#34d399',
+  },
+  {
+    id: 'galactic-void',
+    name: 'Galactic Void',
+    icon: '🛰️',
+    palette: 'Stars · planets · spacecraft',
+    audience: 'Explore the endless void',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #05060f, #1e1b4b 60%, #a78bfa)',
+    surface: '#0b0d1c',
+    accent: '#a78bfa',
+  },
+  {
+    id: 'digital-dna',
+    name: 'Digital DNA',
+    icon: '🧬',
+    palette: 'Code streams · flowing strands',
+    audience: 'Sequenced for the future',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #041210, #065f46 60%, #2dd4bf)',
+    surface: '#071512',
+    accent: '#2dd4bf',
+  },
+  {
+    id: 'football-arena',
+    name: 'Football Arena',
+    icon: '⚽',
+    palette: 'Pitch green · floodlight white',
+    audience: 'Match-day energy',
+    mode: 'light',
+    preview: 'linear-gradient(135deg, #e8f5e9, #2e7d32 60%, #fffde7)',
+    surface: '#ffffff',
+    accent: '#2e7d32',
+  },
 ];
 
 /** Local, decorative artwork shared by theme previews and the scene token sheet. */
 export function communityThemeArtwork(id: CommunityThemeId): string | null {
   if (id === 'default') return null;
-  const extension = id === 'social-snap' || id === 'peppa-pig' ? 'webp' : 'svg';
+  const extension =
+    id === 'social-snap' || id === 'peppa-pig' ? 'webp' : id === 'fashion-editor' ? 'jpg' : 'svg';
   return `/images/community-themes/${id}.${extension}`;
 }
 
