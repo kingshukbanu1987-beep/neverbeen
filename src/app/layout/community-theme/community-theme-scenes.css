@@ -527,39 +527,40 @@ html[data-ctheme='minions'] {
   --ct-nav-panel: #fffbe8;
 }
 
-/* Santa's Village */
+/* Santa's Village — Christmas Midnight (dark): starlit night, white snow,
+   reindeer & Santa, a green decorated tree with gifts. */
 html[data-ctheme='santas-village'] {
-  --ct-bg0: #eef4fb;
-  --ct-page: linear-gradient(135deg, #eef4fb, #d9e8f6);
-  --ct-sf: #ffffff;
-  --ct-sf-rgb: 255 255 255;
-  --ct-sf2: #f5f9fd;
-  --ct-sf3: #e9f1f9;
-  --ct-ln: #d8e4f0;
-  --ct-ln2: #b9cde0;
-  --ct-ink: #12283d;
-  --ct-ink-rgb: 18 40 61;
-  --ct-ink2: #2c445c;
-  --ct-mu: #54708c;
-  --ct-fa: #8ba3ba;
-  --ct-ac: #c1272d;
-  --ct-ac-rgb: 193 39 45;
-  --ct-ac2: #9e1f24;
-  --ct-act: #c1272d;
-  --ct-acs: #fbe9ea;
-  --ct-acl: #f2c3c5;
-  --ct-b1: #c1272d;
-  --ct-b2: #1f4d3a;
-  --ct-b2t: #2a6a50;
-  --ct-b2-rgb: 31 77 58;
-  --ct-b3: #2c445c;
-  --ct-nav-bg: rgb(255 255 255 / 0.94);
-  --ct-nav-ink: #12283d;
-  --ct-nav-mu: #4d6a86;
-  --ct-nav-ln: #d8e4f0;
-  --ct-nav-pill: #eef4fb;
-  --ct-nav-pill-solid: #ffffff;
-  --ct-nav-panel: #ffffff;
+  --ct-bg0: #0a1626;
+  --ct-page: linear-gradient(180deg, #081120 0%, #0f2038 62%, #14304d 100%);
+  --ct-sf: #101d30;
+  --ct-sf-rgb: 16 29 48;
+  --ct-sf2: #16263e;
+  --ct-sf3: #1c3050;
+  --ct-ln: #2b4266;
+  --ct-ln2: #3c5a86;
+  --ct-ink: #f4f9ff;
+  --ct-ink-rgb: 244 249 255;
+  --ct-ink2: #cfe0f2;
+  --ct-mu: #93accf;
+  --ct-fa: #6a84a8;
+  --ct-ac: #e63946;
+  --ct-ac-rgb: 230 57 70;
+  --ct-ac2: #ff5d68;
+  --ct-act: #ffe4e6;
+  --ct-acs: rgba(230, 57, 70, 0.22);
+  --ct-acl: rgba(230, 57, 70, 0.55);
+  --ct-b1: #e63946;
+  --ct-b2: #2e7d54;
+  --ct-b2t: #63c78f;
+  --ct-b2-rgb: 46 125 84;
+  --ct-b3: #7fb3ff;
+  --ct-nav-bg: rgba(8, 17, 32, 0.9);
+  --ct-nav-ink: #f4f9ff;
+  --ct-nav-mu: #93accf;
+  --ct-nav-ln: #2b4266;
+  --ct-nav-pill: #1c3050;
+  --ct-nav-pill-solid: #101d30;
+  --ct-nav-panel: #101d30;
 }
 
 /* KPop Demon Hunters (dark) */
@@ -702,39 +703,39 @@ html[data-ctheme='business-pro'] {
   --ct-nav-panel: #ffffff;
 }
 
-/* Entrepreneur */
-html[data-ctheme='entrepreneur'] {
-  --ct-bg0: #f3f1fb;
-  --ct-page: linear-gradient(135deg, #f3f1fb, #e3dcf7);
+/* iOS-inspired — clean white, rounded cards, soft shadows, system blue. */
+html[data-ctheme='ios-inspired'] {
+  --ct-bg0: #f2f4f7;
+  --ct-page: linear-gradient(160deg, #f7f9fb 0%, #eef1f5 55%, #e7ebf1 100%);
   --ct-sf: #ffffff;
   --ct-sf-rgb: 255 255 255;
-  --ct-sf2: #f9f8fd;
-  --ct-sf3: #f0edfa;
-  --ct-ln: #e0daf2;
-  --ct-ln2: #c5b9e6;
-  --ct-ink: #221b3e;
-  --ct-ink-rgb: 34 27 62;
-  --ct-ink2: #3d3560;
-  --ct-mu: #665f88;
-  --ct-fa: #9a94b8;
-  --ct-ac: #4f46e5;
-  --ct-ac-rgb: 79 70 229;
-  --ct-ac2: #3f38c4;
-  --ct-act: #4338ca;
-  --ct-acs: #ecebfc;
-  --ct-acl: #cfc9f7;
-  --ct-b1: #4f46e5;
-  --ct-b2: #9333ea;
-  --ct-b2t: #7e22ce;
-  --ct-b2-rgb: 147 51 234;
-  --ct-b3: #ff6a3d;
-  --ct-nav-bg: rgb(255 255 255 / 0.94);
-  --ct-nav-ink: #221b3e;
-  --ct-nav-mu: #5d5680;
-  --ct-nav-ln: #e0daf2;
-  --ct-nav-pill: #f0edfa;
+  --ct-sf2: #fbfcfe;
+  --ct-sf3: #f2f4f8;
+  --ct-ln: #e5e9f0;
+  --ct-ln2: #d3dae4;
+  --ct-ink: #1c1c1e;
+  --ct-ink-rgb: 28 28 30;
+  --ct-ink2: #3a3a3c;
+  --ct-mu: #8e8e93;
+  --ct-fa: #b6b6bd;
+  --ct-ac: #007aff;
+  --ct-ac-rgb: 0 122 255;
+  --ct-ac2: #0062cc;
+  --ct-act: #ffffff;
+  --ct-acs: #e8f2ff;
+  --ct-acl: #b8d7ff;
+  --ct-b1: #007aff;
+  --ct-b2: #34c759;
+  --ct-b2t: #1d8a41;
+  --ct-b2-rgb: 52 199 89;
+  --ct-b3: #5856d6;
+  --ct-nav-bg: rgba(250, 250, 252, 0.88);
+  --ct-nav-ink: #1c1c1e;
+  --ct-nav-mu: #6e6e73;
+  --ct-nav-ln: #e5e9f0;
+  --ct-nav-pill: #eef1f5;
   --ct-nav-pill-solid: #ffffff;
-  --ct-nav-panel: #ffffff;
+  --ct-nav-panel: #fbfcfe;
 }
 
 /* Digital Earth (dark) */
@@ -1005,8 +1006,8 @@ html[data-ctheme='spongebob'] {
 html[data-ctheme='business-pro'] {
   --ct-art: url('/images/community-themes/business-pro.svg');
 }
-html[data-ctheme='entrepreneur'] {
-  --ct-art: url('/images/community-themes/entrepreneur.svg');
+html[data-ctheme='ios-inspired'] {
+  --ct-art: url('/images/community-themes/ios-inspired.svg');
 }
 html[data-ctheme='digital-earth'] {
   --ct-art: url('/images/community-themes/digital-earth.svg');
@@ -1160,14 +1161,32 @@ html[data-ctheme='fashion-editor'] app-root > main .section-top-bar {
   border-top: 3px solid var(--ct-ink);
   border-radius: 4px;
 }
-html[data-ctheme='entrepreneur'] app-root > main :is(h1, h2, h3) {
-  font-weight: 800;
-  letter-spacing: -0.015em;
+html[data-ctheme='ios-inspired'] app-root > main :is(h1, h2, h3) {
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
-html[data-ctheme='entrepreneur'] app-root > main .section-top-bar {
-  background: linear-gradient(115deg, #4f46e5 0%, #9333ea 55%, #ff6a3d 100%);
+html[data-ctheme='ios-inspired']
+  app-root
+  > main
+  :is(
+    .left-side-panel,
+    .journey-post-card,
+    .journey-composer-card,
+    .section-top-bar,
+    .companions-side-panel,
+    .circles-side-panel
+  ) {
+  border-radius: 18px;
   border-color: transparent;
-  color: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(28, 28, 30, 0.04),
+    0 10px 30px -12px rgba(28, 28, 30, 0.16);
+}
+html[data-ctheme='ios-inspired'] app-root > main .section-top-bar {
+  background: #ffffff;
+}
+html[data-ctheme='ios-inspired'] app-root > main .menu-btn {
+  border-radius: 12px;
 }
 html[data-ctheme='minions']
   app-root

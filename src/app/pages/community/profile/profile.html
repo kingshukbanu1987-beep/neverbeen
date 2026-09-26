@@ -1051,7 +1051,7 @@
                             [postId]="post.id"
                             [depth]="0"
                             [currentUserId]="service.currentUser()?.id"
-                            [isProfileOwner]="!viewingVisitor()"
+                            [postOwnerId]="post.author.id"
                             [isCurrentUserVerified]="isUserVerified()"
                             (reply)="handleCommentThreadReply($event)"
                             (like)="handleCommentThreadLike($event)"
@@ -3501,19 +3501,23 @@
 
             <div class="visitor-hero-badges">
               <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
-              <span
-                class="badge-mutual-tag clickable-badge"
-                (click)="openMutualCompanionsModal()"
-                role="button"
-                tabindex="0"
-                title="Click to view mutual companions popup"
-              >
-                👥 {{ getMutualCompanionsCount(viewingVisitor()!.id) }} Mutual Companions
-              </span>
+              @if (!isViewingSelf()) {
+                <span
+                  class="badge-mutual-tag clickable-badge"
+                  (click)="openMutualCompanionsModal()"
+                  role="button"
+                  tabindex="0"
+                  title="Click to view mutual companions popup"
+                >
+                  👥 {{ getMutualCompanionsCount(viewingVisitor()!.id) }} Mutual Companions
+                </span>
+              }
             </div>
           </div>
 
-          <!-- Companionship & Messaging Actions Cluster (Requirements A, B, C) -->
+          <!-- Companionship & Messaging Actions Cluster (Requirements A, B, C).
+               Hidden on my own profile preview — I can't be a companion of myself. -->
+          @if (!isViewingSelf()) {
           <div class="visitor-hero-actions">
             @if (viewingVisitor()!.status === 'connected') {
               <span class="badge-connected-status">✓ Companions</span>
@@ -3571,6 +3575,7 @@
               🚩 Report Abuse
             </button>
           </div>
+          }
         </div>
       </div>
 
@@ -4081,7 +4086,7 @@
                         [postId]="post.id"
                         [depth]="0"
                         [currentUserId]="service.currentUser()?.id"
-                        [isProfileOwner]="false"
+                        [postOwnerId]="post.author.id"
                         [isCurrentUserVerified]="isUserVerified()"
                         (reply)="handleCommentThreadReply($event)"
                         (like)="handleCommentThreadLike($event)"

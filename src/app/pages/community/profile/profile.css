@@ -121,6 +121,17 @@
   margin-bottom: 0.75rem;
 }
 
+/*
+ * On laptop / tablet screens the search box lives in the community page header
+ * (top left) — the in-page copy is phone-only. Same breakpoint as the
+ * profile's mobile-drawer layout.
+ */
+@media not all and (max-width: 900px), not all and ((orientation: portrait) and (max-width: 1024px)) {
+  .community-top-search-bar {
+    display: none;
+  }
+}
+
 .search-input-wrapper {
   display: flex;
   align-items: center;
@@ -421,8 +432,8 @@
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--ct-ink2, #475569);
-  background: rgb(var(--ct-sf-rgb, 255 255 255) / 0.8);
-  border: 1px solid rgb(var(--ct-ink-rgb, 148 163 184) / 0.3);
+  background: transparent;
+  border: none;
   border-radius: 999px;
   padding: 0.28rem 0.75rem;
   margin: 0 0 0.7rem;
@@ -445,22 +456,20 @@
 }
 
 .stat-chip {
-  background: rgb(var(--ct-sf-rgb, 255 255 255) / 0.78);
-  border: 1px solid rgb(var(--ct-ink-rgb, 148 163 184) / 0.28);
+  background: transparent;
+  border: none;
   border-radius: 16px;
   padding: 0.5rem 0.2rem 0.42rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.12rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .stat-chip:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.18);
-  border-color: rgba(16, 185, 129, 0.45);
 }
 
 .stat-chip strong {
@@ -486,13 +495,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  background: rgb(var(--ct-sf-rgb, 255 255 255) / 0.85);
-  border: 1px solid rgb(var(--ct-ink-rgb, 148 163 184) / 0.3);
+  background: transparent;
+  border: none;
   border-radius: 999px;
   padding: 0.3rem 0.8rem;
   margin-bottom: 0.55rem;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(8px);
+  box-shadow: none;
 }
 
 .status-indicator-dot {

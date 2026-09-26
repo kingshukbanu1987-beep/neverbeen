@@ -122,7 +122,7 @@ describe('User hover preview card', () => {
     await delay(250);
   });
 
-  it('shows the mutual companion count when hovering one of my companions', async () => {
+  it('shows the live mutual companion count (same as the Companions page) when hovering one of my companions', async () => {
     const companion = service
       .companions()
       .find((c) => c.mutualCompanionsCount !== undefined && c.mutualCompanionsCount !== null);
@@ -133,7 +133,9 @@ describe('User hover preview card', () => {
     await delay(400);
 
     expect(overlay.state()!.name).toBe(companion.fullName);
-    expect(overlay.state()!.mutualWithMe).toBe(companion.mutualCompanionsCount);
+    // The card must show the live intersection (my connected companions ∩ theirs),
+    // exactly what the Companions page displays — not the static seed value.
+    expect(overlay.state()!.mutualWithMe).toBe(service.mutualCompanionsCountOf(companion.id));
     expect(overlay.state()!.location).toContain(companion.city);
 
     overlay.hide();

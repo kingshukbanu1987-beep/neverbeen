@@ -170,6 +170,30 @@ a:has(use[href='#nb-icon-live']) .icon {
   padding-bottom: 0.2rem;
 }
 
+/* Community search — hidden on phones (it lives in the page there). */
+.ch-search {
+  display: none;
+  flex: none;
+}
+
+.ch-search-placeholder {
+  display: inline-block;
+  width: 250px;
+  height: 38px;
+}
+
+/*
+ * Laptop / tablet screens (the same condition the profile page uses for its
+ * desktop layout): the search box moves into the community page header,
+ * top left.
+ */
+@media not all and (max-width: 900px), not all and ((orientation: portrait) and (max-width: 1024px)) {
+  .ch-search {
+    display: inline-flex;
+    width: 250px;
+  }
+}
+
 .ch-brand {
   font-family: var(--serif);
   font-size: 1.15rem;

@@ -47,8 +47,29 @@ import { COMMUNITY_THEMES, CommunityThemeId, CommunityThemeService, communityThe
             </div>
             <button type="button" class="ctp-close" (click)="close(true)" aria-label="Close theme menu">✕</button>
           </div>
+
+          <!-- Search: type to filter, click a match to apply it. -->
+          <div class="ctp-search-row">
+            <svg viewBox="0 0 24 24" class="ctp-search-icon" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              class="ctp-search"
+              placeholder="Search themes…"
+              aria-label="Search community themes"
+              [value]="searchQuery()"
+              (input)="onSearchInput($event)"
+              (keydown)="onSearchKey($event)"
+            />
+            @if (searchQuery()) {
+              <button type="button" class="ctp-search-clear" (click)="searchQuery.set('')" aria-label="Clear theme search">✕</button>
+            }
+          </div>
+
           <div id="ctp-listbox" class="ctp-list" role="listbox" aria-label="Community theme" [attr.aria-activedescendant]="'ctp-opt-' + themeId()">
-            @for (t of themes; track t.id) {
+            @for (t of visibleThemes(); track t.id) {
               <button
                 type="button"
                 role="option"
@@ -77,6 +98,11 @@ import { COMMUNITY_THEMES, CommunityThemeId, CommunityThemeService, communityThe
                   }
                 </span>
               </button>
+            } @empty {
+              <div class="ctp-no-results">
+                <p>No themes match “{{ searchQuery() }}”.</p>
+                <button type="button" (click)="searchQuery.set('')">Show all themes</button>
+              </div>
             }
           </div>
         </div>
@@ -93,6 +119,19 @@ export class CommunityThemePicker {
   protected readonly open = signal(false);
   protected readonly themeId = this.svc.themeId;
   protected readonly current = computed(() => this.svc.theme());
+
+  // Search box: filter the theme list as the member types; clicking a match applies it.
+  protected readonly searchQuery = signal('');
+  protected readonly visibleThemes = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return this.themes;
+    return this.themes.filter(
+      (t) =>
+        t.name.toLowerCase().includes(q) ||
+        t.palette.toLowerCase().includes(q) ||
+        t.audience.toLowerCase().includes(q),
+    );
+  });
 
   constructor() {
     let first = true;
@@ -141,6 +180,17 @@ export class CommunityThemePicker {
     this.close(true);
   }
 
+  protected onSearchInput(e: Event): void {
+    this.searchQuery.set((e.target as HTMLInputElement).value);
+  }
+
+  /** Keep list-navigation keys out of the listbox, but let Escape bubble (closes the picker). */
+  protected onSearchKey(e: KeyboardEvent): void {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+      e.stopPropagation();
+    }
+  }
+
   protected onPanelKey(e: KeyboardEvent): void {
     const opts = this.options();
     if (!opts.length) return;
@@ -165,6 +215,6 @@ export class CommunityThemePicker {
   }
 
   private selectedIndex(): number {
-    return Math.max(0, this.themes.findIndex((t) => t.id === this.themeId()));
+    return Math.max(0, this.visibleThemes().findIndex((t) => t.id === this.themeId()));
   }
 }

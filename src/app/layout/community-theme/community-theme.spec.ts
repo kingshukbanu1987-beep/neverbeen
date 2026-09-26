@@ -101,7 +101,7 @@ describe('Community theme dropdown', () => {
       'Fashion Editor',
       'SpongeBob SquarePants',
       'Business Pro',
-      'Entrepreneur',
+      'iOS-inspired',
       'Digital Earth',
       'Aurora',
       'Galactic Void',
@@ -119,12 +119,12 @@ describe('Community theme dropdown', () => {
     expect(byId('spooky-night')).toContain('spookiest night');
     expect(byId('disco-diva')).toContain('dance floor');
     expect(byId('minions')).toContain('goofy fun');
-    expect(byId('santas-village')).toContain('Holiday cheer');
+    expect(byId('santas-village')).toContain('Reindeer, Santa');
     expect(byId('kpop-demon-hunters')).toContain('supernatural');
     expect(byId('fashion-editor')).toContain('Runway-ready');
     expect(byId('spongebob')).toContain('Boo-yeah');
     expect(byId('business-pro')).toContain('Polished, structured');
-    expect(byId('entrepreneur')).toContain('go-getter');
+    expect(byId('ios-inspired')).toContain('Apple-style');
     expect(byId('digital-earth')).toContain('world from above');
     expect(byId('aurora')).toContain('polar glow');
     expect(byId('galactic-void')).toContain('endless void');
@@ -132,6 +132,47 @@ describe('Community theme dropdown', () => {
     expect(byId('football-arena')).toContain('Match-day');
     expect(options[0].getAttribute('aria-selected')).toBe('true');
     expect(options.filter((o) => o.classList.contains('is-selected')).length).toBe(1);
+  });
+
+  it('filters themes as the member types and applies the clicked match', async () => {
+    const { el, fixture } = await navbarAt('/community/profile');
+    openPicker(el);
+    fixture.detectChanges();
+
+    const search = el.querySelector('.ctp-search') as HTMLInputElement;
+    expect(search).toBeTruthy();
+
+    const visible = () =>
+      Array.from(el.querySelectorAll<HTMLButtonElement>('.ctp-panel [role="option"]')).map(
+        (o) => o.dataset['theme'],
+      );
+    expect(visible().length).toBe(38);
+
+    // Typing narrows the list to matching themes (name / palette / audience).
+    search.value = 'midn';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(visible()).toEqual(['midnight', 'santas-village']);
+
+    // Clicking a match applies it and closes the picker.
+    (el.querySelector('[data-theme="midnight"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(root().getAttribute('data-ctheme')).toBe('midnight');
+    expect(el.querySelector('.ctp-panel')).toBeNull();
+
+    // A query with no match shows the empty state with a reset action.
+    // (Re-open the picker — the panel DOM, incl. the search input, is recreated.)
+    openPicker(el);
+    fixture.detectChanges();
+    const search2 = el.querySelector('.ctp-search') as HTMLInputElement;
+    search2.value = 'zzzz-no-theme';
+    search2.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(visible().length).toBe(0);
+    expect(el.querySelector('.ctp-no-results')).toBeTruthy();
+    (el.querySelector('.ctp-no-results button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(visible().length).toBe(38);
   });
 
   it('applies a picked theme immediately, remembers it, and reverts to Default outside the Community', async () => {

@@ -30,6 +30,7 @@ import {
 import { CommunityService } from '../../../services/community.service';
 import { SiteConfigService } from '../../../services/site-config.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
+import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 import { UserHoverCard, UserPreviewDirective } from '../../../shared/user-hover-card';
 import { CommentThreadComponent } from './comment-item';
@@ -82,6 +83,8 @@ export class CommunityProfile implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  /** Title-less confirmations inside the Community (the native dialog titles itself with the site address). */
+  private readonly confirmSvc = inject(CommunityConfirmService);
 
   // Active section in the right side wide panel (default: 'journey')
   protected readonly activeSection = signal<ProfileSection>('journey');
@@ -100,6 +103,17 @@ export class CommunityProfile implements OnInit {
 
   // Visitor Profile mode (when visiting any other user)
   protected readonly viewingVisitor = signal<Companion | null>(null);
+
+  /**
+   * Requirement H — "View Profile" shows the member's own profile in visitor
+   * mode. It is still *my* profile, so companion-management controls (Mutual
+   * Companions, Remove Companionship, …) must not be offered for myself.
+   */
+  protected readonly isViewingSelf = computed(() => {
+    const visitor = this.viewingVisitor();
+    const me = this.service.currentUser()?.id;
+    return !!visitor && me !== undefined && me !== null && visitor.id === me;
+  });
 
   // Search state (top-left)
   protected readonly searchQuery = signal('');
@@ -489,9 +503,10 @@ export class CommunityProfile implements OnInit {
 
     // Deep links into a profile section (the community header's Home / Notification /
     // Messenger icons point at /profile#journey, /profile#notifications, /profile#messenger).
+    // Back-button navigations also arrive here — apply without pushing another entry.
     this.route.fragment.subscribe((fragment) => {
       if (fragment && (PROFILE_SECTION_VALUES as readonly string[]).includes(fragment)) {
-        this.setSection(fragment as ProfileSection);
+        this.applySection(fragment as ProfileSection);
       }
     });
   }
@@ -556,11 +571,41 @@ export class CommunityProfile implements OnInit {
     return this.cms.flag('community.profile', field);
   }
 
+  /**
+   * Switch the wide panel to `section` and record it in the browser history
+   * (`/profile#section`), so pressing back anywhere in the Community walks
+   * through the previous community page/section instead of skipping it.
+   */
   setSection(section: ProfileSection): void {
-    this.viewingVisitor.set(null); // Return from visitor view
+    // Switching sections from a visited profile (or my own preview) returns to
+    // my own profile.
+    const leavingVisitor = !!this.viewingVisitor();
+    if (leavingVisitor) this.viewingVisitor.set(null);
+    this.applySection(section);
+
+    const target: ProfileSection = this.activeSection();
+    const currentFragment = this.route.snapshot?.fragment ?? '';
+    if (currentFragment === target) return;
+    if (leavingVisitor) {
+      this.router.navigate(['/profile'], { fragment: target });
+    } else {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        fragment: target,
+        queryParamsHandling: 'preserve',
+      });
+    }
+  }
+
+  /**
+   * Apply a section immediately without touching the router (used by section
+   * deep links such as /profile#messenger — including back-button navigations
+   * and URL refreshes, where the ?id= visitor state must be left alone).
+   */
+  private applySection(section: ProfileSection): void {
     this.activeSection.set(this.profileSectionOn(section) ? section : 'journey');
     this.closeMobileSidePanel();
-    if (section === 'notifications') {
+    if (this.activeSection() === 'notifications') {
       this.announcementInbox.refresh();
       this.service.markNotificationsRead();
       this.markNoticesRead();
@@ -675,7 +720,8 @@ export class CommunityProfile implements OnInit {
 
   closeVisitorProfile(): void {
     this.viewingVisitor.set(null);
-    this.router.navigate(['/profile']);
+    // Keep the section the member was on, so back/forward stay consistent.
+    this.router.navigate(['/profile'], { fragment: this.activeSection() });
   }
 
   protected loadProfileByParam(idParam: string): void {
@@ -2120,32 +2166,30 @@ export class CommunityProfile implements OnInit {
     await this.service.deleteComment(commentId);
   }
 
-  // Requirements F & G:
-  // User can delete any post/comment they made (including on other user's journey or messagebook)
-  // Owner can delete any post/comment made on their profile, but cannot delete other users' posts if not on their profile
-  canDeleteComment(authorId: number): boolean {
+  /**
+   * Requirement F — delete permissions, evaluated on the actual post (not the page):
+   * • your own comments, anywhere (your Journey, MessageBook, others' Journeys);
+   * • someone else's comment, only when it sits on your own Journey post.
+   * Posts made by others — including the ones that appear in your Journey feed —
+   * can never be deleted by you (only Hiden), and neither can the other members'
+   * comments on those feed posts.
+   */
+  canDeleteComment(authorId: number, postOwnerId?: number): boolean {
     const currentUserId = this.service.currentUser()?.id || 1;
-    if (!this.viewingVisitor()) {
-      return true; // Owner of this profile can delete any comment on their profile
-    }
-    return authorId === currentUserId; // On another profile, can only delete own comments
+    if (authorId === currentUserId) return true;
+    return postOwnerId !== undefined && postOwnerId === currentUserId;
   }
 
   canDeleteJourneyPost(post: JourneyPost): boolean {
     const currentUserId = this.service.currentUser()?.id || 1;
-    if (!this.viewingVisitor()) {
-      return true; // Owner of this profile can delete any post on their profile
-    }
-    return post.author.id === currentUserId; // On another profile, can only delete own post
+    return post.author.id === currentUserId;
   }
 
-  deleteJourneyPost(postId: number): void {
-    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (!window.confirm('Are you sure you want to delete this journey post?')) {
-        return;
-      }
+  async deleteJourneyPost(postId: number): Promise<void> {
+    const ok = await this.confirmSvc.confirm('Are you sure you want to delete this journey post?', 'Delete');
+    if (ok) {
+      this.service.deleteJourneyPost(postId);
     }
-    this.service.deleteJourneyPost(postId);
   }
 
   // Requirement G: Hide post option for other users' posts in Journey feed
@@ -2153,10 +2197,20 @@ export class CommunityProfile implements OnInit {
     this.service.hideJourneyPost(postId);
   }
 
-  // Requirement C: View own profile as visitor preview
+  // Requirement C: View own profile as visitor preview.
+  // Pushes a history entry (#self-preview) so browser back returns to the
+  // section the member was on. "self-preview" is deliberately not a section,
+  // so the fragment deep-link handler ignores it on reload.
   viewOwnProfileAsVisitor(): void {
     const ownComp = this.service.getCurrentUserAsCompanion();
     this.viewingVisitor.set(ownComp);
+    if (this.route.snapshot?.fragment !== 'self-preview') {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        fragment: 'self-preview',
+        queryParamsHandling: 'preserve',
+      });
+    }
   }
 
   // Requirement E: Facebook collage open full post detail modal
@@ -2242,8 +2296,9 @@ export class CommunityProfile implements OnInit {
     this.activeReactionPickerMsgId.set(null);
   }
 
-  removeChatMsg(companionId: number, msgId: number): void {
-    if (confirm('Are you sure you want to remove this message?')) {
+  async removeChatMsg(companionId: number, msgId: number): Promise<void> {
+    const ok = await this.confirmSvc.confirm('Are you sure you want to remove this message?', 'Remove');
+    if (ok) {
       this.service.removeChatMessage(companionId, msgId);
       this.activeDotsMenuMsgId.set(null);
     }
@@ -2370,12 +2425,9 @@ export class CommunityProfile implements OnInit {
   }
 
   getMutualCompanions(targetId: number): Companion[] {
-    const currentUserId = this.service.currentUser()?.id || 1;
-    const visitorComps = this.getVisitorCompanions(targetId);
-    const myConnected = this.connectedCompanions();
-    return visitorComps.filter(
-      (vc) => vc.id !== currentUserId && vc.id !== targetId && myConnected.some((mc) => mc.id === vc.id),
-    );
+    // Live intersection (my connected companions ∩ the visitor's) — the same
+    // numbers the hover preview card shows, so nothing mismatches anymore.
+    return this.service.mutualCompanionsOf(targetId);
   }
 
   getMutualCompanionsCount(targetId: number): number {

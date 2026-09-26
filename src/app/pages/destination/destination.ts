@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   DestinationPage,
@@ -143,7 +142,6 @@ export class DestinationPageView {
   private readonly route = inject(ActivatedRoute);
   private readonly live = inject(DestinationLive);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly title = inject(Title);
   private readonly destroyRef = inject(DestroyRef);
 
   /** undefined while the slug is being resolved, null when no guide exists. */
@@ -359,11 +357,8 @@ export class DestinationPageView {
     this.summaryState.set('loading');
 
     if (!page) {
-      this.title.setTitle('Destination not found — NeverBeen');
       return;
     }
-
-    this.title.setTitle(`${page.guide.name}, ${page.guide.country} — NeverBeen`);
 
     void this.loadWeather(page, request);
     void this.loadCurrency(page, request);

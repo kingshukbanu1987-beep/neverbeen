@@ -1109,29 +1109,29 @@ describe('CommunityProfile', () => {
     const fixture = create();
     const component = fixture.componentInstance;
 
-    // 1. On own profile: current user is profile owner
-    component['viewingVisitor'].set(null);
-    const anyPost = service.journeyPosts()[0];
-    expect(component.canDeleteJourneyPost(anyPost)).toBe(true);
-    expect(component.canDeleteComment(999)).toBe(true); // Can delete any comment on their profile
+    const myPost = { ...service.journeyPosts()[0], author: { id: 1, fullName: 'Kingshuk Banu' } };
+    const otherPost = { ...myPost, author: { id: 33, fullName: 'Elena Rostova' } };
 
-    // 2. When visiting another user's profile:
+    // 1. Own profile (not a visitor view): my posts are deletable…
+    component['viewingVisitor'].set(null);
+    expect(component.canDeleteJourneyPost(myPost)).toBe(true);
+    // …but other users' posts are never — even when they arrive in MY journey feed.
+    expect(component.canDeleteJourneyPost(otherPost)).toBe(false);
+
+    // Comments: mine are deletable anywhere…
+    expect(component.canDeleteComment(1)).toBe(true);
+    // …someone else's comment is deletable only on MY OWN post…
+    expect(component.canDeleteComment(33, 1)).toBe(true);
+    // …not on another user's post that appears in my feed…
+    expect(component.canDeleteComment(33, 33)).toBe(false);
+
+    // 2. On another user's profile: same post-level rules.
     const visitor = service.companions().find((c) => c.id !== 1)!;
     component['viewingVisitor'].set(visitor);
-
-    // Cannot delete other user's post
-    const otherUserPost = { ...anyPost, author: { id: visitor.id, fullName: visitor.fullName } };
-    expect(component.canDeleteJourneyPost(otherUserPost)).toBe(false);
-
-    // Can delete own post if posted on their page
-    const ownPost = { ...anyPost, author: { id: 1, fullName: 'Sophia Laurent' } };
-    expect(component.canDeleteJourneyPost(ownPost)).toBe(true);
-
-    // Cannot delete other user's comment
-    expect(component.canDeleteComment(visitor.id)).toBe(false);
-
-    // Can delete own comment on another user's page
-    expect(component.canDeleteComment(1)).toBe(true);
+    expect(component.canDeleteComment(visitor.id, 33)).toBe(false);
+    expect(component.canDeleteComment(1, 33)).toBe(true);
+    expect(component.canDeleteJourneyPost(otherPost)).toBe(false);
+    expect(component.canDeleteJourneyPost(myPost)).toBe(true);
   });
 
   it('allows visitors to comment on posts in another traveler\'s Journey page (Requirement H)', () => {

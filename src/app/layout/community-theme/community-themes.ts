@@ -44,7 +44,7 @@ export type CommunityThemeId =
   | 'fashion-editor'
   | 'spongebob'
   | 'business-pro'
-  | 'entrepreneur'
+  | 'ios-inspired'
   | 'digital-earth'
   | 'aurora'
   | 'galactic-void'
@@ -372,12 +372,12 @@ export const COMMUNITY_THEMES: readonly CommunityTheme[] = [
     id: 'santas-village',
     name: "Santa's Village",
     icon: '🦌',
-    palette: 'Snowy village · festive red',
-    audience: 'Holiday cheer, year-round',
-    mode: 'light',
-    preview: 'linear-gradient(135deg, #f2f7fc, #cfe2f2 60%, #c1272d)',
-    surface: '#ffffff',
-    accent: '#c1272d',
+    palette: 'Christmas midnight · white snow · stars',
+    audience: 'Reindeer, Santa & a gift-lit green tree',
+    mode: 'dark',
+    preview: 'linear-gradient(135deg, #0a1626, #1d3557 55%, #c1272d)',
+    surface: '#101d30',
+    accent: '#e63946',
   },
   {
     id: 'kpop-demon-hunters',
@@ -424,15 +424,15 @@ export const COMMUNITY_THEMES: readonly CommunityTheme[] = [
     accent: '#1d4fd7',
   },
   {
-    id: 'entrepreneur',
-    name: 'Entrepreneur',
-    icon: '🚀',
-    palette: 'Bold gradients · go-getter energy',
-    audience: 'Builders, dreamers, doers',
+    id: 'ios-inspired',
+    name: 'iOS-inspired',
+    icon: '📱',
+    palette: 'Clean white · rounded · soft shadows',
+    audience: 'Sleek Apple-style minimalism',
     mode: 'light',
-    preview: 'linear-gradient(135deg, #4f46e5, #9333ea 55%, #ff6a3d)',
+    preview: 'linear-gradient(135deg, #ffffff 0%, #f5f7fa 55%, #e8edf3 100%)',
     surface: '#ffffff',
-    accent: '#4f46e5',
+    accent: '#007aff',
   },
   {
     id: 'digital-earth',

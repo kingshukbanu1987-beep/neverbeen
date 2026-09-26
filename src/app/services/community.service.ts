@@ -2066,6 +2066,23 @@ export class CommunityService {
     return result;
   }
 
+  /**
+   * The TRUE mutual companion list for `targetId`: my connected companions who
+   * are also connected with them. Single source of truth so the Companions page,
+   * the mutuals modal and the hover preview card always agree.
+   */
+  mutualCompanionsOf(targetId: number): Companion[] {
+    const currentUserId = this.currentUser()?.id || 1;
+    const myConnected = this.visibleCompanions().filter((c) => c.status === 'connected');
+    return this.getVisitorConnectedCompanions(targetId).filter(
+      (vc) => vc.id !== currentUserId && vc.id !== targetId && myConnected.some((mc) => mc.id === vc.id),
+    );
+  }
+
+  mutualCompanionsCountOf(targetId: number): number {
+    return this.mutualCompanionsOf(targetId).length;
+  }
+
   getRichIntroForUser(): string {
     return (
       "I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.\n\n" +

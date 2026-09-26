@@ -6,6 +6,17 @@
          Icon shortcuts on the left of the theme dropdown (top right).
          ============================================================ -->
     <div class="bar ch-bar">
+      <!-- Community search (laptop/tablet only; on phones it lives in the page).
+           Deferred: it imports the (lazy) CommunityService and must not bloat
+           the initial bundle. -->
+      <span class="ch-search">
+        @defer (on immediate) {
+          <app-community-search-box />
+        } @placeholder {
+          <span class="ch-search-placeholder" aria-hidden="true"></span>
+        }
+      </span>
+
       <a routerLink="/" class="ch-brand" (click)="close()" aria-label="Back to the NeverBeen website">
         NeverBeen
       </a>
