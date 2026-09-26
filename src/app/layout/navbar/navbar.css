@@ -138,6 +138,26 @@ a:has(use[href='#nb-icon-live']) .icon {
   overflow: hidden;
 }
 
+/* Community theme dropdown slot (Community pages only). Sits at the right, before the menu. */
+.theme-slot {
+  display: inline-flex;
+  align-items: center;
+  order: 3;
+  flex-shrink: 0;
+}
+
+.theme-slot-placeholder {
+  display: block;
+  width: 170px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.compact-bar nav {
+  margin-left: auto;
+}
+
 /* Hamburger toggle: three parallel lines that fold into a cross when the menu is open. */
 .menu {
   display: none;
@@ -185,6 +205,11 @@ a:has(use[href='#nb-icon-live']) .icon {
 @media (max-width: 860px) {
   .menu {
     display: flex;
+    order: 4;
+  }
+
+  .theme-slot {
+    margin-left: auto;
   }
 
   nav {
@@ -212,6 +237,11 @@ a:has(use[href='#nb-icon-live']) .icon {
 @media (max-width: 560px) {
   .bar {
     gap: 0.5rem;
+  }
+
+  .theme-slot-placeholder {
+    width: 120px;
+    height: 38px;
   }
 
   .logo {

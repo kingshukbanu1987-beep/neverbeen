@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/ro
 import { NgOptimizedImage } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { SiteConfigService } from '../../services/site-config.service';
+import { CommunityThemePicker } from '../community-theme/community-theme-picker';
 
 interface NavLink {
   id: string;
@@ -14,7 +15,7 @@ interface NavLink {
 
 @Component({
   selector: 'app-navbar',
-  imports: [NgOptimizedImage, RouterLink, RouterLinkActive],
+  imports: [NgOptimizedImage, RouterLink, RouterLinkActive, CommunityThemePicker],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
@@ -56,6 +57,9 @@ export class Navbar {
     const url = this.currentUrl();
     return url.includes('/community') || url.includes('/profile') || /^\/admin(\/|\?|#|$)/.test(url);
   });
+
+  /** Community pages (hub, profiles, Message Book) — where the member's community theme applies. */
+  protected readonly isCommunity = computed(() => /^\/(community|profile)(\/|\?|#|$)/.test(this.currentUrl()));
 
   private readonly allLinks: NavLink[] = [
     { id: 'home', label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },

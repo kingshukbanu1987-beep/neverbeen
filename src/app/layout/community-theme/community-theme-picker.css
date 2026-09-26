@@ -1,0 +1,334 @@
+/* Community theme dropdown (website header, Community pages only). Unencapsulated → ctp- prefix. */
+
+.ctp-host {
+  display: inline-flex;
+  position: relative;
+}
+
+.ctp {
+  position: relative;
+  font-family: 'Outfit', system-ui, sans-serif;
+}
+
+.ctp-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 42px;
+  padding: 0 0.7rem 0 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--ct-nav-ln, rgba(15, 23, 42, 0.12));
+  background: var(--ct-nav-pill, rgba(255, 255, 255, 0.9));
+  color: var(--ct-nav-ink, #0f172a);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 6px 16px -12px rgba(15, 23, 42, 0.55);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.ctp-trigger:hover {
+  border-color: rgb(var(--ct-ac-rgb, 37 99 235) / 0.45);
+  box-shadow: 0 10px 24px -14px rgb(var(--ct-ac-rgb, 37 99 235) / 0.8);
+  transform: translateY(-1px);
+}
+
+.ctp-trigger:focus-visible,
+.ctp-option:focus-visible,
+.ctp-close:focus-visible {
+  outline: 3px solid rgb(var(--ct-ac-rgb, 37 99 235) / 0.45);
+  outline-offset: 2px;
+}
+
+.ctp-swatch {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(15, 23, 42, 0.12),
+    0 2px 6px -2px rgba(15, 23, 42, 0.35);
+}
+
+.ctp-swatch i {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ct-nav-pill-solid, #ffffff);
+}
+
+.ctp-trigger-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+  min-width: 0;
+}
+
+.ctp-trigger-text small {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ct-nav-mu, #64748b);
+}
+
+.ctp-trigger-text b {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ctp-chevron {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--ct-nav-mu, #64748b);
+  transition: transform 0.2s ease;
+}
+
+.ctp.is-open .ctp-chevron {
+  transform: rotate(180deg);
+}
+
+/* ------------------------------------------------------------------ panel */
+
+.ctp-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(380px, calc(100vw - 1.5rem));
+  max-height: min(620px, calc(100vh - 110px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  background: rgb(var(--ct-sf-rgb, 255 255 255) / 0.97);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgb(var(--ct-ink-rgb, 15 23 42) / 0.08);
+  box-shadow:
+    0 32px 64px -28px rgba(15, 23, 42, 0.55),
+    0 10px 24px -16px rgba(15, 23, 42, 0.35);
+  color: var(--ct-ink, #0f172a);
+  overflow: hidden;
+  z-index: 5;
+  animation: ctp-in 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  transform-origin: top right;
+}
+
+@keyframes ctp-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ctp-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 0.7rem;
+  border-bottom: 1px solid var(--ct-ln, #f1f5f9);
+}
+
+.ctp-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.ctp-head b {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.ctp-head small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--ct-mu, #64748b);
+}
+
+.ctp-close {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--ct-sf3, #f1f5f9);
+  color: var(--ct-ink2, #475569);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.ctp-close:hover {
+  background: var(--ct-ln, #e2e8f0);
+  color: var(--ct-ink, #0f172a);
+}
+
+.ctp-list {
+  overflow-y: auto;
+  padding: 0.4rem;
+  display: grid;
+  gap: 2px;
+  scrollbar-width: thin;
+}
+
+.ctp-option {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.ctp-option:hover,
+.ctp-option:focus-visible {
+  background: var(--ct-sf3, #f5f7fb);
+}
+
+.ctp-option.is-selected {
+  background: linear-gradient(90deg, rgb(var(--ct-ac-rgb, 37 99 235) / 0.1), rgb(var(--ct-ac-rgb, 37 99 235) / 0.02));
+  border-color: rgb(var(--ct-ac-rgb, 37 99 235) / 0.3);
+}
+
+.ctp-preview {
+  position: relative;
+  width: 52px;
+  height: 38px;
+  border-radius: 11px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(15, 23, 42, 0.1),
+    0 4px 10px -6px rgba(15, 23, 42, 0.5);
+}
+
+.ctp-chip-surface {
+  position: absolute;
+  left: 7px;
+  bottom: 6px;
+  width: 22px;
+  height: 9px;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+
+.ctp-chip-accent {
+  position: absolute;
+  right: 7px;
+  bottom: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+}
+
+.ctp-option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.ctp-option-text b {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.ctp-icon {
+  font-size: 0.9rem;
+}
+
+.ctp-option-text small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ct-ink2, #475569);
+}
+
+.ctp-option-text em {
+  font-style: normal;
+  font-size: 0.68rem;
+  color: var(--ct-fa, #94a3b8);
+}
+
+.ctp-check {
+  width: 22px;
+  height: 22px;
+  color: var(--ct-act, #2563eb);
+}
+
+.ctp-check svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Header menu above page content while the panel is open (profile side panels use z-index up to 1200). */
+html.ctp-open app-navbar .nav {
+  z-index: 100002;
+}
+
+@media (max-width: 560px) {
+  .ctp-trigger {
+    height: 38px;
+    padding-right: 0.5rem;
+  }
+  .ctp-trigger-text small {
+    display: none;
+  }
+  .ctp-trigger-text b {
+    max-width: 92px;
+    font-size: 0.76rem;
+  }
+  .ctp-panel {
+    position: fixed;
+    top: 64px;
+    right: 0.75rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .ctp-trigger-text {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctp-panel {
+    animation: none;
+  }
+  .ctp-trigger,
+  .ctp-chevron {
+    transition: none;
+  }
+}

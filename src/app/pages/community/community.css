@@ -1,8 +1,8 @@
 .community-shell {
   position: relative;
   min-height: calc(100vh - 84px);
-  background: #ffffff;
-  color: var(--ink, #1d1914);
+  background: var(--ct-sf, #ffffff);
+  color: var(--ink, var(--ct-ink, #1d1914));
   overflow-x: hidden;
   padding: 2rem 0 4rem;
 }
@@ -25,7 +25,7 @@
 .aurora-1 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, #f3ece2, transparent 70%);
+  background: radial-gradient(circle, var(--ct-sf3, #f3ece2), transparent 70%);
   top: -100px;
   left: 15%;
 }
@@ -33,7 +33,7 @@
 .aurora-2 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, #e6efe8, transparent 70%);
+  background: radial-gradient(circle, var(--ct-ln, #e6efe8), transparent 70%);
   bottom: 5%;
   right: 15%;
 }

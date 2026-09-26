@@ -3,6 +3,16 @@
     <a routerLink="/" class="logo" [class.compact-logo]="isCompactLogo()" (click)="close()" aria-label="NeverBeen home">
       <img ngSrc="/neverbeen-logo.png" [class.compact-logo]="isCompactLogo()" width="150" height="75" alt="NeverBeen" priority />
     </a>
+    @if (isCommunity()) {
+      <!-- Community theme dropdown: loaded only on Community pages; leaving them restores the default look. -->
+      <div class="theme-slot">
+        @defer (on immediate) {
+          <app-community-theme-picker />
+        } @placeholder {
+          <span class="theme-slot-placeholder" aria-hidden="true"></span>
+        }
+      </div>
+    }
     <button
       type="button"
       class="menu"

@@ -32,10 +32,10 @@ describe('Admin Console — compact header & Mail', () => {
   beforeEach(() => localStorage.clear());
 
   it('A: the website header and logo are compact (community size) inside the Admin Console', async () => {
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [Navbar],
       providers: [provideRouter([{ path: 'admin/dashboard', component: Stub }, { path: 'about', component: Stub }])],
-    });
+    }).compileComponents();
     const fixture = TestBed.createComponent(Navbar);
     const router = TestBed.inject(Router);
     const header = () => fixture.nativeElement.querySelector('header.nav') as HTMLElement;
