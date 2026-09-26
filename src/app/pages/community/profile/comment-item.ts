@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, forwardRef, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, forwardRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../../../models/community';
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 import { UserPreviewDirective } from '../../../shared/user-hover-card';
+import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
 
 @Component({
   selector: 'app-comment-thread',
@@ -31,8 +32,11 @@ export class CommentThreadComponent {
   @Input({ required: true }) postId!: number;
   @Input() depth = 0;
   @Input() currentUserId?: number;
-  @Input() isProfileOwner = true;
+  /** Who authored the post this comment belongs to (drives the delete permission). */
+  @Input() postOwnerId?: number;
   @Input() isCurrentUserVerified = false;
+
+  private readonly confirmSvc = inject(CommunityConfirmService);
 
   @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string; imageUrl?: string }>();
   @Output() like = new EventEmitter<{ postId: number; commentId: number }>();
@@ -216,21 +220,28 @@ export class CommentThreadComponent {
     this.reportAbuse.emit(event);
   }
 
+  /**
+   * Requirement F — a comment can be deleted when:
+   * • the signed-in member wrote it (anywhere), or
+   * • the comment is someone else's but it sits on the member's own post.
+   * Other members' posts (even when they appear in your Journey feed) are off
+   * limits, including the comments on them.
+   */
   canDeleteComment(): boolean {
-    if (this.isProfileOwner) return true;
-    return this.currentUserId !== undefined && this.comment.author.id === this.currentUserId;
+    if (this.currentUserId === undefined) return false;
+    if (this.comment.author.id === this.currentUserId) return true;
+    return this.postOwnerId !== undefined && this.postOwnerId === this.currentUserId;
   }
 
-  onDeleteComment(): void {
-    if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-      if (!window.confirm('Are you sure you want to delete this comment?')) {
-        return;
-      }
+  /** Title-less community confirm (the native dialog shows the site address). */
+  async onDeleteComment(): Promise<void> {
+    const ok = await this.confirmSvc.confirm('Are you sure you want to delete this comment?', 'Delete');
+    if (ok) {
+      this.deleteComment.emit({
+        postId: this.postId,
+        commentId: this.comment.id,
+      });
     }
-    this.deleteComment.emit({
-      postId: this.postId,
-      commentId: this.comment.id,
-    });
   }
 
   forwardDeleteComment(event: { postId: number; commentId: number }): void {

@@ -1,6 +1,7 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { CommunityBadgeService } from './community-badge.service';
 import {
   AboutMeDetails,
   AbuseReport,
@@ -312,6 +313,18 @@ export class CommunityService {
   readonly unreadNotificationCount = computed(
     () => this.visibleNotifications().filter((n) => !n.isRead).length,
   );
+
+  /** Chats that still hold at least one unread companion message (Messenger badge). */
+  readonly unreadChatCount = computed(
+    () => this.activeChatBoxes().filter((b) => (b.unreadCount ?? 0) > 0).length,
+  );
+
+  // Keep the root CommunityBadgeService (read by the always-mounted site navbar) in
+  // step with the live unread counts — so the navbar never has to import this service.
+  private readonly badgeBridge = inject(CommunityBadgeService);
+  private readonly badgeSync = effect(() => {
+    this.badgeBridge.sync(this.unreadNotificationCount(), this.unreadChatCount());
+  });
 
   readonly onlineCompanions = computed(() =>
     this.visibleCompanions().filter((c) => c.status === 'connected' && c.isOnline),
@@ -2053,6 +2066,23 @@ export class CommunityService {
     return result;
   }
 
+  /**
+   * The TRUE mutual companion list for `targetId`: my connected companions who
+   * are also connected with them. Single source of truth so the Companions page,
+   * the mutuals modal and the hover preview card always agree.
+   */
+  mutualCompanionsOf(targetId: number): Companion[] {
+    const currentUserId = this.currentUser()?.id || 1;
+    const myConnected = this.visibleCompanions().filter((c) => c.status === 'connected');
+    return this.getVisitorConnectedCompanions(targetId).filter(
+      (vc) => vc.id !== currentUserId && vc.id !== targetId && myConnected.some((mc) => mc.id === vc.id),
+    );
+  }
+
+  mutualCompanionsCountOf(targetId: number): number {
+    return this.mutualCompanionsOf(targetId).length;
+  }
+
   getRichIntroForUser(): string {
     return (
       "I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.\n\n" +
@@ -2270,6 +2300,13 @@ export class CommunityService {
     this.saveJson(NOTIFS_KEY, this.notifications());
   }
 
+  /** The member is looking at this chat: clear its unread badge. */
+  markChatRead(companionId: number): void {
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) => (b.companionId === companionId ? { ...b, unreadCount: 0 } : b)),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // MESSENGER (Popup Facebook-like Chat Boxes - Max 5)
   // ---------------------------------------------------------------------------
@@ -2297,6 +2334,8 @@ export class CommunityService {
       companion,
       isMinimized: false,
       draftText: '',
+      // The seeded greeting comes from the companion, so it counts as one unread chat.
+      unreadCount: 1,
       messages: [
         {
           id: 1,
@@ -2373,7 +2412,7 @@ export class CommunityService {
       this.activeChatBoxes.update((boxes) =>
         boxes.map((b) =>
           b.companionId === companionId
-            ? { ...b, messages: [...b.messages, replyMsg] }
+            ? { ...b, unreadCount: (b.unreadCount ?? 0) + 1, messages: [...b.messages, replyMsg] }
             : b,
         ),
       );

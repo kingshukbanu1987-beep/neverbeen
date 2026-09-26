@@ -2,6 +2,39 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Navbar } from './navbar';
 import { routes } from '../../app.routes';
+import { CommunityBadgeService } from '../../services/community-badge.service';
+import { CommunityService } from '../../services/community.service';
+import { ActiveChatBox, Companion, NotificationItem } from '../../models/community';
+
+function makeCompanion(id: number): Companion {
+  return {
+    id,
+    uniqueId: `89201534010000000${id}`,
+    fullName: `Companion ${id}`,
+    profilePhotoUrl: '',
+    country: 'India',
+    city: 'Kolkata',
+    profession: 'Photographer',
+    isOnline: true,
+    mutualCompanionsCount: 0,
+    status: 'connected',
+  };
+}
+
+function makeBox(companionId: number, unreadCount: number): ActiveChatBox {
+  return { companionId, companion: makeCompanion(companionId), isMinimized: false, draftText: '', unreadCount, messages: [] };
+}
+
+function makeNotification(id: number, isRead = false): NotificationItem {
+  return {
+    id,
+    type: 'journey_like',
+    fromUser: { id: id + 10, fullName: `Member ${id}` },
+    message: 'liked your journey post',
+    createdAtUtc: new Date().toISOString(),
+    isRead,
+  };
+}
 
 describe('Navbar', () => {
   beforeEach(async () => {
@@ -136,33 +169,87 @@ describe('Navbar', () => {
     expect(references.size).toBe(links.length);
   });
 
-  it('scales neverbeen-logo.png down to 50% when visiting community or profile pages (Requirement I)', () => {
+  it('replaces the website header with the community header on community/profile pages', () => {
     const fixture = create();
     const component = fixture.componentInstance;
     const element: HTMLElement = fixture.nativeElement;
 
-    // Default home page: not compact
+    // Default website pages: the classic header with the logo and site menu.
     component['currentUrl'].set('/');
     fixture.detectChanges();
-    expect(component['isCompactLogo']()).toBe(false);
-    expect(element.querySelector('.logo.compact-logo')).toBeNull();
-    expect(element.querySelector('header.compact-nav')).toBeNull();
-    expect(element.querySelector('.bar.compact-bar')).toBeNull();
+    expect(element.querySelector('header.community-nav')).toBeNull();
+    expect(element.querySelector('.logo')).toBeTruthy();
+    expect(element.querySelector('nav#site-nav')).toBeTruthy();
 
-    // On community page: compact logo and compact header active (Requirement B & I)
+    // Community pages: the default header (logo included) is gone completely…
     component['currentUrl'].set('/community');
     fixture.detectChanges();
-    expect(component['isCompactLogo']()).toBe(true);
-    expect(element.querySelector('.logo.compact-logo')).toBeTruthy();
-    expect(element.querySelector('header.compact-nav')).toBeTruthy();
-    expect(element.querySelector('.bar.compact-bar')).toBeTruthy();
+    expect(component['isCommunity']()).toBe(true);
+    expect(element.querySelector('header.community-nav')).toBeTruthy();
+    expect(element.querySelector('.logo')).toBeNull();
+    expect(element.querySelector('nav#site-nav')).toBeNull();
+    expect(element.querySelector('button.menu')).toBeNull();
 
-    // On profile page: compact logo and compact header active (Requirement B & I)
+    // …and the new header carries the three icon shortcuts + the theme dropdown at the top right.
+    expect(element.querySelector('.ch-brand')).toBeTruthy();
+    const shortcuts = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav#ch-nav a'));
+    expect(shortcuts.map((a) => a.getAttribute('href'))).toEqual([
+      '/profile#journey',
+      '/profile#notifications',
+      '/profile#messenger',
+    ]);
+    expect(shortcuts[0].querySelector('use')?.getAttribute('href')).toBe('#nb-icon-home');
+    expect(shortcuts[1].querySelector('use')?.getAttribute('href')).toBe('#nb-icon-bell');
+    expect(shortcuts[2].querySelector('use')?.getAttribute('href')).toBe('#nb-icon-message-square');
+    expect(element.querySelector('nav#ch-nav ~ .theme-slot')).not.toBeNull();
+
+    // Same replacement on member profile pages.
     component['currentUrl'].set('/profile?id=89201534010000000101');
     fixture.detectChanges();
-    expect(component['isCompactLogo']()).toBe(true);
-    expect(element.querySelector('.logo.compact-logo')).toBeTruthy();
-    expect(element.querySelector('header.compact-nav')).toBeTruthy();
-    expect(element.querySelector('.bar.compact-bar')).toBeTruthy();
+    expect(element.querySelector('header.community-nav')).toBeTruthy();
+    expect(element.querySelector('.logo')).toBeNull();
+  });
+
+  it('shows red unread-count badges fed by the community service, hidden at zero, capped at 99+', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    const community = TestBed.inject(CommunityService);
+    const bridge = TestBed.inject(CommunityBadgeService);
+    component['currentUrl'].set('/community');
+
+    // Push the community state through the same path production uses:
+    // CommunityService → badge-sync effect → CommunityBadgeService → navbar.
+    const apply = (notifications: NotificationItem[], boxes: ActiveChatBox[]) => {
+      community.notifications.set(notifications);
+      community.activeChatBoxes.set(boxes);
+      TestBed.flushEffects();
+      fixture.detectChanges();
+    };
+    const iconBadges = () =>
+      Array.from(element.querySelectorAll<HTMLAnchorElement>('nav#ch-nav a')).map(
+        (a) => a.querySelector<HTMLSpanElement>('.ch-badge')?.textContent?.trim() ?? null,
+      );
+
+    // Nothing unread: no badges.
+    apply([], []);
+    expect(element.querySelectorAll('.ch-badge').length).toBe(0);
+
+    // One unread notification + two chats holding unread messages (of three boxes) →
+    // badge on the bell and on the messenger icon only.
+    apply([makeNotification(1)], [makeBox(7, 2), makeBox(8, 1), makeBox(9, 0)]);
+    expect(iconBadges()).toEqual([null, '1', '2']);
+
+    // Over 99 unread → the 99+ cap.
+    apply(Array.from({ length: 105 }, (_, i) => makeNotification(i + 1)), [makeBox(7, 1)]);
+    expect(iconBadges()).toEqual([null, '99+', '1']);
+
+    // Everything marked read → the badges disappear.
+    community.markNotificationsRead();
+    community.markChatRead(7);
+    apply(community.notifications(), community.activeChatBoxes());
+    expect(iconBadges()).toEqual([null, null, null]);
+    expect(bridge.unreadNotifications()).toBe(0);
+    expect(bridge.unreadChats()).toBe(0);
   });
 });

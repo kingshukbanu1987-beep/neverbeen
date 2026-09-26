@@ -13,15 +13,16 @@
   position: fixed;
   width: 300px;
   border-radius: 20px;
-  background: linear-gradient(170deg, rgb(var(--ct-sf-rgb, 255 255 255) / 0.96) 0%, rgba(248, 252, 250, 0.94) 100%);
+  /* Theme tokens for both stops, so dark community themes get a dark card and
+     light themes a light one — the text (ink tokens) always contrasts. */
+  background: linear-gradient(170deg, rgb(var(--ct-sf-rgb, 255 255 255) / 0.96) 0%, rgb(var(--ct-sf-rgb, 255 255 255) / 0.9) 100%);
   backdrop-filter: blur(18px) saturate(1.5);
   -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  border: 1px solid rgb(var(--ct-sf-rgb, 255 255 255) / 0.75);
+  border: 1px solid var(--ct-ln, rgba(148, 163, 184, 0.4));
   box-shadow:
-    0 22px 48px -14px rgba(2, 44, 34, 0.32),
-    0 6px 18px -8px rgba(2, 44, 34, 0.2),
-    0 0 0 1px rgba(16, 185, 129, 0.08),
-    inset 0 1px 0 rgb(var(--ct-sf-rgb, 255 255 255) / 0.95);
+    0 22px 48px -14px rgba(2, 8, 23, 0.35),
+    0 6px 18px -8px rgba(2, 8, 23, 0.22),
+    inset 0 1px 0 rgb(var(--ct-sf-rgb, 255 255 255) / 0.9);
   overflow: hidden;
   pointer-events: auto;
   opacity: 1;
@@ -318,7 +319,8 @@
 .uhc-stat-value {
   font-size: 14.5px;
   font-weight: 700;
-  color: var(--ct-oki, #065f46);
+  /* b2t is the theme's readable "text on soft tint" colour (bright on dark themes). */
+  color: var(--ct-b2t, #065f46);
   letter-spacing: -0.01em;
 }
 
@@ -348,6 +350,77 @@
   width: 13px;
   height: 13px;
   flex: 0 0 auto;
+}
+
+/* ---------------------------------------------------------------------
+   Dark community themes (data-ctheme-mode='dark' is set on <html>):
+   the card follows the theme surface, and every text/label colour is
+   brightened so it stays readable with contrast against the card.
+   --------------------------------------------------------------------- */
+html[data-ctheme-mode='dark'] .uhc-card {
+  box-shadow:
+    0 22px 48px -14px rgba(0, 0, 0, 0.6),
+    0 6px 18px -8px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgb(var(--ct-sf-rgb, 15 23 42) / 0.9);
+}
+
+html[data-ctheme-mode='dark'] .uhc-status-pill.tone-online {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+html[data-ctheme-mode='dark'] .uhc-status-pill.tone-busy {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+html[data-ctheme-mode='dark'] .uhc-status-pill.tone-away {
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+html[data-ctheme-mode='dark'] .uhc-status-pill.tone-dnd {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+html[data-ctheme-mode='dark'] .uhc-status-pill.tone-custom {
+  color: #67e8f9;
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+html[data-ctheme-mode='dark'] .uhc-status-pill.tone-inactive {
+  color: #a8b8cc;
+  background: rgba(100, 116, 139, 0.2);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+html[data-ctheme-mode='dark'] .uhc-meta-text {
+  color: var(--ct-ink2, #cfe0f2);
+}
+html[data-ctheme-mode='dark'] .uhc-meta-icon {
+  color: var(--ct-b2t, #6ee7b7);
+}
+
+html[data-ctheme-mode='dark'] .uhc-stat-chip {
+  background: rgb(var(--ct-sf-rgb, 15 23 42) / 0.55);
+  border-color: rgb(var(--ct-ink-rgb, 255 255 255) / 0.12);
+  box-shadow: none;
+}
+html[data-ctheme-mode='dark'] .uhc-stat-label {
+  color: var(--ct-mu, #94a3b8);
+}
+
+html[data-ctheme-mode='dark'] .uhc-footer {
+  border-top-color: rgb(var(--ct-ink-rgb, 255 255 255) / 0.12);
+  background: rgb(var(--ct-sf-rgb, 15 23 42) / 0.45);
+  color: var(--ct-b2t, #6ee7b7);
+}
+
+html[data-ctheme-mode='dark'] .uhc-avatar {
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgb(var(--ct-ink-rgb, 255 255 255) / 0.15);
 }
 
 /* Respect users who prefer reduced motion */

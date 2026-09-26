@@ -230,13 +230,17 @@ export class UserPreviewOverlayService {
     return n;
   }
 
-  /** Mutual companion count — only meaningful when the hovered user is one of mine. */
+  /**
+   * Mutual companion count — only shown when the hovered user is one of mine.
+   * Uses the same live intersection as the Companions page (my connected
+   * companions ∩ theirs), so the card and the page always match.
+   */
   private mutualCompanionsFor(user: PreviewableUser): number | null {
     const companion = this.community.companions().find(
       (c) => c.id === user.id || (user.uniqueId != null && c.uniqueId === user.uniqueId),
     );
     if (!companion) return null;
-    return companion.mutualCompanionsCount ?? null;
+    return this.community.mutualCompanionsCountOf(companion.id);
   }
 
   private statusFor(user: PreviewableUser): { label: string; tone: PreviewStatusTone } {

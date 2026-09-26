@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="ban" x2="1" y2="1">
+      <stop stop-color="#fff3a6"/>
+      <stop offset="1" stop-color="#ffdf3d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#ban)"/>
+  <g fill="#fffbe0" opacity=".5">
+    <circle cx="1240" cy="180" r="150"/>
+    <circle cx="1120" cy="120" r="80"/>
+    <circle cx="180" cy="640" r="120"/>
+  </g>
+  <!-- Big two-eyed minion -->
+  <g>
+    <rect x="430" y="290" width="190" height="470" rx="86" fill="#ffd82a"/>
+    <!-- Arms -->
+    <path d="M436 480q-56 24-64 84M614 480q56 24 64 84" stroke="#ffd82a" stroke-width="26" stroke-linecap="round"/>
+    <circle cx="368" cy="576" r="21" fill="#26201a"/>
+    <circle cx="682" cy="576" r="21" fill="#26201a"/>
+    <!-- Goggle strap + eyes -->
+    <rect x="430" y="396" width="190" height="38" fill="#4a4a52"/>
+    <circle cx="490" cy="415" r="41" fill="#d9dbe4" stroke="#8d90a0" stroke-width="9"/>
+    <circle cx="560" cy="415" r="41" fill="#d9dbe4" stroke="#8d90a0" stroke-width="9"/>
+    <circle cx="492" cy="413" r="16" fill="#2f6fb5"/>
+    <circle cx="558" cy="413" r="16" fill="#2f6fb5"/>
+    <circle cx="492" cy="413" r="7" fill="#101018"/>
+    <circle cx="558" cy="413" r="7" fill="#101018"/>
+    <circle cx="497" cy="407" r="3" fill="#fff"/>
+    <circle cx="563" cy="407" r="3" fill="#fff"/>
+    <!-- Smile -->
+    <path d="M462 520q58 44 116 0" stroke="#3a3210" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <!-- Overalls -->
+    <path d="M470 600v-96M580 600v-96" stroke="#2f5da8" stroke-width="17" stroke-linecap="round"/>
+    <rect x="446" y="584" width="158" height="176" rx="34" fill="#2f5da8"/>
+    <rect x="496" y="632" width="58" height="52" rx="12" fill="#27508f"/>
+    <circle cx="470" cy="592" r="9" fill="#cfd3e4"/>
+    <circle cx="580" cy="592" r="9" fill="#cfd3e4"/>
+    <!-- Feet -->
+    <rect x="448" y="742" width="66" height="40" rx="18" fill="#26201a"/>
+    <rect x="536" y="742" width="66" height="40" rx="18" fill="#26201a"/>
+  </g>
+  <!-- Small one-eyed minion -->
+  <g>
+    <rect x="800" y="470" width="150" height="340" rx="66" fill="#ffd82a"/>
+    <path d="M804 610q-40 18-46 60M946 610q40 18 46 60" stroke="#ffd82a" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="755" cy="678" r="18" fill="#26201a"/>
+    <circle cx="985" cy="678" r="18" fill="#26201a"/>
+    <rect x="800" y="546" width="150" height="32" fill="#4a4a52"/>
+    <circle cx="875" cy="562" r="38" fill="#d9dbe4" stroke="#8d90a0" stroke-width="9"/>
+    <circle cx="877" cy="560" r="14" fill="#2f6fb5"/>
+    <circle cx="877" cy="560" r="6" fill="#101018"/>
+    <circle cx="882" cy="555" r="2.6" fill="#fff"/>
+    <path d="M846 648q29 26 58 0" stroke="#3a3210" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M832 684v-56M918 684v-56" stroke="#2f5da8" stroke-width="14" stroke-linecap="round"/>
+    <rect x="814" y="672" width="122" height="138" rx="28" fill="#2f5da8"/>
+    <rect x="850" y="708" width="50" height="44" rx="10" fill="#27508f"/>
+    <circle cx="832" cy="680" r="8" fill="#cfd3e4"/>
+    <circle cx="918" cy="680" r="8" fill="#cfd3e4"/>
+    <rect x="818" y="794" width="52" height="34" rx="15" fill="#26201a"/>
+    <rect x="890" y="794" width="52" height="34" rx="15" fill="#26201a"/>
+  </g>
+  <!-- Banana -->
+  <g transform="translate(180 820) rotate(-18)">
+    <path d="M-120 0q60 74 240 54 44-8 66-32-70 18-150-8t-156-14Z" fill="#ffd82a" stroke="#e3b800" stroke-width="6"/>
+    <rect x="-136" y="-10" width="22" height="24" rx="7" fill="#7a5a2b"/>
+    <path d="M136-38l14 26-28 4Z" fill="#7a5a2b"/>
+  </g>
+  <!-- Fun marks -->
+  <g fill="#fff" opacity=".85">
+    <path d="M320 200q4-18 8 0 18 4 0 8-18 4 0 26-4 18-8 0-18-4 0-8 18-4Z"/>
+    <path d="M1180 380q4-18 8 0 18 4 0 8-18 4 0 26-4 18-8 0-18-4 0-8 18-4Z"/>
+    <path d="M740 180q3-14 6 0 14 3 0 6-14 3 0 20-3 14-6 0-14-3 0-6 14-3Z"/>
+  </g>
+  <g stroke="#ffb703" stroke-width="7" stroke-linecap="round">
+    <path d="M1080 220l18-26M1112 244l28-14M1104 200v-32"/>
+  </g>
+</svg>

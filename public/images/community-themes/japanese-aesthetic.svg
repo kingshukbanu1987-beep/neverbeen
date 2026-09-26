@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="washi" x2="0" y2="1">
+      <stop stop-color="#f8f4ec"/>
+      <stop offset="1" stop-color="#efe3e1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#washi)"/>
+  <!-- Enso circle, brushy and open -->
+  <path d="M1078 218a186 186 0 1 1-166 268" stroke="#31556f" stroke-opacity=".16" stroke-width="18" stroke-linecap="round"/>
+  <path d="M1064 232a170 170 0 1 1-151 244" stroke="#31556f" stroke-opacity=".1" stroke-width="7" stroke-linecap="round"/>
+  <!-- Distant Mount Fuji -->
+  <path d="M-60 960V770q300-150 480-150t480 150v190H-60Z" fill="#c3d2dc"/>
+  <path d="M240 712q120-60 240-92 120 32 240 92-60 26-120 34h-240q-60-8-120-34Z" fill="#f6f9fb" opacity=".9"/>
+  <path d="M-60 960v-120q380-96 760-96t700 96v120H-60Z" fill="#b6c9d6"/>
+  <!-- Sakura branch, top left -->
+  <g stroke="#7a6a5a" stroke-linecap="round" fill="none">
+    <path d="M-20 90q220 30 360 118 90 56 130 142" stroke-width="13"/>
+    <path d="M150 118q60 10 104 44" stroke-width="7"/>
+    <path d="M300 176q56 8 92 34" stroke-width="6"/>
+    <path d="M236 150q18 40 12 78" stroke-width="6"/>
+  </g>
+  <g fill="#efa9c2">
+    <g transform="translate(258 168)"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/><circle r="5" fill="#fff6f9"/></g>
+    <g transform="translate(352 136) scale(.85)"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/><circle r="5" fill="#fff6f9"/></g>
+    <g transform="translate(446 214) scale(.9)"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/><circle r="5" fill="#fff6f9"/></g>
+    <g transform="translate(516 286) scale(.7)"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/><circle r="5" fill="#fff6f9"/></g>
+    <g transform="translate(160 132) scale(.6)"><circle cx="0" cy="-15" r="11"/><circle cx="14" cy="-5" r="11"/><circle cx="9" cy="12" r="11"/><circle cx="-9" cy="12" r="11"/><circle cx="-14" cy="-5" r="11"/><circle r="5" fill="#fff6f9"/></g>
+  </g>
+  <!-- Falling petals -->
+  <g fill="#f2b8cc" opacity=".85">
+    <path d="M640 380q14-10 26 0-10 14-26 0Z"/>
+    <path d="M720 470q12-9 22 0-9 12-22 0Z" opacity=".7"/>
+    <path d="M860 340q12-9 22 0-9 12-22 0Z" opacity=".7"/>
+    <path d="M980 560q14-10 26 0-10 14-26 0Z" opacity=".6"/>
+    <path d="M1150 640q12-9 22 0-9 12-22 0Z" opacity=".55"/>
+    <path d="M560 560q10-8 18 0-8 10-18 0Z" opacity=".6"/>
+  </g>
+  <!-- Small torii, bottom right -->
+  <g fill="#b04a5a" opacity=".8">
+    <rect x="1208" y="806" width="14" height="118" rx="4"/>
+    <rect x="1318" y="806" width="14" height="118" rx="4"/>
+    <rect x="1180" y="790" width="188" height="14" rx="7"/>
+    <path d="M1170 792q84-26 188 0l-4 16q-86-22-176 0Z"/>
+    <rect x="1208" y="840" width="124" height="10" rx="5"/>
+  </g>
+</svg>

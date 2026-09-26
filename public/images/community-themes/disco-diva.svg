@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="club" x2="0" y2="1">
+      <stop stop-color="#14101d"/>
+      <stop offset="1" stop-color="#2c1838"/>
+    </linearGradient>
+    <radialGradient id="chrome" cx=".35" cy=".3" r="1">
+      <stop stop-color="#ffffff"/>
+      <stop offset=".45" stop-color="#c9cede"/>
+      <stop offset=".75" stop-color="#8b91ab"/>
+      <stop offset="1" stop-color="#d9dcea"/>
+    </radialGradient>
+    <linearGradient id="beamP" x2="0" y2="1">
+      <stop stop-color="#ff4fd8" stop-opacity=".5"/>
+      <stop offset="1" stop-color="#ff4fd8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="beamC" x2="0" y2="1">
+      <stop stop-color="#4fe3ff" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#4fe3ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#club)"/>
+  <!-- Light beams -->
+  <path d="M640 120 480 960h260L720 120Z" fill="url(#beamP)"/>
+  <path d="M800 120 720 960h280L880 120Z" fill="url(#beamC)"/>
+  <path d="M420 120 180 960h220L500 120Z" fill="url(#beamC)" opacity=".7"/>
+  <path d="M1040 120 1180 960h200L1120 120Z" fill="url(#beamP)" opacity=".7"/>
+  <!-- Mirror ball -->
+  <rect x="706" y="40" width="12" height="90" fill="#5a5f78"/>
+  <circle cx="712" cy="300" r="150" fill="url(#chrome)"/>
+  <g stroke="#5a5f78" stroke-opacity=".55" stroke-width="2.5">
+    <path d="M575 236h274M566 300h292M575 364h274M600 180h224M600 420h224"/>
+    <path d="M640 165q-30 135 0 270M712 150v300M784 165q30 135 0 270"/>
+  </g>
+  <ellipse cx="660" cy="238" rx="52" ry="30" fill="#ffffff" opacity=".75" transform="rotate(-24 660 238)"/>
+  <!-- Sparkles -->
+  <g fill="#ff4fd8">
+    <path d="M300 300q6-26 12 0 26 6 0 12-26 6 0 38-6 26-12 0-26-6 0-12 26-6Z" opacity=".9"/>
+    <path d="M1150 420q5-20 10 0 20 5 0 10-20 5 0 30-5 20-10 0-20-5 0-10 20-5Z" opacity=".8"/>
+  </g>
+  <g fill="#4fe3ff">
+    <path d="M1080 200q5-20 10 0 20 5 0 10-20 5 0 30-5 20-10 0-20-5 0-10 20-5Z" opacity=".85"/>
+    <path d="M420 560q4-16 8 0 16 4 0 8-16 4 0 24-4 16-8 0-16-4 0-8 16-4Z" opacity=".75"/>
+  </g>
+  <g fill="#f5f3ff">
+    <path d="M920 640q4-16 8 0 16 4 0 8-16 4 0 24-4 16-8 0-16-4 0-8 16-4Z" opacity=".8"/>
+    <circle cx="240" cy="480" r="4" opacity=".7"/>
+    <circle cx="1240" cy="300" r="4" opacity=".7"/>
+    <circle cx="560" cy="180" r="3.5" opacity=".6"/>
+    <circle cx="980" cy="120" r="3.5" opacity=".6"/>
+  </g>
+  <!-- Dance floor grid -->
+  <g stroke="#ff4fd8" stroke-opacity=".28" stroke-width="2">
+    <path d="M0 800h1440M0 840h1440M0 885h1440M0 935h1440"/>
+    <path d="M720 760 320 960M720 760 540 960M720 760 900 960M720 760 1120 960M720 760 720 960M720 760 100 960M720 760 1340 960"/>
+  </g>
+  <path d="M0 760h1440" stroke="#4fe3ff" stroke-opacity=".4" stroke-width="3"/>
+</svg>

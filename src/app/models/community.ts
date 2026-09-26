@@ -458,6 +458,8 @@ export interface ActiveChatBox {
   companion: Companion;
   isMinimized: boolean;
   draftText: string;
+  /** Companion messages the member has not seen yet (drives the header badge). */
+  unreadCount: number;
   messages: ChatMessage[];
   replyingToMessage?: ChatMessage | null;
   showEmojiPicker?: boolean;

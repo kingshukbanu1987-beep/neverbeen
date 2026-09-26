@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="dna-bg" x2="1" y2="1">
+      <stop stop-color="#03100e"/>
+      <stop offset="1" stop-color="#07271f"/>
+    </linearGradient>
+    <linearGradient id="stream" x2="1" y2="0">
+      <stop stop-color="#2dd4bf" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#2dd4bf" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#dna-bg)"/>
+  <!-- Code columns -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" fill="#2dd4bf">
+    <g opacity=".16" font-size="20">
+      <text x="70" y="140">01001101</text>
+      <text x="70" y="172">11010010</text>
+      <text x="70" y="204">00111011</text>
+      <text x="70" y="236">10100110</text>
+      <text x="70" y="268">01101100</text>
+      <text x="70" y="300">11001011</text>
+      <text x="70" y="332">00101101</text>
+      <text x="70" y="364">10110100</text>
+      <text x="70" y="396">01011011</text>
+      <text x="70" y="428">11100101</text>
+      <text x="70" y="460">00011110</text>
+      <text x="70" y="492">10111001</text>
+      <text x="70" y="524">01000110</text>
+      <text x="70" y="556">11010011</text>
+    </g>
+    <g opacity=".12" font-size="20">
+      <text x="180" y="200">10110010</text>
+      <text x="180" y="232">00110111</text>
+      <text x="180" y="264">11001101</text>
+      <text x="180" y="296">01010001</text>
+      <text x="180" y="328">10011110</text>
+      <text x="180" y="360">01101010</text>
+      <text x="180" y="392">11100111</text>
+      <text x="180" y="424">00101010</text>
+      <text x="180" y="456">10101101</text>
+      <text x="180" y="488">01110011</text>
+    </g>
+    <g opacity=".14" font-size="20">
+      <text x="1200" y="420">01101101</text>
+      <text x="1200" y="452">10010110</text>
+      <text x="1200" y="484">01011001</text>
+      <text x="1200" y="516">11011100</text>
+      <text x="1200" y="548">00110010</text>
+      <text x="1200" y="580">10100111</text>
+      <text x="1200" y="612">01101110</text>
+      <text x="1200" y="644">11000101</text>
+      <text x="1200" y="676">00101110</text>
+      <text x="1200" y="708">10111010</text>
+      <text x="1200" y="740">01001011</text>
+      <text x="1200" y="772">11110100</text>
+    </g>
+    <g opacity=".1" font-size="20">
+      <text x="1310" y="300">01011100</text>
+      <text x="1310" y="332">10101011</text>
+      <text x="1310" y="364">00111001</text>
+      <text x="1310" y="396">11010101</text>
+      <text x="1310" y="428">01100110</text>
+      <text x="1310" y="460">10011010</text>
+      <text x="1310" y="492">01010111</text>
+      <text x="1310" y="524">11101001</text>
+    </g>
+    <g opacity=".08" font-size="20">
+      <text x="130" y="680">10110101</text>
+      <text x="130" y="712">00111100</text>
+      <text x="130" y="744">10010111</text>
+      <text x="130" y="776">01101010</text>
+      <text x="130" y="808">11001110</text>
+      <text x="130" y="840">01011101</text>
+    </g>
+  </g>
+  <!-- Flowing data streams -->
+  <g stroke="url(#stream)" stroke-width="3" fill="none">
+    <path d="M-40 700C300 640 520 760 780 700S1240 620 1480 680"/>
+    <path d="M-40 800C320 760 560 860 820 800S1260 740 1480 790"/>
+    <path d="M-40 240C280 200 500 300 760 240S1220 180 1480 230"/>
+  </g>
+  <g fill="#7ff0de">
+    <circle cx="520" cy="742" r="5"/>
+    <circle cx="1080" cy="652" r="5"/>
+    <circle cx="300" cy="228" r="5"/>
+    <circle cx="1240" cy="214" r="5"/>
+  </g>
+  <!-- DNA helix -->
+  <g>
+    <path d="M720 90C880 210 880 330 720 450C560 570 560 690 720 810C820 882 880 920 900 950" stroke="#34d399" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <path d="M720 90C560 210 560 330 720 450C880 570 880 690 720 810C620 882 560 920 540 950" stroke="#22d3ee" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <g stroke="#a7f3d0" stroke-opacity=".65" stroke-width="4">
+      <path d="M720 150h0" opacity="0"/>
+      <path d="M796 180h-152"/>
+      <path d="M838 250h-236"/>
+      <path d="M838 320h-236"/>
+      <path d="M796 390h-152"/>
+      <path d="M720 450h0" opacity="0"/>
+      <path d="M644 540h152"/>
+      <path d="M602 610h236"/>
+      <path d="M602 680h236"/>
+      <path d="M644 750h152"/>
+      <path d="M720 810h0" opacity="0"/>
+    </g>
+    <g fill="#e9fbf5">
+      <circle cx="820" cy="180" r="6"/><circle cx="620" cy="180" r="6"/>
+      <circle cx="860" cy="250" r="6"/><circle cx="580" cy="250" r="6"/>
+      <circle cx="860" cy="320" r="6"/><circle cx="580" cy="320" r="6"/>
+      <circle cx="820" cy="390" r="6"/><circle cx="620" cy="390" r="6"/>
+      <circle cx="660" cy="540" r="6"/><circle cx="812" cy="540" r="6"/>
+      <circle cx="602" cy="610" r="6"/><circle cx="888" cy="610" r="6"/>
+      <circle cx="602" cy="680" r="6"/><circle cx="888" cy="680" r="6"/>
+      <circle cx="660" cy="750" r="6"/><circle cx="812" cy="750" r="6"/>
+    </g>
+    <circle cx="720" cy="90" r="9" fill="#34d399"/>
+    <circle cx="720" cy="450" r="9" fill="#7ff0de"/>
+    <circle cx="720" cy="810" r="9" fill="#34d399"/>
+  </g>
+  <!-- Circuit nodes -->
+  <g stroke="#2dd4bf" stroke-opacity=".5" fill="none">
+    <circle cx="1080" cy="180" r="26"/>
+    <circle cx="1160" cy="240" r="14"/>
+    <circle cx="380" cy="860" r="20"/>
+  </g>
+  <g fill="#2dd4bf" opacity=".8">
+    <circle cx="1080" cy="180" r="7"/>
+    <circle cx="1160" cy="240" r="5"/>
+    <circle cx="380" cy="860" r="6"/>
+  </g>
+  <path d="M1106 196l40 32M1054 196l-44 32" stroke="#2dd4bf" stroke-opacity=".4" stroke-width="2.5"/>
+</svg>

@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="hallow" x2="0" y2="1">
+      <stop stop-color="#0e0517"/>
+      <stop offset="1" stop-color="#251040"/>
+    </linearGradient>
+    <radialGradient id="orangeGlow">
+      <stop stop-color="#ff8c2a" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#ff8c2a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1440" height="960" fill="url(#hallow)"/>
+  <g fill="#cbb8e8" opacity=".5">
+    <circle cx="560" cy="120" r="2"/>
+    <circle cx="700" cy="220" r="1.6"/>
+    <circle cx="880" cy="90" r="2"/>
+    <circle cx="1300" cy="600" r="1.6"/>
+    <circle cx="300" cy="560" r="1.8"/>
+  </g>
+  <!-- Moon -->
+  <circle cx="220" cy="200" r="150" fill="url(#orangeGlow)"/>
+  <circle cx="220" cy="200" r="74" fill="#ff9a3d"/>
+  <circle cx="196" cy="182" r="10" fill="#f07f1f" opacity=".7"/>
+  <circle cx="244" cy="224" r="7" fill="#f07f1f" opacity=".6"/>
+  <!-- Cobwebs, top corners -->
+  <g stroke="#cbb8e8" stroke-opacity=".4" stroke-width="2.5" fill="none">
+    <path d="M0 0 250 130M0 0 260 60M0 0 200 190M0 0 110 250M0 0 40 280"/>
+    <path d="M60 8q34 22 52 54M110 20q40 30 60 74M160 34q44 38 66 96M210 52q46 46 70 116M248 72q46 52 72 134"/>
+  </g>
+  <g stroke="#cbb8e8" stroke-opacity=".4" stroke-width="2.5" fill="none">
+    <path d="M1440 0 1190 130M1440 0 1180 60M1440 0 1240 190M1440 0 1330 250M1440 0 1400 280"/>
+    <path d="M1380 8q-34 22-52 54M1330 20q-40 30-60 74M1280 34q-44 38-66 96M1230 52q-46 46-70 116M1192 72q-46 52-72 134"/>
+  </g>
+  <!-- Bats -->
+  <g fill="#3a2458">
+    <path d="M620 260q-26-30-70-26 16 20 6 44 30-8 64-18Zm0 0q26-30 70-26-16 20-6 44-30-8-64-18Z"/>
+    <path d="M840 170q-20-24-54-20 12 16 4 34 24-6 50-14Zm0 0q20-24 54-20-12 16-4 34-24-6-50-14Z"/>
+    <path d="M420 420q-16-18-42-16 10 13 3 27 19-5 39-11Zm0 0q16-18 42-16-10 13-3 27-19-5-39-11Z"/>
+  </g>
+  <!-- Ground + fence -->
+  <path d="M0 960v-130q300-80 700-64t740 64v130H0Z" fill="#170b26"/>
+  <g fill="#0e0517">
+    <rect x="90" y="742" width="16" height="110" rx="5"/>
+    <rect x="190" y="752" width="16" height="100" rx="5"/>
+    <rect x="290" y="746" width="16" height="106" rx="5"/>
+    <rect x="70" y="770" width="260" height="12" rx="6"/>
+    <rect x="70" y="812" width="260" height="12" rx="6"/>
+  </g>
+  <!-- Ghost -->
+  <g opacity=".8">
+    <path d="M980 700v-110a56 56 0 0 1 112 0v110q-14-18-28 0t-28 0-28 0-28 0Z" fill="#c9b6ec"/>
+    <circle cx="1012" cy="586" r="7" fill="#2a1145"/>
+    <circle cx="1044" cy="586" r="7" fill="#2a1145"/>
+    <ellipse cx="1028" cy="606" rx="7" ry="9" fill="#2a1145"/>
+  </g>
+  <!-- Jack-o'-lantern -->
+  <g transform="translate(1180 830)">
+    <rect x="-8" y="-96" width="16" height="30" rx="6" fill="#3f7d3a"/>
+    <ellipse cx="0" cy="0" rx="86" ry="72" fill="#ff7a1a"/>
+    <ellipse cx="-28" cy="-6" rx="20" ry="56" fill="#ff9a3d" opacity=".6"/>
+    <g fill="#2a1145">
+      <path d="M-44-18l18 22-32 4Z"/>
+      <path d="M44-18l-18 22 32 4Z"/>
+      <path d="M-24 26q24 14 48 0-10 22-24 22t-24-22Z"/>
+      <path d="M-16-2l16 14 16-14q-16-10-32 0Z" transform="translate(0 6)"/>
+    </g>
+  </g>
+  <!-- Sparkles -->
+  <g fill="#c98ffa">
+    <path d="M520 620q4-18 8 0 18 4 0 8-18 4 0 18-4 18-8 0-18-4 0-8 18-4Z" opacity=".7"/>
+    <path d="M760 520q3-14 6 0 14 3 0 6-14 3 0 14-3 14-6 0-14-3 0-6 14-3Z" opacity=".6"/>
+    <path d="M1320 320q3-14 6 0 14 3 0 6-14 3 0 14-3 14-6 0-14-3 0-6 14-3Z" opacity=".6"/>
+  </g>
+</svg>

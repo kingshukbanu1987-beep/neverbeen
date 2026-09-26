@@ -552,7 +552,7 @@ html[data-ctheme='boarding-pass'] app-navbar .nav::after {
 }
 
 @media (max-width: 860px) {
-  html[data-ctheme] app-navbar .nav nav {
+  html[data-ctheme] app-navbar .nav nav#site-nav {
     background: var(--ct-nav-panel, var(--ct-sf));
     border-bottom-color: var(--ct-nav-ln);
   }

@@ -1,4 +1,4 @@
-import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Navbar } from './layout/navbar/navbar';
@@ -9,6 +9,7 @@ import { TranslationService } from './services/translation.service';
 import { MaintenanceService, isBypassPath } from './services/maintenance.service';
 import { SiteConfigService } from './services/site-config.service';
 import { SiteAnalyticsService } from './services/site-analytics.service';
+import { SiteTabService } from './services/site-tab.service';
 
 @Component({
   selector: 'app-root',
@@ -22,6 +23,8 @@ export class App {
   private readonly maintenance = inject(MaintenanceService);
   private readonly cms = inject(SiteConfigService);
   private readonly analytics = inject(SiteAnalyticsService);
+  /** Keeps the browser tab as "NeverBeen" (+ unread count, red badge on the icon). */
+  private readonly tab = inject(SiteTabService);
 
   private readonly url = signal(typeof location !== 'undefined' ? location.pathname : '/');
 
@@ -44,10 +47,18 @@ export class App {
       this.url.set(url);
       // First-party page-view analytics for Admin → Health (skipped inside the admin preview frame).
       if (!this.cms.previewMode) this.analytics.recordView(url);
+      // The tab always stays "NeverBeen" — no route renames it to a profile or anything else.
+      this.tab.sync();
     });
     this.analytics.start();
 
+    // Re-sync the tab whenever the community unread count changes (live badge).
+    effect(() => this.tab.sync());
+
     // Start the site-wide multilingual layer once the first view is rendered.
-    afterNextRender(() => this.translation.init());
+    afterNextRender(() => {
+      this.translation.init();
+      this.tab.sync();
+    });
   }
 }

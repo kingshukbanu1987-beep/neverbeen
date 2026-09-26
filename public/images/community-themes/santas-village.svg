@@ -1,0 +1,232 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 960" fill="none">
+  <defs>
+    <linearGradient id="night" x2="0" y2="1">
+      <stop stop-color="#060d1c"/>
+      <stop offset="0.55" stop-color="#0d1f38"/>
+      <stop offset="1" stop-color="#173355"/>
+    </linearGradient>
+    <linearGradient id="snowdrift" x2="0" y2="1">
+      <stop stop-color="#eef5fd"/>
+      <stop offset="1" stop-color="#c9dcf0"/>
+    </linearGradient>
+    <linearGradient id="tree" x2="0" y2="1">
+      <stop stop-color="#2f7a52"/>
+      <stop offset="1" stop-color="#1d5238"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop stop-color="#ffd97a" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffd97a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1440" height="960" fill="url(#night)"/>
+
+  <!-- Stars -->
+  <g fill="#ffffff">
+    <circle cx="120" cy="90" r="2.4" opacity="0.95"/>
+    <circle cx="240" cy="150" r="1.6" opacity="0.7"/>
+    <circle cx="330" cy="70" r="2" opacity="0.85"/>
+    <circle cx="430" cy="180" r="1.4" opacity="0.6"/>
+    <circle cx="520" cy="90" r="2.2" opacity="0.9"/>
+    <circle cx="640" cy="150" r="1.5" opacity="0.65"/>
+    <circle cx="760" cy="70" r="2.4" opacity="0.95"/>
+    <circle cx="880" cy="130" r="1.6" opacity="0.7"/>
+    <circle cx="990" cy="80" r="2" opacity="0.85"/>
+    <circle cx="1100" cy="170" r="1.4" opacity="0.6"/>
+    <circle cx="1210" cy="100" r="2.2" opacity="0.9"/>
+    <circle cx="1330" cy="160" r="1.6" opacity="0.7"/>
+    <circle cx="180" cy="260" r="1.4" opacity="0.55"/>
+    <circle cx="420" cy="290" r="1.6" opacity="0.6"/>
+    <circle cx="700" cy="250" r="1.4" opacity="0.5"/>
+    <circle cx="950" cy="280" r="1.5" opacity="0.55"/>
+    <circle cx="1260" cy="270" r="1.4" opacity="0.5"/>
+  </g>
+  <!-- Sparkle stars (4-point) -->
+  <g fill="#fff6d8">
+    <path d="M580 60l4 12 12 4-12 4-4 12-4-12-12-4 12-4Z" opacity="0.9"/>
+    <path d="M1150 50l3 9 9 3-9 3-3 9-3-9-9-3 9-3Z" opacity="0.8"/>
+    <path d="M300 180l3 9 9 3-9 3-3 9-3-9-9-3 9-3Z" opacity="0.75"/>
+  </g>
+
+  <!-- Moon -->
+  <circle cx="1180" cy="190" r="66" fill="#f4f0e2" opacity="0.95"/>
+  <circle cx="1158" cy="172" r="10" fill="#d8d2bc" opacity="0.6"/>
+  <circle cx="1202" cy="210" r="7" fill="#d8d2bc" opacity="0.5"/>
+  <circle cx="1180" cy="190" r="98" fill="#f4f0e2" opacity="0.08"/>
+
+  <!-- Distant snowy hills -->
+  <path d="M0 700q240-120 480-84t480-40 480 64v320H0Z" fill="#28486e" opacity="0.55"/>
+  <path d="M0 760q300-90 560-58t560-30 320 58v230H0Z" fill="url(#snowdrift)" opacity="0.28"/>
+
+  <!-- Village houses (silhouettes with warm windows) -->
+  <g>
+    <g>
+      <rect x="180" y="560" width="210" height="190" fill="#0c1830"/>
+      <path d="M158 566 285 448l127 118Z" fill="#101f3c"/>
+      <path d="M166 560q119-104 238 0l-14 18q-105-88-210 0Z" fill="#e8f1fb" opacity="0.9"/>
+      <rect x="212" y="604" width="46" height="46" fill="#ffd97a"/>
+      <rect x="318" y="604" width="46" height="46" fill="#ffd97a"/>
+      <rect x="258" y="652" width="54" height="98" fill="#071022"/>
+      <circle cx="235" cy="627" r="60" fill="url(#glow)"/>
+      <circle cx="341" cy="627" r="60" fill="url(#glow)"/>
+      <rect x="352" y="470" width="36" height="60" fill="#101f3c"/>
+    </g>
+    <g>
+      <rect x="520" y="600" width="180" height="150" fill="#0c1830"/>
+      <path d="M500 606 610 508l110 98Z" fill="#101f3c"/>
+      <path d="M508 600q102-86 204 0l-12 18q-90-72-180 0Z" fill="#e8f1fb" opacity="0.9"/>
+      <rect x="546" y="638" width="42" height="42" fill="#ffd97a"/>
+      <rect x="636" y="638" width="42" height="42" fill="#ffd97a"/>
+      <circle cx="567" cy="659" r="52" fill="url(#glow)"/>
+      <circle cx="657" cy="659" r="52" fill="url(#glow)"/>
+    </g>
+    <g>
+      <rect x="1120" y="580" width="200" height="170" fill="#0c1830"/>
+      <path d="M1098 586 1220 480l122 106Z" fill="#101f3c"/>
+      <path d="M1106 580q114-92 228 0l-13 18q-101-76-202 0Z" fill="#e8f1fb" opacity="0.9"/>
+      <rect x="1150" y="620" width="44" height="44" fill="#ffd97a"/>
+      <rect x="1250" y="620" width="44" height="44" fill="#ffd97a"/>
+      <rect x="1196" y="664" width="48" height="86" fill="#071022"/>
+      <circle cx="1172" cy="642" r="56" fill="url(#glow)"/>
+      <circle cx="1272" cy="642" r="56" fill="url(#glow)"/>
+    </g>
+  </g>
+
+  <!-- Foreground snow ground -->
+  <path d="M0 960v-180q360-70 720-52t720 52v180H0Z" fill="url(#snowdrift)"/>
+  <path d="M0 960v-80q480-44 1440-20v100H0Z" fill="#ffffff" opacity="0.85"/>
+
+  <!-- Big decorated Christmas tree -->
+  <g transform="translate(760 0)">
+    <ellipse cx="0" cy="836" rx="190" ry="26" fill="#0a1626" opacity="0.25"/>
+    <rect x="-20" y="760" width="40" height="76" fill="#5b3d24"/>
+    <path d="M0 250 118 420h-74l88 150h-96l96 160H-132l96-160h-96l88-150h-74Z" fill="url(#tree)"/>
+    <path d="M0 250 118 420h-40l-78-138Z" fill="#3f8f63" opacity="0.8"/>
+    <path d="M0 420l122 170h-44l-78-110Z" fill="#3f8f63" opacity="0.6"/>
+    <!-- Garland -->
+    <path d="M-96 480q96 44 192 0" stroke="#ffd97a" stroke-width="6" fill="none" opacity="0.9"/>
+    <path d="M-124 580q124 52 248 0" stroke="#e63946" stroke-width="7" fill="none" opacity="0.85"/>
+    <path d="M-152 690q152 60 304 0" stroke="#ffd97a" stroke-width="7" fill="none" opacity="0.9"/>
+    <!-- Lights -->
+    <g>
+      <circle cx="-60" cy="392" r="6" fill="#ff5d68"/>
+      <circle cx="40" cy="370" r="6" fill="#ffd97a"/>
+      <circle cx="-110" cy="500" r="7" fill="#7fb3ff"/>
+      <circle cx="90" cy="480" r="7" fill="#ff5d68"/>
+      <circle cx="0" cy="450" r="6" fill="#ffd97a"/>
+      <circle cx="-140" cy="620" r="7" fill="#ffd97a"/>
+      <circle cx="130" cy="600" r="7" fill="#7fb3ff"/>
+      <circle cx="-20" cy="560" r="7" fill="#ff5d68"/>
+      <circle cx="60" cy="640" r="6" fill="#ffd97a"/>
+      <circle cx="-170" cy="740" r="7" fill="#7fb3ff"/>
+      <circle cx="170" cy="720" r="7" fill="#ff5d68"/>
+      <circle cx="10" cy="700" r="7" fill="#ffd97a"/>
+      <circle cx="-90" cy="700" r="6" fill="#7fb3ff"/>
+      <circle cx="120" cy="750" r="6" fill="#ffd97a"/>
+    </g>
+    <!-- Star topper -->
+    <path d="M0 214l14 34 37 5-27 26 7 37-31-17-31 17 7-37-27-26 37-5Z" fill="#ffe08a"/>
+    <circle cx="0" cy="250" r="46" fill="#ffe08a" opacity="0.2"/>
+    <!-- Gifts under the tree -->
+    <g>
+      <rect x="-120" y="790" width="64" height="48" rx="6" fill="#e63946"/>
+      <rect x="-92" y="790" width="8" height="48" fill="#ffe08a"/>
+      <rect x="-120" y="810" width="64" height="8" fill="#ffe08a"/>
+      <rect x="-34" y="800" width="56" height="38" rx="6" fill="#2e7d54"/>
+      <rect x="-10" y="800" width="8" height="38" fill="#ffe08a"/>
+      <rect x="30" y="782" width="70" height="56" rx="6" fill="#1f5fa8"/>
+      <rect x="60" y="782" width="10" height="56" fill="#ffe08a"/>
+      <rect x="30" y="804" width="70" height="10" fill="#ffe08a"/>
+      <rect x="112" y="804" width="44" height="34" rx="6" fill="#e63946"/>
+      <rect x="130" y="804" width="8" height="34" fill="#ffe08a"/>
+    </g>
+  </g>
+
+  <!-- Santa -->
+  <g transform="translate(1010 640)">
+    <ellipse cx="0" cy="196" rx="74" ry="14" fill="#0a1626" opacity="0.25"/>
+    <!-- Sack -->
+    <path d="M58 96q54-6 52 52l-4 44h-66Z" fill="#7a5230"/>
+    <rect x="96" y="128" width="10" height="64" fill="#5b3d24"/>
+    <!-- Legs / boots -->
+    <rect x="-34" y="150" width="26" height="36" rx="8" fill="#1c1c1e"/>
+    <rect x="10" y="150" width="26" height="36" rx="8" fill="#1c1c1e"/>
+    <rect x="-44" y="176" width="40" height="16" rx="8" fill="#1c1c1e"/>
+    <rect x="6" y="176" width="40" height="16" rx="8" fill="#1c1c1e"/>
+    <!-- Coat -->
+    <path d="M-40 60q40-26 80 0l14 96h-108Z" fill="#c1272d"/>
+    <path d="M-40 60q40-26 80 0l4 22h-88Z" fill="#ffffff" opacity="0.92"/>
+    <rect x="-46" y="138" width="92" height="22" rx="8" fill="#ffffff" opacity="0.92"/>
+    <rect x="-46" y="92" width="92" height="18" fill="#1c1c1e"/>
+    <rect x="-12" y="92" width="24" height="18" fill="#ffd97a"/>
+    <!-- Arms -->
+    <path d="M-40 74q-34 18-26 58l16 6q2-32 24-44Z" fill="#c1272d"/>
+    <circle cx="-52" cy="140" r="12" fill="#ffffff"/>
+    <path d="M40 74q30 14 26 50l-16 8q-2-30-22-42Z" fill="#c1272d"/>
+    <circle cx="50" cy="134" r="12" fill="#ffffff"/>
+    <!-- Face -->
+    <circle cx="0" cy="30" r="26" fill="#f6cfa8"/>
+    <path d="M-22 34q22 34 44 0q4 22-22 30-26-8-22-30Z" fill="#ffffff"/>
+    <circle cx="-9" cy="26" r="3" fill="#1c1c1e"/>
+    <circle cx="9" cy="26" r="3" fill="#1c1c1e"/>
+    <circle cx="-16" cy="36" r="4" fill="#f2a28c" opacity="0.8"/>
+    <circle cx="16" cy="36" r="4" fill="#f2a28c" opacity="0.8"/>
+    <!-- Hat -->
+    <path d="M-28 14q28-40 56 0l-8-40q-20-14-40 0Z" fill="#c1272d"/>
+    <path d="M-34 12h68q6 14-4 16h-60q-10-2-4-16Z" fill="#ffffff"/>
+    <circle cx="24" cy="-30" r="12" fill="#ffffff"/>
+    <path d="M8-8q10-26 16-22" stroke="#c1272d" stroke-width="14" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Reindeer -->
+  <g transform="translate(300 660)">
+    <ellipse cx="0" cy="180" rx="90" ry="14" fill="#0a1626" opacity="0.25"/>
+    <!-- Legs -->
+    <rect x="-52" y="96" width="14" height="82" rx="7" fill="#7a4a26"/>
+    <rect x="-20" y="104" width="14" height="74" rx="7" fill="#8a5530"/>
+    <rect x="24" y="104" width="14" height="74" rx="7" fill="#8a5530"/>
+    <rect x="56" y="96" width="14" height="82" rx="7" fill="#7a4a26"/>
+    <!-- Body -->
+    <ellipse cx="6" cy="66" rx="78" ry="44" fill="#8a5530"/>
+    <ellipse cx="6" cy="84" rx="52" ry="26" fill="#e8d5b5" opacity="0.9"/>
+    <!-- Tail -->
+    <circle cx="-74" cy="52" r="12" fill="#e8d5b5"/>
+    <!-- Neck + head -->
+    <path d="M62 44q18-44 34-52l18 14q-14 10-24 48Z" fill="#8a5530"/>
+    <g transform="translate(96 -20) rotate(18)">
+      <ellipse cx="0" cy="0" rx="34" ry="20" fill="#8a5530"/>
+      <ellipse cx="26" cy="4" rx="18" ry="13" fill="#7a4a26"/>
+      <circle cx="38" cy="4" r="6" fill="#1c1c1e"/>
+      <circle cx="4" cy="-6" r="4" fill="#1c1c1e"/>
+      <!-- Antlers -->
+      <g stroke="#5b3d24" stroke-width="7" stroke-linecap="round" fill="none">
+        <path d="M-8-16q-6-26-26-34M-16-32q-2-12-14-16M-18-32q10-8 12-20"/>
+        <path d="M8-18q2-28 20-38M14-40q0-12 10-18M16-42q10 2 16 8"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Falling snow -->
+  <g fill="#ffffff">
+    <circle cx="90" cy="380" r="4" opacity="0.9"/>
+    <circle cx="210" cy="480" r="3" opacity="0.75"/>
+    <circle cx="360" cy="360" r="4.5" opacity="0.9"/>
+    <circle cx="480" cy="520" r="3" opacity="0.7"/>
+    <circle cx="600" cy="420" r="4" opacity="0.85"/>
+    <circle cx="700" cy="560" r="3" opacity="0.7"/>
+    <circle cx="830" cy="400" r="4.5" opacity="0.9"/>
+    <circle cx="950" cy="520" r="3" opacity="0.75"/>
+    <circle cx="1060" cy="380" r="4" opacity="0.85"/>
+    <circle cx="1180" cy="500" r="3" opacity="0.7"/>
+    <circle cx="1300" cy="400" r="4.5" opacity="0.9"/>
+    <circle cx="1400" cy="540" r="3" opacity="0.7"/>
+    <circle cx="150" cy="640" r="3.5" opacity="0.8"/>
+    <circle cx="430" cy="680" r="3" opacity="0.65"/>
+    <circle cx="720" cy="660" r="3.5" opacity="0.8"/>
+    <circle cx="980" cy="700" r="3" opacity="0.65"/>
+    <circle cx="1240" cy="660" r="3.5" opacity="0.8"/>
+    <circle cx="60" cy="780" r="3" opacity="0.6"/>
+    <circle cx="560" cy="800" r="3" opacity="0.6"/>
+    <circle cx="1360" cy="780" r="3" opacity="0.6"/>
+  </g>
+</svg>
