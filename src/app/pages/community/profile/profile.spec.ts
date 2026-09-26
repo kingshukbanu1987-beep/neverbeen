@@ -424,7 +424,7 @@ describe('CommunityProfile', () => {
     expect(element.querySelector('.locked-profile-shield-box')).toBeNull();
   });
 
-  it('renders Circles side panel below main side panel and limits circles to maximum 5', () => {
+  it('renders Circles side panel and seeds 47 travel circles under the 500 admin cap', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
 
@@ -432,20 +432,14 @@ describe('CommunityProfile', () => {
     expect(circlesSidePanel).toBeTruthy();
     expect(circlesSidePanel!.querySelector('.circles-subhead')?.textContent?.trim()).toBe('My Circles');
 
-    // Seed circles should be present
-    expect(service.circles().length).toBeGreaterThan(0);
-    expect(service.circles().length).toBeLessThanOrEqual(5);
+    expect(service.myCircles().length).toBe(47);
+    expect(service.adminCircleCount()).toBe(19);
+    expect(service.memberOnlyCircleCount()).toBe(28);
+    expect(service.adminCircleCount()).toBeLessThanOrEqual(500);
 
-    // Try adding more than 5 circles
-    while (service.circles().length < 5) {
-      service.createCircle(`Circle ${service.circles().length + 1}`, 'Description', [2, 3]);
-    }
-    expect(service.circles().length).toBe(5);
-
-    // Attempt 6th circle should fail / be rejected
-    const sixthCircle = service.createCircle('6th Circle', 'Overflow', []);
-    expect(sixthCircle).toBeNull();
-    expect(service.circles().length).toBe(5);
+    const created = service.createCircle('One more trail', 'Still under the cap', []);
+    expect(created).not.toBeNull();
+    expect(service.adminCircleCount()).toBe(20);
   });
 
   it('manages companionship requests in Notifications with Approve and Reject actions', () => {
@@ -533,7 +527,7 @@ describe('CommunityProfile', () => {
     // Circles
     component.setSection('circles');
     fixture.detectChanges();
-    expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('Travel Circles');
+    expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('My Circle');
 
     // Messenger
     component.setSection('messenger');

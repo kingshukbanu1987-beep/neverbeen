@@ -517,9 +517,13 @@ export class CommunityThemeService {
     const id = this.community.currentUser()?.id;
     return id === undefined || id === null ? 'guest' : String(id);
   });
-  readonly themeId = computed<CommunityThemeId>(
-    () => communityTheme(this.choices()[this.userKey()]).id,
-  );
+  readonly themeId = computed<CommunityThemeId>(() => {
+    const saved = this.choices()[this.userKey()];
+    if (saved) return communityTheme(saved).id;
+    // After login, Business Pro is the member's theme until they pick another.
+    if (this.userKey() !== 'guest') return 'business-pro';
+    return 'default';
+  });
   readonly theme = computed(() => communityTheme(this.themeId()));
 
   constructor() {
@@ -537,7 +541,10 @@ export class CommunityThemeService {
     const key = this.userKey();
     this.choices.update((c) => {
       const next = { ...c };
-      if (id === 'default') delete next[key];
+      // Guests have no stored choice when they pick Default. A signed-in member
+      // who explicitly picks Default must keep that choice — otherwise the
+      // post-login Business Pro default would snap back immediately.
+      if (id === 'default' && key === 'guest') delete next[key];
       else next[key] = id;
       return next;
     });

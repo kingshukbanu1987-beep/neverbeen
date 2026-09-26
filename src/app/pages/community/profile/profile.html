@@ -109,7 +109,7 @@
           <div class="results-group">
             <span class="group-header">Circles</span>
             @for (c of searchResults().circles; track c.id) {
-              <div class="search-result-item" (click)="setSection('circles'); showSearchDropdown.set(false)">
+              <div class="search-result-item" (click)="openCircleChat(c); showSearchDropdown.set(false)">
                 <span class="circle-icon-badge" [style.background]="c.color">{{ c.icon }}</span>
                 <div class="res-info">
                   <strong>{{ c.name }}</strong>
@@ -389,7 +389,7 @@
               </svg>
             </span>
             <span class="menu-label">{{ profileLabel('circles') }}</span>
-            <span class="menu-badge">{{ service.circles().length }}/5</span>
+            <span class="menu-badge">{{ service.myCircles().length }}</span>
           </button>
           }
 
@@ -535,23 +535,27 @@
             type="button"
             class="btn-create-circle-mini"
             (click)="openCreateCircleModal()"
-            title="Create Circle (Max 5)"
+            title="Create Circle (max 500 as admin)"
           >
             + New
           </button>
         </div>
 
         <div class="circles-shortcut-list">
-          @for (circle of service.circles(); track circle.id) {
-            <div class="circle-shortcut-item" (click)="setSection('circles')">
-              <span class="circle-icon-badge" [style.background]="circle.color">{{ circle.icon }}</span>
+          @for (circle of service.myCircles().slice(0, 8); track circle.id) {
+            <div class="circle-shortcut-item" (click)="openCircleChat(circle, $event)">
+              @if (circle.photoUrl) {
+                <img class="circle-icon-badge circle-photo-badge" [src]="circle.photoUrl" [alt]="circle.name" />
+              } @else {
+                <span class="circle-icon-badge" [style.background]="circle.color">{{ circle.icon }}</span>
+              }
               <div class="circle-info-mini">
                 <span class="circle-name-mini">{{ circle.name }}</span>
-                <span class="circle-meta-mini">{{ circle.memberIds.length }} members</span>
+                <span class="circle-meta-mini">{{ isCircleAdmin(circle) ? 'Admin' : 'Member' }} · {{ circle.memberIds.length }}</span>
               </div>
             </div>
           } @empty {
-            <div class="empty-circles-hint">No circles created yet. Connect companions into private travel circles!</div>
+            <div class="empty-circles-hint">You are not in any circles yet.</div>
           }
         </div>
       </section>
@@ -753,13 +757,16 @@
                 <article class="journey-post-card">
                   <!-- Post Author Header -->
                   <div class="post-header">
-                    <img
-                      [src]="post.author.profilePhotoUrl || defaultAvatar"
-                      [alt]="post.author.fullName"
-                      class="author-avatar clickable-user"
-                      [nbUserPreview]="post.author"
-                      (click)="openVisitorProfile(post.author)"
-                    />
+                    <span class="avatar-presence">
+                      <img
+                        [src]="post.author.profilePhotoUrl || defaultAvatar"
+                        [alt]="post.author.fullName"
+                        class="author-avatar clickable-user"
+                        [nbUserPreview]="post.author"
+                        (click)="openVisitorProfile(post.author)"
+                      />
+                      <app-presence-dot [user]="post.author" />
+                    </span>
                     <div class="author-details">
                       <div class="author-name-line">
                         <strong class="author-name clickable-user" [nbUserPreview]="post.author" (click)="openVisitorProfile(post.author)">
@@ -770,13 +777,7 @@
                             <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
                           </span>
                         }
-                        <!-- REQUIREMENT C: post displays as user is with those tagged people -->
-                        @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
-                          <span class="tagged-with-text"> is with </span>
-                          @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                            <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
-                          }
-                        }
+                        <app-tagged-with [people]="post.taggedCompanions || []" (openPerson)="openVisitorProfile($event)" />
                         @if (post.isShared && post.originalPost) {
                           <span class="shared-indicator-text">
                             shared
@@ -789,6 +790,7 @@
                       </div>
                       <div class="post-sub-meta">
                         <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                        <span class="post-presence-label" [title]="presenceLabel(post.author.id)">{{ presenceLabel(post.author.id) }}</span>
                         @if (post.location) {
                           <span class="post-loc" title="Google Maps Verified Location">
                             <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
@@ -805,7 +807,7 @@
                       <button
                         type="button"
                         class="btn-delete-post-mini"
-                        (click)="deleteJourneyPost(post.id)"
+                        (click)="deleteJourneyPost(post.id, $event)"
                         title="Delete Post"
                       >
                         🗑️ Delete
@@ -1148,6 +1150,7 @@
                 <!-- 1. Intro -->
                 <div class="edit-subcard">
                   <h3 class="edit-subhead">1. Intro & Travel Story</h3>
+                  <app-field-audience field="intro" [audience]="audienceOf('intro')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('intro', $event)" />
                   <div class="form-group">
                     <label>Detailed Introduction & Travel Story</label>
                     <textarea
@@ -1162,9 +1165,11 @@
                 <!-- 2. Personal Details -->
                 <div class="edit-subcard">
                   <h3 class="edit-subhead">2. Personal Details</h3>
+                  <p class="audience-section-note">Each detail has its own audience. Public, companions, private, or a custom allow / deny list.</p>
                   <div class="form-grid-3">
                     <div class="form-group">
                       <label>Gender</label>
+                      <app-field-audience field="gender" [audience]="audienceOf('gender')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('gender', $event)" />
                       <select [(ngModel)]="aboutGender" class="form-control">
                         <option value="Female">Female</option>
                         <option value="Male">Male</option>
@@ -1174,6 +1179,7 @@
                     </div>
                     <div class="form-group">
                       <label>Date of Birth</label>
+                      <app-field-audience field="dateOfBirth" [audience]="audienceOf('dateOfBirth')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('dateOfBirth', $event)" />
                       <input
                         type="date"
                         [(ngModel)]="aboutDob"
@@ -1182,6 +1188,7 @@
                     </div>
                     <div class="form-group">
                       <label>Relationship Status</label>
+                      <app-field-audience field="relationshipStatus" [audience]="audienceOf('relationshipStatus')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('relationshipStatus', $event)" />
                       <select [(ngModel)]="aboutRelationshipStatus" class="form-control">
                         <option value="Single">Single</option>
                         <option value="In a relationship">In a relationship</option>
@@ -1196,6 +1203,7 @@
                   <div class="form-grid-2">
                     <div class="form-group">
                       <label>Current Location</label>
+                      <app-field-audience field="location" [audience]="audienceOf('location')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('location', $event)" />
                       <input
                         type="text"
                         [(ngModel)]="aboutLocation"
@@ -1205,6 +1213,7 @@
                     </div>
                     <div class="form-group">
                       <label>Hometown</label>
+                      <app-field-audience field="hometown" [audience]="audienceOf('hometown')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('hometown', $event)" />
                       <input
                         type="text"
                         [(ngModel)]="aboutHometown"
@@ -1216,6 +1225,7 @@
 
                   <div class="form-group">
                     <label>Languages Known</label>
+                    <app-field-audience field="languagesKnown" [audience]="audienceOf('languagesKnown')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('languagesKnown', $event)" />
                     <div class="tags-adder-row">
                       <input
                         type="text"
@@ -1241,6 +1251,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">3. Work (Detailed Work Experience)</h3>
+                    <app-field-audience field="workExperience" [audience]="audienceOf('workExperience')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('workExperience', $event)" />
                     <button type="button" class="btn-secondary-action btn-sm" (click)="addWorkExperience()">+ Add Experience</button>
                   </div>
                   @for (work of aboutWorkExperiences(); track $index; let idx = $index) {
@@ -1298,6 +1309,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">4. Education</h3>
+                    <app-field-audience field="education" [audience]="audienceOf('education')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('education', $event)" />
                     <button type="button" class="btn-secondary-action btn-sm" (click)="addEducation()">+ Add Education</button>
                   </div>
                   @for (edu of aboutEducation(); track $index; let idx = $index) {
@@ -1350,6 +1362,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">5. Hobbies ({{ aboutHobbies().length }}/10)</h3>
+                    <app-field-audience field="hobbies" [audience]="audienceOf('hobbies')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('hobbies', $event)" />
                     <span class="max-badge">Max 10 Hobbies</span>
                   </div>
                   @if (hobbyNotice()) {
@@ -1389,6 +1402,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">6. Interests ({{ aboutInterests().length }}/10)</h3>
+                    <app-field-audience field="interests" [audience]="audienceOf('interests')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('interests', $event)" />
                     <span class="max-badge">Max 10 Interests</span>
                   </div>
                   @if (interestNotice()) {
@@ -1428,6 +1442,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">7. Contact Info</h3>
+                    <app-field-audience field="contactEmail" [audience]="audienceOf('contactEmail')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('contactEmail', $event)" />
                     <button
                       type="button"
                       class="btn-secondary-action btn-sm"
@@ -1484,6 +1499,7 @@
                 <!-- 8. About the Person -->
                 <div class="edit-subcard">
                   <h3 class="edit-subhead">8. About the Person</h3>
+                  <app-field-audience field="aboutThePerson" [audience]="audienceOf('aboutThePerson')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('aboutThePerson', $event)" />
                   <div class="form-group">
                     <label>In-depth Personal Story &amp; Philosophy</label>
                     <textarea
@@ -1787,7 +1803,7 @@
                   <img [src]="photo.url" [alt]="photo.caption || 'Travel photo'" class="gallery-img" />
                   <div class="gallery-caption-overlay">
                     <span [nbTranslatable]="photo.caption || ''">{{ photo.caption }}</span>
-                    <button type="button" class="btn-delete-photo" (click)="$event.stopPropagation(); deletePhoto(photo.id)" title="Delete photo">✕</button>
+                    <button type="button" class="btn-delete-photo" (click)="deletePhoto(photo.id, $event)" title="Delete photo">✕</button>
                   </div>
                 </div>
               } @empty {
@@ -1881,27 +1897,25 @@
               @for (comment of service.comments(); track comment.id) {
                 <article class="post-card messagebook-card">
                   <div class="post-header">
-                    <img
-                      [src]="comment.author.profilePhotoUrl || defaultAvatar"
-                      [alt]="comment.author.fullName || 'User'"
-                      class="author-avatar clickable-user"
-                      [nbUserPreview]="comment.author"
-                      (click)="openVisitorProfile(comment.author)"
-                    />
+                    <span class="avatar-presence">
+                      <img
+                        [src]="comment.author.profilePhotoUrl || defaultAvatar"
+                        [alt]="comment.author.fullName || 'User'"
+                        class="author-avatar clickable-user"
+                        [nbUserPreview]="comment.author"
+                        (click)="openVisitorProfile(comment.author)"
+                      />
+                      <app-presence-dot [user]="comment.author" />
+                    </span>
                     <div class="author-details">
                       <div class="author-name-line">
                         <strong class="author-name clickable-user" [nbUserPreview]="comment.author" (click)="openVisitorProfile(comment.author)">
                           {{ comment.author.fullName }}
                         </strong>
-                        <!-- REQUIREMENT C: post displays as user is with those tagged people -->
-                        @if (comment.taggedCompanions && comment.taggedCompanions.length > 0) {
-                          <span class="tagged-with-text"> is with </span>
-                          @for (tagged of comment.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                            <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === comment.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
-                          }
-                        }
+                        <app-tagged-with [people]="comment.taggedCompanions || []" (openPerson)="openVisitorProfile($event)" />
                       </div>
                       <span class="post-time">{{ formatTime(comment.createdAtUtc) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(comment.author.id) }}</span>
                     </div>
                   </div>
                   <p class="post-body-text" [nbTranslatable]="comment.text">{{ comment.text }}</p>
@@ -1998,7 +2012,7 @@
                       <button
                         type="button"
                         class="post-action-btn btn-delete"
-                        (click)="deleteComment(comment.id)"
+                        (click)="deleteComment(comment.id, $event)"
                       >
                         🗑️ Delete
                       </button>
@@ -2056,7 +2070,7 @@
                                 <button
                                   type="button"
                                   class="btn-delete-reply-mini"
-                                  (click)="deleteComment(reply.id)"
+                                  (click)="deleteComment(reply.id, $event)"
                                   title="Delete reply"
                                 >
                                   ✕
@@ -2182,7 +2196,7 @@
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
                             <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
-                              <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                              <app-presence-dot [user]="c" />
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
@@ -2193,6 +2207,7 @@
                                   </span>
                                 }
                               </h4>
+                              <div class="companion-relationship">{{ relationshipLabel(c) }}</div>
                               <div class="companion-70-field companion-card-field">
                                 <span class="companion-70-field-label">Profession:</span>
                                 <span class="companion-70-field-val">{{ c.profession }}</span>
@@ -2226,6 +2241,13 @@
                               (click)="rejectCompanionRequest(c.id)"
                             >
                               ✕ Delete Request
+                            </button>
+                            <button
+                              type="button"
+                              class="btn-danger-outline btn-sm btn-block-user"
+                              (click)="blockUser(c.id)"
+                            >
+                              🚫 Block
                             </button>
                           </footer>
                         </div>
@@ -2271,7 +2293,7 @@
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
                             <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
-                              <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                              <app-presence-dot [user]="c" />
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
@@ -2285,6 +2307,7 @@
                                   <span class="mini-lock-pill" title="Profile locked">🔒</span>
                                 }
                               </h4>
+                              <div class="companion-relationship">{{ relationshipLabel(c) }}</div>
                               <div class="companion-70-field companion-card-field">
                                 <span class="companion-70-field-label">Profession:</span>
                                 <span class="companion-70-field-val">{{ c.profession }}</span>
@@ -2368,7 +2391,7 @@
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
                             <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
-                              <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                              <app-presence-dot [user]="c" />
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
@@ -2382,6 +2405,7 @@
                                   <span class="mini-lock-pill" title="Profile locked">🔒</span>
                                 }
                               </h4>
+                              <div class="companion-relationship">{{ relationshipLabel(c) }}</div>
                               <div class="companion-70-field companion-card-field">
                                 <span class="companion-70-field-label">Profession:</span>
                                 <span class="companion-70-field-val">{{ c.profession }}</span>
@@ -2421,6 +2445,13 @@
                               >
                                 + Add Companion
                               </button>
+                              <button
+                                type="button"
+                                class="btn-danger-outline btn-sm btn-block-user"
+                                (click)="blockUser(c.id)"
+                              >
+                                🚫 Block
+                              </button>
                             }
                           </footer>
                         </div>
@@ -2442,44 +2473,48 @@
           <section class="section-pane circles-pane">
             <header class="section-top-bar">
               <div>
-                <h1 class="section-title">Travel Circles</h1>
-                <p class="section-desc">Organize companions into up to 5 custom trip circles (e.g. Alps Expeditions, Foodies, Coastline Photographers).</p>
+                <h1 class="section-title">My Circle</h1>
+                <p class="section-desc">Only circles you belong to. You can create or admin up to 500 circles, and belong to 1,000 more as a member.</p>
               </div>
-              <button
-                type="button"
-                class="btn-primary-action"
-                (click)="openCreateCircleModal()"
-                [disabled]="service.circles().length >= 5"
-              >
-                + Create Circle ({{ service.circles().length }}/5)
+              <button type="button" class="btn-primary-action" (click)="openCreateCircleModal()">
+                + Create Circle ({{ service.adminCircleCount() }}/500)
               </button>
             </header>
 
+            <div class="circle-toolbar">
+              <input class="circle-search" type="search" placeholder="Search your circles" [value]="circleQuery()" (input)="circleQuery.set($any($event.target).value)" />
+              <div class="circle-role-pills">
+                <button type="button" [class.active]="circleRoleFilter() === 'all'" (click)="circleRoleFilter.set('all')">All {{ service.myCircles().length }}</button>
+                <button type="button" [class.active]="circleRoleFilter() === 'admin'" (click)="circleRoleFilter.set('admin')">Admin {{ service.adminCircleCount() }}</button>
+                <button type="button" [class.active]="circleRoleFilter() === 'member'" (click)="circleRoleFilter.set('member')">Member {{ service.memberOnlyCircleCount() }}</button>
+              </div>
+            </div>
+
             <div class="circles-grid">
-              @for (circle of service.circles(); track circle.id) {
-                <div class="circle-card">
+              @for (circle of filteredCircles(); track circle.id) {
+                <button type="button" class="circle-card circle-card-button" (click)="openCircleChat(circle, $event)">
                   <div class="circle-top-line">
-                    <span class="circle-large-icon" [style.background]="circle.color">{{ circle.icon }}</span>
-                    <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id)" title="Delete Circle">✕</button>
+                    @if (circle.photoUrl) {
+                      <img class="circle-large-icon circle-photo" [src]="circle.photoUrl" [alt]="circle.name" />
+                    } @else {
+                      <span class="circle-large-icon" [style.background]="circle.color">{{ circle.icon }}</span>
+                    }
+                    <span class="circle-role-pill">{{ isCircleAdmin(circle) ? 'Admin' : 'Member' }}</span>
                   </div>
                   <h3 class="circle-title">{{ circle.name }}</h3>
                   <p class="circle-desc" [nbTranslatable]="circle.description">{{ circle.description }}</p>
-
                   <div class="circle-members-row">
-                    <span class="members-lbl">Members ({{ circle.memberIds.length }}):</span>
-                    <div class="member-avatars-cluster">
-                      @for (member of getCircleMembers(circle.memberIds); track member.id) {
-                        <img
-                          [src]="member.profilePhotoUrl"
-                          [alt]="member.fullName"
-                          class="member-cluster-avatar clickable-user"
-                          [nbUserPreview]="member"
-                          (click)="openVisitorProfile(member)"
-                        />
-                      }
-                    </div>
+                    <span class="members-lbl">{{ circle.memberIds.length }} travelers</span>
                   </div>
-                </div>
+                  @if (isCircleAdmin(circle)) {
+                    <div class="circle-admin-actions" (click)="$event.stopPropagation()">
+                      <button type="button" class="btn-action-subtle" (click)="openEditCircle(circle, $event)">Edit</button>
+                      <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id, $event)">Delete</button>
+                    </div>
+                  }
+                </button>
+              } @empty {
+                <div class="companion-empty-box">No circles match this view.</div>
               }
             </div>
           </section>
@@ -2504,11 +2539,11 @@
                     <div class="companion-chat-item" (click)="openChatWith(c)">
                       <div class="chat-avatar-wrap">
                         <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
-                        <span class="online-indicator"></span>
+                        <app-presence-dot [user]="c" />
                       </div>
                       <div class="chat-item-info">
                         <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
-                        <span>{{ c.city }}, {{ c.country }}</span>
+                        <span>{{ presenceLabel(c.id) }} · {{ c.city }}, {{ c.country }}</span>
                       </div>
                       <button type="button" class="btn-launch-chat">Chat</button>
                     </div>
@@ -2785,6 +2820,99 @@
                     <option value="none">Nobody</option>
                   </select>
                 </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who can connect</label>
+                    <p class="toggle-desc">Who is allowed to send you a companionship request.</p>
+                  </div>
+                  <select formControlName="whoCanConnect" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions-of-companions">Companions of companions</option>
+                    <option value="none">Nobody</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who can visit your profile</label>
+                    <p class="toggle-desc">A closed profile shows a private notice instead of your story, gallery, and journey.</p>
+                  </div>
+                  <select formControlName="whoCanVisitProfile" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions">Companions only</option>
+                    <option value="none">Nobody</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who sees your active status</label>
+                    <p class="toggle-desc">Active, Away, Inactive, and custom status shown beside your name.</p>
+                  </div>
+                  <select formControlName="showActiveStatusTo" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions">Companions only</option>
+                    <option value="only-me">Only me</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who can see your companions</label>
+                    <p class="toggle-desc">Hide the companion list from visitors who should not browse it.</p>
+                  </div>
+                  <select formControlName="whoCanSeeCompanionsList" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions">Companions only</option>
+                    <option value="only-me">Only me</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Allow companion tagging</label>
+                    <p class="toggle-desc">Companions can tag you on journey posts.</p>
+                  </div>
+                  <input type="checkbox" formControlName="allowCompanionTagging" class="toggle-checkbox" />
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Approve tags before they appear</label>
+                    <p class="toggle-desc">Tagged posts stay hidden from your profile until you approve them.</p>
+                  </div>
+                  <input type="checkbox" formControlName="approveTagsBeforePost" class="toggle-checkbox" />
+                </div>
+              </div>
+
+              <div class="settings-card devices-card">
+                <h3 class="card-title">Devices used</h3>
+                <p class="card-desc">Every signed-in session, plus the last 10 devices that used this profile. Log a session out, or block a device so it cannot reopen your profile. Browsers cannot read a hardware MAC address, so each device keeps a stable NeverBeen device address.</p>
+                <div class="device-list">
+                  @for (device of service.visibleDevices(); track device.id) {
+                    <article class="device-row" [class.blocked]="device.blocked" [class.current]="device.isCurrent">
+                      <div class="device-mark">{{ device.type === 'Phone' ? '📱' : device.type === 'Tablet' ? '📲' : device.type === 'Laptop' ? '💻' : '🖥️' }}</div>
+                      <div class="device-copy">
+                        <strong>{{ device.name }}</strong>
+                        <span>{{ device.type }} · {{ device.os }} · {{ device.browser }}</span>
+                        <span class="device-net">IP {{ device.ipAddress }} · MAC {{ device.macAddress }}</span>
+                        <span>{{ device.location }} · {{ device.isCurrent ? 'This device' : (device.isActive ? 'Signed in' : 'Last seen ' + formatTime(device.lastSeenUtc)) }}</span>
+                      </div>
+                      <div class="device-actions">
+                        @if (device.blocked) {
+                          <span class="device-pill blocked">Blocked</span>
+                          <button type="button" class="btn-action-subtle" (click)="unblockDevice(device.id)">Unblock</button>
+                        } @else {
+                          @if (device.isActive) {
+                            <button type="button" class="btn-action-subtle" (click)="logoutDevice(device.id)">Log out</button>
+                          }
+                          <button type="button" class="btn-danger-outline btn-sm" (click)="blockDevice(device.id)">Block device</button>
+                        }
+                      </div>
+                    </article>
+                  }
+                </div>
               </div>
 
               <!-- Travel Preferences -->
@@ -2880,14 +3008,35 @@
                 [alt]="box.companion.fullName"
                 class="chat-header-avatar"
               />
-              <span class="chat-header-status-dot" [class.online]="box.companion.isOnline"></span>
+              <app-presence-dot [user]="box.companion" />
             </div>
             <div class="chat-header-info">
               <span class="chat-user-name">{{ box.companion.fullName }}</span>
-              <span class="chat-user-subhead">{{ box.companion.isOnline ? 'Online' : 'Offline' }}</span>
+              <span class="chat-user-subhead">{{ box.isGroup ? (box.participantIds?.length || 0) + ' travelers' : presenceLabel(box.companion.id) }}</span>
             </div>
           </div>
           <div class="chat-controls">
+            <button
+              type="button"
+              class="chat-ctrl-btn"
+              title="Add people"
+              (click)="$event.stopPropagation(); openAddPeople(box.companionId, $event)"
+            >＋</button>
+            @if (!box.circleId) {
+              <button
+                type="button"
+                class="chat-ctrl-btn"
+                title="Save as Circle"
+                (click)="$event.stopPropagation(); openSaveCircle(box.companionId, $event)"
+              >◎</button>
+            } @else if (isChatCircleAdmin(box)) {
+              <button
+                type="button"
+                class="chat-ctrl-btn"
+                title="Manage Circle"
+                (click)="$event.stopPropagation(); openManageCircle(box.circleId!, $event)"
+              >⚙</button>
+            }
             <button
               type="button"
               class="chat-ctrl-btn"
@@ -3266,6 +3415,14 @@
           </div>
 
           <div class="form-group">
+            <label>Circle photo</label>
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" />
+            @if (circlePhotoPreview()) {
+              <img class="circle-photo-preview" [src]="circlePhotoPreview()" alt="Circle photo preview" />
+            }
+          </div>
+
+          <div class="form-group">
             <label>Add Companions to Circle</label>
             <div class="modal-companions-selection">
               @for (c of service.companions(); track c.id) {
@@ -3291,6 +3448,125 @@
         <footer class="modal-footer-bar">
           <button type="button" class="btn-secondary-action" (click)="closeCreateCircleModal()">Cancel</button>
           <button type="button" class="btn-primary-action" (click)="submitCreateCircle()">Create Circle</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (showEditCircleModal()) {
+    <div class="modal-backdrop-overlay" (click)="showEditCircleModal.set(false)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Edit Circle</h3></header>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Name</label>
+            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="newCircleDesc"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Photo</label>
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'edit')" />
+            @if (editCirclePhoto) {
+              <img class="circle-photo-preview" [src]="editCirclePhoto" alt="Updated circle photo" />
+            }
+          </div>
+          @if (circleError()) { <p class="status-error-msg">{{ circleError() }}</p> }
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="showEditCircleModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="saveEditCircle()">Save</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (showAddPeopleModal()) {
+    <div class="modal-backdrop-overlay" (click)="showAddPeopleModal.set(false)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Add people</h3></header>
+        <div class="modal-body">
+          <p class="card-desc">Adding people turns this chat into a group. Only companions can be added.</p>
+          <div class="modal-companions-selection">
+            @for (c of peopleAvailableForOpenChat(); track c.id) {
+              <label class="companion-checkbox-row">
+                <input type="checkbox" [checked]="selectedAddPeopleIds().includes(c.id)" (change)="toggleAddPerson(c.id)" />
+                <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="mini-check-avatar" />
+                <span>{{ c.fullName }}</span>
+              </label>
+            } @empty {
+              <p>No more companions to add.</p>
+            }
+          </div>
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="showAddPeopleModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="confirmAddPeople()">Add</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (showSaveCircleModal()) {
+    <div class="modal-backdrop-overlay" (click)="showSaveCircleModal.set(false)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Save chat as a Circle</h3></header>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Circle name</label>
+            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="newCircleDesc"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Photo</label>
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" />
+          </div>
+          @if (circleError()) { <p class="status-error-msg">{{ circleError() }}</p> }
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="showSaveCircleModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="confirmSaveCircle()">Save Circle</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (showManageCircleModal() && managingCircle(); as circle) {
+    <div class="modal-backdrop-overlay" (click)="showManageCircleModal.set(false)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Manage {{ circle.name }}</h3></header>
+        <div class="modal-body">
+          <p class="card-desc">You are the owner. Promote a companion to admin, or add more travelers.</p>
+          @for (member of getCircleMembers(circle.memberIds); track member.id) {
+            <div class="manage-member-row">
+              <span>{{ member.fullName }}</span>
+              @if (circle.adminIds?.includes(member.id)) {
+                <span class="circle-role-pill">Admin</span>
+              } @else {
+                <button type="button" class="btn-action-subtle" (click)="promoteInCircle(member.id)">Make admin</button>
+              }
+            </div>
+          }
+          <div class="modal-companions-selection">
+            @for (c of connectedCompanions(); track c.id) {
+              @if (!circle.memberIds.includes(c.id)) {
+                <label class="companion-checkbox-row">
+                  <input type="checkbox" [checked]="selectedAddPeopleIds().includes(c.id)" (change)="toggleAddPerson(c.id)" />
+                  <span>{{ c.fullName }}</span>
+                </label>
+              }
+            }
+          </div>
+          @if (circleError()) { <p class="status-error-msg">{{ circleError() }}</p> }
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="showManageCircleModal.set(false)">Close</button>
+          <button type="button" class="btn-primary-action" (click)="addManagedMembers()">Add selected</button>
         </footer>
       </div>
     </div>
@@ -3497,6 +3773,7 @@
             <p class="visitor-hero-subhead">
               <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
               {{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }} • {{ viewingVisitor()!.profession }}
+              <span class="companion-relationship visitor-relationship">{{ relationshipLabel(viewingVisitor()) }}</span>
             </p>
 
             <div class="visitor-hero-badges">
@@ -3566,6 +3843,14 @@
               </button>
             }
 
+            <button
+              type="button"
+              class="btn-danger-outline btn-sm btn-block-user"
+              (click)="blockUser(viewingVisitor()!.id)"
+              title="Block this user"
+            >
+              🚫 Block
+            </button>
             <button
               type="button"
               class="btn-action-report"
@@ -3705,6 +3990,17 @@
           </aside>
 
           <!-- MAIN WIDE CONTENT: About Me, Gallery, Journey -->
+          @if (visitGate(); as gate) {
+            <div class="visit-gate-card">
+              <span class="visit-gate-icon">🔒</span>
+              <h3>{{ gate === 'closed' ? 'This profile is private' : 'Companions only' }}</h3>
+              <p>
+                {{ gate === 'closed'
+                  ? (viewingVisitor()!.fullName + ' is not accepting profile visits right now.')
+                  : ('Only companions can visit ' + viewingVisitor()!.fullName + '. Send a request if you travel in the same circles.') }}
+              </p>
+            </div>
+          } @else {
           <div class="visitor-main-content">
             <!-- 1. ABOUT ME (Compact, nicely arranged modern style) -->
             <section class="visitor-flow-section visitor-flow-about">
@@ -3712,6 +4008,7 @@
             
             <div class="visitor-about-subsections">
               <!-- 1. Intro -->
+              @if (visitorCanSee('intro')) {
               <div class="visitor-sub-block full-width visitor-intro-card">
                 <div class="visitor-intro-header-row">
                   <h4 class="visitor-sub-title">✨ Intro & Travel Story</h4>
@@ -3721,6 +4018,7 @@
                   {{ getVisitorIntro(viewingVisitor()!) }}
                 </div>
               </div>
+              }
 
               <!-- 2. Personal Details (Ultra-Modern Layout - Requirement B) -->
               <div class="visitor-sub-block full-width modern-personal-details-section">
@@ -3733,75 +4031,69 @@
                 </div>
 
                 <div class="visitor-meta-grid modern-details-grid">
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box purple-tint">
-                      <span class="tile-glyph">⚧</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Gender</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box amber-tint">
-                      <span class="tile-glyph">🎂</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Date of Birth</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.dateOfBirth || '1995-04-12' }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box emerald-tint">
-                      <span class="tile-glyph">📍</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Current Location</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.location || (viewingVisitor()!.city + ', ' + viewingVisitor()!.country) }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box blue-tint">
-                      <span class="tile-glyph">🏡</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Hometown</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.hometown || viewingVisitor()!.city }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box rose-tint">
-                      <span class="tile-glyph">💫</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Relationship Status</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.relationshipStatus || 'Single' }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile modern-languages-tile">
-                    <div class="tile-icon-box teal-tint">
-                      <span class="tile-glyph">🗣️</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Languages Known</span>
-                      <div class="visitor-lang-chips modern-lang-chips">
-                        @for (lang of (viewingVisitor()!.aboutMeDetails?.languagesKnown || ['English', 'French']); track lang) {
-                          <span class="visitor-chip-badge modern-lang-pill">
-                            <span class="lang-dot"></span>{{ lang }}
-                          </span>
-                        }
+                  @if (visitorCanSee('gender')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box purple-tint"><span class="tile-glyph">⚧</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Gender</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
                       </div>
                     </div>
-                  </div>
+                  }
+                  @if (visitorCanSee('dateOfBirth')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box amber-tint"><span class="tile-glyph">🎂</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Date of Birth</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.dateOfBirth || '1995-04-12' }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('location')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box emerald-tint"><span class="tile-glyph">📍</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Current Location</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.location || (viewingVisitor()!.city + ', ' + viewingVisitor()!.country) }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('hometown')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box blue-tint"><span class="tile-glyph">🏡</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Hometown</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.hometown || viewingVisitor()!.city }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('relationshipStatus')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box rose-tint"><span class="tile-glyph">💫</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Relationship Status</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.relationshipStatus || 'Single' }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('languagesKnown')) {
+                    <div class="meta-card-mini modern-detail-tile modern-languages-tile">
+                      <div class="tile-icon-box teal-tint"><span class="tile-glyph">🗣️</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Languages Known</span>
+                        <div class="visitor-lang-chips modern-lang-chips">
+                          @for (lang of (viewingVisitor()!.aboutMeDetails?.languagesKnown || ['English', 'French']); track lang) {
+                            <span class="visitor-chip-badge modern-lang-pill"><span class="lang-dot"></span>{{ lang }}</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
 
               <!-- 3. Work Experience (Requirement B) -->
+              @if (visitorCanSee('workExperience')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">💼 Work Experience</h4>
                 <div class="visitor-work-list">
@@ -3820,7 +4112,9 @@
                 </div>
               </div>
 
+              }
               <!-- 4. Education (Requirement B) -->
+              @if (visitorCanSee('education')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🎓 Education</h4>
                 <div class="visitor-edu-list">
@@ -3837,7 +4131,9 @@
                 </div>
               </div>
 
+              }
               <!-- 5. Hobbies (Requirement B) -->
+              @if (visitorCanSee('hobbies')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🎨 Hobbies</h4>
                 <div class="visitor-chips-wrap">
@@ -3847,7 +4143,9 @@
                 </div>
               </div>
 
+              }
               <!-- 6. Interests (Requirement B) -->
+              @if (visitorCanSee('interests')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🧭 Interests</h4>
                 <div class="visitor-chips-wrap">
@@ -3857,7 +4155,9 @@
                 </div>
               </div>
 
+              }
               <!-- 7. About the Person (Requirement B: Visible, but NOT the Contact Info section) -->
+              @if (visitorCanSee('aboutThePerson')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">📖 About the Person</h4>
                 @let visitorNarrative = viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.';
@@ -3865,6 +4165,7 @@
                   {{ visitorNarrative }}
                 </p>
               </div>
+              }
             </div>
           </section>
 
@@ -3898,7 +4199,10 @@
             @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
               <article class="journey-post-card">
                 <div class="post-header">
-                  <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" [nbUserPreview]="post.author" />
+                  <span class="avatar-presence">
+                    <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" [nbUserPreview]="post.author" />
+                    <app-presence-dot [user]="post.author" />
+                  </span>
                   <div class="author-details">
                     <div class="author-name-line">
                       <strong class="author-name" [nbUserPreview]="post.author">{{ post.author.fullName }}</strong>
@@ -3907,15 +4211,11 @@
                           <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
                         </span>
                       }
-                      @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
-                        <span class="tagged-with-text"> is with </span>
-                        @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                          <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
-                        }
-                      }
+                      <app-tagged-with [people]="post.taggedCompanions || []" (openPerson)="openVisitorProfile($event)" />
                     </div>
                     <div class="post-sub-meta">
                       <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(post.author.id) }}</span>
                       @if (post.location) {
                         <span class="post-loc" title="Google Maps Verified Location">
                           <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
@@ -3932,7 +4232,7 @@
                     <button
                       type="button"
                       class="btn-delete-post-mini"
-                      (click)="deleteJourneyPost(post.id)"
+                      (click)="deleteJourneyPost(post.id, $event)"
                       title="Delete post"
                     >
                       🗑️ Delete
@@ -4106,6 +4406,7 @@
             }
           </section>
         </div>
+          }
       </div>
     }
 

@@ -26,7 +26,9 @@ import {
       <div class="ccf-card" role="alertdialog" aria-modal="true" [attr.aria-label]="message()">
         <p class="ccf-message">{{ message() }}</p>
         <div class="ccf-actions">
-          <button type="button" class="ccf-btn ccf-cancel" (click)="settle(false)">Cancel</button>
+          @if (!alertOnly()) {
+            <button type="button" class="ccf-btn ccf-cancel" (click)="settle(false)">Cancel</button>
+          }
           <button type="button" class="ccf-btn ccf-ok" (click)="settle(true)">{{ confirmLabel() }}</button>
         </div>
       </div>
@@ -127,6 +129,7 @@ export class CommunityConfirmComponent {
   readonly message = signal('');
   private readonly confirmLabelSignal = signal('Confirm');
   readonly confirmLabel = this.confirmLabelSignal.asReadonly();
+  readonly alertOnly = signal(false);
 
   /** Set by the service once the host view is attached. */
   settleFn: ((result: boolean) => void) | null = null;
@@ -143,9 +146,10 @@ export class CommunityConfirmComponent {
     inject(DestroyRef).onDestroy(() => document.removeEventListener('keydown', this.onKey));
   }
 
-  setMessage(message: string, confirmLabel = 'Confirm'): void {
+  setMessage(message: string, confirmLabel = 'Confirm', alertOnly = false): void {
     this.message.set(message);
     this.confirmLabelSignal.set(confirmLabel);
+    this.alertOnly.set(alertOnly);
   }
 
   onBackdrop(e: MouseEvent): void {
@@ -167,16 +171,22 @@ export class CommunityConfirmService {
   private readonly injector = inject(EnvironmentInjector);
   private active: ComponentRef<CommunityConfirmComponent> | null = null;
 
-  confirm(message: string, confirmLabel = 'Confirm'): Promise<boolean> {
+  confirm(message: string, confirmLabel = 'Confirm', alertOnly = false): Promise<boolean> {
     // One dialog at a time; a confirm() while one is open resolves false.
     if (this.active) return Promise.resolve(false);
 
+    // Never attach the dialog as <body> itself. Using document.body as the
+    // component host makes Angular treat the whole page as the dialog view, so
+    // confirming (or cancelling) tears the app out of the document and looks
+    // like a navigation to a blank / different page. A dedicated element appended
+    // to <body> keeps the confirmation on the same page.
     const cRef = createComponent(CommunityConfirmComponent, {
       environmentInjector: this.injector,
-      hostElement: document.body,
     });
+    const hostEl = cRef.location.nativeElement as HTMLElement;
+    document.body.appendChild(hostEl);
+    cRef.instance.setMessage(message, confirmLabel, alertOnly);
     cRef.changeDetectorRef.detectChanges();
-    cRef.instance.setMessage(message, confirmLabel);
 
     let resolve!: (v: boolean) => void;
     const promise = new Promise<boolean>((r) => (resolve = r));
@@ -185,15 +195,19 @@ export class CommunityConfirmService {
       if (settled) return;
       settled = true;
       this.active = null;
-      cRef.destroy();
       resolve(result);
+      cRef.destroy();
+      hostEl.remove();
     };
     this.active = cRef;
     cRef.changeDetectorRef.detectChanges();
-    // Focus the Cancel action for keyboard users.
-    const hostEl = cRef.location.nativeElement as HTMLElement;
-    const cancelBtn = hostEl.querySelector('.ccf-cancel') as HTMLButtonElement | null;
-    cancelBtn?.focus();
+    const focusBtn = hostEl.querySelector(alertOnly ? '.ccf-ok' : '.ccf-cancel') as HTMLButtonElement | null;
+    focusBtn?.focus();
     return promise;
+  }
+
+  /** Same-page notice (one button). Used for Circle limits and other errors. */
+  notify(message: string, okLabel = 'OK'): Promise<void> {
+    return this.confirm(message, okLabel, true).then(() => undefined);
   }
 }

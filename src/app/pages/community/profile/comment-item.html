@@ -1,12 +1,15 @@
 <div class="nested-comment-node" [class.is-deep-level]="depth > 0">
   <div class="comment-bubble-wrapper">
-    <img
-      [src]="comment.author.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'"
-      [alt]="comment.author.fullName || 'User'"
-      class="comment-author-avatar clickable-user"
-      [nbUserPreview]="comment.author"
-      (click)="onAuthorClick(comment.author)"
-    />
+    <span class="avatar-presence">
+      <img
+        [src]="comment.author.profilePhotoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80'"
+        [alt]="comment.author.fullName || 'User'"
+        class="comment-author-avatar clickable-user"
+        [nbUserPreview]="comment.author"
+        (click)="onAuthorClick(comment.author)"
+      />
+      <app-presence-dot [user]="comment.author" />
+    </span>
     <div class="comment-body-card">
       <div class="comment-head">
         <span class="author-name clickable-user" [nbUserPreview]="comment.author" (click)="onAuthorClick(comment.author)">
@@ -21,6 +24,7 @@
           <span class="author-role">• {{ comment.author.profession }}</span>
         }
         <span class="comment-time">{{ formatTime(comment.createdAtUtc) }}</span>
+        <span class="comment-presence">{{ presenceLabel(comment.author) }}</span>
       </div>
       <p class="comment-text-content" [nbTranslatable]="comment.text">{{ comment.text }}</p>
       @if (comment.imageUrl) {
