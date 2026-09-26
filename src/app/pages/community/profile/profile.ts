@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -49,6 +49,18 @@ export type ProfileSection =
   | 'notifications'
   | 'settings';
 
+const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
+  'journey',
+  'about',
+  'gallery',
+  'messagebook',
+  'companions',
+  'circles',
+  'messenger',
+  'notifications',
+  'settings',
+];
+
 @Component({
   selector: 'app-community-profile',
   standalone: true,
@@ -73,6 +85,15 @@ export class CommunityProfile implements OnInit {
 
   // Active section in the right side wide panel (default: 'journey')
   protected readonly activeSection = signal<ProfileSection>('journey');
+
+  // While the member is on the Messenger section, every open chat counts as read —
+  // the unread badge on the community header disappears and stays gone while they're here.
+  private readonly markMessengerReadEffect = effect(() => {
+    if (this.activeSection() !== 'messenger') return;
+    for (const box of this.service.activeChatBoxes()) {
+      if ((box.unreadCount ?? 0) > 0) this.service.markChatRead(box.companionId);
+    }
+  });
 
   // Mobile portrait navigation state
   protected readonly isMobileSidePanelOpen = signal<boolean>(false);
@@ -463,6 +484,14 @@ export class CommunityProfile implements OnInit {
         this.loadProfileByParam(idParam);
       } else {
         this.viewingVisitor.set(null);
+      }
+    });
+
+    // Deep links into a profile section (the community header's Home / Notification /
+    // Messenger icons point at /profile#journey, /profile#notifications, /profile#messenger).
+    this.route.fragment.subscribe((fragment) => {
+      if (fragment && (PROFILE_SECTION_VALUES as readonly string[]).includes(fragment)) {
+        this.setSection(fragment as ProfileSection);
       }
     });
   }

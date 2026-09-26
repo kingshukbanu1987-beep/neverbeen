@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/ro
 import { NgOptimizedImage } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { SiteConfigService } from '../../services/site-config.service';
+import { CommunityBadgeService } from '../../services/community-badge.service';
 import { CommunityThemePicker } from '../community-theme/community-theme-picker';
 
 interface NavLink {
@@ -22,8 +23,21 @@ interface NavLink {
 export class Navbar {
   private readonly router = inject(Router);
   private readonly cms = inject(SiteConfigService);
+  private readonly badges = inject(CommunityBadgeService);
   protected readonly open = signal(false);
   protected readonly currentUrl = signal(this.router.url || '');
+
+  /**
+   * Community header badges: unread notifications / unread chats. Read from the
+   * small root CommunityBadgeService (fed by the lazy CommunityService) so the
+   * eager navbar never pulls the heavyweight community service into the initial bundle.
+   */
+  protected readonly unreadNotifications = this.badges.unreadNotifications;
+  protected readonly unreadChats = this.badges.unreadChats;
+
+  protected badgeText(count: number): string {
+    return count > 99 ? '99+' : String(count);
+  }
 
   constructor() {
     // Publish the live header height as a CSS variable (--site-nav-h) so other sticky

@@ -1,10 +1,58 @@
-<header class="nav" [class.compact-nav]="isCompactLogo()">
-  <div class="bar container" [class.compact-bar]="isCompactLogo()">
-    <a routerLink="/" class="logo" [class.compact-logo]="isCompactLogo()" (click)="close()" aria-label="NeverBeen home">
-      <img ngSrc="/neverbeen-logo.png" [class.compact-logo]="isCompactLogo()" width="150" height="75" alt="NeverBeen" priority />
-    </a>
-    @if (isCommunity()) {
-      <!-- Community theme dropdown: loaded only on Community pages; leaving them restores the default look. -->
+<header class="nav" [class.community-nav]="isCommunity()" [class.compact-nav]="!isCommunity() && isCompactLogo()">
+  @if (isCommunity()) {
+    <!-- ============================================================
+         Community header (Community pages only).
+         Replaces the website header completely — no logo, no site menu.
+         Icon shortcuts on the left of the theme dropdown (top right).
+         ============================================================ -->
+    <div class="bar ch-bar">
+      <a routerLink="/" class="ch-brand" (click)="close()" aria-label="Back to the NeverBeen website">
+        NeverBeen
+      </a>
+
+      <nav id="ch-nav" class="ch-actions" aria-label="Community shortcuts">
+        <a
+          [routerLink]="['/profile']"
+          [fragment]="'journey'"
+          class="ch-link"
+          [attr.aria-label]="'My Journey page'"
+          title="My Journey"
+        >
+          <svg class="ch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="#nb-icon-home"></use>
+          </svg>
+        </a>
+        <a
+          [routerLink]="['/profile']"
+          [fragment]="'notifications'"
+          class="ch-link"
+          [attr.aria-label]="'Notifications page' + (unreadNotifications() > 0 ? ', ' + unreadNotifications() + ' unread' : '')"
+          [title]="'Notifications' + (unreadNotifications() > 0 ? ' (' + badgeText(unreadNotifications()) + ')' : '')"
+        >
+          <svg class="ch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="#nb-icon-bell"></use>
+          </svg>
+          @if (unreadNotifications() > 0) {
+            <span class="ch-badge" aria-hidden="true">{{ badgeText(unreadNotifications()) }}</span>
+          }
+        </a>
+        <a
+          [routerLink]="['/profile']"
+          [fragment]="'messenger'"
+          class="ch-link"
+          [attr.aria-label]="'Messenger page' + (unreadChats() > 0 ? ', ' + unreadChats() + ' unread chat' + (unreadChats() > 1 ? 's' : '') : '')"
+          [title]="'Messenger' + (unreadChats() > 0 ? ' (' + badgeText(unreadChats()) + ')' : '')"
+        >
+          <svg class="ch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="#nb-icon-message-square"></use>
+          </svg>
+          @if (unreadChats() > 0) {
+            <span class="ch-badge" aria-hidden="true">{{ badgeText(unreadChats()) }}</span>
+          }
+        </a>
+      </nav>
+
+      <!-- Community theme dropdown, always at the top right. -->
       <div class="theme-slot">
         @defer (on immediate) {
           <app-community-theme-picker />
@@ -12,44 +60,54 @@
           <span class="theme-slot-placeholder" aria-hidden="true"></span>
         }
       </div>
-    }
-    <button
-      type="button"
-      class="menu"
-      [class.is-open]="open()"
-      [attr.aria-expanded]="open()"
-      [attr.aria-label]="open() ? 'Close menu' : 'Open menu'"
-      aria-controls="site-nav"
-      (click)="toggle()"
-    >
-      <span class="line"></span>
-      <span class="line"></span>
-      <span class="line"></span>
-    </button>
-    <nav id="site-nav" [class.open]="open()">
-      @for (link of links(); track link.id) {
-        <a
-          [routerLink]="link.path"
-          [fragment]="link.fragment"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: !link.fragment }"
-          [class.login]="link.id === 'admin'"
-          (click)="close()"
-        >
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <use [attr.href]="'#nb-icon-' + link.icon"></use>
-          </svg>
-          {{ link.label }}
-        </a>
-      }
-    </nav>
-  </div>
+    </div>
+  } @else {
+    <div class="bar container" [class.compact-bar]="isCompactLogo()">
+      <a routerLink="/" class="logo" [class.compact-logo]="isCompactLogo()" (click)="close()" aria-label="NeverBeen home">
+        <img ngSrc="/neverbeen-logo.png" [class.compact-logo]="isCompactLogo()" width="150" height="75" alt="NeverBeen" priority />
+      </a>
+      <button
+        type="button"
+        class="menu"
+        [class.is-open]="open()"
+        [attr.aria-expanded]="open()"
+        [attr.aria-label]="open() ? 'Close menu' : 'Open menu'"
+        aria-controls="site-nav"
+        (click)="toggle()"
+      >
+        <span class="line"></span>
+        <span class="line"></span>
+        <span class="line"></span>
+      </button>
+      <nav id="site-nav" [class.open]="open()">
+        @for (link of links(); track link.id) {
+          <a
+            [routerLink]="link.path"
+            [fragment]="link.fragment"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !link.fragment }"
+            [class.login]="link.id === 'admin'"
+            (click)="close()"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <use [attr.href]="'#nb-icon-' + link.icon"></use>
+            </svg>
+            {{ link.label }}
+          </a>
+        }
+      </nav>
+    </div>
+  }
 
   <!-- Line-icon sprite for the menu options (stroke only, so the icons are transparent). -->
   <svg class="icon-sprite" aria-hidden="true" focusable="false">
     <symbol id="nb-icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
       <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </symbol>
+    <symbol id="nb-icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
     </symbol>
     <symbol id="nb-icon-cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"></circle>

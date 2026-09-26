@@ -2,6 +2,12 @@
   "name": "neverbeen",
   "compatibility_date": "2026-09-15",
   "assets": {
-    "directory": "./dist/neverbeen/browser"
+    "directory": "./dist/neverbeen/browser",
+    // Single-page-app mode: any URL that does not match a static file (deep links like
+    // /community, /profile?id=…, /admin/… or any redirect target) serves index.html with
+    // a 200, so refreshing the browser on any route loads the app instead of a 404.
+    // The Angular router then resolves the route and CommunityService restores the
+    // signed-in session from the auth cookie.
+    "not_found_handling": "single-page-application"
   }
 }
