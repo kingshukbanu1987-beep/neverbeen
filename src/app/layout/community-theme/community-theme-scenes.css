@@ -1,0 +1,562 @@
+/* Local artwork and extended palettes. Every selector requires a non-default Community theme.
+ * --ct-art is decorative; readable surfaces remain above it and member photos are never replaced.
+ */
+
+/* Cosmic */
+html[data-ctheme='cosmic'] {
+  --ct-bg0: #10112d;
+  --ct-page: linear-gradient(135deg, #10112d, #271f4c);
+  --ct-sf: #1c1c3b;
+  --ct-sf-rgb: 28 28 59;
+  --ct-sf2: #221f43;
+  --ct-sf3: #27224a;
+  --ct-ln: #3e3e5a;
+  --ct-ln2: #565570;
+  --ct-ink: #f3efff;
+  --ct-ink-rgb: 243 239 255;
+  --ct-ink2: #d1cde0;
+  --ct-mu: #b7b4c8;
+  --ct-fa: #a19fb5;
+  --ct-ac: #7850ba;
+  --ct-ac-rgb: 120 80 186;
+  --ct-ac2: #624299;
+  --ct-act: #c9b9e3;
+  --ct-acs: #2a244e;
+  --ct-acl: #3c2e67;
+  --ct-b1: #7850ba;
+  --ct-b2: #268ca8;
+  --ct-b2t: #a8d1dc;
+  --ct-b2-rgb: 38 140 168;
+  --ct-b3: #4b71b0;
+  --ct-nav-bg: rgb(28 28 59 / 0.94);
+  --ct-nav-ink: #f3efff;
+  --ct-nav-mu: #c4c1d4;
+  --ct-nav-ln: #3e3e5a;
+  --ct-nav-pill: #242146;
+  --ct-nav-pill-solid: #1c1c3b;
+  --ct-nav-panel: #1c1c3b;
+}
+
+/* Pixel World */
+html[data-ctheme='pixel-world'] {
+  --ct-bg0: #161e35;
+  --ct-page: linear-gradient(135deg, #161e35, #252a51);
+  --ct-sf: #232d49;
+  --ct-sf-rgb: 35 45 73;
+  --ct-sf2: #262f4f;
+  --ct-sf3: #2a3256;
+  --ct-ln: #444d66;
+  --ct-ln2: #5a637a;
+  --ct-ink: #eff4ff;
+  --ct-ink-rgb: 239 244 255;
+  --ct-ink2: #ced4e2;
+  --ct-mu: #b6bccc;
+  --ct-fa: #a1a8ba;
+  --ct-ac: #5a55b3;
+  --ct-ac-rgb: 90 85 179;
+  --ct-ac2: #4a4693;
+  --ct-act: #bdbbe1;
+  --ct-acs: #2b3359;
+  --ct-acl: #363b6e;
+  --ct-b1: #5a55b3;
+  --ct-b2: #257c6e;
+  --ct-b2t: #a8cbc5;
+  --ct-b2-rgb: 37 124 110;
+  --ct-b3: #3d6a8d;
+  --ct-nav-bg: rgb(35 45 73 / 0.94);
+  --ct-nav-ink: #eff4ff;
+  --ct-nav-mu: #c2c8d7;
+  --ct-nav-ln: #444d66;
+  --ct-nav-pill: #283153;
+  --ct-nav-pill-solid: #232d49;
+  --ct-nav-panel: #232d49;
+}
+
+/* Social Snap */
+html[data-ctheme='social-snap'] {
+  --ct-bg0: #fff1f4;
+  --ct-page: linear-gradient(135deg, #fff1f4, #efc6d5);
+  --ct-sf: #fffafb;
+  --ct-sf-rgb: 255 250 251;
+  --ct-sf2: #fbeef2;
+  --ct-sf3: #f6e2e9;
+  --ct-ln: #dfd8db;
+  --ct-ln2: #c9c0c6;
+  --ct-ink: #382335;
+  --ct-ink-rgb: 56 35 53;
+  --ct-ink2: #584555;
+  --ct-mu: #705f6c;
+  --ct-fa: #847580;
+  --ct-ac: #b52f68;
+  --ct-ac-rgb: 181 47 104;
+  --ct-ac2: #942755;
+  --ct-act: #b52f68;
+  --ct-acs: #f4dce5;
+  --ct-acl: #e5b3c8;
+  --ct-b1: #b52f68;
+  --ct-b2: #7046b8;
+  --ct-b2t: #7046b8;
+  --ct-b2-rgb: 112 70 184;
+  --ct-b3: #8f3c94;
+  --ct-nav-bg: rgb(255 250 251 / 0.94);
+  --ct-nav-ink: #382335;
+  --ct-nav-mu: #645261;
+  --ct-nav-ln: #dfd8db;
+  --ct-nav-pill: #f8e8ee;
+  --ct-nav-pill-solid: #fffafb;
+  --ct-nav-panel: #fffafb;
+}
+
+/* Retro 90s */
+html[data-ctheme='retro-90s'] {
+  --ct-bg0: #f2dfc5;
+  --ct-page: linear-gradient(135deg, #f2dfc5, #dbc0b1);
+  --ct-sf: #fff8eb;
+  --ct-sf-rgb: 255 248 235;
+  --ct-sf2: #f8eee3;
+  --ct-sf3: #f1e4db;
+  --ct-ln: #e1d9d0;
+  --ct-ln2: #ccc4be;
+  --ct-ink: #433745;
+  --ct-ink-rgb: 67 55 69;
+  --ct-ink2: #615660;
+  --ct-mu: #786d73;
+  --ct-fa: #8a8084;
+  --ct-ac: #895068;
+  --ct-ac-rgb: 137 80 104;
+  --ct-ac2: #704255;
+  --ct-act: #895068;
+  --ct-acs: #eddfd7;
+  --ct-acl: #d6bdbd;
+  --ct-b1: #895068;
+  --ct-b2: #326c68;
+  --ct-b2t: #326c68;
+  --ct-b2-rgb: 50 108 104;
+  --ct-b3: #595f68;
+  --ct-nav-bg: rgb(255 248 235 / 0.94);
+  --ct-nav-ink: #433745;
+  --ct-nav-mu: #6c616a;
+  --ct-nav-ln: #e1d9d0;
+  --ct-nav-pill: #f4e9df;
+  --ct-nav-pill-solid: #fff8eb;
+  --ct-nav-panel: #fff8eb;
+}
+
+/* Graffiti */
+html[data-ctheme='graffiti'] {
+  --ct-bg0: #192330;
+  --ct-page: linear-gradient(135deg, #192330, #39283f);
+  --ct-sf: #252e40;
+  --ct-sf-rgb: 37 46 64;
+  --ct-sf2: #2d2f43;
+  --ct-sf3: #353046;
+  --ct-ln: #474d5e;
+  --ct-ln2: #5e6272;
+  --ct-ink: #f7eff9;
+  --ct-ink-rgb: 247 239 249;
+  --ct-ink2: #d5d0db;
+  --ct-mu: #bcb9c5;
+  --ct-fa: #a7a6b3;
+  --ct-ac: #ab3c75;
+  --ct-ac-rgb: 171 60 117;
+  --ct-ac2: #8c3160;
+  --ct-act: #ddb1c8;
+  --ct-acs: #393048;
+  --ct-acl: #543353;
+  --ct-b1: #ab3c75;
+  --ct-b2: #237b70;
+  --ct-b2t: #a7cac6;
+  --ct-b2-rgb: 35 123 112;
+  --ct-b3: #605f72;
+  --ct-nav-bg: rgb(37 46 64 / 0.94);
+  --ct-nav-ink: #f7eff9;
+  --ct-nav-mu: #c9c5d0;
+  --ct-nav-ln: #474d5e;
+  --ct-nav-pill: #312f45;
+  --ct-nav-pill-solid: #252e40;
+  --ct-nav-panel: #252e40;
+}
+
+/* Fantasy */
+html[data-ctheme='fantasy'] {
+  --ct-bg0: #f3e6fa;
+  --ct-page: linear-gradient(135deg, #f3e6fa, #d9c1ea);
+  --ct-sf: #fffbff;
+  --ct-sf-rgb: 255 251 255;
+  --ct-sf2: #f7f0fa;
+  --ct-sf3: #efe4f6;
+  --ct-ln: #dfd9e2;
+  --ct-ln2: #cac1cf;
+  --ct-ink: #39264c;
+  --ct-ink-rgb: 57 38 76;
+  --ct-ink2: #594869;
+  --ct-mu: #70627e;
+  --ct-fa: #847790;
+  --ct-ac: #7c3eb0;
+  --ct-ac-rgb: 124 62 176;
+  --ct-ac2: #663390;
+  --ct-act: #7c3eb0;
+  --ct-acs: #ebdff3;
+  --ct-acl: #d1b9e3;
+  --ct-b1: #7c3eb0;
+  --ct-b2: #277b85;
+  --ct-b2t: #277b85;
+  --ct-b2-rgb: 39 123 133;
+  --ct-b3: #4d6098;
+  --ct-nav-bg: rgb(255 251 255 / 0.94);
+  --ct-nav-ink: #39264c;
+  --ct-nav-mu: #655573;
+  --ct-nav-ln: #dfd9e2;
+  --ct-nav-pill: #f3eaf8;
+  --ct-nav-pill-solid: #fffbff;
+  --ct-nav-panel: #fffbff;
+}
+
+/* Disney World */
+html[data-ctheme='disney-world'] {
+  --ct-bg0: #ece9fc;
+  --ct-page: linear-gradient(135deg, #ece9fc, #cfc7ea);
+  --ct-sf: #fdfbff;
+  --ct-sf-rgb: 253 251 255;
+  --ct-sf2: #f4f1fa;
+  --ct-sf3: #ebe6f5;
+  --ct-ln: #ddd9e3;
+  --ct-ln2: #c6c2cf;
+  --ct-ink: #33274d;
+  --ct-ink-rgb: 51 39 77;
+  --ct-ink2: #534969;
+  --ct-mu: #6c627f;
+  --ct-fa: #807891;
+  --ct-ac: #6850ac;
+  --ct-ac-rgb: 104 80 172;
+  --ct-ac2: #55428d;
+  --ct-act: #6850ac;
+  --ct-acs: #e7e1f3;
+  --ct-acl: #c9bfe2;
+  --ct-b1: #6850ac;
+  --ct-b2: #276b9b;
+  --ct-b2t: #276b9b;
+  --ct-b2-rgb: 39 107 155;
+  --ct-b3: #445fa3;
+  --ct-nav-bg: rgb(253 251 255 / 0.94);
+  --ct-nav-ink: #33274d;
+  --ct-nav-mu: #5f5674;
+  --ct-nav-ln: #ddd9e3;
+  --ct-nav-pill: #f0ecf8;
+  --ct-nav-pill-solid: #fdfbff;
+  --ct-nav-panel: #fdfbff;
+}
+
+/* Peppa Pig */
+html[data-ctheme='peppa-pig'] {
+  --ct-bg0: #fff0f6;
+  --ct-page: linear-gradient(135deg, #fff0f6, #efc7d9);
+  --ct-sf: #fffafd;
+  --ct-sf-rgb: 255 250 253;
+  --ct-sf2: #fbeef5;
+  --ct-sf3: #f6e2ec;
+  --ct-ln: #e1d8dd;
+  --ct-ln2: #cdc1c8;
+  --ct-ink: #442737;
+  --ct-ink-rgb: 68 39 55;
+  --ct-ink2: #624957;
+  --ct-mu: #78626e;
+  --ct-fa: #8b7782;
+  --ct-ac: #b53670;
+  --ct-ac-rgb: 181 54 112;
+  --ct-ac2: #942c5c;
+  --ct-act: #b53670;
+  --ct-acs: #f4dde8;
+  --ct-acl: #e5b5cc;
+  --ct-b1: #b53670;
+  --ct-b2: #287752;
+  --ct-b2t: #287752;
+  --ct-b2-rgb: 40 119 82;
+  --ct-b3: #675a60;
+  --ct-nav-bg: rgb(255 250 253 / 0.94);
+  --ct-nav-ink: #442737;
+  --ct-nav-mu: #6d5563;
+  --ct-nav-ln: #e1d8dd;
+  --ct-nav-pill: #f8e8f0;
+  --ct-nav-pill-solid: #fffafd;
+  --ct-nav-panel: #fffafd;
+}
+
+/* Dino World */
+html[data-ctheme='dino-world'] {
+  --ct-bg0: #e9f0df;
+  --ct-page: linear-gradient(135deg, #e9f0df, #bfd3c0);
+  --ct-sf: #fcfff6;
+  --ct-sf-rgb: 252 255 246;
+  --ct-sf2: #eff6ec;
+  --ct-sf3: #e3ede2;
+  --ct-ln: #d9e0d6;
+  --ct-ln2: #c1cbc1;
+  --ct-ink: #233d30;
+  --ct-ink-rgb: 35 61 48;
+  --ct-ink2: #465c50;
+  --ct-mu: #607367;
+  --ct-fa: #75877b;
+  --ct-ac: #286b53;
+  --ct-ac-rgb: 40 107 83;
+  --ct-ac2: #215844;
+  --ct-act: #286b53;
+  --ct-acs: #dce9de;
+  --ct-acl: #b2cbbd;
+  --ct-b1: #286b53;
+  --ct-b2: #9a542d;
+  --ct-b2t: #9a542d;
+  --ct-b2-rgb: 154 84 45;
+  --ct-b3: #675e3e;
+  --ct-nav-bg: rgb(252 255 246 / 0.94);
+  --ct-nav-ink: #233d30;
+  --ct-nav-mu: #53685c;
+  --ct-nav-ln: #d9e0d6;
+  --ct-nav-pill: #e9f2e7;
+  --ct-nav-pill-solid: #fcfff6;
+  --ct-nav-panel: #fcfff6;
+}
+
+/* Unicorn Magic */
+html[data-ctheme='unicorn-magic'] {
+  --ct-bg0: #f8eafb;
+  --ct-page: linear-gradient(135deg, #f8eafb, #e3c6e6);
+  --ct-sf: #fffbff;
+  --ct-sf-rgb: 255 251 255;
+  --ct-sf2: #f9f0f9;
+  --ct-sf3: #f3e5f3;
+  --ct-ln: #e1d9e3;
+  --ct-ln2: #cdc2cf;
+  --ct-ink: #46284e;
+  --ct-ink-rgb: 70 40 78;
+  --ct-ink2: #644a6a;
+  --ct-mu: #7a6380;
+  --ct-fa: #8c7891;
+  --ct-ac: #97459c;
+  --ct-ac-rgb: 151 69 156;
+  --ct-ac2: #7c3980;
+  --ct-act: #97459c;
+  --ct-acs: #efe0f0;
+  --ct-acl: #dbbbdc;
+  --ct-b1: #97459c;
+  --ct-b2: #456caf;
+  --ct-b2t: #456caf;
+  --ct-b2-rgb: 69 108 175;
+  --ct-b3: #6a5aa6;
+  --ct-nav-bg: rgb(255 251 255 / 0.94);
+  --ct-nav-ink: #46284e;
+  --ct-nav-mu: #6f5675;
+  --ct-nav-ln: #e1d9e3;
+  --ct-nav-pill: #f6ebf6;
+  --ct-nav-pill-solid: #fffbff;
+  --ct-nav-panel: #fffbff;
+}
+
+html[data-ctheme='winter-wonderland'] {
+  --ct-art: url('/images/community-themes/winter-wonderland.svg');
+}
+html[data-ctheme='city-explorer'] {
+  --ct-art: url('/images/community-themes/city-explorer.svg');
+}
+html[data-ctheme='green-nature'] {
+  --ct-art: url('/images/community-themes/green-nature.svg');
+}
+html[data-ctheme='travel-classic'] {
+  --ct-art: url('/images/community-themes/travel-classic.svg');
+}
+html[data-ctheme='midnight'] {
+  --ct-art: url('/images/community-themes/midnight.svg');
+}
+html[data-ctheme='cherry-blossom'] {
+  --ct-art: url('/images/community-themes/cherry-blossom.svg');
+}
+html[data-ctheme='tropical-paradise'] {
+  --ct-art: url('/images/community-themes/tropical-paradise.svg');
+}
+html[data-ctheme='mountain-escape'] {
+  --ct-art: url('/images/community-themes/mountain-escape.svg');
+}
+html[data-ctheme='ocean-breeze'] {
+  --ct-art: url('/images/community-themes/ocean-breeze.svg');
+}
+html[data-ctheme='dreamscape'] {
+  --ct-art: url('/images/community-themes/dreamscape.svg');
+}
+html[data-ctheme='boarding-pass'] {
+  --ct-art: url('/images/community-themes/boarding-pass.svg');
+}
+html[data-ctheme='cosmic'] {
+  --ct-art: url('/images/community-themes/cosmic.svg');
+}
+html[data-ctheme='pixel-world'] {
+  --ct-art: url('/images/community-themes/pixel-world.svg');
+}
+html[data-ctheme='social-snap'] {
+  --ct-art: url('/images/community-themes/social-snap.webp');
+}
+html[data-ctheme='retro-90s'] {
+  --ct-art: url('/images/community-themes/retro-90s.svg');
+}
+html[data-ctheme='graffiti'] {
+  --ct-art: url('/images/community-themes/graffiti.svg');
+}
+html[data-ctheme='fantasy'] {
+  --ct-art: url('/images/community-themes/fantasy.svg');
+}
+html[data-ctheme='disney-world'] {
+  --ct-art: url('/images/community-themes/disney-world.svg');
+}
+html[data-ctheme='peppa-pig'] {
+  --ct-art: url('/images/community-themes/peppa-pig.webp');
+}
+html[data-ctheme='dino-world'] {
+  --ct-art: url('/images/community-themes/dino-world.svg');
+}
+html[data-ctheme='unicorn-magic'] {
+  --ct-art: url('/images/community-themes/unicorn-magic.svg');
+}
+
+/* Immersive scenery stays behind content, never over controls or personal photos. */
+html[data-ctheme] app-root > main {
+  background:
+    linear-gradient(180deg, rgb(var(--ct-sf-rgb) / 0.4), rgb(var(--ct-sf-rgb) / 0.76)),
+    var(--ct-art) center top / cover no-repeat;
+  background-color: var(--ct-bg0);
+  background-attachment: fixed;
+}
+
+html[data-ctheme]
+  app-root
+  > main
+  :is(.left-side-panel, .companions-side-panel, .circles-side-panel, .visitor-companions-card) {
+  background:
+    linear-gradient(165deg, rgb(var(--ct-sf-rgb) / 0.87), rgb(var(--ct-sf-rgb) / 0.95)),
+    var(--ct-art) center / cover;
+  border: 1px solid rgb(var(--ct-ac-rgb) / 0.24);
+  outline: none;
+  box-shadow:
+    0 18px 48px -28px rgb(var(--ct-ink-rgb) / 0.36),
+    inset 0 1px 0 rgb(var(--ct-sf-rgb) / 0.7);
+}
+
+/* A full-color landscape window in the side rail. Pure decoration; no extra tab stops. */
+html[data-ctheme]
+  app-root
+  > main
+  :is(.companions-side-panel, .circles-side-panel, .visitor-companions-card)::before {
+  content: '';
+  display: block;
+  height: 100px;
+  margin-bottom: 0.9rem;
+  border-radius: 14px;
+  background: var(--ct-art) center 60% / cover;
+  box-shadow: inset 0 0 0 1px rgb(var(--ct-ink-rgb) / 0.08);
+  pointer-events: none;
+}
+
+html[data-ctheme]
+  app-root
+  > main
+  :is(
+    .journey-composer-card,
+    .journey-post-card,
+    .messagebook-composer-card,
+    .post-card,
+    .composer-card,
+    .about-overview-card,
+    .edit-profile-card,
+    .settings-card,
+    .about-card-section,
+    .visitor-hero-info-card,
+    .notification-card,
+    .oauth-card-box,
+    .mb-intro
+  ) {
+  background: rgb(var(--ct-sf-rgb) / 0.97);
+  border: 1px solid rgb(var(--ct-ac-rgb) / 0.18);
+  border-radius: 22px;
+  box-shadow:
+    0 16px 40px -28px rgb(var(--ct-ink-rgb) / 0.35),
+    inset 0 1px 0 rgb(var(--ct-sf-rgb) / 0.65);
+}
+
+html[data-ctheme] app-root > main .mb-intro {
+  padding: 1.5rem;
+}
+
+html[data-ctheme] app-root > main :is(.section-top-bar, .mobile-top-header) {
+  background: linear-gradient(115deg, var(--ct-sf) 35%, var(--ct-acs));
+  border-color: rgb(var(--ct-ac-rgb) / 0.22);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px -22px rgb(var(--ct-ac-rgb) / 0.4);
+}
+
+html[data-ctheme] app-root > main .menu-btn.active {
+  background: linear-gradient(115deg, var(--ct-acs), rgb(var(--ct-sf-rgb) / 0.92));
+  border-color: var(--ct-acl);
+  box-shadow: 0 8px 20px -14px rgb(var(--ct-ac-rgb) / 0.65);
+}
+
+html[data-ctheme] app-root > main .hamburger-line {
+  background: var(--ct-ink);
+}
+
+/* Connect/Register have their own full-bleed photo layers in Default. */
+html[data-ctheme] app-root > main :is(.connect-page-wrapper, .register-page-wrapper) {
+  background: var(--ct-art) center / cover no-repeat var(--ct-bg0);
+}
+html[data-ctheme] app-root > main .connect-page-wrapper::before {
+  background: rgb(var(--ct-sf-rgb) / 0.2);
+}
+html[data-ctheme] app-root > main .reg-bg {
+  display: none;
+}
+
+/* Small material details make the worlds feel different, without changing their layout. */
+html[data-ctheme='pixel-world']
+  app-root
+  > main
+  :is(
+    .left-side-panel,
+    .journey-post-card,
+    .journey-composer-card,
+    .section-top-bar,
+    .companions-side-panel,
+    .circles-side-panel
+  ) {
+  border-radius: 6px;
+  box-shadow: 5px 5px 0 rgb(var(--ct-ac-rgb) / 0.25);
+}
+html[data-ctheme='social-snap'] app-root > main .journey-post-card {
+  border-top: 3px solid var(--ct-acl);
+}
+html[data-ctheme='retro-90s'] app-root > main :is(.journey-post-card, .left-side-panel) {
+  box-shadow: 5px 5px 0 var(--ct-acl);
+  border-color: var(--ct-acl);
+}
+html[data-ctheme='graffiti'] app-root > main .section-top-bar {
+  border-bottom: 3px solid #84ead0;
+}
+
+@media (max-width: 860px) {
+  html[data-ctheme] app-root > main {
+    /* Avoid fixed-background repaints on mobile browsers. */
+    background-attachment: scroll;
+    background-size:
+      auto,
+      auto 100vh;
+    background-repeat: no-repeat, repeat-y;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-ctheme-anim] app-root > main,
+  html[data-ctheme-anim] app-root > main *,
+  html[data-ctheme-anim] app-navbar .nav,
+  html[data-ctheme-anim] app-navbar .nav * {
+    transition: none !important;
+  }
+  html[data-ctheme] app-root > main .left-side-panel {
+    animation: none;
+  }
+}

@@ -975,7 +975,22 @@
   color: var(--ct-mu, #64748b);
 }
 
+.accessory-item:has(.select-mood) {
+  max-width: 100%;
+}
+
+.accessory-item:has(.select-mood) .accessory-lbl {
+  flex-shrink: 0;
+}
+
+.select-mood:focus-visible {
+  outline: 2px solid var(--ct-act, #2563eb);
+  outline-offset: 2px;
+}
+
 .select-mood {
+  min-width: 0;
+  max-width: 100%;
   background: var(--ct-sf3, #f1f5f9);
   border: 1px solid var(--ct-ln2, #cbd5e1);
   border-radius: 8px;
@@ -1174,6 +1189,8 @@
 }
 
 .author-details {
+  min-width: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
@@ -1198,6 +1215,7 @@
 
 .post-sub-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.74rem;
@@ -3213,6 +3231,7 @@
 }
 
 .post-loc {
+  max-width: 100%;
   display: inline-flex !important;
   align-items: center !important;
   white-space: nowrap !important;

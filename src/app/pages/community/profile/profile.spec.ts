@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityProfile } from './profile';
+import { TRAVEL_MOOD_GROUPS } from './travel-moods';
 import { CommunityService, getCookie, TOKEN_KEY, deleteCookie } from '../../../services/community.service';
 import { GoogleMapsService, VERIFIED_GOOGLE_MAP_LOCATIONS } from '../../../services/google-maps.service';
 
@@ -144,6 +145,28 @@ describe('CommunityProfile', () => {
     const latestPost = service.journeyPosts()[0];
     expect(latestPost.text).toContain('Arashiyama');
     expect(latestPost.location).toContain('Kyoto');
+  });
+
+  it('offers grouped creative Travel Moods and saves the selected mood with a Journey post', async () => {
+    const fixture = create();
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    const select = element.querySelector<HTMLSelectElement>('#journey-travel-mood')!;
+    expect(element.querySelector('label[for="journey-travel-mood"]')?.textContent).toContain('Travel Mood');
+    expect(select.value).toBe('✈️ Traveling');
+    expect(select.querySelectorAll('optgroup').length).toBe(5);
+    const moods = TRAVEL_MOOD_GROUPS.flatMap((group) => [...group.moods]);
+    expect(Array.from(select.options).map((option) => option.value)).toEqual(moods);
+    expect(new Set(moods).size).toBe(32);
+    for (const mood of ['🌌 Aurora Hunting', '🍜 Street Food Quest', '🧳 Solo & Thriving']) {
+      select.value = mood;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await fixture.whenStable();
+      fixture.componentInstance['newJourneyText'] = `Enjoying ${mood}`;
+      fixture.componentInstance.submitJourneyPost();
+      fixture.detectChanges();
+      expect(service.journeyPosts()[0].mood).toBe(mood);
+    }
   });
 
   it('enforces maximum 500 companion limit', () => {

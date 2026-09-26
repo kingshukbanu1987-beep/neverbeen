@@ -1,5 +1,5 @@
 import { Component, DestroyRef, ElementRef, ViewEncapsulation, computed, effect, inject, signal, untracked } from '@angular/core';
-import { COMMUNITY_THEMES, CommunityThemeId, CommunityThemeService } from './community-themes';
+import { COMMUNITY_THEMES, CommunityThemeId, CommunityThemeService, communityThemeArtwork } from './community-themes';
 
 /**
  * Theme dropdown shown in the website header while the member is in the Community.
@@ -10,7 +10,7 @@ import { COMMUNITY_THEMES, CommunityThemeId, CommunityThemeService } from './com
 @Component({
   selector: 'app-community-theme-picker',
   encapsulation: ViewEncapsulation.None,
-  styleUrls: ['./community-themes.css', './community-theme-picker.css'],
+  styleUrls: ['./community-themes.css', './community-theme-scenes.css', './community-theme-picker.css'],
   host: { class: 'ctp-host' },
   template: `
     <div class="ctp" [class.is-open]="open()">
@@ -60,6 +60,9 @@ import { COMMUNITY_THEMES, CommunityThemeId, CommunityThemeService } from './com
                 (click)="pick(t.id)"
               >
                 <span class="ctp-preview" [style.background]="t.preview" aria-hidden="true">
+                  @if (artwork(t.id); as image) {
+                    <img class="ctp-scene-preview" [src]="image" alt="" loading="lazy" />
+                  }
                   <i class="ctp-chip-surface" [style.background]="t.surface"></i>
                   <i class="ctp-chip-accent" [style.background]="t.accent"></i>
                 </span>
@@ -86,6 +89,7 @@ export class CommunityThemePicker {
   private readonly host = inject(ElementRef<HTMLElement>);
 
   protected readonly themes = COMMUNITY_THEMES;
+  protected readonly artwork = communityThemeArtwork;
   protected readonly open = signal(false);
   protected readonly themeId = this.svc.themeId;
   protected readonly current = computed(() => this.svc.theme());
