@@ -5,7 +5,7 @@ export const MAX_ADMIN_CIRCLES = 500;
 /** Logged-in member may belong to at most this many Circles where they are not an admin. */
 export const MAX_MEMBER_CIRCLES = 1000;
 
-export const CIRCLES_SEED_VERSION = 'travel-circles-47-v1';
+export const CIRCLES_SEED_VERSION = 'travel-circles-47-v2';
 export const CIRCLES_SEED_VERSION_KEY = 'neverbeen_circles_seed';
 
 const PHOTOS = [
@@ -91,21 +91,42 @@ const MEMBER_CIRCLES: CircleDraft[] = [
   { name: 'Alaska Wilderness Camps', description: 'Fjord flights, bear-country trails and cabin stoves.' },
 ];
 
-function greeting(name: string, fromId: number, circleId: number): ChatMessage[] {
+/** Spread last-chat times so the Circles page shows Active, hours, days, months, and years. */
+function activityAge(index: number): number {
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const ages = [
+    2 * minute,
+    6 * minute,
+    3 * hour,
+    14 * hour,
+    2 * day,
+    9 * day,
+    45 * day,
+    4 * 30 * day,
+    2 * 365 * day,
+  ];
+  return ages[index % ages.length];
+}
+
+function greeting(name: string, fromId: number, circleId: number, ageMs: number): ChatMessage[] {
+  const latest = Date.now() - ageMs;
+  const earlier = latest - 26 * 60 * 60 * 1000;
   return [
     {
       id: circleId * 10 + 1,
       senderId: fromId,
       receiverId: 0,
       text: `Welcome to ${name}. Drop your next travel dates here and we will sketch a loose plan.`,
-      sentAtUtc: '2026-09-12T08:30:00Z',
+      sentAtUtc: new Date(earlier).toISOString(),
     },
     {
       id: circleId * 10 + 2,
       senderId: fromId,
       receiverId: 0,
       text: 'I pinned a few photos from the last trip — steal whatever is useful for the itinerary.',
-      sentAtUtc: '2026-09-18T16:05:00Z',
+      sentAtUtc: new Date(latest).toISOString(),
     },
   ];
 }
@@ -129,7 +150,7 @@ export function buildTravelCircles(me = 1): Circle[] {
       adminIds: [me],
       memberIds: Array.from(new Set([me, ...fellows])),
       createdAtUtc: new Date(Date.UTC(2026, 5, 1 + i, 9, 0, 0)).toISOString(),
-      messages: greeting(draft.name, fellows[0], id),
+      messages: greeting(draft.name, fellows[0], id, activityAge(i)),
     } satisfies Circle;
   });
 
@@ -148,7 +169,7 @@ export function buildTravelCircles(me = 1): Circle[] {
       adminIds: [host],
       memberIds: Array.from(new Set([me, host, extra])),
       createdAtUtc: new Date(Date.UTC(2026, 6, 1 + (i % 28), 11, 15, 0)).toISOString(),
-      messages: greeting(draft.name, host, id),
+      messages: greeting(draft.name, host, id, activityAge(i + 3)),
     } satisfies Circle;
   });
 

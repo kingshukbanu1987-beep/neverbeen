@@ -786,6 +786,11 @@ export class CommunityProfile implements OnInit {
     this.viewingVisitor.set(found);
     this.showSearchDropdown.set(false);
     this.closeMobileSidePanel();
+    this.destinationSearchInput = '';
+    this.destinationSuggestions.set([]);
+    this.showDestinationDropdown.set(false);
+    this.selectedGoogleLocation.set(null);
+    this.destinationError.set(null);
 
     // Requirement B: Navigate to full normal page via /profile?id=... instead of modal popup
     this.router.navigate(['/profile'], {
@@ -1295,6 +1300,11 @@ export class CommunityProfile implements OnInit {
     this.journeyPhotoPreviews.set([]);
     this.journeyPhotoPreview.set(null);
     this.journeyPhotoError.set(null);
+  }
+
+  canSubmitJourney(): boolean {
+    const hasPhotos = this.journeyPhotoPreviews().length > 0 || !!this.journeyPhotoPreview();
+    return (!!this.newJourneyText.trim() || hasPhotos) && !this.postingJourney();
   }
 
   submitJourneyPost(): void {
@@ -1965,14 +1975,43 @@ export class CommunityProfile implements OnInit {
 
   readonly followListKind = signal<'followers' | 'following' | null>(null);
   readonly followListOwnerId = signal<number | null>(null);
+  protected readonly followListQuery = signal('');
+  protected readonly followersPageQuery = signal('');
+  protected readonly followingPageQuery = signal('');
+  protected readonly circleMembersCircleId = signal<number | null>(null);
+  protected readonly circleMembersQuery = signal('');
 
   openFollowList(kind: 'followers' | 'following', ownerId?: number): void {
+    this.followListQuery.set('');
     this.followListKind.set(kind);
     this.followListOwnerId.set(ownerId ?? this.service.currentUser()?.id ?? 1);
   }
 
   closeFollowList(): void {
     this.followListKind.set(null);
+    this.followListQuery.set('');
+  }
+
+  private filterPeople(people: Companion[], query: string): Companion[] {
+    const q = query.trim().toLowerCase();
+    if (!q) return people;
+    return people.filter((person) =>
+      [person.fullName, person.city, person.country, person.profession].some((part) =>
+        (part || '').toLowerCase().includes(q),
+      ),
+    );
+  }
+
+  filteredFollowList(): Companion[] {
+    return this.filterPeople(this.followListPeople(), this.followListQuery());
+  }
+
+  filteredFollowers(): Companion[] {
+    return this.filterPeople(this.myFollowers(), this.followersPageQuery());
+  }
+
+  filteredFollowing(): Companion[] {
+    return this.filterPeople(this.myFollowing(), this.followingPageQuery());
   }
 
   followListTitle(): string {
@@ -2187,6 +2226,85 @@ export class CommunityProfile implements OnInit {
 
   isCircleAdmin(circle: Circle): boolean {
     return this.service.isCircleAdmin(circle, this.service.currentUser()?.id ?? 1);
+  }
+
+  circleUsage(circle: Circle) {
+    return this.service.circleUsage(circle);
+  }
+
+  openCircleMembers(circle: Circle, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.circleMembersQuery.set('');
+    this.circleMembersCircleId.set(circle.id);
+  }
+
+  closeCircleMembers(): void {
+    this.circleMembersCircleId.set(null);
+    this.circleMembersQuery.set('');
+  }
+
+  circleMembersTarget(): Circle | null {
+    const id = this.circleMembersCircleId();
+    return id == null ? null : (this.service.circles().find((c) => c.id === id) ?? null);
+  }
+
+  circleRoster(circle: Circle): Companion[] {
+    const me = this.service.currentUser()?.id ?? 1;
+    const people = this.getCircleMembers(circle.memberIds);
+    const roster =
+      circle.memberIds.includes(me) && !people.some((person) => person.id === me)
+        ? [this.service.getCurrentUserAsCompanion(), ...people]
+        : people;
+    return [...roster].sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }
+
+  filteredCircleMembers(): Companion[] {
+    const circle = this.circleMembersTarget();
+    return circle ? this.filterPeople(this.circleRoster(circle), this.circleMembersQuery()) : [];
+  }
+
+  personIsCircleAdmin(circle: Circle, userId: number): boolean {
+    return this.service.isCircleAdmin(circle, userId);
+  }
+
+  isCircleOwner(circle: Circle, userId: number): boolean {
+    return circle.ownerId === userId;
+  }
+
+  makeCircleAdmin(circleId: number, userId: number): void {
+    const error = this.service.promoteCircleAdmin(circleId, userId);
+    if (error) void this.confirmSvc.notify(error);
+  }
+
+  removeCircleAdmin(circleId: number, userId: number): void {
+    const error = this.service.demoteCircleAdmin(circleId, userId);
+    if (error) void this.confirmSvc.notify(error);
+  }
+
+  deleteCircleMember(circleId: number, userId: number): void {
+    const error = this.service.removeCircleMember(circleId, userId);
+    if (error) void this.confirmSvc.notify(error);
+  }
+
+  changeCirclePhoto(circle: Circle, event: Event): void {
+    event.stopPropagation();
+    if (!this.isCircleAdmin(circle)) return;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      void this.confirmSvc.notify('Circle photo must be 1 MB or smaller.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const ok = this.service.updateCircle(circle.id, { photoUrl: String(reader.result || '') });
+      if (!ok) void this.confirmSvc.notify('Only an admin can change this Circle photo.');
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
   }
 
   isChatCircleAdmin(box: ActiveChatBox): boolean {

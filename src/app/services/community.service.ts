@@ -65,6 +65,7 @@ export const FOLLOWS_KEY = 'neverbeen_follows';
 export const FOLLOWS_SEED_VERSION = 'follows-v1';
 export const FOLLOWS_SEED_VERSION_KEY = 'neverbeen_follows_seed';
 export const CIRCLES_KEY = 'neverbeen_circles';
+export const CIRCLE_READS_KEY = 'neverbeen_circle_reads';
 export const DEVICES_KEY = 'neverbeen_devices';
 export const NOTIFS_KEY = 'neverbeen_notifications';
 export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
@@ -281,6 +282,8 @@ export class CommunityService {
   /** userId -> ids that person follows. */
   readonly follows = signal<Record<string, number[]>>(this.loadFollows());
   readonly circles = signal<Circle[]>(this.loadCircles());
+  /** circleId -> ISO time the signed-in member last read that Circle chat. */
+  readonly circleReads = signal<Record<string, string>>(this.loadCircleReads());
   readonly devices = signal<LoginDevice[]>(this.loadDevices());
   /** Circle the header search asked the profile page to open as a group chat. */
   readonly pendingCircleChatId = signal<number | null>(null);
@@ -2611,6 +2614,114 @@ export class CommunityService {
     return null;
   }
 
+  demoteCircleAdmin(circleId: number, userId: number): string | null {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle) return 'Circle not found.';
+    if (!isCircleAdmin(circle, me)) return 'Only an admin can change admins.';
+    if (userId === circle.ownerId) return 'The Circle owner stays an admin.';
+    if (!isCircleAdmin(circle, userId)) return null;
+    this.circles.update((list) =>
+      list.map((c) =>
+        c.id === circleId
+          ? normalizeCircle({ ...c, adminIds: (c.adminIds ?? []).filter((id) => id !== userId) })
+          : c,
+      ),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.syncOpenCircleChat(circleId);
+    return null;
+  }
+
+  removeCircleMember(circleId: number, userId: number): string | null {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle) return 'Circle not found.';
+    if (!isCircleAdmin(circle, me)) return 'Only an admin can remove someone from this Circle.';
+    if (userId === circle.ownerId) return 'The Circle owner cannot be removed.';
+    if (userId === me) return 'You cannot remove yourself from this list.';
+    this.circles.update((list) =>
+      list.map((c) =>
+        c.id === circleId
+          ? normalizeCircle({
+              ...c,
+              adminIds: (c.adminIds ?? []).filter((id) => id !== userId),
+              memberIds: (c.memberIds ?? []).filter((id) => id !== userId),
+            })
+          : c,
+      ),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.syncOpenCircleChat(circleId);
+    return null;
+  }
+
+  private loadCircleReads(): Record<string, string> {
+    return this.loadJson<Record<string, string>>(CIRCLE_READS_KEY) ?? {};
+  }
+
+  markCircleRead(circleId: number, at = new Date().toISOString()): void {
+    const key = String(circleId);
+    this.circleReads.update((map) => ({ ...map, [key]: at }));
+    this.saveJson(CIRCLE_READS_KEY, this.circleReads());
+  }
+
+  circleLastUsedIso(circle: Circle): string | null {
+    const times = (circle.messages ?? [])
+      .map((message) => new Date(message.sentAtUtc).getTime())
+      .filter((time) => !Number.isNaN(time));
+    if (!times.length) return circle.createdAtUtc || null;
+    return new Date(Math.max(...times)).toISOString();
+  }
+
+  circleUnreadCount(circle: Circle, userId = this.currentUser()?.id ?? 1): number {
+    const readAt = this.circleReads()[String(circle.id)];
+    const readMs = readAt ? new Date(readAt).getTime() : 0;
+    return (circle.messages ?? []).filter(
+      (message) => message.senderId !== userId && new Date(message.sentAtUtc).getTime() > readMs,
+    ).length;
+  }
+
+  circleIsLive(circle: Circle): boolean {
+    const open = this.activeChatBoxes().some((box) => box.circleId === circle.id && !box.isMinimized);
+    if (open) return true;
+    const last = this.circleLastUsedIso(circle);
+    if (!last) return false;
+    const age = Date.now() - new Date(last).getTime();
+    return age >= 0 && age < 10 * 60 * 1000;
+  }
+
+  circleUsage(circle: Circle): { live: boolean; status: string; chats: number; unread: number; lastLabel: string } {
+    const last = this.circleLastUsedIso(circle);
+    const live = this.circleIsLive(circle);
+    const span = last ? this.elapsedLabel(last) : '';
+    return {
+      live,
+      status: live ? 'Active' : span ? `Inactive since ${span}` : 'Inactive',
+      chats: circle.messages?.length ?? 0,
+      unread: this.circleUnreadCount(circle),
+      lastLabel: !last ? 'No chats yet' : span === 'just now' ? 'Last chat just now' : `Last chat ${span} ago`,
+    };
+  }
+
+  private elapsedLabel(iso: string): string {
+    const ms = Math.max(0, Date.now() - new Date(iso).getTime());
+    const minute = 60_000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const days = Math.floor(ms / day);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+    if (years >= 1) return years === 1 ? '1 year' : `${years} years`;
+    if (months >= 1) return months === 1 ? '1 month' : `${months} months`;
+    if (days >= 1) return days === 1 ? '1 day' : `${days} days`;
+    const hours = Math.floor(ms / hour);
+    if (hours >= 1) return hours === 1 ? '1 hour' : `${hours} hours`;
+    const minutes = Math.floor(ms / minute);
+    if (minutes >= 1) return minutes === 1 ? '1 minute' : `${minutes} minutes`;
+    return 'just now';
+  }
+
   private syncOpenCircleChat(circleId: number): void {
     const circle = this.circles().find((c) => c.id === circleId);
     if (!circle) return;
@@ -2642,9 +2753,11 @@ export class CommunityService {
 
   /** The member is looking at this chat: clear its unread badge. */
   markChatRead(companionId: number): void {
+    const box = this.activeChatBoxes().find((b) => b.companionId === companionId);
     this.activeChatBoxes.update((boxes) =>
       boxes.map((b) => (b.companionId === companionId ? { ...b, unreadCount: 0 } : b)),
     );
+    if (box?.circleId) this.markCircleRead(box.circleId);
   }
 
   // ---------------------------------------------------------------------------
@@ -2673,6 +2786,7 @@ export class CommunityService {
     const key = -Math.abs(circle.id);
     const current = this.activeChatBoxes();
     const existing = current.find((b) => b.companionId === key || b.circleId === circle.id);
+    this.markCircleRead(circle.id);
     if (existing) {
       this.activeChatBoxes.update((boxes) =>
         boxes.map((b) => (b.companionId === existing.companionId ? { ...b, isMinimized: false, unreadCount: 0 } : b)),

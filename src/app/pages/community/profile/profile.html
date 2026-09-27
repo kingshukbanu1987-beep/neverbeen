@@ -753,57 +753,7 @@
                   <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" />
                 </div>
 
-                <!-- Google Maps API Destination Tag Auto-Search (Requirement B & D) -->
-                <div class="accessory-item destination-autocomplete-wrapper">
-                  <div class="dest-field-inline">
-                    <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
-                    @if (selectedGoogleLocation()) {
-                      <div class="selected-google-dest-pill">
-                        <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
-                        <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
-                        <span class="gmap-badge">Verified Google Maps</span>
-                        <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
-                      </div>
-                    } @else {
-                      <div class="dest-search-input-box">
-                        <input
-                          type="text"
-                          [(ngModel)]="destinationSearchInput"
-                          (input)="onDestinationSearchInput()"
-                          (focus)="onDestinationSearchFocus()"
-                          placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
-                          class="input-location-tag"
-                        />
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Google Maps Dropdown Suggestions (Requirement D: only available location can be selected) -->
-                  @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
-                    <div class="google-maps-dropdown">
-                      <div class="gmaps-header-bar">
-                        <svg viewBox="0 0 24 24" class="gmap-icon-svg" fill="none" stroke="currentColor" stroke-width="2">
-                          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                          <line x1="8" y1="2" x2="8" y2="18"></line>
-                          <line x1="16" y1="6" x2="16" y2="22"></line>
-                        </svg>
-                        <span>Google Maps Suggestions (Click to select)</span>
-                      </div>
-                      <div class="gmaps-suggestions-scroll">
-                        @for (loc of destinationSuggestions(); track loc.placeId) {
-                          <div class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
-                            <span class="gmap-pin-red"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /></span>
-                            <div class="gmap-loc-info">
-                              <strong class="loc-name">{{ loc.name }}</strong>
-                              <span class="loc-address">{{ loc.formattedAddress }}</span>
-                            </div>
-                            <span class="loc-category-badge">{{ loc.category || 'Destination' }}</span>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
+                <ng-container *ngTemplateOutlet="destinationPicker" />
               </div>
 
               <!-- Tagged companions chips preview (Requirement C) -->
@@ -860,7 +810,7 @@
                 <button
                   type="button"
                   class="btn-primary-action btn-post"
-                  [disabled]="(!newJourneyText.trim() && journeyPhotoPreviews().length === 0 && !journeyPhotoPreview()) || postingJourney()"
+                  [disabled]="!canSubmitJourney()"
                   (click)="submitJourneyPost()"
                 >
                   {{ postingJourney() ? 'Posting...' : 'Post to Journey' }}
@@ -2597,6 +2547,58 @@
           </section>
         }
 
+        <ng-template #destinationPicker>
+          <div class="accessory-item destination-autocomplete-wrapper">
+            <div class="dest-field-inline">
+              <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
+              @if (selectedGoogleLocation()) {
+                <div class="selected-google-dest-pill">
+                  <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
+                  <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
+                  <span class="gmap-badge">Verified Google Maps</span>
+                  <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
+                </div>
+              } @else {
+                <div class="dest-search-input-box">
+                  <input
+                    type="text"
+                    [(ngModel)]="destinationSearchInput"
+                    (input)="onDestinationSearchInput()"
+                    (focus)="onDestinationSearchFocus()"
+                    placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
+                    class="input-location-tag"
+                    aria-label="Destination"
+                  />
+                </div>
+              }
+            </div>
+            @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
+              <div class="google-maps-dropdown">
+                <div class="gmaps-header-bar">
+                  <svg viewBox="0 0 24 24" class="gmap-icon-svg" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                    <line x1="8" y1="2" x2="8" y2="18"></line>
+                    <line x1="16" y1="6" x2="16" y2="22"></line>
+                  </svg>
+                  <span>Google Maps Suggestions (Click to select)</span>
+                </div>
+                <div class="gmaps-suggestions-scroll">
+                  @for (loc of destinationSuggestions(); track loc.placeId) {
+                    <div class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
+                      <span class="gmap-pin-red"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /></span>
+                      <div class="gmap-loc-info">
+                        <strong class="loc-name">{{ loc.name }}</strong>
+                        <span class="loc-address">{{ loc.formattedAddress }}</span>
+                      </div>
+                      <span class="loc-category-badge">{{ loc.category || 'Destination' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </ng-template>
+
         <ng-template #followPersonCard let-person let-mode="mode">
           <div class="companion-70-card companion-40-card companion-25-card companion-card follow-person-card">
             <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
@@ -2653,12 +2655,15 @@
               </div>
               <span class="companions-capacity-pill">{{ myFollowers().length }} Followers</span>
             </header>
-            @if (myFollowers().length) {
+            <input class="people-search" type="search" placeholder="Search followers" aria-label="Search followers" [value]="followersPageQuery()" (input)="followersPageQuery.set($any($event.target).value)" />
+            @if (filteredFollowers().length) {
               <div class="companion-group-grid follow-people-grid">
-                @for (person of myFollowers(); track person.id) {
+                @for (person of filteredFollowers(); track person.id) {
                   <ng-container *ngTemplateOutlet="followPersonCard; context: { $implicit: person, mode: 'followers' }" />
                 }
               </div>
+            } @else if (followersPageQuery().trim()) {
+              <div class="companion-empty-box">No followers match that search.</div>
             } @else {
               <div class="companion-empty-box">No followers yet.</div>
             }
@@ -2674,12 +2679,15 @@
               </div>
               <span class="companions-capacity-pill">{{ myFollowing().length }} Following</span>
             </header>
-            @if (myFollowing().length) {
+            <input class="people-search" type="search" placeholder="Search following" aria-label="Search following" [value]="followingPageQuery()" (input)="followingPageQuery.set($any($event.target).value)" />
+            @if (filteredFollowing().length) {
               <div class="companion-group-grid follow-people-grid">
-                @for (person of myFollowing(); track person.id) {
+                @for (person of filteredFollowing(); track person.id) {
                   <ng-container *ngTemplateOutlet="followPersonCard; context: { $implicit: person, mode: 'following' }" />
                 }
               </div>
+            } @else if (followingPageQuery().trim()) {
+              <div class="companion-empty-box">No one you follow matches that search.</div>
             } @else {
               <div class="companion-empty-box">You are not following anyone yet.</div>
             }
@@ -2712,19 +2720,35 @@
 
             <div class="circles-grid">
               @for (circle of filteredCircles(); track circle.id) {
-                <button type="button" class="circle-card circle-card-button" (click)="openCircleChat(circle, $event)">
+                <article class="circle-card circle-card-button" (click)="openCircleChat(circle, $event)">
                   <div class="circle-top-line">
-                    @if (circle.photoUrl) {
-                      <img class="circle-large-icon circle-photo" [src]="circle.photoUrl" [alt]="circle.name" />
-                    } @else {
-                      <span class="circle-large-icon" [style.background]="circle.color">{{ circle.icon }}</span>
-                    }
+                    <div class="circle-photo-wrap">
+                      @if (circle.photoUrl) {
+                        <img class="circle-large-icon circle-photo" [src]="circle.photoUrl" [alt]="circle.name" />
+                      } @else {
+                        <span class="circle-large-icon" [style.background]="circle.color">{{ circle.icon }}</span>
+                      }
+                      @if (isCircleAdmin(circle)) {
+                        <label class="circle-photo-change" (click)="$event.stopPropagation()">
+                          Change photo
+                          <input type="file" accept="image/*" (change)="changeCirclePhoto(circle, $event)" />
+                        </label>
+                      }
+                    </div>
                     <span class="circle-role-pill">{{ isCircleAdmin(circle) ? 'Admin' : 'Member' }}</span>
                   </div>
                   <h3 class="circle-title">{{ circle.name }}</h3>
                   <p class="circle-desc" [nbTranslatable]="circle.description">{{ circle.description }}</p>
+                  <div class="circle-usage" [class.live]="circleUsage(circle).live">
+                    <span class="circle-status-pill">{{ circleUsage(circle).status }}</span>
+                    <span>{{ circleUsage(circle).chats }} Chats</span>
+                    <span class="circle-unread" [class.has-unread]="circleUsage(circle).unread > 0">{{ circleUsage(circle).unread }} Unread</span>
+                  </div>
+                  <p class="circle-last-used">{{ circleUsage(circle).lastLabel }}</p>
                   <div class="circle-members-row">
-                    <span class="members-lbl">{{ circle.memberIds.length }} travelers</span>
+                    <button type="button" class="members-count-btn" (click)="openCircleMembers(circle, $event)">
+                      {{ circle.memberIds.length }} travelers
+                    </button>
                   </div>
                   @if (isCircleAdmin(circle)) {
                     <div class="circle-admin-actions" (click)="$event.stopPropagation()">
@@ -2732,7 +2756,7 @@
                       <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id, $event)">Delete</button>
                     </div>
                   }
-                </button>
+                </article>
               } @empty {
                 <div class="companion-empty-box">No circles match this view.</div>
               }
@@ -3601,7 +3625,8 @@
           <button type="button" class="btn-close-modal" (click)="closeFollowList()" aria-label="Close">✕</button>
         </header>
         <div class="modal-body-content follow-list-body">
-          @for (person of followListPeople(); track person.id) {
+          <input class="people-search" type="search" placeholder="Search this list" aria-label="Search this list" [value]="followListQuery()" (input)="followListQuery.set($any($event.target).value)" />
+          @for (person of filteredFollowList(); track person.id) {
             <button type="button" class="follow-list-row" (click)="closeFollowList(); openVisitorProfile(person)">
               <img [src]="person.profilePhotoUrl || defaultAvatar" [alt]="person.fullName" />
               <span>
@@ -3610,7 +3635,7 @@
               </span>
             </button>
           } @empty {
-            <p class="follow-list-empty">No one here yet.</p>
+            <p class="follow-list-empty">{{ followListQuery().trim() ? 'No one matches that search.' : 'No one here yet.' }}</p>
           }
         </div>
       </div>
@@ -3844,25 +3869,34 @@
 
   @if (showAddPeopleModal()) {
     <div class="modal-backdrop-overlay" (click)="showAddPeopleModal.set(false)">
-      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
-        <header class="modal-head"><h3 class="modal-head-title">Add people</h3></header>
-        <div class="modal-body">
-          <p class="card-desc">Adding people turns this chat into a group. Only companions can be added.</p>
-          <div class="modal-companions-selection">
+      <div class="chat-action-dialog" role="dialog" aria-modal="true" aria-labelledby="add-people-title" (click)="$event.stopPropagation()">
+        <header class="chat-action-head">
+          <div>
+            <p class="chat-action-kicker">Group chat</p>
+            <h3 id="add-people-title">Add People</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showAddPeopleModal.set(false)" aria-label="Close">✕</button>
+        </header>
+        <div class="chat-action-body">
+          <p>Adding people turns this chat into a group. Only companions can be added.</p>
+          <div class="chat-action-people">
             @for (c of peopleAvailableForOpenChat(); track c.id) {
-              <label class="companion-checkbox-row">
+              <label class="chat-person-row">
                 <input type="checkbox" [checked]="selectedAddPeopleIds().includes(c.id)" (change)="toggleAddPerson(c.id)" />
-                <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="mini-check-avatar" />
-                <span>{{ c.fullName }}</span>
+                <img [src]="c.profilePhotoUrl" [alt]="c.fullName" />
+                <span>
+                  <strong>{{ c.fullName }}</strong>
+                  <small>{{ c.city }}, {{ c.country }}</small>
+                </span>
               </label>
             } @empty {
-              <p>No more companions to add.</p>
+              <p class="chat-action-empty">No more companions to add.</p>
             }
           </div>
         </div>
-        <footer class="modal-footer-bar">
+        <footer class="chat-action-foot">
           <button type="button" class="btn-secondary-action" (click)="showAddPeopleModal.set(false)">Cancel</button>
-          <button type="button" class="btn-primary-action" (click)="confirmAddPeople()">Add</button>
+          <button type="button" class="btn-primary-action" (click)="confirmAddPeople()">Add People</button>
         </footer>
       </div>
     </div>
@@ -3870,27 +3904,84 @@
 
   @if (showSaveCircleModal()) {
     <div class="modal-backdrop-overlay" (click)="showSaveCircleModal.set(false)">
-      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
-        <header class="modal-head"><h3 class="modal-head-title">Save chat as a Circle</h3></header>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Circle name</label>
-            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" />
+      <div class="chat-action-dialog" role="dialog" aria-modal="true" aria-labelledby="save-circle-title" (click)="$event.stopPropagation()">
+        <header class="chat-action-head">
+          <div>
+            <p class="chat-action-kicker">Keep this conversation</p>
+            <h3 id="save-circle-title">Save Chat as Circle</h3>
           </div>
-          <div class="form-group">
-            <label>Description</label>
-            <textarea class="form-control" rows="3" [(ngModel)]="newCircleDesc"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Photo</label>
+          <button type="button" class="btn-close-modal" (click)="showSaveCircleModal.set(false)" aria-label="Close">✕</button>
+        </header>
+        <div class="chat-action-body">
+          <label class="chat-field">
+            <span>Circle name</span>
+            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" placeholder="Name this Circle" />
+          </label>
+          <label class="chat-field">
+            <span>Description</span>
+            <textarea class="form-control" rows="3" [(ngModel)]="newCircleDesc" placeholder="What is this Circle for?"></textarea>
+          </label>
+          <label class="chat-field chat-photo-field">
+            <span>Photo</span>
             <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" />
-          </div>
+            @if (circlePhotoPreview()) {
+              <img class="circle-photo-preview" [src]="circlePhotoPreview()" alt="Circle photo preview" />
+            }
+          </label>
           @if (circleError()) { <p class="status-error-msg">{{ circleError() }}</p> }
         </div>
-        <footer class="modal-footer-bar">
+        <footer class="chat-action-foot">
           <button type="button" class="btn-secondary-action" (click)="showSaveCircleModal.set(false)">Cancel</button>
-          <button type="button" class="btn-primary-action" (click)="confirmSaveCircle()">Save Circle</button>
+          <button type="button" class="btn-primary-action" (click)="confirmSaveCircle()">Save Chat as Circle</button>
         </footer>
+      </div>
+    </div>
+  }
+
+  @if (circleMembersTarget(); as membersCircle) {
+    <div class="modal-backdrop-overlay" (click)="closeCircleMembers()">
+      <div class="modal-dialog-card circle-members-dialog" role="dialog" aria-modal="true" [attr.aria-label]="membersCircle.name + ' travelers'" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <h3 class="modal-head-title">{{ membersCircle.name }}</h3>
+          <button type="button" class="btn-close-modal" (click)="closeCircleMembers()" aria-label="Close">✕</button>
+        </header>
+        <div class="modal-body-content follow-list-body">
+          <input class="people-search" type="search" placeholder="Search people in this Circle" aria-label="Search people in this Circle" [value]="circleMembersQuery()" (input)="circleMembersQuery.set($any($event.target).value)" />
+          @if (isCircleAdmin(membersCircle)) {
+            <label class="circle-photo-change circle-photo-change-inline">
+              Change photo
+              <input type="file" accept="image/*" (change)="changeCirclePhoto(membersCircle, $event)" />
+            </label>
+          }
+          @for (person of filteredCircleMembers(); track person.id) {
+            <div class="circle-member-row">
+              <button type="button" class="follow-list-row" (click)="closeCircleMembers(); openVisitorProfile(person)">
+                <img [src]="person.profilePhotoUrl || defaultAvatar" [alt]="person.fullName" />
+                <span>
+                  <strong>{{ person.fullName }}</strong>
+                  <small>
+                    @if (isCircleOwner(membersCircle, person.id)) { Owner }
+                    @else if (personIsCircleAdmin(membersCircle, person.id)) { Admin }
+                    @else { Member }
+                    · {{ person.city }}
+                  </small>
+                </span>
+              </button>
+              @if (isCircleAdmin(membersCircle) && person.id !== (service.currentUser()?.id || 1) && !isCircleOwner(membersCircle, person.id)) {
+                <div class="circle-member-actions">
+                  @if (personIsCircleAdmin(membersCircle, person.id)) {
+                    <button type="button" class="btn-action-subtle btn-sm" (click)="removeCircleAdmin(membersCircle.id, person.id)">Remove Admin</button>
+                  } @else {
+                    <button type="button" class="btn-primary-action btn-sm" (click)="makeCircleAdmin(membersCircle.id, person.id)">Admin</button>
+                  }
+                  <button type="button" class="btn-danger-outline btn-sm" (click)="deleteCircleMember(membersCircle.id, person.id)">Delete</button>
+                </div>
+              }
+            </div>
+          } @empty {
+            <p class="follow-list-empty">{{ circleMembersQuery().trim() ? 'No one matches that search.' : 'No travelers in this Circle.' }}</p>
+          }
+        </div>
       </div>
     </div>
   }
@@ -4589,21 +4680,73 @@
                   <label class="btn-tool-photo-label">📷 Add Photos
                     <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
                   </label>
-                  <button type="button" class="btn-tool-tag" (click)="openTagPeopleModal('journey')">🏷️ Tag People</button>
+                  <button type="button" class="btn-tool-tag" (click)="openTagPeopleModal('journey')">🏷️ Tag People
+                    @if (selectedJourneyTaggedCompanions().length > 0) {
+                      <span class="tag-count-bubble">({{ selectedJourneyTaggedCompanions().length }})</span>
+                    }
+                  </button>
                   <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" inputId="visitor-travel-mood" />
-                  <input
-                    type="text"
-                    class="input-location-tag"
-                    [(ngModel)]="destinationSearchInput"
-                    (input)="onDestinationSearchInput()"
-                    placeholder="Destination"
-                    aria-label="Destination"
-                  />
+                  <div class="accessory-item destination-autocomplete-wrapper">
+                    <div class="dest-field-inline">
+                      <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
+                      @if (selectedGoogleLocation()) {
+                        <div class="selected-google-dest-pill">
+                          <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
+                          <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
+                          <span class="gmap-badge">Verified Google Maps</span>
+                          <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
+                        </div>
+                      } @else {
+                        <div class="dest-search-input-box">
+                          <input
+                            type="text"
+                            [(ngModel)]="destinationSearchInput"
+                            (input)="onDestinationSearchInput()"
+                            (focus)="onDestinationSearchFocus()"
+                            placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
+                            class="input-location-tag"
+                            aria-label="Destination"
+                          />
+                        </div>
+                      }
+                    </div>
+                    @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
+                      <div class="google-maps-dropdown">
+                        <div class="gmaps-header-bar">
+                          <span>Google Maps Suggestions (Click to select)</span>
+                        </div>
+                        <div class="gmaps-suggestions-scroll">
+                          @for (loc of destinationSuggestions(); track loc.placeId) {
+                            <button type="button" class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
+                              <span class="gmap-loc-info">
+                                <strong class="loc-name">{{ loc.name }}</strong>
+                                <span class="loc-address">{{ loc.formattedAddress }}</span>
+                              </span>
+                              <span class="loc-category-badge">{{ loc.category || 'Destination' }}</span>
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
                 </div>
+                @if (destinationError()) {
+                  <div class="destination-error-banner">⚠️ {{ destinationError() }}</div>
+                }
+                @if (journeyPhotoError()) {
+                  <div class="composer-error-banner">⚠️ {{ journeyPhotoError() }}</div>
+                }
+                @if (journeyPhotoPreviews().length > 0) {
+                  <div class="composer-multi-photos-preview">
+                    @for (photo of journeyPhotoPreviews(); track $index) {
+                      <img [src]="photo" alt="Attached photo preview" class="composer-preview-img-thumb" />
+                    }
+                  </div>
+                }
                 <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" (audienceChange)="postAudience = $event" />
                 <div class="composer-footer">
-                  <button type="button" class="btn-primary-action" [disabled]="!newJourneyText.trim() && journeyPhotoPreviews().length === 0" (click)="submitJourneyPost()">
-                    Post to {{ viewingVisitor()!.fullName }}'s Journey
+                  <button type="button" class="btn-primary-action btn-post" [disabled]="!canSubmitJourney()" (click)="submitJourneyPost()">
+                    {{ postingJourney() ? 'Posting...' : ('Post to ' + viewingVisitor()!.fullName + "'s Journey") }}
                   </button>
                 </div>
               </div>

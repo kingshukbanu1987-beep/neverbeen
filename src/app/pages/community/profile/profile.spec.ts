@@ -2158,5 +2158,77 @@ describe('CommunityProfile', () => {
     countBtn?.click();
     fixture.detectChanges();
     expect(element.querySelector('.follow-list-dialog')?.textContent).toContain('Followers');
+    const search = element.querySelector<HTMLInputElement>('.follow-list-dialog .people-search');
+    expect(search).toBeTruthy();
+    expect(getComputedStyle(countBtn!).borderTopWidth).toBe('0px');
+  });
+
+  it('posts on a companion Journey with the same destination picker', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    const marco = service.companions().find((c) => c.id === 12)!;
+    component.openVisitorProfile(marco);
+    fixture.detectChanges();
+
+    const composer = element.querySelector('.wall-composer');
+    expect(composer?.textContent).toContain("Post to Marco Rossi's Journey");
+    expect(composer?.querySelector('.destination-autocomplete-wrapper')).toBeTruthy();
+    expect(composer?.querySelector('.input-location-tag')).toBeTruthy();
+
+    component['newJourneyText'] = 'A note on your Journey from the road.';
+    component['destinationSearchInput'] = 'Kyoto';
+    await component['onDestinationSearchInput']();
+    fixture.detectChanges();
+    expect(composer?.querySelector('.google-maps-dropdown')?.textContent).toContain('Kyoto');
+
+    component.submitJourneyPost();
+    fixture.detectChanges();
+    expect(component['destinationError']()).toContain('Only available locations');
+    expect(service.postsForWall(marco.id).some((post) => post.text.includes('from the road'))).toBe(false);
+
+    const kyoto = component['destinationSuggestions']().find((loc) => loc.name.includes('Kyoto'))!;
+    component.selectGoogleLocation(kyoto);
+    component.submitJourneyPost();
+    fixture.detectChanges();
+    const posted = service.postsForWall(marco.id).find((post) => post.text.includes('from the road'));
+    expect(posted?.wallOwnerId).toBe(marco.id);
+    expect(posted?.location).toContain('Kyoto');
+    expect(element.querySelector('.visitor-flow-journey')?.textContent).toContain('from the road');
+  });
+
+  it('lets circle admins manage the traveler list and shows chat activity', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    component.setSection('circles');
+    fixture.detectChanges();
+
+    const adminCircle = service.myCircles().find((circle) => service.isCircleAdmin(circle, 1))!;
+    const memberCircle = service.myCircles().find((circle) => !service.isCircleAdmin(circle, 1))!;
+    expect(element.querySelector('.circle-usage')?.textContent).toMatch(/Active|Inactive since/);
+    expect(element.textContent).toContain('Chats');
+    expect(element.textContent).toContain('Unread');
+    expect(element.querySelector('.circle-photo-change')).toBeTruthy();
+
+    component.openCircleMembers(adminCircle);
+    fixture.detectChanges();
+    const dialog = element.querySelector('.circle-members-dialog');
+    expect(dialog?.querySelector('.people-search')).toBeTruthy();
+    expect(dialog?.textContent).toContain('Admin');
+    expect(dialog?.textContent).toContain('Delete');
+    const other = component.filteredCircleMembers().find((person) => person.id !== 1)!;
+    component.makeCircleAdmin(adminCircle.id, other.id);
+    fixture.detectChanges();
+    expect(service.isCircleAdmin(service.circles().find((c) => c.id === adminCircle.id)!, other.id)).toBe(true);
+    component.removeCircleAdmin(adminCircle.id, other.id);
+    component.deleteCircleMember(adminCircle.id, other.id);
+    expect(service.circles().find((c) => c.id === adminCircle.id)!.memberIds).not.toContain(other.id);
+
+    component.openCircleMembers(memberCircle);
+    fixture.detectChanges();
+    const memberDialog = element.querySelector('.circle-members-dialog');
+    expect(memberDialog?.textContent).not.toContain('Remove Admin');
+    expect(memberDialog?.querySelector('.circle-member-actions')).toBeNull();
   });
 });
