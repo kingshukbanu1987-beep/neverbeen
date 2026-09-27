@@ -115,6 +115,8 @@ export const PROFILE_SECTIONS: [string, string][] = [
   ['gallery', 'Gallery'],
   ['messagebook', 'MessageBook'],
   ['companions', 'Companions'],
+  ['followers', 'Followers'],
+  ['following', 'Following'],
   ['circles', 'Circles'],
   ['messenger', 'Messenger'],
   ['birthdays', 'Birthdays'],

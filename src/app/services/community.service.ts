@@ -61,6 +61,9 @@ export const PROFILE_KEY = 'neverbeen_user_profile';
 export const COMMENTS_KEY = 'neverbeen_comments';
 export const JOURNEY_KEY = 'neverbeen_journey_posts';
 export const COMPANIONS_KEY = 'neverbeen_companions';
+export const FOLLOWS_KEY = 'neverbeen_follows';
+export const FOLLOWS_SEED_VERSION = 'follows-v1';
+export const FOLLOWS_SEED_VERSION_KEY = 'neverbeen_follows_seed';
 export const CIRCLES_KEY = 'neverbeen_circles';
 export const DEVICES_KEY = 'neverbeen_devices';
 export const NOTIFS_KEY = 'neverbeen_notifications';
@@ -275,6 +278,8 @@ export class CommunityService {
   // Social Network State: Journey, Companions, Circles, Notifications, Messenger
   readonly journeyPosts = signal<JourneyPost[]>(this.loadJourneyPosts());
   readonly companions = signal<Companion[]>(this.loadCompanions());
+  /** userId -> ids that person follows. */
+  readonly follows = signal<Record<string, number[]>>(this.loadFollows());
   readonly circles = signal<Circle[]>(this.loadCircles());
   readonly devices = signal<LoginDevice[]>(this.loadDevices());
   /** Circle the header search asked the profile page to open as a group chat. */
@@ -2002,6 +2007,8 @@ export class CommunityService {
       list.map((c) => (Number(c.id) === numId ? { ...c, status: 'pending_outgoing' as const } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+    // Sending a companionship request follows that traveler by default.
+    this.follow(numId);
   }
 
   cancelCompanionshipRequest(targetUserId: number): void {
@@ -2384,11 +2391,13 @@ export class CommunityService {
       this.blockedUserIds.update((list) => [...list, userId]);
       this.saveJson(BLOCKED_USERS_KEY, this.blockedUserIds());
     }
-    // Break companionship connection
+    // Break companionship connection and both follow directions.
     this.companions.update((list) =>
       list.map((c) => (c.id === userId ? { ...c, status: 'none' } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+    this.unfollow(userId);
+    this.disconnectFollower(userId);
 
     // Close any active chat with this user
     this.closeChatBox(userId);
@@ -3579,6 +3588,138 @@ export class CommunityService {
     const first = (c.fullName || '').toLowerCase().split(' ')[0];
     if (femaleNames.some((fn) => first.includes(fn))) return true;
     return index % 2 === 0;
+  }
+
+  private myId(): number {
+    return Number(this.currentUser()?.id || 1);
+  }
+
+  private loadFollows(): Record<string, number[]> {
+    if (typeof localStorage !== 'undefined') {
+      const version = localStorage.getItem(FOLLOWS_SEED_VERSION_KEY);
+      const saved = this.loadJson<Record<string, number[]>>(FOLLOWS_KEY);
+      if (version === FOLLOWS_SEED_VERSION && saved && typeof saved === 'object') {
+        return saved;
+      }
+    }
+    const seeded = this.seedFollows();
+    this.saveJson(FOLLOWS_KEY, seeded);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(FOLLOWS_SEED_VERSION_KEY, FOLLOWS_SEED_VERSION);
+    }
+    return seeded;
+  }
+
+  /** Seed a mixed follow graph so both pages have companions, pending requests, and strangers. */
+  private seedFollows(): Record<string, number[]> {
+    const me = this.myId();
+    const graph: Record<string, number[]> = {};
+    const add = (from: number, to: number) => {
+      if (!from || !to || from === to) return;
+      const key = String(from);
+      const list = graph[key] ?? [];
+      if (!list.includes(to)) list.push(to);
+      graph[key] = list;
+    };
+    const people = this.companions();
+    for (const person of people) {
+      if (person.status === 'pending_outgoing' || person.status === 'connected') {
+        add(me, person.id);
+      }
+      if (person.status === 'pending_incoming' || (person.status === 'connected' && person.id % 2 === 0)) {
+        add(person.id, me);
+      }
+      if (person.status === 'none' && person.id % 5 === 0) add(person.id, me);
+      if (person.status === 'none' && person.id % 7 === 0) add(me, person.id);
+      const others = people.filter((other) => other.id !== person.id);
+      if (!others.length) continue;
+      add(person.id, others[person.id % others.length].id);
+      add(person.id, others[(person.id * 3) % others.length].id);
+    }
+    return graph;
+  }
+
+  private persistFollows(): void {
+    this.saveJson(FOLLOWS_KEY, this.follows());
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(FOLLOWS_SEED_VERSION_KEY, FOLLOWS_SEED_VERSION);
+    }
+  }
+
+  private resolvePeople(ids: number[]): Companion[] {
+    const me = this.myId();
+    const blocked = new Set(this.blockedUserIds());
+    const seen = new Set<number>();
+    const people: Companion[] = [];
+    for (const id of ids) {
+      const num = Number(id);
+      if (!num || seen.has(num) || blocked.has(num)) continue;
+      seen.add(num);
+      const person =
+        num === me
+          ? this.getCurrentUserAsCompanion()
+          : this.companions().find((c) => Number(c.id) === num);
+      if (person) people.push(person);
+    }
+    return people;
+  }
+
+  followingIds(userId: number = this.myId()): number[] {
+    return this.follows()[String(userId)] ?? [];
+  }
+
+  followerIds(userId: number = this.myId()): number[] {
+    const target = Number(userId);
+    return Object.entries(this.follows())
+      .filter(([, ids]) => ids.some((id) => Number(id) === target))
+      .map(([id]) => Number(id));
+  }
+
+  followingCount(userId: number = this.myId()): number {
+    return this.peopleFollowing(userId).length;
+  }
+
+  followerCount(userId: number = this.myId()): number {
+    return this.peopleFollowers(userId).length;
+  }
+
+  peopleFollowing(userId: number = this.myId()): Companion[] {
+    return this.resolvePeople(this.followingIds(userId));
+  }
+
+  peopleFollowers(userId: number = this.myId()): Companion[] {
+    return this.resolvePeople(this.followerIds(userId));
+  }
+
+  isFollowing(targetUserId: number, actorId: number = this.myId()): boolean {
+    return this.followingIds(actorId).some((id) => Number(id) === Number(targetUserId));
+  }
+
+  follow(targetUserId: number, actorId: number = this.myId()): void {
+    const target = Number(targetUserId);
+    const actor = Number(actorId);
+    if (!target || !actor || target === actor || this.blockedUserIds().includes(target)) return;
+    if (this.isFollowing(target, actor)) return;
+    this.follows.update((graph) => {
+      const key = String(actor);
+      return { ...graph, [key]: [...(graph[key] ?? []), target] };
+    });
+    this.persistFollows();
+  }
+
+  unfollow(targetUserId: number, actorId: number = this.myId()): void {
+    const target = Number(targetUserId);
+    const actor = Number(actorId);
+    this.follows.update((graph) => {
+      const key = String(actor);
+      return { ...graph, [key]: (graph[key] ?? []).filter((id) => Number(id) !== target) };
+    });
+    this.persistFollows();
+  }
+
+  /** Stop this person from following me (or `ownerId`). */
+  disconnectFollower(followerId: number, ownerId: number = this.myId()): void {
+    this.unfollow(ownerId, followerId);
   }
 
   private loadCompanions(): Companion[] {

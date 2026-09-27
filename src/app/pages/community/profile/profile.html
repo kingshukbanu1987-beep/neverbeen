@@ -262,6 +262,17 @@
             </select>
           </div>
 
+          <div class="follow-count-row" aria-label="Followers and following">
+            <button type="button" class="follow-count-btn" (click)="openFollowList('followers')">
+              <strong>{{ service.followerCount() }}</strong>
+              <span>Followers</span>
+            </button>
+            <button type="button" class="follow-count-btn" (click)="openFollowList('following')">
+              <strong>{{ service.followingCount() }}</strong>
+              <span>Following</span>
+            </button>
+          </div>
+
           <!-- Profile Locked / Public Pill -->
           <div class="profile-lock-status-badge">
             @if (service.profile()?.isProfileLocked) {
@@ -372,6 +383,43 @@
             </span>
             <span class="menu-label">{{ profileLabel('companions') }}</span>
             <span class="menu-badge">{{ connectedCompanionsCount() }}/500</span>
+          </button>
+          }
+
+          <!-- Followers -->
+          @if (profileSectionOn('followers')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'followers'"
+            (click)="setSection('followers')"
+          >
+            <span class="icon-pill pill-fuchsia">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12.75c1.63 0 3.07.39 4.24.9 1.08.48 1.76 1.56 1.76 2.73V18H6v-1.61c0-1.18.68-2.26 1.76-2.73 1.17-.52 2.61-.91 4.24-.91zM4 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm1.13 1.1c-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29zM20 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm4 3.43c0-.81-.48-1.53-1.22-1.85A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57zM12 6c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('followers') }}</span>
+            <span class="menu-badge">{{ service.followerCount() }}</span>
+          </button>
+          }
+
+          <!-- Following -->
+          @if (profileSectionOn('following')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'following'"
+            (click)="setSection('following')"
+          >
+            <span class="icon-pill pill-lime">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h8.2c-.4-.6-.7-1.3-.7-2 0-1.1.4-2.1 1.1-2.9C9.1 13.4 8.5 13 8 13z"/>
+                <path d="M14 11h3.2l-1.4-1.4L17.2 8 21 11.8 17.2 15.6l-1.4-1.4L17.2 13H14v-2z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('following') }}</span>
+            <span class="menu-badge">{{ service.followingCount() }}</span>
           </button>
           }
 
@@ -2549,6 +2597,95 @@
           </section>
         }
 
+        <ng-template #followPersonCard let-person let-mode="mode">
+          <div class="companion-70-card companion-40-card companion-25-card companion-card follow-person-card">
+            <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
+              <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="person" (click)="openVisitorProfile(person)">
+                <img [src]="person.profilePhotoUrl || defaultAvatar" [alt]="person.fullName" class="companion-photo-70-img companion-photo-img" />
+                <app-presence-dot [user]="person" />
+              </div>
+              <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
+                <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="person" (click)="openVisitorProfile(person)">
+                  {{ person.fullName }}
+                  @if (isAuthorVerified(person)) {
+                    <span class="blue-verified-badge" title="Verified Account">
+                      <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                    </span>
+                  }
+                </h4>
+                <div class="companion-relationship">{{ relationshipLabel(person) }}</div>
+                <div class="companion-70-field companion-card-field">
+                  <span class="companion-70-field-label">Profession:</span>
+                  <span class="companion-70-field-val">{{ person.profession }}</span>
+                </div>
+                <div class="companion-70-field companion-card-field">
+                  <span class="companion-70-field-label">Location:</span>
+                  <span class="companion-70-field-val">{{ person.city }}, {{ person.country }}</span>
+                </div>
+              </div>
+            </div>
+            <footer class="companion-70-card-footer companion-card-footer follow-card-actions">
+              @if (person.status === 'connected') {
+                <button type="button" class="btn-remove-companion-action btn-action-subtle btn-sm" (click)="removeCompanionship(person.id)">Remove Companionship</button>
+              } @else if (person.status === 'pending_incoming') {
+                <button type="button" class="btn-primary-action btn-sm" (click)="acceptCompanionRequest(person.id)">Accept</button>
+              } @else if (person.status === 'pending_outgoing') {
+                <button type="button" class="btn-pending-follow btn-sm" (click)="pendingRequestNotice(person.fullName)">Request Pending</button>
+              } @else {
+                <button type="button" class="btn-primary-action btn-sm btn-connect-companion" (click)="requestCompanionship(person.id)">Add Companion</button>
+              }
+              @if (mode === 'followers') {
+                <button type="button" class="btn-action-subtle btn-sm" (click)="disconnectFollower(person.id)">Disconnect</button>
+              } @else {
+                <button type="button" class="btn-action-subtle btn-sm" (click)="unfollowUser(person.id)">Unfollow</button>
+              }
+              <button type="button" class="btn-danger-outline btn-sm btn-block-user" (click)="blockUser(person.id)">Block</button>
+            </footer>
+          </div>
+        </ng-template>
+
+        @if (activeSection() === 'followers') {
+          <section class="section-pane companions-pane followers-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Followers</h1>
+                <p class="section-desc">Travelers who follow you. Disconnect to stop them following, or block them completely.</p>
+              </div>
+              <span class="companions-capacity-pill">{{ myFollowers().length }} Followers</span>
+            </header>
+            @if (myFollowers().length) {
+              <div class="companion-group-grid follow-people-grid">
+                @for (person of myFollowers(); track person.id) {
+                  <ng-container *ngTemplateOutlet="followPersonCard; context: { $implicit: person, mode: 'followers' }" />
+                }
+              </div>
+            } @else {
+              <div class="companion-empty-box">No followers yet.</div>
+            }
+          </section>
+        }
+
+        @if (activeSection() === 'following') {
+          <section class="section-pane companions-pane following-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Following</h1>
+                <p class="section-desc">Travelers you follow. Unfollow anyone you no longer want to follow.</p>
+              </div>
+              <span class="companions-capacity-pill">{{ myFollowing().length }} Following</span>
+            </header>
+            @if (myFollowing().length) {
+              <div class="companion-group-grid follow-people-grid">
+                @for (person of myFollowing(); track person.id) {
+                  <ng-container *ngTemplateOutlet="followPersonCard; context: { $implicit: person, mode: 'following' }" />
+                }
+              </div>
+            } @else {
+              <div class="companion-empty-box">You are not following anyone yet.</div>
+            }
+          </section>
+        }
+
         <!-- ================================================================= -->
         <!-- SECTION 6: CIRCLES                                                -->
         <!-- ================================================================= -->
@@ -3456,6 +3593,30 @@
     }
   </div>
 
+  @if (followListKind()) {
+    <div class="modal-backdrop-overlay" (click)="closeFollowList()">
+      <div class="modal-dialog-card follow-list-dialog" role="dialog" aria-modal="true" [attr.aria-label]="followListTitle()" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <h3 class="modal-head-title">{{ followListTitle() }}</h3>
+          <button type="button" class="btn-close-modal" (click)="closeFollowList()" aria-label="Close">✕</button>
+        </header>
+        <div class="modal-body-content follow-list-body">
+          @for (person of followListPeople(); track person.id) {
+            <button type="button" class="follow-list-row" (click)="closeFollowList(); openVisitorProfile(person)">
+              <img [src]="person.profilePhotoUrl || defaultAvatar" [alt]="person.fullName" />
+              <span>
+                <strong>{{ person.fullName }}</strong>
+                <small>{{ person.city }}, {{ person.country }}</small>
+              </span>
+            </button>
+          } @empty {
+            <p class="follow-list-empty">No one here yet.</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
   @if (editingPostId()) {
     <div class="modal-backdrop-overlay" (click)="editingPostId.set(null)">
       <div class="modal-dialog-card" (click)="$event.stopPropagation()">
@@ -3976,6 +4137,14 @@
 
             <div class="visitor-hero-badges">
               <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
+              <button type="button" class="follow-count-btn follow-count-inline" (click)="openFollowList('followers', viewingVisitor()!.id)">
+                <strong>{{ service.followerCount(viewingVisitor()!.id) }}</strong>
+                <span>Followers</span>
+              </button>
+              <button type="button" class="follow-count-btn follow-count-inline" (click)="openFollowList('following', viewingVisitor()!.id)">
+                <strong>{{ service.followingCount(viewingVisitor()!.id) }}</strong>
+                <span>Following</span>
+              </button>
               @if (!isViewingSelf()) {
                 <span
                   class="badge-mutual-tag clickable-badge"
@@ -3994,6 +4163,11 @@
                Hidden on my own profile preview — I can't be a companion of myself. -->
           @if (!isViewingSelf()) {
           <div class="visitor-hero-actions">
+            @if (service.isFollowing(viewingVisitor()!.id)) {
+              <button type="button" class="btn-action-outline" (click)="unfollowUser(viewingVisitor()!.id)">Following</button>
+            } @else {
+              <button type="button" class="btn-primary-action" (click)="followUser(viewingVisitor()!.id)">Follow</button>
+            }
             @if (viewingVisitor()!.status === 'connected') {
               <span class="badge-connected-status">✓ Companions</span>
               <button

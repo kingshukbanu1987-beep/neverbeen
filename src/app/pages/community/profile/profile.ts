@@ -57,6 +57,8 @@ export type ProfileSection =
   | 'gallery'
   | 'messagebook'
   | 'companions'
+  | 'followers'
+  | 'following'
   | 'circles'
   | 'messenger'
   | 'birthdays'
@@ -70,6 +72,8 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
   'gallery',
   'messagebook',
   'companions',
+  'followers',
+  'following',
   'circles',
   'messenger',
   'birthdays',
@@ -1958,6 +1962,62 @@ export class CommunityProfile implements OnInit {
   // ---------------------------------------------------------------------------
   // BLOCK / UNBLOCK USERS (Requirement B)
   // ---------------------------------------------------------------------------
+
+  readonly followListKind = signal<'followers' | 'following' | null>(null);
+  readonly followListOwnerId = signal<number | null>(null);
+
+  openFollowList(kind: 'followers' | 'following', ownerId?: number): void {
+    this.followListKind.set(kind);
+    this.followListOwnerId.set(ownerId ?? this.service.currentUser()?.id ?? 1);
+  }
+
+  closeFollowList(): void {
+    this.followListKind.set(null);
+  }
+
+  followListTitle(): string {
+    const kind = this.followListKind() === 'following' ? 'Following' : 'Followers';
+    const ownerId = this.followListOwnerId();
+    const me = this.service.currentUser()?.id ?? 1;
+    if (!ownerId || ownerId === me) return kind;
+    const owner = this.service.companions().find((c) => Number(c.id) === Number(ownerId));
+    return owner ? `${owner.fullName.split(' ')[0]}'s ${kind.toLowerCase()}` : kind;
+  }
+
+  followListPeople(): Companion[] {
+    const ownerId = this.followListOwnerId() ?? this.service.currentUser()?.id ?? 1;
+    return this.followListKind() === 'following'
+      ? this.service.peopleFollowing(ownerId)
+      : this.service.peopleFollowers(ownerId);
+  }
+
+  myFollowers(): Companion[] {
+    return this.service.peopleFollowers();
+  }
+
+  myFollowing(): Companion[] {
+    return this.service.peopleFollowing();
+  }
+
+  followUser(userId: number): void {
+    this.service.follow(userId);
+  }
+
+  unfollowUser(userId: number): void {
+    this.service.unfollow(userId);
+  }
+
+  disconnectFollower(userId: number): void {
+    this.service.disconnectFollower(userId);
+  }
+
+  removeCompanionship(userId: number): void {
+    this.removeCompanionshipFromVisitor(userId);
+  }
+
+  pendingRequestNotice(name: string): void {
+    void this.confirmSvc.notify(`Your companionship request to ${name} is still pending.`);
+  }
 
   blockUser(userId: number): void {
     this.service.blockUser(userId);
