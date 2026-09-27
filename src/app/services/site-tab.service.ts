@@ -4,21 +4,21 @@ import { CommunityBadgeService } from './community-badge.service';
 /**
  * Browser tab state for the whole website:
  *
- *  • The tab title is always "NeverBeen" — with the unread community
- *    notification count in brackets in front (e.g. "(3) NeverBeen"),
+ *  • The tab title is always "NeverBeen" — with the combined unread total of
+ *    chats and notifications in brackets in front (e.g. "(5) NeverBeen"),
  *    the way Facebook does it. No route ever gets to rename the tab to a
  *    member/user profile or anything else.
- *  • When there are unread notifications, a small red circle (with the count,
+ *  • When that total is above zero, a small red circle (with the count,
  *    capped at 99) is drawn on top of the website icon in the tab.
  *
- * The unread count comes from CommunityBadgeService (kept live by the lazy
- * CommunityService). Until that service has synced (e.g. the member is on a
- * marketing page and has not opened the Community this session), the
- * notifications are read straight from localStorage. Only a signed-in
- * session (auth cookie present) shows a badge.
+ * Each count comes from CommunityBadgeService (kept live by the lazy
+ * CommunityService). Until that service has synced a source, that source is
+ * read from localStorage. Only a signed-in session (auth cookie present)
+ * shows a badge.
  */
 const SITE_NAME = 'NeverBeen';
 const NOTIFS_STORAGE_KEY = 'neverbeen_notifications';
+const CHATS_STORAGE_KEY = 'neverbeen_pending_chats';
 const TOKEN_COOKIE = 'neverbeen_auth_token';
 const FAVICON_URL = 'fav.png';
 
@@ -34,7 +34,7 @@ export class SiteTabService {
 
   constructor(private readonly badges: CommunityBadgeService) {
     if (typeof window !== 'undefined') {
-      // Another tab changed the notifications → re-check.
+      // Another tab changed chats or notifications → re-check.
       window.addEventListener('storage', () => this.sync());
     }
   }
@@ -49,19 +49,31 @@ export class SiteTabService {
     this.renderFavicon(count);
   }
 
+  /** Pending chats + unread notifications. -1 means that badge has not synced yet. */
   private currentCount(): number {
     if (!getCookie(TOKEN_COOKIE)) return 0;
-    const live = this.badges.unreadNotifications();
-    return live >= 0 ? live : this.snapshotCount();
+    const notes = this.badges.unreadNotifications();
+    const chats = this.badges.unreadChats();
+    const noteCount = notes < 0 ? this.snapshotNotifications() : notes;
+    const chatCount = chats < 0 ? this.snapshotChats() : chats;
+    return noteCount + chatCount;
   }
 
-  private snapshotCount(): number {
+  private snapshotNotifications(): number {
+    return this.snapshotList(NOTIFS_STORAGE_KEY, (item) => !!item && item.isRead === false);
+  }
+
+  private snapshotChats(): number {
+    return this.snapshotList(CHATS_STORAGE_KEY, (item) => !!item && (item.unreadCount ?? 0) > 0);
+  }
+
+  private snapshotList(key: string, unread: (item: { isRead?: boolean; unreadCount?: number }) => boolean): number {
     try {
-      const raw = localStorage.getItem(NOTIFS_STORAGE_KEY);
+      const raw = localStorage.getItem(key);
       if (!raw) return 0;
-      const list = JSON.parse(raw);
+      const list = JSON.parse(raw) as { isRead?: boolean; unreadCount?: number }[];
       if (!Array.isArray(list)) return 0;
-      return list.filter((n) => n && n.isRead === false).length;
+      return list.filter((item) => unread(item)).length;
     } catch {
       return 0;
     }

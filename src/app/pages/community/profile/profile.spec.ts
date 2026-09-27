@@ -159,6 +159,29 @@ describe('CommunityProfile', () => {
     const moods = TRAVEL_MOOD_GROUPS.flatMap((group) => [...group.moods]);
     expect(TRAVEL_MOOD_GROUPS.length).toBe(80);
     expect(new Set(moods).size).toBe(232);
+
+    const picker = element.querySelector('app-mood-picker') as HTMLElement;
+    picker.querySelector('label')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(picker.querySelector('.mood-popup')).toBeTruthy();
+    expect(picker.querySelectorAll('.mood-type-list').length).toBe(TRAVEL_MOOD_GROUPS.length);
+    expect(picker.querySelector('.mood-collapse')?.textContent).toContain('Collapse');
+    picker.querySelector('.mood-collapse')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(picker.querySelectorAll('.mood-type-list').length).toBe(TRAVEL_MOOD_GROUPS.length - 1);
+    expect(picker.querySelector('.mood-collapse')?.textContent).toContain('Expand');
+
+    const search = picker.querySelector('input') as HTMLInputElement;
+    search.value = 'Aurora Hunting';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const option = Array.from(picker.querySelectorAll('button.mood-option')).find((el) => el.textContent?.includes('Aurora Hunting'));
+    expect(option).toBeTruthy();
+    option?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance['selectedMood']).toContain('Aurora Hunting');
+    expect(picker.querySelector('.mood-popup')).toBeNull();
+
     for (const mood of ['🌌 Aurora Hunting', '🍜 Street Food Quest', '🧳 Solo & Thriving']) {
       fixture.componentInstance['selectedMood'] = mood;
       fixture.componentInstance['newJourneyText'] = `Enjoying ${mood}`;
@@ -166,6 +189,19 @@ describe('CommunityProfile', () => {
       fixture.detectChanges();
       expect(service.journeyPosts()[0].mood).toBe(mood);
     }
+  });
+
+  it('shows dummy pending chats in the messenger count', () => {
+    const fixture = create();
+    const element = fixture.nativeElement as HTMLElement;
+    const count = service.unreadChatCount();
+    expect(count).toBeGreaterThan(0);
+    expect(service.pendingChats().filter((chat) => chat.unreadCount > 0).length).toBe(count);
+    expect(element.querySelector('.chat-count-badge')?.textContent?.trim()).toBe(String(count));
+
+    fixture.componentInstance.setSection('messenger');
+    fixture.detectChanges();
+    expect(element.querySelectorAll('.pending-chat-item').length).toBe(count);
   });
 
   it('enforces maximum 500 companion limit', () => {
@@ -2230,5 +2266,38 @@ describe('CommunityProfile', () => {
     const memberDialog = element.querySelector('.circle-members-dialog');
     expect(memberDialog?.textContent).not.toContain('Remove Admin');
     expect(memberDialog?.querySelector('.circle-member-actions')).toBeNull();
+  });
+
+  it('shows the full hashtag post and restricts custom posts to the allow list', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    component.setSection('journey');
+    fixture.detectChanges();
+    expect(element.querySelector('.btn-tool-photo-label')?.textContent).toContain('Add Photos');
+    expect(element.querySelector('.btn-tool-photo-label')?.textContent).not.toContain('Max 100 KB');
+
+    const photo = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+    const video = 'https://example.com/reef.mp4';
+    const allowed = service.companions().find((person) => person.id !== 1)!;
+    const blockedCompanion = service.companions().find((person) => person.status === 'connected' && person.id !== allowed.id)!;
+    component['postAudience'] = { mode: 'custom', allowIds: [allowed.id], denyIds: [] };
+    component['newJourneyText'] = 'Sunset trail #reefwalk';
+    component['journeyPhotoPreviews'].set([photo, video]);
+    component.submitJourneyPost();
+    const post = service.journeyPosts()[0];
+    expect(post.audience?.allowIds).toContain(allowed.id);
+    expect(service.canViewJourneyPost(post, 1)).toBe(true);
+    expect(service.canViewJourneyPost(post, allowed.id)).toBe(true);
+    expect(service.canViewJourneyPost(post, blockedCompanion.id)).toBe(false);
+
+    component.openHashtag('reefwalk');
+    fixture.detectChanges();
+    const card = element.querySelector('.hashtag-post-card');
+    expect(card?.querySelector('.author-avatar')?.getAttribute('src')).toBeTruthy();
+    expect(card?.textContent).toContain(post.author.fullName);
+    expect(card?.querySelector('.post-attached-photo')?.getAttribute('src')).toBe(photo);
+    expect(card?.querySelector('video')?.getAttribute('src')).toBe(video);
+    expect(card?.textContent).toContain(`Allowed: ${allowed.fullName}`);
   });
 });

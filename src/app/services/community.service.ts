@@ -68,6 +68,9 @@ export const CIRCLES_KEY = 'neverbeen_circles';
 export const CIRCLE_READS_KEY = 'neverbeen_circle_reads';
 export const DEVICES_KEY = 'neverbeen_devices';
 export const NOTIFS_KEY = 'neverbeen_notifications';
+export const PENDING_CHATS_KEY = 'neverbeen_pending_chats';
+export const PENDING_CHATS_SEED_VERSION = 'pending-chats-v1';
+export const PENDING_CHATS_SEED_VERSION_KEY = 'neverbeen_pending_chats_seed';
 export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
 export const HIDDEN_POSTS_KEY = 'neverbeen_hidden_post_ids';
@@ -251,6 +254,19 @@ export interface CreateAccountData {
   profession?: string;
 }
 
+/** A companion conversation waiting to be read. Counted by the header Chats badge. */
+export interface PendingChat {
+  companionId: number;
+  fullName: string;
+  profilePhotoUrl: string;
+  profession: string;
+  city: string;
+  country: string;
+  preview: string;
+  unreadCount: number;
+  sentAtUtc: string;
+}
+
 function loadJsonValue(key: string): unknown {
   if (typeof localStorage === 'undefined') return null;
   const str = localStorage.getItem(key);
@@ -289,6 +305,8 @@ export class CommunityService {
   readonly pendingCircleChatId = signal<number | null>(null);
   readonly circleActionError = signal<string | null>(null);
   readonly notifications = signal<NotificationItem[]>(this.loadNotifications());
+  /** Dummy (and later real) conversations that still have unread messages. */
+  readonly pendingChats = signal<PendingChat[]>(this.loadPendingChats());
   readonly activeChatBoxes = signal<ActiveChatBox[]>([]);
   readonly blockedUserIds = signal<number[]>(this.loadBlockedUsers());
   readonly abuseReports = signal<AbuseReport[]>(this.loadAbuseReports());
@@ -350,10 +368,17 @@ export class CommunityService {
     () => this.visibleNotifications().filter((n) => !n.isRead).length,
   );
 
-  /** Chats that still hold at least one unread companion message (Messenger badge). */
-  readonly unreadChatCount = computed(
-    () => this.activeChatBoxes().filter((b) => (b.unreadCount ?? 0) > 0).length,
-  );
+  /**
+   * Pending chats for the header badge: unread inbox threads, plus any open box
+   * that still has unread messages and is not already counted from the inbox.
+   */
+  readonly unreadChatCount = computed(() => {
+    const boxes = this.activeChatBoxes();
+    const openIds = new Set(boxes.map((b) => b.companionId));
+    const fromBoxes = boxes.filter((b) => (b.unreadCount ?? 0) > 0).length;
+    const fromInbox = this.pendingChats().filter((c) => (c.unreadCount ?? 0) > 0 && !openIds.has(c.companionId)).length;
+    return fromBoxes + fromInbox;
+  });
 
   // Keep the root CommunityBadgeService (read by the always-mounted site navbar) in
   // step with the live unread counts — so the navbar never has to import this service.
@@ -1094,7 +1119,10 @@ export class CommunityService {
       localStorage.removeItem(COMPANIONS_KEY);
       localStorage.removeItem(CIRCLES_KEY);
       localStorage.removeItem(NOTIFS_KEY);
+      localStorage.removeItem(PENDING_CHATS_KEY);
+      localStorage.removeItem(PENDING_CHATS_SEED_VERSION_KEY);
     }
+    this.pendingChats.set([]);
   }
 
   // ---------------------------------------------------------------------------
@@ -1695,16 +1723,17 @@ export class CommunityService {
   readonly WALL_EDIT_WINDOW_MS = 45 * 60 * 1000;
 
   canViewJourneyPost(post: JourneyPost, viewerId = this.currentUser()?.id ?? 1): boolean {
-    if (post.author.id === viewerId || post.wallOwnerId === viewerId) return true;
+    if (Number(post.author.id) === Number(viewerId)) return true;
     if (this.authorBlockedViewer(post.author.id, viewerId)) return false;
     const audience = post.audience ?? { mode: 'public' as const };
+    // Custom is an allow list. Companions who were not allowed cannot see it.
+    if (audience.mode === 'custom') {
+      return (audience.allowIds ?? []).some((id) => Number(id) === Number(viewerId));
+    }
+    if (post.wallOwnerId != null && Number(post.wallOwnerId) === Number(viewerId)) return true;
     if (audience.mode === 'public') return true;
     const connected = this.companions().some((c) => c.id === post.author.id && c.status === 'connected');
     if (audience.mode === 'companions') return connected;
-    const allow = audience.allowIds ?? [];
-    const deny = audience.denyIds ?? [];
-    if (deny.includes(viewerId)) return false;
-    if (allow.length > 0) return allow.includes(viewerId);
     return true;
   }
 
@@ -2757,7 +2786,14 @@ export class CommunityService {
     this.activeChatBoxes.update((boxes) =>
       boxes.map((b) => (b.companionId === companionId ? { ...b, unreadCount: 0 } : b)),
     );
+    this.markPendingChatRead(companionId);
     if (box?.circleId) this.markCircleRead(box.circleId);
+  }
+
+  markPendingChatRead(companionId: number): void {
+    if (!this.pendingChats().some((c) => c.companionId === companionId && c.unreadCount > 0)) return;
+    this.pendingChats.update((list) => list.map((c) => (c.companionId === companionId ? { ...c, unreadCount: 0 } : c)));
+    this.saveJson(PENDING_CHATS_KEY, this.pendingChats());
   }
 
   // ---------------------------------------------------------------------------
@@ -2922,20 +2958,21 @@ export class CommunityService {
       updated.shift(); // remove oldest
     }
 
+    const pending = this.pendingChats().find((c) => c.companionId === companion.id && c.unreadCount > 0);
     const newBox: ActiveChatBox = {
       companionId: companion.id,
       companion,
       isMinimized: false,
       draftText: '',
-      // The seeded greeting comes from the companion, so it counts as one unread chat.
-      unreadCount: 1,
+      // A waiting inbox thread keeps its unread count; otherwise the greeting counts as one unread chat.
+      unreadCount: pending?.unreadCount ?? 1,
       messages: [
         {
           id: 1,
           senderId: companion.id,
           receiverId: 1,
-          text: `Hey Kingshuk! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
-          sentAtUtc: new Date(Date.now() - 3600000).toISOString(),
+          text: pending?.preview ?? `Hey Kingshuk! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
+          sentAtUtc: pending?.sentAtUtc ?? new Date(Date.now() - 3600000).toISOString(),
         },
       ],
     };
@@ -4297,6 +4334,41 @@ export class CommunityService {
       localStorage.setItem(CIRCLES_SEED_VERSION_KEY, CIRCLES_SEED_VERSION);
     }
     return seed;
+  }
+
+  private loadPendingChats(): PendingChat[] {
+    const version = typeof localStorage !== 'undefined' ? localStorage.getItem(PENDING_CHATS_SEED_VERSION_KEY) : null;
+    const saved = this.loadJson<PendingChat[]>(PENDING_CHATS_KEY);
+    if (version === PENDING_CHATS_SEED_VERSION && saved) return saved;
+    const seed = this.buildPendingChatSeed();
+    this.saveJson(PENDING_CHATS_KEY, seed);
+    if (typeof localStorage !== 'undefined') localStorage.setItem(PENDING_CHATS_SEED_VERSION_KEY, PENDING_CHATS_SEED_VERSION);
+    return seed;
+  }
+
+  /** Three waiting conversations so the header Chats badge and browser tab can be checked. */
+  private buildPendingChatSeed(): PendingChat[] {
+    const connected = this.companions().filter((c) => c.status === 'connected' && c.id > 0);
+    const preferred = [12, 33, 42, 71]
+      .map((id) => connected.find((c) => c.id === id))
+      .filter((c): c is Companion => !!c);
+    const chosen = preferred.length >= 3 ? preferred.slice(0, 3) : connected.slice(0, 3);
+    const previews = [
+      'The sunrise platform is still free if you want to join.',
+      'I left three photos from the night market in our chat.',
+      'Are we still meeting at the station tomorrow?',
+    ];
+    return chosen.map((c, i) => ({
+      companionId: c.id,
+      fullName: c.fullName,
+      profilePhotoUrl: c.profilePhotoUrl,
+      profession: c.profession,
+      city: c.city,
+      country: c.country,
+      preview: previews[i] ?? 'Sent you a message.',
+      unreadCount: 1,
+      sentAtUtc: new Date(Date.now() - (i + 1) * 3600000).toISOString(),
+    }));
   }
 
   private loadNotifications(): NotificationItem[] {

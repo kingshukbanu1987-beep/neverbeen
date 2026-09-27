@@ -3,7 +3,8 @@ import { provideRouter } from '@angular/router';
 import { Navbar } from './navbar';
 import { routes } from '../../app.routes';
 import { CommunityBadgeService } from '../../services/community-badge.service';
-import { CommunityService } from '../../services/community.service';
+import { CommunityService, deleteCookie, setCookie, TOKEN_KEY } from '../../services/community.service';
+import { SiteTabService } from '../../services/site-tab.service';
 import { ActiveChatBox, Companion, NotificationItem } from '../../models/community';
 
 function makeCompanion(id: number): Companion {
@@ -210,6 +211,20 @@ describe('Navbar', () => {
     expect(element.querySelector('.logo')).toBeNull();
   });
 
+  it('shows seeded pending chats on the messenger icon', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    const community = TestBed.inject(CommunityService);
+    component['currentUrl'].set('/community');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    const chatBadge = element.querySelector('a[href="/profile#messenger"] .ch-badge')?.textContent?.trim();
+    expect(community.unreadChatCount()).toBeGreaterThan(0);
+    expect(chatBadge).toBe(String(community.unreadChatCount()));
+  });
+
   it('shows red unread-count badges fed by the community service, hidden at zero, capped at 99+', () => {
     const fixture = create();
     const component = fixture.componentInstance;
@@ -221,6 +236,7 @@ describe('Navbar', () => {
     // Push the community state through the same path production uses:
     // CommunityService → badge-sync effect → CommunityBadgeService → navbar.
     const apply = (notifications: NotificationItem[], boxes: ActiveChatBox[]) => {
+      community.pendingChats.set([]);
       community.notifications.set(notifications);
       community.activeChatBoxes.set(boxes);
       TestBed.flushEffects();
@@ -239,6 +255,13 @@ describe('Navbar', () => {
     // badge on the bell and on the messenger icon only.
     apply([makeNotification(1)], [makeBox(7, 2), makeBox(8, 1), makeBox(9, 0)]);
     expect(iconBadges()).toEqual([null, '1', '2']);
+
+    // Browser tab ( ) is chats + notifications, not notifications alone.
+    setCookie(TOKEN_KEY, 'jwt_default_active_token', 1);
+    TestBed.inject(SiteTabService).sync();
+    expect(document.title).toBe('(3) NeverBeen');
+    deleteCookie(TOKEN_KEY);
+    TestBed.inject(SiteTabService).sync();
 
     // Over 99 unread → the 99+ cap.
     apply(Array.from({ length: 105 }, (_, i) => makeNotification(i + 1)), [makeBox(7, 1)]);

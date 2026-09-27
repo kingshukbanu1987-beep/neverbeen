@@ -31,7 +31,7 @@ import {
   UserReaction,
   WorkExperience,
 } from '../../../models/community';
-import { CommunityService } from '../../../services/community.service';
+import { CommunityService, PendingChat } from '../../../services/community.service';
 import { SiteConfigService } from '../../../services/site-config.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
 import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
@@ -925,15 +925,55 @@ export class CommunityProfile implements OnInit {
   audienceLabel(post: JourneyPost): string {
     const mode = post.audience?.mode ?? 'public';
     if (mode === 'companions') return 'Companions';
-    if (mode === 'custom') {
-      const allow = post.audience?.allowIds?.length ?? 0;
-      const deny = post.audience?.denyIds?.length ?? 0;
-      if (allow && deny) return `${allow} can see`;
-      if (allow) return `${allow} selected`;
-      if (deny) return `${deny} excluded`;
-      return 'Custom';
-    }
+    if (mode === 'custom') return 'Custom';
     return 'Public';
+  }
+
+  composerAudienceLabel(): string {
+    if (this.postAudience.mode === 'companions') return '👥 Companions';
+    if (this.postAudience.mode === 'custom') {
+      const count = this.postAudience.allowIds?.length ?? 0;
+      return count ? `✨ Custom · ${count} allowed` : '✨ Custom';
+    }
+    return '🌐 Public';
+  }
+
+  audienceCandidates(): Companion[] {
+    const me = this.service.currentUser()?.id ?? 1;
+    return this.service.visibleCompanions().filter((person) => Number(person.id) !== Number(me));
+  }
+
+  isPostOwner(post: JourneyPost): boolean {
+    return Number(post.author.id) === Number(this.service.currentUser()?.id ?? 1);
+  }
+
+  showCustomAllowList(post: JourneyPost): boolean {
+    return this.isPostOwner(post) && post.audience?.mode === 'custom';
+  }
+
+  allowedNames(post: JourneyPost): string {
+    const ids = post.audience?.allowIds ?? [];
+    if (!ids.length) return 'Only you';
+    const names = ids.map(
+      (id) => this.service.companions().find((person) => Number(person.id) === Number(id))?.fullName || 'Traveler',
+    );
+    if (names.length <= 4) return names.join(', ');
+    return `${names.slice(0, 3).join(', ')} and ${names.length - 3} others`;
+  }
+
+  isVideoMedia(url: string | null | undefined): boolean {
+    if (!url) return false;
+    return /^data:video\//i.test(url) || /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(url);
+  }
+
+  postImageUrls(post: JourneyPost): string[] {
+    const urls = post.imageUrls?.length ? post.imageUrls : post.imageUrl ? [post.imageUrl] : [];
+    return urls.filter((url) => !this.isVideoMedia(url));
+  }
+
+  postVideoUrls(post: JourneyPost): string[] {
+    const urls = post.imageUrls?.length ? post.imageUrls : post.imageUrl ? [post.imageUrl] : [];
+    return urls.filter((url) => this.isVideoMedia(url));
   }
 
   openHashtag(tag: string, event?: Event): void {
@@ -2488,6 +2528,27 @@ export class CommunityProfile implements OnInit {
   openChatWith(companion: Companion): void {
     this.service.openChatBox(companion);
     this.showMessengerFlyout.set(false);
+  }
+
+  protected pendingChats(): PendingChat[] {
+    return this.service.pendingChats().filter((chat) => chat.unreadCount > 0);
+  }
+
+  openPendingChat(chat: PendingChat): void {
+    const known = this.service.companions().find((c) => c.id === chat.companionId);
+    this.openChatWith(
+      known ?? {
+        id: chat.companionId,
+        fullName: chat.fullName,
+        profilePhotoUrl: chat.profilePhotoUrl,
+        country: chat.country,
+        city: chat.city,
+        profession: chat.profession,
+        isOnline: false,
+        mutualCompanionsCount: 0,
+        status: 'connected',
+      },
+    );
   }
 
   closeChat(companionId: number): void {

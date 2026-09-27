@@ -10,6 +10,7 @@ import { MaintenanceService, isBypassPath } from './services/maintenance.service
 import { SiteConfigService } from './services/site-config.service';
 import { SiteAnalyticsService } from './services/site-analytics.service';
 import { SiteTabService } from './services/site-tab.service';
+import { CommunityBadgeService } from './services/community-badge.service';
 
 @Component({
   selector: 'app-root',
@@ -23,8 +24,9 @@ export class App {
   private readonly maintenance = inject(MaintenanceService);
   private readonly cms = inject(SiteConfigService);
   private readonly analytics = inject(SiteAnalyticsService);
-  /** Keeps the browser tab as "NeverBeen" (+ unread count, red badge on the icon). */
+  /** Keeps the browser tab as "NeverBeen" (+ unread chats and notifications, red badge on the icon). */
   private readonly tab = inject(SiteTabService);
+  private readonly badges = inject(CommunityBadgeService);
 
   private readonly url = signal(typeof location !== 'undefined' ? location.pathname : '/');
 
@@ -52,8 +54,12 @@ export class App {
     });
     this.analytics.start();
 
-    // Re-sync the tab whenever the community unread count changes (live badge).
-    effect(() => this.tab.sync());
+    // Re-sync the tab whenever chats or notifications change (live header badges).
+    effect(() => {
+      this.badges.unreadNotifications();
+      this.badges.unreadChats();
+      this.tab.sync();
+    });
 
     // Start the site-wide multilingual layer once the first view is rendered.
     afterNextRender(() => {

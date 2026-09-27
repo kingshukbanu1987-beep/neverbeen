@@ -455,7 +455,9 @@
               </svg>
             </span>
             <span class="menu-label">{{ profileLabel('messenger') }}</span>
-            @if (service.onlineCompanions().length > 0) {
+            @if (service.unreadChatCount() > 0) {
+              <span class="notif-count-badge chat-count-badge">{{ service.unreadChatCount() }}</span>
+            } @else if (service.onlineCompanions().length > 0) {
               <span class="online-dot-mini" title="Active companions online"></span>
             }
           </button>
@@ -656,19 +658,84 @@
             </div>
             <button type="button" class="btn-secondary-action" (click)="closeHashtag()">Back</button>
           </header>
-          <div class="journey-feed">
+          <div class="journey-feed-list">
             @for (post of hashtagPosts(); track post.id) {
-              <article class="post-card">
+              <article class="journey-post-card hashtag-post-card">
                 <div class="post-header">
-                  <strong class="author-name clickable-user" (click)="openVisitorProfile(post.author)">{{ post.author.fullName }}</strong>
-                  <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                  <span class="avatar-presence">
+                    <img
+                      [src]="post.author.profilePhotoUrl || defaultAvatar"
+                      [alt]="post.author.fullName"
+                      class="author-avatar clickable-user"
+                      [nbUserPreview]="post.author"
+                      (click)="openVisitorProfile(post.author)"
+                    />
+                    <app-presence-dot [user]="post.author" />
+                  </span>
+                  <div class="author-details">
+                    <div class="author-name-line">
+                      <strong class="author-name clickable-user" [nbUserPreview]="post.author" (click)="openVisitorProfile(post.author)">
+                        {{ post.author.fullName }}
+                      </strong>
+                      @if (isAuthorVerified(post.author)) {
+                        <span class="blue-verified-badge" title="Verified Account">
+                          <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                        </span>
+                      }
+                    </div>
+                    <div class="post-sub-meta">
+                      <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(post.author.id) }}</span>
+                      @if (post.location) {
+                        <span class="post-loc">{{ post.location }}</span>
+                      }
+                      @if (showCustomAllowList(post)) {
+                        <span class="custom-allow-note">Allowed: {{ allowedNames(post) }}</span>
+                      }
+                    </div>
+                  </div>
                 </div>
-                <p class="post-body-text">{{ post.text }}</p>
-                <div class="hashtag-row">
-                  @for (tag of postHashtags(post); track tag) {
-                    <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
-                  }
-                </div>
+                @if (post.text) {
+                  <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
+                }
+                @if (postHashtags(post).length) {
+                  <div class="hashtag-row">
+                    @for (tag of postHashtags(post); track tag) {
+                      <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
+                    }
+                  </div>
+                }
+                @if (postImageUrls(post).length > 1) {
+                  <div class="post-multi-images-grid facebook-collage" [attr.data-count]="postImageUrls(post).length >= 4 ? 4 : postImageUrls(post).length">
+                    @for (img of postImageUrls(post).slice(0, 4); track img) {
+                      <div class="multi-img-cell" (click)="openImageModal(img)">
+                        <img [src]="img" alt="Journey post photo" class="post-attached-photo multi-photo-img" />
+                      </div>
+                    }
+                  </div>
+                } @else if (postImageUrls(post).length === 1) {
+                  <div class="post-image-attachment-wrap">
+                    <img [src]="postImageUrls(post)[0]" alt="Journey post photo" class="post-attached-photo" (click)="openImageModal(postImageUrls(post)[0])" />
+                  </div>
+                }
+                @for (video of postVideoUrls(post); track video) {
+                  <video class="post-attached-video" [src]="video" controls playsinline [attr.aria-label]="'Video from ' + post.author.fullName"></video>
+                }
+                @if (post.originalPost) {
+                  <div class="shared-post-embed-card">
+                    <div class="shared-embed-header">
+                      <img [src]="post.originalPost.author.profilePhotoUrl || defaultAvatar" [alt]="post.originalPost.author.fullName" class="shared-orig-avatar" />
+                      <strong>{{ post.originalPost.author.fullName }}</strong>
+                    </div>
+                    <p class="shared-orig-text">{{ post.originalPost.text }}</p>
+                    @if (postImageUrls(post.originalPost).length) {
+                      <img [src]="postImageUrls(post.originalPost)[0]" alt="Shared post photo" class="post-attached-photo" />
+                    }
+                    @for (video of postVideoUrls(post.originalPost); track video) {
+                      <video class="post-attached-video" [src]="video" controls playsinline></video>
+                    }
+                  </div>
+                }
               </article>
             } @empty {
               <div class="companion-empty-box">No visible posts use #{{ activeHashtag() }} yet.</div>
@@ -705,7 +772,7 @@
                   <span class="composer-user-name clickable-user" [nbUserPreview]="service.profile()" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
                     {{ service.profile()?.fullName || 'Kingshuk' }}
                   </span>
-                  <span class="composer-audience-badge">{{ postAudience.mode === 'public' ? '🌐 Public' : postAudience.mode === 'companions' ? '👥 Companions' : '✨ Custom' }}</span>
+                  <span class="composer-audience-badge">{{ composerAudienceLabel() }}</span>
                 </div>
               </div>
 
@@ -727,12 +794,12 @@
                   }
                 </div>
               }
-              <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" (audienceChange)="postAudience = $event" />
+              <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="postAudience = $event" />
 
               <!-- COMPOSER ACCESSORIES: Photo, Tag, Mood & Destination (Requirement A, B, C, F) -->
               <div class="composer-accessory-row">
-                <label class="btn-tool-photo-label" title="Attach pictures (Max 100 KB each)">
-                  📷 Add Photos (Max 100 KB)
+                <label class="btn-tool-photo-label" title="Add Photos">
+                  📷 Add Photos
                   <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
                 </label>
 
@@ -867,6 +934,9 @@
                           <span class="post-mood">{{ post.mood }}</span>
                         }
                         <span class="post-audience-pill">{{ audienceLabel(post) }}</span>
+                        @if (showCustomAllowList(post)) {
+                          <span class="custom-allow-note">Allowed: {{ allowedNames(post) }}</span>
+                        }
                         @if (post.wallOwnerName && post.wallOwnerId !== post.author.id) {
                           <span class="post-wall-note">on {{ post.wallOwnerName }}'s Journey</span>
                         }
@@ -942,10 +1012,13 @@
                         </div>
                       }
                     </div>
-                  } @else if (post.imageUrl || (post.imageUrls && post.imageUrls.length === 1)) {
+                  } @else if (postImageUrls(post).length === 1) {
                     <div class="post-image-attachment-wrap">
-                      <img [src]="post.imageUrl || post.imageUrls![0]" alt="Journey post attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl || post.imageUrls![0])" />
+                      <img [src]="postImageUrls(post)[0]" alt="Journey post attachment" class="post-attached-photo" (click)="openImageModal(postImageUrls(post)[0])" />
                     </div>
+                  }
+                  @for (video of postVideoUrls(post); track video) {
+                    <video class="post-attached-video" [src]="video" controls playsinline [attr.aria-label]="'Video from ' + post.author.fullName"></video>
                   }
 
                   <!-- EMBEDDED SHARED POST CARD (Requirement I) -->
@@ -2774,6 +2847,27 @@
               <p class="section-desc">Real-time chats with active online companions. Click anyone to launch a floating chat dock.</p>
             </header>
 
+            @if (pendingChats().length) {
+              <div class="pending-chats" aria-label="Pending chats">
+                <h3 class="col-head">Pending chats ({{ pendingChats().length }})</h3>
+                <div class="companion-chat-list">
+                  @for (chat of pendingChats(); track chat.companionId) {
+                    <div class="companion-chat-item pending-chat-item" (click)="openPendingChat(chat)">
+                      <div class="chat-avatar-wrap">
+                        <img [src]="chat.profilePhotoUrl" [alt]="chat.fullName" class="chat-list-avatar" />
+                        <span class="pending-chat-badge">{{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}</span>
+                      </div>
+                      <div class="chat-item-info">
+                        <strong>{{ chat.fullName }}</strong>
+                        <span>{{ chat.preview }}</span>
+                      </div>
+                      <button type="button" class="btn-launch-chat">Open</button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
             <div class="messenger-columns">
               <!-- Online Companions Directory -->
               <div class="messenger-col">
@@ -3650,7 +3744,7 @@
           <p class="card-desc">You can edit a post on a companion’s Journey for 45 minutes after you publish it.</p>
           <textarea class="form-control" rows="4" [(ngModel)]="editPostText"></textarea>
           <app-mood-picker [value]="editPostMood" (valueChange)="editPostMood = $event" inputId="edit-travel-mood" />
-          <app-post-audience [audience]="editAudience" [companions]="connectedCompanions()" (audienceChange)="editAudience = $event" />
+          <app-post-audience [audience]="editAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="editAudience = $event" />
         </div>
         <footer class="modal-footer-bar">
           <button type="button" class="btn-secondary-action" (click)="editingPostId.set(null)">Cancel</button>
@@ -3683,7 +3777,7 @@
             placeholder="Say something about this travel story... (optional)"
             class="share-thought-textarea"
           ></textarea>
-          <app-post-audience [audience]="shareAudience" [companions]="connectedCompanions()" (audienceChange)="shareAudience = $event" />
+          <app-post-audience [audience]="shareAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="shareAudience = $event" />
 
           <!-- Preview of the post being shared -->
           <div class="share-target-preview">
@@ -4743,7 +4837,7 @@
                     }
                   </div>
                 }
-                <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" (audienceChange)="postAudience = $event" />
+                <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="postAudience = $event" />
                 <div class="composer-footer">
                   <button type="button" class="btn-primary-action btn-post" [disabled]="!canSubmitJourney()" (click)="submitJourneyPost()">
                     {{ postingJourney() ? 'Posting...' : ('Post to ' + viewingVisitor()!.fullName + "'s Journey") }}
@@ -4780,6 +4874,9 @@
                         <span class="post-mood">{{ post.mood }}</span>
                       }
                       <span class="post-audience-pill">{{ audienceLabel(post) }}</span>
+                      @if (showCustomAllowList(post)) {
+                        <span class="custom-allow-note">Allowed: {{ allowedNames(post) }}</span>
+                      }
                     </div>
                   </div>
 
@@ -4831,10 +4928,13 @@
                       </div>
                     }
                   </div>
-                } @else if (post.imageUrl || (post.imageUrls && post.imageUrls.length === 1)) {
+                } @else if (postImageUrls(post).length === 1) {
                   <div class="post-image-attachment-wrap">
-                    <img [src]="post.imageUrl || post.imageUrls![0]" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl || post.imageUrls![0])" />
+                    <img [src]="postImageUrls(post)[0]" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(postImageUrls(post)[0])" />
                   </div>
+                }
+                @for (video of postVideoUrls(post); track video) {
+                  <video class="post-attached-video" [src]="video" controls playsinline [attr.aria-label]="'Video from ' + post.author.fullName"></video>
                 }
 
                 <!-- Engagement Counts -->
