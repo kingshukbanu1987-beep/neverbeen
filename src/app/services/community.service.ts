@@ -18,7 +18,9 @@ import {
   GalleryPhoto,
   JourneyComment,
   JourneyPost,
+  LoginDevice,
   NotificationItem,
+  PostAudience,
   Profile,
   ReactionResult,
   ReactionType,
@@ -37,6 +39,20 @@ import {
 import { SEED_ASIAN_COMPANIONS } from '../models/community-asian-profiles';
 import { ALL_SEED_INDIAN_COMPANIONS } from '../models/community-indian-profiles';
 import { SEED_EXTENDED_JOURNEY_POSTS } from '../models/community-journey-feed-seed';
+import {
+  CIRCLES_SEED_VERSION,
+  CIRCLES_SEED_VERSION_KEY,
+  MAX_ADMIN_CIRCLES,
+  MAX_MEMBER_CIRCLES,
+  buildTravelCircles,
+  isCircleAdmin,
+  isCircleParticipant,
+  normalizeCircle,
+} from '../models/circle-seed';
+import { statusIconClass } from '../shared/presence-dot/presence-dot';
+import { inspectCommunityText } from '../pages/community/profile/content-guard';
+import { extractHashtags } from '../pages/community/profile/hashtags';
+import { StorageReport, StorageSlice, buildStorageReport, imageBytes, utf8Bytes } from '../pages/community/profile/storage-meter';
 import { AdminModerationService } from './admin-moderation.service';
 
 export const TOKEN_KEY = 'neverbeen_auth_token';
@@ -45,8 +61,16 @@ export const PROFILE_KEY = 'neverbeen_user_profile';
 export const COMMENTS_KEY = 'neverbeen_comments';
 export const JOURNEY_KEY = 'neverbeen_journey_posts';
 export const COMPANIONS_KEY = 'neverbeen_companions';
+export const FOLLOWS_KEY = 'neverbeen_follows';
+export const FOLLOWS_SEED_VERSION = 'follows-v1';
+export const FOLLOWS_SEED_VERSION_KEY = 'neverbeen_follows_seed';
 export const CIRCLES_KEY = 'neverbeen_circles';
+export const CIRCLE_READS_KEY = 'neverbeen_circle_reads';
+export const DEVICES_KEY = 'neverbeen_devices';
 export const NOTIFS_KEY = 'neverbeen_notifications';
+export const PENDING_CHATS_KEY = 'neverbeen_pending_chats';
+export const PENDING_CHATS_SEED_VERSION = 'pending-chats-v1';
+export const PENDING_CHATS_SEED_VERSION_KEY = 'neverbeen_pending_chats_seed';
 export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
 export const HIDDEN_POSTS_KEY = 'neverbeen_hidden_post_ids';
@@ -230,6 +254,19 @@ export interface CreateAccountData {
   profession?: string;
 }
 
+/** A companion conversation waiting to be read. Counted by the header Chats badge. */
+export interface PendingChat {
+  companionId: number;
+  fullName: string;
+  profilePhotoUrl: string;
+  profession: string;
+  city: string;
+  country: string;
+  preview: string;
+  unreadCount: number;
+  sentAtUtc: string;
+}
+
 function loadJsonValue(key: string): unknown {
   if (typeof localStorage === 'undefined') return null;
   const str = localStorage.getItem(key);
@@ -258,8 +295,18 @@ export class CommunityService {
   // Social Network State: Journey, Companions, Circles, Notifications, Messenger
   readonly journeyPosts = signal<JourneyPost[]>(this.loadJourneyPosts());
   readonly companions = signal<Companion[]>(this.loadCompanions());
+  /** userId -> ids that person follows. */
+  readonly follows = signal<Record<string, number[]>>(this.loadFollows());
   readonly circles = signal<Circle[]>(this.loadCircles());
+  /** circleId -> ISO time the signed-in member last read that Circle chat. */
+  readonly circleReads = signal<Record<string, string>>(this.loadCircleReads());
+  readonly devices = signal<LoginDevice[]>(this.loadDevices());
+  /** Circle the header search asked the profile page to open as a group chat. */
+  readonly pendingCircleChatId = signal<number | null>(null);
+  readonly circleActionError = signal<string | null>(null);
   readonly notifications = signal<NotificationItem[]>(this.loadNotifications());
+  /** Dummy (and later real) conversations that still have unread messages. */
+  readonly pendingChats = signal<PendingChat[]>(this.loadPendingChats());
   readonly activeChatBoxes = signal<ActiveChatBox[]>([]);
   readonly blockedUserIds = signal<number[]>(this.loadBlockedUsers());
   readonly abuseReports = signal<AbuseReport[]>(this.loadAbuseReports());
@@ -298,13 +345,20 @@ export class CommunityService {
     return this.companions().filter((c) => !this.blockedUserIds().includes(c.id) && !disabled.has(Number(c.id)));
   });
 
+  readonly contentGuardMessage = signal<string | null>(null);
+  readonly storageBlockMessage = signal<string | null>(null);
+
   readonly visibleJourneyPosts = computed(() => {
     const disabled = this.adminDisabledIds();
+    const viewerId = this.currentUser()?.id ?? 1;
     return this.journeyPosts()
       .filter((p) => !this.blockedUserIds().includes(p.author.id))
       .filter((p) => !disabled.has(Number(p.author.id)))
-      .filter((p) => !this.hiddenPostIds().includes(p.id));
+      .filter((p) => !this.hiddenPostIds().includes(p.id))
+      .filter((p) => this.canViewJourneyPost(p, viewerId));
   });
+
+  readonly storageReport = computed(() => this.measureStorage());
 
   readonly visibleNotifications = computed(() =>
     this.notifications().filter((n) => !this.blockedUserIds().includes(n.fromUser.id)),
@@ -314,10 +368,17 @@ export class CommunityService {
     () => this.visibleNotifications().filter((n) => !n.isRead).length,
   );
 
-  /** Chats that still hold at least one unread companion message (Messenger badge). */
-  readonly unreadChatCount = computed(
-    () => this.activeChatBoxes().filter((b) => (b.unreadCount ?? 0) > 0).length,
-  );
+  /**
+   * Pending chats for the header badge: unread inbox threads, plus any open box
+   * that still has unread messages and is not already counted from the inbox.
+   */
+  readonly unreadChatCount = computed(() => {
+    const boxes = this.activeChatBoxes();
+    const openIds = new Set(boxes.map((b) => b.companionId));
+    const fromBoxes = boxes.filter((b) => (b.unreadCount ?? 0) > 0).length;
+    const fromInbox = this.pendingChats().filter((c) => (c.unreadCount ?? 0) > 0 && !openIds.has(c.companionId)).length;
+    return fromBoxes + fromInbox;
+  });
 
   // Keep the root CommunityBadgeService (read by the always-mounted site navbar) in
   // step with the live unread counts — so the navbar never has to import this service.
@@ -325,6 +386,15 @@ export class CommunityService {
   private readonly badgeSync = effect(() => {
     this.badgeBridge.sync(this.unreadNotificationCount(), this.unreadChatCount());
   });
+
+  /** Circles the signed-in member belongs to (admin or member). */
+  readonly myCircles = computed(() => {
+    const me = this.currentUser()?.id ?? 1;
+    return this.circles().filter((c) => isCircleParticipant(c, me));
+  });
+
+  readonly adminCircleCount = computed(() => this.countAdminCircles(this.currentUser()?.id ?? 1));
+  readonly memberOnlyCircleCount = computed(() => this.countMemberOnlyCircles(this.currentUser()?.id ?? 1));
 
   readonly onlineCompanions = computed(() =>
     this.visibleCompanions().filter((c) => c.status === 'connected' && c.isOnline),
@@ -1049,7 +1119,10 @@ export class CommunityService {
       localStorage.removeItem(COMPANIONS_KEY);
       localStorage.removeItem(CIRCLES_KEY);
       localStorage.removeItem(NOTIFS_KEY);
+      localStorage.removeItem(PENDING_CHATS_KEY);
+      localStorage.removeItem(PENDING_CHATS_SEED_VERSION_KEY);
     }
+    this.pendingChats.set([]);
   }
 
   // ---------------------------------------------------------------------------
@@ -1234,11 +1307,13 @@ export class CommunityService {
     return updated;
   }
 
-  updateAboutMeDetails(details: AboutMeDetails): void {
+  updateAboutMeDetails(details: AboutMeDetails): boolean {
+    if (this.blockedByGuard(details.intro) || this.blockedByGuard(details.aboutThePerson)) return false;
     this.profile.update((p) => (p ? { ...p, aboutMeDetails: details } : null));
     this.currentUser.update((u) => (u ? { ...u, aboutMeDetails: details } : null));
     this.saveJson(PROFILE_KEY, this.profile());
     this.saveJson(USER_KEY, this.currentUser());
+    return true;
   }
 
   readonly MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100 KB limit (Requirement A)
@@ -1247,6 +1322,7 @@ export class CommunityService {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
+    if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -1265,6 +1341,7 @@ export class CommunityService {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
+    if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -1362,6 +1439,9 @@ export class CommunityService {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
+    if (!this.storageAllows(file.size)) {
+      throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
+    }
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -1408,6 +1488,9 @@ export class CommunityService {
     imageUrl?: string,
     taggedCompanions?: AuthorInfo[],
   ): Promise<CommunityComment> {
+    if (this.blockedByGuard(text) || !this.storageAllows(utf8Bytes(text) + imageBytes(imageUrl))) {
+      throw new Error('blocked');
+    }
     const user = this.currentUser();
     const newComment: CommunityComment = {
       id: generateUniqueId(),
@@ -1553,7 +1636,12 @@ export class CommunityService {
     imageUrl?: string,
     taggedCompanions?: AuthorInfo[],
     imageUrls?: string[],
-  ): JourneyPost {
+    audience?: PostAudience,
+    wallOwner?: { id: number; fullName: string },
+  ): JourneyPost | null {
+    if (this.blockedByGuard(text)) return null;
+    const photoBytes = (imageUrls ?? (imageUrl ? [imageUrl] : [])).reduce((sum, url) => sum + imageBytes(url), 0);
+    if (!this.storageAllows(utf8Bytes(text) + photoBytes)) return null;
     const user = this.currentUser();
     const profile = this.profile();
     const allImages = imageUrls && imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : undefined);
@@ -1580,6 +1668,10 @@ export class CommunityService {
       mood: mood || undefined,
       location: location || (profile?.cityName ? `${profile.cityName}, ${profile.countryName || ''}` : undefined),
       placeId: placeId || undefined,
+      audience: audience ?? { mode: 'public', allowIds: [], denyIds: [] },
+      hashtags: extractHashtags(text),
+      wallOwnerId: wallOwner?.id,
+      wallOwnerName: wallOwner?.fullName,
     };
 
     this.journeyPosts.update((list) => [newPost, ...list]);
@@ -1587,9 +1679,11 @@ export class CommunityService {
     return newPost;
   }
 
-  shareJourneyPost(originalPostId: number, userThought?: string): JourneyPost | null {
+  shareJourneyPost(originalPostId: number, userThought?: string, audience?: PostAudience): JourneyPost | null {
     const original = this.journeyPosts().find((p) => p.id === originalPostId);
     if (!original) return null;
+    if (userThought && this.blockedByGuard(userThought)) return null;
+    if (!this.storageAllows(utf8Bytes(userThought))) return null;
 
     // Increment share count on original
     this.journeyPosts.update((list) =>
@@ -1617,11 +1711,136 @@ export class CommunityService {
       comments: [],
       isShared: true,
       originalPost: { ...original },
+      audience: audience ?? { mode: 'public', allowIds: [], denyIds: [] },
+      hashtags: extractHashtags(userThought ?? ''),
     };
 
     this.journeyPosts.update((list) => [sharedPost, ...list]);
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
     return sharedPost;
+  }
+
+  readonly WALL_EDIT_WINDOW_MS = 45 * 60 * 1000;
+
+  canViewJourneyPost(post: JourneyPost, viewerId = this.currentUser()?.id ?? 1): boolean {
+    if (Number(post.author.id) === Number(viewerId)) return true;
+    if (this.authorBlockedViewer(post.author.id, viewerId)) return false;
+    const audience = post.audience ?? { mode: 'public' as const };
+    // Custom is an allow list. Companions who were not allowed cannot see it.
+    if (audience.mode === 'custom') {
+      return (audience.allowIds ?? []).some((id) => Number(id) === Number(viewerId));
+    }
+    if (post.wallOwnerId != null && Number(post.wallOwnerId) === Number(viewerId)) return true;
+    if (audience.mode === 'public') return true;
+    const connected = this.companions().some((c) => c.id === post.author.id && c.status === 'connected');
+    if (audience.mode === 'companions') return connected;
+    return true;
+  }
+
+  authorBlockedViewer(authorId: number, viewerId = this.currentUser()?.id ?? 1): boolean {
+    return !!this.companions().find((c) => c.id === authorId)?.blockedViewerIds?.includes(viewerId);
+  }
+
+  postsForWall(ownerId: number): JourneyPost[] {
+    return this.visibleJourneyPosts().filter((p) => p.author.id === ownerId || p.wallOwnerId === ownerId);
+  }
+
+  postsForHashtag(tag: string): JourneyPost[] {
+    const needle = tag.replace(/^#/, '').toLowerCase();
+    const viewerId = this.currentUser()?.id ?? 1;
+    const disabled = this.adminDisabledIds();
+    return this.journeyPosts().filter((post) => {
+      const tags = (post.hashtags?.length ? post.hashtags : extractHashtags(post.text)).map((t) => t.toLowerCase());
+      if (!tags.includes(needle)) return false;
+      if (this.blockedUserIds().includes(post.author.id) || disabled.has(Number(post.author.id))) return false;
+      if (this.hiddenPostIds().includes(post.id)) return false;
+      if (this.authorBlockedViewer(post.author.id, viewerId)) return false;
+      return this.canViewJourneyPost(post, viewerId);
+    });
+  }
+
+  canEditWallPost(post: JourneyPost, now = Date.now()): boolean {
+    const me = this.currentUser()?.id ?? 1;
+    if (post.author.id !== me || !post.wallOwnerId || post.wallOwnerId === me) return false;
+    return now - new Date(post.createdAtUtc).getTime() < this.WALL_EDIT_WINDOW_MS;
+  }
+
+  updateJourneyPost(postId: number, patch: { text: string; mood?: string; audience?: PostAudience }): boolean {
+    const post = this.journeyPosts().find((p) => p.id === postId);
+    if (!post || !this.canEditWallPost(post)) return false;
+    if (this.blockedByGuard(patch.text)) return false;
+    if (!this.storageAllows(Math.max(0, utf8Bytes(patch.text) - utf8Bytes(post.text)))) return false;
+    this.journeyPosts.update((list) =>
+      list.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              text: patch.text.trim(),
+              mood: patch.mood,
+              audience: patch.audience ?? p.audience,
+              hashtags: extractHashtags(patch.text),
+              editedAtUtc: new Date().toISOString(),
+            }
+          : p,
+      ),
+    );
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    return true;
+  }
+
+  storageAllows(extraBytes = 0): boolean {
+    if (this.storageReport().used + extraBytes <= this.storageReport().limit) return true;
+    this.storageBlockMessage.set(
+      'You have used all 25 MB of profile storage. Delete posts, photos, or chats before adding anything new.',
+    );
+    return false;
+  }
+
+  private blockedByGuard(text: string | null | undefined): boolean {
+    const result = inspectCommunityText(text);
+    if (result.ok) return false;
+    this.contentGuardMessage.set(result.message);
+    return true;
+  }
+
+  private measureStorage(): StorageReport {
+    const me = this.currentUser()?.id ?? 1;
+    const profile = this.profile();
+    const mine = this.journeyPosts().filter((p) => p.author.id === me);
+    const commentText = (comments: JourneyComment[]): number =>
+      comments.reduce((sum, c) => {
+        const own = c.author.id === me ? utf8Bytes(c.text) + imageBytes(c.imageUrl) : 0;
+        return sum + own + commentText(c.replies ?? []);
+      }, 0);
+    const chatText = this.activeChatBoxes().reduce(
+      (sum, box) => sum + box.messages.filter((m) => m.senderId === me).reduce((n, m) => n + utf8Bytes(m.text), 0),
+      0,
+    );
+    const circleText = this.circles()
+      .filter((c) => c.ownerId === me || (c.memberIds ?? []).includes(me))
+      .reduce((sum, c) => sum + (c.messages ?? []).filter((m) => m.senderId === me).reduce((n, m) => n + utf8Bytes(m.text), 0), 0);
+    const book = this.comments().filter((c) => c.author.id === me);
+    const slices: StorageSlice[] = [
+      { id: 'journey-text', label: 'Journey text', color: '#6366f1', bytes: mine.reduce((n, p) => n + utf8Bytes(p.text), 0) },
+      {
+        id: 'journey-photos',
+        label: 'Journey photos',
+        color: '#f59e0b',
+        bytes: mine.reduce((n, p) => n + (p.imageUrls ?? (p.imageUrl ? [p.imageUrl] : [])).reduce((s, url) => s + imageBytes(url), 0), 0),
+      },
+      { id: 'comments', label: 'Comments', color: '#06b6d4', bytes: this.journeyPosts().reduce((n, p) => n + commentText(p.comments ?? []), 0) },
+      { id: 'messagebook', label: 'MessageBook', color: '#3b82f6', bytes: book.reduce((n, c) => n + utf8Bytes(c.text) + imageBytes(c.imageUrl), 0) },
+      { id: 'chats', label: 'Chats', color: '#8b5cf6', bytes: chatText + circleText },
+      { id: 'gallery', label: 'Gallery', color: '#ec4899', bytes: (profile?.gallery ?? []).reduce((n, photo) => n + imageBytes(photo.url) + utf8Bytes(photo.caption), 0) },
+      { id: 'profile', label: 'Profile & cover', color: '#10b981', bytes: imageBytes(profile?.profilePhotoUrl) + imageBytes(profile?.coverPhotoUrl) },
+      {
+        id: 'about',
+        label: 'About me',
+        color: '#64748b',
+        bytes: utf8Bytes(profile?.aboutMe) + utf8Bytes(profile?.aboutMeDetails?.intro) + utf8Bytes(profile?.aboutMeDetails?.aboutThePerson),
+      },
+    ];
+    return buildStorageReport(slices);
   }
 
   toggleJourneyLike(postId: number): void {
@@ -1678,6 +1897,7 @@ export class CommunityService {
     imageUrl?: string,
     taggedCompanions?: AuthorInfo[],
   ): void {
+    if (this.blockedByGuard(text) || !this.storageAllows(utf8Bytes(text) + imageBytes(imageUrl))) return;
     const user = this.currentUser();
     const newComment: JourneyComment = {
       id: generateUniqueId(),
@@ -1819,6 +2039,8 @@ export class CommunityService {
       list.map((c) => (Number(c.id) === numId ? { ...c, status: 'pending_outgoing' as const } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+    // Sending a companionship request follows that traveler by default.
+    this.follow(numId);
   }
 
   cancelCompanionshipRequest(targetUserId: number): void {
@@ -2201,11 +2423,13 @@ export class CommunityService {
       this.blockedUserIds.update((list) => [...list, userId]);
       this.saveJson(BLOCKED_USERS_KEY, this.blockedUserIds());
     }
-    // Break companionship connection
+    // Break companionship connection and both follow directions.
     this.companions.update((list) =>
       list.map((c) => (c.id === userId ? { ...c, status: 'none' } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+    this.unfollow(userId);
+    this.disconnectFollower(userId);
 
     // Close any active chat with this user
     this.closeChatBox(userId);
@@ -2257,8 +2481,46 @@ export class CommunityService {
   }
 
   // ---------------------------------------------------------------------------
-  // CIRCLES (Max 5)
+  // CIRCLES (admin max 500, non-admin membership max 1000)
   // ---------------------------------------------------------------------------
+
+  countAdminCircles(userId: number): number {
+    return this.circles().filter((c) => isCircleAdmin(c, userId)).length;
+  }
+
+  countMemberOnlyCircles(userId: number): number {
+    return this.circles().filter((c) => isCircleParticipant(c, userId) && !isCircleAdmin(c, userId)).length;
+  }
+
+  isCircleAdmin(circle: Circle, userId: number): boolean {
+    return isCircleAdmin(circle, userId);
+  }
+
+  isCircleParticipant(circle: Circle, userId: number): boolean {
+    return isCircleParticipant(circle, userId);
+  }
+
+  /** Null when the member may become an admin; otherwise a popup-ready error. */
+  adminLimitError(userId: number): string | null {
+    const count = this.countAdminCircles(userId);
+    if (count < MAX_ADMIN_CIRCLES) return null;
+    const me = this.currentUser()?.id ?? 1;
+    const who = userId === me ? 'You' : this.companionName(userId);
+    return `${who} can create or admin a maximum of ${MAX_ADMIN_CIRCLES} Circles. That limit is already reached (${count}).`;
+  }
+
+  /** Null when the member may join as a non-admin; otherwise a popup-ready error. */
+  memberLimitError(userId: number): string | null {
+    const count = this.countMemberOnlyCircles(userId);
+    if (count < MAX_MEMBER_CIRCLES) return null;
+    const me = this.currentUser()?.id ?? 1;
+    const who = userId === me ? 'You' : this.companionName(userId);
+    return `${who} can be a member of a maximum of ${MAX_MEMBER_CIRCLES} Circles where they are not an admin. That limit is already reached (${count}).`;
+  }
+
+  private companionName(userId: number): string {
+    return this.companions().find((c) => c.id === userId)?.fullName || 'This traveler';
+  }
 
   createCircle(
     name: string,
@@ -2266,29 +2528,247 @@ export class CommunityService {
     memberIds: number[],
     icon = '🌟',
     color = '#2563eb',
+    photoUrl?: string,
   ): Circle | null {
-    if (this.circles().length >= 5) {
+    const me = this.currentUser()?.id ?? 1;
+    const adminError = this.adminLimitError(me);
+    if (adminError) {
+      this.circleActionError.set(adminError);
       return null;
     }
+    for (const id of memberIds) {
+      if (id === me) continue;
+      const memberError = this.memberLimitError(id);
+      if (memberError) {
+        this.circleActionError.set(memberError);
+        return null;
+      }
+    }
 
-    const newCircle: Circle = {
+    const newCircle = normalizeCircle({
       id: generateUniqueId(),
       name: name.trim(),
-      description: description.trim(),
+      description: description.trim() || 'A circle of travel companions.',
       icon,
       color,
-      memberIds,
+      photoUrl,
+      ownerId: me,
+      adminIds: [me],
+      memberIds: Array.from(new Set([me, ...memberIds])),
       createdAtUtc: new Date().toISOString(),
-    };
+      messages: [],
+    });
 
+    this.circleActionError.set(null);
     this.circles.update((list) => [...list, newCircle]);
     this.saveJson(CIRCLES_KEY, this.circles());
     return newCircle;
   }
 
-  deleteCircle(circleId: number): void {
+  deleteCircle(circleId: number): boolean {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle || !isCircleAdmin(circle, me)) return false;
     this.circles.update((list) => list.filter((c) => c.id !== circleId));
     this.saveJson(CIRCLES_KEY, this.circles());
+    this.closeChatBox(-Math.abs(circleId));
+    return true;
+  }
+
+  updateCircle(
+    circleId: number,
+    patch: Partial<Pick<Circle, 'name' | 'description' | 'photoUrl' | 'icon' | 'color'>>,
+  ): boolean {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle || !isCircleAdmin(circle, me)) return false;
+    this.circles.update((list) =>
+      list.map((c) => (c.id === circleId ? normalizeCircle({ ...c, ...patch }) : c)),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.syncOpenCircleChat(circleId);
+    return true;
+  }
+
+  addCircleMembers(circleId: number, userIds: number[]): string | null {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle) return 'Circle not found.';
+    if (!isCircleAdmin(circle, me)) return 'Only an admin can add people to this Circle.';
+    for (const id of userIds) {
+      if ((circle.memberIds ?? []).includes(id) || isCircleAdmin(circle, id)) continue;
+      const memberError = this.memberLimitError(id);
+      if (memberError) {
+        this.circleActionError.set(memberError);
+        return memberError;
+      }
+    }
+    this.circles.update((list) =>
+      list.map((c) =>
+        c.id === circleId
+          ? normalizeCircle({ ...c, memberIds: Array.from(new Set([...(c.memberIds ?? []), ...userIds])) })
+          : c,
+      ),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.syncOpenCircleChat(circleId);
+    this.circleActionError.set(null);
+    return null;
+  }
+
+  promoteCircleAdmin(circleId: number, userId: number): string | null {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle) return 'Circle not found.';
+    if (!isCircleAdmin(circle, me)) return 'Only an admin can make someone an admin.';
+    if (isCircleAdmin(circle, userId)) return null;
+    const adminError = this.adminLimitError(userId);
+    if (adminError) {
+      this.circleActionError.set(adminError);
+      return adminError;
+    }
+    this.circles.update((list) =>
+      list.map((c) =>
+        c.id === circleId
+          ? normalizeCircle({
+              ...c,
+              adminIds: Array.from(new Set([...(c.adminIds ?? []), userId])),
+              memberIds: Array.from(new Set([...(c.memberIds ?? []), userId])),
+            })
+          : c,
+      ),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.circleActionError.set(null);
+    return null;
+  }
+
+  demoteCircleAdmin(circleId: number, userId: number): string | null {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle) return 'Circle not found.';
+    if (!isCircleAdmin(circle, me)) return 'Only an admin can change admins.';
+    if (userId === circle.ownerId) return 'The Circle owner stays an admin.';
+    if (!isCircleAdmin(circle, userId)) return null;
+    this.circles.update((list) =>
+      list.map((c) =>
+        c.id === circleId
+          ? normalizeCircle({ ...c, adminIds: (c.adminIds ?? []).filter((id) => id !== userId) })
+          : c,
+      ),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.syncOpenCircleChat(circleId);
+    return null;
+  }
+
+  removeCircleMember(circleId: number, userId: number): string | null {
+    const me = this.currentUser()?.id ?? 1;
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle) return 'Circle not found.';
+    if (!isCircleAdmin(circle, me)) return 'Only an admin can remove someone from this Circle.';
+    if (userId === circle.ownerId) return 'The Circle owner cannot be removed.';
+    if (userId === me) return 'You cannot remove yourself from this list.';
+    this.circles.update((list) =>
+      list.map((c) =>
+        c.id === circleId
+          ? normalizeCircle({
+              ...c,
+              adminIds: (c.adminIds ?? []).filter((id) => id !== userId),
+              memberIds: (c.memberIds ?? []).filter((id) => id !== userId),
+            })
+          : c,
+      ),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.syncOpenCircleChat(circleId);
+    return null;
+  }
+
+  private loadCircleReads(): Record<string, string> {
+    return this.loadJson<Record<string, string>>(CIRCLE_READS_KEY) ?? {};
+  }
+
+  markCircleRead(circleId: number, at = new Date().toISOString()): void {
+    const key = String(circleId);
+    this.circleReads.update((map) => ({ ...map, [key]: at }));
+    this.saveJson(CIRCLE_READS_KEY, this.circleReads());
+  }
+
+  circleLastUsedIso(circle: Circle): string | null {
+    const times = (circle.messages ?? [])
+      .map((message) => new Date(message.sentAtUtc).getTime())
+      .filter((time) => !Number.isNaN(time));
+    if (!times.length) return circle.createdAtUtc || null;
+    return new Date(Math.max(...times)).toISOString();
+  }
+
+  circleUnreadCount(circle: Circle, userId = this.currentUser()?.id ?? 1): number {
+    const readAt = this.circleReads()[String(circle.id)];
+    const readMs = readAt ? new Date(readAt).getTime() : 0;
+    return (circle.messages ?? []).filter(
+      (message) => message.senderId !== userId && new Date(message.sentAtUtc).getTime() > readMs,
+    ).length;
+  }
+
+  circleIsLive(circle: Circle): boolean {
+    const open = this.activeChatBoxes().some((box) => box.circleId === circle.id && !box.isMinimized);
+    if (open) return true;
+    const last = this.circleLastUsedIso(circle);
+    if (!last) return false;
+    const age = Date.now() - new Date(last).getTime();
+    return age >= 0 && age < 10 * 60 * 1000;
+  }
+
+  circleUsage(circle: Circle): { live: boolean; status: string; chats: number; unread: number; lastLabel: string } {
+    const last = this.circleLastUsedIso(circle);
+    const live = this.circleIsLive(circle);
+    const span = last ? this.elapsedLabel(last) : '';
+    return {
+      live,
+      status: live ? 'Active' : span ? `Inactive since ${span}` : 'Inactive',
+      chats: circle.messages?.length ?? 0,
+      unread: this.circleUnreadCount(circle),
+      lastLabel: !last ? 'No chats yet' : span === 'just now' ? 'Last chat just now' : `Last chat ${span} ago`,
+    };
+  }
+
+  private elapsedLabel(iso: string): string {
+    const ms = Math.max(0, Date.now() - new Date(iso).getTime());
+    const minute = 60_000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const days = Math.floor(ms / day);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+    if (years >= 1) return years === 1 ? '1 year' : `${years} years`;
+    if (months >= 1) return months === 1 ? '1 month' : `${months} months`;
+    if (days >= 1) return days === 1 ? '1 day' : `${days} days`;
+    const hours = Math.floor(ms / hour);
+    if (hours >= 1) return hours === 1 ? '1 hour' : `${hours} hours`;
+    const minutes = Math.floor(ms / minute);
+    if (minutes >= 1) return minutes === 1 ? '1 minute' : `${minutes} minutes`;
+    return 'just now';
+  }
+
+  private syncOpenCircleChat(circleId: number): void {
+    const circle = this.circles().find((c) => c.id === circleId);
+    if (!circle) return;
+    const key = -Math.abs(circleId);
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) =>
+        b.circleId === circleId || b.companionId === key
+          ? {
+              ...b,
+              circleId,
+              isGroup: true,
+              participantIds: circle.memberIds,
+              companion: this.circleAsCompanion(circle),
+              messages: b.messages?.length ? b.messages : circle.messages ?? [],
+            }
+          : b,
+      ),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -2302,14 +2782,163 @@ export class CommunityService {
 
   /** The member is looking at this chat: clear its unread badge. */
   markChatRead(companionId: number): void {
+    const box = this.activeChatBoxes().find((b) => b.companionId === companionId);
     this.activeChatBoxes.update((boxes) =>
       boxes.map((b) => (b.companionId === companionId ? { ...b, unreadCount: 0 } : b)),
     );
+    this.markPendingChatRead(companionId);
+    if (box?.circleId) this.markCircleRead(box.circleId);
+  }
+
+  markPendingChatRead(companionId: number): void {
+    if (!this.pendingChats().some((c) => c.companionId === companionId && c.unreadCount > 0)) return;
+    this.pendingChats.update((list) => list.map((c) => (c.companionId === companionId ? { ...c, unreadCount: 0 } : c)));
+    this.saveJson(PENDING_CHATS_KEY, this.pendingChats());
   }
 
   // ---------------------------------------------------------------------------
   // MESSENGER (Popup Facebook-like Chat Boxes - Max 5)
   // ---------------------------------------------------------------------------
+
+  circleAsCompanion(circle: Circle): Companion {
+    return {
+      id: -Math.abs(circle.id),
+      fullName: circle.name,
+      profilePhotoUrl: circle.photoUrl || '',
+      country: 'Circle',
+      city: `${circle.memberIds.length} travelers`,
+      profession: 'Travel Circle',
+      isOnline: true,
+      activeStatus: 'Active',
+      mutualCompanionsCount: 0,
+      status: 'connected',
+      bio: circle.description,
+    };
+  }
+
+  openCircleChat(circle: Circle): void {
+    const me = this.currentUser()?.id ?? 1;
+    if (!isCircleParticipant(circle, me)) return;
+    const key = -Math.abs(circle.id);
+    const current = this.activeChatBoxes();
+    const existing = current.find((b) => b.companionId === key || b.circleId === circle.id);
+    this.markCircleRead(circle.id);
+    if (existing) {
+      this.activeChatBoxes.update((boxes) =>
+        boxes.map((b) => (b.companionId === existing.companionId ? { ...b, isMinimized: false, unreadCount: 0 } : b)),
+      );
+      return;
+    }
+    let updated = [...current];
+    if (updated.length >= 5) updated.shift();
+    const messages = circle.messages?.length
+      ? circle.messages
+      : [
+          {
+            id: generateUniqueId(),
+            senderId: circle.memberIds.find((id) => id !== me) ?? me,
+            receiverId: 0,
+            text: `This is ${circle.name}. Say hello and plan the next trip.`,
+            sentAtUtc: new Date().toISOString(),
+          },
+        ];
+    this.activeChatBoxes.set([
+      ...updated,
+      {
+        companionId: key,
+        companion: this.circleAsCompanion(circle),
+        isMinimized: false,
+        draftText: '',
+        unreadCount: 0,
+        messages,
+        isGroup: true,
+        circleId: circle.id,
+        participantIds: circle.memberIds,
+        ownerId: circle.ownerId ?? me,
+      },
+    ]);
+  }
+
+  addPeopleToChat(chatKey: number, userIds: number[]): string | null {
+    const box = this.activeChatBoxes().find((b) => b.companionId === chatKey);
+    if (!box) return 'That chat is not open.';
+    const me = this.currentUser()?.id ?? 1;
+    const adding = userIds.filter((id) => id !== me);
+    if (adding.length === 0) return 'Choose at least one companion.';
+
+    if (box.circleId) {
+      return this.addCircleMembers(box.circleId, adding);
+    }
+
+    for (const id of adding) {
+      const memberError = this.memberLimitError(id);
+      if (memberError && this.countMemberOnlyCircles(id) >= MAX_MEMBER_CIRCLES) {
+        // Adding to an unsaved group chat does not consume a Circle slot yet.
+      }
+    }
+
+    const participantIds = Array.from(new Set([...(box.participantIds ?? [box.companion.id]), ...adding]));
+    const names = participantIds
+      .map((id) => this.companions().find((c) => c.id === id)?.fullName)
+      .filter((n): n is string => !!n);
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) =>
+        b.companionId === chatKey
+          ? {
+              ...b,
+              isGroup: true,
+              ownerId: b.ownerId ?? me,
+              participantIds,
+              companion: {
+                ...b.companion,
+                fullName: names.length > 0 ? names.slice(0, 2).join(', ') + (names.length > 2 ? ` +${names.length - 2}` : '') : 'Group chat',
+                profession: 'Group chat',
+                city: `${participantIds.length} travelers`,
+              },
+            }
+          : b,
+      ),
+    );
+    return null;
+  }
+
+  saveChatAsCircle(chatKey: number, name: string, description: string, photoUrl?: string): Circle | null {
+    const box = this.activeChatBoxes().find((b) => b.companionId === chatKey);
+    if (!box) {
+      this.circleActionError.set('Open the group chat before saving it as a Circle.');
+      return null;
+    }
+    if (box.circleId) {
+      this.circleActionError.set('This chat is already a Circle.');
+      return null;
+    }
+    const me = this.currentUser()?.id ?? 1;
+    const memberIds = Array.from(new Set([me, ...(box.participantIds ?? [box.companion.id])]));
+    const created = this.createCircle(name, description, memberIds.filter((id) => id !== me), '✈️', '#2563eb', photoUrl);
+    if (!created) return null;
+    this.circles.update((list) =>
+      list.map((c) => (c.id === created.id ? { ...c, messages: box.messages } : c)),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    const saved = this.circles().find((c) => c.id === created.id) ?? created;
+    const key = -Math.abs(saved.id);
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) =>
+        b.companionId === chatKey
+          ? {
+              ...b,
+              companionId: key,
+              circleId: saved.id,
+              isGroup: true,
+              ownerId: me,
+              participantIds: saved.memberIds,
+              companion: this.circleAsCompanion(saved),
+            }
+          : b,
+      ),
+    );
+    return saved;
+  }
 
   openChatBox(companion: Companion): void {
     const current = this.activeChatBoxes();
@@ -2329,20 +2958,21 @@ export class CommunityService {
       updated.shift(); // remove oldest
     }
 
+    const pending = this.pendingChats().find((c) => c.companionId === companion.id && c.unreadCount > 0);
     const newBox: ActiveChatBox = {
       companionId: companion.id,
       companion,
       isMinimized: false,
       draftText: '',
-      // The seeded greeting comes from the companion, so it counts as one unread chat.
-      unreadCount: 1,
+      // A waiting inbox thread keeps its unread count; otherwise the greeting counts as one unread chat.
+      unreadCount: pending?.unreadCount ?? 1,
       messages: [
         {
           id: 1,
           senderId: companion.id,
           receiverId: 1,
-          text: `Hey Kingshuk! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
-          sentAtUtc: new Date(Date.now() - 3600000).toISOString(),
+          text: pending?.preview ?? `Hey Kingshuk! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
+          sentAtUtc: pending?.sentAtUtc ?? new Date(Date.now() - 3600000).toISOString(),
         },
       ],
     };
@@ -2368,6 +2998,7 @@ export class CommunityService {
     replyTo?: { id: number; senderName: string; text: string } | null,
   ): void {
     if (!text.trim()) return;
+    if (this.blockedByGuard(text) || !this.storageAllows(utf8Bytes(text))) return;
 
     const newMsg: ChatMessage = {
       id: generateUniqueId(),
@@ -2390,8 +3021,16 @@ export class CommunityService {
           : b,
       ),
     );
+    const box = this.activeChatBoxes().find((b) => b.companionId === companionId);
+    if (box?.circleId) {
+      this.circles.update((list) =>
+        list.map((c) => (c.id === box.circleId ? { ...c, messages: [...(box.messages ?? [])] } : c)),
+      );
+      this.saveJson(CIRCLES_KEY, this.circles());
+    }
 
-    // Auto simulated friendly reply after a moment
+    // Auto simulated friendly reply after a moment (1:1 chats only).
+    if (box?.isGroup) return;
     setTimeout(() => {
       const companion = this.companions().find((c) => c.id === companionId);
       if (!companion) return;
@@ -2787,7 +3426,40 @@ export class CommunityService {
     } else {
       merged = [...baseList, ...SEED_EXTENDED_JOURNEY_POSTS];
     }
-    return merged;
+    return this.withMultiTagExamples(merged);
+  }
+
+  /** So the feed shows "Maya with 10 others" without editing the giant seed file. */
+  private withMultiTagExamples(posts: JourneyPost[]): JourneyPost[] {
+    if (posts.some((p) => (p.taggedCompanions?.length ?? 0) > 1)) return posts;
+    const extras: AuthorInfo[] = [
+      { id: 33, fullName: 'Elena Rostova', profilePhotoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', profession: 'Travel Blogger' },
+      { id: 12, fullName: 'Marco Rossi', profilePhotoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', profession: 'Architect' },
+      { id: 42, fullName: 'Chloe Dupont', profilePhotoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', profession: 'Landscape Photographer' },
+      { id: 88, fullName: 'Kenji Sato', profilePhotoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=200&q=80', profession: 'Student & Street Shooter' },
+      { id: 55, fullName: "Liam O'Connor", profilePhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80', profession: 'Adventure Guide' },
+      { id: 101, fullName: 'Aarav Sharma', profilePhotoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', profession: 'Heritage Architect' },
+      { id: 102, fullName: 'Mei Lin', profilePhotoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', profession: 'Traveler' },
+      { id: 103, fullName: 'Hiro Tanaka', profilePhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80', profession: 'Traveler' },
+      { id: 104, fullName: 'Sana Iqbal', profilePhotoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', profession: 'Traveler' },
+      { id: 105, fullName: 'Ravi Menon', profilePhotoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', profession: 'Traveler' },
+      { id: 106, fullName: 'Ananya Das', profilePhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', profession: 'Traveler' },
+    ];
+    let expanded = 0;
+    return posts.map((p) => {
+      if (expanded >= 2) return p;
+      const tagged = p.taggedCompanions ?? [];
+      if (tagged.length !== 1) return p;
+      const more = extras.filter((e) => e.id !== tagged[0].id);
+      const take = expanded === 0 ? 10 : 2;
+      expanded += 1;
+      return { ...p, taggedCompanions: [tagged[0], ...more.slice(0, take)] };
+    }).map((p, index) => {
+      if (p.hashtags?.length || /#\w/.test(p.text)) return p;
+      if (index % 17 !== 0) return p;
+      const tags = ['alps', 'sunset', 'slowtravel', 'streetfood', 'neverbeen'];
+      return { ...p, hashtags: [tags[index % tags.length]] };
+    });
   }
 
   private getBaseSeedJourneyPosts(): JourneyPost[] {
@@ -3069,6 +3741,138 @@ export class CommunityService {
     return index % 2 === 0;
   }
 
+  private myId(): number {
+    return Number(this.currentUser()?.id || 1);
+  }
+
+  private loadFollows(): Record<string, number[]> {
+    if (typeof localStorage !== 'undefined') {
+      const version = localStorage.getItem(FOLLOWS_SEED_VERSION_KEY);
+      const saved = this.loadJson<Record<string, number[]>>(FOLLOWS_KEY);
+      if (version === FOLLOWS_SEED_VERSION && saved && typeof saved === 'object') {
+        return saved;
+      }
+    }
+    const seeded = this.seedFollows();
+    this.saveJson(FOLLOWS_KEY, seeded);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(FOLLOWS_SEED_VERSION_KEY, FOLLOWS_SEED_VERSION);
+    }
+    return seeded;
+  }
+
+  /** Seed a mixed follow graph so both pages have companions, pending requests, and strangers. */
+  private seedFollows(): Record<string, number[]> {
+    const me = this.myId();
+    const graph: Record<string, number[]> = {};
+    const add = (from: number, to: number) => {
+      if (!from || !to || from === to) return;
+      const key = String(from);
+      const list = graph[key] ?? [];
+      if (!list.includes(to)) list.push(to);
+      graph[key] = list;
+    };
+    const people = this.companions();
+    for (const person of people) {
+      if (person.status === 'pending_outgoing' || person.status === 'connected') {
+        add(me, person.id);
+      }
+      if (person.status === 'pending_incoming' || (person.status === 'connected' && person.id % 2 === 0)) {
+        add(person.id, me);
+      }
+      if (person.status === 'none' && person.id % 5 === 0) add(person.id, me);
+      if (person.status === 'none' && person.id % 7 === 0) add(me, person.id);
+      const others = people.filter((other) => other.id !== person.id);
+      if (!others.length) continue;
+      add(person.id, others[person.id % others.length].id);
+      add(person.id, others[(person.id * 3) % others.length].id);
+    }
+    return graph;
+  }
+
+  private persistFollows(): void {
+    this.saveJson(FOLLOWS_KEY, this.follows());
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(FOLLOWS_SEED_VERSION_KEY, FOLLOWS_SEED_VERSION);
+    }
+  }
+
+  private resolvePeople(ids: number[]): Companion[] {
+    const me = this.myId();
+    const blocked = new Set(this.blockedUserIds());
+    const seen = new Set<number>();
+    const people: Companion[] = [];
+    for (const id of ids) {
+      const num = Number(id);
+      if (!num || seen.has(num) || blocked.has(num)) continue;
+      seen.add(num);
+      const person =
+        num === me
+          ? this.getCurrentUserAsCompanion()
+          : this.companions().find((c) => Number(c.id) === num);
+      if (person) people.push(person);
+    }
+    return people;
+  }
+
+  followingIds(userId: number = this.myId()): number[] {
+    return this.follows()[String(userId)] ?? [];
+  }
+
+  followerIds(userId: number = this.myId()): number[] {
+    const target = Number(userId);
+    return Object.entries(this.follows())
+      .filter(([, ids]) => ids.some((id) => Number(id) === target))
+      .map(([id]) => Number(id));
+  }
+
+  followingCount(userId: number = this.myId()): number {
+    return this.peopleFollowing(userId).length;
+  }
+
+  followerCount(userId: number = this.myId()): number {
+    return this.peopleFollowers(userId).length;
+  }
+
+  peopleFollowing(userId: number = this.myId()): Companion[] {
+    return this.resolvePeople(this.followingIds(userId));
+  }
+
+  peopleFollowers(userId: number = this.myId()): Companion[] {
+    return this.resolvePeople(this.followerIds(userId));
+  }
+
+  isFollowing(targetUserId: number, actorId: number = this.myId()): boolean {
+    return this.followingIds(actorId).some((id) => Number(id) === Number(targetUserId));
+  }
+
+  follow(targetUserId: number, actorId: number = this.myId()): void {
+    const target = Number(targetUserId);
+    const actor = Number(actorId);
+    if (!target || !actor || target === actor || this.blockedUserIds().includes(target)) return;
+    if (this.isFollowing(target, actor)) return;
+    this.follows.update((graph) => {
+      const key = String(actor);
+      return { ...graph, [key]: [...(graph[key] ?? []), target] };
+    });
+    this.persistFollows();
+  }
+
+  unfollow(targetUserId: number, actorId: number = this.myId()): void {
+    const target = Number(targetUserId);
+    const actor = Number(actorId);
+    this.follows.update((graph) => {
+      const key = String(actor);
+      return { ...graph, [key]: (graph[key] ?? []).filter((id) => Number(id) !== target) };
+    });
+    this.persistFollows();
+  }
+
+  /** Stop this person from following me (or `ownerId`). */
+  disconnectFollower(followerId: number, ownerId: number = this.myId()): void {
+    this.unfollow(ownerId, followerId);
+  }
+
   private loadCompanions(): Companion[] {
     const saved = this.loadJson<Companion[]>(COMPANIONS_KEY);
     const baseList: Companion[] = this.getDefaultSeedCompanions();
@@ -3141,6 +3945,9 @@ export class CommunityService {
         status = 'pending_incoming';
       }
 
+      const whoCanConnect = c.whoCanConnect ?? (c.isProfileLocked ? 'companions-of-companions' : 'everyone');
+      const whoCanVisitProfile = c.whoCanVisitProfile ?? (c.isProfileLocked ? 'companions' : 'everyone');
+
       return {
         ...c,
         status,
@@ -3149,6 +3956,8 @@ export class CommunityService {
         isVerified,
         verificationType,
         verifiedEmail,
+        whoCanConnect,
+        whoCanVisitProfile,
         uniqueId: c.uniqueId || generate20DigitUid(c.id),
         aboutMeDetails: {
           ...(c.aboutMeDetails || {}),
@@ -3513,29 +4322,53 @@ export class CommunityService {
   }
 
   private loadCircles(): Circle[] {
+    const version =
+      typeof localStorage !== 'undefined' ? localStorage.getItem(CIRCLES_SEED_VERSION_KEY) : null;
     const saved = this.loadJson<Circle[]>(CIRCLES_KEY);
-    if (saved && saved.length > 0) return saved;
+    if (version === CIRCLES_SEED_VERSION && saved && saved.length > 0) {
+      return saved.map((c) => normalizeCircle(c));
+    }
+    const seed = buildTravelCircles(1);
+    this.saveJson(CIRCLES_KEY, seed);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(CIRCLES_SEED_VERSION_KEY, CIRCLES_SEED_VERSION);
+    }
+    return seed;
+  }
 
-    return [
-      {
-        id: 1,
-        name: 'Alpine Explorers',
-        description: 'Passionate hikers and mountain photographers in the Alps.',
-        icon: '🏔️',
-        color: '#0284c7',
-        memberIds: [33, 12],
-        createdAtUtc: '2026-08-20T10:00:00Z',
-      },
-      {
-        id: 2,
-        name: 'Mediterranean Photographers',
-        description: 'Coastal light, coastal villages, and seaside photography.',
-        icon: '🌊',
-        color: '#059669',
-        memberIds: [33, 42, 12],
-        createdAtUtc: '2026-08-25T14:30:00Z',
-      },
+  private loadPendingChats(): PendingChat[] {
+    const version = typeof localStorage !== 'undefined' ? localStorage.getItem(PENDING_CHATS_SEED_VERSION_KEY) : null;
+    const saved = this.loadJson<PendingChat[]>(PENDING_CHATS_KEY);
+    if (version === PENDING_CHATS_SEED_VERSION && saved) return saved;
+    const seed = this.buildPendingChatSeed();
+    this.saveJson(PENDING_CHATS_KEY, seed);
+    if (typeof localStorage !== 'undefined') localStorage.setItem(PENDING_CHATS_SEED_VERSION_KEY, PENDING_CHATS_SEED_VERSION);
+    return seed;
+  }
+
+  /** Three waiting conversations so the header Chats badge and browser tab can be checked. */
+  private buildPendingChatSeed(): PendingChat[] {
+    const connected = this.companions().filter((c) => c.status === 'connected' && c.id > 0);
+    const preferred = [12, 33, 42, 71]
+      .map((id) => connected.find((c) => c.id === id))
+      .filter((c): c is Companion => !!c);
+    const chosen = preferred.length >= 3 ? preferred.slice(0, 3) : connected.slice(0, 3);
+    const previews = [
+      'The sunrise platform is still free if you want to join.',
+      'I left three photos from the night market in our chat.',
+      'Are we still meeting at the station tomorrow?',
     ];
+    return chosen.map((c, i) => ({
+      companionId: c.id,
+      fullName: c.fullName,
+      profilePhotoUrl: c.profilePhotoUrl,
+      profession: c.profession,
+      city: c.city,
+      country: c.country,
+      preview: previews[i] ?? 'Sent you a message.',
+      unreadCount: 1,
+      sentAtUtc: new Date(Date.now() - (i + 1) * 3600000).toISOString(),
+    }));
   }
 
   private loadNotifications(): NotificationItem[] {
@@ -3598,6 +4431,173 @@ export class CommunityService {
   private loadAbuseReports(): AbuseReport[] {
     const saved = this.loadJson<AbuseReport[]>(ABUSE_REPORTS_KEY);
     return saved || [];
+  }
+
+  presenceFor(
+    userId?: number | null,
+    hint?: { activeStatus?: UserActiveStatus; customStatusText?: string; isOnline?: boolean } | AuthorInfo | Companion | null,
+  ): { status: UserActiveStatus; label: string; klass: string } {
+    const me = this.currentUser();
+    const hinted = hint as { activeStatus?: UserActiveStatus; customStatusText?: string; isOnline?: boolean } | null | undefined;
+    let status: UserActiveStatus | undefined = hinted?.activeStatus;
+    let custom = hinted?.customStatusText;
+    let online = hinted?.isOnline;
+    if (userId != null && me && userId === me.id) {
+      status = me.activeStatus;
+      custom = me.customStatusText;
+      online = true;
+    } else if (userId != null) {
+      const companion = this.companions().find((c) => c.id === userId);
+      if (companion) {
+        status = companion.activeStatus;
+        custom = companion.customStatusText;
+        online = companion.isOnline;
+      }
+    }
+    if (!status) status = online === false ? 'Inactive' : 'Active';
+    const label = status === 'Custom' && custom ? custom : status;
+    return { status, label, klass: statusIconClass(status) };
+  }
+
+  relationshipLabel(companion: Companion | null | undefined): string {
+    if (!companion) return '';
+    return (
+      companion.relationshipStatus ||
+      companion.aboutMeDetails?.relationshipStatus ||
+      'Exploring solo'
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // DEVICES USED (current sessions + up to 10 previous devices)
+  // ---------------------------------------------------------------------------
+
+  visibleDevices(): LoginDevice[] {
+    const all = this.devices();
+    const active = all.filter((d) => d.isActive && !d.blocked);
+    const previous = all
+      .filter((d) => !d.isActive || d.blocked)
+      .sort((a, b) => b.lastSeenUtc.localeCompare(a.lastSeenUtc))
+      .slice(0, 10);
+    return [...active, ...previous];
+  }
+
+  logoutDevice(deviceId: string): 'self' | 'remote' | 'missing' {
+    const device = this.devices().find((d) => d.id === deviceId);
+    if (!device) return 'missing';
+    this.devices.update((list) =>
+      list.map((d) => (d.id === deviceId ? { ...d, isActive: false, isCurrent: false, lastSeenUtc: new Date().toISOString() } : d)),
+    );
+    this.saveJson(DEVICES_KEY, this.devices());
+    if (device.isCurrent) return 'self';
+    return 'remote';
+  }
+
+  blockDevice(deviceId: string): 'self' | 'remote' | 'missing' {
+    const device = this.devices().find((d) => d.id === deviceId);
+    if (!device) return 'missing';
+    this.devices.update((list) =>
+      list.map((d) =>
+        d.id === deviceId
+          ? { ...d, blocked: true, isActive: false, isCurrent: false, lastSeenUtc: new Date().toISOString() }
+          : d,
+      ),
+    );
+    this.saveJson(DEVICES_KEY, this.devices());
+    if (device.isCurrent) return 'self';
+    return 'remote';
+  }
+
+  unblockDevice(deviceId: string): void {
+    this.devices.update((list) => list.map((d) => (d.id === deviceId ? { ...d, blocked: false } : d)));
+    this.saveJson(DEVICES_KEY, this.devices());
+  }
+
+  private loadDevices(): LoginDevice[] {
+    const saved = this.loadJson<LoginDevice[]>(DEVICES_KEY);
+    const detected = this.detectCurrentDevice();
+    if (saved && saved.length > 0) {
+      const hasCurrent = saved.some((d) => d.id === detected.id);
+      const next = saved.map((d) =>
+        d.id === detected.id
+          ? { ...detected, blocked: d.blocked, isActive: d.blocked ? false : true, isCurrent: !d.blocked }
+          : { ...d, isCurrent: false },
+      );
+      return hasCurrent ? next : [detected, ...next].slice(0, 16);
+    }
+    const seed = this.seedDevices(detected);
+    this.saveJson(DEVICES_KEY, seed);
+    return seed;
+  }
+
+  private detectCurrentDevice(): LoginDevice {
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    let type: LoginDevice['type'] = 'Desktop';
+    let os = 'Desktop';
+    let name = 'This computer';
+    if (/iPad|Tablet/i.test(ua)) {
+      type = 'Tablet';
+      os = /iPad/.test(ua) ? 'iPadOS 18' : 'Android 15';
+      name = /iPad/.test(ua) ? 'iPad Air' : 'Android tablet';
+    } else if (/Mobile|iPhone|Android/i.test(ua)) {
+      type = 'Phone';
+      os = /iPhone/.test(ua) ? 'iOS 18' : 'Android 15';
+      name = /iPhone/.test(ua) ? 'iPhone' : 'Android phone';
+    } else if (/Mac/i.test(ua)) {
+      type = 'Laptop';
+      os = 'macOS';
+      name = 'MacBook';
+    } else if (/Windows/i.test(ua)) {
+      type = 'Laptop';
+      os = 'Windows 11';
+      name = 'Windows laptop';
+    } else if (/Linux/i.test(ua)) {
+      type = 'Desktop';
+      os = 'Linux';
+      name = 'Linux workstation';
+    }
+    const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+    return {
+      id: 'device-current',
+      name: `${name} · ${browser}`,
+      type,
+      os,
+      browser,
+      ipAddress: this.stableIp('current'),
+      macAddress: this.stableMac('current'),
+      location: 'Kolkata, India',
+      lastSeenUtc: new Date().toISOString(),
+      isCurrent: true,
+      isActive: true,
+      blocked: false,
+    };
+  }
+
+  private seedDevices(current: LoginDevice): LoginDevice[] {
+    const ago = (hours: number) => new Date(Date.now() - hours * 3600_000).toISOString();
+    const previous: LoginDevice[] = [
+      { id: 'device-iphone', name: 'iPhone 15 Pro · Safari', type: 'Phone', os: 'iOS 18.1', browser: 'Safari', ipAddress: '103.25.184.42', macAddress: this.stableMac('iphone'), location: 'Kolkata, India', lastSeenUtc: ago(2), isCurrent: false, isActive: true, blocked: false },
+      { id: 'device-ipad', name: 'iPad Pro · Safari', type: 'Tablet', os: 'iPadOS 18', browser: 'Safari', ipAddress: '103.25.184.58', macAddress: this.stableMac('ipad'), location: 'Kolkata, India', lastSeenUtc: ago(5), isCurrent: false, isActive: true, blocked: false },
+      { id: 'device-pixel', name: 'Pixel 8 · Chrome', type: 'Phone', os: 'Android 15', browser: 'Chrome', ipAddress: '49.37.12.90', macAddress: this.stableMac('pixel'), location: 'Bengaluru, India', lastSeenUtc: ago(30), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-galaxy', name: 'Galaxy S24 · Samsung Internet', type: 'Phone', os: 'Android 14', browser: 'Samsung Internet', ipAddress: '122.176.44.18', macAddress: this.stableMac('galaxy'), location: 'Delhi, India', lastSeenUtc: ago(54), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-win', name: 'Office Desktop · Edge', type: 'Desktop', os: 'Windows 11', browser: 'Edge', ipAddress: '202.142.88.16', macAddress: this.stableMac('win'), location: 'Salt Lake, Kolkata', lastSeenUtc: ago(80), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-mbp', name: 'MacBook Pro · Chrome', type: 'Laptop', os: 'macOS Sequoia', browser: 'Chrome', ipAddress: '157.48.201.77', macAddress: this.stableMac('mbp'), location: 'Mumbai, India', lastSeenUtc: ago(120), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-linux', name: 'ThinkPad · Firefox', type: 'Laptop', os: 'Ubuntu 24.04', browser: 'Firefox', ipAddress: '45.118.22.9', macAddress: this.stableMac('linux'), location: 'Hyderabad, India', lastSeenUtc: ago(200), isCurrent: false, isActive: false, blocked: false },
+    ];
+    return [current, ...previous];
+  }
+
+  private stableMac(seed: string): string {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 33 + seed.charCodeAt(i)) >>> 0;
+    const bytes = [0x02, (h >> 16) & 0xff, (h >> 8) & 0xff, h & 0xff, (h >> 24) & 0xff, (h >> 4) & 0xff];
+    return bytes.map((b) => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
+  }
+
+  private stableIp(seed: string): string {
+    let h = 7;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return `103.25.${(h >> 8) & 0xff}.${h & 0xff}`;
   }
 
   private loadJson<T>(key: string): T | null {

@@ -190,7 +190,20 @@ a:has(use[href='#nb-icon-live']) .icon {
 @media not all and (max-width: 900px), not all and ((orientation: portrait) and (max-width: 1024px)) {
   .ch-search {
     display: inline-flex;
-    width: 250px;
+    width: min(280px, 32vw);
+    min-width: 160px;
+    flex: 0 1 280px;
+    margin-right: 0.35rem;
+  }
+
+  /* Same row as Home / Notifications / Messenger, immediately after NeverBeen. */
+  .ch-actions {
+    margin-left: 0.85rem;
+    flex: 1 1 auto;
+  }
+
+  .ch-brand {
+    flex: none;
   }
 }
 
@@ -212,6 +225,7 @@ a:has(use[href='#nb-icon-live']) .icon {
   align-items: center;
   gap: 0.15rem;
   margin-left: auto;
+  min-width: 0;
 }
 
 .ch-link {

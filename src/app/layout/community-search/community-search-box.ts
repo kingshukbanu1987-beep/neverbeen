@@ -89,7 +89,7 @@ import { CommunityService } from '../../services/community.service';
             <div class="csb-group">
               <span class="csb-group-label">Circles</span>
               @for (c of results().circles; track c.id) {
-                <div class="csb-item" (click)="openCircles()" role="option" tabindex="0">
+                <div class="csb-item" (click)="openCircles(c)" role="option" tabindex="0">
                   <span class="csb-circle-badge" [style.background]="c.color">{{ c.icon }}</span>
                   <div class="csb-item-info">
                     <strong>{{ c.name }}</strong>
@@ -362,7 +362,7 @@ export class CommunitySearchBox implements OnInit {
       );
 
     const circles = this.service
-      .circles()
+      .myCircles()
       .filter((cr) => cr.name.toLowerCase().includes(q) || cr.description.toLowerCase().includes(q));
 
     return { travelers, circles };
@@ -411,9 +411,10 @@ export class CommunitySearchBox implements OnInit {
     });
   }
 
-  protected openCircles(): void {
+  protected openCircles(circle?: Circle): void {
     this.open.set(false);
     this.query.set('');
+    if (circle) this.service.pendingCircleChatId.set(circle.id);
     this.router.navigate(['/profile'], { fragment: 'circles' });
   }
 

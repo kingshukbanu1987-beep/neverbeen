@@ -109,7 +109,7 @@
           <div class="results-group">
             <span class="group-header">Circles</span>
             @for (c of searchResults().circles; track c.id) {
-              <div class="search-result-item" (click)="setSection('circles'); showSearchDropdown.set(false)">
+              <div class="search-result-item" (click)="openCircleChat(c); showSearchDropdown.set(false)">
                 <span class="circle-icon-badge" [style.background]="c.color">{{ c.icon }}</span>
                 <div class="res-info">
                   <strong>{{ c.name }}</strong>
@@ -262,6 +262,17 @@
             </select>
           </div>
 
+          <div class="follow-count-row" aria-label="Followers and following">
+            <button type="button" class="follow-count-btn" (click)="openFollowList('followers')">
+              <strong>{{ service.followerCount() }}</strong>
+              <span>Followers</span>
+            </button>
+            <button type="button" class="follow-count-btn" (click)="openFollowList('following')">
+              <strong>{{ service.followingCount() }}</strong>
+              <span>Following</span>
+            </button>
+          </div>
+
           <!-- Profile Locked / Public Pill -->
           <div class="profile-lock-status-badge">
             @if (service.profile()?.isProfileLocked) {
@@ -375,6 +386,43 @@
           </button>
           }
 
+          <!-- Followers -->
+          @if (profileSectionOn('followers')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'followers'"
+            (click)="setSection('followers')"
+          >
+            <span class="icon-pill pill-fuchsia">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12.75c1.63 0 3.07.39 4.24.9 1.08.48 1.76 1.56 1.76 2.73V18H6v-1.61c0-1.18.68-2.26 1.76-2.73 1.17-.52 2.61-.91 4.24-.91zM4 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm1.13 1.1c-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58A2.01 2.01 0 0 0 0 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29zM20 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm4 3.43c0-.81-.48-1.53-1.22-1.85A6.95 6.95 0 0 0 20 14c-.39 0-.76.04-1.13.1.4.68.63 1.46.63 2.29V18H24v-1.57zM12 6c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('followers') }}</span>
+            <span class="menu-badge">{{ service.followerCount() }}</span>
+          </button>
+          }
+
+          <!-- Following -->
+          @if (profileSectionOn('following')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'following'"
+            (click)="setSection('following')"
+          >
+            <span class="icon-pill pill-lime">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h8.2c-.4-.6-.7-1.3-.7-2 0-1.1.4-2.1 1.1-2.9C9.1 13.4 8.5 13 8 13z"/>
+                <path d="M14 11h3.2l-1.4-1.4L17.2 8 21 11.8 17.2 15.6l-1.4-1.4L17.2 13H14v-2z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('following') }}</span>
+            <span class="menu-badge">{{ service.followingCount() }}</span>
+          </button>
+          }
+
           <!-- 6. Circles -->
           @if (profileSectionOn('circles')) {
           <button
@@ -389,7 +437,7 @@
               </svg>
             </span>
             <span class="menu-label">{{ profileLabel('circles') }}</span>
-            <span class="menu-badge">{{ service.circles().length }}/5</span>
+            <span class="menu-badge">{{ service.myCircles().length }}</span>
           </button>
           }
 
@@ -407,9 +455,28 @@
               </svg>
             </span>
             <span class="menu-label">{{ profileLabel('messenger') }}</span>
-            @if (service.onlineCompanions().length > 0) {
+            @if (service.unreadChatCount() > 0) {
+              <span class="notif-count-badge chat-count-badge">{{ service.unreadChatCount() }}</span>
+            } @else if (service.onlineCompanions().length > 0) {
               <span class="online-dot-mini" title="Active companions online"></span>
             }
+          </button>
+          }
+
+          <!-- Birthdays, after Messenger -->
+          @if (profileSectionOn('birthdays')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'birthdays'"
+            (click)="setSection('birthdays')"
+          >
+            <span class="icon-pill pill-pink">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 6c.7-1.4 2.4-2.2 3.6-1.4.8.5 1.1 1.5.7 2.4H18a2 2 0 0 1 2 2v2H4v-2a2 2 0 0 1 2-2h1.7c-.4-.9-.1-1.9.7-2.4C9.6 3.8 11.3 4.6 12 6zm-8 7h16v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5zm2 2v3h3v-3H6zm5 0v3h3v-3h-3zm5 0v3h2v-3h-2z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('birthdays') }}</span>
           </button>
           }
 
@@ -430,6 +497,24 @@
             @if (notifBadgeCount() > 0) {
               <span class="notif-count-badge">{{ notifBadgeCount() }}</span>
             }
+          </button>
+          }
+
+          <!-- Storage, after Notifications -->
+          @if (profileSectionOn('storage')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'storage'"
+            (click)="setSection('storage')"
+          >
+            <span class="icon-pill pill-teal">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6a8 8 0 0 1 16 0v2H4V6zm0 4h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8zm3 3v2h4v-2H7zm6 0v2h4v-2h-4z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('storage') }}</span>
+            <span class="menu-badge">{{ (service.storageReport().ratio * 100) | number:'1.0-0' }}%</span>
           </button>
           }
 
@@ -535,23 +620,27 @@
             type="button"
             class="btn-create-circle-mini"
             (click)="openCreateCircleModal()"
-            title="Create Circle (Max 5)"
+            title="Create Circle (max 500 as admin)"
           >
             + New
           </button>
         </div>
 
         <div class="circles-shortcut-list">
-          @for (circle of service.circles(); track circle.id) {
-            <div class="circle-shortcut-item" (click)="setSection('circles')">
-              <span class="circle-icon-badge" [style.background]="circle.color">{{ circle.icon }}</span>
+          @for (circle of service.myCircles().slice(0, 8); track circle.id) {
+            <div class="circle-shortcut-item" (click)="openCircleChat(circle, $event)">
+              @if (circle.photoUrl) {
+                <img class="circle-icon-badge circle-photo-badge" [src]="circle.photoUrl" [alt]="circle.name" />
+              } @else {
+                <span class="circle-icon-badge" [style.background]="circle.color">{{ circle.icon }}</span>
+              }
               <div class="circle-info-mini">
                 <span class="circle-name-mini">{{ circle.name }}</span>
-                <span class="circle-meta-mini">{{ circle.memberIds.length }} members</span>
+                <span class="circle-meta-mini">{{ isCircleAdmin(circle) ? 'Admin' : 'Member' }} · {{ circle.memberIds.length }}</span>
               </div>
             </div>
           } @empty {
-            <div class="empty-circles-hint">No circles created yet. Connect companions into private travel circles!</div>
+            <div class="empty-circles-hint">You are not in any circles yet.</div>
           }
         </div>
       </section>
@@ -560,6 +649,101 @@
 
     <!-- RIGHT WIDE PANEL (Takes majority screen space in landscape and 100% in portrait) -->
     <main class="right-wide-panel">
+      @if (activeHashtag()) {
+        <section class="section-pane hashtag-pane">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">#{{ activeHashtag() }}</h1>
+              <p class="section-desc">Every community Journey post with this hashtag, except people who blocked you.</p>
+            </div>
+            <button type="button" class="btn-secondary-action" (click)="closeHashtag()">Back</button>
+          </header>
+          <div class="journey-feed-list">
+            @for (post of hashtagPosts(); track post.id) {
+              <article class="journey-post-card hashtag-post-card">
+                <div class="post-header">
+                  <span class="avatar-presence">
+                    <img
+                      [src]="post.author.profilePhotoUrl || defaultAvatar"
+                      [alt]="post.author.fullName"
+                      class="author-avatar clickable-user"
+                      [nbUserPreview]="post.author"
+                      (click)="openVisitorProfile(post.author)"
+                    />
+                    <app-presence-dot [user]="post.author" />
+                  </span>
+                  <div class="author-details">
+                    <div class="author-name-line">
+                      <strong class="author-name clickable-user" [nbUserPreview]="post.author" (click)="openVisitorProfile(post.author)">
+                        {{ post.author.fullName }}
+                      </strong>
+                      @if (isAuthorVerified(post.author)) {
+                        <span class="blue-verified-badge" title="Verified Account">
+                          <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                        </span>
+                      }
+                    </div>
+                    <div class="post-sub-meta">
+                      <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(post.author.id) }}</span>
+                      @if (post.location) {
+                        <span class="post-loc">{{ post.location }}</span>
+                      }
+                      @if (showCustomAllowList(post)) {
+                        <span class="custom-allow-note">Allowed: {{ allowedNames(post) }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                @if (post.text) {
+                  <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
+                }
+                @if (postHashtags(post).length) {
+                  <div class="hashtag-row">
+                    @for (tag of postHashtags(post); track tag) {
+                      <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
+                    }
+                  </div>
+                }
+                @if (postImageUrls(post).length > 1) {
+                  <div class="post-multi-images-grid facebook-collage" [attr.data-count]="postImageUrls(post).length >= 4 ? 4 : postImageUrls(post).length">
+                    @for (img of postImageUrls(post).slice(0, 4); track img) {
+                      <div class="multi-img-cell" (click)="openImageModal(img)">
+                        <img [src]="img" alt="Journey post photo" class="post-attached-photo multi-photo-img" />
+                      </div>
+                    }
+                  </div>
+                } @else if (postImageUrls(post).length === 1) {
+                  <div class="post-image-attachment-wrap">
+                    <img [src]="postImageUrls(post)[0]" alt="Journey post photo" class="post-attached-photo" (click)="openImageModal(postImageUrls(post)[0])" />
+                  </div>
+                }
+                @for (video of postVideoUrls(post); track video) {
+                  <video class="post-attached-video" [src]="video" controls playsinline [attr.aria-label]="'Video from ' + post.author.fullName"></video>
+                }
+                @if (post.originalPost) {
+                  <div class="shared-post-embed-card">
+                    <div class="shared-embed-header">
+                      <img [src]="post.originalPost.author.profilePhotoUrl || defaultAvatar" [alt]="post.originalPost.author.fullName" class="shared-orig-avatar" />
+                      <strong>{{ post.originalPost.author.fullName }}</strong>
+                    </div>
+                    <p class="shared-orig-text">{{ post.originalPost.text }}</p>
+                    @if (postImageUrls(post.originalPost).length) {
+                      <img [src]="postImageUrls(post.originalPost)[0]" alt="Shared post photo" class="post-attached-photo" />
+                    }
+                    @for (video of postVideoUrls(post.originalPost); track video) {
+                      <video class="post-attached-video" [src]="video" controls playsinline></video>
+                    }
+                  </div>
+                }
+              </article>
+            } @empty {
+              <div class="companion-empty-box">No visible posts use #{{ activeHashtag() }} yet.</div>
+            }
+          </div>
+        </section>
+      } @else {
+
       <!-- ================================================================= -->
       <!-- SECTION 1: JOURNEY (DEFAULT WIDE PANEL VIEW)                     -->
       <!-- ================================================================= -->
@@ -588,21 +772,34 @@
                   <span class="composer-user-name clickable-user" [nbUserPreview]="service.profile()" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
                     {{ service.profile()?.fullName || 'Kingshuk' }}
                   </span>
-                  <span class="composer-audience-badge">🌐 Public</span>
+                  <span class="composer-audience-badge">{{ composerAudienceLabel() }}</span>
                 </div>
               </div>
 
               <textarea
                 [(ngModel)]="newJourneyText"
                 rows="3"
-                placeholder="What's on your travel mind? (e.g. Planning a journey, packing tips, or sharing a photo memory...)"
+                placeholder="What's on your travel mind? Use # to add a hashtag."
                 class="composer-textarea"
+                (input)="onJourneyTextInput($event)"
+                (click)="onJourneyTextInput($event)"
               ></textarea>
+              @if (hashtagSuggestions().length) {
+                <div class="hashtag-suggest" role="listbox">
+                  @for (hit of hashtagSuggestions(); track hit.tag) {
+                    <button type="button" (click)="applyHashtag(hit.tag)">
+                      #{{ hit.tag }}
+                      @if (hit.isNew) { <small>New hashtag</small> }
+                    </button>
+                  }
+                </div>
+              }
+              <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="postAudience = $event" />
 
               <!-- COMPOSER ACCESSORIES: Photo, Tag, Mood & Destination (Requirement A, B, C, F) -->
               <div class="composer-accessory-row">
-                <label class="btn-tool-photo-label" title="Attach pictures (Max 100 KB each)">
-                  📷 Add Photos (Max 100 KB)
+                <label class="btn-tool-photo-label" title="Add Photos">
+                  📷 Add Photos
                   <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
                 </label>
 
@@ -620,69 +817,10 @@
                 </button>
 
                 <div class="accessory-item">
-                  <label class="accessory-lbl" for="journey-travel-mood">Travel Mood:</label>
-                  <select id="journey-travel-mood" [(ngModel)]="selectedMood" class="select-mood">
-                    @for (group of travelMoodGroups; track group.label) {
-                      <optgroup [label]="group.label">
-                        @for (mood of group.moods; track mood) {
-                          <option [value]="mood">{{ mood }}</option>
-                        }
-                      </optgroup>
-                    }
-                  </select>
+                  <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" />
                 </div>
 
-                <!-- Google Maps API Destination Tag Auto-Search (Requirement B & D) -->
-                <div class="accessory-item destination-autocomplete-wrapper">
-                  <div class="dest-field-inline">
-                    <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
-                    @if (selectedGoogleLocation()) {
-                      <div class="selected-google-dest-pill">
-                        <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
-                        <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
-                        <span class="gmap-badge">Verified Google Maps</span>
-                        <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
-                      </div>
-                    } @else {
-                      <div class="dest-search-input-box">
-                        <input
-                          type="text"
-                          [(ngModel)]="destinationSearchInput"
-                          (input)="onDestinationSearchInput()"
-                          (focus)="onDestinationSearchFocus()"
-                          placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
-                          class="input-location-tag"
-                        />
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Google Maps Dropdown Suggestions (Requirement D: only available location can be selected) -->
-                  @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
-                    <div class="google-maps-dropdown">
-                      <div class="gmaps-header-bar">
-                        <svg viewBox="0 0 24 24" class="gmap-icon-svg" fill="none" stroke="currentColor" stroke-width="2">
-                          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                          <line x1="8" y1="2" x2="8" y2="18"></line>
-                          <line x1="16" y1="6" x2="16" y2="22"></line>
-                        </svg>
-                        <span>Google Maps Suggestions (Click to select)</span>
-                      </div>
-                      <div class="gmaps-suggestions-scroll">
-                        @for (loc of destinationSuggestions(); track loc.placeId) {
-                          <div class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
-                            <span class="gmap-pin-red"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /></span>
-                            <div class="gmap-loc-info">
-                              <strong class="loc-name">{{ loc.name }}</strong>
-                              <span class="loc-address">{{ loc.formattedAddress }}</span>
-                            </div>
-                            <span class="loc-category-badge">{{ loc.category || 'Destination' }}</span>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
+                <ng-container *ngTemplateOutlet="destinationPicker" />
               </div>
 
               <!-- Tagged companions chips preview (Requirement C) -->
@@ -739,7 +877,7 @@
                 <button
                   type="button"
                   class="btn-primary-action btn-post"
-                  [disabled]="(!newJourneyText.trim() && journeyPhotoPreviews().length === 0 && !journeyPhotoPreview()) || postingJourney()"
+                  [disabled]="!canSubmitJourney()"
                   (click)="submitJourneyPost()"
                 >
                   {{ postingJourney() ? 'Posting...' : 'Post to Journey' }}
@@ -753,13 +891,16 @@
                 <article class="journey-post-card">
                   <!-- Post Author Header -->
                   <div class="post-header">
-                    <img
-                      [src]="post.author.profilePhotoUrl || defaultAvatar"
-                      [alt]="post.author.fullName"
-                      class="author-avatar clickable-user"
-                      [nbUserPreview]="post.author"
-                      (click)="openVisitorProfile(post.author)"
-                    />
+                    <span class="avatar-presence">
+                      <img
+                        [src]="post.author.profilePhotoUrl || defaultAvatar"
+                        [alt]="post.author.fullName"
+                        class="author-avatar clickable-user"
+                        [nbUserPreview]="post.author"
+                        (click)="openVisitorProfile(post.author)"
+                      />
+                      <app-presence-dot [user]="post.author" />
+                    </span>
                     <div class="author-details">
                       <div class="author-name-line">
                         <strong class="author-name clickable-user" [nbUserPreview]="post.author" (click)="openVisitorProfile(post.author)">
@@ -770,13 +911,7 @@
                             <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
                           </span>
                         }
-                        <!-- REQUIREMENT C: post displays as user is with those tagged people -->
-                        @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
-                          <span class="tagged-with-text"> is with </span>
-                          @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                            <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
-                          }
-                        }
+                        <app-tagged-with [people]="post.taggedCompanions || []" (openPerson)="openVisitorProfile($event)" />
                         @if (post.isShared && post.originalPost) {
                           <span class="shared-indicator-text">
                             shared
@@ -789,6 +924,7 @@
                       </div>
                       <div class="post-sub-meta">
                         <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                        <span class="post-presence-label" [title]="presenceLabel(post.author.id)">{{ presenceLabel(post.author.id) }}</span>
                         @if (post.location) {
                           <span class="post-loc" title="Google Maps Verified Location">
                             <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
@@ -797,15 +933,25 @@
                         @if (post.mood) {
                           <span class="post-mood">{{ post.mood }}</span>
                         }
+                        <span class="post-audience-pill">{{ audienceLabel(post) }}</span>
+                        @if (showCustomAllowList(post)) {
+                          <span class="custom-allow-note">Allowed: {{ allowedNames(post) }}</span>
+                        }
+                        @if (post.wallOwnerName && post.wallOwnerId !== post.author.id) {
+                          <span class="post-wall-note">on {{ post.wallOwnerName }}'s Journey</span>
+                        }
                       </div>
                     </div>
 
                     <!-- Requirements F & G: Delete own post, or Hide post for other users' posts -->
+                    @if (canEditWallPost(post)) {
+                      <button type="button" class="btn-delete-post-mini" (click)="startEditPost(post, $event)" title="Edit within 45 minutes">✏️ Edit</button>
+                    }
                     @if (post.author.id === (service.currentUser()?.id || 1)) {
                       <button
                         type="button"
                         class="btn-delete-post-mini"
-                        (click)="deleteJourneyPost(post.id)"
+                        (click)="deleteJourneyPost(post.id, $event)"
                         title="Delete Post"
                       >
                         🗑️ Delete
@@ -833,6 +979,13 @@
                   <!-- Post Body Text (Or Shared Thoughts) -->
                   @if (post.text) {
                     <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
+                    @if (postHashtags(post).length) {
+                      <div class="hashtag-row">
+                        @for (tag of postHashtags(post); track tag) {
+                          <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
+                        }
+                      </div>
+                    }
                   }
 
                   <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
@@ -859,10 +1012,13 @@
                         </div>
                       }
                     </div>
-                  } @else if (post.imageUrl || (post.imageUrls && post.imageUrls.length === 1)) {
+                  } @else if (postImageUrls(post).length === 1) {
                     <div class="post-image-attachment-wrap">
-                      <img [src]="post.imageUrl || post.imageUrls![0]" alt="Journey post attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl || post.imageUrls![0])" />
+                      <img [src]="postImageUrls(post)[0]" alt="Journey post attachment" class="post-attached-photo" (click)="openImageModal(postImageUrls(post)[0])" />
                     </div>
+                  }
+                  @for (video of postVideoUrls(post); track video) {
+                    <video class="post-attached-video" [src]="video" controls playsinline [attr.aria-label]="'Video from ' + post.author.fullName"></video>
                   }
 
                   <!-- EMBEDDED SHARED POST CARD (Requirement I) -->
@@ -1148,6 +1304,7 @@
                 <!-- 1. Intro -->
                 <div class="edit-subcard">
                   <h3 class="edit-subhead">1. Intro & Travel Story</h3>
+                  <app-field-audience field="intro" [audience]="audienceOf('intro')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('intro', $event)" />
                   <div class="form-group">
                     <label>Detailed Introduction & Travel Story</label>
                     <textarea
@@ -1162,9 +1319,11 @@
                 <!-- 2. Personal Details -->
                 <div class="edit-subcard">
                   <h3 class="edit-subhead">2. Personal Details</h3>
+                  <p class="audience-section-note">Each detail has its own audience. Public, companions, private, or a custom allow / deny list.</p>
                   <div class="form-grid-3">
                     <div class="form-group">
                       <label>Gender</label>
+                      <app-field-audience field="gender" [audience]="audienceOf('gender')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('gender', $event)" />
                       <select [(ngModel)]="aboutGender" class="form-control">
                         <option value="Female">Female</option>
                         <option value="Male">Male</option>
@@ -1174,6 +1333,7 @@
                     </div>
                     <div class="form-group">
                       <label>Date of Birth</label>
+                      <app-field-audience field="dateOfBirth" [audience]="audienceOf('dateOfBirth')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('dateOfBirth', $event)" />
                       <input
                         type="date"
                         [(ngModel)]="aboutDob"
@@ -1182,6 +1342,7 @@
                     </div>
                     <div class="form-group">
                       <label>Relationship Status</label>
+                      <app-field-audience field="relationshipStatus" [audience]="audienceOf('relationshipStatus')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('relationshipStatus', $event)" />
                       <select [(ngModel)]="aboutRelationshipStatus" class="form-control">
                         <option value="Single">Single</option>
                         <option value="In a relationship">In a relationship</option>
@@ -1196,6 +1357,7 @@
                   <div class="form-grid-2">
                     <div class="form-group">
                       <label>Current Location</label>
+                      <app-field-audience field="location" [audience]="audienceOf('location')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('location', $event)" />
                       <input
                         type="text"
                         [(ngModel)]="aboutLocation"
@@ -1205,6 +1367,7 @@
                     </div>
                     <div class="form-group">
                       <label>Hometown</label>
+                      <app-field-audience field="hometown" [audience]="audienceOf('hometown')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('hometown', $event)" />
                       <input
                         type="text"
                         [(ngModel)]="aboutHometown"
@@ -1216,6 +1379,7 @@
 
                   <div class="form-group">
                     <label>Languages Known</label>
+                    <app-field-audience field="languagesKnown" [audience]="audienceOf('languagesKnown')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('languagesKnown', $event)" />
                     <div class="tags-adder-row">
                       <input
                         type="text"
@@ -1241,6 +1405,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">3. Work (Detailed Work Experience)</h3>
+                    <app-field-audience field="workExperience" [audience]="audienceOf('workExperience')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('workExperience', $event)" />
                     <button type="button" class="btn-secondary-action btn-sm" (click)="addWorkExperience()">+ Add Experience</button>
                   </div>
                   @for (work of aboutWorkExperiences(); track $index; let idx = $index) {
@@ -1298,6 +1463,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">4. Education</h3>
+                    <app-field-audience field="education" [audience]="audienceOf('education')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('education', $event)" />
                     <button type="button" class="btn-secondary-action btn-sm" (click)="addEducation()">+ Add Education</button>
                   </div>
                   @for (edu of aboutEducation(); track $index; let idx = $index) {
@@ -1350,6 +1516,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">5. Hobbies ({{ aboutHobbies().length }}/10)</h3>
+                    <app-field-audience field="hobbies" [audience]="audienceOf('hobbies')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('hobbies', $event)" />
                     <span class="max-badge">Max 10 Hobbies</span>
                   </div>
                   @if (hobbyNotice()) {
@@ -1389,6 +1556,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">6. Interests ({{ aboutInterests().length }}/10)</h3>
+                    <app-field-audience field="interests" [audience]="audienceOf('interests')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('interests', $event)" />
                     <span class="max-badge">Max 10 Interests</span>
                   </div>
                   @if (interestNotice()) {
@@ -1428,6 +1596,7 @@
                 <div class="edit-subcard">
                   <div class="subcard-header-row">
                     <h3 class="edit-subhead">7. Contact Info</h3>
+                    <app-field-audience field="contactEmail" [audience]="audienceOf('contactEmail')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('contactEmail', $event)" />
                     <button
                       type="button"
                       class="btn-secondary-action btn-sm"
@@ -1484,6 +1653,7 @@
                 <!-- 8. About the Person -->
                 <div class="edit-subcard">
                   <h3 class="edit-subhead">8. About the Person</h3>
+                  <app-field-audience field="aboutThePerson" [audience]="audienceOf('aboutThePerson')" [companions]="connectedCompanions()" (audienceChange)="setFieldAudience('aboutThePerson', $event)" />
                   <div class="form-group">
                     <label>In-depth Personal Story &amp; Philosophy</label>
                     <textarea
@@ -1787,7 +1957,7 @@
                   <img [src]="photo.url" [alt]="photo.caption || 'Travel photo'" class="gallery-img" />
                   <div class="gallery-caption-overlay">
                     <span [nbTranslatable]="photo.caption || ''">{{ photo.caption }}</span>
-                    <button type="button" class="btn-delete-photo" (click)="$event.stopPropagation(); deletePhoto(photo.id)" title="Delete photo">✕</button>
+                    <button type="button" class="btn-delete-photo" (click)="deletePhoto(photo.id, $event)" title="Delete photo">✕</button>
                   </div>
                 </div>
               } @empty {
@@ -1881,27 +2051,25 @@
               @for (comment of service.comments(); track comment.id) {
                 <article class="post-card messagebook-card">
                   <div class="post-header">
-                    <img
-                      [src]="comment.author.profilePhotoUrl || defaultAvatar"
-                      [alt]="comment.author.fullName || 'User'"
-                      class="author-avatar clickable-user"
-                      [nbUserPreview]="comment.author"
-                      (click)="openVisitorProfile(comment.author)"
-                    />
+                    <span class="avatar-presence">
+                      <img
+                        [src]="comment.author.profilePhotoUrl || defaultAvatar"
+                        [alt]="comment.author.fullName || 'User'"
+                        class="author-avatar clickable-user"
+                        [nbUserPreview]="comment.author"
+                        (click)="openVisitorProfile(comment.author)"
+                      />
+                      <app-presence-dot [user]="comment.author" />
+                    </span>
                     <div class="author-details">
                       <div class="author-name-line">
                         <strong class="author-name clickable-user" [nbUserPreview]="comment.author" (click)="openVisitorProfile(comment.author)">
                           {{ comment.author.fullName }}
                         </strong>
-                        <!-- REQUIREMENT C: post displays as user is with those tagged people -->
-                        @if (comment.taggedCompanions && comment.taggedCompanions.length > 0) {
-                          <span class="tagged-with-text"> is with </span>
-                          @for (tagged of comment.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                            <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === comment.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
-                          }
-                        }
+                        <app-tagged-with [people]="comment.taggedCompanions || []" (openPerson)="openVisitorProfile($event)" />
                       </div>
                       <span class="post-time">{{ formatTime(comment.createdAtUtc) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(comment.author.id) }}</span>
                     </div>
                   </div>
                   <p class="post-body-text" [nbTranslatable]="comment.text">{{ comment.text }}</p>
@@ -1998,7 +2166,7 @@
                       <button
                         type="button"
                         class="post-action-btn btn-delete"
-                        (click)="deleteComment(comment.id)"
+                        (click)="deleteComment(comment.id, $event)"
                       >
                         🗑️ Delete
                       </button>
@@ -2056,7 +2224,7 @@
                                 <button
                                   type="button"
                                   class="btn-delete-reply-mini"
-                                  (click)="deleteComment(reply.id)"
+                                  (click)="deleteComment(reply.id, $event)"
                                   title="Delete reply"
                                 >
                                   ✕
@@ -2182,7 +2350,7 @@
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
                             <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
-                              <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                              <app-presence-dot [user]="c" />
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
@@ -2193,6 +2361,7 @@
                                   </span>
                                 }
                               </h4>
+                              <div class="companion-relationship">{{ relationshipLabel(c) }}</div>
                               <div class="companion-70-field companion-card-field">
                                 <span class="companion-70-field-label">Profession:</span>
                                 <span class="companion-70-field-val">{{ c.profession }}</span>
@@ -2226,6 +2395,13 @@
                               (click)="rejectCompanionRequest(c.id)"
                             >
                               ✕ Delete Request
+                            </button>
+                            <button
+                              type="button"
+                              class="btn-danger-outline btn-sm btn-block-user"
+                              (click)="blockUser(c.id)"
+                            >
+                              🚫 Block
                             </button>
                           </footer>
                         </div>
@@ -2271,7 +2447,7 @@
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
                             <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
-                              <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                              <app-presence-dot [user]="c" />
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
@@ -2285,6 +2461,7 @@
                                   <span class="mini-lock-pill" title="Profile locked">🔒</span>
                                 }
                               </h4>
+                              <div class="companion-relationship">{{ relationshipLabel(c) }}</div>
                               <div class="companion-70-field companion-card-field">
                                 <span class="companion-70-field-label">Profession:</span>
                                 <span class="companion-70-field-val">{{ c.profession }}</span>
@@ -2368,7 +2545,7 @@
                           <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
                             <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
                               <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" class="companion-photo-70-img companion-photo-img" />
-                              <span class="status-dot" [class.online]="c.isOnline" [title]="c.isOnline ? 'Online' : 'Offline'"></span>
+                              <app-presence-dot [user]="c" />
                             </div>
                             <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
                               <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="c" (click)="openVisitorProfile(c)">
@@ -2382,6 +2559,7 @@
                                   <span class="mini-lock-pill" title="Profile locked">🔒</span>
                                 }
                               </h4>
+                              <div class="companion-relationship">{{ relationshipLabel(c) }}</div>
                               <div class="companion-70-field companion-card-field">
                                 <span class="companion-70-field-label">Profession:</span>
                                 <span class="companion-70-field-val">{{ c.profession }}</span>
@@ -2421,6 +2599,13 @@
                               >
                                 + Add Companion
                               </button>
+                              <button
+                                type="button"
+                                class="btn-danger-outline btn-sm btn-block-user"
+                                (click)="blockUser(c.id)"
+                              >
+                                🚫 Block
+                              </button>
                             }
                           </footer>
                         </div>
@@ -2435,6 +2620,153 @@
           </section>
         }
 
+        <ng-template #destinationPicker>
+          <div class="accessory-item destination-autocomplete-wrapper">
+            <div class="dest-field-inline">
+              <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
+              @if (selectedGoogleLocation()) {
+                <div class="selected-google-dest-pill">
+                  <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
+                  <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
+                  <span class="gmap-badge">Verified Google Maps</span>
+                  <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
+                </div>
+              } @else {
+                <div class="dest-search-input-box">
+                  <input
+                    type="text"
+                    [(ngModel)]="destinationSearchInput"
+                    (input)="onDestinationSearchInput()"
+                    (focus)="onDestinationSearchFocus()"
+                    placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
+                    class="input-location-tag"
+                    aria-label="Destination"
+                  />
+                </div>
+              }
+            </div>
+            @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
+              <div class="google-maps-dropdown">
+                <div class="gmaps-header-bar">
+                  <svg viewBox="0 0 24 24" class="gmap-icon-svg" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                    <line x1="8" y1="2" x2="8" y2="18"></line>
+                    <line x1="16" y1="6" x2="16" y2="22"></line>
+                  </svg>
+                  <span>Google Maps Suggestions (Click to select)</span>
+                </div>
+                <div class="gmaps-suggestions-scroll">
+                  @for (loc of destinationSuggestions(); track loc.placeId) {
+                    <div class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
+                      <span class="gmap-pin-red"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /></span>
+                      <div class="gmap-loc-info">
+                        <strong class="loc-name">{{ loc.name }}</strong>
+                        <span class="loc-address">{{ loc.formattedAddress }}</span>
+                      </div>
+                      <span class="loc-category-badge">{{ loc.category || 'Destination' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </ng-template>
+
+        <ng-template #followPersonCard let-person let-mode="mode">
+          <div class="companion-70-card companion-40-card companion-25-card companion-card follow-person-card">
+            <div class="companion-70-card-body companion-40-card-body companion-25-card-body companion-card-body">
+              <div class="companion-70-photo-col companion-40-photo-col companion-25-photo-col companion-card-photo-col" [nbUserPreview]="person" (click)="openVisitorProfile(person)">
+                <img [src]="person.profilePhotoUrl || defaultAvatar" [alt]="person.fullName" class="companion-photo-70-img companion-photo-img" />
+                <app-presence-dot [user]="person" />
+              </div>
+              <div class="companion-70-info-col companion-40-info-col companion-25-info-col companion-card-info-col">
+                <h4 class="companion-70-name companion-card-name clickable-user" [nbUserPreview]="person" (click)="openVisitorProfile(person)">
+                  {{ person.fullName }}
+                  @if (isAuthorVerified(person)) {
+                    <span class="blue-verified-badge" title="Verified Account">
+                      <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                    </span>
+                  }
+                </h4>
+                <div class="companion-relationship">{{ relationshipLabel(person) }}</div>
+                <div class="companion-70-field companion-card-field">
+                  <span class="companion-70-field-label">Profession:</span>
+                  <span class="companion-70-field-val">{{ person.profession }}</span>
+                </div>
+                <div class="companion-70-field companion-card-field">
+                  <span class="companion-70-field-label">Location:</span>
+                  <span class="companion-70-field-val">{{ person.city }}, {{ person.country }}</span>
+                </div>
+              </div>
+            </div>
+            <footer class="companion-70-card-footer companion-card-footer follow-card-actions">
+              @if (person.status === 'connected') {
+                <button type="button" class="btn-remove-companion-action btn-action-subtle btn-sm" (click)="removeCompanionship(person.id)">Remove Companionship</button>
+              } @else if (person.status === 'pending_incoming') {
+                <button type="button" class="btn-primary-action btn-sm" (click)="acceptCompanionRequest(person.id)">Accept</button>
+              } @else if (person.status === 'pending_outgoing') {
+                <button type="button" class="btn-pending-follow btn-sm" (click)="pendingRequestNotice(person.fullName)">Request Pending</button>
+              } @else {
+                <button type="button" class="btn-primary-action btn-sm btn-connect-companion" (click)="requestCompanionship(person.id)">Add Companion</button>
+              }
+              @if (mode === 'followers') {
+                <button type="button" class="btn-action-subtle btn-sm" (click)="disconnectFollower(person.id)">Disconnect</button>
+              } @else {
+                <button type="button" class="btn-action-subtle btn-sm" (click)="unfollowUser(person.id)">Unfollow</button>
+              }
+              <button type="button" class="btn-danger-outline btn-sm btn-block-user" (click)="blockUser(person.id)">Block</button>
+            </footer>
+          </div>
+        </ng-template>
+
+        @if (activeSection() === 'followers') {
+          <section class="section-pane companions-pane followers-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Followers</h1>
+                <p class="section-desc">Travelers who follow you. Disconnect to stop them following, or block them completely.</p>
+              </div>
+              <span class="companions-capacity-pill">{{ myFollowers().length }} Followers</span>
+            </header>
+            <input class="people-search" type="search" placeholder="Search followers" aria-label="Search followers" [value]="followersPageQuery()" (input)="followersPageQuery.set($any($event.target).value)" />
+            @if (filteredFollowers().length) {
+              <div class="companion-group-grid follow-people-grid">
+                @for (person of filteredFollowers(); track person.id) {
+                  <ng-container *ngTemplateOutlet="followPersonCard; context: { $implicit: person, mode: 'followers' }" />
+                }
+              </div>
+            } @else if (followersPageQuery().trim()) {
+              <div class="companion-empty-box">No followers match that search.</div>
+            } @else {
+              <div class="companion-empty-box">No followers yet.</div>
+            }
+          </section>
+        }
+
+        @if (activeSection() === 'following') {
+          <section class="section-pane companions-pane following-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Following</h1>
+                <p class="section-desc">Travelers you follow. Unfollow anyone you no longer want to follow.</p>
+              </div>
+              <span class="companions-capacity-pill">{{ myFollowing().length }} Following</span>
+            </header>
+            <input class="people-search" type="search" placeholder="Search following" aria-label="Search following" [value]="followingPageQuery()" (input)="followingPageQuery.set($any($event.target).value)" />
+            @if (filteredFollowing().length) {
+              <div class="companion-group-grid follow-people-grid">
+                @for (person of filteredFollowing(); track person.id) {
+                  <ng-container *ngTemplateOutlet="followPersonCard; context: { $implicit: person, mode: 'following' }" />
+                }
+              </div>
+            } @else if (followingPageQuery().trim()) {
+              <div class="companion-empty-box">No one you follow matches that search.</div>
+            } @else {
+              <div class="companion-empty-box">You are not following anyone yet.</div>
+            }
+          </section>
+        }
+
         <!-- ================================================================= -->
         <!-- SECTION 6: CIRCLES                                                -->
         <!-- ================================================================= -->
@@ -2442,44 +2774,64 @@
           <section class="section-pane circles-pane">
             <header class="section-top-bar">
               <div>
-                <h1 class="section-title">Travel Circles</h1>
-                <p class="section-desc">Organize companions into up to 5 custom trip circles (e.g. Alps Expeditions, Foodies, Coastline Photographers).</p>
+                <h1 class="section-title">My Circle</h1>
+                <p class="section-desc">Only circles you belong to. You can create or admin up to 500 circles, and belong to 1,000 more as a member.</p>
               </div>
-              <button
-                type="button"
-                class="btn-primary-action"
-                (click)="openCreateCircleModal()"
-                [disabled]="service.circles().length >= 5"
-              >
-                + Create Circle ({{ service.circles().length }}/5)
+              <button type="button" class="btn-primary-action" (click)="openCreateCircleModal()">
+                + Create Circle ({{ service.adminCircleCount() }}/500)
               </button>
             </header>
 
+            <div class="circle-toolbar">
+              <input class="circle-search" type="search" placeholder="Search your circles" [value]="circleQuery()" (input)="circleQuery.set($any($event.target).value)" />
+              <div class="circle-role-pills">
+                <button type="button" [class.active]="circleRoleFilter() === 'all'" (click)="circleRoleFilter.set('all')">All {{ service.myCircles().length }}</button>
+                <button type="button" [class.active]="circleRoleFilter() === 'admin'" (click)="circleRoleFilter.set('admin')">Admin {{ service.adminCircleCount() }}</button>
+                <button type="button" [class.active]="circleRoleFilter() === 'member'" (click)="circleRoleFilter.set('member')">Member {{ service.memberOnlyCircleCount() }}</button>
+              </div>
+            </div>
+
             <div class="circles-grid">
-              @for (circle of service.circles(); track circle.id) {
-                <div class="circle-card">
+              @for (circle of filteredCircles(); track circle.id) {
+                <article class="circle-card circle-card-button" (click)="openCircleChat(circle, $event)">
                   <div class="circle-top-line">
-                    <span class="circle-large-icon" [style.background]="circle.color">{{ circle.icon }}</span>
-                    <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id)" title="Delete Circle">✕</button>
+                    <div class="circle-photo-wrap">
+                      @if (circle.photoUrl) {
+                        <img class="circle-large-icon circle-photo" [src]="circle.photoUrl" [alt]="circle.name" />
+                      } @else {
+                        <span class="circle-large-icon" [style.background]="circle.color">{{ circle.icon }}</span>
+                      }
+                      @if (isCircleAdmin(circle)) {
+                        <label class="circle-photo-change" (click)="$event.stopPropagation()">
+                          Change photo
+                          <input type="file" accept="image/*" (change)="changeCirclePhoto(circle, $event)" />
+                        </label>
+                      }
+                    </div>
+                    <span class="circle-role-pill">{{ isCircleAdmin(circle) ? 'Admin' : 'Member' }}</span>
                   </div>
                   <h3 class="circle-title">{{ circle.name }}</h3>
                   <p class="circle-desc" [nbTranslatable]="circle.description">{{ circle.description }}</p>
-
-                  <div class="circle-members-row">
-                    <span class="members-lbl">Members ({{ circle.memberIds.length }}):</span>
-                    <div class="member-avatars-cluster">
-                      @for (member of getCircleMembers(circle.memberIds); track member.id) {
-                        <img
-                          [src]="member.profilePhotoUrl"
-                          [alt]="member.fullName"
-                          class="member-cluster-avatar clickable-user"
-                          [nbUserPreview]="member"
-                          (click)="openVisitorProfile(member)"
-                        />
-                      }
-                    </div>
+                  <div class="circle-usage" [class.live]="circleUsage(circle).live">
+                    <span class="circle-status-pill">{{ circleUsage(circle).status }}</span>
+                    <span>{{ circleUsage(circle).chats }} Chats</span>
+                    <span class="circle-unread" [class.has-unread]="circleUsage(circle).unread > 0">{{ circleUsage(circle).unread }} Unread</span>
                   </div>
-                </div>
+                  <p class="circle-last-used">{{ circleUsage(circle).lastLabel }}</p>
+                  <div class="circle-members-row">
+                    <button type="button" class="members-count-btn" (click)="openCircleMembers(circle, $event)">
+                      {{ circle.memberIds.length }} travelers
+                    </button>
+                  </div>
+                  @if (isCircleAdmin(circle)) {
+                    <div class="circle-admin-actions" (click)="$event.stopPropagation()">
+                      <button type="button" class="btn-action-subtle" (click)="openEditCircle(circle, $event)">Edit</button>
+                      <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id, $event)">Delete</button>
+                    </div>
+                  }
+                </article>
+              } @empty {
+                <div class="companion-empty-box">No circles match this view.</div>
               }
             </div>
           </section>
@@ -2495,6 +2847,27 @@
               <p class="section-desc">Real-time chats with active online companions. Click anyone to launch a floating chat dock.</p>
             </header>
 
+            @if (pendingChats().length) {
+              <div class="pending-chats" aria-label="Pending chats">
+                <h3 class="col-head">Pending chats ({{ pendingChats().length }})</h3>
+                <div class="companion-chat-list">
+                  @for (chat of pendingChats(); track chat.companionId) {
+                    <div class="companion-chat-item pending-chat-item" (click)="openPendingChat(chat)">
+                      <div class="chat-avatar-wrap">
+                        <img [src]="chat.profilePhotoUrl" [alt]="chat.fullName" class="chat-list-avatar" />
+                        <span class="pending-chat-badge">{{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}</span>
+                      </div>
+                      <div class="chat-item-info">
+                        <strong>{{ chat.fullName }}</strong>
+                        <span>{{ chat.preview }}</span>
+                      </div>
+                      <button type="button" class="btn-launch-chat">Open</button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
             <div class="messenger-columns">
               <!-- Online Companions Directory -->
               <div class="messenger-col">
@@ -2504,11 +2877,11 @@
                     <div class="companion-chat-item" (click)="openChatWith(c)">
                       <div class="chat-avatar-wrap">
                         <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
-                        <span class="online-indicator"></span>
+                        <app-presence-dot [user]="c" />
                       </div>
                       <div class="chat-item-info">
                         <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
-                        <span>{{ c.city }}, {{ c.country }}</span>
+                        <span>{{ presenceLabel(c.id) }} · {{ c.city }}, {{ c.country }}</span>
                       </div>
                       <button type="button" class="btn-launch-chat">Chat</button>
                     </div>
@@ -2586,7 +2959,16 @@
               </div>
             }
 
-            @if (!adminNotices().length && !service.notifications().length) {
+            @if (service.storageReport().warning) {
+              <article class="notification-card storage-warning" aria-live="polite">
+                <div class="notif-content">
+                  <p class="notif-text"><strong>Storage</strong> You have used 90% or more of your allowed 25 MB storage. This notice stays until you free space.</p>
+                  <button type="button" class="btn-primary-action btn-sm" (click)="setSection('storage')">Review storage</button>
+                </div>
+              </article>
+            }
+
+            @if (!adminNotices().length && !service.notifications().length && !service.storageReport().warning) {
               <div class="ann-empty">
                 <span aria-hidden="true">🔔</span>
                 <p>You're all caught up — new announcements and activity will appear here automatically.</p>
@@ -2636,6 +3018,92 @@
                       <span class="badge-rejected">✕ Companionship Declined</span>
                     }
                   </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        @if (activeSection() === 'birthdays') {
+          <section class="section-pane birthdays-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Birthdays</h1>
+                <p class="section-desc">Upcoming birthdays of your companions, plus belated wishes from the last 30 days.</p>
+              </div>
+              <div class="birthday-views">
+                <button type="button" [class.on]="birthdayView() === 'day'" (click)="birthdayView.set('day')">Day</button>
+                <button type="button" [class.on]="birthdayView() === 'week'" (click)="birthdayView.set('week')">Week</button>
+                <button type="button" [class.on]="birthdayView() === 'month'" (click)="birthdayView.set('month')">Month</button>
+              </div>
+            </header>
+            <div class="birthday-grid">
+              @for (card of birthdaysFor(birthdayView()); track card.companion.id) {
+                <article class="birthday-card" [class.today]="card.when === 'today'">
+                  <img [src]="card.companion.profilePhotoUrl || defaultAvatar" [alt]="card.companion.fullName" />
+                  <div>
+                    <strong>{{ card.companion.fullName }}</strong>
+                    <span>{{ card.when === 'today' ? 'Today' : card.when === 'tomorrow' ? 'Tomorrow' : 'In ' + card.dayOffset + ' days' }}</span>
+                    <b>{{ card.exact }}</b>
+                  </div>
+                  @if (card.when === 'today' || card.when === 'tomorrow') {
+                    <textarea [ngModel]="birthdayDraft(card.companion.id)" (ngModelChange)="setBirthdayDraft(card.companion.id, $event)" rows="2" placeholder="Post a wish on {{ card.companion.fullName }}'s Journey"></textarea>
+                    <button type="button" class="btn-primary-action btn-sm" (click)="postBirthdayWish(card)">Post on their Journey</button>
+                  }
+                </article>
+              } @empty {
+                <div class="companion-empty-box">No companion birthdays in this view.</div>
+              }
+            </div>
+            <h2 class="birthday-belated-title">Belated, last 30 days</h2>
+            <div class="birthday-grid belated">
+              @for (card of belatedBirthdays(); track card.companion.id) {
+                <article class="birthday-card belated">
+                  <img [src]="card.companion.profilePhotoUrl || defaultAvatar" [alt]="card.companion.fullName" />
+                  <div>
+                    <strong>{{ card.companion.fullName }}</strong>
+                    <span>{{ -card.dayOffset }} days ago</span>
+                    <b>{{ card.exact }}</b>
+                  </div>
+                </article>
+              } @empty {
+                <div class="companion-empty-box">No belated birthdays in the last 30 days.</div>
+              }
+            </div>
+          </section>
+        }
+
+        @if (activeSection() === 'storage') {
+          <section class="section-pane storage-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Storage</h1>
+                <p class="section-desc">Each profile has 25 MB. Text, chats, gallery, and photos all count.</p>
+              </div>
+            </header>
+            <div class="storage-hero">
+              <div class="storage-pie" [style.background]="storagePie(service.storageReport())">
+                <div>
+                  <strong>{{ formatStorage(service.storageReport().used) }}</strong>
+                  <span>of 25 MB</span>
+                </div>
+              </div>
+              <div class="storage-summary">
+                <p><b>{{ formatStorage(service.storageReport().used) }}</b> used</p>
+                <p><b>{{ formatStorage(service.storageReport().remaining) }}</b> still available</p>
+                @if (service.storageReport().blocked) {
+                  <p class="storage-full">Storage is full. New posts and photo uploads are paused until you delete something.</p>
+                } @else if (service.storageReport().warning) {
+                  <p class="storage-warn">You are over 90%. A notice is pinned in Notifications until this drops.</p>
+                }
+              </div>
+            </div>
+            <div class="storage-bars">
+              @for (slice of service.storageReport().slices; track slice.id) {
+                <div class="storage-bar">
+                  <div class="storage-bar-label"><span [style.background]="slice.color"></span>{{ slice.label }}</div>
+                  <div class="storage-track"><i [style.width.%]="(slice.bytes / service.storageReport().limit) * 100" [style.background]="slice.color"></i></div>
+                  <b>{{ formatStorage(slice.bytes) }}</b>
                 </div>
               }
             </div>
@@ -2785,6 +3253,99 @@
                     <option value="none">Nobody</option>
                   </select>
                 </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who can connect</label>
+                    <p class="toggle-desc">Who is allowed to send you a companionship request.</p>
+                  </div>
+                  <select formControlName="whoCanConnect" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions-of-companions">Companions of companions</option>
+                    <option value="none">Nobody</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who can visit your profile</label>
+                    <p class="toggle-desc">A closed profile shows a private notice instead of your story, gallery, and journey.</p>
+                  </div>
+                  <select formControlName="whoCanVisitProfile" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions">Companions only</option>
+                    <option value="none">Nobody</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who sees your active status</label>
+                    <p class="toggle-desc">Active, Away, Inactive, and custom status shown beside your name.</p>
+                  </div>
+                  <select formControlName="showActiveStatusTo" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions">Companions only</option>
+                    <option value="only-me">Only me</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Who can see your companions</label>
+                    <p class="toggle-desc">Hide the companion list from visitors who should not browse it.</p>
+                  </div>
+                  <select formControlName="whoCanSeeCompanionsList" class="settings-select">
+                    <option value="everyone">Everyone</option>
+                    <option value="companions">Companions only</option>
+                    <option value="only-me">Only me</option>
+                  </select>
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Allow companion tagging</label>
+                    <p class="toggle-desc">Companions can tag you on journey posts.</p>
+                  </div>
+                  <input type="checkbox" formControlName="allowCompanionTagging" class="toggle-checkbox" />
+                </div>
+
+                <div class="toggle-option-row">
+                  <div>
+                    <label class="toggle-title">Approve tags before they appear</label>
+                    <p class="toggle-desc">Tagged posts stay hidden from your profile until you approve them.</p>
+                  </div>
+                  <input type="checkbox" formControlName="approveTagsBeforePost" class="toggle-checkbox" />
+                </div>
+              </div>
+
+              <div class="settings-card devices-card">
+                <h3 class="card-title">Devices used</h3>
+                <p class="card-desc">Every signed-in session, plus the last 10 devices that used this profile. Log a session out, or block a device so it cannot reopen your profile. Browsers cannot read a hardware MAC address, so each device keeps a stable NeverBeen device address.</p>
+                <div class="device-list">
+                  @for (device of service.visibleDevices(); track device.id) {
+                    <article class="device-row" [class.blocked]="device.blocked" [class.current]="device.isCurrent">
+                      <div class="device-mark">{{ device.type === 'Phone' ? '📱' : device.type === 'Tablet' ? '📲' : device.type === 'Laptop' ? '💻' : '🖥️' }}</div>
+                      <div class="device-copy">
+                        <strong>{{ device.name }}</strong>
+                        <span>{{ device.type }} · {{ device.os }} · {{ device.browser }}</span>
+                        <span class="device-net">IP {{ device.ipAddress }} · MAC {{ device.macAddress }}</span>
+                        <span>{{ device.location }} · {{ device.isCurrent ? 'This device' : (device.isActive ? 'Signed in' : 'Last seen ' + formatTime(device.lastSeenUtc)) }}</span>
+                      </div>
+                      <div class="device-actions">
+                        @if (device.blocked) {
+                          <span class="device-pill blocked">Blocked</span>
+                          <button type="button" class="btn-action-subtle" (click)="unblockDevice(device.id)">Unblock</button>
+                        } @else {
+                          @if (device.isActive) {
+                            <button type="button" class="btn-action-subtle" (click)="logoutDevice(device.id)">Log out</button>
+                          }
+                          <button type="button" class="btn-danger-outline btn-sm" (click)="blockDevice(device.id)">Block device</button>
+                        }
+                      </div>
+                    </article>
+                  }
+                </div>
               </div>
 
               <!-- Travel Preferences -->
@@ -2864,6 +3425,7 @@
             </form>
           </section>
         }
+      }
     </main>
   </div>
 
@@ -2880,14 +3442,35 @@
                 [alt]="box.companion.fullName"
                 class="chat-header-avatar"
               />
-              <span class="chat-header-status-dot" [class.online]="box.companion.isOnline"></span>
+              <app-presence-dot [user]="box.companion" />
             </div>
             <div class="chat-header-info">
               <span class="chat-user-name">{{ box.companion.fullName }}</span>
-              <span class="chat-user-subhead">{{ box.companion.isOnline ? 'Online' : 'Offline' }}</span>
+              <span class="chat-user-subhead">{{ box.isGroup ? (box.participantIds?.length || 0) + ' travelers' : presenceLabel(box.companion.id) }}</span>
             </div>
           </div>
           <div class="chat-controls">
+            <button
+              type="button"
+              class="chat-ctrl-btn"
+              title="Add people"
+              (click)="$event.stopPropagation(); openAddPeople(box.companionId, $event)"
+            >＋</button>
+            @if (!box.circleId) {
+              <button
+                type="button"
+                class="chat-ctrl-btn"
+                title="Save as Circle"
+                (click)="$event.stopPropagation(); openSaveCircle(box.companionId, $event)"
+              >◎</button>
+            } @else if (isChatCircleAdmin(box)) {
+              <button
+                type="button"
+                class="chat-ctrl-btn"
+                title="Manage Circle"
+                (click)="$event.stopPropagation(); openManageCircle(box.circleId!, $event)"
+              >⚙</button>
+            }
             <button
               type="button"
               class="chat-ctrl-btn"
@@ -3128,6 +3711,49 @@
     }
   </div>
 
+  @if (followListKind()) {
+    <div class="modal-backdrop-overlay" (click)="closeFollowList()">
+      <div class="modal-dialog-card follow-list-dialog" role="dialog" aria-modal="true" [attr.aria-label]="followListTitle()" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <h3 class="modal-head-title">{{ followListTitle() }}</h3>
+          <button type="button" class="btn-close-modal" (click)="closeFollowList()" aria-label="Close">✕</button>
+        </header>
+        <div class="modal-body-content follow-list-body">
+          <input class="people-search" type="search" placeholder="Search this list" aria-label="Search this list" [value]="followListQuery()" (input)="followListQuery.set($any($event.target).value)" />
+          @for (person of filteredFollowList(); track person.id) {
+            <button type="button" class="follow-list-row" (click)="closeFollowList(); openVisitorProfile(person)">
+              <img [src]="person.profilePhotoUrl || defaultAvatar" [alt]="person.fullName" />
+              <span>
+                <strong>{{ person.fullName }}</strong>
+                <small>{{ person.city }}, {{ person.country }}</small>
+              </span>
+            </button>
+          } @empty {
+            <p class="follow-list-empty">{{ followListQuery().trim() ? 'No one matches that search.' : 'No one here yet.' }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (editingPostId()) {
+    <div class="modal-backdrop-overlay" (click)="editingPostId.set(null)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Edit Journey post</h3></header>
+        <div class="modal-body">
+          <p class="card-desc">You can edit a post on a companion’s Journey for 45 minutes after you publish it.</p>
+          <textarea class="form-control" rows="4" [(ngModel)]="editPostText"></textarea>
+          <app-mood-picker [value]="editPostMood" (valueChange)="editPostMood = $event" inputId="edit-travel-mood" />
+          <app-post-audience [audience]="editAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="editAudience = $event" />
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="editingPostId.set(null)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="saveEditPost()">Save</button>
+        </footer>
+      </div>
+    </div>
+  }
+
   <!-- SHARE POST MODAL (Requirement I) -->
   @if (showShareModal() && postToShare()) {
     <div class="modal-backdrop-overlay" (click)="closeShareModal()">
@@ -3141,7 +3767,7 @@
             <img [src]="service.profile()?.profilePhotoUrl || defaultAvatar" alt="Me" class="share-my-avatar" />
             <div>
               <strong>{{ service.profile()?.fullName || 'Kingshuk' }}</strong>
-              <span class="share-scope">Public Journey Feed</span>
+              <span class="share-scope">Choose who can see this share</span>
             </div>
           </div>
 
@@ -3151,6 +3777,7 @@
             placeholder="Say something about this travel story... (optional)"
             class="share-thought-textarea"
           ></textarea>
+          <app-post-audience [audience]="shareAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="shareAudience = $event" />
 
           <!-- Preview of the post being shared -->
           <div class="share-target-preview">
@@ -3266,6 +3893,14 @@
           </div>
 
           <div class="form-group">
+            <label>Circle photo</label>
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" />
+            @if (circlePhotoPreview()) {
+              <img class="circle-photo-preview" [src]="circlePhotoPreview()" alt="Circle photo preview" />
+            }
+          </div>
+
+          <div class="form-group">
             <label>Add Companions to Circle</label>
             <div class="modal-companions-selection">
               @for (c of service.companions(); track c.id) {
@@ -3291,6 +3926,191 @@
         <footer class="modal-footer-bar">
           <button type="button" class="btn-secondary-action" (click)="closeCreateCircleModal()">Cancel</button>
           <button type="button" class="btn-primary-action" (click)="submitCreateCircle()">Create Circle</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (showEditCircleModal()) {
+    <div class="modal-backdrop-overlay" (click)="showEditCircleModal.set(false)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Edit Circle</h3></header>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Name</label>
+            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" />
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="newCircleDesc"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Photo</label>
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'edit')" />
+            @if (editCirclePhoto) {
+              <img class="circle-photo-preview" [src]="editCirclePhoto" alt="Updated circle photo" />
+            }
+          </div>
+          @if (circleError()) { <p class="status-error-msg">{{ circleError() }}</p> }
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="showEditCircleModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="saveEditCircle()">Save</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (showAddPeopleModal()) {
+    <div class="modal-backdrop-overlay" (click)="showAddPeopleModal.set(false)">
+      <div class="chat-action-dialog" role="dialog" aria-modal="true" aria-labelledby="add-people-title" (click)="$event.stopPropagation()">
+        <header class="chat-action-head">
+          <div>
+            <p class="chat-action-kicker">Group chat</p>
+            <h3 id="add-people-title">Add People</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showAddPeopleModal.set(false)" aria-label="Close">✕</button>
+        </header>
+        <div class="chat-action-body">
+          <p>Adding people turns this chat into a group. Only companions can be added.</p>
+          <div class="chat-action-people">
+            @for (c of peopleAvailableForOpenChat(); track c.id) {
+              <label class="chat-person-row">
+                <input type="checkbox" [checked]="selectedAddPeopleIds().includes(c.id)" (change)="toggleAddPerson(c.id)" />
+                <img [src]="c.profilePhotoUrl" [alt]="c.fullName" />
+                <span>
+                  <strong>{{ c.fullName }}</strong>
+                  <small>{{ c.city }}, {{ c.country }}</small>
+                </span>
+              </label>
+            } @empty {
+              <p class="chat-action-empty">No more companions to add.</p>
+            }
+          </div>
+        </div>
+        <footer class="chat-action-foot">
+          <button type="button" class="btn-secondary-action" (click)="showAddPeopleModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="confirmAddPeople()">Add People</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (showSaveCircleModal()) {
+    <div class="modal-backdrop-overlay" (click)="showSaveCircleModal.set(false)">
+      <div class="chat-action-dialog" role="dialog" aria-modal="true" aria-labelledby="save-circle-title" (click)="$event.stopPropagation()">
+        <header class="chat-action-head">
+          <div>
+            <p class="chat-action-kicker">Keep this conversation</p>
+            <h3 id="save-circle-title">Save Chat as Circle</h3>
+          </div>
+          <button type="button" class="btn-close-modal" (click)="showSaveCircleModal.set(false)" aria-label="Close">✕</button>
+        </header>
+        <div class="chat-action-body">
+          <label class="chat-field">
+            <span>Circle name</span>
+            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" placeholder="Name this Circle" />
+          </label>
+          <label class="chat-field">
+            <span>Description</span>
+            <textarea class="form-control" rows="3" [(ngModel)]="newCircleDesc" placeholder="What is this Circle for?"></textarea>
+          </label>
+          <label class="chat-field chat-photo-field">
+            <span>Photo</span>
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" />
+            @if (circlePhotoPreview()) {
+              <img class="circle-photo-preview" [src]="circlePhotoPreview()" alt="Circle photo preview" />
+            }
+          </label>
+          @if (circleError()) { <p class="status-error-msg">{{ circleError() }}</p> }
+        </div>
+        <footer class="chat-action-foot">
+          <button type="button" class="btn-secondary-action" (click)="showSaveCircleModal.set(false)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="confirmSaveCircle()">Save Chat as Circle</button>
+        </footer>
+      </div>
+    </div>
+  }
+
+  @if (circleMembersTarget(); as membersCircle) {
+    <div class="modal-backdrop-overlay" (click)="closeCircleMembers()">
+      <div class="modal-dialog-card circle-members-dialog" role="dialog" aria-modal="true" [attr.aria-label]="membersCircle.name + ' travelers'" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <h3 class="modal-head-title">{{ membersCircle.name }}</h3>
+          <button type="button" class="btn-close-modal" (click)="closeCircleMembers()" aria-label="Close">✕</button>
+        </header>
+        <div class="modal-body-content follow-list-body">
+          <input class="people-search" type="search" placeholder="Search people in this Circle" aria-label="Search people in this Circle" [value]="circleMembersQuery()" (input)="circleMembersQuery.set($any($event.target).value)" />
+          @if (isCircleAdmin(membersCircle)) {
+            <label class="circle-photo-change circle-photo-change-inline">
+              Change photo
+              <input type="file" accept="image/*" (change)="changeCirclePhoto(membersCircle, $event)" />
+            </label>
+          }
+          @for (person of filteredCircleMembers(); track person.id) {
+            <div class="circle-member-row">
+              <button type="button" class="follow-list-row" (click)="closeCircleMembers(); openVisitorProfile(person)">
+                <img [src]="person.profilePhotoUrl || defaultAvatar" [alt]="person.fullName" />
+                <span>
+                  <strong>{{ person.fullName }}</strong>
+                  <small>
+                    @if (isCircleOwner(membersCircle, person.id)) { Owner }
+                    @else if (personIsCircleAdmin(membersCircle, person.id)) { Admin }
+                    @else { Member }
+                    · {{ person.city }}
+                  </small>
+                </span>
+              </button>
+              @if (isCircleAdmin(membersCircle) && person.id !== (service.currentUser()?.id || 1) && !isCircleOwner(membersCircle, person.id)) {
+                <div class="circle-member-actions">
+                  @if (personIsCircleAdmin(membersCircle, person.id)) {
+                    <button type="button" class="btn-action-subtle btn-sm" (click)="removeCircleAdmin(membersCircle.id, person.id)">Remove Admin</button>
+                  } @else {
+                    <button type="button" class="btn-primary-action btn-sm" (click)="makeCircleAdmin(membersCircle.id, person.id)">Admin</button>
+                  }
+                  <button type="button" class="btn-danger-outline btn-sm" (click)="deleteCircleMember(membersCircle.id, person.id)">Delete</button>
+                </div>
+              }
+            </div>
+          } @empty {
+            <p class="follow-list-empty">{{ circleMembersQuery().trim() ? 'No one matches that search.' : 'No travelers in this Circle.' }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showManageCircleModal() && managingCircle(); as circle) {
+    <div class="modal-backdrop-overlay" (click)="showManageCircleModal.set(false)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Manage {{ circle.name }}</h3></header>
+        <div class="modal-body">
+          <p class="card-desc">You are the owner. Promote a companion to admin, or add more travelers.</p>
+          @for (member of getCircleMembers(circle.memberIds); track member.id) {
+            <div class="manage-member-row">
+              <span>{{ member.fullName }}</span>
+              @if (circle.adminIds?.includes(member.id)) {
+                <span class="circle-role-pill">Admin</span>
+              } @else {
+                <button type="button" class="btn-action-subtle" (click)="promoteInCircle(member.id)">Make admin</button>
+              }
+            </div>
+          }
+          <div class="modal-companions-selection">
+            @for (c of connectedCompanions(); track c.id) {
+              @if (!circle.memberIds.includes(c.id)) {
+                <label class="companion-checkbox-row">
+                  <input type="checkbox" [checked]="selectedAddPeopleIds().includes(c.id)" (change)="toggleAddPerson(c.id)" />
+                  <span>{{ c.fullName }}</span>
+                </label>
+              }
+            }
+          </div>
+          @if (circleError()) { <p class="status-error-msg">{{ circleError() }}</p> }
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="showManageCircleModal.set(false)">Close</button>
+          <button type="button" class="btn-primary-action" (click)="addManagedMembers()">Add selected</button>
         </footer>
       </div>
     </div>
@@ -3497,10 +4317,19 @@
             <p class="visitor-hero-subhead">
               <img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" />
               {{ viewingVisitor()!.city }}, {{ viewingVisitor()!.country }} • {{ viewingVisitor()!.profession }}
+              <span class="companion-relationship visitor-relationship">{{ relationshipLabel(viewingVisitor()) }}</span>
             </p>
 
             <div class="visitor-hero-badges">
               <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
+              <button type="button" class="follow-count-btn follow-count-inline" (click)="openFollowList('followers', viewingVisitor()!.id)">
+                <strong>{{ service.followerCount(viewingVisitor()!.id) }}</strong>
+                <span>Followers</span>
+              </button>
+              <button type="button" class="follow-count-btn follow-count-inline" (click)="openFollowList('following', viewingVisitor()!.id)">
+                <strong>{{ service.followingCount(viewingVisitor()!.id) }}</strong>
+                <span>Following</span>
+              </button>
               @if (!isViewingSelf()) {
                 <span
                   class="badge-mutual-tag clickable-badge"
@@ -3519,6 +4348,11 @@
                Hidden on my own profile preview — I can't be a companion of myself. -->
           @if (!isViewingSelf()) {
           <div class="visitor-hero-actions">
+            @if (service.isFollowing(viewingVisitor()!.id)) {
+              <button type="button" class="btn-action-outline" (click)="unfollowUser(viewingVisitor()!.id)">Following</button>
+            } @else {
+              <button type="button" class="btn-primary-action" (click)="followUser(viewingVisitor()!.id)">Follow</button>
+            }
             @if (viewingVisitor()!.status === 'connected') {
               <span class="badge-connected-status">✓ Companions</span>
               <button
@@ -3566,6 +4400,14 @@
               </button>
             }
 
+            <button
+              type="button"
+              class="btn-danger-outline btn-sm btn-block-user"
+              (click)="blockUser(viewingVisitor()!.id)"
+              title="Block this user"
+            >
+              🚫 Block
+            </button>
             <button
               type="button"
               class="btn-action-report"
@@ -3705,6 +4547,17 @@
           </aside>
 
           <!-- MAIN WIDE CONTENT: About Me, Gallery, Journey -->
+          @if (visitGate(); as gate) {
+            <div class="visit-gate-card">
+              <span class="visit-gate-icon">🔒</span>
+              <h3>{{ gate === 'closed' ? 'This profile is private' : 'Companions only' }}</h3>
+              <p>
+                {{ gate === 'closed'
+                  ? (viewingVisitor()!.fullName + ' is not accepting profile visits right now.')
+                  : ('Only companions can visit ' + viewingVisitor()!.fullName + '. Send a request if you travel in the same circles.') }}
+              </p>
+            </div>
+          } @else {
           <div class="visitor-main-content">
             <!-- 1. ABOUT ME (Compact, nicely arranged modern style) -->
             <section class="visitor-flow-section visitor-flow-about">
@@ -3712,6 +4565,7 @@
             
             <div class="visitor-about-subsections">
               <!-- 1. Intro -->
+              @if (visitorCanSee('intro')) {
               <div class="visitor-sub-block full-width visitor-intro-card">
                 <div class="visitor-intro-header-row">
                   <h4 class="visitor-sub-title">✨ Intro & Travel Story</h4>
@@ -3721,6 +4575,7 @@
                   {{ getVisitorIntro(viewingVisitor()!) }}
                 </div>
               </div>
+              }
 
               <!-- 2. Personal Details (Ultra-Modern Layout - Requirement B) -->
               <div class="visitor-sub-block full-width modern-personal-details-section">
@@ -3733,75 +4588,69 @@
                 </div>
 
                 <div class="visitor-meta-grid modern-details-grid">
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box purple-tint">
-                      <span class="tile-glyph">⚧</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Gender</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box amber-tint">
-                      <span class="tile-glyph">🎂</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Date of Birth</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.dateOfBirth || '1995-04-12' }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box emerald-tint">
-                      <span class="tile-glyph">📍</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Current Location</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.location || (viewingVisitor()!.city + ', ' + viewingVisitor()!.country) }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box blue-tint">
-                      <span class="tile-glyph">🏡</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Hometown</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.hometown || viewingVisitor()!.city }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile">
-                    <div class="tile-icon-box rose-tint">
-                      <span class="tile-glyph">💫</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Relationship Status</span>
-                      <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.relationshipStatus || 'Single' }}</strong>
-                    </div>
-                  </div>
-
-                  <div class="meta-card-mini modern-detail-tile modern-languages-tile">
-                    <div class="tile-icon-box teal-tint">
-                      <span class="tile-glyph">🗣️</span>
-                    </div>
-                    <div class="tile-info">
-                      <span class="meta-label tile-label">Languages Known</span>
-                      <div class="visitor-lang-chips modern-lang-chips">
-                        @for (lang of (viewingVisitor()!.aboutMeDetails?.languagesKnown || ['English', 'French']); track lang) {
-                          <span class="visitor-chip-badge modern-lang-pill">
-                            <span class="lang-dot"></span>{{ lang }}
-                          </span>
-                        }
+                  @if (visitorCanSee('gender')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box purple-tint"><span class="tile-glyph">⚧</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Gender</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
                       </div>
                     </div>
-                  </div>
+                  }
+                  @if (visitorCanSee('dateOfBirth')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box amber-tint"><span class="tile-glyph">🎂</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Date of Birth</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.dateOfBirth || '1995-04-12' }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('location')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box emerald-tint"><span class="tile-glyph">📍</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Current Location</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.location || (viewingVisitor()!.city + ', ' + viewingVisitor()!.country) }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('hometown')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box blue-tint"><span class="tile-glyph">🏡</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Hometown</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.hometown || viewingVisitor()!.city }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('relationshipStatus')) {
+                    <div class="meta-card-mini modern-detail-tile">
+                      <div class="tile-icon-box rose-tint"><span class="tile-glyph">💫</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Relationship Status</span>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.relationshipStatus || 'Single' }}</strong>
+                      </div>
+                    </div>
+                  }
+                  @if (visitorCanSee('languagesKnown')) {
+                    <div class="meta-card-mini modern-detail-tile modern-languages-tile">
+                      <div class="tile-icon-box teal-tint"><span class="tile-glyph">🗣️</span></div>
+                      <div class="tile-info">
+                        <span class="meta-label tile-label">Languages Known</span>
+                        <div class="visitor-lang-chips modern-lang-chips">
+                          @for (lang of (viewingVisitor()!.aboutMeDetails?.languagesKnown || ['English', 'French']); track lang) {
+                            <span class="visitor-chip-badge modern-lang-pill"><span class="lang-dot"></span>{{ lang }}</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
 
               <!-- 3. Work Experience (Requirement B) -->
+              @if (visitorCanSee('workExperience')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">💼 Work Experience</h4>
                 <div class="visitor-work-list">
@@ -3820,7 +4669,9 @@
                 </div>
               </div>
 
+              }
               <!-- 4. Education (Requirement B) -->
+              @if (visitorCanSee('education')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🎓 Education</h4>
                 <div class="visitor-edu-list">
@@ -3837,7 +4688,9 @@
                 </div>
               </div>
 
+              }
               <!-- 5. Hobbies (Requirement B) -->
+              @if (visitorCanSee('hobbies')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🎨 Hobbies</h4>
                 <div class="visitor-chips-wrap">
@@ -3847,7 +4700,9 @@
                 </div>
               </div>
 
+              }
               <!-- 6. Interests (Requirement B) -->
+              @if (visitorCanSee('interests')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🧭 Interests</h4>
                 <div class="visitor-chips-wrap">
@@ -3857,7 +4712,9 @@
                 </div>
               </div>
 
+              }
               <!-- 7. About the Person (Requirement B: Visible, but NOT the Contact Info section) -->
+              @if (visitorCanSee('aboutThePerson')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">📖 About the Person</h4>
                 @let visitorNarrative = viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.';
@@ -3865,6 +4722,7 @@
                   {{ visitorNarrative }}
                 </p>
               </div>
+              }
             </div>
           </section>
 
@@ -3895,10 +4753,105 @@
           <!-- 3. JOURNEY (Requirement H: Visitors have ability to comment on posts) -->
           <section class="visitor-flow-section visitor-flow-journey">
             <h3 class="visitor-section-heading">✈️ Journey Feeds</h3>
+            @if (canPostOnVisitorWall()) {
+              <div class="journey-composer-card wall-composer">
+                <p class="wall-composer-note">You and {{ viewingVisitor()!.fullName }} are companions. This posts on their Journey.</p>
+                <textarea
+                  [(ngModel)]="newJourneyText"
+                  rows="3"
+                  class="composer-textarea"
+                  placeholder="Share something on {{ viewingVisitor()!.fullName }}'s Journey. Use # for a hashtag."
+                  (input)="onJourneyTextInput($event)"
+                ></textarea>
+                @if (hashtagSuggestions().length) {
+                  <div class="hashtag-suggest">
+                    @for (hit of hashtagSuggestions(); track hit.tag) {
+                      <button type="button" (click)="applyHashtag(hit.tag)">#{{ hit.tag }} @if (hit.isNew) { <small>New</small> }</button>
+                    }
+                  </div>
+                }
+                <div class="composer-accessory-row">
+                  <label class="btn-tool-photo-label">📷 Add Photos
+                    <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
+                  </label>
+                  <button type="button" class="btn-tool-tag" (click)="openTagPeopleModal('journey')">🏷️ Tag People
+                    @if (selectedJourneyTaggedCompanions().length > 0) {
+                      <span class="tag-count-bubble">({{ selectedJourneyTaggedCompanions().length }})</span>
+                    }
+                  </button>
+                  <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" inputId="visitor-travel-mood" />
+                  <div class="accessory-item destination-autocomplete-wrapper">
+                    <div class="dest-field-inline">
+                      <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
+                      @if (selectedGoogleLocation()) {
+                        <div class="selected-google-dest-pill">
+                          <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
+                          <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
+                          <span class="gmap-badge">Verified Google Maps</span>
+                          <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
+                        </div>
+                      } @else {
+                        <div class="dest-search-input-box">
+                          <input
+                            type="text"
+                            [(ngModel)]="destinationSearchInput"
+                            (input)="onDestinationSearchInput()"
+                            (focus)="onDestinationSearchFocus()"
+                            placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
+                            class="input-location-tag"
+                            aria-label="Destination"
+                          />
+                        </div>
+                      }
+                    </div>
+                    @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
+                      <div class="google-maps-dropdown">
+                        <div class="gmaps-header-bar">
+                          <span>Google Maps Suggestions (Click to select)</span>
+                        </div>
+                        <div class="gmaps-suggestions-scroll">
+                          @for (loc of destinationSuggestions(); track loc.placeId) {
+                            <button type="button" class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
+                              <span class="gmap-loc-info">
+                                <strong class="loc-name">{{ loc.name }}</strong>
+                                <span class="loc-address">{{ loc.formattedAddress }}</span>
+                              </span>
+                              <span class="loc-category-badge">{{ loc.category || 'Destination' }}</span>
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+                @if (destinationError()) {
+                  <div class="destination-error-banner">⚠️ {{ destinationError() }}</div>
+                }
+                @if (journeyPhotoError()) {
+                  <div class="composer-error-banner">⚠️ {{ journeyPhotoError() }}</div>
+                }
+                @if (journeyPhotoPreviews().length > 0) {
+                  <div class="composer-multi-photos-preview">
+                    @for (photo of journeyPhotoPreviews(); track $index) {
+                      <img [src]="photo" alt="Attached photo preview" class="composer-preview-img-thumb" />
+                    }
+                  </div>
+                }
+                <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="postAudience = $event" />
+                <div class="composer-footer">
+                  <button type="button" class="btn-primary-action btn-post" [disabled]="!canSubmitJourney()" (click)="submitJourneyPost()">
+                    {{ postingJourney() ? 'Posting...' : ('Post to ' + viewingVisitor()!.fullName + "'s Journey") }}
+                  </button>
+                </div>
+              </div>
+            }
             @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
               <article class="journey-post-card">
                 <div class="post-header">
-                  <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" [nbUserPreview]="post.author" />
+                  <span class="avatar-presence">
+                    <img [src]="post.author.profilePhotoUrl || defaultAvatar" [alt]="post.author.fullName" class="author-avatar" [nbUserPreview]="post.author" />
+                    <app-presence-dot [user]="post.author" />
+                  </span>
                   <div class="author-details">
                     <div class="author-name-line">
                       <strong class="author-name" [nbUserPreview]="post.author">{{ post.author.fullName }}</strong>
@@ -3907,15 +4860,11 @@
                           <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
                         </span>
                       }
-                      @if (post.taggedCompanions && post.taggedCompanions.length > 0) {
-                        <span class="tagged-with-text"> is with </span>
-                        @for (tagged of post.taggedCompanions; track tagged.id; let last = $last; let idx = $index) {
-                          <strong class="tagged-companion-link clickable-user" [nbUserPreview]="tagged" (click)="openVisitorProfile(tagged)">{{ tagged.fullName }}</strong>{{ !last ? (idx === post.taggedCompanions.length - 2 ? ' and ' : ', ') : '' }}
-                        }
-                      }
+                      <app-tagged-with [people]="post.taggedCompanions || []" (openPerson)="openVisitorProfile($event)" />
                     </div>
                     <div class="post-sub-meta">
                       <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(post.author.id) }}</span>
                       @if (post.location) {
                         <span class="post-loc" title="Google Maps Verified Location">
                           <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
@@ -3924,15 +4873,22 @@
                       @if (post.mood) {
                         <span class="post-mood">{{ post.mood }}</span>
                       }
+                      <span class="post-audience-pill">{{ audienceLabel(post) }}</span>
+                      @if (showCustomAllowList(post)) {
+                        <span class="custom-allow-note">Allowed: {{ allowedNames(post) }}</span>
+                      }
                     </div>
                   </div>
 
+                  @if (canEditWallPost(post)) {
+                    <button type="button" class="btn-delete-post-mini" (click)="startEditPost(post, $event)">✏️ Edit</button>
+                  }
                   <!-- Requirements F & G: Delete post check (only if author or on own profile) -->
                   @if (canDeleteJourneyPost(post)) {
                     <button
                       type="button"
                       class="btn-delete-post-mini"
-                      (click)="deleteJourneyPost(post.id)"
+                      (click)="deleteJourneyPost(post.id, $event)"
                       title="Delete post"
                     >
                       🗑️ Delete
@@ -3941,6 +4897,13 @@
                 </div>
 
                 <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
+                @if (postHashtags(post).length) {
+                  <div class="hashtag-row">
+                    @for (tag of postHashtags(post); track tag) {
+                      <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
+                    }
+                  </div>
+                }
                 <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
                 @if (post.imageUrls && post.imageUrls.length > 1) {
                   <div class="post-multi-images-grid facebook-collage" [attr.data-count]="post.imageUrls.length >= 4 ? 4 : post.imageUrls.length">
@@ -3965,10 +4928,13 @@
                       </div>
                     }
                   </div>
-                } @else if (post.imageUrl || (post.imageUrls && post.imageUrls.length === 1)) {
+                } @else if (postImageUrls(post).length === 1) {
                   <div class="post-image-attachment-wrap">
-                    <img [src]="post.imageUrl || post.imageUrls![0]" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(post.imageUrl || post.imageUrls![0])" />
+                    <img [src]="postImageUrls(post)[0]" alt="Journey photo attachment" class="post-attached-photo" (click)="openImageModal(postImageUrls(post)[0])" />
                   </div>
+                }
+                @for (video of postVideoUrls(post); track video) {
+                  <video class="post-attached-video" [src]="video" controls playsinline [attr.aria-label]="'Video from ' + post.author.fullName"></video>
                 }
 
                 <!-- Engagement Counts -->
@@ -4106,6 +5072,7 @@
             }
           </section>
         </div>
+          }
       </div>
     }
 

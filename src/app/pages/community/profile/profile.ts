@@ -3,9 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+  AboutFieldKey,
   AboutMeDetails,
+  AboutVisibilityMap,
   ActiveChatBox,
   AuthorInfo,
+  FieldAudience,
   AVAILABLE_HOBBIES,
   AVAILABLE_INTERESTS,
   ChatMessage,
@@ -20,6 +23,7 @@ import {
   HOLD_REACTION_OPTIONS,
   JourneyComment,
   JourneyPost,
+  PostAudience,
   REACTION_ICONS,
   ReactionType,
   SocialMediaLink,
@@ -27,17 +31,25 @@ import {
   UserReaction,
   WorkExperience,
 } from '../../../models/community';
-import { CommunityService } from '../../../services/community.service';
+import { CommunityService, PendingChat } from '../../../services/community.service';
 import { SiteConfigService } from '../../../services/site-config.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
 import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 import { UserHoverCard, UserPreviewDirective } from '../../../shared/user-hover-card';
 import { CommentThreadComponent } from './comment-item';
+import { TaggedWith } from './tagged-with';
+import { FieldAudienceControl } from './field-audience';
+import { PresenceDot } from '../../../shared/presence-dot/presence-dot';
 import { SelectValueSync } from '../../../shared/select-value-sync';
 import { AnnouncementInboxService, AnnouncementNotice, noticeTime, viewerProfile } from '../../../services/announcement-inbox.service';
 
 import { TRAVEL_MOOD_GROUPS } from './travel-moods';
+import { MoodPicker } from './mood-picker';
+import { PostAudienceControl } from './post-audience';
+import { birthdayCards, BirthdayCard } from './birthdays';
+import { extractHashtags, hashtagAtCursor, insertHashtag, suggestHashtags } from './hashtags';
+import { formatStorage, storagePie } from './storage-meter';
 
 export type ProfileSection =
   | 'journey'
@@ -45,9 +57,13 @@ export type ProfileSection =
   | 'gallery'
   | 'messagebook'
   | 'companions'
+  | 'followers'
+  | 'following'
   | 'circles'
   | 'messenger'
+  | 'birthdays'
   | 'notifications'
+  | 'storage'
   | 'settings';
 
 const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
@@ -56,9 +72,13 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
   'gallery',
   'messagebook',
   'companions',
+  'followers',
+  'following',
   'circles',
   'messenger',
+  'birthdays',
   'notifications',
+  'storage',
   'settings',
 ];
 
@@ -73,6 +93,11 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
     TranslatableTextDirective,
     UserPreviewDirective,
     UserHoverCard,
+    TaggedWith,
+    FieldAudienceControl,
+    PresenceDot,
+    MoodPicker,
+    PostAudienceControl,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
@@ -91,6 +116,22 @@ export class CommunityProfile implements OnInit {
 
   // While the member is on the Messenger section, every open chat counts as read —
   // the unread badge on the community header disappears and stays gone while they're here.
+  private readonly openPendingCircleEffect = effect(() => {
+    const id = this.service.pendingCircleChatId();
+    if (!id) return;
+    const circle = this.service.circles().find((c) => c.id === id);
+    this.service.pendingCircleChatId.set(null);
+    if (circle) this.service.openCircleChat(circle);
+  });
+
+  private readonly contentGuardEffect = effect(() => {
+    const message = this.service.contentGuardMessage() || this.service.storageBlockMessage();
+    if (!message) return;
+    this.service.contentGuardMessage.set(null);
+    this.service.storageBlockMessage.set(null);
+    void this.confirmSvc.notify(message);
+  });
+
   private readonly markMessengerReadEffect = effect(() => {
     if (this.activeSection() !== 'messenger') return;
     for (const box of this.service.activeChatBoxes()) {
@@ -148,6 +189,18 @@ export class CommunityProfile implements OnInit {
   protected newJourneyText = '';
   protected readonly travelMoodGroups = TRAVEL_MOOD_GROUPS;
   protected selectedMood = '✈️ Traveling';
+  protected postAudience: PostAudience = { mode: 'public', allowIds: [], denyIds: [] };
+  protected shareAudience: PostAudience = { mode: 'public', allowIds: [], denyIds: [] };
+  protected readonly activeHashtag = signal<string | null>(null);
+  protected readonly hashtagSuggestions = signal<{ tag: string; isNew: boolean }[]>([]);
+  protected readonly birthdayView = signal<'day' | 'week' | 'month'>('day');
+  protected readonly birthdayDrafts = signal<Record<number, string>>({});
+  protected readonly editingPostId = signal<number | null>(null);
+  protected editPostText = '';
+  protected editPostMood = '';
+  protected editAudience: PostAudience = { mode: 'public', allowIds: [], denyIds: [] };
+  protected readonly formatStorage = formatStorage;
+  protected readonly storagePie = storagePie;
   protected destinationSearchInput = '';
   protected readonly destinationSuggestions = signal<GoogleMapLocation[]>([]);
   protected readonly showDestinationDropdown = signal(false);
@@ -279,6 +332,7 @@ export class CommunityProfile implements OnInit {
   protected aboutLocation = 'Paris, France';
   protected aboutHometown = 'Lyon, France';
   protected aboutRelationshipStatus = 'Exploring solo';
+  protected aboutVisibility: AboutVisibilityMap = {};
   protected readonly aboutLanguages = signal<string[]>([]);
   protected newLanguageInput = '';
   protected readonly aboutWorkExperiences = signal<WorkExperience[]>([]);
@@ -316,6 +370,19 @@ export class CommunityProfile implements OnInit {
   protected newCircleColor = '#2563eb';
   protected readonly selectedCircleMemberIds = signal<number[]>([]);
   protected readonly circleError = signal<string | null>(null);
+  protected readonly circlePhotoPreview = signal<string | null>(null);
+  protected editCirclePhoto = '';
+  protected readonly circleQuery = signal('');
+  protected readonly circleRoleFilter = signal<'all' | 'admin' | 'member'>('all');
+  protected readonly showEditCircleModal = signal(false);
+  protected readonly editingCircleId = signal<number | null>(null);
+  protected readonly showAddPeopleModal = signal(false);
+  protected readonly addPeopleChatKey = signal<number | null>(null);
+  protected readonly selectedAddPeopleIds = signal<number[]>([]);
+  protected readonly showSaveCircleModal = signal(false);
+  protected readonly saveCircleChatKey = signal<number | null>(null);
+  protected readonly showManageCircleModal = signal(false);
+  protected readonly managingCircleId = signal<number | null>(null);
 
   // Messenger state
   protected readonly showMessengerFlyout = signal(false);
@@ -390,6 +457,12 @@ export class CommunityProfile implements OnInit {
     preferredSeason: ['Autumn & Spring'],
     theme: ['light'],
     timezone: ['UTC'],
+    whoCanConnect: ['everyone'],
+    whoCanVisitProfile: ['everyone'],
+    showActiveStatusTo: ['everyone'],
+    whoCanSeeCompanionsList: ['everyone'],
+    allowCompanionTagging: [true],
+    approveTagsBeforePost: [false],
   });
 
   // Search results computed
@@ -409,7 +482,7 @@ export class CommunityProfile implements OnInit {
       );
 
     const circles = this.service
-      .circles()
+      .myCircles()
       .filter(
         (cr) =>
           cr.name.toLowerCase().includes(q) ||
@@ -526,7 +599,9 @@ export class CommunityProfile implements OnInit {
   protected readonly adminNotices = computed(() => this.announcementInbox.noticesFor(this.noticeViewer()));
   protected readonly unreadNoticeCount = computed(() => this.adminNotices().filter((n) => n.unread).length);
   /** Side-panel badge: unread member notifications + unread announcements. */
-  protected readonly notifBadgeCount = computed(() => this.service.unreadNotificationCount() + this.unreadNoticeCount());
+  protected readonly notifBadgeCount = computed(
+    () => this.service.unreadNotificationCount() + this.unreadNoticeCount() + (this.service.storageReport().warning ? 1 : 0),
+  );
   /** Announcements that were unread when the Notifications section was opened (kept highlighted). */
   private readonly freshNoticeIds = signal<Set<string>>(new Set());
   protected readonly noticeTime = noticeTime;
@@ -711,6 +786,11 @@ export class CommunityProfile implements OnInit {
     this.viewingVisitor.set(found);
     this.showSearchDropdown.set(false);
     this.closeMobileSidePanel();
+    this.destinationSearchInput = '';
+    this.destinationSuggestions.set([]);
+    this.showDestinationDropdown.set(false);
+    this.selectedGoogleLocation.set(null);
+    this.destinationError.set(null);
 
     // Requirement B: Navigate to full normal page via /profile?id=... instead of modal popup
     this.router.navigate(['/profile'], {
@@ -802,7 +882,191 @@ export class CommunityProfile implements OnInit {
   }
 
   getVisitorJourneyPosts(visitorId: number): JourneyPost[] {
-    return this.service.journeyPosts().filter((p) => p.author.id === visitorId);
+    return this.service.postsForWall(visitorId);
+  }
+
+  wallTarget(): { id: number; fullName: string } | null {
+    const visitor = this.viewingVisitor();
+    const me = this.service.currentUser()?.id ?? 1;
+    if (!visitor || visitor.id === me || visitor.status !== 'connected') return null;
+    return { id: visitor.id, fullName: visitor.fullName };
+  }
+
+  canPostOnVisitorWall(): boolean {
+    return !!this.wallTarget();
+  }
+
+  onJourneyTextInput(event: Event): void {
+    const input = event.target as HTMLTextAreaElement;
+    const hit = hashtagAtCursor(input.value, input.selectionStart ?? input.value.length);
+    if (!hit) {
+      this.hashtagSuggestions.set([]);
+      return;
+    }
+    const used = this.service.journeyPosts().flatMap((post) => post.hashtags ?? extractHashtags(post.text));
+    this.hashtagSuggestions.set(suggestHashtags(hit.query, used));
+  }
+
+  applyHashtag(tag: string): void {
+    const input = document.querySelector<HTMLTextAreaElement>('.composer-textarea');
+    const cursor = input?.selectionStart ?? this.newJourneyText.length;
+    const hit = hashtagAtCursor(this.newJourneyText, cursor);
+    const start = hit?.start ?? this.newJourneyText.length;
+    const end = hit ? cursor : this.newJourneyText.length;
+    const next = insertHashtag(this.newJourneyText, start, end, tag);
+    this.newJourneyText = next.text;
+    this.hashtagSuggestions.set([]);
+  }
+
+  postHashtags(post: JourneyPost): string[] {
+    return post.hashtags?.length ? post.hashtags : extractHashtags(post.text);
+  }
+
+  audienceLabel(post: JourneyPost): string {
+    const mode = post.audience?.mode ?? 'public';
+    if (mode === 'companions') return 'Companions';
+    if (mode === 'custom') return 'Custom';
+    return 'Public';
+  }
+
+  composerAudienceLabel(): string {
+    if (this.postAudience.mode === 'companions') return '👥 Companions';
+    if (this.postAudience.mode === 'custom') {
+      const count = this.postAudience.allowIds?.length ?? 0;
+      return count ? `✨ Custom · ${count} allowed` : '✨ Custom';
+    }
+    return '🌐 Public';
+  }
+
+  audienceCandidates(): Companion[] {
+    const me = this.service.currentUser()?.id ?? 1;
+    return this.service.visibleCompanions().filter((person) => Number(person.id) !== Number(me));
+  }
+
+  isPostOwner(post: JourneyPost): boolean {
+    return Number(post.author.id) === Number(this.service.currentUser()?.id ?? 1);
+  }
+
+  showCustomAllowList(post: JourneyPost): boolean {
+    return this.isPostOwner(post) && post.audience?.mode === 'custom';
+  }
+
+  allowedNames(post: JourneyPost): string {
+    const ids = post.audience?.allowIds ?? [];
+    if (!ids.length) return 'Only you';
+    const names = ids.map(
+      (id) => this.service.companions().find((person) => Number(person.id) === Number(id))?.fullName || 'Traveler',
+    );
+    if (names.length <= 4) return names.join(', ');
+    return `${names.slice(0, 3).join(', ')} and ${names.length - 3} others`;
+  }
+
+  isVideoMedia(url: string | null | undefined): boolean {
+    if (!url) return false;
+    return /^data:video\//i.test(url) || /\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i.test(url);
+  }
+
+  postImageUrls(post: JourneyPost): string[] {
+    const urls = post.imageUrls?.length ? post.imageUrls : post.imageUrl ? [post.imageUrl] : [];
+    return urls.filter((url) => !this.isVideoMedia(url));
+  }
+
+  postVideoUrls(post: JourneyPost): string[] {
+    const urls = post.imageUrls?.length ? post.imageUrls : post.imageUrl ? [post.imageUrl] : [];
+    return urls.filter((url) => this.isVideoMedia(url));
+  }
+
+  openHashtag(tag: string, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.activeHashtag.set(tag.replace(/^#/, '').toLowerCase());
+    if (this.viewingVisitor()) this.closeVisitorProfile();
+    this.applySection('journey');
+  }
+
+  closeHashtag(): void {
+    this.activeHashtag.set(null);
+  }
+
+  hashtagPosts(): JourneyPost[] {
+    const tag = this.activeHashtag();
+    return tag ? this.service.postsForHashtag(tag) : [];
+  }
+
+  canEditWallPost(post: JourneyPost): boolean {
+    return this.service.canEditWallPost(post);
+  }
+
+  startEditPost(post: JourneyPost, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.canEditWallPost(post)) {
+      void this.confirmSvc.notify('This post can only be edited within 45 minutes of posting it on a companion’s Journey.');
+      return;
+    }
+    this.editingPostId.set(post.id);
+    this.editPostText = post.text;
+    this.editPostMood = post.mood || this.selectedMood;
+    this.editAudience = {
+      mode: post.audience?.mode ?? 'public',
+      allowIds: [...(post.audience?.allowIds ?? [])],
+      denyIds: [...(post.audience?.denyIds ?? [])],
+    };
+  }
+
+  saveEditPost(): void {
+    const id = this.editingPostId();
+    if (id == null) return;
+    const ok = this.service.updateJourneyPost(id, {
+      text: this.editPostText,
+      mood: this.editPostMood,
+      audience: this.editAudience,
+    });
+    if (ok) this.editingPostId.set(null);
+  }
+
+  readonly birthdayCards = computed(() => birthdayCards(this.connectedCompanions()));
+
+  birthdaysFor(view: 'day' | 'week' | 'month'): BirthdayCard[] {
+    const cards = this.birthdayCards();
+    if (view === 'day') return cards.filter((card) => card.when === 'today' || card.when === 'tomorrow');
+    if (view === 'week') return cards.filter((card) => card.dayOffset >= 0 && card.dayOffset <= 7);
+    const month = new Date().getMonth();
+    return cards.filter((card) => card.dayOffset >= 0 && card.date.getMonth() === month);
+  }
+
+  belatedBirthdays(): BirthdayCard[] {
+    return this.birthdayCards().filter((card) => card.when === 'belated');
+  }
+
+  birthdayDraft(id: number): string {
+    return this.birthdayDrafts()[id] ?? '';
+  }
+
+  setBirthdayDraft(id: number, value: string): void {
+    this.birthdayDrafts.update((drafts) => ({ ...drafts, [id]: value }));
+  }
+
+  postBirthdayWish(card: BirthdayCard): void {
+    const text = this.birthdayDraft(card.companion.id).trim();
+    if (!text) return;
+    const created = this.service.createJourneyPost(
+      text,
+      '🎂 Birthday Wish',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { mode: 'companions', allowIds: [], denyIds: [] },
+      { id: card.companion.id, fullName: card.companion.fullName },
+    );
+    if (!created) return;
+    this.setBirthdayDraft(card.companion.id, '');
+  }
+
+  storageSlices() {
+    return this.service.storageReport().slices;
   }
 
   openImageModal(url: string): void {
@@ -948,6 +1212,18 @@ export class CommunityProfile implements OnInit {
   }
 
   requestCompanionship(userId: number): void {
+    const target = this.service.companions().find((c) => Number(c.id) === Number(userId));
+    const rule = target?.whoCanConnect ?? 'everyone';
+    if (rule === 'none') {
+      void this.confirmSvc.notify(`${target?.fullName ?? 'This traveler'} is not accepting companionship requests.`);
+      return;
+    }
+    if (rule === 'companions-of-companions' && this.getMutualCompanionsCount(Number(userId)) === 0) {
+      void this.confirmSvc.notify(
+        `${target?.fullName ?? 'This traveler'} only accepts requests from companions of their companions.`,
+      );
+      return;
+    }
     const numId = Number(userId);
     this.service.sendCompanionshipRequest(numId);
     if (this.viewingVisitor() && (Number(this.viewingVisitor()!.id) === numId || !userId)) {
@@ -1066,6 +1342,11 @@ export class CommunityProfile implements OnInit {
     this.journeyPhotoError.set(null);
   }
 
+  canSubmitJourney(): boolean {
+    const hasPhotos = this.journeyPhotoPreviews().length > 0 || !!this.journeyPhotoPreview();
+    return (!!this.newJourneyText.trim() || hasPhotos) && !this.postingJourney();
+  }
+
   submitJourneyPost(): void {
     const hasPhotos = this.journeyPhotoPreviews().length > 0 || !!this.journeyPhotoPreview();
     if (!this.newJourneyText.trim() && !hasPhotos) return;
@@ -1085,7 +1366,8 @@ export class CommunityProfile implements OnInit {
       const allPreviews = this.journeyPhotoPreviews();
       const primaryPhoto = allPreviews[0] || this.journeyPhotoPreview() || undefined;
 
-      this.service.createJourneyPost(
+      const wall = this.wallTarget();
+      const created = this.service.createJourneyPost(
         this.newJourneyText,
         this.selectedMood,
         locationTag,
@@ -1095,8 +1377,13 @@ export class CommunityProfile implements OnInit {
           ? [...this.selectedJourneyTaggedCompanions()]
           : undefined,
         allPreviews.length > 0 ? allPreviews : (primaryPhoto ? [primaryPhoto] : undefined),
+        this.postAudience,
+        wall ?? undefined,
       );
+      if (!created) return;
       this.newJourneyText = '';
+      this.postAudience = { mode: 'public', allowIds: [], denyIds: [] };
+      this.hashtagSuggestions.set([]);
       this.selectedJourneyTaggedCompanions.set([]);
       this.selectedGoogleLocation.set(null);
       this.destinationSearchInput = '';
@@ -1210,7 +1497,9 @@ export class CommunityProfile implements OnInit {
     const post = this.postToShare();
     if (!post) return;
 
-    this.service.shareJourneyPost(post.id, this.shareThoughtText);
+    const shared = this.service.shareJourneyPost(post.id, this.shareThoughtText, this.shareAudience);
+    if (!shared) return;
+    this.shareAudience = { mode: 'public', allowIds: [], denyIds: [] };
     this.closeShareModal();
     this.setSection('journey');
   }
@@ -1409,6 +1698,7 @@ export class CommunityProfile implements OnInit {
         : 'Paris, France');
     this.aboutHometown = details?.hometown || 'Lyon, France';
     this.aboutRelationshipStatus = details?.relationshipStatus || 'Exploring solo';
+    this.aboutVisibility = { ...(details?.visibility ?? {}) };
     this.aboutLanguages.set(
       details?.languagesKnown && details.languagesKnown.length > 0
         ? [...details.languagesKnown]
@@ -1627,9 +1917,10 @@ export class CommunityProfile implements OnInit {
       contactPhone: this.aboutContactPhone.trim(),
       socialLinks: this.aboutSocialLinks(),
       aboutThePerson: this.aboutThePersonText.trim(),
+      visibility: { ...this.aboutVisibility },
     };
 
-    this.service.updateAboutMeDetails(details);
+    if (!this.service.updateAboutMeDetails(details)) return;
     this.editingAboutMe.set(false);
   }
 
@@ -1722,6 +2013,91 @@ export class CommunityProfile implements OnInit {
   // BLOCK / UNBLOCK USERS (Requirement B)
   // ---------------------------------------------------------------------------
 
+  readonly followListKind = signal<'followers' | 'following' | null>(null);
+  readonly followListOwnerId = signal<number | null>(null);
+  protected readonly followListQuery = signal('');
+  protected readonly followersPageQuery = signal('');
+  protected readonly followingPageQuery = signal('');
+  protected readonly circleMembersCircleId = signal<number | null>(null);
+  protected readonly circleMembersQuery = signal('');
+
+  openFollowList(kind: 'followers' | 'following', ownerId?: number): void {
+    this.followListQuery.set('');
+    this.followListKind.set(kind);
+    this.followListOwnerId.set(ownerId ?? this.service.currentUser()?.id ?? 1);
+  }
+
+  closeFollowList(): void {
+    this.followListKind.set(null);
+    this.followListQuery.set('');
+  }
+
+  private filterPeople(people: Companion[], query: string): Companion[] {
+    const q = query.trim().toLowerCase();
+    if (!q) return people;
+    return people.filter((person) =>
+      [person.fullName, person.city, person.country, person.profession].some((part) =>
+        (part || '').toLowerCase().includes(q),
+      ),
+    );
+  }
+
+  filteredFollowList(): Companion[] {
+    return this.filterPeople(this.followListPeople(), this.followListQuery());
+  }
+
+  filteredFollowers(): Companion[] {
+    return this.filterPeople(this.myFollowers(), this.followersPageQuery());
+  }
+
+  filteredFollowing(): Companion[] {
+    return this.filterPeople(this.myFollowing(), this.followingPageQuery());
+  }
+
+  followListTitle(): string {
+    const kind = this.followListKind() === 'following' ? 'Following' : 'Followers';
+    const ownerId = this.followListOwnerId();
+    const me = this.service.currentUser()?.id ?? 1;
+    if (!ownerId || ownerId === me) return kind;
+    const owner = this.service.companions().find((c) => Number(c.id) === Number(ownerId));
+    return owner ? `${owner.fullName.split(' ')[0]}'s ${kind.toLowerCase()}` : kind;
+  }
+
+  followListPeople(): Companion[] {
+    const ownerId = this.followListOwnerId() ?? this.service.currentUser()?.id ?? 1;
+    return this.followListKind() === 'following'
+      ? this.service.peopleFollowing(ownerId)
+      : this.service.peopleFollowers(ownerId);
+  }
+
+  myFollowers(): Companion[] {
+    return this.service.peopleFollowers();
+  }
+
+  myFollowing(): Companion[] {
+    return this.service.peopleFollowing();
+  }
+
+  followUser(userId: number): void {
+    this.service.follow(userId);
+  }
+
+  unfollowUser(userId: number): void {
+    this.service.unfollow(userId);
+  }
+
+  disconnectFollower(userId: number): void {
+    this.service.disconnectFollower(userId);
+  }
+
+  removeCompanionship(userId: number): void {
+    this.removeCompanionshipFromVisitor(userId);
+  }
+
+  pendingRequestNotice(name: string): void {
+    void this.confirmSvc.notify(`Your companionship request to ${name} is still pending.`);
+  }
+
   blockUser(userId: number): void {
     this.service.blockUser(userId);
     if (this.viewingVisitor() && this.viewingVisitor()!.id === userId) {
@@ -1796,12 +2172,16 @@ export class CommunityProfile implements OnInit {
 
   openCreateCircleModal(): void {
     this.circleError.set(null);
-    if (this.service.circles().length >= 5) {
-      this.circleError.set('You have reached the maximum of 5 Circles.');
+    const limit = this.service.adminLimitError(this.service.currentUser()?.id ?? 1);
+    if (limit) {
+      this.circleError.set(limit);
+      void this.confirmSvc.notify(limit);
       return;
     }
     this.newCircleName = '';
     this.newCircleDesc = '';
+    this.newCircleIcon = '✈️';
+    this.circlePhotoPreview.set(null);
     this.selectedCircleMemberIds.set([]);
     this.showCreateCircleModal.set(true);
   }
@@ -1831,22 +2211,310 @@ export class CommunityProfile implements OnInit {
       this.selectedCircleMemberIds(),
       this.newCircleIcon,
       this.newCircleColor,
+      this.circlePhotoPreview() || undefined,
     );
 
     if (created) {
       this.showCreateCircleModal.set(false);
       this.circleError.set(null);
+      this.service.openCircleChat(created);
     } else {
-      this.circleError.set('Maximum of 5 Circles allowed.');
+      const message = this.service.circleActionError() || 'Could not create this Circle.';
+      this.circleError.set(message);
+      void this.confirmSvc.notify(message);
     }
   }
 
-  deleteCircle(circleId: number): void {
-    this.service.deleteCircle(circleId);
+  async deleteCircle(circleId: number, event?: Event): Promise<void> {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const ok = await this.confirmSvc.confirm('Delete this Circle for everyone in it? This cannot be undone.', 'Delete');
+    if (!ok) return;
+    const removed = this.service.deleteCircle(circleId);
+    if (!removed) {
+      void this.confirmSvc.notify('Only an admin can delete this Circle.');
+    }
+  }
+
+  openCircleChat(circle: Circle, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const me = this.service.currentUser()?.id ?? 1;
+    if (!this.service.isCircleParticipant(circle, me)) {
+      void this.confirmSvc.notify('You can only open a Circle you belong to.');
+      return;
+    }
+    this.service.openCircleChat(circle);
   }
 
   getCircleMembers(memberIds: number[]): Companion[] {
     return this.service.companions().filter((c) => memberIds.includes(c.id));
+  }
+
+  protected readonly filteredCircles = computed(() => {
+    const q = this.circleQuery().trim().toLowerCase();
+    const role = this.circleRoleFilter();
+    const me = this.service.currentUser()?.id ?? 1;
+    return this.service.myCircles().filter((c) => {
+      const admin = this.service.isCircleAdmin(c, me);
+      if (role === 'admin' && !admin) return false;
+      if (role === 'member' && admin) return false;
+      if (!q) return true;
+      return c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q);
+    });
+  });
+
+  isCircleAdmin(circle: Circle): boolean {
+    return this.service.isCircleAdmin(circle, this.service.currentUser()?.id ?? 1);
+  }
+
+  circleUsage(circle: Circle) {
+    return this.service.circleUsage(circle);
+  }
+
+  openCircleMembers(circle: Circle, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.circleMembersQuery.set('');
+    this.circleMembersCircleId.set(circle.id);
+  }
+
+  closeCircleMembers(): void {
+    this.circleMembersCircleId.set(null);
+    this.circleMembersQuery.set('');
+  }
+
+  circleMembersTarget(): Circle | null {
+    const id = this.circleMembersCircleId();
+    return id == null ? null : (this.service.circles().find((c) => c.id === id) ?? null);
+  }
+
+  circleRoster(circle: Circle): Companion[] {
+    const me = this.service.currentUser()?.id ?? 1;
+    const people = this.getCircleMembers(circle.memberIds);
+    const roster =
+      circle.memberIds.includes(me) && !people.some((person) => person.id === me)
+        ? [this.service.getCurrentUserAsCompanion(), ...people]
+        : people;
+    return [...roster].sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }
+
+  filteredCircleMembers(): Companion[] {
+    const circle = this.circleMembersTarget();
+    return circle ? this.filterPeople(this.circleRoster(circle), this.circleMembersQuery()) : [];
+  }
+
+  personIsCircleAdmin(circle: Circle, userId: number): boolean {
+    return this.service.isCircleAdmin(circle, userId);
+  }
+
+  isCircleOwner(circle: Circle, userId: number): boolean {
+    return circle.ownerId === userId;
+  }
+
+  makeCircleAdmin(circleId: number, userId: number): void {
+    const error = this.service.promoteCircleAdmin(circleId, userId);
+    if (error) void this.confirmSvc.notify(error);
+  }
+
+  removeCircleAdmin(circleId: number, userId: number): void {
+    const error = this.service.demoteCircleAdmin(circleId, userId);
+    if (error) void this.confirmSvc.notify(error);
+  }
+
+  deleteCircleMember(circleId: number, userId: number): void {
+    const error = this.service.removeCircleMember(circleId, userId);
+    if (error) void this.confirmSvc.notify(error);
+  }
+
+  changeCirclePhoto(circle: Circle, event: Event): void {
+    event.stopPropagation();
+    if (!this.isCircleAdmin(circle)) return;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      void this.confirmSvc.notify('Circle photo must be 1 MB or smaller.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const ok = this.service.updateCircle(circle.id, { photoUrl: String(reader.result || '') });
+      if (!ok) void this.confirmSvc.notify('Only an admin can change this Circle photo.');
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  isChatCircleAdmin(box: ActiveChatBox): boolean {
+    if (!box.circleId) return false;
+    const circle = this.service.circles().find((c) => c.id === box.circleId);
+    return !!circle && this.isCircleAdmin(circle);
+  }
+
+  onCirclePhotoSelected(event: Event, target: 'create' | 'edit' = 'create'): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      this.circleError.set('Circle photo must be 1 MB or smaller.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result || '');
+      if (target === 'edit') this.editCirclePhoto = url;
+      else this.circlePhotoPreview.set(url);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  openEditCircle(circle: Circle, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.isCircleAdmin(circle)) return;
+    this.editingCircleId.set(circle.id);
+    this.newCircleName = circle.name;
+    this.newCircleDesc = circle.description;
+    this.editCirclePhoto = circle.photoUrl || '';
+    this.circleError.set(null);
+    this.showEditCircleModal.set(true);
+  }
+
+  saveEditCircle(): void {
+    const id = this.editingCircleId();
+    if (!id) return;
+    if (!this.newCircleName.trim()) {
+      this.circleError.set('Circle name is required.');
+      return;
+    }
+    const ok = this.service.updateCircle(id, {
+      name: this.newCircleName.trim(),
+      description: this.newCircleDesc.trim(),
+      photoUrl: this.editCirclePhoto || undefined,
+    });
+    if (!ok) {
+      void this.confirmSvc.notify('Only an admin can change this Circle.');
+      return;
+    }
+    this.showEditCircleModal.set(false);
+  }
+
+  openAddPeople(chatKey: number, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.addPeopleChatKey.set(chatKey);
+    this.selectedAddPeopleIds.set([]);
+    this.circleError.set(null);
+    this.showAddPeopleModal.set(true);
+  }
+
+  peopleAvailableForOpenChat(): Companion[] {
+    const key = this.addPeopleChatKey();
+    if (key == null) return [];
+    const box = this.chatBoxFor(key);
+    return box ? this.companionsAvailableToAdd(box) : [];
+  }
+
+  companionsAvailableToAdd(box: ActiveChatBox): Companion[] {
+    const already = new Set(box.participantIds ?? [box.companion.id]);
+    return this.connectedCompanions().filter((c) => !already.has(c.id));
+  }
+
+  toggleAddPerson(id: number): void {
+    const current = this.selectedAddPeopleIds();
+    this.selectedAddPeopleIds.set(current.includes(id) ? current.filter((x) => x !== id) : [...current, id]);
+  }
+
+  confirmAddPeople(): void {
+    const key = this.addPeopleChatKey();
+    if (key == null) return;
+    const error = this.service.addPeopleToChat(key, this.selectedAddPeopleIds());
+    if (error) {
+      this.circleError.set(error);
+      void this.confirmSvc.notify(error);
+      return;
+    }
+    this.showAddPeopleModal.set(false);
+  }
+
+  openSaveCircle(chatKey: number, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const limit = this.service.adminLimitError(this.service.currentUser()?.id ?? 1);
+    if (limit) {
+      void this.confirmSvc.notify(limit);
+      return;
+    }
+    this.saveCircleChatKey.set(chatKey);
+    this.newCircleName = '';
+    this.newCircleDesc = '';
+    this.circlePhotoPreview.set(null);
+    this.circleError.set(null);
+    this.showSaveCircleModal.set(true);
+  }
+
+  confirmSaveCircle(): void {
+    const key = this.saveCircleChatKey();
+    if (key == null) return;
+    if (!this.newCircleName.trim()) {
+      this.circleError.set('Circle name is required.');
+      return;
+    }
+    const created = this.service.saveChatAsCircle(
+      key,
+      this.newCircleName,
+      this.newCircleDesc,
+      this.circlePhotoPreview() || undefined,
+    );
+    if (!created) {
+      const message = this.service.circleActionError() || 'Could not save this Circle.';
+      this.circleError.set(message);
+      void this.confirmSvc.notify(message);
+      return;
+    }
+    this.showSaveCircleModal.set(false);
+  }
+
+  openManageCircle(circleId: number, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.managingCircleId.set(circleId);
+    this.selectedAddPeopleIds.set([]);
+    this.circleError.set(null);
+    this.showManageCircleModal.set(true);
+  }
+
+  managingCircle(): Circle | null {
+    const id = this.managingCircleId();
+    return this.service.circles().find((c) => c.id === id) ?? null;
+  }
+
+  promoteInCircle(userId: number): void {
+    const id = this.managingCircleId();
+    if (!id) return;
+    const error = this.service.promoteCircleAdmin(id, userId);
+    if (error) {
+      this.circleError.set(error);
+      void this.confirmSvc.notify(error);
+    }
+  }
+
+  addManagedMembers(): void {
+    const id = this.managingCircleId();
+    if (!id) return;
+    const error = this.service.addCircleMembers(id, this.selectedAddPeopleIds());
+    if (error) {
+      this.circleError.set(error);
+      void this.confirmSvc.notify(error);
+      return;
+    }
+    this.selectedAddPeopleIds.set([]);
+  }
+
+  chatBoxFor(key: number): ActiveChatBox | undefined {
+    return this.service.activeChatBoxes().find((b) => b.companionId === key);
   }
 
   // ---------------------------------------------------------------------------
@@ -1860,6 +2528,27 @@ export class CommunityProfile implements OnInit {
   openChatWith(companion: Companion): void {
     this.service.openChatBox(companion);
     this.showMessengerFlyout.set(false);
+  }
+
+  protected pendingChats(): PendingChat[] {
+    return this.service.pendingChats().filter((chat) => chat.unreadCount > 0);
+  }
+
+  openPendingChat(chat: PendingChat): void {
+    const known = this.service.companions().find((c) => c.id === chat.companionId);
+    this.openChatWith(
+      known ?? {
+        id: chat.companionId,
+        fullName: chat.fullName,
+        profilePhotoUrl: chat.profilePhotoUrl,
+        country: chat.country,
+        city: chat.city,
+        profession: chat.profession,
+        isOnline: false,
+        mutualCompanionsCount: 0,
+        status: 'connected',
+      },
+    );
   }
 
   closeChat(companionId: number): void {
@@ -1996,6 +2685,12 @@ export class CommunityProfile implements OnInit {
       preferredSeason: s.preferredSeason ?? 'Autumn & Spring',
       theme: s.theme,
       timezone: s.timezone || 'UTC',
+      whoCanConnect: s.whoCanConnect ?? 'everyone',
+      whoCanVisitProfile: s.whoCanVisitProfile ?? 'everyone',
+      showActiveStatusTo: s.showActiveStatusTo ?? 'everyone',
+      whoCanSeeCompanionsList: s.whoCanSeeCompanionsList ?? 'everyone',
+      allowCompanionTagging: s.allowCompanionTagging ?? true,
+      approveTagsBeforePost: s.approveTagsBeforePost ?? false,
     });
     if (s.travelStyles) {
       this.selectedTravelStyles.set(s.travelStyles);
@@ -2085,8 +2780,11 @@ export class CommunityProfile implements OnInit {
     }
   }
 
-  async deletePhoto(photoId: number): Promise<void> {
-    await this.service.deleteGalleryPhoto(photoId);
+  async deletePhoto(photoId: number, event?: Event): Promise<void> {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const ok = await this.confirmSvc.confirm('Delete this photo from your gallery?', 'Delete');
+    if (ok) await this.service.deleteGalleryPhoto(photoId);
   }
 
   // ---------------------------------------------------------------------------
@@ -2130,9 +2828,12 @@ export class CommunityProfile implements OnInit {
           ? [...this.selectedMessageBookTaggedCompanions()]
           : undefined,
       );
+      if (this.service.contentGuardMessage() || this.service.storageBlockMessage()) return;
       this.newPostText = '';
       this.selectedMessageBookTaggedCompanions.set([]);
       this.clearMessageBookPhoto();
+    } catch {
+      // The content guard or storage limit already raised a popup.
     } finally {
       this.postingPost.set(false);
     }
@@ -2162,8 +2863,11 @@ export class CommunityProfile implements OnInit {
     await this.service.toggleReaction(commentId, type);
   }
 
-  async deleteComment(commentId: number): Promise<void> {
-    await this.service.deleteComment(commentId);
+  async deleteComment(commentId: number, event?: Event): Promise<void> {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const ok = await this.confirmSvc.confirm('Are you sure you want to delete this?', 'Delete');
+    if (ok) await this.service.deleteComment(commentId);
   }
 
   /**
@@ -2185,7 +2889,9 @@ export class CommunityProfile implements OnInit {
     return post.author.id === currentUserId;
   }
 
-  async deleteJourneyPost(postId: number): Promise<void> {
+  async deleteJourneyPost(postId: number, event?: Event): Promise<void> {
+    event?.preventDefault();
+    event?.stopPropagation();
     const ok = await this.confirmSvc.confirm('Are you sure you want to delete this journey post?', 'Delete');
     if (ok) {
       this.service.deleteJourneyPost(postId);
@@ -2333,6 +3039,7 @@ export class CommunityProfile implements OnInit {
         }
       : null;
     this.service.sendChatMessage(box.companionId, box.draftText, replyTo);
+    if (this.service.contentGuardMessage() || this.service.storageBlockMessage()) return;
     box.draftText = '';
     box.replyingToMessage = null;
     this.activeEmojiTrayCompanionId.set(null);
@@ -2626,7 +3333,14 @@ export class CommunityProfile implements OnInit {
       const isLocked = v.isProfileLocked ?? false;
       this.service.setProfileLock(isLocked);
 
+      const existing = this.service.profile()?.settings;
       await this.service.updateSettings({
+        ...(existing || {
+          emailNotificationsEnabled: true,
+          phoneNotificationsEnabled: false,
+          publicProfileEnabled: true,
+          theme: 'light',
+        }),
         publicProfileEnabled: v.publicProfileEnabled ?? true,
         isProfileLocked: isLocked,
         whoCanMessage: (v.whoCanMessage as any) ?? 'everyone',
@@ -2640,6 +3354,12 @@ export class CommunityProfile implements OnInit {
         preferredSeason: v.preferredSeason ?? 'Autumn & Spring',
         theme: (v.theme as 'light' | 'dark' | 'system') ?? 'light',
         timezone: v.timezone ?? 'UTC',
+        whoCanConnect: (v.whoCanConnect as 'everyone' | 'companions-of-companions' | 'none') ?? 'everyone',
+        whoCanVisitProfile: (v.whoCanVisitProfile as 'everyone' | 'companions' | 'none') ?? 'everyone',
+        showActiveStatusTo: (v.showActiveStatusTo as 'everyone' | 'companions' | 'only-me') ?? 'everyone',
+        whoCanSeeCompanionsList: (v.whoCanSeeCompanionsList as 'everyone' | 'companions' | 'only-me') ?? 'everyone',
+        allowCompanionTagging: v.allowCompanionTagging ?? true,
+        approveTagsBeforePost: v.approveTagsBeforePost ?? false,
       });
       this.settingsSaved.set(true);
       setTimeout(() => this.settingsSaved.set(false), 3000);
@@ -2671,6 +3391,98 @@ export class CommunityProfile implements OnInit {
   // ---------------------------------------------------------------------------
   // LOG OUT
   // ---------------------------------------------------------------------------
+
+  setFieldAudience(field: AboutFieldKey, audience: FieldAudience): void {
+    this.aboutVisibility = { ...this.aboutVisibility, [field]: audience };
+  }
+
+  audienceOf(field: AboutFieldKey): FieldAudience {
+    return this.aboutVisibility[field] ?? { visibility: 'public' };
+  }
+
+  audienceShort(field: AboutFieldKey): string {
+    const v = this.audienceOf(field).visibility;
+    if (v === 'companions') return 'Companions';
+    if (v === 'private') return 'Private';
+    if (v === 'custom') return 'Custom';
+    return 'Public';
+  }
+
+  visitorCanSee(field: AboutFieldKey): boolean {
+    const visitor = this.viewingVisitor();
+    if (!visitor) return true;
+    const me = this.service.currentUser()?.id;
+    const isSelf = me != null && visitor.id === me;
+    const details = isSelf ? this.service.profile()?.aboutMeDetails : visitor.aboutMeDetails;
+    const audience = details?.visibility?.[field] ?? { visibility: 'public' as const };
+    if (isSelf) return audience.visibility === 'public';
+    return this.audienceAllows(audience, visitor.status === 'connected', me ?? 0);
+  }
+
+  private audienceAllows(audience: FieldAudience, isCompanion: boolean, viewerId: number): boolean {
+    switch (audience.visibility) {
+      case 'private':
+        return false;
+      case 'companions':
+        return isCompanion;
+      case 'custom': {
+        const listed = (audience.companionIds ?? []).includes(viewerId);
+        return (audience.customMode ?? 'allow') === 'allow' ? listed : !listed;
+      }
+      default:
+        return true;
+    }
+  }
+
+  visitGate(): 'closed' | 'companions' | null {
+    const visitor = this.viewingVisitor();
+    if (!visitor) return null;
+    const me = this.service.currentUser()?.id;
+    const isSelf = me != null && visitor.id === me;
+    const rule = isSelf
+      ? (this.service.profile()?.settings?.whoCanVisitProfile ?? 'everyone')
+      : (visitor.whoCanVisitProfile ?? 'everyone');
+    if (isSelf) return null;
+    if (rule === 'none') return 'closed';
+    if (rule === 'companions' && visitor.status !== 'connected') return 'companions';
+    return null;
+  }
+
+  relationshipLabel(c: Companion | null | undefined): string {
+    return this.service.relationshipLabel(c);
+  }
+
+  presenceLabel(userId?: number | null): string {
+    return this.service.presenceFor(userId).label;
+  }
+
+  async logoutDevice(deviceId: string): Promise<void> {
+    const device = this.service.devices().find((d) => d.id === deviceId);
+    const ok = await this.confirmSvc.confirm(
+      device?.isCurrent
+        ? 'Log out of this device? You will be signed out of NeverBeen on this browser.'
+        : `Log out the session on ${device?.name ?? 'this device'}?`,
+      'Log out',
+    );
+    if (!ok) return;
+    const result = this.service.logoutDevice(deviceId);
+    if (result === 'self') this.logout();
+  }
+
+  async blockDevice(deviceId: string): Promise<void> {
+    const device = this.service.devices().find((d) => d.id === deviceId);
+    const ok = await this.confirmSvc.confirm(
+      `Block ${device?.name ?? 'this device'}? It will be signed out and cannot open your profile until you unblock it.`,
+      'Block device',
+    );
+    if (!ok) return;
+    const result = this.service.blockDevice(deviceId);
+    if (result === 'self') this.logout();
+  }
+
+  unblockDevice(deviceId: string): void {
+    this.service.unblockDevice(deviceId);
+  }
 
   logout(): void {
     this.service.logout();

@@ -13,6 +13,8 @@ import {
 import { TranslatableTextDirective } from '../../../shared/translate/translatable-text.directive';
 import { UserPreviewDirective } from '../../../shared/user-hover-card';
 import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
+import { CommunityService } from '../../../services/community.service';
+import { PresenceDot } from '../../../shared/presence-dot/presence-dot';
 
 @Component({
   selector: 'app-comment-thread',
@@ -22,6 +24,7 @@ import { CommunityConfirmService } from '../../../shared/community-confirm/commu
     FormsModule,
     TranslatableTextDirective,
     UserPreviewDirective,
+    PresenceDot,
     forwardRef(() => CommentThreadComponent),
   ],
   templateUrl: './comment-item.html',
@@ -37,6 +40,11 @@ export class CommentThreadComponent {
   @Input() isCurrentUserVerified = false;
 
   private readonly confirmSvc = inject(CommunityConfirmService);
+  private readonly community = inject(CommunityService);
+
+  presenceLabel(author: AuthorInfo): string {
+    return this.community.presenceFor(author.id).label;
+  }
 
   @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string; imageUrl?: string }>();
   @Output() like = new EventEmitter<{ postId: number; commentId: number }>();

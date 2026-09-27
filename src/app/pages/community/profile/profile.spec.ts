@@ -53,21 +53,25 @@ describe('CommunityProfile', () => {
     const menuButtons = Array.from(leftPanel!.querySelectorAll<HTMLButtonElement>('.menu-btn'));
     const menuLabels = menuButtons.map((b) => b.textContent?.trim());
 
-    // Verify order: About me, Journey, Gallery, MessageBook, Companions, Circles, Messenger, Notifications, Settings, Log Out
+    // Verify order: About me, Journey, Gallery, MessageBook, Companions, Followers, Following, Circles, Messenger, Birthdays, Notifications, Storage, Settings, Log Out
     expect(menuLabels[0]).toContain('About me');
     expect(menuLabels[1]).toContain('Journey');
     expect(menuLabels[2]).toContain('Gallery');
     expect(menuLabels[3]).toContain('MessageBook');
     expect(menuLabels[4]).toContain('Companions');
-    expect(menuLabels[5]).toContain('Circles');
-    expect(menuLabels[6]).toContain('Messenger');
-    expect(menuLabels[7]).toContain('Notifications');
-    expect(menuLabels[8]).toContain('Settings');
-    expect(menuLabels[9]).toContain('Log Out');
+    expect(menuLabels[5]).toContain('Followers');
+    expect(menuLabels[6]).toContain('Following');
+    expect(menuLabels[7]).toContain('Circles');
+    expect(menuLabels[8]).toContain('Messenger');
+    expect(menuLabels[9]).toContain('Birthdays');
+    expect(menuLabels[10]).toContain('Notifications');
+    expect(menuLabels[11]).toContain('Storage');
+    expect(menuLabels[12]).toContain('Settings');
+    expect(menuLabels[13]).toContain('Log Out');
 
     // Verify colorful icon badges
     const iconPills = Array.from(leftPanel!.querySelectorAll('.icon-pill'));
-    expect(iconPills.length).toBe(10);
+    expect(iconPills.length).toBe(14);
     expect(leftPanel!.querySelector('.pill-violet')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-emerald')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-amber')).toBeTruthy();
@@ -151,22 +155,53 @@ describe('CommunityProfile', () => {
     const fixture = create();
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
-    const select = element.querySelector<HTMLSelectElement>('#journey-travel-mood')!;
     expect(element.querySelector('label[for="journey-travel-mood"]')?.textContent).toContain('Travel Mood');
-    expect(select.value).toBe('✈️ Traveling');
-    expect(select.querySelectorAll('optgroup').length).toBe(5);
     const moods = TRAVEL_MOOD_GROUPS.flatMap((group) => [...group.moods]);
-    expect(Array.from(select.options).map((option) => option.value)).toEqual(moods);
-    expect(new Set(moods).size).toBe(32);
+    expect(TRAVEL_MOOD_GROUPS.length).toBe(80);
+    expect(new Set(moods).size).toBe(232);
+
+    const picker = element.querySelector('app-mood-picker') as HTMLElement;
+    picker.querySelector('label')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(picker.querySelector('.mood-popup')).toBeTruthy();
+    expect(picker.querySelectorAll('.mood-type-list').length).toBe(TRAVEL_MOOD_GROUPS.length);
+    expect(picker.querySelector('.mood-collapse')?.textContent).toContain('Collapse');
+    picker.querySelector('.mood-collapse')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(picker.querySelectorAll('.mood-type-list').length).toBe(TRAVEL_MOOD_GROUPS.length - 1);
+    expect(picker.querySelector('.mood-collapse')?.textContent).toContain('Expand');
+
+    const search = picker.querySelector('input') as HTMLInputElement;
+    search.value = 'Aurora Hunting';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const option = Array.from(picker.querySelectorAll('button.mood-option')).find((el) => el.textContent?.includes('Aurora Hunting'));
+    expect(option).toBeTruthy();
+    option?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance['selectedMood']).toContain('Aurora Hunting');
+    expect(picker.querySelector('.mood-popup')).toBeNull();
+
     for (const mood of ['🌌 Aurora Hunting', '🍜 Street Food Quest', '🧳 Solo & Thriving']) {
-      select.value = mood;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      await fixture.whenStable();
+      fixture.componentInstance['selectedMood'] = mood;
       fixture.componentInstance['newJourneyText'] = `Enjoying ${mood}`;
       fixture.componentInstance.submitJourneyPost();
       fixture.detectChanges();
       expect(service.journeyPosts()[0].mood).toBe(mood);
     }
+  });
+
+  it('shows dummy pending chats in the messenger count', () => {
+    const fixture = create();
+    const element = fixture.nativeElement as HTMLElement;
+    const count = service.unreadChatCount();
+    expect(count).toBeGreaterThan(0);
+    expect(service.pendingChats().filter((chat) => chat.unreadCount > 0).length).toBe(count);
+    expect(element.querySelector('.chat-count-badge')?.textContent?.trim()).toBe(String(count));
+
+    fixture.componentInstance.setSection('messenger');
+    fixture.detectChanges();
+    expect(element.querySelectorAll('.pending-chat-item').length).toBe(count);
   });
 
   it('enforces maximum 500 companion limit', () => {
@@ -424,7 +459,7 @@ describe('CommunityProfile', () => {
     expect(element.querySelector('.locked-profile-shield-box')).toBeNull();
   });
 
-  it('renders Circles side panel below main side panel and limits circles to maximum 5', () => {
+  it('renders Circles side panel and seeds 47 travel circles under the 500 admin cap', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
 
@@ -432,20 +467,14 @@ describe('CommunityProfile', () => {
     expect(circlesSidePanel).toBeTruthy();
     expect(circlesSidePanel!.querySelector('.circles-subhead')?.textContent?.trim()).toBe('My Circles');
 
-    // Seed circles should be present
-    expect(service.circles().length).toBeGreaterThan(0);
-    expect(service.circles().length).toBeLessThanOrEqual(5);
+    expect(service.myCircles().length).toBe(47);
+    expect(service.adminCircleCount()).toBe(19);
+    expect(service.memberOnlyCircleCount()).toBe(28);
+    expect(service.adminCircleCount()).toBeLessThanOrEqual(500);
 
-    // Try adding more than 5 circles
-    while (service.circles().length < 5) {
-      service.createCircle(`Circle ${service.circles().length + 1}`, 'Description', [2, 3]);
-    }
-    expect(service.circles().length).toBe(5);
-
-    // Attempt 6th circle should fail / be rejected
-    const sixthCircle = service.createCircle('6th Circle', 'Overflow', []);
-    expect(sixthCircle).toBeNull();
-    expect(service.circles().length).toBe(5);
+    const created = service.createCircle('One more trail', 'Still under the cap', []);
+    expect(created).not.toBeNull();
+    expect(service.adminCircleCount()).toBe(20);
   });
 
   it('manages companionship requests in Notifications with Approve and Reject actions', () => {
@@ -533,7 +562,7 @@ describe('CommunityProfile', () => {
     // Circles
     component.setSection('circles');
     fixture.detectChanges();
-    expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('Travel Circles');
+    expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('My Circle');
 
     // Messenger
     component.setSection('messenger');
@@ -826,7 +855,7 @@ describe('CommunityProfile', () => {
     const element: HTMLElement = fixture.nativeElement;
 
     const navButtons = element.querySelectorAll<HTMLButtonElement>('.side-menu-nav .menu-btn');
-    expect(navButtons.length).toBe(10);
+    expect(navButtons.length).toBe(14);
 
     navButtons.forEach((btn) => {
       const pill = btn.querySelector('.icon-pill');
@@ -2118,5 +2147,157 @@ describe('CommunityProfile', () => {
     fixture.detectChanges();
     expect(component.isSuggestionsGroupCollapsed()).toBe(false);
     expect(element.querySelector('.suggestions-group-section .companion-group-grid')).toBeTruthy();
+  });
+
+  it('follows by default on a companion request and manages followers and following', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const stranger = service.companions().find((c) => c.status === 'none' && c.id % 7 !== 0)!;
+    expect(service.isFollowing(stranger.id)).toBe(false);
+    service.sendCompanionshipRequest(stranger.id);
+    expect(service.companions().find((c) => c.id === stranger.id)?.status).toBe('pending_outgoing');
+    expect(service.isFollowing(stranger.id)).toBe(true);
+
+    const follower = service.peopleFollowers()[0];
+    expect(follower).toBeTruthy();
+    component.setSection('followers');
+    fixture.detectChanges();
+    const followersPane = element.querySelector('.followers-pane');
+    expect(followersPane?.textContent).toContain('Disconnect');
+    expect(followersPane?.textContent).toContain('Block');
+    expect(followersPane?.textContent).toContain(follower.fullName);
+    component.disconnectFollower(follower.id);
+    fixture.detectChanges();
+    expect(service.peopleFollowers().some((c) => c.id === follower.id)).toBe(false);
+
+    component.setSection('following');
+    fixture.detectChanges();
+    const followingPane = element.querySelector('.following-pane');
+    expect(followingPane?.textContent).toContain(stranger.fullName);
+    expect(followingPane?.textContent).toContain('Unfollow');
+    expect(followingPane?.textContent).toContain('Request Pending');
+    component.unfollowUser(stranger.id);
+    fixture.detectChanges();
+    expect(service.isFollowing(stranger.id)).toBe(false);
+    expect(element.querySelector('.following-pane')?.textContent).not.toContain(stranger.fullName);
+
+    service.follow(stranger.id);
+    service.follow(1, stranger.id);
+    component.blockUser(stranger.id);
+    expect(service.isUserBlocked(stranger.id)).toBe(true);
+    expect(service.isFollowing(stranger.id)).toBe(false);
+    expect(service.isFollowing(1, stranger.id)).toBe(false);
+
+    const countBtn = element.querySelector<HTMLButtonElement>('.follow-count-row .follow-count-btn');
+    countBtn?.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.follow-list-dialog')?.textContent).toContain('Followers');
+    const search = element.querySelector<HTMLInputElement>('.follow-list-dialog .people-search');
+    expect(search).toBeTruthy();
+    expect(getComputedStyle(countBtn!).borderTopWidth).toBe('0px');
+  });
+
+  it('posts on a companion Journey with the same destination picker', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    const marco = service.companions().find((c) => c.id === 12)!;
+    component.openVisitorProfile(marco);
+    fixture.detectChanges();
+
+    const composer = element.querySelector('.wall-composer');
+    expect(composer?.textContent).toContain("Post to Marco Rossi's Journey");
+    expect(composer?.querySelector('.destination-autocomplete-wrapper')).toBeTruthy();
+    expect(composer?.querySelector('.input-location-tag')).toBeTruthy();
+
+    component['newJourneyText'] = 'A note on your Journey from the road.';
+    component['destinationSearchInput'] = 'Kyoto';
+    await component['onDestinationSearchInput']();
+    fixture.detectChanges();
+    expect(composer?.querySelector('.google-maps-dropdown')?.textContent).toContain('Kyoto');
+
+    component.submitJourneyPost();
+    fixture.detectChanges();
+    expect(component['destinationError']()).toContain('Only available locations');
+    expect(service.postsForWall(marco.id).some((post) => post.text.includes('from the road'))).toBe(false);
+
+    const kyoto = component['destinationSuggestions']().find((loc) => loc.name.includes('Kyoto'))!;
+    component.selectGoogleLocation(kyoto);
+    component.submitJourneyPost();
+    fixture.detectChanges();
+    const posted = service.postsForWall(marco.id).find((post) => post.text.includes('from the road'));
+    expect(posted?.wallOwnerId).toBe(marco.id);
+    expect(posted?.location).toContain('Kyoto');
+    expect(element.querySelector('.visitor-flow-journey')?.textContent).toContain('from the road');
+  });
+
+  it('lets circle admins manage the traveler list and shows chat activity', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    component.setSection('circles');
+    fixture.detectChanges();
+
+    const adminCircle = service.myCircles().find((circle) => service.isCircleAdmin(circle, 1))!;
+    const memberCircle = service.myCircles().find((circle) => !service.isCircleAdmin(circle, 1))!;
+    expect(element.querySelector('.circle-usage')?.textContent).toMatch(/Active|Inactive since/);
+    expect(element.textContent).toContain('Chats');
+    expect(element.textContent).toContain('Unread');
+    expect(element.querySelector('.circle-photo-change')).toBeTruthy();
+
+    component.openCircleMembers(adminCircle);
+    fixture.detectChanges();
+    const dialog = element.querySelector('.circle-members-dialog');
+    expect(dialog?.querySelector('.people-search')).toBeTruthy();
+    expect(dialog?.textContent).toContain('Admin');
+    expect(dialog?.textContent).toContain('Delete');
+    const other = component.filteredCircleMembers().find((person) => person.id !== 1)!;
+    component.makeCircleAdmin(adminCircle.id, other.id);
+    fixture.detectChanges();
+    expect(service.isCircleAdmin(service.circles().find((c) => c.id === adminCircle.id)!, other.id)).toBe(true);
+    component.removeCircleAdmin(adminCircle.id, other.id);
+    component.deleteCircleMember(adminCircle.id, other.id);
+    expect(service.circles().find((c) => c.id === adminCircle.id)!.memberIds).not.toContain(other.id);
+
+    component.openCircleMembers(memberCircle);
+    fixture.detectChanges();
+    const memberDialog = element.querySelector('.circle-members-dialog');
+    expect(memberDialog?.textContent).not.toContain('Remove Admin');
+    expect(memberDialog?.querySelector('.circle-member-actions')).toBeNull();
+  });
+
+  it('shows the full hashtag post and restricts custom posts to the allow list', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    component.setSection('journey');
+    fixture.detectChanges();
+    expect(element.querySelector('.btn-tool-photo-label')?.textContent).toContain('Add Photos');
+    expect(element.querySelector('.btn-tool-photo-label')?.textContent).not.toContain('Max 100 KB');
+
+    const photo = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+    const video = 'https://example.com/reef.mp4';
+    const allowed = service.companions().find((person) => person.id !== 1)!;
+    const blockedCompanion = service.companions().find((person) => person.status === 'connected' && person.id !== allowed.id)!;
+    component['postAudience'] = { mode: 'custom', allowIds: [allowed.id], denyIds: [] };
+    component['newJourneyText'] = 'Sunset trail #reefwalk';
+    component['journeyPhotoPreviews'].set([photo, video]);
+    component.submitJourneyPost();
+    const post = service.journeyPosts()[0];
+    expect(post.audience?.allowIds).toContain(allowed.id);
+    expect(service.canViewJourneyPost(post, 1)).toBe(true);
+    expect(service.canViewJourneyPost(post, allowed.id)).toBe(true);
+    expect(service.canViewJourneyPost(post, blockedCompanion.id)).toBe(false);
+
+    component.openHashtag('reefwalk');
+    fixture.detectChanges();
+    const card = element.querySelector('.hashtag-post-card');
+    expect(card?.querySelector('.author-avatar')?.getAttribute('src')).toBeTruthy();
+    expect(card?.textContent).toContain(post.author.fullName);
+    expect(card?.querySelector('.post-attached-photo')?.getAttribute('src')).toBe(photo);
+    expect(card?.querySelector('video')?.getAttribute('src')).toBe(video);
+    expect(card?.textContent).toContain(`Allowed: ${allowed.fullName}`);
   });
 });

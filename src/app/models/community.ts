@@ -150,6 +150,55 @@ export interface SocialMediaLink {
   urlOrHandle: string;
 }
 
+/** Who may see one About me field. */
+export type FieldVisibility = 'public' | 'companions' | 'private' | 'custom';
+
+/** Customize: only these companions can see, or everyone except these companions. */
+export type CustomAudienceMode = 'allow' | 'deny';
+
+export interface FieldAudience {
+  visibility: FieldVisibility;
+  customMode?: CustomAudienceMode;
+  companionIds?: number[];
+}
+
+export type AboutFieldKey =
+  | 'intro'
+  | 'gender'
+  | 'dateOfBirth'
+  | 'location'
+  | 'hometown'
+  | 'relationshipStatus'
+  | 'languagesKnown'
+  | 'workExperience'
+  | 'education'
+  | 'hobbies'
+  | 'interests'
+  | 'contactEmail'
+  | 'contactPhone'
+  | 'socialLinks'
+  | 'aboutThePerson';
+
+export type AboutVisibilityMap = Partial<Record<AboutFieldKey, FieldAudience>>;
+
+export const ABOUT_FIELD_LABELS: Record<AboutFieldKey, string> = {
+  intro: 'Intro & travel story',
+  gender: 'Gender',
+  dateOfBirth: 'Date of birth',
+  location: 'Current location',
+  hometown: 'Hometown',
+  relationshipStatus: 'Relationship status',
+  languagesKnown: 'Languages',
+  workExperience: 'Work experience',
+  education: 'Education',
+  hobbies: 'Hobbies',
+  interests: 'Interests',
+  contactEmail: 'Email',
+  contactPhone: 'Phone',
+  socialLinks: 'Social links',
+  aboutThePerson: 'About the person',
+};
+
 export interface AboutMeDetails {
   intro?: string;
   gender?: string;
@@ -166,6 +215,8 @@ export interface AboutMeDetails {
   contactPhone?: string;
   socialLinks?: SocialMediaLink[];
   aboutThePerson?: string;
+  /** Per-field audience. Missing fields are treated as Public. */
+  visibility?: AboutVisibilityMap;
 }
 
 export function generate20DigitUid(id: number | string): string {
@@ -218,6 +269,18 @@ export interface UserSettings {
   twoFactorEnabled?: boolean;
   travelStyles?: string[];
   preferredSeason?: string;
+  /** Who may send me a companionship request. */
+  whoCanConnect?: 'everyone' | 'companions-of-companions' | 'none';
+  /** Who may open my profile. */
+  whoCanVisitProfile?: 'everyone' | 'companions' | 'none';
+  /** Who sees my active / away / busy presence. */
+  showActiveStatusTo?: 'everyone' | 'companions' | 'only-me';
+  /** Who sees the companions list on my profile. */
+  whoCanSeeCompanionsList?: 'everyone' | 'companions' | 'only-me';
+  /** Companions may tag me in Journey posts. */
+  allowCompanionTagging?: boolean;
+  /** Tags that mention me wait for my approval. */
+  approveTagsBeforePost?: boolean;
   isVerified?: boolean;
   verificationEmail?: string;
   verificationType?: 'work' | 'university' | null;
@@ -356,6 +419,17 @@ export interface JourneyComment {
   replies?: JourneyComment[];
 }
 
+/** Who may see a Journey post or a share. */
+export type PostAudienceMode = 'public' | 'companions' | 'custom';
+
+export interface PostAudience {
+  mode: PostAudienceMode;
+  /** Custom: only these companions can see the post. */
+  allowIds?: number[];
+  /** Custom: these companions cannot see the post. A person cannot be in both lists. */
+  denyIds?: number[];
+}
+
 export interface JourneyPost {
   id: number;
   author: AuthorInfo;
@@ -378,6 +452,12 @@ export interface JourneyPost {
   sharedText?: string;
   originalPost?: JourneyPost;
   likers?: AuthorInfo[];
+  audience?: PostAudience;
+  hashtags?: string[];
+  /** Set when the post was written on another companion's Journey wall. */
+  wallOwnerId?: number;
+  wallOwnerName?: string;
+  editedAtUtc?: string;
 }
 
 export interface AbuseReport {
@@ -415,6 +495,13 @@ export interface Companion {
   connectedCompanionIds?: number[];
   isVerified?: boolean;
   verifiedEmail?: string;
+  relationshipStatus?: string;
+  /** Who may send this traveler a companionship request. */
+  whoCanConnect?: 'everyone' | 'companions-of-companions' | 'none';
+  /** Who may open this traveler's profile. */
+  whoCanVisitProfile?: 'everyone' | 'companions' | 'none';
+  /** Member ids this traveler has blocked. */
+  blockedViewerIds?: number[];
 }
 
 export interface Circle {
@@ -423,8 +510,31 @@ export interface Circle {
   description: string;
   icon: string;
   color: string;
+  /** Cover photo for the Circle (upload or stock travel image). */
+  photoUrl?: string;
   memberIds: number[];
+  /** Admins can edit, delete, add members and promote admins. Owner is always an admin. */
+  adminIds?: number[];
+  ownerId?: number;
   createdAtUtc: string;
+  /** Group-chat history for this Circle. */
+  messages?: ChatMessage[];
+}
+
+/** A browser / phone / tablet the member has signed in from. */
+export interface LoginDevice {
+  id: string;
+  name: string;
+  type: 'Phone' | 'Tablet' | 'Laptop' | 'Desktop';
+  os: string;
+  browser: string;
+  ipAddress: string;
+  macAddress: string;
+  location: string;
+  lastSeenUtc: string;
+  isCurrent: boolean;
+  isActive: boolean;
+  blocked: boolean;
 }
 
 export interface NotificationItem {
@@ -464,4 +574,12 @@ export interface ActiveChatBox {
   replyingToMessage?: ChatMessage | null;
   showEmojiPicker?: boolean;
   showActionMenuForMsgId?: number | null;
+  /** True once other travelers have been added to this chat. */
+  isGroup?: boolean;
+  /** Set when the group has been saved as a Circle. */
+  circleId?: number;
+  /** Everyone in the chat, including the companion the chat started with. */
+  participantIds?: number[];
+  /** Member who started the chat / owns the Circle. */
+  ownerId?: number;
 }
