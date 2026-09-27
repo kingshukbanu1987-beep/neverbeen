@@ -413,6 +413,23 @@
           </button>
           }
 
+          <!-- Birthdays, after Messenger -->
+          @if (profileSectionOn('birthdays')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'birthdays'"
+            (click)="setSection('birthdays')"
+          >
+            <span class="icon-pill pill-pink">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 6c.7-1.4 2.4-2.2 3.6-1.4.8.5 1.1 1.5.7 2.4H18a2 2 0 0 1 2 2v2H4v-2a2 2 0 0 1 2-2h1.7c-.4-.9-.1-1.9.7-2.4C9.6 3.8 11.3 4.6 12 6zm-8 7h16v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5zm2 2v3h3v-3H6zm5 0v3h3v-3h-3zm5 0v3h2v-3h-2z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('birthdays') }}</span>
+          </button>
+          }
+
           <!-- 8. Notifications -->
           @if (profileSectionOn('notifications')) {
           <button
@@ -430,6 +447,24 @@
             @if (notifBadgeCount() > 0) {
               <span class="notif-count-badge">{{ notifBadgeCount() }}</span>
             }
+          </button>
+          }
+
+          <!-- Storage, after Notifications -->
+          @if (profileSectionOn('storage')) {
+          <button
+            type="button"
+            class="menu-btn"
+            [class.active]="!viewingVisitor() && activeSection() === 'storage'"
+            (click)="setSection('storage')"
+          >
+            <span class="icon-pill pill-teal">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 6a8 8 0 0 1 16 0v2H4V6zm0 4h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8zm3 3v2h4v-2H7zm6 0v2h4v-2h-4z"/>
+              </svg>
+            </span>
+            <span class="menu-label">{{ profileLabel('storage') }}</span>
+            <span class="menu-badge">{{ (service.storageReport().ratio * 100) | number:'1.0-0' }}%</span>
           </button>
           }
 
@@ -564,6 +599,36 @@
 
     <!-- RIGHT WIDE PANEL (Takes majority screen space in landscape and 100% in portrait) -->
     <main class="right-wide-panel">
+      @if (activeHashtag()) {
+        <section class="section-pane hashtag-pane">
+          <header class="section-top-bar">
+            <div>
+              <h1 class="section-title">#{{ activeHashtag() }}</h1>
+              <p class="section-desc">Every community Journey post with this hashtag, except people who blocked you.</p>
+            </div>
+            <button type="button" class="btn-secondary-action" (click)="closeHashtag()">Back</button>
+          </header>
+          <div class="journey-feed">
+            @for (post of hashtagPosts(); track post.id) {
+              <article class="post-card">
+                <div class="post-header">
+                  <strong class="author-name clickable-user" (click)="openVisitorProfile(post.author)">{{ post.author.fullName }}</strong>
+                  <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
+                </div>
+                <p class="post-body-text">{{ post.text }}</p>
+                <div class="hashtag-row">
+                  @for (tag of postHashtags(post); track tag) {
+                    <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
+                  }
+                </div>
+              </article>
+            } @empty {
+              <div class="companion-empty-box">No visible posts use #{{ activeHashtag() }} yet.</div>
+            }
+          </div>
+        </section>
+      } @else {
+
       <!-- ================================================================= -->
       <!-- SECTION 1: JOURNEY (DEFAULT WIDE PANEL VIEW)                     -->
       <!-- ================================================================= -->
@@ -592,16 +657,29 @@
                   <span class="composer-user-name clickable-user" [nbUserPreview]="service.profile()" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
                     {{ service.profile()?.fullName || 'Kingshuk' }}
                   </span>
-                  <span class="composer-audience-badge">🌐 Public</span>
+                  <span class="composer-audience-badge">{{ postAudience.mode === 'public' ? '🌐 Public' : postAudience.mode === 'companions' ? '👥 Companions' : '✨ Custom' }}</span>
                 </div>
               </div>
 
               <textarea
                 [(ngModel)]="newJourneyText"
                 rows="3"
-                placeholder="What's on your travel mind? (e.g. Planning a journey, packing tips, or sharing a photo memory...)"
+                placeholder="What's on your travel mind? Use # to add a hashtag."
                 class="composer-textarea"
+                (input)="onJourneyTextInput($event)"
+                (click)="onJourneyTextInput($event)"
               ></textarea>
+              @if (hashtagSuggestions().length) {
+                <div class="hashtag-suggest" role="listbox">
+                  @for (hit of hashtagSuggestions(); track hit.tag) {
+                    <button type="button" (click)="applyHashtag(hit.tag)">
+                      #{{ hit.tag }}
+                      @if (hit.isNew) { <small>New hashtag</small> }
+                    </button>
+                  }
+                </div>
+              }
+              <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" (audienceChange)="postAudience = $event" />
 
               <!-- COMPOSER ACCESSORIES: Photo, Tag, Mood & Destination (Requirement A, B, C, F) -->
               <div class="composer-accessory-row">
@@ -624,16 +702,7 @@
                 </button>
 
                 <div class="accessory-item">
-                  <label class="accessory-lbl" for="journey-travel-mood">Travel Mood:</label>
-                  <select id="journey-travel-mood" [(ngModel)]="selectedMood" class="select-mood">
-                    @for (group of travelMoodGroups; track group.label) {
-                      <optgroup [label]="group.label">
-                        @for (mood of group.moods; track mood) {
-                          <option [value]="mood">{{ mood }}</option>
-                        }
-                      </optgroup>
-                    }
-                  </select>
+                  <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" />
                 </div>
 
                 <!-- Google Maps API Destination Tag Auto-Search (Requirement B & D) -->
@@ -799,10 +868,17 @@
                         @if (post.mood) {
                           <span class="post-mood">{{ post.mood }}</span>
                         }
+                        <span class="post-audience-pill">{{ audienceLabel(post) }}</span>
+                        @if (post.wallOwnerName && post.wallOwnerId !== post.author.id) {
+                          <span class="post-wall-note">on {{ post.wallOwnerName }}'s Journey</span>
+                        }
                       </div>
                     </div>
 
                     <!-- Requirements F & G: Delete own post, or Hide post for other users' posts -->
+                    @if (canEditWallPost(post)) {
+                      <button type="button" class="btn-delete-post-mini" (click)="startEditPost(post, $event)" title="Edit within 45 minutes">✏️ Edit</button>
+                    }
                     @if (post.author.id === (service.currentUser()?.id || 1)) {
                       <button
                         type="button"
@@ -835,6 +911,13 @@
                   <!-- Post Body Text (Or Shared Thoughts) -->
                   @if (post.text) {
                     <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
+                    @if (postHashtags(post).length) {
+                      <div class="hashtag-row">
+                        @for (tag of postHashtags(post); track tag) {
+                          <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
+                        }
+                      </div>
+                    }
                   }
 
                   <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
@@ -2621,7 +2704,16 @@
               </div>
             }
 
-            @if (!adminNotices().length && !service.notifications().length) {
+            @if (service.storageReport().warning) {
+              <article class="notification-card storage-warning" aria-live="polite">
+                <div class="notif-content">
+                  <p class="notif-text"><strong>Storage</strong> You have used 90% or more of your allowed 25 MB storage. This notice stays until you free space.</p>
+                  <button type="button" class="btn-primary-action btn-sm" (click)="setSection('storage')">Review storage</button>
+                </div>
+              </article>
+            }
+
+            @if (!adminNotices().length && !service.notifications().length && !service.storageReport().warning) {
               <div class="ann-empty">
                 <span aria-hidden="true">🔔</span>
                 <p>You're all caught up — new announcements and activity will appear here automatically.</p>
@@ -2671,6 +2763,92 @@
                       <span class="badge-rejected">✕ Companionship Declined</span>
                     }
                   </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        @if (activeSection() === 'birthdays') {
+          <section class="section-pane birthdays-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Birthdays</h1>
+                <p class="section-desc">Upcoming birthdays of your companions, plus belated wishes from the last 30 days.</p>
+              </div>
+              <div class="birthday-views">
+                <button type="button" [class.on]="birthdayView() === 'day'" (click)="birthdayView.set('day')">Day</button>
+                <button type="button" [class.on]="birthdayView() === 'week'" (click)="birthdayView.set('week')">Week</button>
+                <button type="button" [class.on]="birthdayView() === 'month'" (click)="birthdayView.set('month')">Month</button>
+              </div>
+            </header>
+            <div class="birthday-grid">
+              @for (card of birthdaysFor(birthdayView()); track card.companion.id) {
+                <article class="birthday-card" [class.today]="card.when === 'today'">
+                  <img [src]="card.companion.profilePhotoUrl || defaultAvatar" [alt]="card.companion.fullName" />
+                  <div>
+                    <strong>{{ card.companion.fullName }}</strong>
+                    <span>{{ card.when === 'today' ? 'Today' : card.when === 'tomorrow' ? 'Tomorrow' : 'In ' + card.dayOffset + ' days' }}</span>
+                    <b>{{ card.exact }}</b>
+                  </div>
+                  @if (card.when === 'today' || card.when === 'tomorrow') {
+                    <textarea [ngModel]="birthdayDraft(card.companion.id)" (ngModelChange)="setBirthdayDraft(card.companion.id, $event)" rows="2" placeholder="Post a wish on {{ card.companion.fullName }}'s Journey"></textarea>
+                    <button type="button" class="btn-primary-action btn-sm" (click)="postBirthdayWish(card)">Post on their Journey</button>
+                  }
+                </article>
+              } @empty {
+                <div class="companion-empty-box">No companion birthdays in this view.</div>
+              }
+            </div>
+            <h2 class="birthday-belated-title">Belated, last 30 days</h2>
+            <div class="birthday-grid belated">
+              @for (card of belatedBirthdays(); track card.companion.id) {
+                <article class="birthday-card belated">
+                  <img [src]="card.companion.profilePhotoUrl || defaultAvatar" [alt]="card.companion.fullName" />
+                  <div>
+                    <strong>{{ card.companion.fullName }}</strong>
+                    <span>{{ -card.dayOffset }} days ago</span>
+                    <b>{{ card.exact }}</b>
+                  </div>
+                </article>
+              } @empty {
+                <div class="companion-empty-box">No belated birthdays in the last 30 days.</div>
+              }
+            </div>
+          </section>
+        }
+
+        @if (activeSection() === 'storage') {
+          <section class="section-pane storage-pane">
+            <header class="section-top-bar">
+              <div>
+                <h1 class="section-title">Storage</h1>
+                <p class="section-desc">Each profile has 25 MB. Text, chats, gallery, and photos all count.</p>
+              </div>
+            </header>
+            <div class="storage-hero">
+              <div class="storage-pie" [style.background]="storagePie(service.storageReport())">
+                <div>
+                  <strong>{{ formatStorage(service.storageReport().used) }}</strong>
+                  <span>of 25 MB</span>
+                </div>
+              </div>
+              <div class="storage-summary">
+                <p><b>{{ formatStorage(service.storageReport().used) }}</b> used</p>
+                <p><b>{{ formatStorage(service.storageReport().remaining) }}</b> still available</p>
+                @if (service.storageReport().blocked) {
+                  <p class="storage-full">Storage is full. New posts and photo uploads are paused until you delete something.</p>
+                } @else if (service.storageReport().warning) {
+                  <p class="storage-warn">You are over 90%. A notice is pinned in Notifications until this drops.</p>
+                }
+              </div>
+            </div>
+            <div class="storage-bars">
+              @for (slice of service.storageReport().slices; track slice.id) {
+                <div class="storage-bar">
+                  <div class="storage-bar-label"><span [style.background]="slice.color"></span>{{ slice.label }}</div>
+                  <div class="storage-track"><i [style.width.%]="(slice.bytes / service.storageReport().limit) * 100" [style.background]="slice.color"></i></div>
+                  <b>{{ formatStorage(slice.bytes) }}</b>
                 </div>
               }
             </div>
@@ -2992,6 +3170,7 @@
             </form>
           </section>
         }
+      }
     </main>
   </div>
 
@@ -3277,6 +3456,24 @@
     }
   </div>
 
+  @if (editingPostId()) {
+    <div class="modal-backdrop-overlay" (click)="editingPostId.set(null)">
+      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
+        <header class="modal-head"><h3 class="modal-head-title">Edit Journey post</h3></header>
+        <div class="modal-body">
+          <p class="card-desc">You can edit a post on a companion’s Journey for 45 minutes after you publish it.</p>
+          <textarea class="form-control" rows="4" [(ngModel)]="editPostText"></textarea>
+          <app-mood-picker [value]="editPostMood" (valueChange)="editPostMood = $event" inputId="edit-travel-mood" />
+          <app-post-audience [audience]="editAudience" [companions]="connectedCompanions()" (audienceChange)="editAudience = $event" />
+        </div>
+        <footer class="modal-footer-bar">
+          <button type="button" class="btn-secondary-action" (click)="editingPostId.set(null)">Cancel</button>
+          <button type="button" class="btn-primary-action" (click)="saveEditPost()">Save</button>
+        </footer>
+      </div>
+    </div>
+  }
+
   <!-- SHARE POST MODAL (Requirement I) -->
   @if (showShareModal() && postToShare()) {
     <div class="modal-backdrop-overlay" (click)="closeShareModal()">
@@ -3290,7 +3487,7 @@
             <img [src]="service.profile()?.profilePhotoUrl || defaultAvatar" alt="Me" class="share-my-avatar" />
             <div>
               <strong>{{ service.profile()?.fullName || 'Kingshuk' }}</strong>
-              <span class="share-scope">Public Journey Feed</span>
+              <span class="share-scope">Choose who can see this share</span>
             </div>
           </div>
 
@@ -3300,6 +3497,7 @@
             placeholder="Say something about this travel story... (optional)"
             class="share-thought-textarea"
           ></textarea>
+          <app-post-audience [audience]="shareAudience" [companions]="connectedCompanions()" (audienceChange)="shareAudience = $event" />
 
           <!-- Preview of the post being shared -->
           <div class="share-target-preview">
@@ -4196,6 +4394,46 @@
           <!-- 3. JOURNEY (Requirement H: Visitors have ability to comment on posts) -->
           <section class="visitor-flow-section visitor-flow-journey">
             <h3 class="visitor-section-heading">✈️ Journey Feeds</h3>
+            @if (canPostOnVisitorWall()) {
+              <div class="journey-composer-card wall-composer">
+                <p class="wall-composer-note">You and {{ viewingVisitor()!.fullName }} are companions. This posts on their Journey.</p>
+                <textarea
+                  [(ngModel)]="newJourneyText"
+                  rows="3"
+                  class="composer-textarea"
+                  placeholder="Share something on {{ viewingVisitor()!.fullName }}'s Journey. Use # for a hashtag."
+                  (input)="onJourneyTextInput($event)"
+                ></textarea>
+                @if (hashtagSuggestions().length) {
+                  <div class="hashtag-suggest">
+                    @for (hit of hashtagSuggestions(); track hit.tag) {
+                      <button type="button" (click)="applyHashtag(hit.tag)">#{{ hit.tag }} @if (hit.isNew) { <small>New</small> }</button>
+                    }
+                  </div>
+                }
+                <div class="composer-accessory-row">
+                  <label class="btn-tool-photo-label">📷 Add Photos
+                    <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
+                  </label>
+                  <button type="button" class="btn-tool-tag" (click)="openTagPeopleModal('journey')">🏷️ Tag People</button>
+                  <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" inputId="visitor-travel-mood" />
+                  <input
+                    type="text"
+                    class="input-location-tag"
+                    [(ngModel)]="destinationSearchInput"
+                    (input)="onDestinationSearchInput()"
+                    placeholder="Destination"
+                    aria-label="Destination"
+                  />
+                </div>
+                <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" (audienceChange)="postAudience = $event" />
+                <div class="composer-footer">
+                  <button type="button" class="btn-primary-action" [disabled]="!newJourneyText.trim() && journeyPhotoPreviews().length === 0" (click)="submitJourneyPost()">
+                    Post to {{ viewingVisitor()!.fullName }}'s Journey
+                  </button>
+                </div>
+              </div>
+            }
             @for (post of getVisitorJourneyPosts(viewingVisitor()!.id); track post.id) {
               <article class="journey-post-card">
                 <div class="post-header">
@@ -4224,9 +4462,13 @@
                       @if (post.mood) {
                         <span class="post-mood">{{ post.mood }}</span>
                       }
+                      <span class="post-audience-pill">{{ audienceLabel(post) }}</span>
                     </div>
                   </div>
 
+                  @if (canEditWallPost(post)) {
+                    <button type="button" class="btn-delete-post-mini" (click)="startEditPost(post, $event)">✏️ Edit</button>
+                  }
                   <!-- Requirements F & G: Delete post check (only if author or on own profile) -->
                   @if (canDeleteJourneyPost(post)) {
                     <button
@@ -4241,6 +4483,13 @@
                 </div>
 
                 <p class="post-body-text" [nbTranslatable]="post.text">{{ post.text }}</p>
+                @if (postHashtags(post).length) {
+                  <div class="hashtag-row">
+                    @for (tag of postHashtags(post); track tag) {
+                      <button type="button" class="hashtag-chip" (click)="openHashtag(tag, $event)">#{{ tag }}</button>
+                    }
+                  </div>
+                }
                 <!-- Post Attached Photo (Requirement E: Facebook-like photo collage layout) -->
                 @if (post.imageUrls && post.imageUrls.length > 1) {
                   <div class="post-multi-images-grid facebook-collage" [attr.data-count]="post.imageUrls.length >= 4 ? 4 : post.imageUrls.length">

@@ -1,5 +1,7 @@
+import { EXTRA_TRAVEL_MOOD_GROUPS } from './travel-moods-extra';
+
 /** Keep stored mood values as their display text for compatibility with existing Journey posts. */
-export const TRAVEL_MOOD_GROUPS = [
+const ORIGINAL_TRAVEL_MOOD_GROUPS = [
   {
     label: 'Everyday wanderlust',
     moods: [
@@ -58,3 +60,30 @@ export const TRAVEL_MOOD_GROUPS = [
     ],
   },
 ] as const;
+
+export const TRAVEL_MOOD_GROUPS = [...ORIGINAL_TRAVEL_MOOD_GROUPS, ...EXTRA_TRAVEL_MOOD_GROUPS];
+
+export interface MoodMatch {
+  kind: 'type' | 'mood';
+  label: string;
+  mood?: string;
+  type: string;
+}
+
+export function searchTravelMoods(query: string, limit = 24): MoodMatch[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const matches: MoodMatch[] = [];
+  for (const group of TRAVEL_MOOD_GROUPS) {
+    if (group.label.toLowerCase().includes(q)) {
+      matches.push({ kind: 'type', label: group.label, type: group.label });
+    }
+    for (const mood of group.moods) {
+      if (mood.toLowerCase().includes(q) || group.label.toLowerCase().includes(q)) {
+        matches.push({ kind: 'mood', label: mood, mood, type: group.label });
+      }
+    }
+    if (matches.length >= limit) break;
+  }
+  return matches.slice(0, limit);
+}

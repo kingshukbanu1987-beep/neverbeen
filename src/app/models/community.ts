@@ -419,6 +419,17 @@ export interface JourneyComment {
   replies?: JourneyComment[];
 }
 
+/** Who may see a Journey post or a share. */
+export type PostAudienceMode = 'public' | 'companions' | 'custom';
+
+export interface PostAudience {
+  mode: PostAudienceMode;
+  /** Custom: only these companions can see the post. */
+  allowIds?: number[];
+  /** Custom: these companions cannot see the post. A person cannot be in both lists. */
+  denyIds?: number[];
+}
+
 export interface JourneyPost {
   id: number;
   author: AuthorInfo;
@@ -441,6 +452,12 @@ export interface JourneyPost {
   sharedText?: string;
   originalPost?: JourneyPost;
   likers?: AuthorInfo[];
+  audience?: PostAudience;
+  hashtags?: string[];
+  /** Set when the post was written on another companion's Journey wall. */
+  wallOwnerId?: number;
+  wallOwnerName?: string;
+  editedAtUtc?: string;
 }
 
 export interface AbuseReport {
@@ -483,6 +500,8 @@ export interface Companion {
   whoCanConnect?: 'everyone' | 'companions-of-companions' | 'none';
   /** Who may open this traveler's profile. */
   whoCanVisitProfile?: 'everyone' | 'companions' | 'none';
+  /** Member ids this traveler has blocked. */
+  blockedViewerIds?: number[];
 }
 
 export interface Circle {

@@ -20,6 +20,7 @@ import {
   JourneyPost,
   LoginDevice,
   NotificationItem,
+  PostAudience,
   Profile,
   ReactionResult,
   ReactionType,
@@ -49,6 +50,9 @@ import {
   normalizeCircle,
 } from '../models/circle-seed';
 import { statusIconClass } from '../shared/presence-dot/presence-dot';
+import { inspectCommunityText } from '../pages/community/profile/content-guard';
+import { extractHashtags } from '../pages/community/profile/hashtags';
+import { StorageReport, StorageSlice, buildStorageReport, imageBytes, utf8Bytes } from '../pages/community/profile/storage-meter';
 import { AdminModerationService } from './admin-moderation.service';
 
 export const TOKEN_KEY = 'neverbeen_auth_token';
@@ -315,13 +319,20 @@ export class CommunityService {
     return this.companions().filter((c) => !this.blockedUserIds().includes(c.id) && !disabled.has(Number(c.id)));
   });
 
+  readonly contentGuardMessage = signal<string | null>(null);
+  readonly storageBlockMessage = signal<string | null>(null);
+
   readonly visibleJourneyPosts = computed(() => {
     const disabled = this.adminDisabledIds();
+    const viewerId = this.currentUser()?.id ?? 1;
     return this.journeyPosts()
       .filter((p) => !this.blockedUserIds().includes(p.author.id))
       .filter((p) => !disabled.has(Number(p.author.id)))
-      .filter((p) => !this.hiddenPostIds().includes(p.id));
+      .filter((p) => !this.hiddenPostIds().includes(p.id))
+      .filter((p) => this.canViewJourneyPost(p, viewerId));
   });
+
+  readonly storageReport = computed(() => this.measureStorage());
 
   readonly visibleNotifications = computed(() =>
     this.notifications().filter((n) => !this.blockedUserIds().includes(n.fromUser.id)),
@@ -1260,11 +1271,13 @@ export class CommunityService {
     return updated;
   }
 
-  updateAboutMeDetails(details: AboutMeDetails): void {
+  updateAboutMeDetails(details: AboutMeDetails): boolean {
+    if (this.blockedByGuard(details.intro) || this.blockedByGuard(details.aboutThePerson)) return false;
     this.profile.update((p) => (p ? { ...p, aboutMeDetails: details } : null));
     this.currentUser.update((u) => (u ? { ...u, aboutMeDetails: details } : null));
     this.saveJson(PROFILE_KEY, this.profile());
     this.saveJson(USER_KEY, this.currentUser());
+    return true;
   }
 
   readonly MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100 KB limit (Requirement A)
@@ -1273,6 +1286,7 @@ export class CommunityService {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
+    if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -1291,6 +1305,7 @@ export class CommunityService {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
+    if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -1388,6 +1403,9 @@ export class CommunityService {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
+    if (!this.storageAllows(file.size)) {
+      throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
+    }
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -1434,6 +1452,9 @@ export class CommunityService {
     imageUrl?: string,
     taggedCompanions?: AuthorInfo[],
   ): Promise<CommunityComment> {
+    if (this.blockedByGuard(text) || !this.storageAllows(utf8Bytes(text) + imageBytes(imageUrl))) {
+      throw new Error('blocked');
+    }
     const user = this.currentUser();
     const newComment: CommunityComment = {
       id: generateUniqueId(),
@@ -1579,7 +1600,12 @@ export class CommunityService {
     imageUrl?: string,
     taggedCompanions?: AuthorInfo[],
     imageUrls?: string[],
-  ): JourneyPost {
+    audience?: PostAudience,
+    wallOwner?: { id: number; fullName: string },
+  ): JourneyPost | null {
+    if (this.blockedByGuard(text)) return null;
+    const photoBytes = (imageUrls ?? (imageUrl ? [imageUrl] : [])).reduce((sum, url) => sum + imageBytes(url), 0);
+    if (!this.storageAllows(utf8Bytes(text) + photoBytes)) return null;
     const user = this.currentUser();
     const profile = this.profile();
     const allImages = imageUrls && imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : undefined);
@@ -1606,6 +1632,10 @@ export class CommunityService {
       mood: mood || undefined,
       location: location || (profile?.cityName ? `${profile.cityName}, ${profile.countryName || ''}` : undefined),
       placeId: placeId || undefined,
+      audience: audience ?? { mode: 'public', allowIds: [], denyIds: [] },
+      hashtags: extractHashtags(text),
+      wallOwnerId: wallOwner?.id,
+      wallOwnerName: wallOwner?.fullName,
     };
 
     this.journeyPosts.update((list) => [newPost, ...list]);
@@ -1613,9 +1643,11 @@ export class CommunityService {
     return newPost;
   }
 
-  shareJourneyPost(originalPostId: number, userThought?: string): JourneyPost | null {
+  shareJourneyPost(originalPostId: number, userThought?: string, audience?: PostAudience): JourneyPost | null {
     const original = this.journeyPosts().find((p) => p.id === originalPostId);
     if (!original) return null;
+    if (userThought && this.blockedByGuard(userThought)) return null;
+    if (!this.storageAllows(utf8Bytes(userThought))) return null;
 
     // Increment share count on original
     this.journeyPosts.update((list) =>
@@ -1643,11 +1675,135 @@ export class CommunityService {
       comments: [],
       isShared: true,
       originalPost: { ...original },
+      audience: audience ?? { mode: 'public', allowIds: [], denyIds: [] },
+      hashtags: extractHashtags(userThought ?? ''),
     };
 
     this.journeyPosts.update((list) => [sharedPost, ...list]);
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
     return sharedPost;
+  }
+
+  readonly WALL_EDIT_WINDOW_MS = 45 * 60 * 1000;
+
+  canViewJourneyPost(post: JourneyPost, viewerId = this.currentUser()?.id ?? 1): boolean {
+    if (post.author.id === viewerId || post.wallOwnerId === viewerId) return true;
+    if (this.authorBlockedViewer(post.author.id, viewerId)) return false;
+    const audience = post.audience ?? { mode: 'public' as const };
+    if (audience.mode === 'public') return true;
+    const connected = this.companions().some((c) => c.id === post.author.id && c.status === 'connected');
+    if (audience.mode === 'companions') return connected;
+    const allow = audience.allowIds ?? [];
+    const deny = audience.denyIds ?? [];
+    if (deny.includes(viewerId)) return false;
+    if (allow.length > 0) return allow.includes(viewerId);
+    return true;
+  }
+
+  authorBlockedViewer(authorId: number, viewerId = this.currentUser()?.id ?? 1): boolean {
+    return !!this.companions().find((c) => c.id === authorId)?.blockedViewerIds?.includes(viewerId);
+  }
+
+  postsForWall(ownerId: number): JourneyPost[] {
+    return this.visibleJourneyPosts().filter((p) => p.author.id === ownerId || p.wallOwnerId === ownerId);
+  }
+
+  postsForHashtag(tag: string): JourneyPost[] {
+    const needle = tag.replace(/^#/, '').toLowerCase();
+    const viewerId = this.currentUser()?.id ?? 1;
+    const disabled = this.adminDisabledIds();
+    return this.journeyPosts().filter((post) => {
+      const tags = (post.hashtags?.length ? post.hashtags : extractHashtags(post.text)).map((t) => t.toLowerCase());
+      if (!tags.includes(needle)) return false;
+      if (this.blockedUserIds().includes(post.author.id) || disabled.has(Number(post.author.id))) return false;
+      if (this.hiddenPostIds().includes(post.id)) return false;
+      if (this.authorBlockedViewer(post.author.id, viewerId)) return false;
+      return this.canViewJourneyPost(post, viewerId);
+    });
+  }
+
+  canEditWallPost(post: JourneyPost, now = Date.now()): boolean {
+    const me = this.currentUser()?.id ?? 1;
+    if (post.author.id !== me || !post.wallOwnerId || post.wallOwnerId === me) return false;
+    return now - new Date(post.createdAtUtc).getTime() < this.WALL_EDIT_WINDOW_MS;
+  }
+
+  updateJourneyPost(postId: number, patch: { text: string; mood?: string; audience?: PostAudience }): boolean {
+    const post = this.journeyPosts().find((p) => p.id === postId);
+    if (!post || !this.canEditWallPost(post)) return false;
+    if (this.blockedByGuard(patch.text)) return false;
+    if (!this.storageAllows(Math.max(0, utf8Bytes(patch.text) - utf8Bytes(post.text)))) return false;
+    this.journeyPosts.update((list) =>
+      list.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              text: patch.text.trim(),
+              mood: patch.mood,
+              audience: patch.audience ?? p.audience,
+              hashtags: extractHashtags(patch.text),
+              editedAtUtc: new Date().toISOString(),
+            }
+          : p,
+      ),
+    );
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    return true;
+  }
+
+  storageAllows(extraBytes = 0): boolean {
+    if (this.storageReport().used + extraBytes <= this.storageReport().limit) return true;
+    this.storageBlockMessage.set(
+      'You have used all 25 MB of profile storage. Delete posts, photos, or chats before adding anything new.',
+    );
+    return false;
+  }
+
+  private blockedByGuard(text: string | null | undefined): boolean {
+    const result = inspectCommunityText(text);
+    if (result.ok) return false;
+    this.contentGuardMessage.set(result.message);
+    return true;
+  }
+
+  private measureStorage(): StorageReport {
+    const me = this.currentUser()?.id ?? 1;
+    const profile = this.profile();
+    const mine = this.journeyPosts().filter((p) => p.author.id === me);
+    const commentText = (comments: JourneyComment[]): number =>
+      comments.reduce((sum, c) => {
+        const own = c.author.id === me ? utf8Bytes(c.text) + imageBytes(c.imageUrl) : 0;
+        return sum + own + commentText(c.replies ?? []);
+      }, 0);
+    const chatText = this.activeChatBoxes().reduce(
+      (sum, box) => sum + box.messages.filter((m) => m.senderId === me).reduce((n, m) => n + utf8Bytes(m.text), 0),
+      0,
+    );
+    const circleText = this.circles()
+      .filter((c) => c.ownerId === me || (c.memberIds ?? []).includes(me))
+      .reduce((sum, c) => sum + (c.messages ?? []).filter((m) => m.senderId === me).reduce((n, m) => n + utf8Bytes(m.text), 0), 0);
+    const book = this.comments().filter((c) => c.author.id === me);
+    const slices: StorageSlice[] = [
+      { id: 'journey-text', label: 'Journey text', color: '#6366f1', bytes: mine.reduce((n, p) => n + utf8Bytes(p.text), 0) },
+      {
+        id: 'journey-photos',
+        label: 'Journey photos',
+        color: '#f59e0b',
+        bytes: mine.reduce((n, p) => n + (p.imageUrls ?? (p.imageUrl ? [p.imageUrl] : [])).reduce((s, url) => s + imageBytes(url), 0), 0),
+      },
+      { id: 'comments', label: 'Comments', color: '#06b6d4', bytes: this.journeyPosts().reduce((n, p) => n + commentText(p.comments ?? []), 0) },
+      { id: 'messagebook', label: 'MessageBook', color: '#3b82f6', bytes: book.reduce((n, c) => n + utf8Bytes(c.text) + imageBytes(c.imageUrl), 0) },
+      { id: 'chats', label: 'Chats', color: '#8b5cf6', bytes: chatText + circleText },
+      { id: 'gallery', label: 'Gallery', color: '#ec4899', bytes: (profile?.gallery ?? []).reduce((n, photo) => n + imageBytes(photo.url) + utf8Bytes(photo.caption), 0) },
+      { id: 'profile', label: 'Profile & cover', color: '#10b981', bytes: imageBytes(profile?.profilePhotoUrl) + imageBytes(profile?.coverPhotoUrl) },
+      {
+        id: 'about',
+        label: 'About me',
+        color: '#64748b',
+        bytes: utf8Bytes(profile?.aboutMe) + utf8Bytes(profile?.aboutMeDetails?.intro) + utf8Bytes(profile?.aboutMeDetails?.aboutThePerson),
+      },
+    ];
+    return buildStorageReport(slices);
   }
 
   toggleJourneyLike(postId: number): void {
@@ -1704,6 +1860,7 @@ export class CommunityService {
     imageUrl?: string,
     taggedCompanions?: AuthorInfo[],
   ): void {
+    if (this.blockedByGuard(text) || !this.storageAllows(utf8Bytes(text) + imageBytes(imageUrl))) return;
     const user = this.currentUser();
     const newComment: JourneyComment = {
       id: generateUniqueId(),
@@ -2681,6 +2838,7 @@ export class CommunityService {
     replyTo?: { id: number; senderName: string; text: string } | null,
   ): void {
     if (!text.trim()) return;
+    if (this.blockedByGuard(text) || !this.storageAllows(utf8Bytes(text))) return;
 
     const newMsg: ChatMessage = {
       id: generateUniqueId(),
@@ -3136,6 +3294,11 @@ export class CommunityService {
       const take = expanded === 0 ? 10 : 2;
       expanded += 1;
       return { ...p, taggedCompanions: [tagged[0], ...more.slice(0, take)] };
+    }).map((p, index) => {
+      if (p.hashtags?.length || /#\w/.test(p.text)) return p;
+      if (index % 17 !== 0) return p;
+      const tags = ['alps', 'sunset', 'slowtravel', 'streetfood', 'neverbeen'];
+      return { ...p, hashtags: [tags[index % tags.length]] };
     });
   }
 

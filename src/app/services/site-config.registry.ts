@@ -117,7 +117,9 @@ export const PROFILE_SECTIONS: [string, string][] = [
   ['companions', 'Companions'],
   ['circles', 'Circles'],
   ['messenger', 'Messenger'],
+  ['birthdays', 'Birthdays'],
   ['notifications', 'Notifications'],
+  ['storage', 'Storage'],
   ['settings', 'Settings'],
 ];
 

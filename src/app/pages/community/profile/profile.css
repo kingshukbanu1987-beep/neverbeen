@@ -7562,3 +7562,75 @@
     justify-content: flex-start;
   }
 }
+
+.pill-pink { color: #ec4899; }
+.pill-teal { color: #14b8a6; }
+.hashtag-suggest, .hashtag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.45rem 0; }
+.hashtag-suggest button, .hashtag-chip {
+  border: 0;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 700;
+  padding: 0.28rem 0.65rem;
+  cursor: pointer;
+}
+.post-audience-pill, .post-wall-note {
+  margin-left: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f766e;
+}
+.storage-warning { border: 1px solid #fecaca; background: #fff7ed; }
+.storage-hero { display: grid; grid-template-columns: 180px 1fr; gap: 1.25rem; align-items: center; margin-bottom: 1.25rem; }
+.storage-pie {
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.storage-pie div {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.storage-bars { display: grid; gap: 0.7rem; }
+.storage-bar { display: grid; grid-template-columns: 160px 1fr auto; gap: 0.6rem; align-items: center; }
+.storage-bar-label { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; }
+.storage-bar-label span { width: 10px; height: 10px; border-radius: 50%; }
+.storage-track { height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.storage-track i { display: block; height: 100%; border-radius: inherit; }
+.storage-warn { color: #b45309; }
+.storage-full { color: #b91c1c; font-weight: 700; }
+.birthday-views { display: flex; gap: 0.35rem; }
+.birthday-views button, .birthday-views button.on {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  background: #f1f5f9;
+  font-weight: 700;
+}
+.birthday-views button.on { background: #0f172a; color: #fff; }
+.birthday-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.8rem; }
+.birthday-card {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fff, #fdf2f8);
+  border: 1px solid #fbcfe8;
+}
+.birthday-card img { width: 56px; height: 56px; border-radius: 16px; object-fit: cover; }
+.birthday-card strong, .birthday-card span, .birthday-card b { display: block; }
+.birthday-card textarea, .birthday-card button { grid-column: 1 / -1; }
+.birthday-belated-title { margin: 1.4rem 0 0.6rem; }
+.wall-composer-note { margin: 0 0 0.6rem; color: #0f766e; font-weight: 700; }
+@media (max-width: 720px) {
+  .storage-hero, .storage-bar { grid-template-columns: 1fr; }
+}

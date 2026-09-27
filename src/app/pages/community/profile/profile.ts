@@ -23,6 +23,7 @@ import {
   HOLD_REACTION_OPTIONS,
   JourneyComment,
   JourneyPost,
+  PostAudience,
   REACTION_ICONS,
   ReactionType,
   SocialMediaLink,
@@ -44,6 +45,11 @@ import { SelectValueSync } from '../../../shared/select-value-sync';
 import { AnnouncementInboxService, AnnouncementNotice, noticeTime, viewerProfile } from '../../../services/announcement-inbox.service';
 
 import { TRAVEL_MOOD_GROUPS } from './travel-moods';
+import { MoodPicker } from './mood-picker';
+import { PostAudienceControl } from './post-audience';
+import { birthdayCards, BirthdayCard } from './birthdays';
+import { extractHashtags, hashtagAtCursor, insertHashtag, suggestHashtags } from './hashtags';
+import { formatStorage, storagePie } from './storage-meter';
 
 export type ProfileSection =
   | 'journey'
@@ -53,7 +59,9 @@ export type ProfileSection =
   | 'companions'
   | 'circles'
   | 'messenger'
+  | 'birthdays'
   | 'notifications'
+  | 'storage'
   | 'settings';
 
 const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
@@ -64,7 +72,9 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
   'companions',
   'circles',
   'messenger',
+  'birthdays',
   'notifications',
+  'storage',
   'settings',
 ];
 
@@ -82,6 +92,8 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
     TaggedWith,
     FieldAudienceControl,
     PresenceDot,
+    MoodPicker,
+    PostAudienceControl,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
@@ -106,6 +118,14 @@ export class CommunityProfile implements OnInit {
     const circle = this.service.circles().find((c) => c.id === id);
     this.service.pendingCircleChatId.set(null);
     if (circle) this.service.openCircleChat(circle);
+  });
+
+  private readonly contentGuardEffect = effect(() => {
+    const message = this.service.contentGuardMessage() || this.service.storageBlockMessage();
+    if (!message) return;
+    this.service.contentGuardMessage.set(null);
+    this.service.storageBlockMessage.set(null);
+    void this.confirmSvc.notify(message);
   });
 
   private readonly markMessengerReadEffect = effect(() => {
@@ -165,6 +185,18 @@ export class CommunityProfile implements OnInit {
   protected newJourneyText = '';
   protected readonly travelMoodGroups = TRAVEL_MOOD_GROUPS;
   protected selectedMood = '✈️ Traveling';
+  protected postAudience: PostAudience = { mode: 'public', allowIds: [], denyIds: [] };
+  protected shareAudience: PostAudience = { mode: 'public', allowIds: [], denyIds: [] };
+  protected readonly activeHashtag = signal<string | null>(null);
+  protected readonly hashtagSuggestions = signal<{ tag: string; isNew: boolean }[]>([]);
+  protected readonly birthdayView = signal<'day' | 'week' | 'month'>('day');
+  protected readonly birthdayDrafts = signal<Record<number, string>>({});
+  protected readonly editingPostId = signal<number | null>(null);
+  protected editPostText = '';
+  protected editPostMood = '';
+  protected editAudience: PostAudience = { mode: 'public', allowIds: [], denyIds: [] };
+  protected readonly formatStorage = formatStorage;
+  protected readonly storagePie = storagePie;
   protected destinationSearchInput = '';
   protected readonly destinationSuggestions = signal<GoogleMapLocation[]>([]);
   protected readonly showDestinationDropdown = signal(false);
@@ -563,7 +595,9 @@ export class CommunityProfile implements OnInit {
   protected readonly adminNotices = computed(() => this.announcementInbox.noticesFor(this.noticeViewer()));
   protected readonly unreadNoticeCount = computed(() => this.adminNotices().filter((n) => n.unread).length);
   /** Side-panel badge: unread member notifications + unread announcements. */
-  protected readonly notifBadgeCount = computed(() => this.service.unreadNotificationCount() + this.unreadNoticeCount());
+  protected readonly notifBadgeCount = computed(
+    () => this.service.unreadNotificationCount() + this.unreadNoticeCount() + (this.service.storageReport().warning ? 1 : 0),
+  );
   /** Announcements that were unread when the Notifications section was opened (kept highlighted). */
   private readonly freshNoticeIds = signal<Set<string>>(new Set());
   protected readonly noticeTime = noticeTime;
@@ -839,7 +873,151 @@ export class CommunityProfile implements OnInit {
   }
 
   getVisitorJourneyPosts(visitorId: number): JourneyPost[] {
-    return this.service.journeyPosts().filter((p) => p.author.id === visitorId);
+    return this.service.postsForWall(visitorId);
+  }
+
+  wallTarget(): { id: number; fullName: string } | null {
+    const visitor = this.viewingVisitor();
+    const me = this.service.currentUser()?.id ?? 1;
+    if (!visitor || visitor.id === me || visitor.status !== 'connected') return null;
+    return { id: visitor.id, fullName: visitor.fullName };
+  }
+
+  canPostOnVisitorWall(): boolean {
+    return !!this.wallTarget();
+  }
+
+  onJourneyTextInput(event: Event): void {
+    const input = event.target as HTMLTextAreaElement;
+    const hit = hashtagAtCursor(input.value, input.selectionStart ?? input.value.length);
+    if (!hit) {
+      this.hashtagSuggestions.set([]);
+      return;
+    }
+    const used = this.service.journeyPosts().flatMap((post) => post.hashtags ?? extractHashtags(post.text));
+    this.hashtagSuggestions.set(suggestHashtags(hit.query, used));
+  }
+
+  applyHashtag(tag: string): void {
+    const input = document.querySelector<HTMLTextAreaElement>('.composer-textarea');
+    const cursor = input?.selectionStart ?? this.newJourneyText.length;
+    const hit = hashtagAtCursor(this.newJourneyText, cursor);
+    const start = hit?.start ?? this.newJourneyText.length;
+    const end = hit ? cursor : this.newJourneyText.length;
+    const next = insertHashtag(this.newJourneyText, start, end, tag);
+    this.newJourneyText = next.text;
+    this.hashtagSuggestions.set([]);
+  }
+
+  postHashtags(post: JourneyPost): string[] {
+    return post.hashtags?.length ? post.hashtags : extractHashtags(post.text);
+  }
+
+  audienceLabel(post: JourneyPost): string {
+    const mode = post.audience?.mode ?? 'public';
+    if (mode === 'companions') return 'Companions';
+    if (mode === 'custom') {
+      const allow = post.audience?.allowIds?.length ?? 0;
+      const deny = post.audience?.denyIds?.length ?? 0;
+      if (allow && deny) return `${allow} can see`;
+      if (allow) return `${allow} selected`;
+      if (deny) return `${deny} excluded`;
+      return 'Custom';
+    }
+    return 'Public';
+  }
+
+  openHashtag(tag: string, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    this.activeHashtag.set(tag.replace(/^#/, '').toLowerCase());
+    if (this.viewingVisitor()) this.closeVisitorProfile();
+    this.applySection('journey');
+  }
+
+  closeHashtag(): void {
+    this.activeHashtag.set(null);
+  }
+
+  hashtagPosts(): JourneyPost[] {
+    const tag = this.activeHashtag();
+    return tag ? this.service.postsForHashtag(tag) : [];
+  }
+
+  canEditWallPost(post: JourneyPost): boolean {
+    return this.service.canEditWallPost(post);
+  }
+
+  startEditPost(post: JourneyPost, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (!this.canEditWallPost(post)) {
+      void this.confirmSvc.notify('This post can only be edited within 45 minutes of posting it on a companion’s Journey.');
+      return;
+    }
+    this.editingPostId.set(post.id);
+    this.editPostText = post.text;
+    this.editPostMood = post.mood || this.selectedMood;
+    this.editAudience = {
+      mode: post.audience?.mode ?? 'public',
+      allowIds: [...(post.audience?.allowIds ?? [])],
+      denyIds: [...(post.audience?.denyIds ?? [])],
+    };
+  }
+
+  saveEditPost(): void {
+    const id = this.editingPostId();
+    if (id == null) return;
+    const ok = this.service.updateJourneyPost(id, {
+      text: this.editPostText,
+      mood: this.editPostMood,
+      audience: this.editAudience,
+    });
+    if (ok) this.editingPostId.set(null);
+  }
+
+  readonly birthdayCards = computed(() => birthdayCards(this.connectedCompanions()));
+
+  birthdaysFor(view: 'day' | 'week' | 'month'): BirthdayCard[] {
+    const cards = this.birthdayCards();
+    if (view === 'day') return cards.filter((card) => card.when === 'today' || card.when === 'tomorrow');
+    if (view === 'week') return cards.filter((card) => card.dayOffset >= 0 && card.dayOffset <= 7);
+    const month = new Date().getMonth();
+    return cards.filter((card) => card.dayOffset >= 0 && card.date.getMonth() === month);
+  }
+
+  belatedBirthdays(): BirthdayCard[] {
+    return this.birthdayCards().filter((card) => card.when === 'belated');
+  }
+
+  birthdayDraft(id: number): string {
+    return this.birthdayDrafts()[id] ?? '';
+  }
+
+  setBirthdayDraft(id: number, value: string): void {
+    this.birthdayDrafts.update((drafts) => ({ ...drafts, [id]: value }));
+  }
+
+  postBirthdayWish(card: BirthdayCard): void {
+    const text = this.birthdayDraft(card.companion.id).trim();
+    if (!text) return;
+    const created = this.service.createJourneyPost(
+      text,
+      '🎂 Birthday Wish',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { mode: 'companions', allowIds: [], denyIds: [] },
+      { id: card.companion.id, fullName: card.companion.fullName },
+    );
+    if (!created) return;
+    this.setBirthdayDraft(card.companion.id, '');
+  }
+
+  storageSlices() {
+    return this.service.storageReport().slices;
   }
 
   openImageModal(url: string): void {
@@ -1134,7 +1312,8 @@ export class CommunityProfile implements OnInit {
       const allPreviews = this.journeyPhotoPreviews();
       const primaryPhoto = allPreviews[0] || this.journeyPhotoPreview() || undefined;
 
-      this.service.createJourneyPost(
+      const wall = this.wallTarget();
+      const created = this.service.createJourneyPost(
         this.newJourneyText,
         this.selectedMood,
         locationTag,
@@ -1144,8 +1323,13 @@ export class CommunityProfile implements OnInit {
           ? [...this.selectedJourneyTaggedCompanions()]
           : undefined,
         allPreviews.length > 0 ? allPreviews : (primaryPhoto ? [primaryPhoto] : undefined),
+        this.postAudience,
+        wall ?? undefined,
       );
+      if (!created) return;
       this.newJourneyText = '';
+      this.postAudience = { mode: 'public', allowIds: [], denyIds: [] };
+      this.hashtagSuggestions.set([]);
       this.selectedJourneyTaggedCompanions.set([]);
       this.selectedGoogleLocation.set(null);
       this.destinationSearchInput = '';
@@ -1259,7 +1443,9 @@ export class CommunityProfile implements OnInit {
     const post = this.postToShare();
     if (!post) return;
 
-    this.service.shareJourneyPost(post.id, this.shareThoughtText);
+    const shared = this.service.shareJourneyPost(post.id, this.shareThoughtText, this.shareAudience);
+    if (!shared) return;
+    this.shareAudience = { mode: 'public', allowIds: [], denyIds: [] };
     this.closeShareModal();
     this.setSection('journey');
   }
@@ -1680,7 +1866,7 @@ export class CommunityProfile implements OnInit {
       visibility: { ...this.aboutVisibility },
     };
 
-    this.service.updateAboutMeDetails(details);
+    if (!this.service.updateAboutMeDetails(details)) return;
     this.editingAboutMe.set(false);
   }
 
@@ -2403,9 +2589,12 @@ export class CommunityProfile implements OnInit {
           ? [...this.selectedMessageBookTaggedCompanions()]
           : undefined,
       );
+      if (this.service.contentGuardMessage() || this.service.storageBlockMessage()) return;
       this.newPostText = '';
       this.selectedMessageBookTaggedCompanions.set([]);
       this.clearMessageBookPhoto();
+    } catch {
+      // The content guard or storage limit already raised a popup.
     } finally {
       this.postingPost.set(false);
     }
@@ -2611,6 +2800,7 @@ export class CommunityProfile implements OnInit {
         }
       : null;
     this.service.sendChatMessage(box.companionId, box.draftText, replyTo);
+    if (this.service.contentGuardMessage() || this.service.storageBlockMessage()) return;
     box.draftText = '';
     box.replyingToMessage = null;
     this.activeEmojiTrayCompanionId.set(null);

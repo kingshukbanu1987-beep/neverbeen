@@ -53,7 +53,7 @@ describe('CommunityProfile', () => {
     const menuButtons = Array.from(leftPanel!.querySelectorAll<HTMLButtonElement>('.menu-btn'));
     const menuLabels = menuButtons.map((b) => b.textContent?.trim());
 
-    // Verify order: About me, Journey, Gallery, MessageBook, Companions, Circles, Messenger, Notifications, Settings, Log Out
+    // Verify order: About me, Journey, Gallery, MessageBook, Companions, Circles, Messenger, Birthdays, Notifications, Storage, Settings, Log Out
     expect(menuLabels[0]).toContain('About me');
     expect(menuLabels[1]).toContain('Journey');
     expect(menuLabels[2]).toContain('Gallery');
@@ -61,13 +61,15 @@ describe('CommunityProfile', () => {
     expect(menuLabels[4]).toContain('Companions');
     expect(menuLabels[5]).toContain('Circles');
     expect(menuLabels[6]).toContain('Messenger');
-    expect(menuLabels[7]).toContain('Notifications');
-    expect(menuLabels[8]).toContain('Settings');
-    expect(menuLabels[9]).toContain('Log Out');
+    expect(menuLabels[7]).toContain('Birthdays');
+    expect(menuLabels[8]).toContain('Notifications');
+    expect(menuLabels[9]).toContain('Storage');
+    expect(menuLabels[10]).toContain('Settings');
+    expect(menuLabels[11]).toContain('Log Out');
 
     // Verify colorful icon badges
     const iconPills = Array.from(leftPanel!.querySelectorAll('.icon-pill'));
-    expect(iconPills.length).toBe(10);
+    expect(iconPills.length).toBe(12);
     expect(leftPanel!.querySelector('.pill-violet')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-emerald')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-amber')).toBeTruthy();
@@ -151,17 +153,12 @@ describe('CommunityProfile', () => {
     const fixture = create();
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
-    const select = element.querySelector<HTMLSelectElement>('#journey-travel-mood')!;
     expect(element.querySelector('label[for="journey-travel-mood"]')?.textContent).toContain('Travel Mood');
-    expect(select.value).toBe('✈️ Traveling');
-    expect(select.querySelectorAll('optgroup').length).toBe(5);
     const moods = TRAVEL_MOOD_GROUPS.flatMap((group) => [...group.moods]);
-    expect(Array.from(select.options).map((option) => option.value)).toEqual(moods);
-    expect(new Set(moods).size).toBe(32);
+    expect(TRAVEL_MOOD_GROUPS.length).toBe(80);
+    expect(new Set(moods).size).toBe(232);
     for (const mood of ['🌌 Aurora Hunting', '🍜 Street Food Quest', '🧳 Solo & Thriving']) {
-      select.value = mood;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      await fixture.whenStable();
+      fixture.componentInstance['selectedMood'] = mood;
       fixture.componentInstance['newJourneyText'] = `Enjoying ${mood}`;
       fixture.componentInstance.submitJourneyPost();
       fixture.detectChanges();
@@ -820,7 +817,7 @@ describe('CommunityProfile', () => {
     const element: HTMLElement = fixture.nativeElement;
 
     const navButtons = element.querySelectorAll<HTMLButtonElement>('.side-menu-nav .menu-btn');
-    expect(navButtons.length).toBe(10);
+    expect(navButtons.length).toBe(12);
 
     navButtons.forEach((btn) => {
       const pill = btn.querySelector('.icon-pill');
