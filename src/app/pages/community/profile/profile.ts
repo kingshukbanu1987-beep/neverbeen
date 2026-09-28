@@ -57,6 +57,7 @@ export type ProfileSection =
   | 'journey'
   | 'about'
   | 'gallery'
+  | 'games'
   | 'messagebook'
   | 'companions'
   | 'followers'
@@ -72,6 +73,7 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
   'journey',
   'about',
   'gallery',
+  'games',
   'messagebook',
   'companions',
   'followers',
@@ -404,6 +406,27 @@ export class CommunityProfile implements OnInit {
   protected readonly galleryPreviewUrl = signal<string | null>(null);
   protected readonly galleryError = signal<string | null>(null);
   protected newCaption = '';
+
+  // Games hub
+  protected readonly selectedGame = signal<string | null>(null);
+  protected readonly ticBoard = signal<(string | null)[]>(Array(9).fill(null));
+  protected readonly ticStatus = signal('Your turn');
+  protected readonly gameScore = signal({ wins: 0, ai: 0 });
+  protected readonly gameCategories = ['🌍 Famous landmark', '🏖️ Beach', '🏔️ Mountain', '🏙️ City', '🕌 Historical place', '🐼 Animals', '🍜 Food', '✈️ Travel destination'];
+
+  selectGame(game: string): void { this.selectedGame.set(game); }
+  resetTicTacToe(): void { this.ticBoard.set(Array(9).fill(null)); this.ticStatus.set('Your turn'); }
+  playTicCell(index: number): void {
+    if (this.selectedGame() !== 'Tic-Tac-Toe' || this.ticBoard()[index] || this.ticStatus() !== 'Your turn') return;
+    const board = [...this.ticBoard()]; board[index] = 'X'; this.ticBoard.set(board);
+    if (this.gameWinner(board)) { this.ticStatus.set('You win!'); this.gameScore.update(s => ({ ...s, wins: s.wins + 1 })); return; }
+    const open = board.map((v, i) => v ? -1 : i).filter(i => i >= 0);
+    if (!open.length) { this.ticStatus.set('Draw game'); return; }
+    const ai = open[Math.floor(Math.random() * open.length)]; board[ai] = 'O'; this.ticBoard.set(board);
+    this.ticStatus.set(this.gameWinner(board) ? 'NeverBeen AI wins' : 'Your turn');
+    if (this.gameWinner(board)) this.gameScore.update(s => ({ ...s, ai: s.ai + 1 }));
+  }
+  private gameWinner(board: (string | null)[]): boolean { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(line => !!board[line[0]] && board[line[0]] === board[line[1]] && board[line[1]] === board[line[2]]); }
 
   // MessageBook state
   protected newPostText = '';

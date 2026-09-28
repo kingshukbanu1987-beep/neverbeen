@@ -351,7 +351,15 @@
           </button>
           }
 
-          <!-- 4. MessageBook -->
+          <!-- 4. Games -->
+          @if (profileSectionOn('games')) {
+          <button type="button" class="menu-btn" [class.active]="!viewingVisitor() && activeSection() === 'games'" (click)="setSection('games')">
+            <span class="icon-pill pill-violet"><span class="games-menu-icon">🎮</span></span>
+            <span class="menu-label">Games</span>
+          </button>
+          }
+
+          <!-- 5. MessageBook -->
           @if (profileSectionOn('messagebook')) {
           <button
             type="button"
@@ -1992,7 +2000,32 @@
         }
 
         <!-- ================================================================= -->
-        <!-- SECTION 4: MESSAGEBOOK (Personal to user and companions only)      -->
+        <!-- SECTION 4: GAMES                                                   -->
+        <!-- ================================================================= -->
+        @if (activeSection() === 'games') {
+          <section class="section-pane games-pane">
+            <header class="games-hero"><div><span class="games-kicker">NeverBeen Play</span><h1 class="section-title">Games</h1><p class="section-desc">Travel farther from wherever you are. Learn, explore, and challenge yourself.</p></div><div class="games-trophy">✦</div></header>
+            @if (!selectedGame()) {
+              <div class="games-grid">
+                <button type="button" class="game-tile flag-game" (click)="selectGame('Flag Challenge')"><span class="game-tile-icon">🚩</span><strong>Flag Challenge</strong><small>Identify country flags</small><em>Play now →</em></button>
+                <button type="button" class="game-tile quiz-game" (click)="selectGame('Travel Quiz')"><span class="game-tile-icon">✈️</span><strong>Travel Quiz</strong><small>Countries, food, landmarks & culture</small><em>Play now →</em></button>
+                <button type="button" class="game-tile country-game" (click)="selectGame('Guess the Country')"><span class="game-tile-icon">🌍</span><strong>Guess the Country</strong><small>Identify a landmark or photo</small><em>Play now →</em></button>
+                <button type="button" class="game-tile puzzle-game" (click)="selectGame('Jigsaw Puzzle')"><span class="game-tile-icon">🧩</span><strong>Jigsaw Puzzle</strong><small>Arrange travel photos correctly</small><em>Choose a category →</em></button>
+                <button type="button" class="game-tile tic-game" (click)="selectGame('Tic-Tac-Toe'); resetTicTacToe()"><span class="game-tile-icon">🎮</span><strong>Tic-Tac-Toe</strong><small>Play against NeverBeen AI</small><em>Play now →</em></button>
+                <button type="button" class="game-tile chess-game" (click)="selectGame('Chess')"><span class="game-tile-icon">♟️</span><strong>Chess</strong><small>Challenge NeverBeen AI</small><em>Play now →</em></button>
+              </div>
+            } @else {
+              <section class="game-stage"><button type="button" class="game-back" (click)="selectedGame.set(null)">← All games</button><div class="game-stage-heading"><span>{{ selectedGame() === 'Jigsaw Puzzle' ? '🧩' : selectedGame() === 'Chess' ? '♟️' : '✨' }}</span><div><h2>{{ selectedGame() }}</h2><p>{{ selectedGame() === 'Jigsaw Puzzle' ? 'Choose a photo category to begin.' : 'A mindful travel challenge, made for curious explorers.' }}</p></div></div>
+                @if (selectedGame() === 'Jigsaw Puzzle') { <div class="puzzle-categories">@for (category of gameCategories; track category) { <button type="button" (click)="ticStatus.set(category + ' puzzle ready')"><span>{{ category.split(' ')[0] }}</span>{{ category.substring(category.indexOf(' ') + 1) }}<small>4 photos</small></button> }</div> }
+                @else if (selectedGame() === 'Tic-Tac-Toe') { <div class="tic-score"><span>You {{ gameScore().wins }}</span><b>{{ ticStatus() }}</b><span>AI {{ gameScore().ai }}</span></div><div class="tic-board">@for (cell of ticBoard(); track $index) { <button type="button" (click)="playTicCell($index)" [class.x]="cell === 'X'" [class.o]="cell === 'O'">{{ cell }}</button> }</div><button type="button" class="btn-primary-action" (click)="resetTicTacToe()">New round</button> }
+                @else { <div class="coming-game"><span>🧭</span><h3>Your next adventure starts here</h3><p>{{ selectedGame() }} is ready for its first round. Choose Play to begin exploring.</p><button type="button" class="btn-primary-action" (click)="ticStatus.set('Round ready — good luck!')">Start round</button><strong>{{ ticStatus() }}</strong></div> }
+              </section>
+            }
+          </section>
+        }
+
+        <!-- ================================================================= -->
+        <!-- SECTION 5: MESSAGEBOOK (Personal to user and companions only)      -->
         <!-- ================================================================= -->
         @if (activeSection() === 'messagebook') {
           <section class="section-pane messagebook-pane">
