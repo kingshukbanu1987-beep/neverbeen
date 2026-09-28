@@ -299,6 +299,7 @@ export interface GalleryAlbum {
   name: string;
   photos: GalleryPhoto[];
   coverPhotoId?: number;
+  privacy?: 'public' | 'companions' | 'only-me';
   isDefault?: boolean;
   updatedAtUtc: string;
 }

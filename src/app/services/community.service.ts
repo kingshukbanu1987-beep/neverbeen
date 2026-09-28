@@ -1479,9 +1479,11 @@ export class CommunityService {
     const profile = this.profile();
     if (!profile) return [];
     const saved = profile.galleryAlbums ?? [];
-    const defaults: GalleryAlbum[] = ['Profile Photos', 'Cover Photos'].map((name, index) => ({
-      id: -(index + 1), name, photos: [], isDefault: true, updatedAtUtc: new Date(0).toISOString(),
-    }));
+    const defaults: GalleryAlbum[] = ['Profile Photos', 'Cover Photos'].map((name, index) => {
+      const image = index === 0 ? profile.profilePhotoUrl : profile.coverPhotoUrl;
+      const photo = image ? { id: -(index + 1), url: image, caption: name, createdAtUtc: new Date().toISOString() } : undefined;
+      return { id: -(index + 1), name, photos: photo ? [photo] : [], coverPhotoId: photo?.id, privacy: saved.find((item) => item.name === name)?.privacy || 'public', isDefault: true, updatedAtUtc: new Date().toISOString() };
+    });
     return [...defaults, ...saved.filter((album) => !defaults.some((item) => item.name === album.name)).sort((a, b) => b.updatedAtUtc.localeCompare(a.updatedAtUtc))];
   }
 
@@ -1496,6 +1498,18 @@ export class CommunityService {
 
   setGalleryAlbumCover(albumId: number, photoId: number): void {
     this.profile.update((p) => p ? { ...p, galleryAlbums: (p.galleryAlbums ?? []).map((a) => a.id === albumId ? { ...a, coverPhotoId: photoId, updatedAtUtc: new Date().toISOString() } : a) } : null);
+    this.saveJson(PROFILE_KEY, this.profile());
+  }
+
+  setGalleryAlbumPrivacy(albumId: number, privacy: GalleryAlbum['privacy']): void {
+    if (!privacy) return;
+    this.profile.update((p) => {
+      if (!p) return null;
+      const name = albumId === -1 ? 'Profile Photos' : albumId === -2 ? 'Cover Photos' : undefined;
+      const albums = p.galleryAlbums ?? [];
+      if (name && !albums.some((a) => a.name === name)) return { ...p, galleryAlbums: [...albums, { id: albumId, name, photos: [], privacy, isDefault: true, updatedAtUtc: new Date().toISOString() }] };
+      return { ...p, galleryAlbums: albums.map((a) => a.id === albumId ? { ...a, privacy, updatedAtUtc: new Date().toISOString() } : a) };
+    });
     this.saveJson(PROFILE_KEY, this.profile());
   }
 

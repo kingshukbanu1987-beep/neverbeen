@@ -1916,15 +1916,24 @@
               <input [(ngModel)]="newAlbumName" placeholder="New album name" aria-label="New album name" />
               <button type="button" class="btn-primary-action btn-sm" (click)="createGalleryAlbum()" [disabled]="!newAlbumName.trim()">+ Create album</button>
             </div>
+            @if (openedGalleryAlbum(); as album) {
+              <section class="album-viewer" aria-label="Open album">
+                <div class="album-viewer-head"><button type="button" class="album-back" (click)="closeGalleryAlbum()">← All albums</button><div><span class="album-eyebrow">Album</span><h2>{{ album.name }}</h2><p>{{ album.photos.length }} photos · Your private album space</p></div><select class="album-privacy" [value]="album.privacy || 'public'" (change)="setAlbumPrivacy(album, $event)" ><option value="public">🌐 Public</option><option value="companions">👥 Companions</option><option value="only-me">🔒 Only me</option></select></div>
+                <div class="album-photo-grid">
+                  @for (photo of album.photos; track photo.id) { <figure><img [src]="photo.url" [alt]="photo.caption || album.name" (click)="openImageModal(photo.url)" /><figcaption>{{ photo.caption || 'Photo' }}</figcaption></figure> } @empty { <div class="album-empty"><strong>This album is ready for memories.</strong><span>Upload a photo to get started.</span></div> }
+                </div>
+              </section>
+            } @else {
             <div class="album-grid">
               @for (album of galleryAlbums(); track album.id) {
-                <button type="button" class="album-card" [class.selected]="selectedGalleryAlbumId() === album.id" (click)="selectedGalleryAlbumId.set(album.isDefault ? undefined : album.id); showUploadCard.set(true)">
+                <button type="button" class="album-card" [class.selected]="selectedGalleryAlbumId() === album.id" (click)="openGalleryAlbum(album)">
                   <div class="album-cover"><img [src]="albumCover(album)?.url || (album.name === 'Profile Photos' ? (service.profile()?.profilePhotoUrl || defaultAvatar) : (service.profile()?.coverPhotoUrl || defaultCoverPhoto))" [alt]="album.name" /></div>
                   <span class="album-name">{{ album.name }}</span><small>{{ album.photos.length }} photos · {{ album.isDefault ? 'Default' : 'Custom' }}</small>
                   @if (album.photos.length > 1 && !album.isDefault) { <select class="album-cover-select" aria-label="Choose album cover" (change)="chooseAlbumCover(album, $event)"><option value="">Choose cover</option>@for (photo of album.photos; track photo.id) { <option [value]="photo.id" [selected]="photo.id === album.coverPhotoId">Photo {{ $index + 1 }}</option> }</select> }
                 </button>
               }
             </div>
+            }
 
             <!-- Upload Card -->
             @if (showUploadCard()) {

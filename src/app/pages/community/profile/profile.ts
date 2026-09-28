@@ -397,6 +397,7 @@ export class CommunityProfile implements OnInit {
   // Gallery state
   protected readonly showUploadCard = signal(false);
   protected readonly selectedGalleryAlbumId = signal<number | undefined>(undefined);
+  protected readonly openGalleryAlbumId = signal<number | null>(null);
   protected newAlbumName = '';
   protected readonly uploadingGallery = signal(false);
   protected readonly selectedGalleryFile = signal<File | null>(null);
@@ -1084,6 +1085,14 @@ export class CommunityProfile implements OnInit {
     const photoId = Number((event.target as HTMLSelectElement).value);
     if (photoId) this.service.setGalleryAlbumCover(album.id, photoId);
   }
+  openGalleryAlbum(album: GalleryAlbum): void {
+    this.openGalleryAlbumId.set(album.id);
+    this.selectedGalleryAlbumId.set(album.isDefault ? undefined : album.id);
+    this.showUploadCard.set(true);
+  }
+  closeGalleryAlbum(): void { this.openGalleryAlbumId.set(null); this.showUploadCard.set(false); }
+  openedGalleryAlbum(): GalleryAlbum | undefined { return this.galleryAlbums().find((album) => album.id === this.openGalleryAlbumId()); }
+  setAlbumPrivacy(album: GalleryAlbum, event: Event): void { this.service.setGalleryAlbumPrivacy(album.id, (event.target as HTMLSelectElement).value as GalleryAlbum['privacy']); }
 
   createGalleryAlbum(): void {
     const album = this.service.createGalleryAlbum(this.newAlbumName);
