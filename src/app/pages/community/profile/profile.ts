@@ -449,6 +449,21 @@ export class CommunityProfile implements OnInit {
   protected readonly dinoSpeedMode = signal<'Relaxed' | 'Classic' | 'Fast'>('Relaxed');
   private readonly dinoSpeedMultipliers = { Relaxed: 0.65, Classic: 1, Fast: 1.35 };
   private dinoTimer?: ReturnType<typeof setInterval>;
+  protected readonly fruitScore = signal(0);
+  protected readonly fruitBest = signal(0);
+  protected readonly fruitLives = signal(3);
+  protected readonly fruitTime = signal(60);
+  protected readonly fruitRunning = signal(false);
+  protected readonly fruitOver = signal(false);
+  protected readonly fruitFlights = signal<{id:number;x:number;y:number;vx:number;vy:number;emoji:string;cut:boolean}[]>([]);
+  protected readonly fruitCombo = signal(0);
+  protected readonly fruitMessage = signal('');
+  protected readonly fruitDestination = signal('🏝️ Bali');
+  protected readonly fruitMode = signal<'Classic'|'Time Challenge'>('Classic');
+  private fruitTimer?: ReturnType<typeof setInterval>;
+  private fruitNextId = 0;
+  private fruitPointer: {x:number;y:number}|null = null;
+  private fruitLastCutAt = 0;
   private dinoVelocity = 0;
   private dinoDistance = 0;
   protected readonly chessPieces = signal<string[]>(['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟','','','','','','','','','♙','♙','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔','♗','♘','♖']);
@@ -456,6 +471,9 @@ export class CommunityProfile implements OnInit {
   protected readonly puzzleCategory = signal<string | null>(null);
   protected readonly puzzlePieces = signal<number[]>([0,1,2,3,4,5,6,7,8]);
   protected readonly puzzleImage = signal<string | null>(null);
+  protected startFruitCutter(): void { clearInterval(this.fruitTimer); try { this.fruitBest.set(Number(localStorage.getItem('neverbeen-fruit-best'))||this.fruitBest()); } catch {} this.fruitScore.set(0); this.fruitLives.set(3); this.fruitTime.set(60); this.fruitCombo.set(0); this.fruitMessage.set(''); this.fruitOver.set(false); this.fruitFlights.set([]); this.fruitRunning.set(true); this.fruitNextId=0; let ticks=0; this.fruitTimer=setInterval(()=>{ if(!this.fruitRunning())return; ticks++; if(this.fruitMode()==='Time Challenge' && ticks%50===0){this.fruitTime.update(t=>Math.max(0,t-1));if(this.fruitTime()===0)this.endFruitCutter('Time is up!');} const speed=1+this.fruitScore()/350; let flights=this.fruitFlights().map(f=>({...f,x:f.x+f.vx*speed,y:f.y+f.vy*speed,vy:f.vy+.055*speed})).filter(f=>f.y<115&&!f.cut); if(Math.random()<.025+Math.min(.04,this.fruitScore()/8000)){const fruits=['🍎','🍊','🍉','🍌','🍇','🍓','🥝']; flights.push({id:this.fruitNextId++,x:15+Math.random()*70,y:105,vx:(Math.random()-.5)*.5,vy:-2.3-Math.random()*1.5,emoji:Math.random()<.13?'💣':fruits[Math.floor(Math.random()*fruits.length)],cut:false});} this.fruitFlights.set(flights); },20); }
+  protected fruitPointerEvent(event: PointerEvent, phase: 'start'|'move'|'end'): void { const target=event.currentTarget as HTMLElement; const rect=target.getBoundingClientRect(); const point={x:(event.clientX-rect.left)/rect.width*100,y:(event.clientY-rect.top)/rect.height*100}; if(phase==='start'){this.fruitPointer=point;target.setPointerCapture(event.pointerId);return;} if(phase==='move'&&this.fruitPointer&&this.fruitRunning()){const previous=this.fruitPointer;let lives=this.fruitLives(),score=this.fruitScore(),combo=this.fruitCombo(),message='';const now=Date.now();let flights=this.fruitFlights().map(f=>{const dist=Math.hypot((f.x-point.x)*.75,f.y-point.y);if(!f.cut&&dist<7){if(f.emoji==='💣'){lives--;combo=0;message='💥 Bomb!';}else{combo=now-this.fruitLastCutAt<850?combo+1:1;this.fruitLastCutAt=now;score+=10+(combo>1?Math.min(50,(combo-1)*5):0);message=combo>1?`✈️ ${combo} fruit combo!`:'✈️ +10 travel points';}return {...f,cut:true};}return f;}); this.fruitFlights.set(flights);this.fruitLives.set(lives);this.fruitScore.set(score);this.fruitCombo.set(combo);const destinations=['🏝️ Bali','🏖️ Penang','🍊 Valencia','🍓 Kyoto','🥝 New Zealand'];this.fruitDestination.set(destinations[Math.min(destinations.length-1,Math.floor(score/100))]);if(message)this.fruitMessage.set(message);if(lives<=0)this.endFruitCutter('Bomb hit!');else if(score>0){this.fruitBest.set(Math.max(this.fruitBest(),score));try{localStorage.setItem('neverbeen-fruit-best',String(this.fruitBest()));}catch{}}this.fruitPointer=point;return;} if(phase==='end')this.fruitPointer=null; }
+  private endFruitCutter(message:string): void { clearInterval(this.fruitTimer);this.fruitRunning.set(false);this.fruitOver.set(true);this.fruitMessage.set(message); }
   protected startDino(): void { clearInterval(this.dinoTimer); this.dinoScore.set(0); this.dinoPlayerY.set(0); this.dinoVelocity=0; this.dinoDistance=0; this.dinoObstacles.set([]); this.dinoItems.set([]); this.dinoOver.set(false); this.dinoRunning.set(true); this.dinoTimer=setInterval(()=>this.tickDino(),40); }
   protected dinoJump(): void { if (this.dinoRunning() && this.dinoPlayerY()===0) this.dinoVelocity=13; }
   protected setDinoDuck(value:boolean): void { this.dinoDucking.set(value); }
