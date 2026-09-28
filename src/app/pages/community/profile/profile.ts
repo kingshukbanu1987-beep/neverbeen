@@ -426,7 +426,14 @@ export class CommunityProfile implements OnInit {
   protected readonly snakeDirection = signal<'up' | 'down' | 'left' | 'right'>('right');
   protected readonly snakeRunning = signal(false);
   protected readonly snakeScore = signal(0);
+  protected readonly flappyBirdY = signal(50);
+  protected readonly flappyVelocity = signal(0);
+  protected readonly flappyPipeX = signal(100);
+  protected readonly flappyGap = signal(48);
+  protected readonly flappyScore = signal(0);
+  protected readonly flappyRunning = signal(false);
   private snakeTimer?: ReturnType<typeof setInterval>;
+  private flappyTimer?: ReturnType<typeof setInterval>;
   protected readonly chessPieces = signal<string[]>(['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟','','','','','','','','','♙','♙','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔','♗','♘','♖']);
   protected readonly chessSelected = signal<number | null>(null);
   protected readonly puzzleCategory = signal<string | null>(null);
@@ -450,6 +457,7 @@ export class CommunityProfile implements OnInit {
     if (game === 'Chess') this.gamePrompt.set('You play White. Select a piece to begin — NeverBeen AI will query its live move service.');
     if (game === 'Ludo') this.gamePrompt.set('Roll the dice to race your token against NeverBeen AI.');
     if (game === 'NeverBeen Snake') this.startSnake();
+    if (game === 'Flappy Bird') this.startFlappy();
   }
   private async liveJson<T>(url: string): Promise<T> { const response = await fetch(url); if (!response.ok) throw new Error(`Live game service returned ${response.status}`); return response.json() as Promise<T>; }
   private async loadLiveFlags(): Promise<void> {
@@ -472,11 +480,15 @@ export class CommunityProfile implements OnInit {
   resetCrossword(): void { this.crosswordAnswers.set(Array(5).fill('')); this.gameFeedback.set(null); }
   async rollLudoDice(): Promise<void> { this.gameLoading.set(true); this.gameSource.set('Live randomizer · Random.org'); try { const response = await fetch('https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new'); const value = Number((await response.text()).trim()); this.ludoRoll.set(Number.isFinite(value) ? value : 1); this.gameFeedback.set(`You rolled ${value}! NeverBeen AI is moving its token.`); } catch { const value = Math.floor(Math.random() * 6) + 1; this.ludoRoll.set(value); this.gameFeedback.set(`You rolled ${value}! Offline fallback used while NeverBeen AI moves.`); } finally { this.gameLoading.set(false); } }
   answerGame(answer: string): void { const correct = this.selectedGame() === 'Flag Challenge' ? this.liveFlagAnswer : this.liveQuizAnswer; this.gameFeedback.set(answer === correct ? 'Correct! NeverBeen AI says well played.' : `Not quite — the answer is ${correct || 'not available'}. Try another live round!`); }
+  startFlappy(): void { this.stopFlappy(); this.flappyBirdY.set(50); this.flappyVelocity.set(0); this.flappyPipeX.set(100); this.flappyScore.set(0); this.flappyRunning.set(true); this.gameFeedback.set(null); this.flappyTimer = setInterval(() => this.tickFlappy(), 45); }
+  stopFlappy(): void { if (this.flappyTimer) { clearInterval(this.flappyTimer); this.flappyTimer = undefined; } this.flappyRunning.set(false); }
+  flap(): void { if (!this.flappyRunning()) this.startFlappy(); this.flappyVelocity.set(-1.8); }
+  tickFlappy(): void { const y = this.flappyBirdY() + this.flappyVelocity(); const velocity = this.flappyVelocity() + .075; let pipe = this.flappyPipeX() - .8; if (pipe < -12) { pipe = 100; this.flappyScore.update(score => score + 1); } const gap = this.flappyGap(); const collision = y < 0 || y > 94 || (pipe < 22 && pipe > 8 && (y < gap - 18 || y > gap + 18)); if (collision) { this.stopFlappy(); this.gameFeedback.set(`Game over! Score ${this.flappyScore()}. Tap Flap to try again.`); return; } this.flappyBirdY.set(y); this.flappyVelocity.set(velocity); this.flappyPipeX.set(pipe); }
   startSnake(): void { this.stopSnake(); this.snakeBody.set([78,77,76]); this.snakeFood.set(55); this.snakeDirection.set('right'); this.snakeScore.set(0); this.snakeRunning.set(true); this.snakeTimer = setInterval(() => this.moveSnake(), Math.max(75, 170 - this.snakeScore() * 6)); }
   stopSnake(): void { if (this.snakeTimer) { clearInterval(this.snakeTimer); this.snakeTimer = undefined; } this.snakeRunning.set(false); }
   moveSnake(): void { const body = this.snakeBody(), head = body[0], row = Math.floor(head / 12), col = head % 12; const d = this.snakeDirection(); const next = d === 'up' ? head - 12 : d === 'down' ? head + 12 : d === 'left' ? (col === 0 ? -1 : head - 1) : (col === 11 ? -1 : head + 1); if (next < 0 || next >= 144 || body.includes(next) || (d === 'up' && row === 0) || (d === 'down' && row === 11)) { this.stopSnake(); this.gameFeedback.set(`Game over! Score ${this.snakeScore()}. NeverBeen AI applauds your run.`); return; } const grown = [next, ...body]; if (next === this.snakeFood()) { this.snakeScore.update(s => s + 1); let food = Math.floor(Math.random() * 144); while (grown.includes(food)) food = Math.floor(Math.random() * 144); this.snakeFood.set(food); } else grown.pop(); this.snakeBody.set(grown); }
   @HostListener('window:keydown', ['$event'])
-  onGameKey(event: KeyboardEvent): void { if (this.selectedGame() !== 'NeverBeen Snake') return; const key = event.key.toLowerCase(); const map: Record<string, 'up'|'down'|'left'|'right'> = { arrowup:'up', w:'up', arrowdown:'down', s:'down', arrowleft:'left', a:'left', arrowright:'right', d:'right' }; if (map[key]) { event.preventDefault(); const next = map[key]; const opposite = { up:'down', down:'up', left:'right', right:'left' } as const; if (opposite[this.snakeDirection()] !== next) this.snakeDirection.set(next); } }
+  onGameKey(event: KeyboardEvent): void { if (this.selectedGame() === 'Flappy Bird' && (event.code === 'Space' || event.key === 'ArrowUp')) { event.preventDefault(); this.flap(); return; } if (this.selectedGame() !== 'NeverBeen Snake') return; const key = event.key.toLowerCase(); const map: Record<string, 'up'|'down'|'left'|'right'> = { arrowup:'up', w:'up', arrowdown:'down', s:'down', arrowleft:'left', a:'left', arrowright:'right', d:'right' }; if (map[key]) { event.preventDefault(); const next = map[key]; const opposite = { up:'down', down:'up', left:'right', right:'left' } as const; if (opposite[this.snakeDirection()] !== next) this.snakeDirection.set(next); } }
   resetMinesweeper(): void {
     const positions = new Set<number>();
     while (positions.size < 5) positions.add(Math.floor(Math.random() * 25));
