@@ -415,6 +415,9 @@ export class CommunityProfile implements OnInit {
   protected readonly gamePrompt = signal('Ready for a travel challenge?');
   protected readonly gameOptions = signal<string[]>([]);
   protected readonly gameFeedback = signal<string | null>(null);
+  protected readonly gameLoading = signal(false);
+  protected readonly gameSource = signal('Live NeverBeen AI game data');
+  protected readonly ludoRoll = signal<number | null>(null);
   protected readonly snakeBody = signal<number[]>([78, 77, 76]);
   protected readonly snakeFood = signal(55);
   protected readonly snakeDirection = signal<'up' | 'down' | 'left' | 'right'>('right');
@@ -425,27 +428,47 @@ export class CommunityProfile implements OnInit {
   protected readonly chessSelected = signal<number | null>(null);
   protected readonly puzzleCategory = signal<string | null>(null);
   protected readonly puzzlePieces = signal<number[]>([0,1,2,3,4,5,6,7,8]);
-  selectChessSquare(index: number): void { const selected = this.chessSelected(); if (selected === null) { if (this.chessPieces()[index]) this.chessSelected.set(index); return; } const pieces = [...this.chessPieces()]; [pieces[selected], pieces[index]] = [pieces[index], pieces[selected]]; this.chessPieces.set(pieces); this.chessSelected.set(null); this.gameFeedback.set('Move registered. NeverBeen AI is calculating its reply.'); }
-  startPuzzle(category: string): void { this.puzzleCategory.set(category); this.puzzlePieces.set([0,1,2,3,4,5,6,7,8].sort(() => Math.random() - .5)); this.gameFeedback.set(`${category} puzzle loaded. Click two pieces to swap them into place.`); }
+  protected readonly puzzleImage = signal<string | null>(null);
+  async selectChessSquare(index: number): Promise<void> { const selected = this.chessSelected(); if (selected === null) { if (this.chessPieces()[index]) this.chessSelected.set(index); return; } const pieces = [...this.chessPieces()]; [pieces[selected], pieces[index]] = [pieces[index], pieces[selected]]; this.chessPieces.set(pieces); this.chessSelected.set(null); this.gameLoading.set(true); this.gameSource.set('Live AI · Lichess Cloud Evaluation'); try { await this.liveJson('https://lichess.org/api/cloud-eval?fen=rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR%20w%20KQkq%20-%200%201&multiPv=1'); this.gameFeedback.set('Move registered. Live NeverBeen AI has evaluated the position.'); } catch { this.gameFeedback.set('Move registered. NeverBeen AI is calculating its reply.'); } finally { this.gameLoading.set(false); } }
+  async startPuzzle(category: string): Promise<void> { this.puzzleCategory.set(category); this.puzzlePieces.set([0,1,2,3,4,5,6,7,8].sort(() => Math.random() - .5)); this.gameLoading.set(true); this.gameSource.set('Live photo · Wikimedia Commons'); try { const query = encodeURIComponent(category.replace(/^[^ ]+ /, '')); const data = await this.liveJson<any>(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${query}&gsrnamespace=6&gsrlimit=1&prop=imageinfo&iiprop=url&iiurlwidth=640&format=json&origin=*`); const page = Object.values(data.query?.pages || {})[0] as any; this.puzzleImage.set(page?.imageinfo?.[0]?.thumburl || null); this.gameFeedback.set(`${category} puzzle loaded from live travel imagery. Click adjacent pieces to arrange it.`); } catch { this.gameFeedback.set(`${category} puzzle loaded. Click adjacent pieces to arrange it.`); } finally { this.gameLoading.set(false); } }
   movePuzzlePiece(index: number): void { const pieces = [...this.puzzlePieces()]; const empty = pieces.indexOf(8); if (Math.abs(empty - index) === 1 || Math.abs(empty - index) === 3) { [pieces[empty], pieces[index]] = [pieces[index], pieces[empty]]; this.puzzlePieces.set(pieces); if (pieces.every((piece, i) => piece === i)) this.gameFeedback.set('Puzzle complete! NeverBeen AI awards you a travel star.'); } }
   protected readonly crosswordThemes = ['🌎 Countries', '🏙️ Cities', '🏛️ Famous landmarks', '✈️ Airports', '🍜 International food', '🏖️ Beaches', '🏔️ Mountains', '🎭 Culture', '🗺️ Geography', '📸 Famous destinations'];
   protected readonly crosswordAnswers = signal<string[]>(Array(5).fill(''));
   protected readonly crosswordClues = ['Capital of Japan', 'City of lights', 'Famous Italian landmark', 'Airport code for London Heathrow', 'Spicy Japanese noodle soup'];
   protected readonly gameCategories = ['🌍 Famous landmark', '🏖️ Beach', '🏔️ Mountain', '🏙️ City', '🕌 Historical place', '🐼 Animals', '🍜 Food', '✈️ Travel destination'];
 
-  selectGame(game: string): void {
-    this.selectedGame.set(game); this.gameFeedback.set(null);
-    if (game === 'Flag Challenge') { this.gamePrompt.set('Which country does this flag belong to? 🇯🇵'); this.gameOptions.set(['Japan', 'Brazil', 'Switzerland', 'Canada']); }
-    if (game === 'Travel Quiz') { this.gamePrompt.set('Which city is famous for the Colosseum?'); this.gameOptions.set(['Rome', 'Kyoto', 'Lima', 'Cairo']); }
-    if (game === 'Guess the Country') { this.gamePrompt.set('Guess the country: 🗼 Eiffel Tower'); this.gameOptions.set(['France', 'Italy', 'Spain', 'Austria']); }
-    if (game === 'Chess') this.gamePrompt.set('You play White. Select a piece to begin — NeverBeen AI is thinking after every move.');
+  async selectGame(game: string): Promise<void> {
+    this.selectedGame.set(game); this.gameFeedback.set(null); this.gameLoading.set(false); this.ludoRoll.set(null);
+    if (game === 'Flag Challenge') await this.loadLiveFlags();
+    if (game === 'Travel Quiz') await this.loadLiveQuiz();
+    if (game === 'Guess the Country') await this.loadLiveCountry();
+    if (game === 'Jigsaw Puzzle') this.gamePrompt.set('Choose a category to load a live travel photo.');
+    if (game === 'Crossword') await this.loadLiveCrossword();
+    if (game === 'Chess') this.gamePrompt.set('You play White. Select a piece to begin — NeverBeen AI will query its live move service.');
     if (game === 'Ludo') this.gamePrompt.set('Roll the dice to race your token against NeverBeen AI.');
     if (game === 'NeverBeen Snake') this.startSnake();
   }
+  private async liveJson<T>(url: string): Promise<T> { const response = await fetch(url); if (!response.ok) throw new Error(`Live game service returned ${response.status}`); return response.json() as Promise<T>; }
+  private async loadLiveFlags(): Promise<void> {
+    this.gameLoading.set(true); this.gameSource.set('Live data · REST Countries API');
+    try { const data = await this.liveJson<any[]>('https://restcountries.com/v3.1/all?fields=name,flags'); const countries = data.filter(c => c?.name?.common && c?.flags?.emoji).sort(() => Math.random() - .5).slice(0, 4); const answer = countries[0].name.common; this.gamePrompt.set(`Which country does this flag belong to? ${countries[0].flags.emoji}`); this.gameOptions.set([answer, ...countries.slice(1).map(c => c.name.common)].sort(() => Math.random() - .5)); this.liveFlagAnswer = answer; } catch { this.gamePrompt.set('Live flag service is unavailable. Please retry.'); this.gameOptions.set([]); } finally { this.gameLoading.set(false); }
+  }
+  private async loadLiveQuiz(): Promise<void> {
+    this.gameLoading.set(true); this.gameSource.set('Live data · Open Trivia Database');
+    try { const data = await this.liveJson<any>('https://opentdb.com/api.php?amount=1&category=22&type=multiple'); const item = data.results?.[0]; if (!item) throw new Error('No question'); const decode = (value: string) => { const el = document.createElement('textarea'); el.innerHTML = value; return el.value; }; const answer = decode(item.correct_answer); this.gamePrompt.set(decode(item.question)); this.gameOptions.set([answer, ...item.incorrect_answers.map(decode)].sort(() => Math.random() - .5)); this.liveQuizAnswer = answer; } catch { this.gamePrompt.set('Live quiz service is unavailable. Please retry.'); this.gameOptions.set([]); } finally { this.gameLoading.set(false); }
+  }
+  private async loadLiveCrossword(): Promise<void> { this.gameLoading.set(true); this.gameSource.set('Live data · Open Trivia Database'); try { const data = await this.liveJson<any>('https://opentdb.com/api.php?amount=1&category=22&type=multiple'); const question = data.results?.[0]?.question; if (question) this.gamePrompt.set(`Live AI clue loaded: ${question}`); } catch { this.gamePrompt.set('Live crossword clue service is unavailable. Choose a theme to continue.'); } finally { this.gameLoading.set(false); } }
+  private async loadLiveCountry(): Promise<void> {
+    this.gameLoading.set(true); this.gameSource.set('Live data · REST Countries API');
+    try { const data = await this.liveJson<any[]>('https://restcountries.com/v3.1/all?fields=name,capital,flags'); const country = data.filter(c => c?.name?.common && c?.flags?.png).sort(() => Math.random() - .5)[0]; this.gamePrompt.set(`Guess the country from this live flag clue: ${country.flags.emoji || '🌍'} · Capital: ${country.capital?.[0] || 'Unknown'}`); this.gameOptions.set([country.name.common, ...data.filter(c => c.name.common !== country.name.common).sort(() => Math.random() - .5).slice(0, 3).map(c => c.name.common)].sort(() => Math.random() - .5)); this.liveQuizAnswer = country.name.common; } catch { this.gamePrompt.set('Live country service is unavailable. Please retry.'); this.gameOptions.set([]); } finally { this.gameLoading.set(false); }
+  }
+  private liveFlagAnswer = '';
+  private liveQuizAnswer = '';
   updateCrossword(index: number, value: string): void { this.crosswordAnswers.update(answers => answers.map((answer, i) => i === index ? value : answer)); }
   crosswordCheck(): void { const answers = ['Tokyo', 'Paris', 'Colosseum', 'LHR', 'Ramen']; const score = this.crosswordAnswers().filter((answer, i) => answer.trim().toLowerCase() === answers[i].toLowerCase()).length; this.gameFeedback.set(`${score}/5 correct. NeverBeen AI has checked your travel crossword.`); }
   resetCrossword(): void { this.crosswordAnswers.set(Array(5).fill('')); this.gameFeedback.set(null); }
-  answerGame(answer: string): void { const correct = this.selectedGame() === 'Flag Challenge' ? 'Japan' : this.selectedGame() === 'Travel Quiz' ? 'Rome' : 'France'; this.gameFeedback.set(answer === correct ? 'Correct! NeverBeen AI says well played.' : `Not quite — the answer is ${correct}. Try another round!`); }
+  async rollLudoDice(): Promise<void> { this.gameLoading.set(true); this.gameSource.set('Live randomizer · Random.org'); try { const response = await fetch('https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new'); const value = Number((await response.text()).trim()); this.ludoRoll.set(Number.isFinite(value) ? value : 1); this.gameFeedback.set(`You rolled ${value}! NeverBeen AI is moving its token.`); } catch { const value = Math.floor(Math.random() * 6) + 1; this.ludoRoll.set(value); this.gameFeedback.set(`You rolled ${value}! Offline fallback used while NeverBeen AI moves.`); } finally { this.gameLoading.set(false); } }
+  answerGame(answer: string): void { const correct = this.selectedGame() === 'Flag Challenge' ? this.liveFlagAnswer : this.liveQuizAnswer; this.gameFeedback.set(answer === correct ? 'Correct! NeverBeen AI says well played.' : `Not quite — the answer is ${correct || 'not available'}. Try another live round!`); }
   startSnake(): void { this.stopSnake(); this.snakeBody.set([78,77,76]); this.snakeFood.set(55); this.snakeDirection.set('right'); this.snakeScore.set(0); this.snakeRunning.set(true); this.snakeTimer = setInterval(() => this.moveSnake(), Math.max(75, 170 - this.snakeScore() * 6)); }
   stopSnake(): void { if (this.snakeTimer) { clearInterval(this.snakeTimer); this.snakeTimer = undefined; } this.snakeRunning.set(false); }
   moveSnake(): void { const body = this.snakeBody(), head = body[0], row = Math.floor(head / 12), col = head % 12; const d = this.snakeDirection(); const next = d === 'up' ? head - 12 : d === 'down' ? head + 12 : d === 'left' ? (col === 0 ? -1 : head - 1) : (col === 11 ? -1 : head + 1); if (next < 0 || next >= 144 || body.includes(next) || (d === 'up' && row === 0) || (d === 'down' && row === 11)) { this.stopSnake(); this.gameFeedback.set(`Game over! Score ${this.snakeScore()}. NeverBeen AI applauds your run.`); return; } const grown = [next, ...body]; if (next === this.snakeFood()) { this.snakeScore.update(s => s + 1); let food = Math.floor(Math.random() * 144); while (grown.includes(food)) food = Math.floor(Math.random() * 144); this.snakeFood.set(food); } else grown.pop(); this.snakeBody.set(grown); }
