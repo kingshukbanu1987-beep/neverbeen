@@ -421,6 +421,13 @@ export class CommunityProfile implements OnInit {
   protected readonly snakeRunning = signal(false);
   protected readonly snakeScore = signal(0);
   private snakeTimer?: ReturnType<typeof setInterval>;
+  protected readonly chessPieces = signal<string[]>(['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟','','','','','','','','','♙','♙','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔','♗','♘','♖']);
+  protected readonly chessSelected = signal<number | null>(null);
+  protected readonly puzzleCategory = signal<string | null>(null);
+  protected readonly puzzlePieces = signal<number[]>([0,1,2,3,4,5,6,7,8]);
+  selectChessSquare(index: number): void { const selected = this.chessSelected(); if (selected === null) { if (this.chessPieces()[index]) this.chessSelected.set(index); return; } const pieces = [...this.chessPieces()]; [pieces[selected], pieces[index]] = [pieces[index], pieces[selected]]; this.chessPieces.set(pieces); this.chessSelected.set(null); this.gameFeedback.set('Move registered. NeverBeen AI is calculating its reply.'); }
+  startPuzzle(category: string): void { this.puzzleCategory.set(category); this.puzzlePieces.set([0,1,2,3,4,5,6,7,8].sort(() => Math.random() - .5)); this.gameFeedback.set(`${category} puzzle loaded. Click two pieces to swap them into place.`); }
+  movePuzzlePiece(index: number): void { const pieces = [...this.puzzlePieces()]; const empty = pieces.indexOf(8); if (Math.abs(empty - index) === 1 || Math.abs(empty - index) === 3) { [pieces[empty], pieces[index]] = [pieces[index], pieces[empty]]; this.puzzlePieces.set(pieces); if (pieces.every((piece, i) => piece === i)) this.gameFeedback.set('Puzzle complete! NeverBeen AI awards you a travel star.'); } }
   protected readonly crosswordThemes = ['🌎 Countries', '🏙️ Cities', '🏛️ Famous landmarks', '✈️ Airports', '🍜 International food', '🏖️ Beaches', '🏔️ Mountains', '🎭 Culture', '🗺️ Geography', '📸 Famous destinations'];
   protected readonly crosswordAnswers = signal<string[]>(Array(5).fill(''));
   protected readonly crosswordClues = ['Capital of Japan', 'City of lights', 'Famous Italian landmark', 'Airport code for London Heathrow', 'Spicy Japanese noodle soup'];
