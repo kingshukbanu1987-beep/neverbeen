@@ -8179,4 +8179,6 @@
 .ludo-yard-token{grid-row:auto;grid-column:auto}
 @media(max-width:650px){.ludo-modern-board{border-width:4px;border-radius:12px}.ludo-token{width:92%;height:92%}.ludo-base b{font-size:.38rem;letter-spacing:0}}
 .ludo-confetti{animation:ludoDiceRoll .32s ease-in-out infinite alternate}
+/* High-contrast piece styling so side ownership is obvious on every board square. */
+.modern-chess-board button.white-piece{color:#fff;-webkit-text-stroke:1.1px #1e293b;text-shadow:0 2px 3px #0f172a99,0 0 1px #0f172a;font-weight:900;filter:drop-shadow(0 1px 1px #0f172a66)}.modern-chess-board button.black-piece{color:#111827;-webkit-text-stroke:.65px #f8fafc;text-shadow:0 1px 2px #fff,0 2px 3px #0f172a55;font-weight:900;filter:drop-shadow(0 1px 1px #fff9)}
 
