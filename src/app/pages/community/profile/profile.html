@@ -2007,15 +2007,8 @@
             <header class="games-hero"><div><span class="games-kicker">NeverBeen Play</span><h1 class="section-title">Games</h1><p class="section-desc">Travel farther from wherever you are. Learn, explore, and challenge yourself.</p></div><div class="games-trophy">✦</div></header>
             @if (!selectedGame()) {
               <div class="games-grid">
-                <button type="button" class="game-tile flag-game" (click)="selectGame('Flag Challenge')"><span class="game-tile-icon">🚩</span><strong>Flag Challenge</strong><small>Identify country flags</small><em>Play now →</em></button>
-                <button type="button" class="game-tile quiz-game" (click)="selectGame('Travel Quiz')"><span class="game-tile-icon">✈️</span><strong>Travel Quiz</strong><small>Countries, food, landmarks & culture</small><em>Play now →</em></button>
-                <button type="button" class="game-tile country-game" (click)="selectGame('Guess the Country')"><span class="game-tile-icon">🌍</span><strong>Guess the Country</strong><small>Identify a landmark or photo</small><em>Play now →</em></button>
-                <button type="button" class="game-tile puzzle-game" (click)="selectGame('Jigsaw Puzzle')"><span class="game-tile-icon">🧩</span><strong>Jigsaw Puzzle</strong><small>Arrange travel photos correctly</small><em>Choose a category →</em></button>
-                <button type="button" class="game-tile crossword-game" (click)="selectGame('Crossword')"><span class="game-tile-icon">🧩</span><strong>Travel Crossword</strong><small>AI-generated puzzles about the world</small><em>Choose a theme →</em></button>
                 <button type="button" class="game-tile tic-game" (click)="selectGame('Tic-Tac-Toe'); resetTicTacToe()"><span class="game-tile-icon">🎮</span><strong>Tic-Tac-Toe</strong><small>Play against NeverBeen AI</small><em>Play now →</em></button>
                 <button type="button" class="game-tile snake-game" (click)="selectGame('NeverBeen Snake')"><span class="game-tile-icon">🐍</span><strong>NeverBeen Snake</strong><small>Arrow keys / WASD · eat, grow, survive</small><em>Play now →</em></button>
-                <button type="button" class="game-tile ludo-game" (click)="selectGame('Ludo')"><span class="game-tile-icon">🎲</span><strong>Ludo</strong><small>Race your token against NeverBeen AI</small><em>Play now →</em></button>
-                <button type="button" class="game-tile chess-game" (click)="selectGame('Chess')"><span class="game-tile-icon">♟️</span><strong>Chess</strong><small>Challenge NeverBeen AI</small><em>Play now →</em></button>
               </div>
             } @else {
               <section class="game-stage"><button type="button" class="game-back" (click)="selectedGame.set(null)">← All games</button><div class="game-stage-heading"><span>{{ selectedGame() === 'Jigsaw Puzzle' ? '🧩' : selectedGame() === 'Chess' ? '♟️' : '✨' }}</span><div><h2>{{ selectedGame() }}</h2><p>{{ selectedGame() === 'Jigsaw Puzzle' ? 'Choose a photo category to begin.' : 'A mindful travel challenge, made for curious explorers.' }}</p></div></div>
