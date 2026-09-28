@@ -477,7 +477,13 @@ export class CommunityProfile implements OnInit {
   moveSnake(): void { const body = this.snakeBody(), head = body[0], row = Math.floor(head / 12), col = head % 12; const d = this.snakeDirection(); const next = d === 'up' ? head - 12 : d === 'down' ? head + 12 : d === 'left' ? (col === 0 ? -1 : head - 1) : (col === 11 ? -1 : head + 1); if (next < 0 || next >= 144 || body.includes(next) || (d === 'up' && row === 0) || (d === 'down' && row === 11)) { this.stopSnake(); this.gameFeedback.set(`Game over! Score ${this.snakeScore()}. NeverBeen AI applauds your run.`); return; } const grown = [next, ...body]; if (next === this.snakeFood()) { this.snakeScore.update(s => s + 1); let food = Math.floor(Math.random() * 144); while (grown.includes(food)) food = Math.floor(Math.random() * 144); this.snakeFood.set(food); } else grown.pop(); this.snakeBody.set(grown); }
   @HostListener('window:keydown', ['$event'])
   onGameKey(event: KeyboardEvent): void { if (this.selectedGame() !== 'NeverBeen Snake') return; const key = event.key.toLowerCase(); const map: Record<string, 'up'|'down'|'left'|'right'> = { arrowup:'up', w:'up', arrowdown:'down', s:'down', arrowleft:'left', a:'left', arrowright:'right', d:'right' }; if (map[key]) { event.preventDefault(); const next = map[key]; const opposite = { up:'down', down:'up', left:'right', right:'left' } as const; if (opposite[this.snakeDirection()] !== next) this.snakeDirection.set(next); } }
-  resetMinesweeper(): void { this.mines.set([1, 7, 13, 19, 23].sort(() => Math.random() - .5)); this.mineRevealed.set([]); this.mineStatus.set('Clear the board without hitting a mine'); }
+  resetMinesweeper(): void {
+    const positions = new Set<number>();
+    while (positions.size < 5) positions.add(Math.floor(Math.random() * 25));
+    this.mines.set([...positions]);
+    this.mineRevealed.set([]);
+    this.mineStatus.set('Clear the board without hitting a mine');
+  }
   revealMineCell(index: number): void { if (this.mineRevealed().includes(index) || this.mineStatus() !== 'Clear the board without hitting a mine') return; if (this.mines().includes(index)) { this.mineRevealed.set(Array.from({ length: 25 }, (_, i) => i)); this.mineStatus.set('Boom! NeverBeen AI says try again.'); return; } const revealed = [...this.mineRevealed(), index]; this.mineRevealed.set(revealed); if (revealed.length >= 20) this.mineStatus.set('You cleared the board! NeverBeen AI awards you a star.'); }
   mineCountAround(index: number): number { const row = Math.floor(index / 5), col = index % 5; return this.mines().filter(m => { const mr = Math.floor(m / 5), mc = m % 5; return Math.abs(mr - row) <= 1 && Math.abs(mc - col) <= 1; }).length; }
   resetTicTacToe(): void { this.ticBoard.set(Array(9).fill(null)); this.ticStatus.set('Your turn'); }
