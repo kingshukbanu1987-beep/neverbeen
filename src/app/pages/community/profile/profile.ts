@@ -23,6 +23,8 @@ import {
   HOLD_REACTION_OPTIONS,
   JourneyComment,
   JourneyPost,
+  GalleryAlbum,
+  GalleryPhoto,
   PostAudience,
   REACTION_ICONS,
   ReactionType,
@@ -394,6 +396,8 @@ export class CommunityProfile implements OnInit {
 
   // Gallery state
   protected readonly showUploadCard = signal(false);
+  protected readonly selectedGalleryAlbumId = signal<number | undefined>(undefined);
+  protected newAlbumName = '';
   protected readonly uploadingGallery = signal(false);
   protected readonly selectedGalleryFile = signal<File | null>(null);
   protected readonly galleryPreviewUrl = signal<string | null>(null);
@@ -925,12 +929,14 @@ export class CommunityProfile implements OnInit {
 
   audienceLabel(post: JourneyPost): string {
     const mode = post.audience?.mode ?? 'public';
+    if (mode === 'only-me') return 'Only Me';
     if (mode === 'companions') return 'Companions';
     if (mode === 'custom') return 'Custom';
     return 'Public';
   }
 
   composerAudienceLabel(): string {
+    if (this.postAudience.mode === 'only-me') return '🔒 Only Me';
     if (this.postAudience.mode === 'companions') return '👥 Companions';
     if (this.postAudience.mode === 'custom') {
       const count = this.postAudience.allowIds?.length ?? 0;
@@ -1064,6 +1070,24 @@ export class CommunityProfile implements OnInit {
     );
     if (!created) return;
     this.setBirthdayDraft(card.companion.id, '');
+  }
+
+  myJourneyPostCount(): number {
+    const me = this.service.currentUser()?.id ?? 1;
+    return this.service.journeyPosts().filter((post) => Number(post.author.id) === Number(me)).length;
+  }
+
+  galleryAlbums() { return this.service.galleryAlbums(); }
+  albumCover(album: GalleryAlbum): GalleryPhoto | undefined { return album.photos.find((photo) => photo.id === album.coverPhotoId) || album.photos[0]; }
+  chooseAlbumCover(album: GalleryAlbum, event: Event): void {
+    event.stopPropagation();
+    const photoId = Number((event.target as HTMLSelectElement).value);
+    if (photoId) this.service.setGalleryAlbumCover(album.id, photoId);
+  }
+
+  createGalleryAlbum(): void {
+    const album = this.service.createGalleryAlbum(this.newAlbumName);
+    if (album) { this.newAlbumName = ''; this.selectedGalleryAlbumId.set(album.id); }
   }
 
   storageSlices() {
@@ -2772,7 +2796,7 @@ export class CommunityProfile implements OnInit {
 
     this.uploadingGallery.set(true);
     try {
-      await this.service.addGalleryPhoto(file, this.newCaption);
+      await this.service.addGalleryPhoto(file, this.newCaption, this.selectedGalleryAlbumId());
       this.selectedGalleryFile.set(null);
       this.galleryPreviewUrl.set(null);
       this.newCaption = '';

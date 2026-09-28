@@ -16,6 +16,7 @@ import {
   Country,
   CurrentUser,
   GalleryPhoto,
+  GalleryAlbum,
   JourneyComment,
   JourneyPost,
   LoginDevice,
@@ -1441,7 +1442,7 @@ export class CommunityService {
   // Gallery
   // ---------------------------------------------------------------------------
 
-  async addGalleryPhoto(file: File, caption?: string): Promise<GalleryPhoto> {
+  async addGalleryPhoto(file: File, caption?: string, albumId?: number): Promise<GalleryPhoto> {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
@@ -1463,6 +1464,7 @@ export class CommunityService {
           return {
             ...p,
             gallery: [newPhoto, ...p.gallery],
+            galleryAlbums: (p.galleryAlbums ?? []).map((album) => album.id === albumId ? { ...album, photos: [newPhoto, ...album.photos], coverPhotoId: album.coverPhotoId ?? newPhoto.id, updatedAtUtc: newPhoto.createdAtUtc } : album),
           };
         });
 
@@ -1471,6 +1473,30 @@ export class CommunityService {
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  galleryAlbums(): GalleryAlbum[] {
+    const profile = this.profile();
+    if (!profile) return [];
+    const saved = profile.galleryAlbums ?? [];
+    const defaults: GalleryAlbum[] = ['Profile Photos', 'Cover Photos'].map((name, index) => ({
+      id: -(index + 1), name, photos: [], isDefault: true, updatedAtUtc: new Date(0).toISOString(),
+    }));
+    return [...defaults, ...saved.filter((album) => !defaults.some((item) => item.name === album.name)).sort((a, b) => b.updatedAtUtc.localeCompare(a.updatedAtUtc))];
+  }
+
+  createGalleryAlbum(name: string): GalleryAlbum | null {
+    const clean = name.trim();
+    if (!clean || ['profile photos', 'cover photos'].includes(clean.toLowerCase())) return null;
+    const album: GalleryAlbum = { id: generateUniqueId(), name: clean, photos: [], updatedAtUtc: new Date().toISOString() };
+    this.profile.update((p) => p ? { ...p, galleryAlbums: [album, ...(p.galleryAlbums ?? [])] } : null);
+    this.saveJson(PROFILE_KEY, this.profile());
+    return album;
+  }
+
+  setGalleryAlbumCover(albumId: number, photoId: number): void {
+    this.profile.update((p) => p ? { ...p, galleryAlbums: (p.galleryAlbums ?? []).map((a) => a.id === albumId ? { ...a, coverPhotoId: photoId, updatedAtUtc: new Date().toISOString() } : a) } : null);
+    this.saveJson(PROFILE_KEY, this.profile());
   }
 
   async deleteGalleryPhoto(photoId: number): Promise<void> {
@@ -1736,6 +1762,7 @@ export class CommunityService {
     if (audience.mode === 'custom') {
       return (audience.allowIds ?? []).some((id) => Number(id) === Number(viewerId));
     }
+    if (audience.mode === 'only-me') return false;
     if (post.wallOwnerId != null && Number(post.wallOwnerId) === Number(viewerId)) return true;
     if (audience.mode === 'public') return true;
     const connected = this.companions().some((c) => c.id === post.author.id && c.status === 'connected');

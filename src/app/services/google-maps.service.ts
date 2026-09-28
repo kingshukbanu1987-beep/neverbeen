@@ -534,13 +534,28 @@ export class GoogleMapsService {
     }
 
     // Match against verified Google Map destinations
-    return VERIFIED_GOOGLE_MAP_LOCATIONS.filter(
+    const matches = VERIFIED_GOOGLE_MAP_LOCATIONS.filter(
       (loc) =>
         loc.name.toLowerCase().includes(q) ||
         loc.city.toLowerCase().includes(q) ||
         loc.formattedAddress.toLowerCase().includes(q) ||
         loc.country.toLowerCase().includes(q),
     );
+    // Keep destination tagging useful without an API key: every world location can
+    // still be selected, while configured Google Places results remain authoritative.
+    if (matches.length) return matches;
+    const label = query.trim();
+    return [{
+      placeId: `manual-${encodeURIComponent(label.toLowerCase())}`,
+      name: label,
+      formattedAddress: label,
+      city: label,
+      country: 'World',
+      latitude: 0,
+      longitude: 0,
+      mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`,
+      category: 'World location',
+    }];
   }
 
   getLocationByPlaceId(placeId: string): GoogleMapLocation | undefined {

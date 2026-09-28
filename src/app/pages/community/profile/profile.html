@@ -236,8 +236,8 @@
               <span>Circles</span>
             </div>
             <div class="stat-chip">
-              <strong>{{ service.profile()?.gallery?.length || 0 }}</strong>
-              <span>Photos</span>
+              <strong>{{ myJourneyPostCount() }}</strong>
+              <span>Journey Posts</span>
             </div>
           </div>
 
@@ -1911,6 +1911,21 @@
               </button>
             </header>
 
+            <div class="album-create-bar">
+              <div><strong>Your albums</strong><span>Organize every memory in one place</span></div>
+              <input [(ngModel)]="newAlbumName" placeholder="New album name" aria-label="New album name" />
+              <button type="button" class="btn-primary-action btn-sm" (click)="createGalleryAlbum()" [disabled]="!newAlbumName.trim()">+ Create album</button>
+            </div>
+            <div class="album-grid">
+              @for (album of galleryAlbums(); track album.id) {
+                <button type="button" class="album-card" [class.selected]="selectedGalleryAlbumId() === album.id" (click)="selectedGalleryAlbumId.set(album.isDefault ? undefined : album.id); showUploadCard.set(true)">
+                  <div class="album-cover"><img [src]="albumCover(album)?.url || (album.name === 'Profile Photos' ? (service.profile()?.profilePhotoUrl || defaultAvatar) : (service.profile()?.coverPhotoUrl || defaultCoverPhoto))" [alt]="album.name" /></div>
+                  <span class="album-name">{{ album.name }}</span><small>{{ album.photos.length }} photos · {{ album.isDefault ? 'Default' : 'Custom' }}</small>
+                  @if (album.photos.length > 1 && !album.isDefault) { <select class="album-cover-select" aria-label="Choose album cover" (change)="chooseAlbumCover(album, $event)"><option value="">Choose cover</option>@for (photo of album.photos; track photo.id) { <option [value]="photo.id" [selected]="photo.id === album.coverPhotoId">Photo {{ $index + 1 }}</option> }</select> }
+                </button>
+              }
+            </div>
+
             <!-- Upload Card -->
             @if (showUploadCard()) {
               <div class="gallery-upload-box">
@@ -3117,6 +3132,12 @@
                   <p class="storage-warn">You are over 90%. A notice is pinned in Notifications until this drops.</p>
                 }
               </div>
+            </div>
+            <div class="storage-detail-grid">
+              <div><span>Capacity</span><strong>{{ formatStorage(service.storageReport().limit) }}</strong></div>
+              <div><span>Used</span><strong>{{ (service.storageReport().ratio * 100) | number:'1.1-1' }}%</strong></div>
+              <div><span>Journey posts</span><strong>{{ myJourneyPostCount() }}</strong></div>
+              <div><span>Gallery photos</span><strong>{{ service.profile()?.gallery?.length || 0 }}</strong></div>
             </div>
             <div class="storage-bars">
               @for (slice of service.storageReport().slices; track slice.id) {

@@ -294,6 +294,15 @@ export interface GalleryPhoto {
   createdAtUtc: string;
 }
 
+export interface GalleryAlbum {
+  id: number;
+  name: string;
+  photos: GalleryPhoto[];
+  coverPhotoId?: number;
+  isDefault?: boolean;
+  updatedAtUtc: string;
+}
+
 export interface Profile {
   id: number;
   uniqueId?: string;
@@ -323,6 +332,7 @@ export interface Profile {
   createdAtUtc: string;
   settings: UserSettings;
   gallery: GalleryPhoto[];
+  galleryAlbums?: GalleryAlbum[];
   commentCount: number;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
@@ -420,7 +430,7 @@ export interface JourneyComment {
 }
 
 /** Who may see a Journey post or a share. */
-export type PostAudienceMode = 'public' | 'companions' | 'custom';
+export type PostAudienceMode = 'public' | 'companions' | 'custom' | 'only-me';
 
 export interface PostAudience {
   mode: PostAudienceMode;
@@ -489,6 +499,7 @@ export interface Companion {
   aboutMe?: string;
   aboutMeDetails?: AboutMeDetails;
   gallery?: GalleryPhoto[];
+  galleryAlbums?: GalleryAlbum[];
   isProfileLocked?: boolean;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
