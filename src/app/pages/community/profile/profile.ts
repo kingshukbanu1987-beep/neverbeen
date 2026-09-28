@@ -421,6 +421,9 @@ export class CommunityProfile implements OnInit {
   protected readonly snakeRunning = signal(false);
   protected readonly snakeScore = signal(0);
   private snakeTimer?: ReturnType<typeof setInterval>;
+  protected readonly crosswordThemes = ['🌎 Countries', '🏙️ Cities', '🏛️ Famous landmarks', '✈️ Airports', '🍜 International food', '🏖️ Beaches', '🏔️ Mountains', '🎭 Culture', '🗺️ Geography', '📸 Famous destinations'];
+  protected readonly crosswordAnswers = signal<string[]>(Array(5).fill(''));
+  protected readonly crosswordClues = ['Capital of Japan', 'City of lights', 'Famous Italian landmark', 'Airport code for London Heathrow', 'Spicy Japanese noodle soup'];
   protected readonly gameCategories = ['🌍 Famous landmark', '🏖️ Beach', '🏔️ Mountain', '🏙️ City', '🕌 Historical place', '🐼 Animals', '🍜 Food', '✈️ Travel destination'];
 
   selectGame(game: string): void {
@@ -432,6 +435,9 @@ export class CommunityProfile implements OnInit {
     if (game === 'Ludo') this.gamePrompt.set('Roll the dice to race your token against NeverBeen AI.');
     if (game === 'NeverBeen Snake') this.startSnake();
   }
+  updateCrossword(index: number, value: string): void { this.crosswordAnswers.update(answers => answers.map((answer, i) => i === index ? value : answer)); }
+  crosswordCheck(): void { const answers = ['Tokyo', 'Paris', 'Colosseum', 'LHR', 'Ramen']; const score = this.crosswordAnswers().filter((answer, i) => answer.trim().toLowerCase() === answers[i].toLowerCase()).length; this.gameFeedback.set(`${score}/5 correct. NeverBeen AI has checked your travel crossword.`); }
+  resetCrossword(): void { this.crosswordAnswers.set(Array(5).fill('')); this.gameFeedback.set(null); }
   answerGame(answer: string): void { const correct = this.selectedGame() === 'Flag Challenge' ? 'Japan' : this.selectedGame() === 'Travel Quiz' ? 'Rome' : 'France'; this.gameFeedback.set(answer === correct ? 'Correct! NeverBeen AI says well played.' : `Not quite — the answer is ${correct}. Try another round!`); }
   startSnake(): void { this.stopSnake(); this.snakeBody.set([78,77,76]); this.snakeFood.set(55); this.snakeDirection.set('right'); this.snakeScore.set(0); this.snakeRunning.set(true); this.snakeTimer = setInterval(() => this.moveSnake(), Math.max(75, 170 - this.snakeScore() * 6)); }
   stopSnake(): void { if (this.snakeTimer) { clearInterval(this.snakeTimer); this.snakeTimer = undefined; } this.snakeRunning.set(false); }
