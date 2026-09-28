@@ -2257,6 +2257,14 @@
                 {{ connectedCompanionsCount() }} / 500 Companions Added
               </span>
             </header>
+            <div class="companion-directory-search">
+              <span class="directory-search-icon" aria-hidden="true">⌕</span>
+              <input type="search" [(ngModel)]="searchQuery" (focus)="onSearchFocus()" (input)="onSearchInput()" placeholder="Search users across every category..." aria-label="Search users across every category" />
+              @if (searchQuery()) { <button type="button" aria-label="Clear user search" (click)="searchQuery.set(''); showSearchDropdown.set(false)">×</button> }
+            </div>
+            @if (showSearchDropdown() && searchQuery().trim() && (searchResults().travelers.length || searchResults().circles.length)) {
+              <div class="companion-search-hint">Showing {{ searchResults().travelers.length }} travelers and {{ searchResults().circles.length }} circles from all categories above.</div>
+            }
 
             <!-- Option to cancel companion request once sent (Requirement C: Anywhere) -->
             @if (pendingOutgoingCompanions().length > 0) {
@@ -2782,14 +2790,26 @@
               </button>
             </header>
 
+            <div class="circle-tabs" role="tablist" aria-label="Circle status">
+              <button type="button" role="tab" [attr.aria-selected]="circleStatusTab() === 'active'" [class.active]="circleStatusTab() === 'active'" (click)="circleStatusTab.set('active')">Active <span>{{ service.myCircles().length }}</span></button>
+              <button type="button" role="tab" [attr.aria-selected]="circleStatusTab() === 'archived'" [class.active]="circleStatusTab() === 'archived'" (click)="circleStatusTab.set('archived'); circleRoleFilter.set('all')">Archived <span>{{ service.archivedCircles().length }}</span></button>
+            </div>
             <div class="circle-toolbar">
-              <input class="circle-search" type="search" placeholder="Search your circles" [value]="circleQuery()" (input)="circleQuery.set($any($event.target).value)" />
-              <div class="circle-role-pills">
-                <button type="button" [class.active]="circleRoleFilter() === 'all'" (click)="circleRoleFilter.set('all')">All {{ service.myCircles().length }}</button>
-                <button type="button" [class.active]="circleRoleFilter() === 'admin'" (click)="circleRoleFilter.set('admin')">Admin {{ service.adminCircleCount() }}</button>
-                <button type="button" [class.active]="circleRoleFilter() === 'member'" (click)="circleRoleFilter.set('member')">Member {{ service.memberOnlyCircleCount() }}</button>
+              <div class="circle-search-wrap">
+                <span aria-hidden="true">⌕</span>
+                <input class="circle-search" type="search" [placeholder]="circleStatusTab() === 'archived' ? 'Search archived circles' : 'Search active circles'" aria-label="Search circles" [value]="circleQuery()" (input)="circleQuery.set($any($event.target).value)" />
+              </div>
+              <div class="circle-role-pills" [class.is-disabled]="circleStatusTab() === 'archived'">
+                <button type="button" [class.active]="circleRoleFilter() === 'all'" (click)="circleRoleFilter.set('all')">All {{ circleStatusTab() === 'archived' ? service.archivedCircles().length : service.myCircles().length }}</button>
+                @if (circleStatusTab() === 'active') {
+                  <button type="button" [class.active]="circleRoleFilter() === 'admin'" (click)="circleRoleFilter.set('admin')">Admin {{ service.adminCircleCount() }}</button>
+                  <button type="button" [class.active]="circleRoleFilter() === 'member'" (click)="circleRoleFilter.set('member')">Member {{ service.memberOnlyCircleCount() }}</button>
+                }
               </div>
             </div>
+            @if (circleStatusTab() === 'archived') {
+              <div class="archived-notice"><span>↗</span><div><strong>Archived circles</strong><small>Deleted circles are kept here for your records and are no longer active.</small></div></div>
+            }
 
             <div class="circles-grid">
               @for (circle of filteredCircles(); track circle.id) {
@@ -2823,10 +2843,10 @@
                       {{ circle.memberIds.length }} travelers
                     </button>
                   </div>
-                  @if (isCircleAdmin(circle)) {
+                  @if (isCircleAdmin(circle) && circleStatusTab() === 'active') {
                     <div class="circle-admin-actions" (click)="$event.stopPropagation()">
                       <button type="button" class="btn-action-subtle" (click)="openEditCircle(circle, $event)">Edit</button>
-                      <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id, $event)">Delete</button>
+                      <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id, $event)">Archive</button>
                     </div>
                   }
                 </article>
@@ -3933,12 +3953,16 @@
 
   @if (showEditCircleModal()) {
     <div class="modal-backdrop-overlay" (click)="showEditCircleModal.set(false)">
-      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
-        <header class="modal-head"><h3 class="modal-head-title">Edit Circle</h3></header>
-        <div class="modal-body">
+      <div class="modal-dialog-card edit-circle-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-circle-title" (click)="$event.stopPropagation()">
+        <header class="edit-circle-head">
+          <div class="edit-circle-mark">✦</div>
+          <div><span class="modal-kicker">Circle settings</span><h3 id="edit-circle-title" class="modal-head-title">Edit Circle</h3><p>Keep your travel community fresh and welcoming.</p></div>
+          <button type="button" class="btn-close-modal" (click)="showEditCircleModal.set(false)" aria-label="Close edit circle">✕</button>
+        </header>
+        <div class="modal-body edit-circle-body">
           <div class="form-group">
-            <label>Name</label>
-            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" />
+            <label>Name <span>Required</span></label>
+            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" placeholder="Give your circle a memorable name" />
           </div>
           <div class="form-group">
             <label>Description</label>

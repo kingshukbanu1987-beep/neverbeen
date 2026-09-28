@@ -390,7 +390,13 @@ export class CommunityService {
   /** Circles the signed-in member belongs to (admin or member). */
   readonly myCircles = computed(() => {
     const me = this.currentUser()?.id ?? 1;
-    return this.circles().filter((c) => isCircleParticipant(c, me));
+    return this.circles().filter((c) => !c.archivedAtUtc && isCircleParticipant(c, me));
+  });
+
+  /** Deleted circles are retained locally so members can review their history. */
+  readonly archivedCircles = computed(() => {
+    const me = this.currentUser()?.id ?? 1;
+    return this.circles().filter((c) => !!c.archivedAtUtc && isCircleParticipant(c, me));
   });
 
   readonly adminCircleCount = computed(() => this.countAdminCircles(this.currentUser()?.id ?? 1));
@@ -2485,11 +2491,11 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   countAdminCircles(userId: number): number {
-    return this.circles().filter((c) => isCircleAdmin(c, userId)).length;
+    return this.circles().filter((c) => !c.archivedAtUtc && isCircleAdmin(c, userId)).length;
   }
 
   countMemberOnlyCircles(userId: number): number {
-    return this.circles().filter((c) => isCircleParticipant(c, userId) && !isCircleAdmin(c, userId)).length;
+    return this.circles().filter((c) => !c.archivedAtUtc && isCircleParticipant(c, userId) && !isCircleAdmin(c, userId)).length;
   }
 
   isCircleAdmin(circle: Circle, userId: number): boolean {
@@ -2569,7 +2575,9 @@ export class CommunityService {
     const me = this.currentUser()?.id ?? 1;
     const circle = this.circles().find((c) => c.id === circleId);
     if (!circle || !isCircleAdmin(circle, me)) return false;
-    this.circles.update((list) => list.filter((c) => c.id !== circleId));
+    this.circles.update((list) =>
+      list.map((c) => (c.id === circleId ? normalizeCircle({ ...c, archivedAtUtc: new Date().toISOString() }) : c)),
+    );
     this.saveJson(CIRCLES_KEY, this.circles());
     this.closeChatBox(-Math.abs(circleId));
     return true;

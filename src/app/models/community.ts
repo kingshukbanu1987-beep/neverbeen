@@ -517,6 +517,8 @@ export interface Circle {
   adminIds?: number[];
   ownerId?: number;
   createdAtUtc: string;
+  /** Set when an admin deletes the Circle; archived circles remain recoverable in the Archived tab. */
+  archivedAtUtc?: string;
   /** Group-chat history for this Circle. */
   messages?: ChatMessage[];
 }

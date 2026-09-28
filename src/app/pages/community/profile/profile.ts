@@ -374,6 +374,7 @@ export class CommunityProfile implements OnInit {
   protected editCirclePhoto = '';
   protected readonly circleQuery = signal('');
   protected readonly circleRoleFilter = signal<'all' | 'admin' | 'member'>('all');
+  protected readonly circleStatusTab = signal<'active' | 'archived'>('active');
   protected readonly showEditCircleModal = signal(false);
   protected readonly editingCircleId = signal<number | null>(null);
   protected readonly showAddPeopleModal = signal(false);
@@ -2228,7 +2229,7 @@ export class CommunityProfile implements OnInit {
   async deleteCircle(circleId: number, event?: Event): Promise<void> {
     event?.preventDefault();
     event?.stopPropagation();
-    const ok = await this.confirmSvc.confirm('Delete this Circle for everyone in it? This cannot be undone.', 'Delete');
+    const ok = await this.confirmSvc.confirm('Archive this Circle for everyone in it? It will move to Archived and no longer be active.', 'Archive');
     if (!ok) return;
     const removed = this.service.deleteCircle(circleId);
     if (!removed) {
@@ -2255,7 +2256,8 @@ export class CommunityProfile implements OnInit {
     const q = this.circleQuery().trim().toLowerCase();
     const role = this.circleRoleFilter();
     const me = this.service.currentUser()?.id ?? 1;
-    return this.service.myCircles().filter((c) => {
+    const source = this.circleStatusTab() === 'archived' ? this.service.archivedCircles() : this.service.myCircles();
+    return source.filter((c) => {
       const admin = this.service.isCircleAdmin(c, me);
       if (role === 'admin' && !admin) return false;
       if (role === 'member' && admin) return false;

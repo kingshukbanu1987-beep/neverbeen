@@ -8052,3 +8052,55 @@
 @media (max-width: 720px) {
   .storage-hero, .storage-bar { grid-template-columns: 1fr; }
 }
+
+/* Circle workspace additions */
+.circle-tabs {
+  display: inline-flex;
+  gap: .35rem;
+  padding: .3rem;
+  margin: .25rem 0 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+.circle-tabs button {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  border-radius: 10px;
+  padding: .62rem 1rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.circle-tabs button span { margin-left: .35rem; font-size: .75rem; opacity: .7; }
+.circle-tabs button.active { background: #fff; color: #312e81; box-shadow: 0 3px 10px rgb(15 23 42 / 10%); }
+.circle-search-wrap { position: relative; flex: 1 1 260px; display: flex; align-items: center; }
+.circle-search-wrap > span { position: absolute; left: 1rem; font-size: 1.25rem; color: #64748b; pointer-events: none; }
+.circle-search-wrap .circle-search { width: 100%; padding-left: 2.5rem; }
+.circle-role-pills.is-disabled { opacity: .8; }
+.archived-notice { display: flex; align-items: flex-start; gap: .75rem; padding: .9rem 1rem; margin: 0 0 1rem; border: 1px solid #c7d2fe; border-radius: 14px; color: #3730a3; background: linear-gradient(135deg,#eef2ff,#f5f3ff); }
+.archived-notice span { font-size: 1.25rem; }
+.archived-notice strong, .archived-notice small { display: block; }
+.archived-notice small { margin-top: .2rem; color: #6366f1; }
+.companion-directory-search { display: flex; align-items: center; gap: .6rem; margin: 1rem 0; padding: .2rem .65rem; border: 1px solid #dbe3ef; border-radius: 15px; background: #fff; box-shadow: 0 5px 18px rgb(30 41 59 / 6%); }
+.companion-directory-search:focus-within { border-color: #818cf8; box-shadow: 0 0 0 4px rgb(99 102 241 / 12%); }
+.companion-directory-search input { flex: 1; min-height: 44px; border: 0; outline: 0; font-size: .94rem; background: transparent; }
+.directory-search-icon { font-size: 1.35rem; color: #6366f1; }
+.companion-directory-search button { border: 0; background: #eef2ff; color: #4338ca; border-radius: 50%; width: 27px; height: 27px; cursor: pointer; font-size: 1.1rem; }
+.companion-search-hint { margin: -.4rem 0 1rem; font-size: .78rem; color: #6366f1; }
+.edit-circle-dialog { overflow: hidden; border: 1px solid rgb(255 255 255 / 70%); border-radius: 24px; box-shadow: 0 30px 80px rgb(15 23 42 / 28%); padding: 0; }
+.edit-circle-head { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 1rem; padding: 1.5rem 1.6rem 1.35rem; background: linear-gradient(135deg,#312e81,#4f46e5 65%,#7c3aed); color: #fff; }
+.edit-circle-head .btn-close-modal { color: #fff; background: rgb(255 255 255 / 14%); border-color: rgb(255 255 255 / 22%); }
+.edit-circle-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: rgb(255 255 255 / 18%); font-size: 1.35rem; }
+.modal-kicker { display: block; text-transform: uppercase; letter-spacing: .12em; font-size: .68rem; font-weight: 800; opacity: .75; }
+.edit-circle-head .modal-head-title { color: #fff; margin: .15rem 0 .2rem; }
+.edit-circle-head p { margin: 0; font-size: .82rem; color: rgb(255 255 255 / 78%); }
+.edit-circle-body { padding: 1.5rem 1.6rem 1rem; }
+.edit-circle-body .form-group { margin-bottom: 1.15rem; }
+.edit-circle-body label { display: flex; justify-content: space-between; margin-bottom: .45rem; color: #334155; font-weight: 750; }
+.edit-circle-body label span { color: #818cf8; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+.edit-circle-body .form-control { min-height: 46px; border-radius: 12px; border-color: #dbe3ef; padding: .7rem .85rem; }
+.edit-circle-body textarea.form-control { min-height: 92px; resize: vertical; }
+.edit-circle-dialog .modal-footer-bar { padding: 1rem 1.6rem 1.35rem; background: #f8fafc; border-top: 1px solid #eef2f7; }
+@media (max-width: 600px) { .circle-toolbar { align-items: stretch; } .circle-role-pills { overflow-x: auto; } .edit-circle-head, .edit-circle-body, .edit-circle-dialog .modal-footer-bar { padding-left: 1rem; padding-right: 1rem; } }
