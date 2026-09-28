@@ -1099,9 +1099,14 @@ export class CommunityProfile implements OnInit {
     if (album) { this.newAlbumName = ''; this.selectedGalleryAlbumId.set(album.id); }
   }
 
-  storageSlices() {
-    return this.service.storageReport().slices;
-  }
+  protected readonly selectedStorageSlice = signal<string | null>(null);
+
+  storageSlices() { return this.service.storageReport().slices; }
+  storageSliceDetails() { return this.service.storageReport().slices.find((slice) => slice.id === this.selectedStorageSlice()); }
+  selectStorageSlice(id: string): void { this.selectedStorageSlice.set(this.selectedStorageSlice() === id ? null : id); }
+  deleteStoragePhoto(id: number): void { void this.service.deleteGalleryPhoto(id); }
+  deleteStoragePost(id: number): void { this.service.deleteJourneyPost(id); }
+  deleteStorageAlbum(id: number): void { this.service.deleteGalleryAlbum(id); }
 
   openImageModal(url: string): void {
     this.lightboxImageUrl.set(url);

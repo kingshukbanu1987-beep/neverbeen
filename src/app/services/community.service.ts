@@ -1501,6 +1501,12 @@ export class CommunityService {
     this.saveJson(PROFILE_KEY, this.profile());
   }
 
+  deleteGalleryAlbum(albumId: number): void {
+    if (albumId < 0) return;
+    this.profile.update((p) => p ? { ...p, galleryAlbums: (p.galleryAlbums ?? []).filter((a) => a.id !== albumId) } : null);
+    this.saveJson(PROFILE_KEY, this.profile());
+  }
+
   setGalleryAlbumPrivacy(albumId: number, privacy: GalleryAlbum['privacy']): void {
     if (!privacy) return;
     this.profile.update((p) => {

@@ -3150,13 +3150,25 @@
             </div>
             <div class="storage-bars">
               @for (slice of service.storageReport().slices; track slice.id) {
-                <div class="storage-bar">
+                <button type="button" class="storage-bar" [class.is-inspected]="selectedStorageSlice() === slice.id" (click)="selectStorageSlice(slice.id)">
                   <div class="storage-bar-label"><span [style.background]="slice.color"></span>{{ slice.label }}</div>
                   <div class="storage-track"><i [style.width.%]="(slice.bytes / service.storageReport().limit) * 100" [style.background]="slice.color"></i></div>
                   <b>{{ formatStorage(slice.bytes) }}</b>
-                </div>
+                </button>
               }
             </div>
+            @if (selectedStorageSlice(); as inspected) {
+              <section class="storage-inspector">
+                <header><div><span class="inspector-kicker">Micro storage inspector</span><h3>{{ storageSliceDetails()?.label }}</h3><p>{{ formatStorage(storageSliceDetails()?.bytes || 0) }} currently used</p></div><button type="button" class="inspector-close" (click)="selectedStorageSlice.set(null)">×</button></header>
+                @if (inspected === 'gallery') {
+                  <div class="cleanup-list">@for (photo of service.profile()?.gallery || []; track photo.id) { <article><img [src]="photo.url" alt="Gallery photo" /><div><strong>{{ photo.caption || 'Untitled photo' }}</strong><small>Gallery photo · click delete to reclaim space</small></div><button type="button" class="cleanup-delete" (click)="deleteStoragePhoto(photo.id)">Delete</button></article> } @empty { <p class="cleanup-empty">No gallery photos to clean up.</p> }</div><h4 class="cleanup-subtitle">Albums</h4><div class="cleanup-list">@for (album of galleryAlbums(); track album.id) { @if (!album.isDefault) { <article><div class="cleanup-post-icon">▦</div><div><strong>{{ album.name }}</strong><small>{{ album.photos.length }} photos · album metadata and contents</small></div><button type="button" class="cleanup-delete" (click)="deleteStorageAlbum(album.id)">Delete</button></article> } }</div>
+                } @else if (inspected === 'journey-photos' || inspected === 'journey-text') {
+                  <div class="cleanup-list">@for (post of service.journeyPosts(); track post.id) { @if (post.author.id === (service.currentUser()?.id || 1)) { <article><div class="cleanup-post-icon">✈</div><div><strong>{{ post.text || 'Photo-only Journey post' }}</strong><small>{{ post.imageUrls?.length || (post.imageUrl ? 1 : 0) }} photos · {{ formatStorage((post.text || '').length * 2) }} text estimate</small></div><button type="button" class="cleanup-delete" (click)="deleteStoragePost(post.id)">Delete</button></article> } } @empty { <p class="cleanup-empty">No Journey posts to clean up.</p> }</div>
+                } @else {
+                  <p class="cleanup-empty">Use Journey and Gallery to remove the underlying content. This chart category is informational.</p>
+                }
+              </section>
+            }
           </section>
         }
 
