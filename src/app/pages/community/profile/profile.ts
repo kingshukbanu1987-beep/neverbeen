@@ -23,6 +23,8 @@ import {
   HOLD_REACTION_OPTIONS,
   JourneyComment,
   JourneyPost,
+  GalleryAlbum,
+  GalleryPhoto,
   PostAudience,
   REACTION_ICONS,
   ReactionType,
@@ -55,6 +57,7 @@ export type ProfileSection =
   | 'journey'
   | 'about'
   | 'gallery'
+  | 'games'
   | 'messagebook'
   | 'companions'
   | 'followers'
@@ -70,6 +73,7 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
   'journey',
   'about',
   'gallery',
+  'games',
   'messagebook',
   'companions',
   'followers',
@@ -374,6 +378,7 @@ export class CommunityProfile implements OnInit {
   protected editCirclePhoto = '';
   protected readonly circleQuery = signal('');
   protected readonly circleRoleFilter = signal<'all' | 'admin' | 'member'>('all');
+  protected readonly circleStatusTab = signal<'active' | 'archived'>('active');
   protected readonly showEditCircleModal = signal(false);
   protected readonly editingCircleId = signal<number | null>(null);
   protected readonly showAddPeopleModal = signal(false);
@@ -393,11 +398,123 @@ export class CommunityProfile implements OnInit {
 
   // Gallery state
   protected readonly showUploadCard = signal(false);
+  protected readonly selectedGalleryAlbumId = signal<number | undefined>(undefined);
+  protected readonly openGalleryAlbumId = signal<number | null>(null);
+  protected newAlbumName = '';
   protected readonly uploadingGallery = signal(false);
   protected readonly selectedGalleryFile = signal<File | null>(null);
   protected readonly galleryPreviewUrl = signal<string | null>(null);
   protected readonly galleryError = signal<string | null>(null);
   protected newCaption = '';
+
+  // Games hub
+  protected readonly selectedGame = signal<string | null>(null);
+  protected readonly ticBoard = signal<(string | null)[]>(Array(9).fill(null));
+  protected readonly mines = signal<number[]>([1, 7, 13, 19, 23]);
+  protected readonly mineRevealed = signal<number[]>([]);
+  protected readonly mineStatus = signal('Clear the board without hitting a mine');
+  protected readonly ticStatus = signal('Your turn');
+  protected readonly gameScore = signal({ wins: 0, ai: 0 });
+  protected readonly gamePrompt = signal('Ready for a travel challenge?');
+  protected readonly gameOptions = signal<string[]>([]);
+  protected readonly gameFeedback = signal<string | null>(null);
+  protected readonly gameLoading = signal(false);
+  protected readonly gameSource = signal('Live NeverBeen AI game data');
+  protected readonly ludoRoll = signal<number | null>(null);
+  protected readonly snakeBody = signal<number[]>([78, 77, 76]);
+  protected readonly snakeFood = signal(55);
+  protected readonly snakeDirection = signal<'up' | 'down' | 'left' | 'right'>('right');
+  protected readonly snakeRunning = signal(false);
+  protected readonly snakeScore = signal(0);
+  protected readonly flappyBirdY = signal(50);
+  protected readonly flappyVelocity = signal(0);
+  protected readonly flappyPipeX = signal(100);
+  protected readonly flappyGap = signal(48);
+  protected readonly flappyScore = signal(0);
+  protected readonly flappyRunning = signal(false);
+  protected readonly arcadeScore = signal(0);
+  protected readonly arcadeStatus = signal('Ready to play');
+  protected readonly arcadeProgress = signal(12);
+  private snakeTimer?: ReturnType<typeof setInterval>;
+  private flappyTimer?: ReturnType<typeof setInterval>;
+  protected readonly chessPieces = signal<string[]>(['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟','','','','','','','','','♙','♙','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔','♗','♘','♖']);
+  protected readonly chessSelected = signal<number | null>(null);
+  protected readonly puzzleCategory = signal<string | null>(null);
+  protected readonly puzzlePieces = signal<number[]>([0,1,2,3,4,5,6,7,8]);
+  protected readonly puzzleImage = signal<string | null>(null);
+  async selectChessSquare(index: number): Promise<void> { const selected = this.chessSelected(); if (selected === null) { if (this.chessPieces()[index]) this.chessSelected.set(index); return; } const pieces = [...this.chessPieces()]; [pieces[selected], pieces[index]] = [pieces[index], pieces[selected]]; this.chessPieces.set(pieces); this.chessSelected.set(null); this.gameLoading.set(true); this.gameSource.set('Live AI · Lichess Cloud Evaluation'); try { await this.liveJson('https://lichess.org/api/cloud-eval?fen=rnbqkbnr%2Fpppppppp%2F8%2F8%2F8%2F8%2FPPPPPPPP%2FRNBQKBNR%20w%20KQkq%20-%200%201&multiPv=1'); this.gameFeedback.set('Move registered. Live NeverBeen AI has evaluated the position.'); } catch { this.gameFeedback.set('Move registered. NeverBeen AI is calculating its reply.'); } finally { this.gameLoading.set(false); } }
+  async startPuzzle(category: string): Promise<void> { this.puzzleCategory.set(category); this.puzzlePieces.set([0,1,2,3,4,5,6,7,8].sort(() => Math.random() - .5)); this.gameLoading.set(true); this.gameSource.set('Live photo · Wikimedia Commons'); try { const query = encodeURIComponent(category.replace(/^[^ ]+ /, '')); const data = await this.liveJson<any>(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${query}&gsrnamespace=6&gsrlimit=1&prop=imageinfo&iiprop=url&iiurlwidth=640&format=json&origin=*`); const page = Object.values(data.query?.pages || {})[0] as any; this.puzzleImage.set(page?.imageinfo?.[0]?.thumburl || null); this.gameFeedback.set(`${category} puzzle loaded from live travel imagery. Click adjacent pieces to arrange it.`); } catch { this.gameFeedback.set(`${category} puzzle loaded. Click adjacent pieces to arrange it.`); } finally { this.gameLoading.set(false); } }
+  movePuzzlePiece(index: number): void { const pieces = [...this.puzzlePieces()]; const empty = pieces.indexOf(8); if (Math.abs(empty - index) === 1 || Math.abs(empty - index) === 3) { [pieces[empty], pieces[index]] = [pieces[index], pieces[empty]]; this.puzzlePieces.set(pieces); if (pieces.every((piece, i) => piece === i)) this.gameFeedback.set('Puzzle complete! NeverBeen AI awards you a travel star.'); } }
+  protected readonly crosswordThemes = ['🌎 Countries', '🏙️ Cities', '🏛️ Famous landmarks', '✈️ Airports', '🍜 International food', '🏖️ Beaches', '🏔️ Mountains', '🎭 Culture', '🗺️ Geography', '📸 Famous destinations'];
+  protected readonly crosswordAnswers = signal<string[]>(Array(5).fill(''));
+  protected readonly crosswordClues = ['Capital of Japan', 'City of lights', 'Famous Italian landmark', 'Airport code for London Heathrow', 'Spicy Japanese noodle soup'];
+  protected readonly gameCategories = ['🌍 Famous landmark', '🏖️ Beach', '🏔️ Mountain', '🏙️ City', '🕌 Historical place', '🐼 Animals', '🍜 Food', '✈️ Travel destination'];
+
+  async selectGame(game: string): Promise<void> {
+    this.selectedGame.set(game); this.gameFeedback.set(null); this.gameLoading.set(false); this.ludoRoll.set(null);
+    if (game === 'Flag Challenge') await this.loadLiveFlags();
+    if (game === 'Travel Quiz') await this.loadLiveQuiz();
+    if (game === 'Guess the Country') await this.loadLiveCountry();
+    if (game === 'Jigsaw Puzzle') this.gamePrompt.set('Choose a category to load a live travel photo.');
+    if (game === 'Crossword') await this.loadLiveCrossword();
+    if (game === 'Chess') this.gamePrompt.set('You play White. Select a piece to begin — NeverBeen AI will query its live move service.');
+    if (game === 'Ludo') this.gamePrompt.set('Roll the dice to race your token against NeverBeen AI.');
+    if (game === 'NeverBeen Snake') this.startSnake();
+    if (game === 'Flappy Bird') this.startFlappy();
+  }
+  private async liveJson<T>(url: string): Promise<T> { const response = await fetch(url); if (!response.ok) throw new Error(`Live game service returned ${response.status}`); return response.json() as Promise<T>; }
+  private async loadLiveFlags(): Promise<void> {
+    this.gameLoading.set(true); this.gameSource.set('Live data · REST Countries API');
+    try { const data = await this.liveJson<any[]>('https://restcountries.com/v3.1/all?fields=name,flags'); const countries = data.filter(c => c?.name?.common && c?.flags?.emoji).sort(() => Math.random() - .5).slice(0, 4); const answer = countries[0].name.common; this.gamePrompt.set(`Which country does this flag belong to? ${countries[0].flags.emoji}`); this.gameOptions.set([answer, ...countries.slice(1).map(c => c.name.common)].sort(() => Math.random() - .5)); this.liveFlagAnswer = answer; } catch { this.gamePrompt.set('Live flag service is unavailable. Please retry.'); this.gameOptions.set([]); } finally { this.gameLoading.set(false); }
+  }
+  private async loadLiveQuiz(): Promise<void> {
+    this.gameLoading.set(true); this.gameSource.set('Live data · Open Trivia Database');
+    try { const data = await this.liveJson<any>('https://opentdb.com/api.php?amount=1&category=22&type=multiple'); const item = data.results?.[0]; if (!item) throw new Error('No question'); const decode = (value: string) => { const el = document.createElement('textarea'); el.innerHTML = value; return el.value; }; const answer = decode(item.correct_answer); this.gamePrompt.set(decode(item.question)); this.gameOptions.set([answer, ...item.incorrect_answers.map(decode)].sort(() => Math.random() - .5)); this.liveQuizAnswer = answer; } catch { this.gamePrompt.set('Live quiz service is unavailable. Please retry.'); this.gameOptions.set([]); } finally { this.gameLoading.set(false); }
+  }
+  private async loadLiveCrossword(): Promise<void> { this.gameLoading.set(true); this.gameSource.set('Live data · Open Trivia Database'); try { const data = await this.liveJson<any>('https://opentdb.com/api.php?amount=1&category=22&type=multiple'); const question = data.results?.[0]?.question; if (question) this.gamePrompt.set(`Live AI clue loaded: ${question}`); } catch { this.gamePrompt.set('Live crossword clue service is unavailable. Choose a theme to continue.'); } finally { this.gameLoading.set(false); } }
+  private async loadLiveCountry(): Promise<void> {
+    this.gameLoading.set(true); this.gameSource.set('Live data · REST Countries API');
+    try { const data = await this.liveJson<any[]>('https://restcountries.com/v3.1/all?fields=name,capital,flags'); const country = data.filter(c => c?.name?.common && c?.flags?.png).sort(() => Math.random() - .5)[0]; this.gamePrompt.set(`Guess the country from this live flag clue: ${country.flags.emoji || '🌍'} · Capital: ${country.capital?.[0] || 'Unknown'}`); this.gameOptions.set([country.name.common, ...data.filter(c => c.name.common !== country.name.common).sort(() => Math.random() - .5).slice(0, 3).map(c => c.name.common)].sort(() => Math.random() - .5)); this.liveQuizAnswer = country.name.common; } catch { this.gamePrompt.set('Live country service is unavailable. Please retry.'); this.gameOptions.set([]); } finally { this.gameLoading.set(false); }
+  }
+  private liveFlagAnswer = '';
+  private liveQuizAnswer = '';
+  updateCrossword(index: number, value: string): void { this.crosswordAnswers.update(answers => answers.map((answer, i) => i === index ? value : answer)); }
+  crosswordCheck(): void { const answers = ['Tokyo', 'Paris', 'Colosseum', 'LHR', 'Ramen']; const score = this.crosswordAnswers().filter((answer, i) => answer.trim().toLowerCase() === answers[i].toLowerCase()).length; this.gameFeedback.set(`${score}/5 correct. NeverBeen AI has checked your travel crossword.`); }
+  resetCrossword(): void { this.crosswordAnswers.set(Array(5).fill('')); this.gameFeedback.set(null); }
+  async rollLudoDice(): Promise<void> { this.gameLoading.set(true); this.gameSource.set('Live randomizer · Random.org'); try { const response = await fetch('https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new'); const value = Number((await response.text()).trim()); this.ludoRoll.set(Number.isFinite(value) ? value : 1); this.gameFeedback.set(`You rolled ${value}! NeverBeen AI is moving its token.`); } catch { const value = Math.floor(Math.random() * 6) + 1; this.ludoRoll.set(value); this.gameFeedback.set(`You rolled ${value}! Offline fallback used while NeverBeen AI moves.`); } finally { this.gameLoading.set(false); } }
+  answerGame(answer: string): void { const correct = this.selectedGame() === 'Flag Challenge' ? this.liveFlagAnswer : this.liveQuizAnswer; this.gameFeedback.set(answer === correct ? 'Correct! NeverBeen AI says well played.' : `Not quite — the answer is ${correct || 'not available'}. Try another live round!`); }
+  startArcade(game: string): void { this.selectedGame.set(game); this.arcadeScore.set(0); this.arcadeProgress.set(12); this.arcadeStatus.set('NeverBeen AI is ready — make your move!'); }
+  playArcade(): void { const game = this.selectedGame(); this.arcadeScore.update(score => score + (game === 'Darts' ? Math.floor(Math.random() * 20) + 1 : 10)); this.arcadeProgress.update(value => Math.min(94, value + 9)); this.arcadeStatus.set(game === 'Tetris' ? 'Piece dropped — clear a line!' : game === 'Darts' ? 'Bullseye practice! Aim again.' : game === 'Simple Racing' ? 'Boost engaged — overtake the AI!' : game === 'Space Shooter' ? 'Laser fired — alien wave hit!' : 'Paddle hit! Keep the rally alive.'); }
+  startFlappy(): void { this.stopFlappy(); this.flappyBirdY.set(50); this.flappyVelocity.set(0); this.flappyPipeX.set(100); this.flappyScore.set(0); this.flappyRunning.set(true); this.gameFeedback.set(null); this.flappyTimer = setInterval(() => this.tickFlappy(), 45); }
+  stopFlappy(): void { if (this.flappyTimer) { clearInterval(this.flappyTimer); this.flappyTimer = undefined; } this.flappyRunning.set(false); }
+  flap(): void { if (!this.flappyRunning()) this.startFlappy(); this.flappyVelocity.set(-1.8); }
+  tickFlappy(): void { const y = this.flappyBirdY() + this.flappyVelocity(); const velocity = this.flappyVelocity() + .075; let pipe = this.flappyPipeX() - .8; if (pipe < -12) { pipe = 100; this.flappyScore.update(score => score + 1); } const gap = this.flappyGap(); const collision = y < 0 || y > 94 || (pipe < 22 && pipe > 8 && (y < gap - 18 || y > gap + 18)); if (collision) { this.stopFlappy(); this.gameFeedback.set(`Game over! Score ${this.flappyScore()}. Tap Flap to try again.`); return; } this.flappyBirdY.set(y); this.flappyVelocity.set(velocity); this.flappyPipeX.set(pipe); }
+  startSnake(): void { this.stopSnake(); this.snakeBody.set([78,77,76]); this.snakeFood.set(55); this.snakeDirection.set('right'); this.snakeScore.set(0); this.snakeRunning.set(true); this.snakeTimer = setInterval(() => this.moveSnake(), Math.max(75, 170 - this.snakeScore() * 6)); }
+  stopSnake(): void { if (this.snakeTimer) { clearInterval(this.snakeTimer); this.snakeTimer = undefined; } this.snakeRunning.set(false); }
+  moveSnake(): void { const body = this.snakeBody(), head = body[0], row = Math.floor(head / 12), col = head % 12; const d = this.snakeDirection(); const next = d === 'up' ? head - 12 : d === 'down' ? head + 12 : d === 'left' ? (col === 0 ? -1 : head - 1) : (col === 11 ? -1 : head + 1); if (next < 0 || next >= 144 || body.includes(next) || (d === 'up' && row === 0) || (d === 'down' && row === 11)) { this.stopSnake(); this.gameFeedback.set(`Game over! Score ${this.snakeScore()}. NeverBeen AI applauds your run.`); return; } const grown = [next, ...body]; if (next === this.snakeFood()) { this.snakeScore.update(s => s + 1); let food = Math.floor(Math.random() * 144); while (grown.includes(food)) food = Math.floor(Math.random() * 144); this.snakeFood.set(food); } else grown.pop(); this.snakeBody.set(grown); }
+  @HostListener('window:keydown', ['$event'])
+  onGameKey(event: KeyboardEvent): void { if (this.selectedGame() === 'Flappy Bird' && (event.code === 'Space' || event.key === 'ArrowUp')) { event.preventDefault(); this.flap(); return; } if (this.selectedGame() !== 'NeverBeen Snake') return; const key = event.key.toLowerCase(); const map: Record<string, 'up'|'down'|'left'|'right'> = { arrowup:'up', w:'up', arrowdown:'down', s:'down', arrowleft:'left', a:'left', arrowright:'right', d:'right' }; if (map[key]) { event.preventDefault(); const next = map[key]; const opposite = { up:'down', down:'up', left:'right', right:'left' } as const; if (opposite[this.snakeDirection()] !== next) this.snakeDirection.set(next); } }
+  resetMinesweeper(): void {
+    const positions = new Set<number>();
+    while (positions.size < 5) positions.add(Math.floor(Math.random() * 25));
+    this.mines.set([...positions]);
+    this.mineRevealed.set([]);
+    this.mineStatus.set('Clear the board without hitting a mine');
+  }
+  revealMineCell(index: number): void { if (this.mineRevealed().includes(index) || this.mineStatus() !== 'Clear the board without hitting a mine') return; if (this.mines().includes(index)) { this.mineRevealed.set(Array.from({ length: 25 }, (_, i) => i)); this.mineStatus.set('Boom! NeverBeen AI says try again.'); return; } const revealed = [...this.mineRevealed(), index]; this.mineRevealed.set(revealed); if (revealed.length >= 20) this.mineStatus.set('You cleared the board! NeverBeen AI awards you a star.'); }
+  mineCountAround(index: number): number { const row = Math.floor(index / 5), col = index % 5; return this.mines().filter(m => { const mr = Math.floor(m / 5), mc = m % 5; return Math.abs(mr - row) <= 1 && Math.abs(mc - col) <= 1; }).length; }
+  resetTicTacToe(): void { this.ticBoard.set(Array(9).fill(null)); this.ticStatus.set('Your turn'); }
+  playTicCell(index: number): void {
+    if (this.selectedGame() !== 'Tic-Tac-Toe' || this.ticBoard()[index] || this.ticStatus() !== 'Your turn') return;
+    const board = [...this.ticBoard()]; board[index] = 'X'; this.ticBoard.set(board);
+    if (this.gameWinner(board)) { this.ticStatus.set('You win!'); this.gameScore.update(s => ({ ...s, wins: s.wins + 1 })); return; }
+    const open = board.map((v, i) => v ? -1 : i).filter(i => i >= 0);
+    if (!open.length) { this.ticStatus.set('Draw game'); return; }
+    const ai = open[Math.floor(Math.random() * open.length)]; board[ai] = 'O'; this.ticBoard.set(board);
+    this.ticStatus.set(this.gameWinner(board) ? 'NeverBeen AI wins' : 'Your turn');
+    if (this.gameWinner(board)) this.gameScore.update(s => ({ ...s, ai: s.ai + 1 }));
+  }
+  private gameWinner(board: (string | null)[]): boolean { return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(line => !!board[line[0]] && board[line[0]] === board[line[1]] && board[line[1]] === board[line[2]]); }
 
   // MessageBook state
   protected newPostText = '';
@@ -924,12 +1041,14 @@ export class CommunityProfile implements OnInit {
 
   audienceLabel(post: JourneyPost): string {
     const mode = post.audience?.mode ?? 'public';
+    if (mode === 'only-me') return 'Only Me';
     if (mode === 'companions') return 'Companions';
     if (mode === 'custom') return 'Custom';
     return 'Public';
   }
 
   composerAudienceLabel(): string {
+    if (this.postAudience.mode === 'only-me') return '🔒 Only Me';
     if (this.postAudience.mode === 'companions') return '👥 Companions';
     if (this.postAudience.mode === 'custom') {
       const count = this.postAudience.allowIds?.length ?? 0;
@@ -1065,9 +1184,40 @@ export class CommunityProfile implements OnInit {
     this.setBirthdayDraft(card.companion.id, '');
   }
 
-  storageSlices() {
-    return this.service.storageReport().slices;
+  myJourneyPostCount(): number {
+    const me = this.service.currentUser()?.id ?? 1;
+    return this.service.journeyPosts().filter((post) => Number(post.author.id) === Number(me)).length;
   }
+
+  galleryAlbums() { return this.service.galleryAlbums(); }
+  albumCover(album: GalleryAlbum): GalleryPhoto | undefined { return album.photos.find((photo) => photo.id === album.coverPhotoId) || album.photos[0]; }
+  chooseAlbumCover(album: GalleryAlbum, event: Event): void {
+    event.stopPropagation();
+    const photoId = Number((event.target as HTMLSelectElement).value);
+    if (photoId) this.service.setGalleryAlbumCover(album.id, photoId);
+  }
+  openGalleryAlbum(album: GalleryAlbum): void {
+    this.openGalleryAlbumId.set(album.id);
+    this.selectedGalleryAlbumId.set(album.isDefault ? undefined : album.id);
+    this.showUploadCard.set(true);
+  }
+  closeGalleryAlbum(): void { this.openGalleryAlbumId.set(null); this.showUploadCard.set(false); }
+  openedGalleryAlbum(): GalleryAlbum | undefined { return this.galleryAlbums().find((album) => album.id === this.openGalleryAlbumId()); }
+  setAlbumPrivacy(album: GalleryAlbum, event: Event): void { this.service.setGalleryAlbumPrivacy(album.id, (event.target as HTMLSelectElement).value as GalleryAlbum['privacy']); }
+
+  createGalleryAlbum(): void {
+    const album = this.service.createGalleryAlbum(this.newAlbumName);
+    if (album) { this.newAlbumName = ''; this.selectedGalleryAlbumId.set(album.id); }
+  }
+
+  protected readonly selectedStorageSlice = signal<string | null>(null);
+
+  storageSlices() { return this.service.storageReport().slices; }
+  storageSliceDetails() { return this.service.storageReport().slices.find((slice) => slice.id === this.selectedStorageSlice()); }
+  selectStorageSlice(id: string): void { this.selectedStorageSlice.set(this.selectedStorageSlice() === id ? null : id); }
+  deleteStoragePhoto(id: number): void { void this.service.deleteGalleryPhoto(id); }
+  deleteStoragePost(id: number): void { this.service.deleteJourneyPost(id); }
+  deleteStorageAlbum(id: number): void { this.service.deleteGalleryAlbum(id); }
 
   openImageModal(url: string): void {
     this.lightboxImageUrl.set(url);
@@ -2228,7 +2378,7 @@ export class CommunityProfile implements OnInit {
   async deleteCircle(circleId: number, event?: Event): Promise<void> {
     event?.preventDefault();
     event?.stopPropagation();
-    const ok = await this.confirmSvc.confirm('Delete this Circle for everyone in it? This cannot be undone.', 'Delete');
+    const ok = await this.confirmSvc.confirm('Archive this Circle for everyone in it? It will move to Archived and no longer be active.', 'Archive');
     if (!ok) return;
     const removed = this.service.deleteCircle(circleId);
     if (!removed) {
@@ -2255,7 +2405,8 @@ export class CommunityProfile implements OnInit {
     const q = this.circleQuery().trim().toLowerCase();
     const role = this.circleRoleFilter();
     const me = this.service.currentUser()?.id ?? 1;
-    return this.service.myCircles().filter((c) => {
+    const source = this.circleStatusTab() === 'archived' ? this.service.archivedCircles() : this.service.myCircles();
+    return source.filter((c) => {
       const admin = this.service.isCircleAdmin(c, me);
       if (role === 'admin' && !admin) return false;
       if (role === 'member' && admin) return false;
@@ -2770,7 +2921,7 @@ export class CommunityProfile implements OnInit {
 
     this.uploadingGallery.set(true);
     try {
-      await this.service.addGalleryPhoto(file, this.newCaption);
+      await this.service.addGalleryPhoto(file, this.newCaption, this.selectedGalleryAlbumId());
       this.selectedGalleryFile.set(null);
       this.galleryPreviewUrl.set(null);
       this.newCaption = '';

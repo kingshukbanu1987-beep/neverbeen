@@ -16,6 +16,7 @@ import {
   Country,
   CurrentUser,
   GalleryPhoto,
+  GalleryAlbum,
   JourneyComment,
   JourneyPost,
   LoginDevice,
@@ -390,7 +391,13 @@ export class CommunityService {
   /** Circles the signed-in member belongs to (admin or member). */
   readonly myCircles = computed(() => {
     const me = this.currentUser()?.id ?? 1;
-    return this.circles().filter((c) => isCircleParticipant(c, me));
+    return this.circles().filter((c) => !c.archivedAtUtc && isCircleParticipant(c, me));
+  });
+
+  /** Deleted circles are retained locally so members can review their history. */
+  readonly archivedCircles = computed(() => {
+    const me = this.currentUser()?.id ?? 1;
+    return this.circles().filter((c) => !!c.archivedAtUtc && isCircleParticipant(c, me));
   });
 
   readonly adminCircleCount = computed(() => this.countAdminCircles(this.currentUser()?.id ?? 1));
@@ -1435,7 +1442,7 @@ export class CommunityService {
   // Gallery
   // ---------------------------------------------------------------------------
 
-  async addGalleryPhoto(file: File, caption?: string): Promise<GalleryPhoto> {
+  async addGalleryPhoto(file: File, caption?: string, albumId?: number): Promise<GalleryPhoto> {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
@@ -1457,6 +1464,7 @@ export class CommunityService {
           return {
             ...p,
             gallery: [newPhoto, ...p.gallery],
+            galleryAlbums: (p.galleryAlbums ?? []).map((album) => album.id === albumId ? { ...album, photos: [newPhoto, ...album.photos], coverPhotoId: album.coverPhotoId ?? newPhoto.id, updatedAtUtc: newPhoto.createdAtUtc } : album),
           };
         });
 
@@ -1465,6 +1473,50 @@ export class CommunityService {
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  galleryAlbums(): GalleryAlbum[] {
+    const profile = this.profile();
+    if (!profile) return [];
+    const saved = profile.galleryAlbums ?? [];
+    const defaults: GalleryAlbum[] = ['Profile Photos', 'Cover Photos'].map((name, index) => {
+      const image = index === 0 ? profile.profilePhotoUrl : profile.coverPhotoUrl;
+      const photo = image ? { id: -(index + 1), url: image, caption: name, createdAtUtc: new Date().toISOString() } : undefined;
+      return { id: -(index + 1), name, photos: photo ? [photo] : [], coverPhotoId: photo?.id, privacy: saved.find((item) => item.name === name)?.privacy || 'public', isDefault: true, updatedAtUtc: new Date().toISOString() };
+    });
+    return [...defaults, ...saved.filter((album) => !defaults.some((item) => item.name === album.name)).sort((a, b) => b.updatedAtUtc.localeCompare(a.updatedAtUtc))];
+  }
+
+  createGalleryAlbum(name: string): GalleryAlbum | null {
+    const clean = name.trim();
+    if (!clean || ['profile photos', 'cover photos'].includes(clean.toLowerCase())) return null;
+    const album: GalleryAlbum = { id: generateUniqueId(), name: clean, photos: [], updatedAtUtc: new Date().toISOString() };
+    this.profile.update((p) => p ? { ...p, galleryAlbums: [album, ...(p.galleryAlbums ?? [])] } : null);
+    this.saveJson(PROFILE_KEY, this.profile());
+    return album;
+  }
+
+  setGalleryAlbumCover(albumId: number, photoId: number): void {
+    this.profile.update((p) => p ? { ...p, galleryAlbums: (p.galleryAlbums ?? []).map((a) => a.id === albumId ? { ...a, coverPhotoId: photoId, updatedAtUtc: new Date().toISOString() } : a) } : null);
+    this.saveJson(PROFILE_KEY, this.profile());
+  }
+
+  deleteGalleryAlbum(albumId: number): void {
+    if (albumId < 0) return;
+    this.profile.update((p) => p ? { ...p, galleryAlbums: (p.galleryAlbums ?? []).filter((a) => a.id !== albumId) } : null);
+    this.saveJson(PROFILE_KEY, this.profile());
+  }
+
+  setGalleryAlbumPrivacy(albumId: number, privacy: GalleryAlbum['privacy']): void {
+    if (!privacy) return;
+    this.profile.update((p) => {
+      if (!p) return null;
+      const name = albumId === -1 ? 'Profile Photos' : albumId === -2 ? 'Cover Photos' : undefined;
+      const albums = p.galleryAlbums ?? [];
+      if (name && !albums.some((a) => a.name === name)) return { ...p, galleryAlbums: [...albums, { id: albumId, name, photos: [], privacy, isDefault: true, updatedAtUtc: new Date().toISOString() }] };
+      return { ...p, galleryAlbums: albums.map((a) => a.id === albumId ? { ...a, privacy, updatedAtUtc: new Date().toISOString() } : a) };
+    });
+    this.saveJson(PROFILE_KEY, this.profile());
   }
 
   async deleteGalleryPhoto(photoId: number): Promise<void> {
@@ -1730,6 +1782,7 @@ export class CommunityService {
     if (audience.mode === 'custom') {
       return (audience.allowIds ?? []).some((id) => Number(id) === Number(viewerId));
     }
+    if (audience.mode === 'only-me') return false;
     if (post.wallOwnerId != null && Number(post.wallOwnerId) === Number(viewerId)) return true;
     if (audience.mode === 'public') return true;
     const connected = this.companions().some((c) => c.id === post.author.id && c.status === 'connected');
@@ -2485,11 +2538,11 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   countAdminCircles(userId: number): number {
-    return this.circles().filter((c) => isCircleAdmin(c, userId)).length;
+    return this.circles().filter((c) => !c.archivedAtUtc && isCircleAdmin(c, userId)).length;
   }
 
   countMemberOnlyCircles(userId: number): number {
-    return this.circles().filter((c) => isCircleParticipant(c, userId) && !isCircleAdmin(c, userId)).length;
+    return this.circles().filter((c) => !c.archivedAtUtc && isCircleParticipant(c, userId) && !isCircleAdmin(c, userId)).length;
   }
 
   isCircleAdmin(circle: Circle, userId: number): boolean {
@@ -2569,7 +2622,9 @@ export class CommunityService {
     const me = this.currentUser()?.id ?? 1;
     const circle = this.circles().find((c) => c.id === circleId);
     if (!circle || !isCircleAdmin(circle, me)) return false;
-    this.circles.update((list) => list.filter((c) => c.id !== circleId));
+    this.circles.update((list) =>
+      list.map((c) => (c.id === circleId ? normalizeCircle({ ...c, archivedAtUtc: new Date().toISOString() }) : c)),
+    );
     this.saveJson(CIRCLES_KEY, this.circles());
     this.closeChatBox(-Math.abs(circleId));
     return true;

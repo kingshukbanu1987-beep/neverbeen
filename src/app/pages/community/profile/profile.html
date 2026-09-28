@@ -236,8 +236,8 @@
               <span>Circles</span>
             </div>
             <div class="stat-chip">
-              <strong>{{ service.profile()?.gallery?.length || 0 }}</strong>
-              <span>Photos</span>
+              <strong>{{ myJourneyPostCount() }}</strong>
+              <span>Journey Posts</span>
             </div>
           </div>
 
@@ -351,7 +351,15 @@
           </button>
           }
 
-          <!-- 4. MessageBook -->
+          <!-- 4. Games -->
+          @if (profileSectionOn('games')) {
+          <button type="button" class="menu-btn" [class.active]="!viewingVisitor() && activeSection() === 'games'" (click)="setSection('games')">
+            <span class="icon-pill pill-violet"><span class="games-menu-icon">🎮</span></span>
+            <span class="menu-label">Games</span>
+          </button>
+          }
+
+          <!-- 5. MessageBook -->
           @if (profileSectionOn('messagebook')) {
           <button
             type="button"
@@ -1911,6 +1919,30 @@
               </button>
             </header>
 
+            <div class="album-create-bar">
+              <div><strong>Your albums</strong><span>Organize every memory in one place</span></div>
+              <input [(ngModel)]="newAlbumName" placeholder="New album name" aria-label="New album name" />
+              <button type="button" class="btn-primary-action btn-sm" (click)="createGalleryAlbum()" [disabled]="!newAlbumName.trim()">+ Create album</button>
+            </div>
+            @if (openedGalleryAlbum(); as album) {
+              <section class="album-viewer" aria-label="Open album">
+                <div class="album-viewer-head"><button type="button" class="album-back" (click)="closeGalleryAlbum()">← All albums</button><div><span class="album-eyebrow">Album</span><h2>{{ album.name }}</h2><p>{{ album.photos.length }} photos · Your private album space</p></div><select class="album-privacy" [value]="album.privacy || 'public'" (change)="setAlbumPrivacy(album, $event)" ><option value="public">🌐 Public</option><option value="companions">👥 Companions</option><option value="only-me">🔒 Only me</option></select></div>
+                <div class="album-photo-grid">
+                  @for (photo of album.photos; track photo.id) { <figure><img [src]="photo.url" [alt]="photo.caption || album.name" (click)="openImageModal(photo.url)" /><figcaption>{{ photo.caption || 'Photo' }}</figcaption></figure> } @empty { <div class="album-empty"><strong>This album is ready for memories.</strong><span>Upload a photo to get started.</span></div> }
+                </div>
+              </section>
+            } @else {
+            <div class="album-grid">
+              @for (album of galleryAlbums(); track album.id) {
+                <button type="button" class="album-card" [class.selected]="selectedGalleryAlbumId() === album.id" (click)="openGalleryAlbum(album)">
+                  <div class="album-cover"><img [src]="albumCover(album)?.url || (album.name === 'Profile Photos' ? (service.profile()?.profilePhotoUrl || defaultAvatar) : (service.profile()?.coverPhotoUrl || defaultCoverPhoto))" [alt]="album.name" /></div>
+                  <span class="album-name">{{ album.name }}</span><small>{{ album.photos.length }} photos · {{ album.isDefault ? 'Default' : 'Custom' }}</small>
+                  @if (album.photos.length > 1 && !album.isDefault) { <select class="album-cover-select" aria-label="Choose album cover" (change)="chooseAlbumCover(album, $event)"><option value="">Choose cover</option>@for (photo of album.photos; track photo.id) { <option [value]="photo.id" [selected]="photo.id === album.coverPhotoId">Photo {{ $index + 1 }}</option> }</select> }
+                </button>
+              }
+            </div>
+            }
+
             <!-- Upload Card -->
             @if (showUploadCard()) {
               <div class="gallery-upload-box">
@@ -1968,7 +2000,48 @@
         }
 
         <!-- ================================================================= -->
-        <!-- SECTION 4: MESSAGEBOOK (Personal to user and companions only)      -->
+        <!-- SECTION 4: GAMES                                                   -->
+        <!-- ================================================================= -->
+        @if (activeSection() === 'games') {
+          <section class="section-pane games-pane">
+            <header class="games-hero"><div><span class="games-kicker">NeverBeen Play</span><h1 class="section-title">Games</h1><p class="section-desc">Travel farther from wherever you are. Learn, explore, and challenge yourself.</p></div><div class="games-trophy">✦</div></header>
+            @if (!selectedGame()) {
+              <div class="games-grid">
+                <button type="button" class="game-tile tic-game" (click)="selectGame('Tic-Tac-Toe'); resetTicTacToe()"><span class="game-tile-icon">🎮</span><strong>Tic-Tac-Toe</strong><small>Play against NeverBeen AI</small><em>Play now →</em></button>
+                <button type="button" class="game-tile snake-game" (click)="selectGame('NeverBeen Snake')"><span class="game-tile-icon">🐍</span><strong>NeverBeen Snake</strong><small>Arrow keys / WASD · eat, grow, survive</small><em>Play now →</em></button>
+                <button type="button" class="game-tile mines-game" (click)="selectGame('Minesweeper'); resetMinesweeper()"><span class="game-tile-icon">💣</span><strong>Minesweeper</strong><small>Find the safe squares with NeverBeen AI</small><em>Play now →</em></button>
+                <button type="button" class="game-tile flappy-game" (click)="selectGame('Flappy Bird')"><span class="game-tile-icon">🐤</span><strong>Flappy Bird-style</strong><small>Flap through the travel pipes</small><em>Play now →</em></button>
+              </div>
+            } @else {
+              <section class="game-stage"><button type="button" class="game-back" (click)="selectedGame.set(null)">← All games</button><div class="game-stage-heading"><span>{{ selectedGame() === 'Jigsaw Puzzle' ? '🧩' : selectedGame() === 'Chess' ? '♟️' : '✨' }}</span><div><h2>{{ selectedGame() }}</h2><p>{{ selectedGame() === 'Jigsaw Puzzle' ? 'Choose a photo category to begin.' : 'A mindful travel challenge, made for curious explorers.' }}</p></div></div>
+                @if (selectedGame() === 'Flag Challenge' || selectedGame() === 'Travel Quiz' || selectedGame() === 'Guess the Country') {
+                  <div class="quiz-stage">
+                    @if (gameLoading()) { <div class="game-loading"><span>✦</span><strong>NeverBeen AI is fetching a live round…</strong></div> }
+                    @else {
+                      <div class="quiz-question">{{ gamePrompt() }}</div>
+                      <div class="quiz-options">@for (option of gameOptions(); track option) { <button type="button" (click)="answerGame(option)">{{ option }}</button> }</div>
+                      @if (gameFeedback()) { <p class="game-feedback">{{ gameFeedback() }}</p> }
+                      <button type="button" class="btn-primary-action" (click)="selectGame(selectedGame()!)">New live question</button>
+                    }
+                  </div>
+                }
+                @else if (selectedGame() === 'Minesweeper') { <div class="mines-stage"><div class="mines-head"><strong>{{ mineStatus() }}</strong><button type="button" class="game-back" (click)="resetMinesweeper()">New board</button></div><div class="mines-board">@for (cell of [].constructor(25); track $index) { <button type="button" [class.mine-revealed]="mineRevealed().includes($index)" (click)="revealMineCell($index)">{{ mineRevealed().includes($index) ? (mines().includes($index) ? '💣' : (mineCountAround($index) || '·')) : '?' }}</button> }</div><p class="game-feedback">NeverBeen AI is your co-pilot. Tap a square to reveal it.</p></div> }
+                @else if (['Tetris', 'Darts', 'Simple Racing', 'Space Shooter', 'Pong', 'Whack-a-Mole', 'Coin Catcher', 'Hangman', 'Penalty Shootout', 'Archery', 'Tower Builder', 'Bubble Shooter', 'Asteroids'].includes(selectedGame()!)) { <div class="arcade-stage"><div class="arcade-hud"><strong>{{ selectedGame() }}</strong><span>Score {{ arcadeScore() }}</span></div><div class="arcade-arena" [class]="selectedGame()?.toLowerCase()?.replace(' ', '-')"><span class="arcade-target">{{ selectedGame() === 'Tetris' ? '🧱' : selectedGame() === 'Darts' ? '🎯' : selectedGame() === 'Simple Racing' ? '🏎️' : selectedGame() === 'Space Shooter' ? '👾' : '🏓' }}</span><div class="arcade-progress"><i [style.width.%]="arcadeProgress()"></i></div></div><p class="game-feedback">{{ arcadeStatus() }}</p><button type="button" class="btn-primary-action arcade-action" (click)="playArcade()">{{ selectedGame() === 'Darts' ? 'Throw dart' : selectedGame() === 'Simple Racing' ? 'Accelerate' : selectedGame() === 'Space Shooter' ? 'Fire laser' : selectedGame() === 'Pong' ? 'Hit ball' : 'Drop block' }}</button></div> }
+                @else if (selectedGame() === 'Flappy Bird') { <div class="flappy-stage" tabindex="0" (click)="flap()"><div class="flappy-hud"><strong>Score {{ flappyScore() }}</strong><span>Space / ↑ / tap to flap</span><button type="button" class="btn-primary-action btn-sm" (click)="$event.stopPropagation(); startFlappy()">{{ flappyRunning() ? 'Restart' : 'Start' }}</button></div><div class="flappy-sky"><div class="flappy-pipe flappy-pipe-top" [style.left.%]="flappyPipeX()" [style.height.%]="flappyGap() - 25"></div><div class="flappy-bird" [style.top.%]="flappyBirdY()">🐤</div><div class="flappy-pipe flappy-pipe-bottom" [style.left.%]="flappyPipeX()" [style.top.%]="flappyGap() + 18" [style.height.%]="100 - (flappyGap() + 18)"></div></div>@if (gameFeedback()) { <p class="game-feedback">{{ gameFeedback() }}</p> }</div> }
+                @else if (selectedGame() === 'NeverBeen Snake') { <div class="snake-game-stage"><div class="snake-hud"><span>Score <b>{{ snakeScore() }}</b></span><span>{{ snakeRunning() ? 'Running · Arrow keys / WASD' : 'Game over' }}</span><button type="button" class="btn-primary-action btn-sm" (click)="startSnake()">{{ snakeRunning() ? 'Restart' : 'Start snake' }}</button></div><div class="snake-board">@for (cell of [].constructor(144); track $index) { <span [class.snake-head]="snakeBody()[0] === $index" [class.snake-cell]="snakeBody().includes($index)" [class.snake-food]="snakeFood() === $index"></span> }</div>@if (gameFeedback()) { <p class="game-feedback">{{ gameFeedback() }}</p> }</div> }
+                @else if (selectedGame() === 'Ludo') { <div class="ludo-board"><div class="ludo-home red">●</div><div class="ludo-track">🎲　🟢　⬜　⬜　⬜　⬜　🟡　⬜　🔵　⬜</div><div class="ludo-home blue">●</div><button type="button" class="btn-primary-action" (click)="rollLudoDice()">{{ gameLoading() ? 'AI rolling…' : 'Roll live dice 🎲' }}</button><p class="game-feedback">{{ ludoRoll() ? 'You rolled ' + ludoRoll() + ' · ' : '' }}{{ gameFeedback() || gamePrompt() }}</p></div> }
+                @else if (selectedGame() === 'Chess') { <div class="chess-help">Select a piece, then select its destination. NeverBeen AI will respond.</div><div class="chess-board">@for (piece of chessPieces(); track $index) { <button type="button" [class.chess-selected]="chessSelected() === $index" (click)="selectChessSquare($index)">{{ piece }}</button> }</div><p class="game-feedback">{{ gameFeedback() || gamePrompt() }}</p> }
+                @else if (selectedGame() === 'Crossword') { <div class="crossword-stage"><div class="crossword-theme-row"><span>AI theme</span>@for (theme of crosswordThemes; track theme) { <button type="button" (click)="gamePrompt.set(theme + ' crossword generated')">{{ theme }}</button> }</div><p class="crossword-prompt">{{ gamePrompt() }}</p><div class="crossword-clues">@for (clue of crosswordClues; track $index) { <label><span>{{ $index + 1 }}. {{ clue }}</span><input [value]="crosswordAnswers()[$index]" (input)="updateCrossword($index, $any($event.target).value)" placeholder="Answer" /></label> }</div><div class="crossword-actions"><button type="button" class="btn-primary-action" (click)="crosswordCheck()">Check answers</button><button type="button" class="game-back" (click)="resetCrossword()">Clear</button></div>@if (gameFeedback()) { <p class="game-feedback">{{ gameFeedback() }}</p> }</div> }
+                @else if (selectedGame() === 'Jigsaw Puzzle') { @if (!puzzleCategory()) { <div class="puzzle-categories">@for (category of gameCategories; track category) { <button type="button" (click)="startPuzzle(category)"><span>{{ category.split(' ')[0] }}</span>{{ category.substring(category.indexOf(' ') + 1) }}<small>4 photos · Start puzzle</small></button> }</div> } @else { <div class="puzzle-play"><div class="puzzle-play-head"><strong>{{ puzzleCategory() }}</strong><button type="button" class="game-back" (click)="puzzleCategory.set(null)">Change category</button></div>@if (puzzleImage()) { <img class="puzzle-reference-image" [src]="puzzleImage()!" alt="Live puzzle reference" /> }<div class="puzzle-board">@for (piece of puzzlePieces(); track $index) { <button type="button" [class.puzzle-empty]="piece === 8" (click)="movePuzzlePiece($index)">{{ piece === 8 ? '' : piece + 1 }}</button> }</div><p class="game-feedback">{{ gameFeedback() }}</p></div> } }
+                @else if (selectedGame() === 'Tic-Tac-Toe') { <div class="tic-score"><span>You {{ gameScore().wins }}</span><b>{{ ticStatus() }}</b><span>AI {{ gameScore().ai }}</span></div><div class="tic-board">@for (cell of ticBoard(); track $index) { <button type="button" (click)="playTicCell($index)" [class.x]="cell === 'X'" [class.o]="cell === 'O'">{{ cell }}</button> }</div><button type="button" class="btn-primary-action" (click)="resetTicTacToe()">New round</button> }
+                @else { <div class="coming-game"><span>🧭</span><h3>Your next adventure starts here</h3><p>{{ selectedGame() }} is ready for its first round. Choose Play to begin exploring.</p><button type="button" class="btn-primary-action" (click)="ticStatus.set('Round ready — good luck!')">Start round</button><strong>{{ ticStatus() }}</strong></div> }
+              </section>
+            }
+          </section>
+        }
+
+        <!-- ================================================================= -->
+        <!-- SECTION 5: MESSAGEBOOK (Personal to user and companions only)      -->
         <!-- ================================================================= -->
         @if (activeSection() === 'messagebook') {
           <section class="section-pane messagebook-pane">
@@ -2257,6 +2330,14 @@
                 {{ connectedCompanionsCount() }} / 500 Companions Added
               </span>
             </header>
+            <div class="companion-directory-search">
+              <span class="directory-search-icon" aria-hidden="true">⌕</span>
+              <input type="search" [(ngModel)]="searchQuery" (focus)="onSearchFocus()" (input)="onSearchInput()" placeholder="Search users across every category..." aria-label="Search users across every category" />
+              @if (searchQuery()) { <button type="button" aria-label="Clear user search" (click)="searchQuery.set(''); showSearchDropdown.set(false)">×</button> }
+            </div>
+            @if (showSearchDropdown() && searchQuery().trim() && (searchResults().travelers.length || searchResults().circles.length)) {
+              <div class="companion-search-hint">Showing {{ searchResults().travelers.length }} travelers and {{ searchResults().circles.length }} circles from all categories above.</div>
+            }
 
             <!-- Option to cancel companion request once sent (Requirement C: Anywhere) -->
             @if (pendingOutgoingCompanions().length > 0) {
@@ -2782,14 +2863,26 @@
               </button>
             </header>
 
+            <div class="circle-tabs" role="tablist" aria-label="Circle status">
+              <button type="button" role="tab" [attr.aria-selected]="circleStatusTab() === 'active'" [class.active]="circleStatusTab() === 'active'" (click)="circleStatusTab.set('active')">Active <span>{{ service.myCircles().length }}</span></button>
+              <button type="button" role="tab" [attr.aria-selected]="circleStatusTab() === 'archived'" [class.active]="circleStatusTab() === 'archived'" (click)="circleStatusTab.set('archived'); circleRoleFilter.set('all')">Archived <span>{{ service.archivedCircles().length }}</span></button>
+            </div>
             <div class="circle-toolbar">
-              <input class="circle-search" type="search" placeholder="Search your circles" [value]="circleQuery()" (input)="circleQuery.set($any($event.target).value)" />
-              <div class="circle-role-pills">
-                <button type="button" [class.active]="circleRoleFilter() === 'all'" (click)="circleRoleFilter.set('all')">All {{ service.myCircles().length }}</button>
-                <button type="button" [class.active]="circleRoleFilter() === 'admin'" (click)="circleRoleFilter.set('admin')">Admin {{ service.adminCircleCount() }}</button>
-                <button type="button" [class.active]="circleRoleFilter() === 'member'" (click)="circleRoleFilter.set('member')">Member {{ service.memberOnlyCircleCount() }}</button>
+              <div class="circle-search-wrap">
+                <span aria-hidden="true">⌕</span>
+                <input class="circle-search" type="search" [placeholder]="circleStatusTab() === 'archived' ? 'Search archived circles' : 'Search active circles'" aria-label="Search circles" [value]="circleQuery()" (input)="circleQuery.set($any($event.target).value)" />
+              </div>
+              <div class="circle-role-pills" [class.is-disabled]="circleStatusTab() === 'archived'">
+                <button type="button" [class.active]="circleRoleFilter() === 'all'" (click)="circleRoleFilter.set('all')">All {{ circleStatusTab() === 'archived' ? service.archivedCircles().length : service.myCircles().length }}</button>
+                @if (circleStatusTab() === 'active') {
+                  <button type="button" [class.active]="circleRoleFilter() === 'admin'" (click)="circleRoleFilter.set('admin')">Admin {{ service.adminCircleCount() }}</button>
+                  <button type="button" [class.active]="circleRoleFilter() === 'member'" (click)="circleRoleFilter.set('member')">Member {{ service.memberOnlyCircleCount() }}</button>
+                }
               </div>
             </div>
+            @if (circleStatusTab() === 'archived') {
+              <div class="archived-notice"><span>↗</span><div><strong>Archived circles</strong><small>Deleted circles are kept here for your records and are no longer active.</small></div></div>
+            }
 
             <div class="circles-grid">
               @for (circle of filteredCircles(); track circle.id) {
@@ -2823,10 +2916,10 @@
                       {{ circle.memberIds.length }} travelers
                     </button>
                   </div>
-                  @if (isCircleAdmin(circle)) {
+                  @if (isCircleAdmin(circle) && circleStatusTab() === 'active') {
                     <div class="circle-admin-actions" (click)="$event.stopPropagation()">
                       <button type="button" class="btn-action-subtle" (click)="openEditCircle(circle, $event)">Edit</button>
-                      <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id, $event)">Delete</button>
+                      <button type="button" class="btn-delete-circle" (click)="deleteCircle(circle.id, $event)">Archive</button>
                     </div>
                   }
                 </article>
@@ -3098,15 +3191,33 @@
                 }
               </div>
             </div>
+            <div class="storage-detail-grid">
+              <div><span>Capacity</span><strong>{{ formatStorage(service.storageReport().limit) }}</strong></div>
+              <div><span>Used</span><strong>{{ (service.storageReport().ratio * 100) | number:'1.1-1' }}%</strong></div>
+              <div><span>Journey posts</span><strong>{{ myJourneyPostCount() }}</strong></div>
+              <div><span>Gallery photos</span><strong>{{ service.profile()?.gallery?.length || 0 }}</strong></div>
+            </div>
             <div class="storage-bars">
               @for (slice of service.storageReport().slices; track slice.id) {
-                <div class="storage-bar">
+                <button type="button" class="storage-bar" [class.is-inspected]="selectedStorageSlice() === slice.id" (click)="selectStorageSlice(slice.id)">
                   <div class="storage-bar-label"><span [style.background]="slice.color"></span>{{ slice.label }}</div>
                   <div class="storage-track"><i [style.width.%]="(slice.bytes / service.storageReport().limit) * 100" [style.background]="slice.color"></i></div>
                   <b>{{ formatStorage(slice.bytes) }}</b>
-                </div>
+                </button>
               }
             </div>
+            @if (selectedStorageSlice(); as inspected) {
+              <section class="storage-inspector">
+                <header><div><span class="inspector-kicker">Micro storage inspector</span><h3>{{ storageSliceDetails()?.label }}</h3><p>{{ formatStorage(storageSliceDetails()?.bytes || 0) }} currently used</p></div><button type="button" class="inspector-close" (click)="selectedStorageSlice.set(null)">×</button></header>
+                @if (inspected === 'gallery') {
+                  <div class="cleanup-list">@for (photo of service.profile()?.gallery || []; track photo.id) { <article><img [src]="photo.url" alt="Gallery photo" /><div><strong>{{ photo.caption || 'Untitled photo' }}</strong><small>Gallery photo · click delete to reclaim space</small></div><button type="button" class="cleanup-delete" (click)="deleteStoragePhoto(photo.id)">Delete</button></article> } @empty { <p class="cleanup-empty">No gallery photos to clean up.</p> }</div><h4 class="cleanup-subtitle">Albums</h4><div class="cleanup-list">@for (album of galleryAlbums(); track album.id) { @if (!album.isDefault) { <article><div class="cleanup-post-icon">▦</div><div><strong>{{ album.name }}</strong><small>{{ album.photos.length }} photos · album metadata and contents</small></div><button type="button" class="cleanup-delete" (click)="deleteStorageAlbum(album.id)">Delete</button></article> } }</div>
+                } @else if (inspected === 'journey-photos' || inspected === 'journey-text') {
+                  <div class="cleanup-list">@for (post of service.journeyPosts(); track post.id) { @if (post.author.id === (service.currentUser()?.id || 1)) { <article><div class="cleanup-post-icon">✈</div><div><strong>{{ post.text || 'Photo-only Journey post' }}</strong><small>{{ post.imageUrls?.length || (post.imageUrl ? 1 : 0) }} photos · {{ formatStorage((post.text || '').length * 2) }} text estimate</small></div><button type="button" class="cleanup-delete" (click)="deleteStoragePost(post.id)">Delete</button></article> } } @empty { <p class="cleanup-empty">No Journey posts to clean up.</p> }</div>
+                } @else {
+                  <p class="cleanup-empty">Use Journey and Gallery to remove the underlying content. This chart category is informational.</p>
+                }
+              </section>
+            }
           </section>
         }
 
@@ -3933,12 +4044,16 @@
 
   @if (showEditCircleModal()) {
     <div class="modal-backdrop-overlay" (click)="showEditCircleModal.set(false)">
-      <div class="modal-dialog-card" (click)="$event.stopPropagation()">
-        <header class="modal-head"><h3 class="modal-head-title">Edit Circle</h3></header>
-        <div class="modal-body">
+      <div class="modal-dialog-card edit-circle-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-circle-title" (click)="$event.stopPropagation()">
+        <header class="edit-circle-head">
+          <div class="edit-circle-mark">✦</div>
+          <div><span class="modal-kicker">Circle settings</span><h3 id="edit-circle-title" class="modal-head-title">Edit Circle</h3><p>Keep your travel community fresh and welcoming.</p></div>
+          <button type="button" class="btn-close-modal" (click)="showEditCircleModal.set(false)" aria-label="Close edit circle">✕</button>
+        </header>
+        <div class="modal-body edit-circle-body">
           <div class="form-group">
-            <label>Name</label>
-            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" />
+            <label>Name <span>Required</span></label>
+            <input class="form-control" [(ngModel)]="newCircleName" maxlength="48" placeholder="Give your circle a memorable name" />
           </div>
           <div class="form-group">
             <label>Description</label>

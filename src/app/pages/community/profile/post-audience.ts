@@ -44,7 +44,11 @@ import { Companion, PostAudience } from '../../../models/community';
               [value]="query()"
               (input)="query.set($any($event.target).value)"
             />
-            <p class="pa-note">Choose who may see this post. On Submit they are added to the customization privacy list. Everyone else, companion or not, cannot see it.</p>
+            <label class="pa-private-toggle">
+              <input type="checkbox" [checked]="onlyMeDraft()" (change)="onlyMeDraft.set($any($event.target).checked)" />
+              <span><strong>Only Me</strong><small>Keep this Journey post private. Companion selection will be disabled.</small></span>
+            </label>
+            <p class="pa-note">Choose who may see this post. Everyone else, companion or not, cannot see it.</p>
             @if (selectedPeople().length) {
               <div class="pa-chips" aria-label="Allowed users">
                 @for (person of selectedPeople(); track person.id) {
@@ -54,14 +58,14 @@ import { Companion, PostAudience } from '../../../models/community';
             }
             <div class="pa-results">
               @for (person of filteredPeople(); track person.id) {
-                <label class="pa-user">
-                  <input type="checkbox" [checked]="draftHas(person.id)" (change)="toggleDraft(person.id)" />
+                <label class="pa-user" [class.pa-frozen]="onlyMeDraft()">
+                  @if (!onlyMeDraft()) { <input type="checkbox" [checked]="draftHas(person.id)" (change)="toggleDraft(person.id)" /> }
                   <img [src]="person.profilePhotoUrl || ''" [alt]="person.fullName" />
                   <span>
                     <strong>{{ person.fullName }}</strong>
                     <small>{{ person.city }}, {{ person.country }}</small>
                   </span>
-                  <em>{{ draftHas(person.id) ? 'Allowed' : 'Allow' }}</em>
+                  <em>{{ onlyMeDraft() ? 'Frozen' : (draftHas(person.id) ? 'Allowed' : 'Allow') }}</em>
                 </label>
               } @empty {
                 <p class="pa-empty">No users match that search.</p>
@@ -159,6 +163,7 @@ export class PostAudienceControl {
   protected readonly customOpen = signal(false);
   protected readonly query = signal('');
   protected readonly draft = signal<number[]>([]);
+  protected readonly onlyMeDraft = signal(false);
 
   protected readonly modes: { id: PostAudience['mode']; label: string; icon: string }[] = [
     { id: 'public', label: 'Public', icon: '🌐' },
@@ -180,6 +185,7 @@ export class PostAudienceControl {
 
   protected openCustom(): void {
     this.draft.set([...(this.audience.allowIds ?? [])].map(Number));
+    this.onlyMeDraft.set(this.audience.mode === 'only-me');
     this.query.set('');
     this.customOpen.set(true);
   }
@@ -219,8 +225,8 @@ export class PostAudienceControl {
 
   protected submitCustom(): void {
     this.audienceChange.emit({
-      mode: 'custom',
-      allowIds: [...this.draft()],
+      mode: this.onlyMeDraft() ? 'only-me' : 'custom',
+      allowIds: this.onlyMeDraft() ? [] : [...this.draft()],
       denyIds: [],
     });
     this.customOpen.set(false);

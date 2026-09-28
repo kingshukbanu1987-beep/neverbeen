@@ -294,6 +294,16 @@ export interface GalleryPhoto {
   createdAtUtc: string;
 }
 
+export interface GalleryAlbum {
+  id: number;
+  name: string;
+  photos: GalleryPhoto[];
+  coverPhotoId?: number;
+  privacy?: 'public' | 'companions' | 'only-me';
+  isDefault?: boolean;
+  updatedAtUtc: string;
+}
+
 export interface Profile {
   id: number;
   uniqueId?: string;
@@ -323,6 +333,7 @@ export interface Profile {
   createdAtUtc: string;
   settings: UserSettings;
   gallery: GalleryPhoto[];
+  galleryAlbums?: GalleryAlbum[];
   commentCount: number;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
@@ -420,7 +431,7 @@ export interface JourneyComment {
 }
 
 /** Who may see a Journey post or a share. */
-export type PostAudienceMode = 'public' | 'companions' | 'custom';
+export type PostAudienceMode = 'public' | 'companions' | 'custom' | 'only-me';
 
 export interface PostAudience {
   mode: PostAudienceMode;
@@ -489,6 +500,7 @@ export interface Companion {
   aboutMe?: string;
   aboutMeDetails?: AboutMeDetails;
   gallery?: GalleryPhoto[];
+  galleryAlbums?: GalleryAlbum[];
   isProfileLocked?: boolean;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
@@ -517,6 +529,8 @@ export interface Circle {
   adminIds?: number[];
   ownerId?: number;
   createdAtUtc: string;
+  /** Set when an admin deletes the Circle; archived circles remain recoverable in the Archived tab. */
+  archivedAtUtc?: string;
   /** Group-chat history for this Circle. */
   messages?: ChatMessage[];
 }
