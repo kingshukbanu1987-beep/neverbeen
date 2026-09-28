@@ -432,6 +432,9 @@ export class CommunityProfile implements OnInit {
   protected readonly flappyGap = signal(48);
   protected readonly flappyScore = signal(0);
   protected readonly flappyRunning = signal(false);
+  protected readonly arcadeScore = signal(0);
+  protected readonly arcadeStatus = signal('Ready to play');
+  protected readonly arcadeProgress = signal(12);
   private snakeTimer?: ReturnType<typeof setInterval>;
   private flappyTimer?: ReturnType<typeof setInterval>;
   protected readonly chessPieces = signal<string[]>(['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟','','','','','','','','','♙','♙','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔','♗','♘','♖']);
@@ -480,6 +483,8 @@ export class CommunityProfile implements OnInit {
   resetCrossword(): void { this.crosswordAnswers.set(Array(5).fill('')); this.gameFeedback.set(null); }
   async rollLudoDice(): Promise<void> { this.gameLoading.set(true); this.gameSource.set('Live randomizer · Random.org'); try { const response = await fetch('https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new'); const value = Number((await response.text()).trim()); this.ludoRoll.set(Number.isFinite(value) ? value : 1); this.gameFeedback.set(`You rolled ${value}! NeverBeen AI is moving its token.`); } catch { const value = Math.floor(Math.random() * 6) + 1; this.ludoRoll.set(value); this.gameFeedback.set(`You rolled ${value}! Offline fallback used while NeverBeen AI moves.`); } finally { this.gameLoading.set(false); } }
   answerGame(answer: string): void { const correct = this.selectedGame() === 'Flag Challenge' ? this.liveFlagAnswer : this.liveQuizAnswer; this.gameFeedback.set(answer === correct ? 'Correct! NeverBeen AI says well played.' : `Not quite — the answer is ${correct || 'not available'}. Try another live round!`); }
+  startArcade(game: string): void { this.selectedGame.set(game); this.arcadeScore.set(0); this.arcadeProgress.set(12); this.arcadeStatus.set('NeverBeen AI is ready — make your move!'); }
+  playArcade(): void { const game = this.selectedGame(); this.arcadeScore.update(score => score + (game === 'Darts' ? Math.floor(Math.random() * 20) + 1 : 10)); this.arcadeProgress.update(value => Math.min(94, value + 9)); this.arcadeStatus.set(game === 'Tetris' ? 'Piece dropped — clear a line!' : game === 'Darts' ? 'Bullseye practice! Aim again.' : game === 'Simple Racing' ? 'Boost engaged — overtake the AI!' : game === 'Space Shooter' ? 'Laser fired — alien wave hit!' : 'Paddle hit! Keep the rally alive.'); }
   startFlappy(): void { this.stopFlappy(); this.flappyBirdY.set(50); this.flappyVelocity.set(0); this.flappyPipeX.set(100); this.flappyScore.set(0); this.flappyRunning.set(true); this.gameFeedback.set(null); this.flappyTimer = setInterval(() => this.tickFlappy(), 45); }
   stopFlappy(): void { if (this.flappyTimer) { clearInterval(this.flappyTimer); this.flappyTimer = undefined; } this.flappyRunning.set(false); }
   flap(): void { if (!this.flappyRunning()) this.startFlappy(); this.flappyVelocity.set(-1.8); }
