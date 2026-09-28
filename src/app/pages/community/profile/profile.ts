@@ -533,7 +533,7 @@ export class CommunityProfile implements OnInit {
   protected readonly chessBlackTime = signal(0);
   protected readonly chessFinished = signal(false);
   private readonly chessRevision = signal(0);
-  protected readonly chessBoardView = computed(()=>{this.chessRevision();const board=this.chessGame.board();const rows=board.map((row,r)=>row.map((piece,c)=>({square:`${'abcdefgh'[c]}${8-r}`,piece:piece?this.chessGlyph(piece.color,piece.type):'',color:piece?.color||''})));return (this.chessSide()==='w'?rows:rows.slice().reverse().map(row=>row.slice().reverse())).flat();});
+  protected readonly chessBoardView = computed(()=>{this.chessRevision();const side=this.chessSide();const ranks=side==='w'?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];const files=side==='w'?['a','b','c','d','e','f','g','h']:['h','g','f','e','d','c','b','a'];return ranks.flatMap(rank=>files.map(file=>{const square=`${file}${rank}` as Square;const piece=this.chessGame.get(square);return{square,piece:piece?this.chessGlyph(piece.color,piece.type):'',color:piece?.color||''};}));});
   protected readonly Math = Math;
   protected chessGame = new Chess();
   private chessWorker?: Worker;
