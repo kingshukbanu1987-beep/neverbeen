@@ -237,7 +237,7 @@
   box-shadow: 0 2px 8px rgba(36, 53, 44, 0.25);
 }
 
-/* 3 OAuth Buttons List */
+/* OAuth Buttons List */
 .oauth-buttons-list {
   display: flex;
   flex-direction: column;
@@ -308,33 +308,6 @@
   height: 24px;
   flex-shrink: 0;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
-}
-
-.btn-apple {
-  background: #000000;
-  color: #ffffff;
-  border: 1px solid #000000;
-}
-
-.btn-apple:hover:not(:disabled) {
-  background: #1a1a1a;
-  border-color: #1a1a1a;
-}
-
-.apple-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.btn-microsoft {
-  background: #2f2f2f;
-  color: #ffffff;
-  border: 1px solid #2f2f2f;
-}
-
-.btn-microsoft:hover:not(:disabled) {
-  background: #1f1f1f;
-  border-color: #1f1f1f;
 }
 
 /* Official Google button panel (shown when One-Tap is skipped) */

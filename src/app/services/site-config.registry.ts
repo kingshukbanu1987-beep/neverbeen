@@ -387,7 +387,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         key: 'providers',
         label: 'Sign-in providers',
         type: 'items',
-        default: items([['google', 'Sign in with Google'], ['facebook', 'Sign in with Facebook'], ['apple', 'Sign in with Apple'], ['microsoft', 'Sign in with Microsoft']]),
+        default: items([['google', 'Sign in with Google'], ['facebook', 'Sign in with Facebook']]),
         labelEditable: true,
       },
       { key: 'showLanguage', label: 'Show the language switcher', type: 'toggle', default: true },

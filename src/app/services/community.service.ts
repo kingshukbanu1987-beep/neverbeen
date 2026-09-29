@@ -458,7 +458,7 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   async loginWithOAuth(
-    provider: 'google' | 'facebook' | 'microsoft' | string,
+    provider: 'google' | 'facebook' | string,
     isExistingUserOrCode: boolean | string = false,
   ): Promise<AuthResult> {
     const isExistingUser =

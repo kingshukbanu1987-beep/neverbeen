@@ -75,7 +75,7 @@ export class HelpPage {
       category: 'getting-started',
       question: 'How do I join the NeverBeen Community?',
       answer:
-        'Open the Community login page and pick Google, Facebook or Microsoft. Choose “New Member” if this is your first visit — you will land on the registration form to add a display name, bio and avatar. Existing members go straight to their profile.',
+        'Open the Community login page and pick Google or Facebook. Choose “New Member” if this is your first visit — you will land on the registration form to add a display name, bio and avatar. Existing members go straight to their profile.',
       keywords: 'join sign up register new member community oauth',
     },
     {
@@ -91,8 +91,8 @@ export class HelpPage {
       category: 'account',
       question: 'Which sign-in options can I use?',
       answer:
-        'NeverBeen Community supports Google, Facebook and Microsoft identity providers. Authentication is encrypted and secure, and we never see your provider password. Use the account-status toggle on the login card to preview the new-member or existing-member path.',
-      keywords: 'login sign in google facebook microsoft oauth token encrypted secure',
+        'NeverBeen Community supports Google and Facebook identity providers. Authentication is encrypted and secure, and we never see your provider password. Use the account-status toggle on the login card to preview the new-member or existing-member path.',
+      keywords: 'login sign in google facebook oauth token encrypted secure',
     },
     {
       id: 'signed-out',

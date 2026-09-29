@@ -56,7 +56,7 @@ export class CommunityConnect implements OnInit {
     this.translation.setLanguage(code);
   }
 
-  async signInWith(provider: 'google' | 'facebook' | 'apple' | 'microsoft'): Promise<void> {
+  async signInWith(provider: 'google' | 'facebook'): Promise<void> {
     // The official Google button panel is already open — ignore repeat clicks.
     if (provider === 'google' && this.googleManualStep()) {
       return;
