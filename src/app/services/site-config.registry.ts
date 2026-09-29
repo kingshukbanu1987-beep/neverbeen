@@ -407,7 +407,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         key: 'guestHint',
         label: 'Guest option hint',
         type: 'text',
-        default: 'Browse community discussions without an account. Sign in any time to post and react.',
+        default: 'Explore the whole community default profile without an account. Sign in any time to connect and post.',
         maxLength: 120,
       },
       { key: 'showLanguage', label: 'Show the language switcher', type: 'toggle', default: true },

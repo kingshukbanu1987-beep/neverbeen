@@ -50,6 +50,12 @@ export class CommunityConnect implements OnInit {
     this.simulateExisting.set(isExisting);
   }
 
+  /** Enter the whole Community default profile without creating an account. */
+  exploreAsGuest(): void {
+    this.service.exploreAsGuest();
+    this.router.navigate(['/community/profile']);
+  }
+
   /** Switch the entire NeverBeen site to the chosen language. */
   onLanguageChange(event: Event): void {
     const code = (event.target as HTMLSelectElement).value;

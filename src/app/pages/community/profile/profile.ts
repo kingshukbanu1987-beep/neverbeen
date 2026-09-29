@@ -804,7 +804,12 @@ export class CommunityProfile implements OnInit {
   );
 
   async ngOnInit(): Promise<void> {
-    if (!this.service.isAuthenticated() || !this.service.profile()) {
+    // Signed-in members and "Explore as Guest" visitors may view the whole profile;
+    // anyone else is sent back to the Community sign-in page.
+    if (
+      (!this.service.isAuthenticated() && !this.service.guestBrowsing()) ||
+      !this.service.profile()
+    ) {
       this.router.navigate(['/community']);
       return;
     }

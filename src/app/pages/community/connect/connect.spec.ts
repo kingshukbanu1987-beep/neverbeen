@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityConnect } from './connect';
-import { CommunityService, setCookie, deleteCookie, TOKEN_KEY, PROFILE_KEY } from '../../../services/community.service';
+import { CommunityService, setCookie, deleteCookie, TOKEN_KEY, PROFILE_KEY, GUEST_KEY } from '../../../services/community.service';
 
 describe('CommunityConnect', () => {
   let router: Router;
@@ -10,6 +10,7 @@ describe('CommunityConnect', () => {
 
   beforeEach(async () => {
     deleteCookie(TOKEN_KEY);
+    localStorage.removeItem(GUEST_KEY);
 
     await TestBed.configureTestingModule({
       imports: [CommunityConnect],
@@ -48,15 +49,26 @@ describe('CommunityConnect', () => {
     expect(buttons).toHaveLength(2);
   });
 
-  it('offers an “Explore as Guest” option that browses the community without an account', () => {
-    const element: HTMLElement = create().nativeElement;
-    const guest = element.querySelector<HTMLAnchorElement>('a.guest-explore-btn');
+  it('offers an “Explore as Guest” option that opens the whole community default profile', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const guest = element.querySelector<HTMLButtonElement>('button.guest-explore-btn');
 
     expect(guest).toBeTruthy();
     expect(guest!.textContent).toContain('Explore as Guest');
-    expect(guest!.getAttribute('href')).toBe('/community/message-book');
     expect(element.querySelector('.guest-divider')).toBeTruthy();
     expect(element.querySelector('.guest-hint')?.textContent).toContain('without an account');
+
+    guest!.click();
+    fixture.detectChanges();
+
+    // The guest lands on the Community profile with the whole default profile loaded —
+    // without any account session (no auth cookie/token, not signed in).
+    expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
+    expect(service.guestBrowsing()).toBe(true);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.profile()?.fullName).toBe('Kingshuk');
+    expect(service.profile()?.profession).toContain('founder of NeverBeen');
   });
 
   it('redirects to user profile page if already authenticated on open', () => {

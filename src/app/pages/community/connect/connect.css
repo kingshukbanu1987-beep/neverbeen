@@ -503,6 +503,7 @@
   padding: 0.95rem 1.2rem;
   border-radius: 14px;
   font-size: 0.96rem;
+  font-family: inherit;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--ct-ln2, #d1d5db);

@@ -59,6 +59,8 @@ import { AdminModerationService } from './admin-moderation.service';
 export const TOKEN_KEY = 'neverbeen_auth_token';
 export const USER_KEY = 'neverbeen_current_user';
 export const PROFILE_KEY = 'neverbeen_user_profile';
+/** localStorage flag: a visitor is exploring the Community without an account. */
+export const GUEST_KEY = 'neverbeen_guest_browsing';
 export const COMMENTS_KEY = 'neverbeen_comments';
 export const JOURNEY_KEY = 'neverbeen_journey_posts';
 export const COMPANIONS_KEY = 'neverbeen_companions';
@@ -326,6 +328,9 @@ export class CommunityService {
 
   readonly isAuthenticated = computed(() => !!this.token() && !!this.currentUser());
 
+  /** True while a visitor explores the whole Community default profile without an account. */
+  readonly guestBrowsing = signal(false);
+
   /** Google Identity Services script loader (see loadGoogleGis). */
   private gisScriptPromise: Promise<boolean> | null = null;
   /** Resolver for the official fallback Google button's identity. */
@@ -414,6 +419,8 @@ export class CommunityService {
   constructor() {
     const existingCookieToken = getCookie(TOKEN_KEY);
     if (existingCookieToken) {
+      // A real member session always supersedes guest browsing.
+      this.exitGuestBrowsing();
       const storedUser = this.loadJson<CurrentUser>(USER_KEY);
       const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
       if (storedUser && storedProfile) {
@@ -446,10 +453,13 @@ export class CommunityService {
         this.initDefaultMember();
       }
     } else {
-      // User is not signed in
+      // Not signed in — unless the visitor chose "Explore as Guest" earlier.
       this.token.set(null);
       this.currentUser.set(null);
       this.profile.set(null);
+      if (typeof localStorage !== 'undefined' && localStorage.getItem(GUEST_KEY) === '1') {
+        this.exploreAsGuest();
+      }
     }
   }
 
@@ -457,10 +467,29 @@ export class CommunityService {
   // Session / OAuth
   // ---------------------------------------------------------------------------
 
+  /**
+   * "Explore as Guest" — opens the whole Community default profile (the founder's
+   * seeded member: journey, gallery, companions, circles, message book) without
+   * creating an account session: no auth cookie or token is set, so
+   * `isAuthenticated()` stays false and signing in remains possible at any time.
+   */
+  exploreAsGuest(): void {
+    this.initDefaultMember({ asGuest: true });
+    this.guestBrowsing.set(true);
+    if (typeof localStorage !== 'undefined') localStorage.setItem(GUEST_KEY, '1');
+  }
+
+  /** Guest browsing ends the moment a real account session starts or the visitor logs out. */
+  private exitGuestBrowsing(): void {
+    this.guestBrowsing.set(false);
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(GUEST_KEY);
+  }
+
   async loginWithOAuth(
     provider: 'google' | 'facebook' | string,
     isExistingUserOrCode: boolean | string = false,
   ): Promise<AuthResult> {
+    this.exitGuestBrowsing();
     const isExistingUser =
       typeof isExistingUserOrCode === 'boolean' ? isExistingUserOrCode : false;
     const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
@@ -1080,6 +1109,7 @@ export class CommunityService {
   }
 
   loginAsDemoUser(mode: 'new_pending' | 'active_member'): void {
+    this.exitGuestBrowsing();
     if (mode === 'new_pending') {
       const pendingUser: CurrentUser = {
         id: 99,
@@ -1108,6 +1138,7 @@ export class CommunityService {
   }
 
   logout(): void {
+    this.exitGuestBrowsing();
     const u = this.currentUser();
     if (u) {
       this.currentUser.set({ ...u, activeStatus: 'Inactive' });
@@ -3208,7 +3239,7 @@ export class CommunityService {
   // Local Seed / Storage Helpers
   // ---------------------------------------------------------------------------
 
-  private initDefaultMember(): void {
+  private initDefaultMember(options: { asGuest?: boolean } = {}): void {
     const defaultAboutMeDetails: AboutMeDetails = {
       intro: this.getRichIntroForUser(),
       gender: 'Male',
@@ -3393,11 +3424,14 @@ export class CommunityService {
       aboutMeDetails: defaultAboutMeDetails,
     };
 
-    this.token.set('jwt_default_active_token');
+    // Guests get the same whole default profile, but never an account session.
+    this.token.set(options.asGuest ? null : 'jwt_default_active_token');
     this.currentUser.set(defaultUser);
     this.profile.set(defaultProfile);
-    this.saveJson(USER_KEY, defaultUser);
-    this.saveJson(PROFILE_KEY, defaultProfile);
+    if (!options.asGuest) {
+      this.saveJson(USER_KEY, defaultUser);
+      this.saveJson(PROFILE_KEY, defaultProfile);
+    }
   }
 
   private loadComments(): CommunityComment[] {

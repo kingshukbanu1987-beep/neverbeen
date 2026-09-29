@@ -2044,6 +2044,24 @@ describe('CommunityProfile', () => {
     expect(profile?.aboutMe).toContain('Creativity, Future Proof Design and Strong Foundation in Programming');
   });
 
+  it('lets an Explore as Guest visitor open the whole community default profile without an account', () => {
+    service.logout(); // drop the member session set up by the harness
+    service.exploreAsGuest();
+
+    const fixture = TestBed.createComponent(CommunityProfile);
+    fixture.detectChanges();
+
+    // No bounce back to the sign-in page — the guest sees the whole default profile.
+    expect(router.navigate).not.toHaveBeenCalledWith(['/community']);
+    expect(service.guestBrowsing()).toBe(true);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.profile()?.fullName).toBe('Kingshuk');
+
+    const element: HTMLElement = fixture.nativeElement;
+    expect(element.querySelector('.profile-layout-container')).toBeTruthy();
+    expect(element.textContent).toContain('Kingshuk');
+  });
+
   it('Requirement C: exactly 60% of companions are verified with blue tick', () => {
     const companions = service.companions();
     expect(companions.length).toBeGreaterThan(500);

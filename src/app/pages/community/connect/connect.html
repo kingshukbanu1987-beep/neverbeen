@@ -142,7 +142,7 @@
         <span class="divider-text">or</span>
         <span class="divider-line"></span>
       </div>
-      <a routerLink="/community/message-book" class="guest-explore-btn">
+      <button type="button" class="guest-explore-btn" (click)="exploreAsGuest()">
         <svg
           viewBox="0 0 24 24"
           class="guest-icon"
@@ -157,7 +157,7 @@
           <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
         </svg>
         <span class="btn-text">{{ cmsText('guestLabel') }}</span>
-      </a>
+      </button>
       <p class="guest-hint">{{ cmsText('guestHint') }}</p>
     </div>
     }
