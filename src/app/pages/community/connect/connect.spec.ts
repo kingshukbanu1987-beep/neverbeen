@@ -48,6 +48,17 @@ describe('CommunityConnect', () => {
     expect(buttons).toHaveLength(2);
   });
 
+  it('offers an “Explore as Guest” option that browses the community without an account', () => {
+    const element: HTMLElement = create().nativeElement;
+    const guest = element.querySelector<HTMLAnchorElement>('a.guest-explore-btn');
+
+    expect(guest).toBeTruthy();
+    expect(guest!.textContent).toContain('Explore as Guest');
+    expect(guest!.getAttribute('href')).toBe('/community/message-book');
+    expect(element.querySelector('.guest-divider')).toBeTruthy();
+    expect(element.querySelector('.guest-hint')?.textContent).toContain('without an account');
+  });
+
   it('redirects to user profile page if already authenticated on open', () => {
     service.loginAsDemoUser('active_member');
     expect(service.isAuthenticated()).toBe(true);

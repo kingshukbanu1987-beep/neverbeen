@@ -134,6 +134,34 @@
       </div>
     }
 
+    <!-- Explore without an account -->
+    @if (cmsFlag('showGuest')) {
+    <div class="guest-option">
+      <div class="guest-divider" aria-hidden="true">
+        <span class="divider-line"></span>
+        <span class="divider-text">or</span>
+        <span class="divider-line"></span>
+      </div>
+      <a routerLink="/community/message-book" class="guest-explore-btn">
+        <svg
+          viewBox="0 0 24 24"
+          class="guest-icon"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+        </svg>
+        <span class="btn-text">{{ cmsText('guestLabel') }}</span>
+      </a>
+      <p class="guest-hint">{{ cmsText('guestHint') }}</p>
+    </div>
+    }
+
     <!-- Security footnote -->
     <footer class="card-footer">
       <div class="secure-badge">

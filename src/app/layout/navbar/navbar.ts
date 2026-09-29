@@ -65,16 +65,30 @@ export class Navbar {
   }
 
   /**
+   * The Community sign-in / connect page (exact route /community) belongs to the public
+   * website: it keeps the full website header (logo + site menu). The community profile
+   * header appears only once a visitor enters the community itself (/community/… pages,
+   * member profiles and the Message Book).
+   */
+  private readonly isCommunitySignIn = computed(() => /^\/community\/?(\?|#|$)/.test(this.currentUrl()));
+
+  /**
    * Compact header (smaller bar + 50% logo) on the Community, member profiles and the whole
-   * Admin Console, so as much of the working area as possible is visible.
+   * Admin Console, so as much of the working area as possible is visible. The Community
+   * sign-in page keeps the full-size website header.
    */
   protected readonly isCompactLogo = computed(() => {
     const url = this.currentUrl();
-    return url.includes('/community') || url.includes('/profile') || /^\/admin(\/|\?|#|$)/.test(url);
+    return (
+      !this.isCommunitySignIn() &&
+      (url.includes('/community') || url.includes('/profile') || /^\/admin(\/|\?|#|$)/.test(url))
+    );
   });
 
   /** Community pages (hub, profiles, Message Book) — where the member's community theme applies. */
-  protected readonly isCommunity = computed(() => /^\/(community|profile)(\/|\?|#|$)/.test(this.currentUrl()));
+  protected readonly isCommunity = computed(
+    () => !this.isCommunitySignIn() && /^\/(community|profile)(\/|\?|#|$)/.test(this.currentUrl()),
+  );
 
   private readonly allLinks: NavLink[] = [
     { id: 'home', label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },
