@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NeverBeen.API.Entities;
@@ -18,6 +19,10 @@ public class CommunityComment
 
     public int AuthorId { get; set; }
     public UserProfile? Author { get; set; }
+
+    /// <summary>Optional photo attached to the post.</summary>
+    [MaxLength(1024)]
+    public string? ImageUrl { get; set; }
 
     /// <summary>Id of the top-level comment this entry replies to (null for top-level posts).</summary>
     public int? ParentId { get; set; }

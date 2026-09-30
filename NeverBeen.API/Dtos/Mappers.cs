@@ -2,6 +2,37 @@ using NeverBeen.API.Entities;
 
 namespace NeverBeen.API.Dtos;
 
+/// <summary>Maps a <see cref="UserSettings"/> row to the public <see cref="SettingsDto"/>.</summary>
+public static class SettingsDtoMapper
+{
+    public static SettingsDto FromEntity(UserSettings s) => new()
+    {
+        EmailNotificationsEnabled = s.EmailNotificationsEnabled,
+        PhoneNotificationsEnabled = s.PhoneNotificationsEnabled,
+        PublicProfileEnabled = s.PublicProfileEnabled,
+        Theme = s.Theme,
+        Timezone = s.Timezone,
+        IsProfileLocked = s.IsProfileLocked,
+        WhoCanMessage = s.WhoCanMessage,
+        SearchVisibility = s.SearchVisibility,
+        JourneyVisibility = s.JourneyVisibility,
+        SoundNotificationsEnabled = s.SoundNotificationsEnabled,
+        TwoFactorEnabled = s.TwoFactorEnabled,
+        TravelStyles = s.TravelStyles,
+        PreferredSeason = s.PreferredSeason,
+        WhoCanConnect = s.WhoCanConnect,
+        WhoCanVisitProfile = s.WhoCanVisitProfile,
+        ShowActiveStatusTo = s.ShowActiveStatusTo,
+        WhoCanSeeCompanionsList = s.WhoCanSeeCompanionsList,
+        AllowCompanionTagging = s.AllowCompanionTagging,
+        ApproveTagsBeforePost = s.ApproveTagsBeforePost,
+        IsVerified = s.IsVerified,
+        VerificationEmail = s.VerificationEmail,
+        VerificationType = s.VerificationType,
+        VerifiedAtUtc = s.VerifiedAtUtc
+    };
+}
+
 public static class ProfileMapper
 {
     public static ProfileDto ToDto(UserProfile user, List<GalleryPhotoDto> gallery, int commentCount)
@@ -31,14 +62,7 @@ public static class ProfileMapper
             CreatedAtUtc = user.CreatedAtUtc,
             Settings = user.Settings == null
                 ? new SettingsDto()
-                : new SettingsDto
-                {
-                    EmailNotificationsEnabled = user.Settings.EmailNotificationsEnabled,
-                    PhoneNotificationsEnabled = user.Settings.PhoneNotificationsEnabled,
-                    PublicProfileEnabled = user.Settings.PublicProfileEnabled,
-                    Theme = user.Settings.Theme,
-                    Timezone = user.Settings.Timezone
-                },
+                : SettingsDtoMapper.FromEntity(user.Settings),
             Gallery = gallery,
             CommentCount = commentCount
         };
@@ -55,6 +79,24 @@ public static class ProfileMapper
             age--;
         return age;
     }
+}
+
+/// <summary>Maps user rows to the compact <see cref="AuthorDto"/> used by feeds and chats.</summary>
+public static class AuthorMapper
+{
+    public static AuthorDto From(UserProfile u) => new()
+    {
+        Id = u.Id,
+        UniqueId = u.UniqueId ?? UserProfileStatus.GenerateUniqueId(u.Id),
+        FullName = u.FullName,
+        ProfilePhotoUrl = u.ProfilePhotoData != null
+            ? $"/api/profile/{u.Id}/photo"
+            : u.ProfilePhotoUrl ?? u.ExternalProfilePictureUrl ?? string.Empty,
+        Profession = u.Profession,
+        Country = u.Country?.Name,
+        City = u.City?.Name,
+        IsVerified = u.IsVerified
+    };
 }
 
 public static class CommentMapper

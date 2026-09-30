@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NeverBeen.API.Entities;
@@ -10,6 +11,13 @@ public class GalleryPhoto
 
     public int UserId { get; set; }
     public UserProfile? User { get; set; }
+
+    /// <summary>Album the photo belongs to (null = default album).</summary>
+    public int? AlbumId { get; set; }
+
+    /// <summary>Photo URL (e.g. Supabase Storage) — alternative to the stored bytes.</summary>
+    [MaxLength(1024)]
+    public string? Url { get; set; }
 
     /// <summary>Image bytes (JPEG / PNG / WebP / GIF).</summary>
     public byte[] PhotoData { get; set; } = Array.Empty<byte>();

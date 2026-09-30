@@ -52,6 +52,39 @@ public class SettingsDto
     /// <summary>"light", "dark" or "system".</summary>
     public string Theme { get; set; } = "light";
     public string? Timezone { get; set; }
+
+    public bool IsProfileLocked { get; set; }
+
+    /// <summary>"everyone", "companions" or "none".</summary>
+    public string WhoCanMessage { get; set; } = "everyone";
+    public bool SearchVisibility { get; set; } = true;
+
+    /// <summary>"public" or "companions".</summary>
+    public string JourneyVisibility { get; set; } = "public";
+    public bool SoundNotificationsEnabled { get; set; } = true;
+    public bool TwoFactorEnabled { get; set; }
+    public string[]? TravelStyles { get; set; }
+    public string? PreferredSeason { get; set; }
+
+    /// <summary>"everyone", "companions-of-companions" or "none".</summary>
+    public string WhoCanConnect { get; set; } = "everyone";
+
+    /// <summary>"everyone", "companions" or "none".</summary>
+    public string WhoCanVisitProfile { get; set; } = "everyone";
+
+    /// <summary>"everyone", "companions" or "only-me".</summary>
+    public string ShowActiveStatusTo { get; set; } = "everyone";
+
+    /// <summary>"everyone", "companions" or "only-me".</summary>
+    public string WhoCanSeeCompanionsList { get; set; } = "everyone";
+    public bool AllowCompanionTagging { get; set; } = true;
+    public bool ApproveTagsBeforePost { get; set; }
+    public bool IsVerified { get; set; }
+    public string? VerificationEmail { get; set; }
+
+    /// <summary>"work" or "university".</summary>
+    public string? VerificationType { get; set; }
+    public DateTime? VerifiedAtUtc { get; set; }
 }
 
 /// <summary>

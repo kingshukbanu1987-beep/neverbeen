@@ -50,13 +50,19 @@ export class CommunityConnect implements OnInit {
     this.simulateExisting.set(isExisting);
   }
 
+  /** Enter the whole Community default profile without creating an account. */
+  exploreAsGuest(): void {
+    this.service.exploreAsGuest();
+    this.router.navigate(['/community/profile']);
+  }
+
   /** Switch the entire NeverBeen site to the chosen language. */
   onLanguageChange(event: Event): void {
     const code = (event.target as HTMLSelectElement).value;
     this.translation.setLanguage(code);
   }
 
-  async signInWith(provider: 'google' | 'facebook' | 'apple' | 'microsoft'): Promise<void> {
+  async signInWith(provider: 'google' | 'facebook'): Promise<void> {
     // The official Google button panel is already open — ignore repeat clicks.
     if (provider === 'google' && this.googleManualStep()) {
       return;

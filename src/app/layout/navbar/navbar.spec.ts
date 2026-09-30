@@ -183,7 +183,7 @@ describe('Navbar', () => {
     expect(element.querySelector('nav#site-nav')).toBeTruthy();
 
     // Community pages: the default header (logo included) is gone completely…
-    component['currentUrl'].set('/community');
+    component['currentUrl'].set('/community/profile');
     fixture.detectChanges();
     expect(component['isCommunity']()).toBe(true);
     expect(element.querySelector('header.community-nav')).toBeTruthy();
@@ -211,12 +211,32 @@ describe('Navbar', () => {
     expect(element.querySelector('.logo')).toBeNull();
   });
 
+  it('keeps the full website header on the Community sign-in page', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    component['currentUrl'].set('/community');
+    fixture.detectChanges();
+
+    // The sign-in page is part of the public website: logo + site menu, full size,
+    // not the community profile header (search / shortcuts / theme picker).
+    expect(component['isCommunity']()).toBe(false);
+    expect(component['isCompactLogo']()).toBe(false);
+    expect(element.querySelector('header.community-nav')).toBeNull();
+    expect(element.querySelector('header.compact-nav')).toBeNull();
+    expect(element.querySelector('.logo')).toBeTruthy();
+    expect(element.querySelector('nav#site-nav')).toBeTruthy();
+    expect(element.querySelector('button.menu')).toBeTruthy();
+    expect(element.querySelector('.ch-brand')).toBeNull();
+  });
+
   it('shows seeded pending chats on the messenger icon', () => {
     const fixture = create();
     const component = fixture.componentInstance;
     const element: HTMLElement = fixture.nativeElement;
     const community = TestBed.inject(CommunityService);
-    component['currentUrl'].set('/community');
+    component['currentUrl'].set('/community/profile');
     TestBed.flushEffects();
     fixture.detectChanges();
 
@@ -231,7 +251,7 @@ describe('Navbar', () => {
     const element: HTMLElement = fixture.nativeElement;
     const community = TestBed.inject(CommunityService);
     const bridge = TestBed.inject(CommunityBadgeService);
-    component['currentUrl'].set('/community');
+    component['currentUrl'].set('/community/profile');
 
     // Push the community state through the same path production uses:
     // CommunityService → badge-sync effect → CommunityBadgeService → navbar.

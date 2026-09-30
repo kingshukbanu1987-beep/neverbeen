@@ -179,17 +179,24 @@ public class ProfileController : ControllerBase
         if (request.Theme != null)
             user.Settings.Theme = request.Theme;
         user.Settings.Timezone = string.IsNullOrWhiteSpace(request.Timezone) ? null : request.Timezone.Trim();
+        user.Settings.IsProfileLocked = request.IsProfileLocked;
+        user.Settings.WhoCanMessage = request.WhoCanMessage;
+        user.Settings.SearchVisibility = request.SearchVisibility;
+        user.Settings.JourneyVisibility = request.JourneyVisibility;
+        user.Settings.SoundNotificationsEnabled = request.SoundNotificationsEnabled;
+        user.Settings.TwoFactorEnabled = request.TwoFactorEnabled;
+        user.Settings.TravelStyles = request.TravelStyles;
+        user.Settings.PreferredSeason = request.PreferredSeason;
+        user.Settings.WhoCanConnect = request.WhoCanConnect;
+        user.Settings.WhoCanVisitProfile = request.WhoCanVisitProfile;
+        user.Settings.ShowActiveStatusTo = request.ShowActiveStatusTo;
+        user.Settings.WhoCanSeeCompanionsList = request.WhoCanSeeCompanionsList;
+        user.Settings.AllowCompanionTagging = request.AllowCompanionTagging;
+        user.Settings.ApproveTagsBeforePost = request.ApproveTagsBeforePost;
         user.Settings.UpdatedAtUtc = DateTime.UtcNow;
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(new SettingsDto
-        {
-            EmailNotificationsEnabled = user.Settings.EmailNotificationsEnabled,
-            PhoneNotificationsEnabled = user.Settings.PhoneNotificationsEnabled,
-            PublicProfileEnabled = user.Settings.PublicProfileEnabled,
-            Theme = user.Settings.Theme,
-            Timezone = user.Settings.Timezone
-        });
+        return Ok(SettingsDtoMapper.FromEntity(user.Settings));
     }
 
     /// <summary>Serves the profile photograph as an image (used by &lt;img&gt; tags across the app).</summary>

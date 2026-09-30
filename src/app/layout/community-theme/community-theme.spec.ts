@@ -49,13 +49,19 @@ describe('Community theme dropdown', () => {
   });
 
   it('is shown in the header on Community pages only, with Default selected', async () => {
-    const { el, fixture, router } = await navbarAt('/community');
+    const { el, fixture, router } = await navbarAt('/community/message-book');
     const trigger = el.querySelector('.theme-slot .ctp-trigger');
     expect(trigger).toBeTruthy();
     expect(text(trigger)).toContain('Default');
     expect(root().hasAttribute('data-ctheme')).toBe(false);
 
     await router.navigateByUrl('/collection');
+    fixture.detectChanges();
+    expect(el.querySelector('.theme-slot')).toBeNull();
+    expect(el.querySelector('.ctp-trigger')).toBeNull();
+
+    // The Community sign-in page keeps the website header — no theme picker there either.
+    await router.navigateByUrl('/community');
     fixture.detectChanges();
     expect(el.querySelector('.theme-slot')).toBeNull();
     expect(el.querySelector('.ctp-trigger')).toBeNull();
@@ -176,7 +182,7 @@ describe('Community theme dropdown', () => {
   });
 
   it('applies a picked theme immediately, remembers it, and reverts to Default outside the Community', async () => {
-    const { el, fixture, router } = await navbarAt('/community');
+    const { el, fixture, router } = await navbarAt('/community/profile');
     openPicker(el);
     fixture.detectChanges();
     (el.querySelector('[data-theme="midnight"]') as HTMLButtonElement).click();
@@ -218,7 +224,7 @@ describe('Community theme dropdown', () => {
   });
 
   it('provides local artwork for every non-default theme and renders decorative previews', async () => {
-    const { el, fixture } = await navbarAt('/community');
+    const { el, fixture } = await navbarAt('/community/profile');
     openPicker(el);
     fixture.detectChanges();
     expect(new Set(COMMUNITY_THEMES.map((t) => t.id)).size).toBe(38);
@@ -252,7 +258,7 @@ describe('Community theme dropdown', () => {
 
   it('restores a saved new theme on load and ignores unrecognized theme IDs', async () => {
     localStorage.setItem(COMMUNITY_THEME_KEY, JSON.stringify({ guest: 'cosmic', invalid: 'not-a-theme' }));
-    const { el } = await navbarAt('/community');
+    const { el } = await navbarAt('/community/profile');
     expect(root().getAttribute('data-ctheme')).toBe('cosmic');
     expect(text(el.querySelector('.ctp-trigger'))).toContain('Cosmic');
     expect(communityTheme('not-a-theme').id).toBe('default');
@@ -286,7 +292,7 @@ describe('Community theme dropdown', () => {
   });
 
   it('dropdown is keyboard friendly: arrows move between themes, Escape closes and returns focus', async () => {
-    const { el, fixture } = await navbarAt('/community');
+    const { el, fixture } = await navbarAt('/community/profile');
     const trigger = el.querySelector('.ctp-trigger') as HTMLButtonElement;
     expect(trigger.getAttribute('aria-haspopup')).toBe('listbox');
     trigger.click();

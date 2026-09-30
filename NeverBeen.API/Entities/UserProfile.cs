@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NeverBeen.API.Entities;
@@ -12,6 +13,16 @@ public class UserProfile
 {
     public int Id { get; set; }
 
+    /// <summary>20-digit public profile id ('8920153401' + zero-padded Id), used in profile URLs.</summary>
+    [MaxLength(20)]
+    public string? UniqueId { get; set; }
+
+    [MaxLength(100)]
+    public string? FirstName { get; set; }
+
+    [MaxLength(100)]
+    public string? LastName { get; set; }
+
     /// <summary>Full name as typed on the registration page (or from the OAuth account before registration).</summary>
     [MaxLength(200)]
     public string? FullName { get; set; }
@@ -24,6 +35,8 @@ public class UserProfile
     [MaxLength(20)]
     public string? Gender { get; set; }
 
+    /// <summary>Stored as a plain timestamp (no time zone) — a calendar date only.</summary>
+    [Column(TypeName = "timestamp without time zone")]
     public DateTime? DateOfBirth { get; set; }
 
     public int? CountryId { get; set; }
@@ -31,6 +44,10 @@ public class UserProfile
 
     public int? CityId { get; set; }
     public City? City { get; set; }
+
+    /// <summary>State / province as typed on the registration page.</summary>
+    [MaxLength(100)]
+    public string? State { get; set; }
 
     [MaxLength(20)]
     public string? Pincode { get; set; }
@@ -59,6 +76,14 @@ public class UserProfile
     [MaxLength(1024)]
     public string? ExternalProfilePictureUrl { get; set; }
 
+    /// <summary>Profile photo URL (e.g. Supabase Storage) — alternative to the stored bytes.</summary>
+    [MaxLength(1024)]
+    public string? ProfilePhotoUrl { get; set; }
+
+    /// <summary>Cover photo URL (e.g. Supabase Storage) — alternative to the stored bytes.</summary>
+    [MaxLength(1024)]
+    public string? CoverPhotoUrl { get; set; }
+
     /// <summary>Profile picture uploaded by the user (stored in the database).</summary>
     public byte[]? ProfilePhotoData { get; set; }
 
@@ -75,6 +100,29 @@ public class UserProfile
     [MaxLength(8000)]
     public string? AboutMeDetailsJson { get; set; }
 
+    /// <summary>Presence shown to other travelers: Active, Busy, Don't Disturb, Away, Inactive or Custom.</summary>
+    [MaxLength(20)]
+    public string ActiveStatus { get; set; } = "Active";
+
+    /// <summary>Custom presence text (max 15 letters) used when <see cref="ActiveStatus"/> is "Custom".</summary>
+    [MaxLength(30)]
+    public string? CustomStatusText { get; set; }
+
+    /// <summary>When true, non-connected travelers see a locked profile.</summary>
+    public bool IsProfileLocked { get; set; }
+
+    /// <summary>Work / university verification (blue tick).</summary>
+    public bool IsVerified { get; set; }
+
+    [MaxLength(256)]
+    public string? VerifiedEmail { get; set; }
+
+    /// <summary>"work" or "university".</summary>
+    [MaxLength(20)]
+    public string? VerificationType { get; set; }
+
+    public DateTime? VerifiedAtUtc { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
@@ -88,4 +136,8 @@ public static class UserProfileStatus
 {
     public const string Pending = "Pending";
     public const string Active = "Active";
+
+    /// <summary>The 20-digit public profile id derived from the numeric user id.</summary>
+    public static string GenerateUniqueId(int userId)
+        => "8920153401" + userId.ToString().PadLeft(10, '0');
 }

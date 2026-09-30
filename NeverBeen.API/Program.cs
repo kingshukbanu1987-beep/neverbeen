@@ -11,22 +11,16 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------------------------------------------------------------------------
-// Database.
-// Default provider is Azure SQL Server (Microsoft.EntityFrameworkCore.SqlServer).
-// Set Database:Provider to "Sqlite" for quick local development without SQL Server
-// (see appsettings.Development.json).
+// Database — Supabase (PostgreSQL) via Npgsql.
+// Get the connection string from Supabase → Project Settings → Database
+// (Session pooler recommended). See appsettings.json.
 // ---------------------------------------------------------------------------
-var dbProvider = builder.Configuration["Database:Provider"] ?? "SqlServer";
-var connectionString = builder.Configuration.GetConnectionString("NeverBeen")
-    ?? "Server=localhost;Database=NeverBeen;User Id=sa;Password=ChangeMe;TrustServerCertificate=True;";
+var connectionString = builder.Configuration.GetConnectionString("Supabase")
+    ?? builder.Configuration.GetConnectionString("NeverBeen")
+    ?? "Host=localhost;Database=neverbeen;Username=postgres;Password=ChangeMe;SSL Mode=Prefer;";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    if (dbProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
-        options.UseSqlite(connectionString);
-    else
-        options.UseSqlServer(connectionString);
-});
+    options.UseNpgsql(connectionString));
 
 // ---------------------------------------------------------------------------
 // Authentication (JWT issued after the OAuth login) and authorization.
@@ -68,7 +62,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "NeverBeen Community API",
         Version = "v1",
-        Description = "OAuth (Google / Facebook / Microsoft) SSO login, registration, user profiles, photo galleries and the NeverBeen Community Message Book."
+        Description = "The complete NeverBeen community backend on Supabase (PostgreSQL): OAuth (Google / Facebook / Microsoft) sign in and sign up, profiles, settings, galleries, Journey feeds, Message Book, messenger, companionships, followers, circles, notifications and moderation."
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

@@ -237,7 +237,7 @@
   box-shadow: 0 2px 8px rgba(36, 53, 44, 0.25);
 }
 
-/* 3 OAuth Buttons List */
+/* OAuth Buttons List */
 .oauth-buttons-list {
   display: flex;
   flex-direction: column;
@@ -308,33 +308,6 @@
   height: 24px;
   flex-shrink: 0;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
-}
-
-.btn-apple {
-  background: #000000;
-  color: #ffffff;
-  border: 1px solid #000000;
-}
-
-.btn-apple:hover:not(:disabled) {
-  background: #1a1a1a;
-  border-color: #1a1a1a;
-}
-
-.apple-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.btn-microsoft {
-  background: #2f2f2f;
-  color: #ffffff;
-  border: 1px solid #2f2f2f;
-}
-
-.btn-microsoft:hover:not(:disabled) {
-  background: #1f1f1f;
-  border-color: #1f1f1f;
 }
 
 /* Official Google button panel (shown when One-Tap is skipped) */
@@ -492,6 +465,72 @@
 .link-dot {
   color: rgb(var(--ct-ink-rgb, 29 25 20) / 0.35);
   user-select: none;
+}
+
+/* Explore as Guest */
+.guest-option {
+  margin-bottom: 2rem;
+}
+
+.guest-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.15rem;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgb(var(--ct-ink-rgb, 29 25 20) / 0.12);
+}
+
+.divider-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
+  user-select: none;
+}
+
+.guest-explore-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.95rem 1.2rem;
+  border-radius: 14px;
+  font-size: 0.96rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--ct-ln2, #d1d5db);
+  background: rgb(var(--ct-ink-rgb, 29 25 20) / 0.03);
+  color: var(--ink, var(--ct-ink, #1d1914));
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.guest-explore-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--ct-ln2, #9ca3af);
+  box-shadow: 0 8px 20px rgba(29, 25, 20, 0.12);
+}
+
+.guest-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.guest-hint {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-soft, var(--ct-mu, #5c5348));
 }
 
 @media (max-width: 480px) {

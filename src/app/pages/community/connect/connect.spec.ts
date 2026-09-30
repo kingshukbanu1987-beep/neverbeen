@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityConnect } from './connect';
-import { CommunityService, setCookie, deleteCookie, TOKEN_KEY, PROFILE_KEY } from '../../../services/community.service';
+import { CommunityService, setCookie, deleteCookie, TOKEN_KEY, PROFILE_KEY, GUEST_KEY } from '../../../services/community.service';
 
 describe('CommunityConnect', () => {
   let router: Router;
@@ -10,6 +10,7 @@ describe('CommunityConnect', () => {
 
   beforeEach(async () => {
     deleteCookie(TOKEN_KEY);
+    localStorage.removeItem(GUEST_KEY);
 
     await TestBed.configureTestingModule({
       imports: [CommunityConnect],
@@ -27,7 +28,7 @@ describe('CommunityConnect', () => {
     return fixture;
   }
 
-  it('renders the 4 OAuth login options in order — Google, Facebook, Apple (3rd), Microsoft — in a card box design', () => {
+  it('renders the Google and Facebook sign-in options in a card box design', () => {
     const element: HTMLElement = create().nativeElement;
     const cardBox = element.querySelector('.oauth-card-box');
     expect(cardBox).toBeTruthy();
@@ -37,15 +38,37 @@ describe('CommunityConnect', () => {
 
     expect(labels.some((l) => l?.includes('Sign in with Google'))).toBe(true);
     expect(labels.some((l) => l?.includes('Sign in with Facebook'))).toBe(true);
-    expect(labels.some((l) => l?.includes('Sign in with Apple'))).toBe(true);
-    expect(labels.some((l) => l?.includes('Sign in with Microsoft'))).toBe(true);
 
-    // Apple must sit in 3rd place, right after Facebook and before Microsoft
+    // 'Sign in with Apple' and 'Sign in with Microsoft' have been removed
+    expect(labels.some((l) => l?.includes('Sign in with Apple'))).toBe(false);
+    expect(labels.some((l) => l?.includes('Sign in with Microsoft'))).toBe(false);
+
+    // Google first, Facebook second
     expect(labels[0]).toContain('Sign in with Google');
     expect(labels[1]).toContain('Sign in with Facebook');
-    expect(labels[2]).toContain('Sign in with Apple');
-    expect(labels[3]).toContain('Sign in with Microsoft');
-    expect(buttons[2].classList.contains('btn-apple')).toBe(true);
+    expect(buttons).toHaveLength(2);
+  });
+
+  it('offers an “Explore as Guest” option that opens the whole community default profile', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const guest = element.querySelector<HTMLButtonElement>('button.guest-explore-btn');
+
+    expect(guest).toBeTruthy();
+    expect(guest!.textContent).toContain('Explore as Guest');
+    expect(element.querySelector('.guest-divider')).toBeTruthy();
+    expect(element.querySelector('.guest-hint')?.textContent).toContain('without an account');
+
+    guest!.click();
+    fixture.detectChanges();
+
+    // The guest lands on the Community profile with the whole default profile loaded —
+    // without any account session (no auth cookie/token, not signed in).
+    expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
+    expect(service.guestBrowsing()).toBe(true);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.profile()?.fullName).toBe('Kingshuk');
+    expect(service.profile()?.profession).toContain('founder of NeverBeen');
   });
 
   it('redirects to user profile page if already authenticated on open', () => {
