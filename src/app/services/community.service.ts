@@ -288,7 +288,7 @@ export class CommunityService {
   private readonly http = inject(HttpClient, { optional: true });
   /** Admin Console moderation — accounts disabled by an admin are hidden from the community. */
   private readonly moderation = inject(AdminModerationService);
-  readonly apiUrl = 'http://localhost:5080';
+  readonly apiUrl = 'https://localhost:7080';
 
   readonly token = signal<string | null>(getCookie(TOKEN_KEY));
   readonly currentUser = signal<CurrentUser | null>(null);
