@@ -70,7 +70,7 @@ export class Navbar {
    * header appears only once a visitor enters the community itself (/community/… pages,
    * member profiles and the Message Book).
    */
-  private readonly isCommunitySignIn = computed(() => /^\/community\/?(\?|#|$)/.test(this.currentUrl()));
+  private readonly isCommunitySignIn = computed(() => /^\/community(?:\/register)?\/?(\?|#|$)/.test(this.currentUrl()));
 
   /**
    * Compact header (smaller bar + 50% logo) on the Community, member profiles and the whole
