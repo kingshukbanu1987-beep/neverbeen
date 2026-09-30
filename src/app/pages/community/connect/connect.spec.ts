@@ -28,7 +28,7 @@ describe('CommunityConnect', () => {
     return fixture;
   }
 
-  it('renders the Google and Facebook sign-in options in a card box design', () => {
+  it('renders Google sign-in in a card box and hides Facebook sign-in', () => {
     const element: HTMLElement = create().nativeElement;
     const cardBox = element.querySelector('.oauth-card-box');
     expect(cardBox).toBeTruthy();
@@ -37,16 +37,14 @@ describe('CommunityConnect', () => {
     const labels = buttons.map((b) => b.textContent?.trim());
 
     expect(labels.some((l) => l?.includes('Sign in with Google'))).toBe(true);
-    expect(labels.some((l) => l?.includes('Sign in with Facebook'))).toBe(true);
+    expect(labels.some((l) => l?.includes('Sign in with Facebook'))).toBe(false);
 
     // 'Sign in with Apple' and 'Sign in with Microsoft' have been removed
     expect(labels.some((l) => l?.includes('Sign in with Apple'))).toBe(false);
     expect(labels.some((l) => l?.includes('Sign in with Microsoft'))).toBe(false);
 
-    // Google first, Facebook second
     expect(labels[0]).toContain('Sign in with Google');
-    expect(labels[1]).toContain('Sign in with Facebook');
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(1);
   });
 
   it('offers an “Explore as Guest” option that opens the whole community default profile', () => {
