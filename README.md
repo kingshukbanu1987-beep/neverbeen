@@ -2,12 +2,33 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.24.
 
+## Install dependencies
+
+Use a supported Node.js release before installing the Angular CLI and project dependencies. Angular 21 requires Node.js 20.19+, 22.12+, or 24+; this repository uses Node 22 by default (see `.nvmrc`). npm 10.8+ or npm 11 is supported.
+
+With `nvm` installed:
+
+```bash
+nvm install
+nvm use
+npm ci
+```
+
+If you do not use `nvm`, install Node.js 22 LTS first, then run `npm ci`. Use `npm install` only when you intentionally want to update the lockfile. If npm reports a missing or partially installed package, remove the incomplete install and retry from the lockfile:
+
+```bash
+rm -rf node_modules
+npm ci --no-audit --no-fund
+```
+
+The `engines` entry in `package.json` makes an unsupported Node/npm version visible during installation instead of failing later with an Angular CLI error.
+
 ## Development server
 
 To start a local development server, run:
 
 ```bash
-ng serve
+npm start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
