@@ -1,0 +1,89 @@
+<main class="documentation-page">
+  <section class="documentation-hero" aria-labelledby="documentation-title">
+    <div class="hero-orbit orbit-one" aria-hidden="true"></div>
+    <div class="hero-orbit orbit-two" aria-hidden="true"></div>
+
+    <div class="container hero-inner">
+      <a class="back-link" routerLink="/">← Back to NeverBeen</a>
+      <p class="eyebrow">Documentation Centre</p>
+      <h1 id="documentation-title">The complete NeverBeen experience, matched to your screen.</h1>
+      <p class="lede">
+        Explore the product story, every public page, the Community social experience, and the
+        Admin Console operations suite. A screen-aware viewer selects the right edition first — and
+        both PDFs are always available to open or download.
+      </p>
+
+      <div class="highlights" aria-label="Documentation contents">
+        <span>Community features</span>
+        <span>Admin Console operations</span>
+        <span>Public pages &amp; destination guides</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="viewer-section" aria-labelledby="viewer-title">
+    <div class="container">
+      <header class="viewer-header">
+        <div>
+          <p class="eyebrow">Choose your view</p>
+          <h2 id="viewer-title">{{ activeDocument().label }}</h2>
+          <p class="viewer-copy">{{ activeDocument().description }}</p>
+        </div>
+
+        <div class="screen-status" [class.manual]="!followsScreen()">
+          <span class="status-dot" aria-hidden="true"></span>
+          @if (followsScreen()) {
+            Selected automatically for this screen
+          } @else {
+            Manually selected
+          }
+        </div>
+      </header>
+
+      <div class="document-controls" role="group" aria-label="Documentation format">
+        @for (document of documents; track document.key) {
+          <button
+            type="button"
+            class="format-card"
+            [class.active]="selectedLayout() === document.key"
+            [attr.aria-pressed]="selectedLayout() === document.key"
+            (click)="choose(document.key)"
+          >
+            <span class="format-art" [class.mobile]="document.key === 'mobile'" aria-hidden="true">
+              <i></i><i></i><i></i>
+            </span>
+            <span class="format-copy">
+              <strong>{{ document.shortLabel }}</strong>
+              <small>{{ document.size }} · {{ document.pages }}</small>
+            </span>
+          </button>
+        }
+
+        @if (!followsScreen()) {
+          <button type="button" class="auto-choice" (click)="restoreAutomaticChoice()">
+            Use screen recommendation
+          </button>
+        }
+      </div>
+
+      <div class="viewer-actions">
+        <a class="btn btn-primary" [href]="activeDocument().url" target="_blank" rel="noopener">
+          Open {{ activeDocument().shortLabel }} PDF
+          <span aria-hidden="true">↗</span>
+        </a>
+        <a class="btn btn-gold" [href]="activeDocument().url" [attr.download]="activeDocument().url.split('/').pop()">
+          Download PDF
+          <span aria-hidden="true">↓</span>
+        </a>
+        <p>
+          {{ activeDocument().description }} Use the alternate tab above if you would prefer a
+          different layout.
+        </p>
+      </div>
+
+      <div class="pdf-frame" [class.mobile-document]="selectedLayout() === 'mobile'">
+        <iframe [src]="activePdf()" [title]="activeDocument().label + ' — NeverBeen documentation'"></iframe>
+      </div>
+    </div>
+  </section>
+</main>
