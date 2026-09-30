@@ -231,6 +231,23 @@ describe('Navbar', () => {
     expect(element.querySelector('.ch-brand')).toBeNull();
   });
 
+  it('keeps the full website header on the Community registration page', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    component['currentUrl'].set('/community/register');
+    fixture.detectChanges();
+
+    expect(component['isCommunity']()).toBe(false);
+    expect(component['isCompactLogo']()).toBe(false);
+    expect(element.querySelector('header.community-nav')).toBeNull();
+    expect(element.querySelector('header.compact-nav')).toBeNull();
+    expect(element.querySelector('.logo')).toBeTruthy();
+    expect(element.querySelector('nav#site-nav')).toBeTruthy();
+    expect(element.querySelector('.ch-brand')).toBeNull();
+  });
+
   it('shows seeded pending chats on the messenger icon', () => {
     const fixture = create();
     const component = fixture.componentInstance;
