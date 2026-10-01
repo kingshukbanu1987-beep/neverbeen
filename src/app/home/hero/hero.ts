@@ -10,6 +10,9 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
   destinations: { path: '/', fragment: 'destinations', cls: 'btn-ghost' },
   collection: { path: '/collection', cls: 'btn-ghost' },
   gallery: { path: '/', fragment: 'gallery', cls: 'btn-ghost' },
+  // The Documentation Centre detects the active viewport and loads the matching
+  // portrait or wide-screen PDF, while keeping both files downloadable.
+  documentation: { path: '/documentation', cls: 'btn-ghost' },
 };
 
 @Component({

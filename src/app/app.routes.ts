@@ -48,6 +48,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/collection/collection').then((m) => m.Collection),
   },
   {
+    path: 'documentation',
+    loadComponent: () =>
+      import('./pages/documentation/documentation').then((m) => m.DocumentationPage),
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
   },
