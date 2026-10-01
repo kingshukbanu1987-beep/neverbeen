@@ -57,7 +57,7 @@ describe('DocumentationPage', () => {
     expect(element.querySelector('h2')?.textContent).toContain('Wide screen edition');
     expect(element.querySelector('.format-card.active')?.textContent).toContain('Wide');
     expect(element.querySelector<HTMLIFrameElement>('iframe')?.getAttribute('src')).toContain(
-      '/documentation/NeverBeen_Documentation_Wide.pdf',
+      '/assets/documentation/NeverBeen_Documentation_Wide.pdf',
     );
   });
 
@@ -68,13 +68,13 @@ describe('DocumentationPage', () => {
     expect(element.querySelector('h2')?.textContent).toContain('Mobile edition');
     expect(element.querySelector('.format-card.active')?.textContent).toContain('Mobile');
     expect(element.querySelector<HTMLIFrameElement>('iframe')?.getAttribute('src')).toContain(
-      '/documentation/NeverBeen_Documentation_Mobile.pdf',
+      '/assets/documentation/NeverBeen_Documentation_Mobile.pdf',
     );
 
     const download = Array.from(element.querySelectorAll<HTMLAnchorElement>('a')).find((link) =>
       link.textContent?.includes('Download PDF'),
     );
-    expect(download?.getAttribute('href')).toBe('/documentation/NeverBeen_Documentation_Mobile.pdf');
+    expect(download?.getAttribute('href')).toBe('/assets/documentation/NeverBeen_Documentation_Mobile.pdf');
     expect(download?.getAttribute('download')).toBe('NeverBeen_Documentation_Mobile.pdf');
   });
 

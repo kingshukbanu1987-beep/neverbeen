@@ -11,7 +11,7 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const OUT = path.join(ROOT, 'public', 'documentation', 'NeverBeen_Documentation_Wide.pdf');
+const OUT = path.join(ROOT, 'public', 'assets', 'documentation', 'NeverBeen_Documentation_Wide.pdf');
 const W = 960;
 const H = 540;
 

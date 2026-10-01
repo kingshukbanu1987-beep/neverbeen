@@ -10,7 +10,7 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 
 const ROOT = path.resolve(__dirname, '..', '..');
-const OUT = path.join(ROOT, 'public', 'documentation', 'NeverBeen_Documentation_Mobile.pdf');
+const OUT = path.join(ROOT, 'public', 'assets', 'documentation', 'NeverBeen_Documentation_Mobile.pdf');
 const W = 540;
 const H = 960;
 const M = 30;
