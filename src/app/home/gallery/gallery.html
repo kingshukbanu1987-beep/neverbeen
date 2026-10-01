@@ -7,16 +7,30 @@
       title="Gallery"
       copy="Example vacation stills—composed like editorial travel photographs, not generated novelties."
     />
-    <div class="mosaic">
-      @for (item of items(); track item.title) {
-        <figure>
-          <img [src]="item.image" [alt]="item.title + ' in ' + item.location" />
-          <figcaption>
-            <strong>{{ item.title }}</strong>
-            <span>{{ item.location }}</span>
-          </figcaption>
-        </figure>
+
+    <!-- 20 photographs drawn at random from the Neverbeen Collection; a new draw on every page load. -->
+    <ul class="wall" aria-label="Photographs from the Neverbeen Collection, chosen at random">
+      @for (photo of photos; track photo.src) {
+        <li>
+          <figure>
+            <img [src]="photo.src" [alt]="photo.alt" loading="lazy" decoding="async" />
+            <figcaption>
+              <strong>{{ photo.title }}</strong>
+              @if (place(photo); as where) {
+                <span>{{ where }}</span>
+              }
+            </figcaption>
+          </figure>
+        </li>
       }
-    </div>
+    </ul>
+
+    <p class="wall-note">
+      <span>
+        {{ photos.length }} of {{ collectionSize }} photographs from the Neverbeen Collection ·
+        refresh the page for a new selection
+      </span>
+      <a routerLink="/collection">View the full collection →</a>
+    </p>
   </div>
 </section>

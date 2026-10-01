@@ -1,4 +1,4 @@
-import { destinations, faqItems, galleryItems, howItWorksSteps, pricingPlans } from '../models/site-content';
+import { destinations, faqItems, howItWorksSteps, pricingPlans } from '../models/site-content';
 
 /**
  * Registry of every website component that can be managed from
@@ -281,12 +281,11 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     page: 'home',
     label: 'Gallery',
     icon: '🖼️',
-    description: 'The example-photograph mosaic.',
+    description: 'The photo wall: 20 photographs drawn at random from the Neverbeen Collection on every page load.',
     previewPath: '/',
     previewFragment: 'gallery',
     fields: [
       ...heading('The proof', 'Gallery', 'Example vacation stills—composed like editorial travel photographs, not generated novelties.'),
-      { key: 'items', label: 'Photographs', type: 'items', default: galleryItems.map((g) => ({ id: g.title, label: `${g.title} · ${g.location}`, visible: true })), labelEditable: false },
     ],
   },
   {

@@ -10,12 +10,6 @@ export interface Destination {
   images: string[];
 }
 
-export interface GalleryItem {
-  title: string;
-  location: string;
-  image: string;
-}
-
 export interface PricingPlan {
   name: string;
   price: string;
@@ -553,93 +547,6 @@ const contactDestinationOptions: string[] = [
 
 /** Every place name offered in the contact form, without duplicates. */
 export const contactDestinations = Array.from(new Set(contactDestinationOptions));
-
-export const galleryItems: GalleryItem[] = [
-  {
-    title: 'Morning in Amalfi',
-    location: 'Italy',
-    image:
-      'https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'A terrace in Kyoto',
-    location: 'Japan',
-    image:
-      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Sahara after rain',
-    location: 'Morocco',
-    image:
-      'https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Fjords at dusk',
-    location: 'Norway',
-    image:
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Lagoon quiet',
-    location: 'French Polynesia',
-    image:
-      'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Desert camp light',
-    location: 'Jordan',
-    image:
-      'https://images.unsplash.com/photo-1547234935-80c7145ec969?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Aria above the valley',
-    location: 'Manali, India',
-    image:
-      'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=85',
-  },
-  {
-    title: 'Mateo in the color',
-    location: 'Rio de Janeiro, Brazil',
-    image:
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1200&q=85',
-  },
-  {
-    title: 'Two tickets to the coast',
-    location: 'Mallorca, Spain',
-    image:
-      'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=85',
-  },
-  {
-    title: 'The summer table',
-    location: 'Crete, Greece',
-    image:
-      'https://images.unsplash.com/photo-1504150558240-0b4fd8946624?auto=format&fit=crop&w=1200&q=85',
-  },
-  {
-    title: 'Four friends, one island',
-    location: 'Bali, Indonesia',
-    image:
-      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85',
-  },
-  {
-    title: 'Nia at golden hour',
-    location: 'Nairobi, Kenya',
-    image:
-      'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=1200&q=85',
-  },
-  {
-    title: 'A family weekend north',
-    location: 'Banff, Canada',
-    image:
-      'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=85',
-  },
-  {
-    title: 'Luca by the blue hour',
-    location: 'Lisbon, Portugal',
-    image:
-      'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1200&q=85',
-  },
-];
 
 export const pricingPlans: PricingPlan[] = [
   {

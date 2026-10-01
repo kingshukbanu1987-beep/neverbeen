@@ -4,33 +4,51 @@
   color: var(--ink);
 }
 
-.mosaic {
+/*
+ * Twenty portrait tiles: 5 columns x 4 rows on desktop, 4 x 5 on tablets and 2 x 10 on phones,
+ * so the grid is always completely filled. The collection is mostly portrait phone photographs,
+ * so tiles are 3:4 and cropped towards the top, where faces and landmarks usually are.
+ */
+.wall {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr 1fr;
-  grid-auto-rows: 220px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.9rem;
-  margin-top: 2.6rem;
+  margin: 2.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  margin: 0;
 }
 
 figure {
-  margin: 0;
   position: relative;
+  aspect-ratio: 3 / 4;
+  margin: 0;
   overflow: hidden;
   border-radius: 16px;
+  background: var(--sand-deep);
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
-figure:nth-child(1) {
-  grid-row: span 2;
-}
-
-figure:nth-child(4) {
-  grid-column: span 2;
+figure:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 34px rgba(24, 36, 30, 0.22);
 }
 
 img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 30%;
+  transition: transform 0.5s ease;
+}
+
+figure:hover img {
+  transform: scale(1.05);
 }
 
 figcaption {
@@ -39,27 +57,63 @@ figcaption {
   right: 0;
   bottom: 0;
   display: flex;
-  justify-content: space-between;
-  padding: 0.9rem 1rem;
-  background: linear-gradient(transparent, rgba(18, 24, 20, 0.78));
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 2.2rem 0.85rem 0.8rem;
+  background: linear-gradient(transparent, rgba(18, 24, 20, 0.8));
   color: var(--paper);
-  font-size: 0.88rem;
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 strong {
   font-weight: 500;
 }
 
-@media (max-width: 800px) {
-  .mosaic {
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 210px;
+figcaption span {
+  font-size: 0.7rem;
+  opacity: 0.82;
+}
+
+.wall-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 1.1rem;
+  margin: 1.8rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.wall-note a {
+  color: var(--bronze);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
+.wall-note a:hover,
+.wall-note a:focus-visible {
+  color: var(--forest);
+}
+
+@media (max-width: 1000px) {
+  .wall {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
   }
 
-  figure:nth-child(1),
-  figure:nth-child(4) {
-    grid-column: auto;
-    grid-row: auto;
+  figcaption {
+    padding: 1.8rem 0.65rem 0.65rem;
+    font-size: 0.74rem;
   }
 }
 
@@ -67,9 +121,16 @@ strong {
   .gallery {
     padding: 4rem 0;
   }
+}
 
-  .mosaic {
-    grid-template-columns: 1fr;
-    grid-auto-rows: 240px;
+@media (prefers-reduced-motion: reduce) {
+  figure,
+  img {
+    transition: none;
+  }
+
+  figure:hover,
+  figure:hover img {
+    transform: none;
   }
 }
