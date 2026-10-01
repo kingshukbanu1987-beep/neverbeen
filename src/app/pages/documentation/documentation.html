@@ -5,18 +5,19 @@
 
     <div class="container hero-inner">
       <a class="back-link" routerLink="/">← Back to NeverBeen</a>
-      <p class="eyebrow">Documentation Centre</p>
-      <h1 id="documentation-title">The complete NeverBeen experience, matched to your screen.</h1>
+      <p class="eyebrow">Documentation</p>
+      <h1 id="documentation-title">Everything about Neverbeen, in one brochure.</h1>
       <p class="lede">
-        Explore the product story, every public page, the Community social experience, and the
-        Admin Console operations suite. A screen-aware viewer selects the right edition first — and
-        both PDFs are always available to open or download.
+        Discover what Neverbeen is for, how to place a Neverbeen Request, what each package costs
+        and how the process works — in a vibrant, wide landscape document you can read here, open in a new
+        tab or download.
       </p>
 
-      <div class="highlights" aria-label="Documentation contents">
-        <span>Community features</span>
-        <span>Admin Console operations</span>
-        <span>Public pages &amp; destination guides</span>
+      <div class="highlights" aria-label="Brochure contents">
+        <span>How to place a Neverbeen Request</span>
+        <span>Pricing &amp; packages</span>
+        <span>How it works</span>
+        <span>Destinations around the world</span>
       </div>
     </div>
   </section>
@@ -25,65 +26,31 @@
     <div class="container">
       <header class="viewer-header">
         <div>
-          <p class="eyebrow">Choose your view</p>
-          <h2 id="viewer-title">{{ activeDocument().label }}</h2>
-          <p class="viewer-copy">{{ activeDocument().description }}</p>
+          <p class="eyebrow">Wide landscape · {{ brochure.pages }} pages · PDF</p>
+          <h2 id="viewer-title">{{ brochure.title }}</h2>
+          <p class="viewer-copy">{{ brochure.description }}</p>
         </div>
 
-        <div class="screen-status" [class.manual]="!followsScreen()">
-          <span class="status-dot" aria-hidden="true"></span>
-          @if (followsScreen()) {
-            Selected automatically for this screen
-          } @else {
-            Manually selected
-          }
+        <div class="viewer-actions">
+          <a class="btn btn-primary" [href]="brochure.url" target="_blank" rel="noopener">
+            Open Brochure
+            <span aria-hidden="true">↗</span>
+          </a>
+          <a class="btn btn-gold" [href]="brochure.url" [attr.download]="brochure.fileName">
+            Download Brochure
+            <span aria-hidden="true">↓</span>
+          </a>
         </div>
       </header>
 
-      <div class="document-controls" role="group" aria-label="Documentation format">
-        @for (document of documents; track document.key) {
-          <button
-            type="button"
-            class="format-card"
-            [class.active]="selectedLayout() === document.key"
-            [attr.aria-pressed]="selectedLayout() === document.key"
-            (click)="choose(document.key)"
-          >
-            <span class="format-art" [class.mobile]="document.key === 'mobile'" aria-hidden="true">
-              <i></i><i></i><i></i>
-            </span>
-            <span class="format-copy">
-              <strong>{{ document.shortLabel }}</strong>
-              <small>{{ document.size }} · {{ document.pages }}</small>
-            </span>
-          </button>
-        }
-
-        @if (!followsScreen()) {
-          <button type="button" class="auto-choice" (click)="restoreAutomaticChoice()">
-            Use screen recommendation
-          </button>
-        }
+      <div class="pdf-frame">
+        <iframe [src]="viewerUrl" [title]="brochure.title + ' — wide landscape PDF'"></iframe>
       </div>
 
-      <div class="viewer-actions">
-        <a class="btn btn-primary" [href]="activeDocument().url" target="_blank" rel="noopener">
-          Open {{ activeDocument().shortLabel }} PDF
-          <span aria-hidden="true">↗</span>
-        </a>
-        <a class="btn btn-gold" [href]="activeDocument().url" [attr.download]="activeDocument().url.split('/').pop()">
-          Download PDF
-          <span aria-hidden="true">↓</span>
-        </a>
-        <p>
-          {{ activeDocument().description }} Use the alternate tab above if you would prefer a
-          different layout.
-        </p>
-      </div>
-
-      <div class="pdf-frame" [class.mobile-document]="selectedLayout() === 'mobile'">
-        <iframe [src]="activePdf()" [title]="activeDocument().label + ' — NeverBeen documentation'"></iframe>
-      </div>
+      <p class="viewer-hint">
+        If the brochure does not appear in your browser, use <strong>Open Brochure</strong> or
+        <strong>Download Brochure</strong> above.
+      </p>
     </div>
   </section>
 </main>

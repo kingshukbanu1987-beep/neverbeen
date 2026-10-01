@@ -43,3 +43,7 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 .wrangler/
+
+# PDF build tooling (docs/brochure)
+docs/brochure/node_modules/
+docs/brochure/.cache/

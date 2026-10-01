@@ -1,40 +1,24 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
-type DocumentationLayout = 'wide' | 'mobile';
-
+/** The one document this page presents. */
 interface DocumentationFile {
-  key: DocumentationLayout;
-  label: string;
-  shortLabel: string;
+  title: string;
   description: string;
+  /** Public URL of the PDF (served from `public/assets/documentation`). */
   url: string;
-  pages: string;
-  size: string;
+  /** Suggested file name when the visitor downloads the PDF. */
+  fileName: string;
+  pages: number;
 }
 
-const DOCUMENTS: Record<DocumentationLayout, DocumentationFile> = {
-  wide: {
-    key: 'wide',
-    label: 'Wide screen edition',
-    shortLabel: 'Wide',
-    description: 'Landscape documentation designed for tablet, laptop and desktop viewing.',
-    url: '/assets/documentation/NeverBeen_Documentation_Wide.pdf',
-    pages: 'Wide / landscape',
-    size: 'Desktop & tablet',
-  },
-  mobile: {
-    key: 'mobile',
-    label: 'Mobile edition',
-    shortLabel: 'Mobile',
-    description: 'Portrait documentation designed for phone-sized screens and comfortable vertical reading.',
-    url: '/assets/documentation/NeverBeen_Documentation_Mobile.pdf',
-    pages: 'Mobile / portrait',
-    size: 'Phone-first',
-  },
-};
-
+/**
+ * Documentation page.
+ *
+ * It shows a single wide landscape document — the Neverbeen Brochure — in an embedded viewer,
+ * with "Open Brochure" (new tab) and "Download Brochure" actions.
+ */
 @Component({
   selector: 'app-documentation-page',
   imports: [RouterLink],
@@ -42,47 +26,20 @@ const DOCUMENTS: Record<DocumentationLayout, DocumentationFile> = {
   styleUrl: './documentation.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DocumentationPage implements OnInit {
+export class DocumentationPage {
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly destroyRef = inject(DestroyRef);
-  private mediaQuery: MediaQueryList | null = null;
 
-  /** The choice follows the current display until a visitor deliberately switches editions. */
-  protected readonly selectedLayout = signal<DocumentationLayout>('wide');
-  protected readonly followsScreen = signal(true);
+  protected readonly brochure: DocumentationFile = {
+    title: 'Neverbeen Brochure',
+    description:
+      'Why Neverbeen exists, how to place a Neverbeen Request, what each package costs and how the process works — from your first message to a vacation photograph you can share.',
+    url: '/assets/documentation/Neverbeen_Brochure.pdf',
+    fileName: 'Neverbeen_Brochure.pdf',
+    pages: 22,
+  };
 
-  protected readonly documents = [DOCUMENTS.wide, DOCUMENTS.mobile];
-  protected readonly activeDocument = computed(() => DOCUMENTS[this.selectedLayout()]);
-  protected readonly activePdf = computed<SafeResourceUrl>(() =>
-    this.sanitizer.bypassSecurityTrustResourceUrl(this.activeDocument().url),
+  /** The PDF is a fixed, first-party file, so it is safe to trust as an embeddable resource. */
+  protected readonly viewerUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+    `${this.brochure.url}#view=FitH&navpanes=0`,
   );
-
-  ngOnInit(): void {
-    // Keep the wide edition as a safe baseline for server rendering and older browsers.
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-
-    // Phones are normally below 640 CSS pixels; the second branch also recognises
-    // a phone held landscape without treating standard tablet dimensions as mobile.
-    this.mediaQuery = window.matchMedia('(max-width: 640px), (max-height: 640px) and (max-width: 960px)');
-    this.applyViewportChoice();
-
-    const onChange = () => this.applyViewportChoice();
-    this.mediaQuery.addEventListener?.('change', onChange);
-    this.destroyRef.onDestroy(() => this.mediaQuery?.removeEventListener?.('change', onChange));
-  }
-
-  protected choose(layout: DocumentationLayout): void {
-    this.followsScreen.set(false);
-    this.selectedLayout.set(layout);
-  }
-
-  protected restoreAutomaticChoice(): void {
-    this.followsScreen.set(true);
-    this.applyViewportChoice();
-  }
-
-  private applyViewportChoice(): void {
-    if (!this.followsScreen()) return;
-    this.selectedLayout.set(this.mediaQuery?.matches ? 'mobile' : 'wide');
-  }
 }
