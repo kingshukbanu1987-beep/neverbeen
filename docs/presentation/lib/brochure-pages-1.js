@@ -93,10 +93,16 @@ module.exports = [
       'Inside: how a Neverbeen Request works, the photo kit, packages and the whole destination atlas.',
       MARGIN,
       462,
-      420,
-      { font: 'Body', size: 9.4, color: WHITE, opacity: 1, lineGap: 2.4 },
+      {
+        font: 'Body',
+        size: 9.4,
+        color: WHITE,
+        opacity: 1,
+        width: 420,
+        lineGap: 2.4,
+      },
     );
-    k.text('Santorini, Greece · composed by the NeverBeen studio', 452, 500, 340, {
+    k.text('Santorini, Greece · composed by the NeverBeen studio', 452, 500, {
       font: 'BodySemi',
       size: 8,
       color: WHITE,
