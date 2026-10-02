@@ -327,6 +327,7 @@ module.exports = [
         captionHeight: 24,
         frame: 4,
         radius: 12,
+        imageFit: 'contain',
       });
     });
   },
@@ -363,7 +364,12 @@ module.exports = [
       const x = MARGIN + column * 186;
       const y = 214 + row * 178;
       k.glass(x, y, cardW, 160, { radius: 16, opacity: 0.96 });
-      k.photo(story[0], x + 8, y + 8, cardW - 16, 82, { frame: 3, radius: 12, shadow: false });
+      k.photo(story[0], x + 8, y + 8, cardW - 16, 82, {
+        frame: 3,
+        radius: 12,
+        shadow: false,
+        imageFit: 'contain',
+      });
       k.fit(story[1], x + 12, y + 98, cardW - 24, 26, {
         font: 'BodyBold',
         size: 10.4,
@@ -476,10 +482,12 @@ module.exports = [
     k.photo(ctx.C('Terrace beers'), 794 - 172, 186, 172, 150, {
       caption: 'Amsterdam, Netherlands',
       captionHeight: 24,
+      imageFit: 'contain',
     });
     k.photo(ctx.C('Coins in the Trevi'), 794 - 172, 346, 172, 150, {
       caption: 'Rome, Italy',
       captionHeight: 24,
+      imageFit: 'contain',
     });
     k.roundRect(MARGIN, 508, 730, 40, 14, '#2B1055', 0.9);
     k.icon('mail', MARGIN + 26, 528, 9, '#FFD166');
@@ -570,6 +578,7 @@ module.exports = [
         captionHeight: 22,
         frame: 4,
         radius: 12,
+        imageFit: 'contain',
       });
     });
   },
@@ -1043,6 +1052,7 @@ module.exports = [
         captionHeight: 26,
         frame: 5,
         radius: 14,
+        imageFit: 'contain',
       });
     });
 

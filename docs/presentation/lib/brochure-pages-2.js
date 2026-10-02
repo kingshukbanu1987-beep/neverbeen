@@ -35,6 +35,7 @@ module.exports = [
         captionHeight: 26,
         frame: 5,
         radius: 14,
+        imageFit: 'contain',
       });
     });
 
@@ -82,6 +83,7 @@ module.exports = [
         captionHeight: 26,
         frame: 4,
         radius: 13,
+        imageFit: 'contain',
       });
     });
 
@@ -509,12 +511,14 @@ module.exports = [
       captionHeight: 26,
       frame: 5,
       radius: 14,
+      imageFit: 'contain',
     });
     k.photo(ctx.IMG.help, 536, 428, 294, 124, {
       caption: 'Help Centre: search, categories and a human reply',
       captionHeight: 24,
       frame: 5,
       radius: 14,
+      imageFit: 'contain',
     });
   },
 
@@ -594,6 +598,7 @@ module.exports = [
         radius: 12,
         caption: shot[1],
         captionHeight: 22,
+        imageFit: 'contain',
       });
     });
     k.chip('61 photographs  ·  new frames weekly', MARGIN, 566, {
@@ -664,12 +669,14 @@ module.exports = [
       radius: 12,
       caption: 'Amsterdam, Netherlands',
       captionHeight: 22,
+      imageFit: 'contain',
     });
     k.photo(ctx.C('Mulled wine crew'), MARGIN + 250, 446, 236, 108, {
       frame: 4,
       radius: 12,
       caption: 'Christmas market, London',
       captionHeight: 22,
+      imageFit: 'contain',
     });
     k.glass(MARGIN + 500, 446, 230, 108, { radius: 14, opacity: 0.96 });
     k.label('Reminder', MARGIN + 520, 462, { color: '#0B6B4F', size: 7.6 });

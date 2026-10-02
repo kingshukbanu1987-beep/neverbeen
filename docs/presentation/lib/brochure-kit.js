@@ -376,7 +376,7 @@ class BrochureKit {
     }
   }
 
-  /** Photo with a white frame, soft shadow and optional caption bar. */
+  /** Photo with a white frame; imageFit: 'contain' preserves the full source frame. */
   photo(file, x, y, w, h, opts = {}) {
     const {
       radius = 14,
@@ -389,6 +389,7 @@ class BrochureKit {
       badgeColor = null,
       captionHeight = null,
       shadow = true,
+      imageFit = 'cover',
     } = opts;
 
     const frameW = w;
@@ -403,16 +404,22 @@ class BrochureKit {
 
     try {
       const image = this.openImage(file);
-      const scale = Math.max(innerW / image.width, innerH / image.height);
+      const contain = imageFit === 'contain';
+      const scale = contain
+        ? Math.min(innerW / image.width, innerH / image.height)
+        : Math.max(innerW / image.width, innerH / image.height);
       const iw = image.width * scale;
       const ih = image.height * scale;
       const d = this.doc;
       d.save();
       d.roundedRect(innerX, innerY, innerW, innerH, radius - 4).clip();
+      if (contain) {
+        d.fillColor(WHITE).rect(innerX, innerY, innerW, innerH).fill();
+      }
       d.image(
         image,
         innerX + (innerW - iw) / 2,
-        innerY + (innerH - ih) / 2 - (ih - innerH) * 0.15,
+        contain ? innerY + (innerH - ih) / 2 : innerY + (innerH - ih) / 2 - (ih - innerH) * 0.15,
         { width: iw, height: ih },
       );
       d.restore();
