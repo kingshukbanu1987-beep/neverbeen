@@ -102,6 +102,7 @@ const AUD = {
 };
 
 const IMG = {
+  coverLofoten: path.join(__dirname, 'images', 'cover-lofoten-selfie.jpg'),
   norway: path.join(ROOT, 'public/images/norway-laptop.jpg'),
   help: path.join(ROOT, 'public/images/help-hero.jpg'),
   logo: path.join(ROOT, 'public/neverbeen-logo.png'),
@@ -152,9 +153,14 @@ const kit = new BrochureKit(doc, fonts);
 kit.registerFonts();
 kit.setChrome({ year: YEAR });
 
-const pages = [...require('./lib/brochure-pages-1'), ...require('./lib/brochure-pages-2')];
+const pages = [
+  ...require('./lib/brochure-page-cover'),
+  ...require('./lib/brochure-pages-1'),
+  ...require('./lib/brochure-pages-2'),
+];
 
-kit.totalPages = pages.length;
+// The front cover is an unnumbered sheet, so the printed folio total excludes it.
+kit.totalPages = pages.length - 1;
 pages.forEach((draw) => draw(kit, context));
 kit.finishPage();
 

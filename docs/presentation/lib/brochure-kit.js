@@ -750,8 +750,11 @@ class BrochureKit {
   startPage(meta) {
     this.finishPage();
     this.doc.addPage({ size: [PAGE.W, PAGE.H], margin: 0 });
-    this.page += 1;
-    this.meta.push({ ...meta, number: this.page });
+    // Unnumbered sheets (the front cover) sit outside the folio count so the
+    // numbered pages keep their printed 01…N sequence.
+    const numbered = !meta || meta.numbered !== false;
+    if (numbered) this.page += 1;
+    this.meta.push({ ...meta, number: numbered ? this.page : null });
   }
 
   /** Header band (logo + section) and footer (copyright + page). */
