@@ -282,6 +282,24 @@ class BrochureKit {
     this.decorate(decor, accent);
   }
 
+  /** Full-bleed travel photograph blended over navy at the requested opacity. */
+  photoBackground(file, opacity = 0.7) {
+    const d = this.doc;
+    const image = this.openImage(file);
+    const scale = Math.max(PAGE.W / image.width, PAGE.H / image.height);
+    const iw = image.width * scale;
+    const ih = image.height * scale;
+
+    this.rect(0, 0, PAGE.W, PAGE.H, '#07172B');
+    d.save();
+    d.rect(0, 0, PAGE.W, PAGE.H).clip();
+    d.opacity(opacity).image(image, (PAGE.W - iw) / 2, (PAGE.H - ih) / 2, {
+      width: iw,
+      height: ih,
+    });
+    d.restore();
+  }
+
   decorate(style, accent) {
     const { W, H } = PAGE;
     switch (style) {
