@@ -107,7 +107,7 @@ export const HERO_BUTTONS: [string, string][] = [
   ['destinations', 'Dream Destinations'],
   ['collection', 'Neverbeen Collection'],
   ['gallery', 'Explore Gallery'],
-  ['documentation', 'Documentation'],
+  ['documentation', 'Brochure'],
 ];
 
 export const PROFILE_SECTIONS: [string, string][] = [

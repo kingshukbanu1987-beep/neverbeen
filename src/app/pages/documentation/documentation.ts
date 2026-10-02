@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
-/** The single document the Documentation Centre publishes. */
+/** The single brochure the Documentation Centre publishes. */
 export interface Brochure {
   /** Heading shown above the viewer. */
   label: string;
@@ -16,22 +16,27 @@ export interface Brochure {
   fileName: string;
   /** Orientation note shown next to the heading. */
   orientation: string;
+  /** Length note shown next to the heading. */
+  length: string;
   /** Screens the landscape layout is composed for. */
   audience: string;
 }
 
 /**
- * The wide landscape edition is the only brochure: one document, no
- * screen-dependent switching, always openable and downloadable.
+ * The visitor brochure: how NeverBeen works, how to place a Neverbeen Request,
+ * the photo kit, packages, and the destination atlas. It is written for the
+ * people who use the website — nothing about the Admin Console or how the site
+ * is built. Regenerate it with `npm run generate:brochure`.
  */
-export const WIDE_BROCHURE: Brochure = {
-  label: 'Wide landscape brochure',
+export const VISITOR_BROCHURE: Brochure = {
+  label: 'The NeverBeen brochure',
   shortLabel: 'Brochure',
   description:
-    'The whole NeverBeen story — public pages, Community and Admin Console — in one wide landscape document composed for tablet, laptop and desktop reading.',
-  url: '/assets/documentation/NeverBeen_Documentation_Wide.pdf',
-  fileName: 'NeverBeen_Documentation_Wide.pdf',
+    'A vibrant 25-page tour of everything a visitor needs: the idea behind NeverBeen, how to place a Neverbeen Request, what to send, the packages and the whole destination atlas.',
+  url: '/assets/documentation/NeverBeen_Brochure.pdf',
+  fileName: 'NeverBeen_Brochure.pdf',
   orientation: 'Wide / landscape',
+  length: '25 pages',
   audience: 'Tablet, laptop & desktop',
 };
 
@@ -45,9 +50,9 @@ export const WIDE_BROCHURE: Brochure = {
 export class DocumentationPage {
   private readonly sanitizer = inject(DomSanitizer);
 
-  protected readonly brochure = WIDE_BROCHURE;
+  protected readonly brochure = VISITOR_BROCHURE;
 
   /** The same brochure, trusted for the embedded viewer below the actions. */
   protected readonly brochureViewer: SafeResourceUrl =
-    this.sanitizer.bypassSecurityTrustResourceUrl(WIDE_BROCHURE.url);
+    this.sanitizer.bypassSecurityTrustResourceUrl(VISITOR_BROCHURE.url);
 }

@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { WIDE_BROCHURE, DocumentationPage } from './documentation';
+import { VISITOR_BROCHURE, DocumentationPage } from './documentation';
 
-const WIDE_URL = '/assets/documentation/NeverBeen_Documentation_Wide.pdf';
+const BROCHURE_URL = '/assets/documentation/NeverBeen_Brochure.pdf';
 
 describe('DocumentationPage', () => {
   beforeEach(async () => {
@@ -26,16 +26,17 @@ describe('DocumentationPage', () => {
     };
   }
 
-  it('publishes the wide landscape brochure as the only document', () => {
+  it('publishes the visitor brochure as the only document', () => {
     const element: HTMLElement = create().nativeElement;
 
-    expect(WIDE_BROCHURE.url).toBe(WIDE_URL);
+    expect(VISITOR_BROCHURE.url).toBe(BROCHURE_URL);
     expect(element.querySelectorAll('.pdf-frame iframe').length).toBe(1);
     expect(element.querySelector<HTMLIFrameElement>('iframe')?.getAttribute('src')).toContain(
-      WIDE_URL,
+      BROCHURE_URL,
     );
-    expect(element.querySelector('h2')?.textContent).toContain('Wide landscape brochure');
+    expect(element.querySelector('h2')?.textContent).toContain('The NeverBeen brochure');
     expect(element.querySelector('.document-meta')?.textContent).toContain('Wide / landscape');
+    expect(element.querySelector('.document-meta')?.textContent).toContain('25 pages');
   });
 
   it('offers exactly an Open Brochure and a Download Brochure action, both for the landscape PDF', () => {
@@ -44,15 +45,24 @@ describe('DocumentationPage', () => {
 
     expect(element.querySelectorAll('.viewer-actions a.btn').length).toBe(2);
 
-    expect(open?.getAttribute('href')).toBe(WIDE_URL);
+    expect(open?.getAttribute('href')).toBe(BROCHURE_URL);
     expect(open?.getAttribute('target')).toBe('_blank');
     expect(open?.getAttribute('rel')).toContain('noopener');
 
-    expect(download?.getAttribute('href')).toBe(WIDE_URL);
-    expect(download?.getAttribute('download')).toBe('NeverBeen_Documentation_Wide.pdf');
+    expect(download?.getAttribute('href')).toBe(BROCHURE_URL);
+    expect(download?.getAttribute('download')).toBe('NeverBeen_Brochure.pdf');
   });
 
-  it('shows no portrait edition and no layout switcher', () => {
+  it('talks to visitors, not to developers', () => {
+    const element: HTMLElement = create().nativeElement;
+    const copy = element.textContent ?? '';
+
+    expect(copy).toContain('Neverbeen Request');
+    expect(copy).not.toMatch(/admin console/i);
+    expect(copy).not.toMatch(/documentation/i);
+  });
+
+  it('shows no second edition and no layout switcher', () => {
     const element: HTMLElement = create().nativeElement;
     const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('a'));
 
