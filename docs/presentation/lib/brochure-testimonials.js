@@ -71,8 +71,8 @@ const TESTIMONIALS = [
     place: 'Stockholm, Sweden',
   },
   {
-    image: 'romeFriends',
-    scene: 'Rome, Italy',
+    image: 'dubaiFriends',
+    scene: 'Burj Khalifa · Downtown Dubai',
     quote: 'Four friends, four cities, one afternoon. Nobody flew anywhere.',
     name: 'Nora, Bea, Fenna & Luuk',
     place: 'Ghent, Belgium',
