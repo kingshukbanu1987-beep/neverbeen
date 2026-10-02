@@ -73,7 +73,7 @@ ng test
 | `/audience`      | Audience   | Who NeverBeen is for, age note, destination list, privacy promises                                   |
 | `/collection`    | Collection | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
 | `/founder`       | Founder    | Founder profile and expertise                                                                        |
-| `/documentation` | Brochure   | Visitor brochure: 36 pages on how to place a Neverbeen Request, packages and destinations            |
+| `/documentation` | Brochure   | Visitor brochure: 50 pages on how to place a Neverbeen Request, packages and destinations            |
 | `/login`         | Login      | Sign-in form                                                                                         |
 
 ## The Collection page
@@ -117,20 +117,18 @@ Admin Console → Website Management.
 
 The Documentation page publishes a single client-facing PDF — the **NeverBeen visitor brochure**
 (`public/assets/documentation/NeverBeen_Brochure.pdf`). It is written for people who are thinking
-about submitting a Neverbeen Request, not for developers: 36 landscape pages with vibrant
+about submitting a Neverbeen Request, not for developers: 50 landscape pages with vibrant
 backgrounds and collection photography, covering the idea behind NeverBeen, how to place a request,
 the photo kit, verification and privacy, packages and prices, how to use each page of the website,
 the destination atlas, FAQs and policies. The opening cover is a full-bleed Lofoten scene with a
-single centered headline. Fifteen selected slides (2–12, 14, 18, 21 and 24) use 70%-opacity photo backgrounds
-from Paris, Rome, Florence, Vienna, Interlaken and Innsbruck, while keeping their original content.
+single centered headline.
 
 Ten of the pages are traveller quotations, spliced at shuffled positions between page 02 and page 24
-(`INSERT_AFTER` in `brochure-testimonials.js`): each one is a breathtaking travel frame — a young
-European couple, a solo traveller, a group of friends or an older couple in Rome, Florence, Vienna,
-Interlaken, Innsbruck or Paris, with no mobile device in the shot — printed at 80% opacity as a
-full-bleed background, carrying only a short quotation, the speaker's name and their city. The
-questions page prints every question in white and the answer beneath it in yellow, over a dark wash
-that keeps both readable on the photograph.
+(`INSERT_AFTER` in `brochure-testimonials.js`), and fourteen pages are ultra-modern client reviews
+with 100%-opacity breathtaking photographic backgrounds from Singapore, Malaysia, Paris, Netherlands,
+Innsbruck, Thailand, Black Forest, Antarctica, New York, London, Scotland, and the Amazon Rainforest
+(`INSERT_AFTER_36` in `brochure-reviews.js`), featuring elaborate testimonials inside modern frosted-glass
+floating docks with client ratings and destination credits while keeping the scenery prominent.
 
 The remaining pages carry the NeverBeen logo in the header and the copyright line in the footer, and
 the back cover holds the studio contact block.

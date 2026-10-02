@@ -121,6 +121,28 @@ const IMG = {
   photoKitSunglasses: path.join(__dirname, 'images', 'photo-kit-avoid-sunglasses.jpg'),
   photoKitGroup: path.join(__dirname, 'images', 'photo-kit-avoid-group-blur.jpg'),
   identityVerification: path.join(__dirname, 'images', 'identity-verification.jpg'),
+  singaporeMbsCouple: path.join(__dirname, 'images', 'singapore-mbs-couple.jpg'),
+  malaysiaPetronasBengaliLady: path.join(
+    __dirname,
+    'images',
+    'malaysia-petronas-night-bengali-lady.jpg',
+  ),
+  parisEiffelOldCouple: path.join(__dirname, 'images', 'paris-eiffel-old-couple.jpg'),
+  netherlandsTulipsBengaliLady: path.join(
+    __dirname,
+    'images',
+    'netherlands-tulips-bengali-lady.jpg',
+  ),
+  innsbruckRiverCouple: path.join(__dirname, 'images', 'innsbruck-river-couple.jpg'),
+  thailandMayaBayFriends: path.join(__dirname, 'images', 'thailand-maya-bay-friends.jpg'),
+  germanyBlackForestLady: path.join(__dirname, 'images', 'germany-black-forest-aristocrat-lady.jpg'),
+  antarcticaPenguinsFriends: path.join(__dirname, 'images', 'antarctica-penguins-friends.jpg'),
+  newYorkTimesSquareCouple: path.join(__dirname, 'images', 'new-york-times-square-couple.jpg'),
+  londonTowerBridgeLady: path.join(__dirname, 'images', 'london-tower-bridge-aristocrat-lady.jpg'),
+  scotlandCastleOldCouple: path.join(__dirname, 'images', 'scotland-castle-night-old-couple.jpg'),
+  amazonRainforestFriends: path.join(__dirname, 'images', 'amazon-rainforest-friends.jpg'),
+  singaporeGardensLady: path.join(__dirname, 'images', 'singapore-gardens-bengali-lady.jpg'),
+  londonBigBenCouple: path.join(__dirname, 'images', 'london-big-ben-sunset-couple.jpg'),
 };
 
 const context = {
@@ -164,13 +186,18 @@ kit.registerFonts();
 kit.setChrome({ year: YEAR });
 
 const { testimonialPages, interleave } = require('./lib/brochure-testimonials');
+const { reviewPages, interleaveReviews } = require('./lib/brochure-reviews');
 
 // The quotation pages are spliced between page 02 and page 24 rather than
 // appended, so travellers meet them throughout the brochure.
-const pages = interleave(
+const thirtySixPages = interleave(
   [...require('./lib/brochure-pages-1'), ...require('./lib/brochure-pages-2')],
   testimonialPages,
 );
+
+// Fourteen ultra-modern review slides (100% opacity background photos with
+// elaborate client testimonials) spliced in random order strictly between Slide 4 and Slide 36.
+const pages = interleaveReviews(thirtySixPages, reviewPages);
 
 kit.totalPages = pages.length;
 pages.forEach((draw) => draw(kit, context));

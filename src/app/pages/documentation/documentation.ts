@@ -32,11 +32,11 @@ export const VISITOR_BROCHURE: Brochure = {
   label: 'The NeverBeen brochure',
   shortLabel: 'Brochure',
   description:
-    'A vibrant 36-page tour of everything a visitor needs: the idea behind NeverBeen, how to place a Neverbeen Request, what to send, the packages, the whole destination atlas, and ten traveller quotations.',
+    'A vibrant 50-page tour of everything a visitor needs: the idea behind NeverBeen, how to place a Neverbeen Request, what to send, the packages, the whole destination atlas, and twenty-four traveller reviews and quotations.',
   url: '/assets/documentation/NeverBeen_Brochure.pdf',
   fileName: 'NeverBeen_Brochure.pdf',
   orientation: 'Wide / landscape',
-  length: '36 pages',
+  length: '50 pages',
   audience: 'Tablet, laptop & desktop',
 };
 
