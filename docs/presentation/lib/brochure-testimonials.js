@@ -214,10 +214,10 @@ const ADDITIONAL_TESTIMONIALS = [
     place: 'Dhaka, Bangladesh',
   },
   {
-    image: 'parisSolo',
-    scene: 'Paris · France',
+    image: 'testimonialScotland',
+    scene: 'Highlands castle · Scotland',
     quote:
-      'One clear portrait and a small idea became a whole travel scene. I liked that the result was treated like a photograph rather than a novelty graphic, with the city still visible and the styling kept simple. It is a lovely reminder that a dream destination can start with one image.',
+      'One clear portrait and a small idea became a whole travel scene. I liked that the result was treated like a photograph rather than a novelty graphic, with the landmark still visible and the styling kept simple. It is a lovely reminder that a dream destination can start with one image.',
     name: 'Annelies De Vries',
     place: 'Antwerp, Belgium',
   },

@@ -132,6 +132,7 @@ const IMG = {
   testimonialAntarctica: path.join(__dirname, 'images', 'testimonial-antarctica-penguins.jpg'),
   testimonialTimesSquare: path.join(__dirname, 'images', 'testimonial-times-square.jpg'),
   testimonialLondon: path.join(__dirname, 'images', 'testimonial-london-tower-bridge.jpg'),
+  testimonialScotland: path.join(__dirname, 'images', 'testimonial-scotland-castle.jpg'),
 };
 
 const context = {
