@@ -76,7 +76,7 @@ module.exports = [
 
     let chipX = MARGIN;
     [
-      { text: '33 dream destinations', fill: '#FFD166', color: INK },
+      { text: 'Unlimited Destinations', fill: '#FFD166', color: INK },
       { text: 'First look in 48 hours', fill: '#00D2A8', color: INK },
       { text: 'Pay only when you love it', fill: '#FF3D6E', color: WHITE },
     ].forEach((chip) => {
@@ -94,13 +94,13 @@ module.exports = [
       MARGIN,
       462,
       420,
-      { font: 'Body', size: 9.4, color: WHITE, opacity: 0.92, lineGap: 2.4 },
+      { font: 'Body', size: 9.4, color: WHITE, opacity: 1, lineGap: 2.4 },
     );
     k.text('Santorini, Greece · composed by the NeverBeen studio', 452, 500, 340, {
       font: 'BodySemi',
       size: 8,
       color: WHITE,
-      opacity: 0.85,
+      opacity: 1,
       width: 340,
       align: 'right',
     });
