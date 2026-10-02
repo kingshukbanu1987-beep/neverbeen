@@ -117,20 +117,23 @@ Admin Console → Website Management.
 
 The Documentation page publishes a single client-facing PDF — the **NeverBeen visitor brochure**
 (`public/assets/documentation/NeverBeen_Brochure.pdf`). It is written for people who are thinking
-about submitting a Neverbeen Request, not for developers: 36 landscape pages with vibrant
+about submitting a NeverBeen Request, not for developers: 51 landscape pages with vibrant
 backgrounds and collection photography, covering the idea behind NeverBeen, how to place a request,
 the photo kit, verification and privacy, packages and prices, how to use each page of the website,
 the destination atlas, FAQs and policies. The opening cover is a full-bleed Lofoten scene with a
-single centered headline. Fifteen selected slides (2–12, 14, 18, 21 and 24) use 70%-opacity photo backgrounds
-from Paris, Rome, Florence, Vienna, Interlaken and Innsbruck, while keeping their original content.
+single centered headline; the remaining core pages mix graphic layouts with destination photography.
 
-Ten of the pages are traveller quotations, spliced at shuffled positions between page 02 and page 24
-(`INSERT_AFTER` in `brochure-testimonials.js`): each one is a breathtaking travel frame — a young
-European couple, a solo traveller, a group of friends or an older couple in Rome, Florence, Vienna,
-Interlaken, Innsbruck or Paris, with no mobile device in the shot — printed at 80% opacity as a
-full-bleed background, carrying only a short quotation, the speaker's name and their city. The
-questions page prints every question in white and the answer beneath it in yellow, over a dark wash
-that keeps both readable on the photograph.
+The brochure now includes 24 traveller-quotation slides. Ten existing quotations remain in their
+original shuffled positions (`INSERT_AFTER` in `brochure-testimonials.js`). Fourteen additional
+stories are inserted after irregularly spaced pages 05–35 of the previous 37-page sequence, bringing
+the complete PDF to 51 pages. Their full-bleed travel photographs are rendered at 100% image opacity;
+small white quote copy and attributions sit over a separate, restrained navy wash so the scenery stays
+prominent. The traveller and group portraits keep phones out of frame; scenes include Marina Bay,
+the Petronas Towers, the Eiffel Tower, Netherlands tulips, Innsbruck, Maya Bay, the Black Forest,
+Antarctica, Times Square and London. The 14 new speaker names,
+locations and quotes are illustrative placeholders (marked **SAMPLE TESTIMONIAL** in the PDF), not
+verified customer reviews; replace them with approved customer feedback before public use. The
+questions page prints every question in white and the answer beneath it in yellow over a dark wash.
 
 The remaining pages carry the NeverBeen logo in the header and the copyright line in the footer, and
 the back cover holds the studio contact block.
@@ -150,11 +153,13 @@ The generator lives in `docs/presentation/generate-neverbeen-brochure.js` with i
 crop is anchored on the face instead of cutting it off. Regenerate that map after adding or
 replacing photographs:
 
-````bash
+```bash
 pip install --break-system-packages "opencv-python-headless==4.10.0.84"
 python3 scripts/generate-photo-focus.py
-``` It reads the generated collection manifest, so the stills it prints are
-the same ones that appear on `/collection`. PDFKit is a devDependency for exactly this script.
+```
+
+The script reads the generated collection manifest, so the stills it prints are the same ones that
+appear on `/collection`. PDFKit is a devDependency for exactly this script.
 
 The contact details printed on the pages live in the `CONTACT` object at the top of the generator —
 replace the placeholder email, WhatsApp number and domain with the live studio details.
@@ -188,7 +193,7 @@ For end-to-end (e2e) testing, run:
 
 ```bash
 ng e2e
-````
+```
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
