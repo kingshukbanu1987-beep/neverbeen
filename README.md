@@ -145,7 +145,15 @@ The generator lives in `docs/presentation/generate-neverbeen-brochure.js` with i
 `docs/presentation/lib/brochure-pages-1.js` / `brochure-pages-2.js`, the quotation pages in
 `brochure-testimonials.js`, its design toolkit in
 `brochure-kit.js`, and open-licence fonts (Poppins and Playfair Display, SIL OFL) in
-`docs/presentation/fonts`. It reads the generated collection manifest, so the stills it prints are
+`docs/presentation/fonts`. Photo frames are filled edge to edge — no letterboxing — and
+`docs/presentation/lib/photo-focus.json` records where the subject sits in each photograph so the
+crop is anchored on the face instead of cutting it off. Regenerate that map after adding or
+replacing photographs:
+
+````bash
+pip install --break-system-packages "opencv-python-headless==4.10.0.84"
+python3 scripts/generate-photo-focus.py
+``` It reads the generated collection manifest, so the stills it prints are
 the same ones that appear on `/collection`. PDFKit is a devDependency for exactly this script.
 
 The contact details printed on the pages live in the `CONTACT` object at the top of the generator —
@@ -180,7 +188,7 @@ For end-to-end (e2e) testing, run:
 
 ```bash
 ng e2e
-```
+````
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 

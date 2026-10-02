@@ -42,7 +42,8 @@ module.exports = [
         captionHeight: 26,
         frame: 5,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
         shadow: false,
       });
     });
@@ -91,7 +92,8 @@ module.exports = [
         captionHeight: 26,
         frame: 4,
         radius: 13,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
 
@@ -157,10 +159,6 @@ module.exports = [
         'Maldives',
         'Bangkok',
         'Sydney',
-        'Auckland',
-        'Antarctica',
-        'New York',
-        'Rio de Janeiro',
       ].map((name, index) => ({
         text: name,
         fill: '#FFF1E6',
@@ -424,34 +422,12 @@ module.exports = [
       ['Help Centre', 'Guides, search and a direct line to support.'],
       ['Feedback', 'Tell us what to improve \u2014 read by humans.'],
     ];
-    pages.forEach((page, index) => {
-      const column = index % 3;
-      const row = Math.floor(index / 3);
-      const x = MARGIN + column * 250;
-      const y = 208 + row * 98;
-      k.glass(x, y, 236, 88, { radius: 14, opacity: 0.95 });
-      k.roundRect(x, y, 5, 88, 3, ACCENTS[index % ACCENTS.length]);
-      k.text(page[0], x + 18, y + 16, {
-        font: 'BodyBold',
-        size: 10.8,
-        color: INK,
-        width: 200,
-        lineGap: 0,
-      });
-      k.fit(page[1], x + 18, y + 36, 202, 44, {
-        font: 'Body',
-        size: 8.4,
-        minSize: 7.4,
-        color: INK_SOFT,
-        lineGap: 2.2,
-      });
-    });
-
-    k.roundRect(MARGIN, 508, 730, 30, 12, '#2B1055', 0.9);
+    // The "start here" band leads the page; the twelve blocks sit beneath it.
+    k.roundRect(MARGIN, 152, 730, 32, 12, '#2B1055', 0.9);
     k.text(
       'New here? Read How It Works, pick a package, then send the request. The whole journey takes about ten minutes.',
       MARGIN + 20,
-      515,
+      160,
       {
         font: 'BodySemi',
         size: 8.8,
@@ -460,6 +436,32 @@ module.exports = [
         lineGap: 0,
       },
     );
+
+    const blockTop = 196;
+    const blockHeight = 80;
+    const blockGap = 6;
+    pages.forEach((page, index) => {
+      const column = index % 3;
+      const row = Math.floor(index / 3);
+      const x = MARGIN + column * 250;
+      const y = blockTop + row * (blockHeight + blockGap);
+      k.glass(x, y, 236, blockHeight, { radius: 14, opacity: 0.95 });
+      k.roundRect(x, y, 5, blockHeight, 3, ACCENTS[index % ACCENTS.length]);
+      k.text(page[0], x + 18, y + 14, {
+        font: 'BodyBold',
+        size: 10.8,
+        color: INK,
+        width: 200,
+        lineGap: 0,
+      });
+      k.fit(page[1], x + 18, y + 32, 202, 40, {
+        font: 'Body',
+        size: 8.4,
+        minSize: 7.4,
+        color: INK_SOFT,
+        lineGap: 2.2,
+      });
+    });
   },
 
   // ------------------------------------------------------------------ 21 destination guides
@@ -519,14 +521,16 @@ module.exports = [
       captionHeight: 26,
       frame: 5,
       radius: 14,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
     k.photo(ctx.IMG.help, 536, 393, 294, 160, {
       caption: 'Help Centre: search, categories and a human reply',
       captionHeight: 24,
       frame: 5,
       radius: 14,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
   },
 
@@ -610,10 +614,11 @@ module.exports = [
         radius: 12,
         caption: shot[1],
         captionHeight: 22,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
-    k.chip('61 photographs  ·  new frames weekly', MARGIN, 530, {
+    k.chip('AI Generated Photographs  ·  new frames weekly', MARGIN, 530, {
       fill: WHITE,
       color: INK,
       dot: '#FF3D6E',
@@ -684,14 +689,16 @@ module.exports = [
       radius: 12,
       caption: 'Amsterdam, Netherlands',
       captionHeight: 22,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
     k.photo(ctx.C('Mulled wine crew'), MARGIN + 250, 336, 236, 202, {
       frame: 4,
       radius: 12,
       caption: 'Christmas market, London',
       captionHeight: 22,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
     k.glass(MARGIN + 500, 336, 230, 202, { radius: 14, opacity: 0.96 });
     k.label('Reminder', MARGIN + 520, 354, { color: '#0B6B4F', size: 7.6 });
@@ -884,18 +891,14 @@ module.exports = [
     });
 
     k.roundRect(MARGIN, 520, 730, 30, 12, '#FF3D6E', 0.92);
-    k.text(
-      'Full Privacy Policy and Terms & Condition live on the website footer \u2014 written in the same plain language as this page.',
-      MARGIN + 20,
-      527,
-      {
-        font: 'BodySemi',
-        size: 8.8,
-        color: WHITE,
-        width: 690,
-        lineGap: 0,
-      },
-    );
+    k.text('Full Privacy Policy and Terms & Condition', MARGIN + 20, 527, {
+      font: 'BodySemi',
+      size: 8.8,
+      color: WHITE,
+      width: 690,
+      align: 'center',
+      lineGap: 0,
+    });
   },
 
   // ------------------------------------------------------------------ 26 back cover

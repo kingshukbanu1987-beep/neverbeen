@@ -372,7 +372,8 @@ module.exports = [
         captionHeight: 24,
         frame: 4,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
   },
@@ -414,7 +415,8 @@ module.exports = [
         frame: 3,
         radius: 12,
         shadow: false,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
       k.fit(story[1], x + 12, y + 142, cardW - 24, 15, {
         font: 'BodyBold',
@@ -544,14 +546,16 @@ module.exports = [
       captionHeight: 24,
       frame: 4,
       radius: 14,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
     k.photo(ctx.C('Coins in the Trevi'), 451, 344, 172, 210, {
       caption: 'Rome, Italy',
       captionHeight: 24,
       frame: 4,
       radius: 14,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
   },
 
@@ -628,7 +632,8 @@ module.exports = [
         captionHeight: 22,
         frame: 4,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
   },
@@ -676,22 +681,13 @@ module.exports = [
 
     k.roundRect(MARGIN, 494, 470, 38, 12, '#E6F7EE', 1);
     k.icon('tick', MARGIN + 24, 513, 10, '#00A86B');
-    k.text(
-      'Prefer to talk first? Write to ' +
-        ctx.CONTACT.email +
-        ' or message ' +
-        ctx.CONTACT.whatsapp +
-        '.',
-      MARGIN + 44,
-      507,
-      {
-        font: 'BodySemi',
-        size: 9,
-        color: '#0B6B4F',
-        width: 410,
-        lineGap: 0,
-      },
-    );
+    k.text('Prefer to talk first? Go to Feedback and post a General Query', MARGIN + 44, 507, {
+      font: 'BodySemi',
+      size: 9,
+      color: '#0B6B4F',
+      width: 410,
+      lineGap: 0,
+    });
 
     k.photo(ctx.AUD.register, 546, 200, 240, 200, {
       caption: 'Sending your first request takes minutes',
@@ -949,7 +945,8 @@ module.exports = [
         captionHeight: 24,
         frame: 4,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
     k.roundRect(MARGIN, 524, 730, 28, 12, '#FF3D6E', 0.92);
@@ -1101,7 +1098,8 @@ module.exports = [
         captionHeight: 26,
         frame: 5,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
         shadow: false,
       });
     });
