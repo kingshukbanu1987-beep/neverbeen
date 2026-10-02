@@ -33,7 +33,7 @@ const COLLECTION_MANIFEST = path.join(
 const YEAR = new Date().getFullYear();
 
 /**
- * Studio contact details printed on every page footer and on the back cover.
+ * Studio contact details used in relevant brochure copy and on the back cover.
  * These are placeholders — replace them with the live studio addresses.
  */
 const CONTACT = {
@@ -41,7 +41,6 @@ const CONTACT = {
   whatsapp: '+91 90000 00000',
   site: 'www.neverbeen.com',
 };
-const CONTACT_LINE = `${CONTACT.email}   ·   ${CONTACT.whatsapp}   ·   ${CONTACT.site}`;
 
 const FONTS = {
   Body: 'Poppins_400Regular.ttf',
@@ -106,6 +105,11 @@ const IMG = {
   norway: path.join(ROOT, 'public/images/norway-laptop.jpg'),
   help: path.join(ROOT, 'public/images/help-hero.jpg'),
   logo: path.join(ROOT, 'public/neverbeen-logo.png'),
+  photoKitPortrait: path.join(__dirname, 'images', 'photo-kit-good-portrait.jpg'),
+  photoKitFullLength: path.join(__dirname, 'images', 'photo-kit-good-full-length.jpg'),
+  photoKitSunglasses: path.join(__dirname, 'images', 'photo-kit-avoid-sunglasses.jpg'),
+  photoKitGroup: path.join(__dirname, 'images', 'photo-kit-avoid-group-blur.jpg'),
+  identityVerification: path.join(__dirname, 'images', 'identity-verification.jpg'),
 };
 
 const context = {
@@ -113,7 +117,6 @@ const context = {
   IMG,
   LOGO: IMG.logo,
   CONTACT,
-  CONTACT_LINE,
   C: collectionPhoto,
 };
 
@@ -147,7 +150,7 @@ for (const [name, file] of Object.entries(fonts)) {
 
 const kit = new BrochureKit(doc, fonts);
 kit.registerFonts();
-kit.setChrome({ year: YEAR, contactLine: CONTACT_LINE });
+kit.setChrome({ year: YEAR });
 
 const pages = [...require('./lib/brochure-pages-1'), ...require('./lib/brochure-pages-2')];
 

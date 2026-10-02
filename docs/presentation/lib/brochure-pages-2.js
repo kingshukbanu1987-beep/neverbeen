@@ -20,21 +20,21 @@ module.exports = [
     });
 
     const shots = [
-      [ctx.C('Above the cloud line'), 'Jungfrau region, Switzerland'],
-      [ctx.C('Meadow trail, Lauterbrunnen'), 'Lauterbrunnen, Switzerland'],
-      [ctx.C('First snow at the Matterhorn'), 'Zermatt, Switzerland'],
-      [ctx.C('Sharing the hot chocolate'), 'M\u00FCrren, Switzerland'],
-      [ctx.C('Soaked at Skogafoss'), 'South coast, Iceland'],
+      [ctx.C('Above the cloud line'), 'Jungfrau'],
+      [ctx.C('Meadow trail, Lauterbrunnen'), 'Lauterbrunnen'],
+      [ctx.C('First snow at the Matterhorn'), 'Zermatt'],
+      [ctx.C('Sharing the hot chocolate'), 'M\u00FCrren'],
+      [ctx.C('Soaked at Skogafoss'), 'Iceland'],
       [ctx.C('Above the fjord'), 'Norway'],
     ];
     shots.forEach((shot, index) => {
-      const column = index % 3;
-      const row = Math.floor(index / 3);
-      k.photo(shot[0], MARGIN + column * 250, 228 + row * 166, 236, 152, {
+      k.photo(shot[0], MARGIN + index * 122, 164, 118, 236, {
         caption: shot[1],
         captionHeight: 26,
         frame: 5,
-        radius: 14,
+        radius: 12,
+        imageFit: 'contain',
+        shadow: false,
       });
     });
 
@@ -46,7 +46,7 @@ module.exports = [
         }),
       ),
       MARGIN,
-      188,
+      420,
       730,
       { height: 20, size: 8.2, gap: 6 },
     );
@@ -77,11 +77,12 @@ module.exports = [
     shots.forEach((shot, index) => {
       const column = index % 4;
       const row = Math.floor(index / 4);
-      k.photo(shot[0], MARGIN + column * 186, 222 + row * 162, 172, 148, {
+      k.photo(shot[0], MARGIN + column * 186, 190 + row * 176, 172, 168, {
         caption: shot[1],
         captionHeight: 26,
         frame: 4,
         radius: 13,
+        imageFit: 'contain',
       });
     });
 
@@ -98,7 +99,7 @@ module.exports = [
         'Seoul',
       ].map((name, index) => ({ text: name, fill: WHITE, dot: ACCENTS[index % ACCENTS.length] })),
       MARGIN,
-      184,
+      164,
       730,
       { height: 20, size: 8.2, gap: 6 },
     );
@@ -504,17 +505,19 @@ module.exports = [
       });
     });
 
-    k.photo(ctx.IMG.norway, 536, 232, 294, 186, {
+    k.photo(ctx.IMG.norway, 536, 198, 294, 185, {
       caption: 'A destination guide on a laptop',
       captionHeight: 26,
       frame: 5,
       radius: 14,
+      imageFit: 'contain',
     });
-    k.photo(ctx.IMG.help, 536, 428, 294, 124, {
+    k.photo(ctx.IMG.help, 536, 393, 294, 160, {
       caption: 'Help Centre: search, categories and a human reply',
       captionHeight: 24,
       frame: 5,
       radius: 14,
+      imageFit: 'contain',
     });
   },
 
@@ -530,7 +533,7 @@ module.exports = [
       accent: '#FFD166',
     });
 
-    k.glass(MARGIN, 246, 424, 150, { radius: 18, opacity: 0.95 });
+    k.glass(MARGIN, 246, 424, 132, { radius: 18, opacity: 0.95 });
     k.label('The Collection', MARGIN + 20, 262, { color: '#C2185B', size: 8 });
     k.fit('61 studio compositions, one scrollable wall', MARGIN + 20, 276, 380, 30, {
       font: 'BodyBold',
@@ -554,9 +557,9 @@ module.exports = [
       },
     );
 
-    k.glass(MARGIN, 410, 424, 150, { radius: 18, opacity: 0.95 });
-    k.label('The Gallery on the home page', MARGIN + 20, 426, { color: '#C2185B', size: 8 });
-    k.fit('Twenty photographs, different every visit', MARGIN + 20, 440, 380, 30, {
+    k.glass(MARGIN, 388, 424, 132, { radius: 18, opacity: 0.95 });
+    k.label('The Gallery on the home page', MARGIN + 20, 404, { color: '#C2185B', size: 8 });
+    k.fit('Twenty photographs, different every visit', MARGIN + 20, 418, 380, 30, {
       font: 'BodyBold',
       size: 13,
       minSize: 10.6,
@@ -566,7 +569,7 @@ module.exports = [
     k.fit(
       'The Gallery draws twenty stills at random from the collection each time the page loads, so the proof never goes stale.',
       MARGIN + 20,
-      474,
+      452,
       380,
       60,
       {
@@ -584,26 +587,31 @@ module.exports = [
       [ctx.C('Peace signs'), 'Street art'],
       [ctx.C('Mind the gap'), 'London'],
       [ctx.C('Hot chocolate at Cafe Alpina'), 'M\u00FCrren'],
-      [ctx.C('Sunscreen duties'), 'Beach day'],
+      [ctx.C('Sunscreen duties'), 'Beach'],
     ];
     shots.forEach((shot, index) => {
-      const column = index % 2;
-      const row = Math.floor(index / 2);
-      k.photo(shot[0], 512 + column * 154, 150 + row * 148, 146, 138, {
+      const layout =
+        index < 3
+          ? { x: 512 + index * 104, y: 198, w: 98, h: 164 }
+          : index === 3
+            ? { x: 512, y: 372, w: 154, h: 164 }
+            : { x: index === 4 ? 674 : 754, y: 372, w: 72, h: 164 };
+      k.photo(shot[0], layout.x, layout.y, layout.w, layout.h, {
         frame: 4,
         radius: 12,
         caption: shot[1],
         captionHeight: 22,
+        imageFit: 'contain',
       });
     });
-    k.chip('61 photographs  ·  new frames weekly', MARGIN, 566, {
+    k.chip('61 photographs  ·  new frames weekly', MARGIN, 530, {
       fill: WHITE,
       color: INK,
       dot: '#FF3D6E',
       height: 24,
       size: 8.6,
     });
-    k.chip('20 reshuffled every visit', MARGIN + 240, 566, {
+    k.chip('20 reshuffled every visit', MARGIN + 240, 530, {
       fill: WHITE,
       color: INK,
       dot: '#8A2BE2',
@@ -639,46 +647,51 @@ module.exports = [
       ],
     ];
     cards.forEach((card, index) => {
-      const x = MARGIN + index * 186;
-      k.glass(x, 240, 172, 190, { radius: 18, opacity: 0.96 });
-      k.circle(x + 34, 278, 18, ['#0B49C9', '#E8116B', '#FF8A00', '#00A86B'][index], 1);
-      k.icon(card[0], x + 34, 278, 10.5, WHITE);
-      k.fit(card[1], x + 18, 306, 136, 32, {
+      const column = index % 2;
+      const row = Math.floor(index / 2);
+      const x = MARGIN + column * 374;
+      const y = 166 + row * 76;
+      k.glass(x, y, 356, 68, { radius: 16, opacity: 0.96 });
+      k.circle(x + 28, y + 24, 14, ['#0B49C9', '#E8116B', '#FF8A00', '#00A86B'][index], 1);
+      k.icon(card[0], x + 28, y + 24, 8.5, WHITE);
+      k.fit(card[1], x + 52, y + 7, 288, 19, {
         font: 'BodyBold',
-        size: 11.2,
-        minSize: 9.4,
+        size: 10.2,
+        minSize: 8.8,
         color: INK,
-        lineGap: 0.8,
+        lineGap: 0.5,
       });
-      k.fit(card[2], x + 18, 344, 136, 76, {
+      k.fit(card[2], x + 52, y + 29, 288, 31, {
         font: 'Body',
-        size: 8.4,
-        minSize: 7.4,
+        size: 8,
+        minSize: 7,
         color: INK_SOFT,
-        lineGap: 2.2,
+        lineGap: 1.5,
       });
     });
 
-    k.photo(ctx.C('Light festival with the kids'), MARGIN, 446, 236, 108, {
+    k.photo(ctx.C('Light festival with the kids'), MARGIN, 336, 236, 202, {
       frame: 4,
       radius: 12,
       caption: 'Amsterdam, Netherlands',
       captionHeight: 22,
+      imageFit: 'contain',
     });
-    k.photo(ctx.C('Mulled wine crew'), MARGIN + 250, 446, 236, 108, {
+    k.photo(ctx.C('Mulled wine crew'), MARGIN + 250, 336, 236, 202, {
       frame: 4,
       radius: 12,
       caption: 'Christmas market, London',
       captionHeight: 22,
+      imageFit: 'contain',
     });
-    k.glass(MARGIN + 500, 446, 230, 108, { radius: 14, opacity: 0.96 });
-    k.label('Reminder', MARGIN + 520, 462, { color: '#0B6B4F', size: 7.6 });
+    k.glass(MARGIN + 500, 336, 230, 202, { radius: 14, opacity: 0.96 });
+    k.label('Reminder', MARGIN + 520, 354, { color: '#0B6B4F', size: 7.6 });
     k.fit(
       'You never need an account to place a Neverbeen Request \u2014 the form on the home page is open to everyone.',
       MARGIN + 520,
-      478,
+      374,
       190,
-      62,
+      148,
       {
         font: 'Body',
         size: 8.4,
@@ -943,29 +956,17 @@ module.exports = [
 
     k.glass(MARGIN, 372, 430, 148, { radius: 18, opacity: 0.95 });
     k.label('Talk to the studio', MARGIN + 22, 390, { color: '#C2185B', size: 8 });
-    k.text(ctx.CONTACT.email, MARGIN + 22, 408, {
-      font: 'BodyBlack',
-      size: 15,
-      color: INK,
-      width: 380,
-      lineGap: 0,
-    });
-    k.text('WhatsApp ' + ctx.CONTACT.whatsapp, MARGIN + 22, 432, {
-      font: 'BodySemi',
-      size: 11,
-      color: INK,
-      width: 380,
-      lineGap: 0,
-    });
-    k.text(ctx.CONTACT.site, MARGIN + 22, 452, {
-      font: 'BodySemi',
-      size: 11,
-      color: INK,
-      width: 380,
+    k.roundRect(MARGIN + 22, 412, 386, 36, 12, '#00A86B', 1);
+    k.text('Submit a Neverbeen Request', MARGIN + 22, 424, {
+      font: 'BodyBold',
+      size: 10.4,
+      color: WHITE,
+      width: 386,
+      align: 'center',
       lineGap: 0,
     });
     k.fit(
-      'Help Centre, FAQ, Privacy Policy and Terms & Condition are always in the website footer.',
+      'Help Centre, FAQ, Community, Privacy Policy and Terms & Condition',
       MARGIN + 22,
       474,
       380,
@@ -1005,7 +1006,7 @@ module.exports = [
       align: 'center',
       lineGap: 1,
     });
-    k.text('33 destination guides  ·  61 collection stills  ·  4 packages', 540, 488, {
+    k.text('Unlimited destination guides · 4 packages', 540, 488, {
       font: 'Body',
       size: 7.6,
       color: INK_SOFT,
