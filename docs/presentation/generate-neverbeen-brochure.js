@@ -109,6 +109,10 @@ const IMG = {
   interlaken: path.join(__dirname, 'images', 'interlaken-couple-selfie.jpg'),
   innsbruck: path.join(__dirname, 'images', 'innsbruck-couple-selfie.jpg'),
   paris: path.join(__dirname, 'images', 'paris-couple-selfie.jpg'),
+  romeFriends: path.join(__dirname, 'images', 'rome-friends-group.jpg'),
+  parisSolo: path.join(__dirname, 'images', 'paris-solo-traveller.jpg'),
+  viennaElders: path.join(__dirname, 'images', 'vienna-older-couple.jpg'),
+  florenceSolo: path.join(__dirname, 'images', 'florence-solo-traveller.jpg'),
   norway: path.join(ROOT, 'public/images/norway-laptop.jpg'),
   help: path.join(ROOT, 'public/images/help-hero.jpg'),
   logo: path.join(ROOT, 'public/neverbeen-logo.png'),
@@ -159,7 +163,14 @@ const kit = new BrochureKit(doc, fonts);
 kit.registerFonts();
 kit.setChrome({ year: YEAR });
 
-const pages = [...require('./lib/brochure-pages-1'), ...require('./lib/brochure-pages-2')];
+const { testimonialPages, interleave } = require('./lib/brochure-testimonials');
+
+// The quotation pages are spliced between page 02 and page 24 rather than
+// appended, so travellers meet them throughout the brochure.
+const pages = interleave(
+  [...require('./lib/brochure-pages-1'), ...require('./lib/brochure-pages-2')],
+  testimonialPages,
+);
 
 kit.totalPages = pages.length;
 pages.forEach((draw) => draw(kit, context));

@@ -1,7 +1,16 @@
 /*
  * NeverBeen visitor brochure — pages 15 to 26.
  */
-const { GRADIENTS, ACCENTS, INK, INK_SOFT, WHITE, MARGIN } = require('./brochure-kit');
+const {
+  GRADIENTS,
+  ACCENTS,
+  INK,
+  INK_SOFT,
+  WHITE,
+  MARGIN,
+  HEADER_H,
+  FOOTER_H,
+} = require('./brochure-kit');
 
 const W = 842;
 const H = 595;
@@ -706,10 +715,13 @@ module.exports = [
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Questions, answered' });
     k.photoBackground(ctx.IMG.vienna);
+    // Dark wash between the chrome bands so the white questions and the
+    // yellow answers below them read cleanly over the photograph.
+    k.rect(0, HEADER_H, W, H - HEADER_H - FOOTER_H, '#07172B', 0.44);
     k.heading(MARGIN, 62, 620, {
       eyebrow: 'Questions, answered',
       title: 'Before you ask \u2014 the twelve questions we hear most',
-      accent: '#7A1F00',
+      accent: '#FFD166',
     });
 
     const faq = [
@@ -776,18 +788,19 @@ module.exports = [
         align: 'center',
         lineGap: 0,
       });
+      // The question reads in white, the answer under it in yellow.
       k.fit(item[0], x + 26, y, 320, 26, {
         font: 'BodyBold',
         size: 9.6,
         minSize: 8.4,
-        color: INK,
+        color: WHITE,
         lineGap: 0.6,
       });
       k.fit(item[1], x + 26, y + 24, 320, 34, {
-        font: 'Body',
+        font: 'BodySemi',
         size: 8.2,
         minSize: 7.2,
-        color: INK_SOFT,
+        color: '#FFD166',
         lineGap: 2,
       });
     });

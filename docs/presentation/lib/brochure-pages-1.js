@@ -176,21 +176,23 @@ module.exports = [
       { font: 'Body', size: 9.4, minSize: 8.2, color: INK_SOFT, lineGap: 2.8 },
     );
 
+    // Page numbers account for the ten quotation pages spliced through the
+    // brochure; they are the printed numbers, not the source order.
     const contents = [
-      ['The idea', '04'],
-      ['Why NeverBeen exists', '05'],
-      ['Seven kinds of stories', '06'],
-      ['What you receive', '07'],
-      ['How it works', '08'],
-      ['Submit your request', '09'],
-      ['Your photo kit', '10'],
-      ['Verify & confirm', '11'],
-      ['Inside the studio', '12'],
-      ['The destination atlas', '13\u201317'],
-      ['Packages & prices', '18'],
-      ['Payment & refunds', '19'],
-      ['Using the website', '20\u201323'],
-      ['Questions & policies', '24\u201325'],
+      ['The idea', '05'],
+      ['Why NeverBeen exists', '07'],
+      ['Seven kinds of stories', '08'],
+      ['What you receive', '10'],
+      ['How it works', '11'],
+      ['Submit your request', '13'],
+      ['Your photo kit', '14'],
+      ['Verify & confirm', '16'],
+      ['Inside the studio', '17'],
+      ['The destination atlas', '19\u201323'],
+      ['Packages & prices', '25'],
+      ['Payment & refunds', '27'],
+      ['Using the website', '29\u201332'],
+      ['Questions & policies', '34\u201335'],
     ];
     k.label('What is inside', MARGIN + 22, 352, { color: '#D2431F', size: 8 });
     contents.forEach((row, index) => {
@@ -222,7 +224,7 @@ module.exports = [
 
     k.roundRect(516, 462, 266, 40, 12, '#7B2FF7', 0.96);
     k.icon('plane', 540, 482, 9, WHITE);
-    k.text('Start with page 09 \u2014 placing your request', 558, 476, {
+    k.text('Start with page 13 \u2014 placing your request', 558, 476, {
       font: 'BodySemi',
       size: 9.2,
       color: WHITE,
