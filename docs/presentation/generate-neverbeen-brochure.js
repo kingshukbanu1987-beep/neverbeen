@@ -105,6 +105,11 @@ const IMG = {
   norway: path.join(ROOT, 'public/images/norway-laptop.jpg'),
   help: path.join(ROOT, 'public/images/help-hero.jpg'),
   logo: path.join(ROOT, 'public/neverbeen-logo.png'),
+  photoKitPortrait: path.join(__dirname, 'images', 'photo-kit-good-portrait.jpg'),
+  photoKitFullLength: path.join(__dirname, 'images', 'photo-kit-good-full-length.jpg'),
+  photoKitSunglasses: path.join(__dirname, 'images', 'photo-kit-avoid-sunglasses.jpg'),
+  photoKitGroup: path.join(__dirname, 'images', 'photo-kit-avoid-group-blur.jpg'),
+  identityVerification: path.join(__dirname, 'images', 'identity-verification.jpg'),
 };
 
 const context = {

@@ -697,8 +697,18 @@ module.exports = [
       306,
       { size: 9.2, bubble: '#00A86B', gap: 5 },
     );
-    k.photo(ctx.C('Foreheads together'), MARGIN + 22, 398, 150, 128, { frame: 4, radius: 12 });
-    k.photo(ctx.C('Blue domes behind us'), MARGIN + 186, 398, 150, 128, { frame: 4, radius: 12 });
+    k.photo(ctx.IMG.photoKitPortrait, MARGIN + 22, 398, 150, 128, {
+      frame: 4,
+      radius: 12,
+      badge: 'Portrait',
+      badgeColor: '#00A86B',
+    });
+    k.photo(ctx.IMG.photoKitFullLength, MARGIN + 186, 398, 150, 128, {
+      frame: 4,
+      radius: 12,
+      badge: 'Full length',
+      badgeColor: '#00A86B',
+    });
 
     k.glass(430, 200, 356, 340, { radius: 18, opacity: 0.96 });
     k.circle(464, 236, 16, '#E8116B', 1);
@@ -717,13 +727,18 @@ module.exports = [
       316,
       { size: 9.2, dot: '#E8116B', gap: 5 },
     );
-    k.photo(ctx.C('Sunglasses weather'), 452, 398, 150, 128, {
+    k.photo(ctx.IMG.photoKitSunglasses, 452, 398, 150, 128, {
       frame: 4,
       radius: 12,
       badge: 'Not this',
       badgeColor: '#E8116B',
     });
-    k.photo(ctx.C('Snow in her hair'), 616, 398, 150, 128, { frame: 4, radius: 12 });
+    k.photo(ctx.IMG.photoKitGroup, 616, 398, 150, 128, {
+      frame: 4,
+      radius: 12,
+      badge: 'Group shot',
+      badgeColor: '#E8116B',
+    });
     k.roundRect(MARGIN, 522, 730, 28, 12, '#0B2A6B', 0.9);
     k.text(
       'Send your photographs only after our team contacts you \u2014 never to a public link or a third-party upload page.',
@@ -789,10 +804,10 @@ module.exports = [
       });
     });
 
-    k.photo(ctx.C('Turquoise at Lake Louise'), MARGIN, 464, 236, 88, {
+    k.photo(ctx.IMG.identityVerification, MARGIN, 464, 236, 88, {
       frame: 4,
       radius: 12,
-      caption: 'Banff, Canada',
+      caption: 'Private identity verification',
       captionHeight: 22,
     });
     [
