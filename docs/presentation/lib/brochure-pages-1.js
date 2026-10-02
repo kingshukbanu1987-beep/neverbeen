@@ -176,21 +176,23 @@ module.exports = [
       { font: 'Body', size: 9.4, minSize: 8.2, color: INK_SOFT, lineGap: 2.8 },
     );
 
+    // Page numbers account for the ten quotation pages spliced through the
+    // brochure; they are the printed numbers, not the source order.
     const contents = [
-      ['The idea', '04'],
-      ['Why NeverBeen exists', '05'],
-      ['Seven kinds of stories', '06'],
-      ['What you receive', '07'],
-      ['How it works', '08'],
-      ['Submit your request', '09'],
-      ['Your photo kit', '10'],
-      ['Verify & confirm', '11'],
-      ['Inside the studio', '12'],
-      ['The destination atlas', '13\u201317'],
-      ['Packages & prices', '18'],
-      ['Payment & refunds', '19'],
-      ['Using the website', '20\u201323'],
-      ['Questions & policies', '24\u201325'],
+      ['The idea', '05'],
+      ['Why NeverBeen exists', '07'],
+      ['Seven kinds of stories', '08'],
+      ['What you receive', '10'],
+      ['How it works', '11'],
+      ['Submit your request', '13'],
+      ['Your photo kit', '14'],
+      ['Verify & confirm', '16'],
+      ['Inside the studio', '17'],
+      ['The destination atlas', '19\u201323'],
+      ['Packages & prices', '25'],
+      ['Payment & refunds', '27'],
+      ['Using the website', '29\u201332'],
+      ['Questions & policies', '34\u201335'],
     ];
     k.label('What is inside', MARGIN + 22, 352, { color: '#D2431F', size: 8 });
     contents.forEach((row, index) => {
@@ -222,7 +224,7 @@ module.exports = [
 
     k.roundRect(516, 462, 266, 40, 12, '#7B2FF7', 0.96);
     k.icon('plane', 540, 482, 9, WHITE);
-    k.text('Start with page 09 \u2014 placing your request', 558, 476, {
+    k.text('Start with page 13 \u2014 placing your request', 558, 476, {
       font: 'BodySemi',
       size: 9.2,
       color: WHITE,
@@ -370,7 +372,8 @@ module.exports = [
         captionHeight: 24,
         frame: 4,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
   },
@@ -412,7 +415,8 @@ module.exports = [
         frame: 3,
         radius: 12,
         shadow: false,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
       k.fit(story[1], x + 12, y + 142, cardW - 24, 15, {
         font: 'BodyBold',
@@ -542,14 +546,16 @@ module.exports = [
       captionHeight: 24,
       frame: 4,
       radius: 14,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
     k.photo(ctx.C('Coins in the Trevi'), 451, 344, 172, 210, {
       caption: 'Rome, Italy',
       captionHeight: 24,
       frame: 4,
       radius: 14,
-      imageFit: 'contain',
+      imageFit: 'cover',
+      focus: 'face',
     });
   },
 
@@ -626,7 +632,8 @@ module.exports = [
         captionHeight: 22,
         frame: 4,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
   },
@@ -674,22 +681,13 @@ module.exports = [
 
     k.roundRect(MARGIN, 494, 470, 38, 12, '#E6F7EE', 1);
     k.icon('tick', MARGIN + 24, 513, 10, '#00A86B');
-    k.text(
-      'Prefer to talk first? Write to ' +
-        ctx.CONTACT.email +
-        ' or message ' +
-        ctx.CONTACT.whatsapp +
-        '.',
-      MARGIN + 44,
-      507,
-      {
-        font: 'BodySemi',
-        size: 9,
-        color: '#0B6B4F',
-        width: 410,
-        lineGap: 0,
-      },
-    );
+    k.text('Prefer to talk first? Go to Feedback and post a General Query', MARGIN + 44, 507, {
+      font: 'BodySemi',
+      size: 9,
+      color: '#0B6B4F',
+      width: 410,
+      lineGap: 0,
+    });
 
     k.photo(ctx.AUD.register, 546, 200, 240, 200, {
       caption: 'Sending your first request takes minutes',
@@ -947,7 +945,8 @@ module.exports = [
         captionHeight: 24,
         frame: 4,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
       });
     });
     k.roundRect(MARGIN, 524, 730, 28, 12, '#FF3D6E', 0.92);
@@ -1099,7 +1098,8 @@ module.exports = [
         captionHeight: 26,
         frame: 5,
         radius: 12,
-        imageFit: 'contain',
+        imageFit: 'cover',
+        focus: 'face',
         shadow: false,
       });
     });

@@ -73,7 +73,7 @@ ng test
 | `/audience`      | Audience   | Who NeverBeen is for, age note, destination list, privacy promises                                   |
 | `/collection`    | Collection | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
 | `/founder`       | Founder    | Founder profile and expertise                                                                        |
-| `/documentation` | Brochure   | Visitor brochure: 26 pages on how to place a Neverbeen Request, packages and destinations            |
+| `/documentation` | Brochure   | Visitor brochure: 36 pages on how to place a Neverbeen Request, packages and destinations            |
 | `/login`         | Login      | Sign-in form                                                                                         |
 
 ## The Collection page
@@ -117,12 +117,21 @@ Admin Console → Website Management.
 
 The Documentation page publishes a single client-facing PDF — the **NeverBeen visitor brochure**
 (`public/assets/documentation/NeverBeen_Brochure.pdf`). It is written for people who are thinking
-about submitting a Neverbeen Request, not for developers: 26 landscape pages with vibrant
+about submitting a Neverbeen Request, not for developers: 36 landscape pages with vibrant
 backgrounds and collection photography, covering the idea behind NeverBeen, how to place a request,
 the photo kit, verification and privacy, packages and prices, how to use each page of the website,
 the destination atlas, FAQs and policies. The opening cover is a full-bleed Lofoten scene with a
 single centered headline. Fifteen selected slides (2–12, 14, 18, 21 and 24) use 70%-opacity photo backgrounds
 from Paris, Rome, Florence, Vienna, Interlaken and Innsbruck, while keeping their original content.
+
+Ten of the pages are traveller quotations, spliced at shuffled positions between page 02 and page 24
+(`INSERT_AFTER` in `brochure-testimonials.js`): each one is a breathtaking travel frame — a young
+European couple, a solo traveller, a group of friends or an older couple in Rome, Florence, Vienna,
+Interlaken, Innsbruck or Paris, with no mobile device in the shot — printed at 80% opacity as a
+full-bleed background, carrying only a short quotation, the speaker's name and their city. The
+questions page prints every question in white and the answer beneath it in yellow, over a dark wash
+that keeps both readable on the photograph.
+
 The remaining pages carry the NeverBeen logo in the header and the copyright line in the footer, and
 the back cover holds the studio contact block.
 
@@ -133,9 +142,18 @@ npm run generate:brochure
 ```
 
 The generator lives in `docs/presentation/generate-neverbeen-brochure.js` with its page content in
-`docs/presentation/lib/brochure-pages-1.js` / `brochure-pages-2.js`, its design toolkit in
+`docs/presentation/lib/brochure-pages-1.js` / `brochure-pages-2.js`, the quotation pages in
+`brochure-testimonials.js`, its design toolkit in
 `brochure-kit.js`, and open-licence fonts (Poppins and Playfair Display, SIL OFL) in
-`docs/presentation/fonts`. It reads the generated collection manifest, so the stills it prints are
+`docs/presentation/fonts`. Photo frames are filled edge to edge — no letterboxing — and
+`docs/presentation/lib/photo-focus.json` records where the subject sits in each photograph so the
+crop is anchored on the face instead of cutting it off. Regenerate that map after adding or
+replacing photographs:
+
+````bash
+pip install --break-system-packages "opencv-python-headless==4.10.0.84"
+python3 scripts/generate-photo-focus.py
+``` It reads the generated collection manifest, so the stills it prints are
 the same ones that appear on `/collection`. PDFKit is a devDependency for exactly this script.
 
 The contact details printed on the pages live in the `CONTACT` object at the top of the generator —
@@ -170,7 +188,7 @@ For end-to-end (e2e) testing, run:
 
 ```bash
 ng e2e
-```
+````
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
