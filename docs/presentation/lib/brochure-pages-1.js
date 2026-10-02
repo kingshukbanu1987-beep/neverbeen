@@ -1,5 +1,5 @@
 /*
- * NeverBeen visitor brochure — pages 1 to 14.
+ * NeverBeen visitor brochure — pages 1 to 15.
  * Each page function draws one A4-landscape page; the runner handles chrome.
  */
 const { GRADIENTS, ACCENTS, INK, INK_SOFT, WHITE, CREAM, MARGIN } = require('./brochure-kit');
@@ -143,7 +143,53 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 03 welcome + contents
+  // ------------------------------------------------------------------ 03 Swiss First Class Lounge + NeverBeen logo
+  (k, ctx) => {
+    k.startPage({ chrome: false, section: 'NeverBeen' });
+    const d = k.doc;
+
+    // White base so the 40%-opacity lounge photograph keeps the dark-navy
+    // NeverBeen logo crisp and clearly legible across the centre of the slide.
+    k.rect(0, 0, W, H, WHITE);
+    try {
+      const bg = k.openImage(ctx.IMG.swissLounge);
+      const scale = Math.max(W / bg.width, H / bg.height);
+      const iw = bg.width * scale;
+      const ih = bg.height * scale;
+      d.save();
+      d.rect(0, 0, W, H).clip();
+      d.opacity(0.4).image(bg, (W - iw) / 2, (H - ih) / 2, {
+        width: iw,
+        height: ih,
+      });
+      d.restore();
+    } catch (error) {
+      k.rect(0, 0, W, H, WHITE);
+    }
+
+    try {
+      const logo = k.openImage(ctx.LOGO);
+      const box = { w: 760, h: 420 };
+      const scale = Math.min(box.w / logo.width, box.h / logo.height);
+      const lw = logo.width * scale;
+      const lh = logo.height * scale;
+      d.image(logo, (W - lw) / 2, (H - lh) / 2, {
+        width: lw,
+        height: lh,
+      });
+    } catch (error) {
+      k.text('NEVERBEEN.', MARGIN, H / 2 - 28, {
+        font: 'BodyBlack',
+        size: 56,
+        color: INK,
+        width: W - MARGIN * 2,
+        align: 'center',
+        lineGap: 0,
+      });
+    }
+  },
+
+  // ------------------------------------------------------------------ 04 welcome + contents
   (k, ctx) => {
     k.startPage({ accent: ACCENTS[3], section: 'Welcome' });
     k.photoBackground(ctx.IMG.florence);
@@ -179,20 +225,20 @@ module.exports = [
     // Page numbers account for the ten quotation pages spliced through the
     // brochure; they are the printed numbers, not the source order.
     const contents = [
-      ['The idea', '05'],
-      ['Why NeverBeen exists', '07'],
-      ['Seven kinds of stories', '08'],
-      ['What you receive', '10'],
-      ['How it works', '11'],
-      ['Submit your request', '13'],
-      ['Your photo kit', '14'],
-      ['Verify & confirm', '16'],
-      ['Inside the studio', '17'],
-      ['The destination atlas', '19\u201323'],
-      ['Packages & prices', '25'],
-      ['Payment & refunds', '27'],
-      ['Using the website', '29\u201332'],
-      ['Questions & policies', '34\u201335'],
+      ['The idea', '06'],
+      ['Why NeverBeen exists', '08'],
+      ['Seven kinds of stories', '09'],
+      ['What you receive', '11'],
+      ['How it works', '12'],
+      ['Submit your request', '14'],
+      ['Your photo kit', '15'],
+      ['Verify & confirm', '17'],
+      ['Inside the studio', '18'],
+      ['The destination atlas', '20\u201324'],
+      ['Packages & prices', '26'],
+      ['Payment & refunds', '28'],
+      ['Using the website', '30\u201333'],
+      ['Questions & policies', '35\u201336'],
     ];
     k.label('What is inside', MARGIN + 22, 352, { color: '#D2431F', size: 8 });
     contents.forEach((row, index) => {
@@ -224,7 +270,7 @@ module.exports = [
 
     k.roundRect(516, 462, 266, 40, 12, '#7B2FF7', 0.96);
     k.icon('plane', 540, 482, 9, WHITE);
-    k.text('Start with page 13 \u2014 placing your request', 558, 476, {
+    k.text('Start with page 14 \u2014 placing your request', 558, 476, {
       font: 'BodySemi',
       size: 9.2,
       color: WHITE,

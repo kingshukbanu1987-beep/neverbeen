@@ -113,6 +113,7 @@ const IMG = {
   parisSolo: path.join(__dirname, 'images', 'paris-solo-traveller.jpg'),
   viennaElders: path.join(__dirname, 'images', 'vienna-older-couple.jpg'),
   florenceSolo: path.join(__dirname, 'images', 'florence-solo-traveller.jpg'),
+  swissLounge: path.join(__dirname, 'images', 'swiss-first-class-lounge.jpg'),
   norway: path.join(ROOT, 'public/images/norway-laptop.jpg'),
   help: path.join(ROOT, 'public/images/help-hero.jpg'),
   logo: path.join(ROOT, 'public/neverbeen-logo.png'),
