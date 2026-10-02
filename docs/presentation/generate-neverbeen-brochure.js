@@ -102,6 +102,13 @@ const AUD = {
 };
 
 const IMG = {
+  cover: path.join(__dirname, 'images', 'lofoten-couple-selfie.jpg'),
+  rome: path.join(__dirname, 'images', 'rome-couple-selfie.jpg'),
+  florence: path.join(__dirname, 'images', 'florence-couple-selfie.jpg'),
+  vienna: path.join(__dirname, 'images', 'vienna-couple-selfie.jpg'),
+  interlaken: path.join(__dirname, 'images', 'interlaken-couple-selfie.jpg'),
+  innsbruck: path.join(__dirname, 'images', 'innsbruck-couple-selfie.jpg'),
+  paris: path.join(__dirname, 'images', 'paris-couple-selfie.jpg'),
   norway: path.join(ROOT, 'public/images/norway-laptop.jpg'),
   help: path.join(ROOT, 'public/images/help-hero.jpg'),
   logo: path.join(ROOT, 'public/neverbeen-logo.png'),

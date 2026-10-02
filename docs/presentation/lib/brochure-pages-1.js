@@ -1,5 +1,5 @@
 /*
- * NeverBeen visitor brochure — pages 1 to 13.
+ * NeverBeen visitor brochure — pages 1 to 14.
  * Each page function draws one A4-landscape page; the runner handles chrome.
  */
 const { GRADIENTS, ACCENTS, INK, INK_SOFT, WHITE, CREAM, MARGIN } = require('./brochure-kit');
@@ -9,23 +9,54 @@ const H = 595;
 const RIGHT = W - MARGIN;
 
 module.exports = [
-  // ------------------------------------------------------------------ 01 cover
+  // ------------------------------------------------------------------ 01 full-bleed Lofoten cover
   (k, ctx) => {
-    k.startPage({ chrome: 'dark', accent: '#FFD166', section: 'Visitor brochure' });
+    k.startPage({ chrome: false, section: 'Cover' });
     const d = k.doc;
 
+    // The photograph is deliberately blended over a deep-navy base at 70% opacity.
+    k.rect(0, 0, W, H, '#07172B');
     try {
-      const image = k.openImage(ctx.AUD.dream);
+      const image = k.openImage(ctx.IMG.cover);
       const scale = Math.max(W / image.width, H / image.height);
       const iw = image.width * scale;
       const ih = image.height * scale;
       d.save();
       d.rect(0, 0, W, H).clip();
-      d.image(image, (W - iw) / 2, (H - ih) / 2 - ih * 0.04, { width: iw, height: ih });
+      d.opacity(0.7).image(image, (W - iw) / 2, (H - ih) / 2, {
+        width: iw,
+        height: ih,
+      });
       d.restore();
     } catch (error) {
-      k.rect(0, 0, W, H, '#3A0CA3');
+      // Retain a composed cover even if the optional photograph is unavailable.
+      k.rect(0, 0, W, H, '#07172B');
     }
+
+    // One centered headline, with no other cover copy or page chrome.
+    k.fit(
+      'Neverbeen - Where Imagination\nBecomes a Memory',
+      MARGIN,
+      H / 2 - 68,
+      W - MARGIN * 2,
+      136,
+      {
+        font: 'Display',
+        size: 46,
+        minSize: 34,
+        color: WHITE,
+        lineGap: 3,
+        align: 'center',
+      },
+    );
+  },
+
+  // ------------------------------------------------------------------ 02 visitor brochure cover
+  (k, ctx) => {
+    k.startPage({ chrome: 'dark', accent: '#FFD166', section: 'Visitor brochure' });
+    const d = k.doc;
+
+    k.photoBackground(ctx.IMG.paris);
 
     // Vibrant scrim: opaque on the left, transparent over the photograph.
     const scrim = d.linearGradient(0, 0, W * 0.95, H * 0.25);
@@ -112,10 +143,10 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 02 welcome + contents
+  // ------------------------------------------------------------------ 03 welcome + contents
   (k, ctx) => {
     k.startPage({ accent: ACCENTS[3], section: 'Welcome' });
-    k.background(GRADIENTS.gold, 'blobs', '#FF6B00');
+    k.photoBackground(ctx.IMG.florence);
     k.heading(MARGIN, 76, 300, { eyebrow: 'Welcome', title: '', accent: '#7A1F00', color: WHITE });
 
     k.glass(MARGIN, 100, 436, 396, { radius: 20, opacity: 0.95 });
@@ -146,20 +177,20 @@ module.exports = [
     );
 
     const contents = [
-      ['The idea', '03'],
-      ['Why NeverBeen exists', '04'],
-      ['Seven kinds of stories', '05'],
-      ['What you receive', '06'],
-      ['How it works', '07'],
-      ['Submit your request', '08'],
-      ['Your photo kit', '09'],
-      ['Verify & confirm', '10'],
-      ['Inside the studio', '11'],
-      ['The destination atlas', '12\u201316'],
-      ['Packages & prices', '17'],
-      ['Payment & refunds', '18'],
-      ['Using the website', '19\u201322'],
-      ['Questions & policies', '23\u201324'],
+      ['The idea', '04'],
+      ['Why NeverBeen exists', '05'],
+      ['Seven kinds of stories', '06'],
+      ['What you receive', '07'],
+      ['How it works', '08'],
+      ['Submit your request', '09'],
+      ['Your photo kit', '10'],
+      ['Verify & confirm', '11'],
+      ['Inside the studio', '12'],
+      ['The destination atlas', '13\u201317'],
+      ['Packages & prices', '18'],
+      ['Payment & refunds', '19'],
+      ['Using the website', '20\u201323'],
+      ['Questions & policies', '24\u201325'],
     ];
     k.label('What is inside', MARGIN + 22, 352, { color: '#D2431F', size: 8 });
     contents.forEach((row, index) => {
@@ -191,7 +222,7 @@ module.exports = [
 
     k.roundRect(516, 462, 266, 40, 12, '#7B2FF7', 0.96);
     k.icon('plane', 540, 482, 9, WHITE);
-    k.text('Start with page 08 \u2014 placing your request', 558, 476, {
+    k.text('Start with page 09 \u2014 placing your request', 558, 476, {
       font: 'BodySemi',
       size: 9.2,
       color: WHITE,
@@ -200,10 +231,10 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 03 the idea
+  // ------------------------------------------------------------------ 04 the idea
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'The idea' });
-    k.background(GRADIENTS.ocean, 'rings', '#FFFFFF');
+    k.photoBackground(ctx.IMG.rome);
     k.heading(MARGIN, 70, 400, {
       eyebrow: 'The idea',
       title: 'A photograph of the trip you never took',
@@ -268,10 +299,10 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 04 why we exist
+  // ------------------------------------------------------------------ 05 why we exist
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Why NeverBeen exists' });
-    k.background(GRADIENTS.berry, 'sunburst', '#FF3D6E');
+    k.photoBackground(ctx.IMG.paris);
     k.heading(MARGIN, 72, 600, {
       eyebrow: 'Why NeverBeen exists',
       title: 'The trips that never happened \u2014 until now',
@@ -344,10 +375,10 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 05 seven kinds of stories
+  // ------------------------------------------------------------------ 06 seven kinds of stories
   (k, ctx) => {
     k.startPage({ accent: '#FFF3B0', section: 'Seven kinds of stories' });
-    k.background(GRADIENTS.teal, 'dots', '#FFFFFF');
+    k.photoBackground(ctx.IMG.vienna);
     k.heading(MARGIN, 68, 640, {
       eyebrow: 'Whose story are we telling?',
       title: 'Seven kinds of stories we compose',
@@ -426,10 +457,10 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 06 what you receive
+  // ------------------------------------------------------------------ 07 what you receive
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'What you receive' });
-    k.background(GRADIENTS.violet, 'blobs', '#FFFFFF');
+    k.photoBackground(ctx.IMG.florence);
     k.heading(MARGIN, 70, 500, {
       eyebrow: 'What you receive',
       title: 'Your collection, finished like a magazine story',
@@ -522,10 +553,10 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 07 how it works
+  // ------------------------------------------------------------------ 08 how it works
   (k, ctx) => {
     k.startPage({ accent: '#1B1033', section: 'How it works' });
-    k.background(GRADIENTS.mango, 'ribbon', '#FF3D6E');
+    k.photoBackground(ctx.IMG.interlaken);
     k.heading(MARGIN, 68, 620, {
       eyebrow: 'How it works',
       title: 'Four steps from portrait to passport-free travel',
@@ -600,10 +631,10 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 08 submit your request
+  // ------------------------------------------------------------------ 09 submit your request
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Submit your request' });
-    k.background(GRADIENTS.rose, 'circles', '#FFFFFF');
+    k.photoBackground(ctx.IMG.rome);
     k.heading(MARGIN, 68, 560, {
       eyebrow: 'Placing an order',
       title: 'How to place a Neverbeen Request',
@@ -692,10 +723,10 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 09 your photo kit
+  // ------------------------------------------------------------------ 10 your photo kit
   (k, ctx) => {
     k.startPage({ accent: '#1B1033', section: 'Your photo kit' });
-    k.background(GRADIENTS.lime, 'dots', '#FFFFFF');
+    k.photoBackground(ctx.IMG.innsbruck);
     k.heading(MARGIN, 68, 620, {
       eyebrow: 'Your photo kit',
       title: 'Two photographs are enough to begin',
@@ -780,10 +811,10 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 10 verify & confirm
+  // ------------------------------------------------------------------ 11 verify & confirm
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Verify & confirm' });
-    k.background(GRADIENTS.sky, 'rings', '#0B49C9');
+    k.photoBackground(ctx.IMG.vienna);
     k.heading(MARGIN, 70, 560, {
       eyebrow: 'Before we compose',
       title: 'Verified, consented, then composed',
@@ -852,10 +883,10 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 11 inside the studio
+  // ------------------------------------------------------------------ 12 inside the studio
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Inside the studio' });
-    k.background(GRADIENTS.midnight, 'sunburst', '#FF3D6E');
+    k.photoBackground(ctx.IMG.paris);
     k.heading(MARGIN, 68, 620, {
       eyebrow: 'Inside the studio',
       title: 'AI builds the scene. A human makes it believable.',
@@ -934,7 +965,7 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 12 destination atlas
+  // ------------------------------------------------------------------ 13 destination atlas
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'The destination atlas' });
     k.background(GRADIENTS.grape, 'blobs', '#FFFFFF');
@@ -1042,10 +1073,10 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 13 atlas: europe in colour
+  // ------------------------------------------------------------------ 14 atlas: europe in colour
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Atlas · Europe' });
-    k.background(GRADIENTS.violet, 'circles', '#FFFFFF');
+    k.photoBackground(ctx.IMG.rome);
     k.heading(MARGIN, 66, 560, {
       eyebrow: 'Atlas I \u00B7 Europe in colour',
       title: 'Old streets, soft light, long evenings',

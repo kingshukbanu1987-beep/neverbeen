@@ -1,5 +1,5 @@
 /*
- * NeverBeen visitor brochure — pages 14 to 25.
+ * NeverBeen visitor brochure — pages 15 to 26.
  */
 const { GRADIENTS, ACCENTS, INK, INK_SOFT, WHITE, MARGIN } = require('./brochure-kit');
 
@@ -7,7 +7,7 @@ const W = 842;
 const H = 595;
 
 module.exports = [
-  // ------------------------------------------------------------------ 14 atlas: alps, fjords & fire
+  // ------------------------------------------------------------------ 15 atlas: alps, fjords & fire
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Atlas · Alps & Nordics' });
     k.background(GRADIENTS.teal, 'dots', '#FFFFFF');
@@ -52,7 +52,7 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 15 atlas: asia, india & the gulf
+  // ------------------------------------------------------------------ 16 atlas: asia, india & the gulf
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Atlas · Asia & the Gulf' });
     k.background(GRADIENTS.flame, 'ribbon', '#FFD166');
@@ -105,7 +105,7 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 16 atlas: americas & beyond
+  // ------------------------------------------------------------------ 17 atlas: americas & beyond
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Atlas · Americas & beyond' });
     k.background(GRADIENTS.dawn, 'sunburst', '#FF3D6E');
@@ -164,10 +164,10 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 17 packages & prices
+  // ------------------------------------------------------------------ 18 packages & prices
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Packages & prices' });
-    k.background(GRADIENTS.berry, 'circles', '#FFFFFF');
+    k.photoBackground(ctx.IMG.florence);
     k.heading(MARGIN, 66, 620, {
       eyebrow: 'Packages & prices',
       title: 'Four ways to be somewhere else',
@@ -282,7 +282,7 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 18 choosing, paying, refunds
+  // ------------------------------------------------------------------ 19 choosing, paying, refunds
   (k, ctx) => {
     k.startPage({ accent: '#7A1F00', section: 'Payment & refunds' });
     k.background(GRADIENTS.gold, 'blobs', '#FF3D6E');
@@ -390,7 +390,7 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 19 using the website
+  // ------------------------------------------------------------------ 20 using the website
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Using the website' });
     k.background(GRADIENTS.grape, 'dots', '#FFFFFF');
@@ -453,10 +453,10 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 20 destination guides
+  // ------------------------------------------------------------------ 21 destination guides
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Destination guides' });
-    k.background(GRADIENTS.ocean, 'rings', '#FFD166');
+    k.photoBackground(ctx.IMG.interlaken);
     k.heading(MARGIN, 64, 470, {
       eyebrow: 'Destination guides',
       title: 'Every destination, researched before you decide',
@@ -521,7 +521,7 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 21 gallery & collection
+  // ------------------------------------------------------------------ 22 gallery & collection
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Gallery & collection' });
     k.background(GRADIENTS.coral, 'blobs', '#FFFFFF');
@@ -620,7 +620,7 @@ module.exports = [
     });
   },
 
-  // ------------------------------------------------------------------ 22 community
+  // ------------------------------------------------------------------ 23 community
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Community' });
     k.background(GRADIENTS.jade, 'circles', '#FFFFFF');
@@ -702,10 +702,10 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 23 questions answered
+  // ------------------------------------------------------------------ 24 questions answered
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Questions, answered' });
-    k.background(GRADIENTS.sunset, 'ribbon', '#FFD166');
+    k.photoBackground(ctx.IMG.vienna);
     k.heading(MARGIN, 62, 620, {
       eyebrow: 'Questions, answered',
       title: 'Before you ask \u2014 the twelve questions we hear most',
@@ -793,24 +793,17 @@ module.exports = [
     });
 
     k.glass(MARGIN, 508, 730, 46, { radius: 14, opacity: 0.95 });
-    k.icon('mail', MARGIN + 26, 531, 10, '#C2185B');
-    k.text(
-      'Something else? The Help Centre answers more, and ' +
-        ctx.CONTACT.email +
-        ' reaches a human.',
-      MARGIN + 46,
-      522,
-      {
-        font: 'BodySemi',
-        size: 9.4,
-        color: INK,
-        width: 660,
-        lineGap: 1.4,
-      },
-    );
+    k.icon('chat', MARGIN + 26, 531, 10, '#C2185B');
+    k.text('Something else? Visit the Help Centre for more answers.', MARGIN + 46, 522, {
+      font: 'BodySemi',
+      size: 9.4,
+      color: INK,
+      width: 660,
+      lineGap: 1.4,
+    });
   },
 
-  // ------------------------------------------------------------------ 24 privacy, safety & policies
+  // ------------------------------------------------------------------ 25 privacy, safety & policies
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Privacy, safety & policies' });
     k.background(GRADIENTS.night, 'rings', '#FFD166');
@@ -892,7 +885,7 @@ module.exports = [
     );
   },
 
-  // ------------------------------------------------------------------ 25 back cover
+  // ------------------------------------------------------------------ 26 back cover
   (k, ctx) => {
     k.startPage({ chrome: 'dark', accent: '#FFD166', section: 'Place your request' });
     const d = k.doc;
