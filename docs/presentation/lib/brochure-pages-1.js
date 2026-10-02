@@ -296,23 +296,26 @@ module.exports = [
       ],
     ];
     reasons.forEach((reason, index) => {
-      const x = MARGIN + index * 186;
-      k.glass(x, 250, 172, 190, { radius: 18, opacity: 0.95 });
-      k.circle(x + 34, 288, 18, ACCENTS[index], 1);
-      k.icon(reason[0], x + 34, 288, 10.5, WHITE);
-      k.fit(reason[1], x + 18, 316, 136, 34, {
+      const column = index % 2;
+      const row = Math.floor(index / 2);
+      const x = MARGIN + column * 374;
+      const y = 186 + row * 72;
+      k.glass(x, y, 356, 64, { radius: 16, opacity: 0.95 });
+      k.circle(x + 28, y + 32, 15, ACCENTS[index], 1);
+      k.icon(reason[0], x + 28, y + 32, 9, WHITE);
+      k.fit(reason[1], x + 52, y + 8, 288, 18, {
         font: 'BodyBold',
-        size: 11.6,
-        minSize: 9.6,
+        size: 10.8,
+        minSize: 9.4,
         color: INK,
-        lineGap: 1,
+        lineGap: 0.5,
       });
-      k.fit(reason[2], x + 18, 356, 136, 74, {
+      k.fit(reason[2], x + 52, y + 27, 288, 31, {
         font: 'Body',
-        size: 8.6,
-        minSize: 7.6,
+        size: 8.2,
+        minSize: 7.2,
         color: INK_SOFT,
-        lineGap: 2.4,
+        lineGap: 1.5,
       });
     });
 
@@ -322,7 +325,10 @@ module.exports = [
       [ctx.C('Lemon ice, Positano'), 'Amalfi Coast, Italy'],
       [ctx.C('Under the Petronas Towers'), 'Kuala Lumpur'],
     ].forEach((item, index) => {
-      k.photo(item[0], MARGIN + index * 186, 456, 172, 96, {
+      const photoWidth = 152;
+      const photoGap = 18;
+      const photoStart = MARGIN + (730 - (photoWidth * 4 + photoGap * 3)) / 2;
+      k.photo(item[0], photoStart + index * (photoWidth + photoGap), 330, photoWidth, 222, {
         caption: item[1],
         captionHeight: 24,
         frame: 4,
@@ -358,36 +364,37 @@ module.exports = [
       [ctx.AUD.elders, 'Golden years', 'Homesick for a place you last saw decades ago.'],
     ];
     const cardW = 172;
+    const cardH = 184;
     stories.forEach((story, index) => {
       const column = index % 4;
       const row = Math.floor(index / 4);
       const x = MARGIN + column * 186;
-      const y = 214 + row * 178;
-      k.glass(x, y, cardW, 160, { radius: 16, opacity: 0.96 });
-      k.photo(story[0], x + 8, y + 8, cardW - 16, 82, {
+      const y = 178 + row * 188;
+      k.glass(x, y, cardW, cardH, { radius: 16, opacity: 0.96 });
+      k.photo(story[0], x + 8, y + 8, cardW - 16, 132, {
         frame: 3,
         radius: 12,
         shadow: false,
         imageFit: 'contain',
       });
-      k.fit(story[1], x + 12, y + 98, cardW - 24, 26, {
+      k.fit(story[1], x + 12, y + 142, cardW - 24, 15, {
         font: 'BodyBold',
-        size: 10.4,
-        minSize: 8.6,
+        size: 9.4,
+        minSize: 8.2,
         color: INK,
-        lineGap: 0.8,
+        lineGap: 0.5,
       });
-      k.fit(story[2], x + 12, y + 124, cardW - 24, 30, {
+      k.fit(story[2], x + 12, y + 159, cardW - 24, 23, {
         font: 'Body',
-        size: 8.2,
-        minSize: 7.2,
+        size: 7.4,
+        minSize: 7,
         color: INK_SOFT,
-        lineGap: 2,
+        lineGap: 1,
       });
     });
-    k.roundRect(MARGIN + 3 * 186, 392, cardW, 160, 16, '#0B2A6B', 0.94);
-    k.badge('+', MARGIN + 3 * 186 + 86, 434, 20, { fill: '#FFD166', color: INK, size: 20 });
-    k.fit('Your story, not on this list?', MARGIN + 3 * 186 + 16, 466, cardW - 32, 40, {
+    k.roundRect(MARGIN + 3 * 186, 366, cardW, cardH, 16, '#0B2A6B', 0.94);
+    k.badge('+', MARGIN + 3 * 186 + 86, 410, 20, { fill: '#FFD166', color: INK, size: 20 });
+    k.fit('Your story, not on this list?', MARGIN + 3 * 186 + 16, 444, cardW - 32, 40, {
       font: 'BodyBold',
       size: 11,
       minSize: 9,
@@ -398,9 +405,9 @@ module.exports = [
     k.fit(
       'Tell us the moment in the note field of the request \u2014 we compose around people, not templates.',
       MARGIN + 3 * 186 + 16,
-      498,
+      478,
       cardW - 32,
-      48,
+      54,
       {
         font: 'Body',
         size: 8.2,
@@ -456,53 +463,57 @@ module.exports = [
       ],
     ];
     tiles.forEach((tile, index) => {
-      const column = index % 2;
-      const row = Math.floor(index / 2);
-      const x = MARGIN + column * 366;
-      const y = 186 + row * 108;
-      k.glass(x, y, 350, 94, { radius: 16, opacity: 0.95 });
-      k.circle(x + 36, y + 47, 17, ACCENTS[(index + 2) % ACCENTS.length], 1);
-      k.icon(tile[0], x + 36, y + 47, 10, WHITE);
-      k.fit(tile[1], x + 64, y + 20, 272, 24, {
+      const column = index % 3;
+      const row = Math.floor(index / 3);
+      const x = MARGIN + column * 250;
+      const y = 164 + row * 72;
+      k.glass(x, y, 230, 64, { radius: 14, opacity: 0.95 });
+      k.circle(x + 24, y + 24, 13, ACCENTS[(index + 2) % ACCENTS.length], 1);
+      k.icon(tile[0], x + 24, y + 24, 8, WHITE);
+      k.fit(tile[1], x + 44, y + 7, 176, 20, {
         font: 'BodyBold',
-        size: 11.2,
-        minSize: 9.4,
+        size: 9.8,
+        minSize: 8.4,
         color: INK,
-        lineGap: 0.6,
+        lineGap: 0.4,
       });
-      k.fit(tile[2], x + 64, y + 44, 272, 40, {
+      k.fit(tile[2], x + 44, y + 28, 176, 31, {
         font: 'Body',
-        size: 8.6,
-        minSize: 7.6,
+        size: 7.8,
+        minSize: 7,
         color: INK_SOFT,
-        lineGap: 2.2,
+        lineGap: 1.4,
       });
     });
 
-    k.photo(ctx.C('Terrace beers'), 794 - 172, 186, 172, 150, {
-      caption: 'Amsterdam, Netherlands',
-      captionHeight: 24,
-      imageFit: 'contain',
-    });
-    k.photo(ctx.C('Coins in the Trevi'), 794 - 172, 346, 172, 150, {
-      caption: 'Rome, Italy',
-      captionHeight: 24,
-      imageFit: 'contain',
-    });
-    k.roundRect(MARGIN, 508, 730, 40, 14, '#2B1055', 0.9);
-    k.icon('mail', MARGIN + 26, 528, 9, '#FFD166');
+    k.roundRect(MARGIN, 308, 730, 30, 12, '#2B1055', 0.9);
+    k.icon('mail', MARGIN + 26, 323, 9, '#FFD166');
     k.text(
       'Delivered by link, in both orientations, within the delivery window of your package \u2014 24 to 48 hours for most collections.',
       MARGIN + 46,
-      521,
+      316,
       {
         font: 'BodySemi',
-        size: 9,
+        size: 8.8,
         color: WHITE,
         width: 660,
-        lineGap: 1,
+        lineGap: 0,
       },
     );
+    k.photo(ctx.C('Terrace beers'), 219, 344, 172, 210, {
+      caption: 'Amsterdam, Netherlands',
+      captionHeight: 24,
+      frame: 4,
+      radius: 14,
+      imageFit: 'contain',
+    });
+    k.photo(ctx.C('Coins in the Trevi'), 451, 344, 172, 210, {
+      caption: 'Rome, Italy',
+      captionHeight: 24,
+      frame: 4,
+      radius: 14,
+      imageFit: 'contain',
+    });
   },
 
   // ------------------------------------------------------------------ 07 how it works
@@ -543,19 +554,19 @@ module.exports = [
     ];
     steps.forEach((step, index) => {
       const x = MARGIN + index * 186;
-      k.glass(x, 262, 172, 190, { radius: 18, opacity: 0.96 });
-      k.badge(step[0], x + 36, 300, 19, {
+      k.glass(x, 166, 172, 176, { radius: 18, opacity: 0.96 });
+      k.badge(step[0], x + 36, 204, 19, {
         fill: ['#FF3D6E', '#8A2BE2', '#00A86B', '#0B49C9'][index],
         size: 15,
       });
-      k.fit(step[1], x + 16, 332, 140, 40, {
+      k.fit(step[1], x + 16, 236, 140, 36, {
         font: 'BodyBold',
         size: 11,
         minSize: 9.2,
         color: INK,
         lineGap: 1,
       });
-      k.fit(step[2], x + 16, 376, 140, 68, {
+      k.fit(step[2], x + 16, 276, 140, 64, {
         font: 'Body',
         size: 8.4,
         minSize: 7.4,
@@ -563,7 +574,7 @@ module.exports = [
         lineGap: 2.2,
       });
       if (index < 3) {
-        k.line(x + 176, 300, x + 186, 300, '#1B1033', 1.4, 0.5);
+        k.line(x + 176, 204, x + 186, 204, '#1B1033', 1.4, 0.5);
       }
     });
 
@@ -573,7 +584,7 @@ module.exports = [
       [ctx.C('Eiffel sparkles'), 'Paris'],
       [ctx.C('Before the rainbow steps'), 'Kuala Lumpur'],
     ].forEach((item, index) => {
-      k.photo(item[0], MARGIN + index * 186, 462, 172, 90, {
+      k.photo(item[0], MARGIN + index * 186, 350, 172, 202, {
         caption: item[1],
         captionHeight: 22,
         frame: 4,
@@ -864,21 +875,21 @@ module.exports = [
     ];
     stages.forEach((stage, index) => {
       const x = MARGIN + index * 148;
-      k.badge(String(index + 1).padStart(2, '0'), x + 22, 250, 16, {
+      k.badge(String(index + 1).padStart(2, '0'), x + 22, 220, 16, {
         fill: ['#FF3D6E', '#8A2BE2', '#00A86B', '#0B49C9', '#FF8A00'][index],
         size: 13,
       });
       if (index < stages.length - 1) {
-        k.line(x + 42, 250, x + 148, 250, WHITE, 1.2, 0.35);
+        k.line(x + 42, 220, x + 148, 220, WHITE, 1.2, 0.35);
       }
-      k.fit(stage[0], x, 276, 130, 30, {
+      k.fit(stage[0], x, 246, 130, 30, {
         font: 'BodyBold',
         size: 10.4,
         minSize: 8.8,
         color: WHITE,
         lineGap: 0.8,
       });
-      k.fit(stage[1], x, 308, 130, 70, {
+      k.fit(stage[1], x, 278, 130, 68, {
         font: 'Body',
         size: 8.2,
         minSize: 7.2,
@@ -894,11 +905,12 @@ module.exports = [
       [ctx.C('Chicken rice, Maxwell'), 'Singapore'],
       [ctx.C('Marina seawall, midnight'), 'Dubai'],
     ].forEach((item, index) => {
-      k.photo(item[0], MARGIN + index * 186, 386, 172, 132, {
+      k.photo(item[0], MARGIN + index * 186, 352, 172, 166, {
         caption: item[1],
         captionHeight: 24,
         frame: 4,
         radius: 12,
+        imageFit: 'contain',
       });
     });
     k.roundRect(MARGIN, 524, 730, 28, 12, '#FF3D6E', 0.92);
@@ -1037,22 +1049,21 @@ module.exports = [
     });
 
     const shots = [
-      [ctx.C('Blue hour, Paris'), 'Paris, France'],
-      [ctx.C('String lights and the Eye'), 'London, United Kingdom'],
-      [ctx.C('Golden canal lights'), 'Amsterdam, Netherlands'],
-      [ctx.C('Coins in the Trevi'), 'Rome, Italy'],
-      [ctx.C('Lemon ice, Positano'), 'Amalfi Coast, Italy'],
-      [ctx.C('Blue domes behind us'), 'Santorini, Greece'],
+      [ctx.C('Blue hour, Paris'), 'Paris'],
+      [ctx.C('String lights and the Eye'), 'London'],
+      [ctx.C('Golden canal lights'), 'Amsterdam'],
+      [ctx.C('Coins in the Trevi'), 'Rome'],
+      [ctx.C('Lemon ice, Positano'), 'Amalfi'],
+      [ctx.C('Blue domes behind us'), 'Santorini'],
     ];
     shots.forEach((shot, index) => {
-      const column = index % 3;
-      const row = Math.floor(index / 3);
-      k.photo(shot[0], MARGIN + column * 250, 228 + row * 166, 236, 152, {
+      k.photo(shot[0], MARGIN + index * 122, 164, 118, 236, {
         caption: shot[1],
         captionHeight: 26,
         frame: 5,
-        radius: 14,
+        radius: 12,
         imageFit: 'contain',
+        shadow: false,
       });
     });
 
@@ -1069,7 +1080,7 @@ module.exports = [
         'Reykjavik',
       ].map((name, index) => ({ text: name, dot: ACCENTS[index % ACCENTS.length] })),
       MARGIN,
-      222 - 34,
+      420,
       730,
       { height: 20, size: 8.2, gap: 6 },
     );
