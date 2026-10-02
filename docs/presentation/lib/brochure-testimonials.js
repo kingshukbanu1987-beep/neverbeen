@@ -22,10 +22,10 @@ const DEEP = '#07172B';
 
 /**
  * Original (pre-testimonial) page numbers after which a quotation page is
- * inserted: ten gaps spread between page 02 and page 24, skipping the ranges
+ * inserted: ten gaps spread between page 02 and page 25, skipping the ranges
  * the contents page prints as spans (the atlas, and the website walkthrough).
  */
-const INSERT_AFTER = [2, 4, 6, 8, 10, 12, 17, 18, 19, 23];
+const INSERT_AFTER = [2, 5, 7, 9, 11, 13, 18, 19, 20, 24];
 
 /**
  * One entry per quotation page.
