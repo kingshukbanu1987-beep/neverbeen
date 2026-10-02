@@ -1,3 +1,7 @@
+:host {
+  display: block;
+}
+
 .gallery {
   padding: 5rem 0 5.5rem;
   background: #F0F0F0;
@@ -6,8 +10,8 @@
 
 .mosaic {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr 1fr;
-  grid-auto-rows: 220px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-auto-rows: 180px;
   gap: 0.9rem;
   margin-top: 2.6rem;
 }
@@ -17,20 +21,18 @@ figure {
   position: relative;
   overflow: hidden;
   border-radius: 16px;
-}
-
-figure:nth-child(1) {
-  grid-row: span 2;
-}
-
-figure:nth-child(4) {
-  grid-column: span 2;
+  background: rgba(29, 25, 20, 0.08);
 }
 
 img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+figure:hover img {
+  transform: scale(1.045);
 }
 
 figcaption {
@@ -39,28 +41,48 @@ figcaption {
   right: 0;
   bottom: 0;
   display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
-  padding: 0.9rem 1rem;
+  gap: 0.15rem 0.75rem;
+  padding: 1.4rem 0.9rem 0.75rem;
   background: linear-gradient(transparent, rgba(18, 24, 20, 0.78));
   color: var(--paper);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
+  line-height: 1.3;
 }
 
 strong {
   font-weight: 500;
 }
 
-@media (max-width: 800px) {
-  .mosaic {
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 210px;
-  }
+figcaption span {
+  opacity: 0.82;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
 
-  figure:nth-child(1),
-  figure:nth-child(4) {
-    grid-column: auto;
-    grid-row: auto;
-  }
+.mosaic-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin: 1.6rem 0 0;
+  font-size: 0.88rem;
+  color: rgba(29, 25, 20, 0.66);
+}
+
+.note-link {
+  color: var(--forest);
+  font-weight: 500;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(29, 25, 20, 0.28);
+  padding-bottom: 0.1rem;
+}
+
+.note-link:hover {
+  border-color: var(--forest);
 }
 
 @media (max-width: 520px) {
@@ -69,7 +91,15 @@ strong {
   }
 
   .mosaic {
-    grid-template-columns: 1fr;
-    grid-auto-rows: 240px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 150px;
+  }
+
+  figcaption {
+    padding: 1rem 0.6rem 0.5rem;
+  }
+
+  figcaption span {
+    display: none;
   }
 }

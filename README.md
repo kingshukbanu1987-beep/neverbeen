@@ -69,7 +69,7 @@ ng test
 
 | Path          | Page       | Notes                                                                                                |
 | ------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| `/`           | Home       | Hero, how it works, destinations, gallery, pricing, FAQ, contact                                     |
+| `/`           | Home       | Hero, how it works, destinations, gallery (20 random collection stills), pricing, FAQ, contact       |
 | `/audience`   | Audience   | Who NeverBeen is for, age note, destination list, privacy promises                                   |
 | `/collection` | Collection | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
 | `/founder`    | Founder    | Founder profile and expertise                                                                        |
@@ -101,6 +101,16 @@ regenerate the manifest in one step.
 
 While `public/collection` is empty, the page shows the sample studio photographs from
 `public/audience` so it is never blank.
+
+## The Gallery on the home page
+
+The **Explore Gallery** section on `/` is not a hand-picked list: it draws 20 photographs at random
+from the Neverbeen Collection on every page load, so each refresh shows a different set of stills.
+The sample is a Fisher–Yates draw (`src/app/shared/random-sample.ts`), so a photograph never repeats
+inside one view, and the pool is the same generated manifest that powers `/collection` — add
+photographs to `public/collection` and they join the rotation automatically. The number twenty lives
+in `GALLERY_PHOTO_COUNT` (`src/app/home/gallery/gallery.ts`). Only the section copy stays editable in
+Admin Console → Website Management.
 
 ## Community Backend API
 

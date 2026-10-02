@@ -5,18 +5,25 @@
       tone="ink"
       eyebrow="The proof"
       title="Gallery"
-      copy="Example vacation stills—composed like editorial travel photographs, not generated novelties."
+      copy="Twenty stills drawn at random from the Neverbeen Collection—a new set every time you open this page."
     />
     <div class="mosaic">
-      @for (item of items(); track item.title) {
+      @for (photo of photographs; track photo.src) {
         <figure>
-          <img [src]="item.image" [alt]="item.title + ' in ' + item.location" />
+          <img [src]="photo.src" [alt]="photo.alt" loading="lazy" decoding="async" />
           <figcaption>
-            <strong>{{ item.title }}</strong>
-            <span>{{ item.location }}</span>
+            <strong>{{ photo.title }}</strong>
+            <span>{{ locationOf(photo) }}</span>
           </figcaption>
         </figure>
       }
     </div>
+    <p class="mosaic-note">
+      <span>
+        Showing {{ photographs.length }} of {{ collectionSize }} photographs, reshuffled on every
+        visit.
+      </span>
+      <a class="note-link" routerLink="/collection">See the whole collection</a>
+    </p>
   </div>
 </section>
