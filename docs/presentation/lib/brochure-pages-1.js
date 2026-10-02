@@ -898,7 +898,7 @@ module.exports = [
     k.background(GRADIENTS.grape, 'blobs', '#FFFFFF');
     k.heading(MARGIN, 68, 560, {
       eyebrow: 'The destination atlas',
-      title: '33 destination guides \u2014 and the places you name yourself',
+      title: 'Unlimited destination guides \u2014 and the places you name yourself',
       intro:
         'Every guide on the website is free to browse: live weather, local time, currency, food, sights and history.',
       accent: '#FFD166',

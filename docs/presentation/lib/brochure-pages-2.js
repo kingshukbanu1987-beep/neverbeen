@@ -943,25 +943,13 @@ module.exports = [
 
     k.glass(MARGIN, 372, 430, 148, { radius: 18, opacity: 0.95 });
     k.label('Talk to the studio', MARGIN + 22, 390, { color: '#C2185B', size: 8 });
-    k.text(ctx.CONTACT.email, MARGIN + 22, 408, {
-      font: 'BodyBlack',
-      size: 15,
-      color: INK,
-      width: 380,
-      lineGap: 0,
-    });
-    k.text('WhatsApp ' + ctx.CONTACT.whatsapp, MARGIN + 22, 432, {
-      font: 'BodySemi',
-      size: 11,
-      color: INK,
-      width: 380,
-      lineGap: 0,
-    });
-    k.text(ctx.CONTACT.site, MARGIN + 22, 452, {
-      font: 'BodySemi',
-      size: 11,
-      color: INK,
-      width: 380,
+    k.roundRect(MARGIN + 22, 412, 386, 36, 12, '#00A86B', 1);
+    k.text('Submit a Neverbeen Request', MARGIN + 22, 424, {
+      font: 'BodyBold',
+      size: 10.4,
+      color: WHITE,
+      width: 386,
+      align: 'center',
       lineGap: 0,
     });
     k.fit(
@@ -1005,7 +993,7 @@ module.exports = [
       align: 'center',
       lineGap: 1,
     });
-    k.text('33 destination guides  ·  61 collection stills  ·  4 packages', 540, 488, {
+    k.text('Unlimited destination guides · 4 packages', 540, 488, {
       font: 'Body',
       size: 7.6,
       color: INK_SOFT,
