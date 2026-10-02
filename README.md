@@ -130,7 +130,7 @@ the complete PDF to 51 pages. Their full-bleed travel photographs are rendered a
 small white quote copy and attributions sit over a separate, restrained navy wash so the scenery stays
 prominent. The traveller and group portraits keep phones out of frame; scenes include Marina Bay,
 the Petronas Towers, the Eiffel Tower, Netherlands tulips, Innsbruck, Maya Bay, the Black Forest,
-Antarctica, Times Square, London and a Scottish Highlands castle. The 14 new speaker names,
+Antarctica, Times Square, London, the Burj Khalifa in Downtown Dubai and a Scottish Highlands castle. The 14 new speaker names,
 locations and quotes are illustrative placeholders (marked **SAMPLE TESTIMONIAL** in the PDF), not
 verified customer reviews; replace them with approved customer feedback before public use. The
 questions page prints every question in white and the answer beneath it in yellow over a dark wash.

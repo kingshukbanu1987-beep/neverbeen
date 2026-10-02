@@ -110,6 +110,7 @@ const IMG = {
   innsbruck: path.join(__dirname, 'images', 'innsbruck-couple-selfie.jpg'),
   paris: path.join(__dirname, 'images', 'paris-couple-selfie.jpg'),
   romeFriends: path.join(__dirname, 'images', 'rome-friends-group.jpg'),
+  dubaiFriends: path.join(__dirname, 'images', 'dubai-burj-khalifa-friends.jpg'),
   parisSolo: path.join(__dirname, 'images', 'paris-solo-traveller.jpg'),
   viennaElders: path.join(__dirname, 'images', 'vienna-older-couple.jpg'),
   florenceSolo: path.join(__dirname, 'images', 'florence-solo-traveller.jpg'),
