@@ -122,6 +122,17 @@ const IMG = {
   photoKitSunglasses: path.join(__dirname, 'images', 'photo-kit-avoid-sunglasses.jpg'),
   photoKitGroup: path.join(__dirname, 'images', 'photo-kit-avoid-group-blur.jpg'),
   identityVerification: path.join(__dirname, 'images', 'identity-verification.jpg'),
+  testimonialSingapore: path.join(__dirname, 'images', 'testimonial-singapore-marina-bay.jpg'),
+  testimonialPetronas: path.join(__dirname, 'images', 'testimonial-petronas-kuala-lumpur.jpg'),
+  testimonialParis: path.join(__dirname, 'images', 'testimonial-paris-eiffel-scenic.jpg'),
+  testimonialTulips: path.join(__dirname, 'images', 'testimonial-netherlands-tulips.jpg'),
+  testimonialInnsbruck: path.join(__dirname, 'images', 'testimonial-innsbruck-river.jpg'),
+  testimonialMayaBay: path.join(__dirname, 'images', 'testimonial-maya-bay-thailand.jpg'),
+  testimonialBlackForest: path.join(__dirname, 'images', 'testimonial-black-forest.jpg'),
+  testimonialAntarctica: path.join(__dirname, 'images', 'testimonial-antarctica-penguins.jpg'),
+  testimonialTimesSquare: path.join(__dirname, 'images', 'testimonial-times-square.jpg'),
+  testimonialLondon: path.join(__dirname, 'images', 'testimonial-london-tower-bridge.jpg'),
+  testimonialScotland: path.join(__dirname, 'images', 'testimonial-scotland-castle.jpg'),
 };
 
 const context = {
@@ -164,14 +175,20 @@ const kit = new BrochureKit(doc, fonts);
 kit.registerFonts();
 kit.setChrome({ year: YEAR });
 
-const { testimonialPages, interleave } = require('./lib/brochure-testimonials');
+const {
+  testimonialPages,
+  additionalTestimonialPages,
+  interleave,
+  interleaveAdditional,
+} = require('./lib/brochure-testimonials');
 
-// The quotation pages are spliced between page 02 and page 24 rather than
-// appended, so travellers meet them throughout the brochure.
-const pages = interleave(
+// Keep the original quotations in their source-page positions, then spread
+// fourteen new, full-opacity destination stories through the 37-page sequence.
+const pagesWithOriginalTestimonials = interleave(
   [...require('./lib/brochure-pages-1'), ...require('./lib/brochure-pages-2')],
   testimonialPages,
 );
+const pages = interleaveAdditional(pagesWithOriginalTestimonials, additionalTestimonialPages);
 
 kit.totalPages = pages.length;
 pages.forEach((draw) => draw(kit, context));

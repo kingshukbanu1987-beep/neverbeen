@@ -222,23 +222,23 @@ module.exports = [
       { font: 'Body', size: 9.4, minSize: 8.2, color: INK_SOFT, lineGap: 2.8 },
     );
 
-    // Page numbers account for the ten quotation pages spliced through the
-    // brochure; they are the printed numbers, not the source order.
+    // Printed page numbers account for both the original quotation pages and
+    // the fourteen added traveller stories; they are final PDF page numbers.
     const contents = [
-      ['The idea', '06'],
-      ['Why NeverBeen exists', '08'],
-      ['Seven kinds of stories', '09'],
-      ['What you receive', '11'],
-      ['How it works', '12'],
-      ['Submit your request', '14'],
-      ['Your photo kit', '15'],
-      ['Verify & confirm', '17'],
-      ['Inside the studio', '18'],
-      ['The destination atlas', '20\u201324'],
-      ['Packages & prices', '26'],
-      ['Payment & refunds', '28'],
-      ['Using the website', '30\u201333'],
-      ['Questions & policies', '35\u201336'],
+      ['The idea', '07'],
+      ['Why NeverBeen exists', '10'],
+      ['Seven kinds of stories', '11'],
+      ['What you receive', '14'],
+      ['How it works', '15'],
+      ['Submit your request', '18'],
+      ['Your photo kit', '19'],
+      ['Verify & confirm', '22'],
+      ['Inside the studio', '24'],
+      ['The destination atlas', '26\u201332'],
+      ['Packages & prices', '35'],
+      ['Payment & refunds', '38'],
+      ['Using the website', '41\u201345'],
+      ['Questions & policies', '48\u201350'],
     ];
     k.label('What is inside', MARGIN + 22, 352, { color: '#D2431F', size: 8 });
     contents.forEach((row, index) => {
