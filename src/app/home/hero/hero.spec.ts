@@ -36,7 +36,7 @@ describe('Hero', () => {
       'Dream Destinations',
       'Neverbeen Collection',
       'Explore Gallery',
-      'Documentation',
+      'Brochure',
     ]);
 
     const community = buttons[0];
@@ -93,24 +93,24 @@ describe('Hero', () => {
     expect(labels[dreamIndex + 2]).toBe('Explore Gallery');
   });
 
-  it('adds Documentation immediately after Explore Gallery with the same ghost style', () => {
+  it('adds the Brochure link immediately after Explore Gallery with the same ghost style', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
     const galleryIndex = labels.indexOf('Explore Gallery');
 
     expect(galleryIndex).toBeGreaterThan(-1);
-    expect(labels[galleryIndex + 1]).toBe('Documentation');
+    expect(labels[galleryIndex + 1]).toBe('Brochure');
 
     const gallery = buttons[galleryIndex];
-    const documentation = buttons[galleryIndex + 1];
-    expect(documentation.getAttribute('href')).toBe('/documentation');
-    expect(documentation.classList.contains('btn-ghost')).toBe(true);
+    const brochure = buttons[galleryIndex + 1];
+    expect(brochure.getAttribute('href')).toBe('/documentation');
+    expect(brochure.classList.contains('btn-ghost')).toBe(true);
 
     const galleryStyle = getComputedStyle(gallery);
-    const documentationStyle = getComputedStyle(documentation);
-    expect(documentationStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
-    expect(documentationStyle.color).toBe(galleryStyle.color);
-    expect(documentationStyle.borderColor).toBe(galleryStyle.borderColor);
+    const brochureStyle = getComputedStyle(brochure);
+    expect(brochureStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
+    expect(brochureStyle.color).toBe(galleryStyle.color);
+    expect(brochureStyle.borderColor).toBe(galleryStyle.borderColor);
   });
 });

@@ -1,40 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { DocumentationPage } from './documentation';
+import { VISITOR_BROCHURE, DocumentationPage } from './documentation';
 
-type ChangeListener = (event: MediaQueryListEvent) => void;
-
-function installMatchMedia(matches: boolean): () => void {
-  const original = window.matchMedia;
-  const listeners = new Set<ChangeListener>();
-  const query: MediaQueryList = {
-    matches,
-    media: '(test)',
-    onchange: null,
-    addEventListener: (_type: string, listener: EventListenerOrEventListenerObject | null) => {
-      if (typeof listener === 'function') listeners.add(listener as ChangeListener);
-    },
-    removeEventListener: (_type: string, listener: EventListenerOrEventListenerObject | null) => {
-      if (typeof listener === 'function') listeners.delete(listener as ChangeListener);
-    },
-    addListener: (listener: ChangeListener) => listeners.add(listener),
-    removeListener: (listener: ChangeListener) => listeners.delete(listener),
-    dispatchEvent: () => true,
-  };
-
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    value: () => query,
-  });
-
-  return () => {
-    Object.defineProperty(window, 'matchMedia', { configurable: true, value: original });
-  };
-}
+const BROCHURE_URL = '/assets/documentation/NeverBeen_Brochure.pdf';
 
 describe('DocumentationPage', () => {
-  let restoreMatchMedia: (() => void) | undefined;
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DocumentationPage],
@@ -42,58 +12,71 @@ describe('DocumentationPage', () => {
     }).compileComponents();
   });
 
-  afterEach(() => restoreMatchMedia?.());
-
   function create() {
     const fixture = TestBed.createComponent(DocumentationPage);
     fixture.detectChanges();
     return fixture;
   }
 
-  it('selects the landscape PDF for tablet, laptop and desktop-sized screens', () => {
-    restoreMatchMedia = installMatchMedia(false);
+  function actionsOf(element: HTMLElement) {
+    const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('.viewer-actions a.btn'));
+    return {
+      open: links.find((link) => link.textContent?.includes('Open Brochure')),
+      download: links.find((link) => link.textContent?.includes('Download Brochure')),
+    };
+  }
+
+  it('publishes the visitor brochure as the only document', () => {
     const element: HTMLElement = create().nativeElement;
 
-    expect(element.querySelector('h2')?.textContent).toContain('Wide screen edition');
-    expect(element.querySelector('.format-card.active')?.textContent).toContain('Wide');
+    expect(VISITOR_BROCHURE.url).toBe(BROCHURE_URL);
+    expect(element.querySelectorAll('.pdf-frame iframe').length).toBe(1);
     expect(element.querySelector<HTMLIFrameElement>('iframe')?.getAttribute('src')).toContain(
-      '/assets/documentation/NeverBeen_Documentation_Wide.pdf',
+      BROCHURE_URL,
     );
+    expect(element.querySelector('h2')?.textContent).toContain('The NeverBeen brochure');
+    expect(element.querySelector('.document-meta')?.textContent).toContain('Wide / landscape');
+    expect(element.querySelector('.document-meta')?.textContent).toContain('25 pages');
   });
 
-  it('selects the portrait document and exposes its download action on phone-sized screens', () => {
-    restoreMatchMedia = installMatchMedia(true);
+  it('offers exactly an Open Brochure and a Download Brochure action, both for the landscape PDF', () => {
+    const element: HTMLElement = create().nativeElement;
+    const { open, download } = actionsOf(element);
+
+    expect(element.querySelectorAll('.viewer-actions a.btn').length).toBe(2);
+
+    expect(open?.getAttribute('href')).toBe(BROCHURE_URL);
+    expect(open?.getAttribute('target')).toBe('_blank');
+    expect(open?.getAttribute('rel')).toContain('noopener');
+
+    expect(download?.getAttribute('href')).toBe(BROCHURE_URL);
+    expect(download?.getAttribute('download')).toBe('NeverBeen_Brochure.pdf');
+  });
+
+  it('talks to visitors, not to developers', () => {
+    const element: HTMLElement = create().nativeElement;
+    const copy = element.textContent ?? '';
+
+    expect(copy).toContain('Neverbeen Request');
+    expect(copy).not.toMatch(/admin console/i);
+    expect(copy).not.toMatch(/documentation/i);
+  });
+
+  it('shows no second edition and no layout switcher', () => {
+    const element: HTMLElement = create().nativeElement;
+    const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('a'));
+
+    expect(element.querySelectorAll('.format-card, .document-controls, .auto-choice').length).toBe(
+      0,
+    );
+    expect(links.filter((link) => link.getAttribute('href')?.includes('Mobile')).length).toBe(0);
+    expect(element.textContent).not.toContain('Mobile edition');
+    expect(element.textContent).not.toContain('Choose your view');
+  });
+
+  it('still lets the visitor leave for the rest of the site', () => {
     const element: HTMLElement = create().nativeElement;
 
-    expect(element.querySelector('h2')?.textContent).toContain('Mobile edition');
-    expect(element.querySelector('.format-card.active')?.textContent).toContain('Mobile');
-    expect(element.querySelector<HTMLIFrameElement>('iframe')?.getAttribute('src')).toContain(
-      '/assets/documentation/NeverBeen_Documentation_Mobile.pdf',
-    );
-
-    const download = Array.from(element.querySelectorAll<HTMLAnchorElement>('a')).find((link) =>
-      link.textContent?.includes('Download PDF'),
-    );
-    expect(download?.getAttribute('href')).toBe('/assets/documentation/NeverBeen_Documentation_Mobile.pdf');
-    expect(download?.getAttribute('download')).toBe('NeverBeen_Documentation_Mobile.pdf');
-  });
-
-  it('lets a visitor override the recommendation and restore it later', () => {
-    restoreMatchMedia = installMatchMedia(true);
-    const fixture = create();
-    const element: HTMLElement = fixture.nativeElement;
-    const formats = Array.from(element.querySelectorAll<HTMLButtonElement>('.format-card'));
-
-    formats.find((button) => button.textContent?.includes('Wide'))?.click();
-    fixture.detectChanges();
-
-    expect(element.querySelector('.screen-status')?.classList.contains('manual')).toBe(true);
-    expect(element.querySelector('.format-card.active')?.textContent).toContain('Wide');
-
-    (element.querySelector<HTMLButtonElement>('.auto-choice') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(element.querySelector('.screen-status')?.classList.contains('manual')).toBe(false);
-    expect(element.querySelector('.format-card.active')?.textContent).toContain('Mobile');
+    expect(element.querySelector('.back-link')?.getAttribute('href')).toBe('/');
   });
 });

@@ -1,4 +1,4 @@
-import { destinations, faqItems, galleryItems, howItWorksSteps, pricingPlans } from '../models/site-content';
+import { destinations, faqItems, howItWorksSteps, pricingPlans } from '../models/site-content';
 
 /**
  * Registry of every website component that can be managed from
@@ -107,7 +107,7 @@ export const HERO_BUTTONS: [string, string][] = [
   ['destinations', 'Dream Destinations'],
   ['collection', 'Neverbeen Collection'],
   ['gallery', 'Explore Gallery'],
-  ['documentation', 'Documentation'],
+  ['documentation', 'Brochure'],
 ];
 
 export const PROFILE_SECTIONS: [string, string][] = [
@@ -281,12 +281,12 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     page: 'home',
     label: 'Gallery',
     icon: '🖼️',
-    description: 'The example-photograph mosaic.',
+    description:
+      'The proof mosaic: 20 photographs drawn at random from the Neverbeen Collection (/collection) on every page load, so the set is not managed here.',
     previewPath: '/',
     previewFragment: 'gallery',
     fields: [
-      ...heading('The proof', 'Gallery', 'Example vacation stills—composed like editorial travel photographs, not generated novelties.'),
-      { key: 'items', label: 'Photographs', type: 'items', default: galleryItems.map((g) => ({ id: g.title, label: `${g.title} · ${g.location}`, visible: true })), labelEditable: false },
+      ...heading('The proof', 'Gallery', 'Twenty stills drawn at random from the Neverbeen Collection—a new set every time you open this page.'),
     ],
   },
   {

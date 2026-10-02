@@ -10,7 +10,8 @@
     "generate:collection": "node scripts/generate-collection.mjs",
     "ingest:collection": "node scripts/ingest-collection-uploads.mjs",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "generate:brochure": "node docs/presentation/generate-neverbeen-brochure.js"
   },
   "private": true,
   "packageManager": "npm@11.6.2",
@@ -35,6 +36,7 @@
     "@angular/cli": "^21.2.24",
     "@angular/compiler-cli": "^21.2.0",
     "jsdom": "^28.0.0",
+    "pdfkit": "^0.20.2",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
