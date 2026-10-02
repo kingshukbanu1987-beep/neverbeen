@@ -966,7 +966,7 @@ module.exports = [
       lineGap: 0,
     });
     k.fit(
-      'Help Centre, FAQ, Privacy Policy and Terms & Condition are always in the website footer.',
+      'Help Centre, FAQ, Community, Privacy Policy and Terms & Condition',
       MARGIN + 22,
       474,
       380,
