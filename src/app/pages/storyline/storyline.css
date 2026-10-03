@@ -477,17 +477,6 @@ h1 em {
   text-transform: uppercase;
 }
 
-.content-note {
-  margin-bottom: 0.85rem;
-  padding: 0.55rem 0.7rem;
-  border-left: 2px solid var(--bronze);
-  background: rgb(140 90 50 / 8%);
-  color: #625346;
-  font-size: 0.76rem;
-  font-weight: 600;
-  line-height: 1.45;
-}
-
 .story-paragraph {
   margin-bottom: 1rem;
   color: #4e4941;

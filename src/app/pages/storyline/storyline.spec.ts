@@ -16,7 +16,7 @@ describe('StorylinePage', () => {
     return fixture;
   }
 
-  it('presents the parallel-universe title and clearly labels fictional stories and illustrative images', () => {
+  it('presents the parallel-universe title and clearly labels fictional stories and images', () => {
     const element: HTMLElement = create().nativeElement;
 
     expect(element.querySelector('h1')?.textContent).toContain('The Storyline of');
@@ -26,41 +26,38 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows eight albums with exactly four pictures in each album', () => {
+  it('shows the first three albums with exactly four pictures in each', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
-    expect(albums).toHaveLength(8);
+    expect(albums.map((album) => album.id)).toEqual([
+      'switzerland-honeymoon',
+      'paris-solo-dream',
+      'amazon-university-reunion',
+    ]);
     expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 4)).toBe(true);
-    expect(element.querySelectorAll('.photo-label')).toHaveLength(32);
-    expect(element.querySelectorAll('.album-index a')).toHaveLength(8);
+    expect(element.querySelectorAll('.photo-label')).toHaveLength(12);
+    expect(element.querySelectorAll('.album-index a')).toHaveLength(3);
   });
 
-  it('includes the reunion, family preview, wedding, birthday and Everest storylines', () => {
+  it('keeps the Dutch, Paris and university-friends storylines and removes later albums', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
+    const copy = element.textContent ?? '';
 
+    expect(albums[0].textContent).toContain('Switzerland');
+    expect(albums[0].textContent).toContain('work pressure');
+    expect(albums[1].textContent).toContain('Paris, France');
+    expect(albums[1].textContent).toContain('middle-class family');
     expect(albums[2].textContent).toContain('Amazon Rainforest');
     expect(albums[2].textContent).toContain('3 men & 2 women');
     expect(albums[2].textContent).toContain('university');
 
-    expect(albums[3].textContent).toContain('Singapore');
-    expect(albums[3].textContent).toContain('The Iyer family');
-    expect(albums[3].textContent?.toLowerCase()).toContain('before they pack');
-
-    expect(albums[4].textContent).toContain('Tuscany, Italy');
-    expect(albums[4].textContent).toContain('Meera died in an accident');
-    expect(albums[4].querySelector('.content-note')?.textContent).toContain('bereavement');
-
-    expect(albums[5].textContent).toContain('London, United Kingdom');
-    expect(albums[5].textContent).toContain('old photographs');
-
-    expect(albums[6].textContent).toContain('Vienna, Austria');
-    expect(albums[6].textContent).toContain('COVID restrictions');
-    expect(albums[6].textContent).toContain('twenty-five');
-
-    expect(albums[7].textContent).toContain('Everest Region, Nepal');
-    expect(albums[7].textContent).toContain('Her job was demanding');
+    expect(copy).not.toContain('The Iyer family');
+    expect(copy).not.toContain('Meera & Arjun');
+    expect(copy).not.toContain('Helen & James');
+    expect(copy).not.toContain('Clara');
+    expect(copy).not.toContain('Elisabeth');
   });
 
   it('explains that barriers to travel are broader than money and avoids promising a real trip', () => {
