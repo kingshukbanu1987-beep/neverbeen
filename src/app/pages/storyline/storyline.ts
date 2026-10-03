@@ -230,5 +230,85 @@ export class StorylinePage {
         },
       ],
     },
+    {
+      id: 'vienna-birthday-missed',
+      number: '07',
+      place: 'Vienna, Austria',
+      people: 'Clara · a birthday dinner with friends',
+      title: 'The birthday dinner she never got to share',
+      deck: 'COVID restrictions kept her twenty-fifth birthday off the restaurant calendar; the wish to celebrate with friends stayed.',
+      story: [
+        'Clara, a fictional Austrian woman, turned twenty-five during COVID restrictions. She had pictured a small dinner at a Vienna restaurant, a cake at the centre of the table and her friends around it. The reservation never happened; her birthday came through messages and a screen instead.',
+        'She understood why people needed to keep apart, but missing that milestone with her friends still hurt. Time moved on and they stayed close, yet there was no way to revisit the exact evening she had hoped for. The celebration in this album is a what-if, not a hidden record of a party that took place.',
+        'In this fictional example, Clara asks NeverBeen to imagine four casual snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
+      ],
+      reason:
+        'She chose NeverBeen to mark a milestone that was missed and picture the friends she wanted around her table—not to erase COVID restrictions or pretend the celebration occurred.',
+      quote:
+        'I understood why we stayed home. I still wanted one picture of the dinner I had imagined with my friends.',
+      quotedBy: 'An imagined voice for Clara',
+      photos: [
+        {
+          src: '/storyline/21-clara-vienna-birthday-dinner.jpg',
+          alt: "AI-generated imagined snapshot of fictional Clara and three friends celebrating Clara's twenty-fifth birthday at a Vienna restaurant, a dinner that never happened.",
+          caption: 'The table she hoped to share',
+        },
+        {
+          src: '/storyline/22-clara-vienna-birthday-candles.jpg',
+          alt: 'AI-generated imagined snapshot of fictional Clara blowing out candles at the birthday dinner she missed during COVID restrictions.',
+          caption: 'A candlelit wish in the parallel version',
+        },
+        {
+          src: '/storyline/23-clara-vienna-friends.jpg',
+          alt: 'AI-generated imagined snapshot of fictional Clara and friends walking together in Vienna after a birthday dinner that never took place.',
+          caption: 'Friends after the dinner in another timeline',
+        },
+        {
+          src: '/storyline/24-clara-vienna-toast.jpg',
+          alt: 'AI-generated illustration of fictional Clara and three friends sharing a toast at an imagined Vienna restaurant birthday celebration.',
+          caption: 'The toast they did not get to make',
+        },
+      ],
+    },
+    {
+      id: 'everest-solo-dream',
+      number: '08',
+      place: 'Everest Region, Nepal',
+      people: 'Elisabeth · a European solo-trek dream',
+      title: 'The mountain she carried through a working life',
+      deck: 'She always pictured the Everest trail. Work pressure kept turning the leave she planned into another year.',
+      story: [
+        'Elisabeth, a fictional older European woman, kept a folded map of Nepal’s Everest region in her desk for years. She imagined an independent solo trek along a well-travelled, non-technical route, with local support, a warm teahouse at day’s end and a first view of the Himalayan peaks. She wanted to make the journey, not climb a summit.',
+        'Whenever she tried to book time away, a deadline or another responsibility at work pushed the leave to a later season. Her plans kept sliding into “next year”; the years passed. The dream stayed, even while she knew a high-altitude trek requires real preparation, good health and careful planning.',
+        'In this fictional example, Elisabeth asks NeverBeen for four clearly labelled illustrations of a calm trekking day she had pictured. These AI images are not evidence that she travelled, reached Everest Base Camp or climbed a mountain. They hold the outline of a long-held hope, without pretending to complete it.',
+      ],
+      reason:
+        'She chose NeverBeen to see a long-held solo travel dream pictured, not to claim an ascent or substitute an imagined frame for the preparation and safety a real high-altitude trek requires.',
+      quote:
+        'My leave kept moving to next year. I wanted one picture of the path I kept promising myself I would walk.',
+      quotedBy: 'An imagined voice for Elisabeth',
+      photos: [
+        {
+          src: '/storyline/25-elisabeth-everest-trail.jpg',
+          alt: "AI-generated imagined portrait of fictional older European woman Elisabeth on a broad, non-technical trekking trail in Nepal's Everest region; not evidence of travel or an ascent.",
+          caption: 'A quiet pause on the trail she imagined',
+        },
+        {
+          src: '/storyline/26-elisabeth-everest-teahouse-map.jpg',
+          alt: 'AI-generated illustration of fictional Elisabeth studying a trekking map in a Himalayan teahouse during an imagined Everest-region expedition.',
+          caption: 'The map that stayed in her desk',
+        },
+        {
+          src: '/storyline/27-elisabeth-everest-valley.jpg',
+          alt: 'AI-generated mobile-style illustration of fictional older European woman Elisabeth pausing on a marked, gentle trekking path in the Everest region, without a summit climb.',
+          caption: 'A safe path toward the distant peaks',
+        },
+        {
+          src: '/storyline/28-elisabeth-everest-lodge.jpg',
+          alt: 'AI-generated illustration of fictional Elisabeth enjoying tea at a mountain teahouse veranda on an imagined trek, with distant Himalayan peaks.',
+          caption: 'Tea at a teahouse in the parallel version',
+        },
+      ],
+    },
   ];
 }
