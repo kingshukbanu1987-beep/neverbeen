@@ -13,6 +13,7 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
   // The brochure page publishes the single wide landscape visitor brochure,
   // openable in a new tab or downloadable as a PDF.
   documentation: { path: '/documentation', cls: 'btn-brochure' },
+  storyline: { path: '/storyline-of-parallel-universe', cls: 'btn-brochure' },
 };
 
 @Component({
@@ -32,12 +33,22 @@ export class Hero {
   protected readonly lede = computed(() => this.cms.text('home.hero', 'lede'));
   protected readonly buttons = computed(() => {
     const buttons = this.cms.visibleItems('home.hero', 'buttons').filter((b) => BUTTONS[b.id]);
-    // Keep this pair together even for visitors with a previously published CMS
-    // order. Preserve labels, visibility and the relative order of other actions.
+    // Keep Brochure directly after Community and the storyline directly after
+    // Brochure, even when a previously published CMS order predates this link.
+    // Preserve visibility, labels and the relative order of other actions.
     const brochureIndex = buttons.findIndex((b) => b.id === 'documentation');
     if (brochureIndex >= 0 && buttons.some((b) => b.id === 'community')) {
       const [brochure] = buttons.splice(brochureIndex, 1);
       buttons.splice(buttons.findIndex((b) => b.id === 'community') + 1, 0, brochure);
+    }
+    const storylineIndex = buttons.findIndex((b) => b.id === 'storyline');
+    if (storylineIndex >= 0) {
+      const [storyline] = buttons.splice(storylineIndex, 1);
+      const brochureAnchor = buttons.findIndex((b) => b.id === 'documentation');
+      const communityAnchor = buttons.findIndex((b) => b.id === 'community');
+      const anchor = brochureAnchor >= 0 ? brochureAnchor : communityAnchor;
+      if (anchor >= 0) buttons.splice(anchor + 1, 0, storyline);
+      else buttons.push(storyline);
     }
     return buttons.map((b) => ({
       id: b.id, label: b.label, ...BUTTONS[b.id], fragment: BUTTONS[b.id].fragment ?? undefined,

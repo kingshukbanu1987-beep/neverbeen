@@ -53,6 +53,10 @@ export const routes: Routes = [
       import('./pages/documentation/documentation').then((m) => m.DocumentationPage),
   },
   {
+    path: 'storyline-of-parallel-universe',
+    loadComponent: () => import('./pages/storyline/storyline').then((m) => m.StorylinePage),
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
   },
