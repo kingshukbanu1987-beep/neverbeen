@@ -294,9 +294,9 @@ export class StorylinePage {
           caption: 'A quiet pause on the trail she imagined',
         },
         {
-          src: '/storyline/26-elisabeth-everest-teahouse-map.jpg',
-          alt: 'AI-generated illustration of fictional Elisabeth studying a trekking map in a Himalayan teahouse during an imagined Everest-region expedition.',
-          caption: 'The map that stayed in her desk',
+          src: '/storyline/26-elisabeth-everest-village-stop.jpg',
+          alt: 'AI-generated imagined snapshot of fictional older European woman Elisabeth pausing in a quiet village on a safe Everest-region trekking route.',
+          caption: 'A village stop along the route she imagined',
         },
         {
           src: '/storyline/27-elisabeth-everest-valley.jpg',

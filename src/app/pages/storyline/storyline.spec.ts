@@ -87,6 +87,9 @@ describe('StorylinePage', () => {
     expect(albums[6].textContent).toContain('solo trek');
     expect(albums[6].textContent).toContain('not evidence that she travelled');
     expect(albums[6].textContent).toContain('not climb a summit');
+    expect(albums[6].querySelectorAll('img')[1].getAttribute('src')).toBe(
+      '/storyline/26-elisabeth-everest-village-stop.jpg',
+    );
 
     expect(copy).not.toContain('The Iyer family');
     expect(copy).not.toContain('Singapore');
