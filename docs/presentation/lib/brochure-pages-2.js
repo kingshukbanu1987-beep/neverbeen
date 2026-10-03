@@ -19,7 +19,7 @@ module.exports = [
   // ------------------------------------------------------------------ 15 atlas: alps, fjords & fire
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Atlas · Alps & Nordics' });
-    k.background(GRADIENTS.teal, 'dots', '#FFFFFF');
+    k.photoBackground(ctx.IMG.backgroundNorwayAurora, 0.8);
     k.heading(MARGIN, 66, 560, {
       eyebrow: 'Atlas II \u00B7 Alps, fjords & fire',
       title: 'Snow, steam and turquoise water',
@@ -65,7 +65,7 @@ module.exports = [
   // ------------------------------------------------------------------ 16 atlas: asia, india & the gulf
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Atlas · Asia & the Gulf' });
-    k.background(GRADIENTS.flame, 'ribbon', '#FFD166');
+    k.photoBackground(ctx.IMG.backgroundAmsterdamCanals, 0.8);
     k.heading(MARGIN, 64, 620, {
       eyebrow: 'Atlas III \u00B7 Asia, India & the Gulf',
       title: 'Neon cities, desert dunes and mountains at dawn',
@@ -119,7 +119,7 @@ module.exports = [
   // ------------------------------------------------------------------ 17 atlas: americas & beyond
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Atlas · Americas & beyond' });
-    k.background(GRADIENTS.dawn, 'sunburst', '#FF3D6E');
+    k.photoBackground(ctx.IMG.backgroundCanadaCouple, 0.8);
     k.heading(MARGIN, 66, 560, {
       eyebrow: 'Atlas IV \u00B7 Americas & beyond',
       title: 'And anywhere else you can name',
@@ -291,12 +291,12 @@ module.exports = [
 
   // ------------------------------------------------------------------ 19 choosing, paying, refunds
   (k, ctx) => {
-    k.startPage({ accent: '#7A1F00', section: 'Payment & refunds' });
-    k.background(GRADIENTS.gold, 'blobs', '#FF3D6E');
+    k.startPage({ accent: '#FFD166', section: 'Payment & refunds' });
+    k.photoBackground(ctx.IMG.backgroundSwitzerlandGlacierExpress, 0.8);
     k.heading(MARGIN, 64, 620, {
       eyebrow: 'Choosing & paying',
       title: 'You pay when you like what you see',
-      accent: '#7A1F00',
+      accent: '#FFD166',
     });
 
     const rows = [
@@ -400,7 +400,7 @@ module.exports = [
   // ------------------------------------------------------------------ 20 using the website
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Using the website' });
-    k.background(GRADIENTS.grape, 'dots', '#FFFFFF');
+    k.photoBackground(ctx.IMG.backgroundDubaiNightSafari, 0.8);
     k.heading(MARGIN, 64, 620, {
       eyebrow: 'Using the website',
       title: 'Twelve pages, one journey',
@@ -537,7 +537,7 @@ module.exports = [
   // ------------------------------------------------------------------ 22 gallery & collection
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Gallery & collection' });
-    k.background(GRADIENTS.coral, 'blobs', '#FFFFFF');
+    k.photoBackground(ctx.IMG.backgroundJapanCherryBlossoms, 0.8);
     k.heading(MARGIN, 64, 470, {
       eyebrow: 'Proof, before you ask',
       title: 'Look at what we have already composed',
@@ -637,7 +637,7 @@ module.exports = [
   // ------------------------------------------------------------------ 23 community
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Community' });
-    k.background(GRADIENTS.jade, 'circles', '#FFFFFF');
+    k.photoBackground(ctx.IMG.backgroundBudapestEvening, 0.8);
     k.heading(MARGIN, 64, 560, {
       eyebrow: 'If you like company',
       title: 'A travel circle, when you want one',
@@ -826,7 +826,7 @@ module.exports = [
   // ------------------------------------------------------------------ 25 privacy, safety & policies
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'Privacy, safety & policies' });
-    k.background(GRADIENTS.night, 'rings', '#FFD166');
+    k.photoBackground(ctx.IMG.backgroundSantoriniHoneymoon, 0.8);
     k.heading(MARGIN, 64, 620, {
       eyebrow: 'Privacy, safety & policies',
       title: 'The rules we hold ourselves to',
