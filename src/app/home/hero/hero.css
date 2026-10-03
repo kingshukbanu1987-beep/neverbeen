@@ -35,6 +35,18 @@ h1 {
   gap: 0.8rem;
 }
 
+.btn-brochure,
+.btn-brochure:hover,
+.btn-brochure:focus-visible {
+  background: #F7C30E;
+  color: #fff;
+}
+
+.btn-brochure:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
 .btn-founder {
   background: #123b68;
   color: #fff;

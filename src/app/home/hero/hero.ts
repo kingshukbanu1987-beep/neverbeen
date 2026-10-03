@@ -12,7 +12,7 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
   gallery: { path: '/', fragment: 'gallery', cls: 'btn-ghost' },
   // The brochure page publishes the single wide landscape visitor brochure,
   // openable in a new tab or downloadable as a PDF.
-  documentation: { path: '/documentation', cls: 'btn-ghost' },
+  documentation: { path: '/documentation', cls: 'btn-brochure' },
 };
 
 @Component({
@@ -30,12 +30,19 @@ export class Hero {
   protected readonly eyebrow = computed(() => this.cms.text('home.hero', 'eyebrow'));
   protected readonly title = computed(() => this.cms.text('home.hero', 'title'));
   protected readonly lede = computed(() => this.cms.text('home.hero', 'lede'));
-  protected readonly buttons = computed(() =>
-    this.cms
-      .visibleItems('home.hero', 'buttons')
-      .filter((b) => BUTTONS[b.id])
-      .map((b) => ({ id: b.id, label: b.label, ...BUTTONS[b.id], fragment: BUTTONS[b.id].fragment ?? undefined })),
-  );
+  protected readonly buttons = computed(() => {
+    const buttons = this.cms.visibleItems('home.hero', 'buttons').filter((b) => BUTTONS[b.id]);
+    // Keep this pair together even for visitors with a previously published CMS
+    // order. Preserve labels, visibility and the relative order of other actions.
+    const brochureIndex = buttons.findIndex((b) => b.id === 'documentation');
+    if (brochureIndex >= 0 && buttons.some((b) => b.id === 'community')) {
+      const [brochure] = buttons.splice(brochureIndex, 1);
+      buttons.splice(buttons.findIndex((b) => b.id === 'community') + 1, 0, brochure);
+    }
+    return buttons.map((b) => ({
+      id: b.id, label: b.label, ...BUTTONS[b.id], fragment: BUTTONS[b.id].fragment ?? undefined,
+    }));
+  });
 
   protected showPreviousDestination(): void {
     this.index.update((value) => (value - 1 + heroDestinations.length) % heroDestinations.length);

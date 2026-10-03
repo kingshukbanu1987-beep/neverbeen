@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
 
 /** The single brochure the Documentation Centre publishes. */
 export interface Brochure {
@@ -32,17 +31,16 @@ export const VISITOR_BROCHURE: Brochure = {
   label: 'The NeverBeen brochure',
   shortLabel: 'Brochure',
   description:
-    'A vibrant 37-page tour of everything a visitor needs: the idea behind NeverBeen, how to place a Neverbeen Request, what to send, the packages, the whole destination atlas, and ten traveller quotations.',
+    'A vibrant 54-page tour of everything a visitor needs: the idea behind NeverBeen, how to place a Neverbeen Request, what to send, the packages, the whole destination atlas, traveller quotations, and the founder’s vision.',
   url: '/assets/documentation/NeverBeen_Brochure.pdf',
   fileName: 'NeverBeen_Brochure.pdf',
   orientation: 'Wide / landscape',
-  length: '37 pages',
+  length: '54 pages',
   audience: 'Tablet, laptop & desktop',
 };
 
 @Component({
   selector: 'app-documentation-page',
-  imports: [RouterLink],
   templateUrl: './documentation.html',
   styleUrl: './documentation.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
