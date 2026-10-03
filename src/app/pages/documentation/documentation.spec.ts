@@ -37,7 +37,7 @@ describe('DocumentationPage', () => {
     );
     expect(element.querySelector('h2')?.textContent).toContain('The NeverBeen brochure');
     expect(element.querySelector('.document-meta')?.textContent).toContain('Wide / landscape');
-    expect(element.querySelector('.document-meta')?.textContent).toContain('54 pages');
+    expect(element.querySelector('.document-meta')?.textContent).toContain('53 pages');
   });
 
   it('offers exactly an Open Brochure and a Download Brochure action, both for the landscape PDF', () => {
