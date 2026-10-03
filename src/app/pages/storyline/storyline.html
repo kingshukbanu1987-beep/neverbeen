@@ -40,9 +40,10 @@
           <p class="transparency-title">An important note about this page</p>
           <p>
             These characters, storylines and quotes are fictional examples—not real customers or
-            testimonials. Every album image is AI-generated and illustrative, styled as an everyday
-            mobile snapshot. They show what NeverBeen can help imagine, not journeys that actually
-            happened.
+            testimonials. Character scenes are AI-generated illustrations with casual mobile-photo
+            styling; some supporting frames are existing illustrative or destination views and may
+            show a place or moment rather than the same fictional people. None are real customer
+            photos or proof that a trip or event happened.
           </p>
         </div>
         <span class="transparency-tag">Illustrative stories</span>
@@ -84,13 +85,23 @@
   <section class="story-albums" id="story-albums" aria-labelledby="albums-title">
     <div class="container">
       <header class="albums-heading">
-        <p class="eyebrow">Two lives · two places · eight imagined photographs</p>
+        <p class="eyebrow">Eight stories · thirty-two illustrated frames</p>
         <h2 id="albums-title">A little closer to the parallel universe</h2>
         <p>
-          Each album holds four moments from a story that never got its boarding pass. Read the
-          reason, meet the dream, and remember: the photograph is not the trip.
+          Each album contains four frames. Some are journeys that wait; the Singapore family is
+          imagining a journey they already hope to take. Read the reason, meet the dream, and
+          remember: an imagined photograph is not the trip.
         </p>
       </header>
+
+      <nav class="album-index" aria-label="Jump to a story album">
+        @for (album of albums; track album.id) {
+          <a [attr.href]="'#' + album.id">
+            <span>{{ album.number }}</span>
+            {{ album.place }}
+          </a>
+        }
+      </nav>
 
       @for (album of albums; track album.id) {
         <article
@@ -113,6 +124,9 @@
           <div class="album-layout">
             <div class="album-story">
               <p class="chapter-label">The storyline</p>
+              @if (album.contentNote) {
+                <p class="content-note">{{ album.contentNote }}</p>
+              }
               @for (paragraph of album.story; track $index) {
                 <p class="story-paragraph">{{ paragraph }}</p>
               }
@@ -132,7 +146,7 @@
               @for (photo of album.photos; track photo.src; let photoIndex = $index) {
                 <figure class="album-photo" [class.feature-photo]="photoIndex === 0">
                   <img [src]="photo.src" [alt]="photo.alt" loading="lazy" decoding="async" />
-                  <span class="photo-label">AI illustration</span>
+                  <span class="photo-label">{{ photo.label ?? 'AI illustration' }}</span>
                   <figcaption>
                     <span class="photo-number">0{{ photoIndex + 1 }}</span>
                     <span>{{ photo.caption }}</span>

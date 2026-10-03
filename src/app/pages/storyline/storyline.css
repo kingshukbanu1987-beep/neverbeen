@@ -337,6 +337,49 @@ h1 em {
   line-height: 1.7;
 }
 
+.album-index {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+  margin: -2rem auto 3rem;
+}
+
+.album-index a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 38px;
+  padding: 0.42rem 0.75rem;
+  border: 1px solid rgb(36 53 44 / 15%);
+  border-radius: 999px;
+  background: #fffdf9;
+  color: var(--forest);
+  font-size: 0.72rem;
+  font-weight: 650;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.album-index a:hover {
+  transform: translateY(-1px);
+  border-color: var(--gold);
+  background: #f3ece2;
+}
+
+.album-index a:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 3px;
+}
+
+.album-index a span {
+  color: var(--bronze);
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
 .story-album {
   padding: clamp(2.25rem, 4.5vw, 3.75rem) 0 clamp(3rem, 6vw, 5rem);
   border-top: 1px solid rgb(29 25 20 / 13%);
@@ -432,6 +475,17 @@ h1 em {
   font-weight: 750;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+}
+
+.content-note {
+  margin-bottom: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 2px solid var(--bronze);
+  background: rgb(140 90 50 / 8%);
+  color: #625346;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
 .story-paragraph {

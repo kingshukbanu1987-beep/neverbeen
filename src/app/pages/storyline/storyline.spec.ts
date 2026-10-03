@@ -16,29 +16,51 @@ describe('StorylinePage', () => {
     return fixture;
   }
 
-  it('presents the parallel-universe title and a clear note that the stories are illustrative', () => {
+  it('presents the parallel-universe title and clearly labels fictional stories and illustrative images', () => {
     const element: HTMLElement = create().nativeElement;
 
     expect(element.querySelector('h1')?.textContent).toContain('The Storyline of');
     expect(element.querySelector('h1')?.textContent).toContain('Parallel Universe');
     expect(element.querySelector('.transparency')?.textContent).toContain('fictional examples');
     expect(element.querySelector('.transparency')?.textContent).toContain('AI-generated');
-    expect(element.querySelector('.transparency')?.textContent).toContain('not real customers');
+    expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows exactly two albums with four clearly labelled illustrative images each', () => {
+  it('shows eight albums with exactly four pictures in each album', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
-    expect(albums).toHaveLength(2);
-    expect(albums[0].querySelectorAll('.album-photo')).toHaveLength(4);
-    expect(albums[1].querySelectorAll('.album-photo')).toHaveLength(4);
-    expect(albums[0].textContent).toContain('Switzerland');
-    expect(albums[0].textContent).toContain('work pressure');
-    expect(albums[1].textContent).toContain('Paris, France');
-    expect(albums[1].textContent).toContain('middle-class family');
-    expect(element.querySelectorAll('.photo-label')).toHaveLength(8);
-    expect(element.querySelectorAll('.photo-label')[0].textContent).toContain('AI illustration');
+    expect(albums).toHaveLength(8);
+    expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 4)).toBe(true);
+    expect(element.querySelectorAll('.photo-label')).toHaveLength(32);
+    expect(element.querySelectorAll('.album-index a')).toHaveLength(8);
+  });
+
+  it('includes the reunion, family preview, wedding, birthday and Everest storylines', () => {
+    const element: HTMLElement = create().nativeElement;
+    const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
+
+    expect(albums[2].textContent).toContain('Amazon Rainforest');
+    expect(albums[2].textContent).toContain('3 men & 2 women');
+    expect(albums[2].textContent).toContain('university');
+
+    expect(albums[3].textContent).toContain('Singapore');
+    expect(albums[3].textContent).toContain('The Iyer family');
+    expect(albums[3].textContent?.toLowerCase()).toContain('before they pack');
+
+    expect(albums[4].textContent).toContain('Tuscany, Italy');
+    expect(albums[4].textContent).toContain('Meera died in an accident');
+    expect(albums[4].querySelector('.content-note')?.textContent).toContain('bereavement');
+
+    expect(albums[5].textContent).toContain('London, United Kingdom');
+    expect(albums[5].textContent).toContain('old photographs');
+
+    expect(albums[6].textContent).toContain('Vienna, Austria');
+    expect(albums[6].textContent).toContain('COVID restrictions');
+    expect(albums[6].textContent).toContain('twenty-five');
+
+    expect(albums[7].textContent).toContain('Everest Region, Nepal');
+    expect(albums[7].textContent).toContain('Her job was demanding');
   });
 
   it('explains that barriers to travel are broader than money and avoids promising a real trip', () => {
