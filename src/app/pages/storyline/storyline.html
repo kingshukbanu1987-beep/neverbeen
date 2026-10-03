@@ -1,0 +1,175 @@
+<div class="storyline-page">
+  <section class="storyline-hero" aria-labelledby="storyline-title">
+    <div class="container hero-inner">
+      <a class="back-link" routerLink="/">← Back to NeverBeen</a>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">For the places life keeps postponing</p>
+          <h1 id="storyline-title">The Storyline of <em>Parallel Universe</em></h1>
+          <p class="hero-lede">
+            In one version of a life, the trip happens. In another, work, care, health, timing or
+            circumstance asks us to stay. These stories are about the distance between the two—and
+            the small ways a dream can still be held.
+          </p>
+          <a class="hero-link" href="#story-albums">
+            Meet the stories <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+
+        <aside class="parallel-note" aria-label="The NeverBeen idea">
+          <p class="note-kicker">A note from NeverBeen</p>
+          <p class="note-title">A different photograph.<br />The same honest life.</p>
+          <p class="note-copy">
+            NeverBeen creates personal, imagined travel photographs for a place you have not reached
+            yet. It can honour the longing; it cannot replace the journey.
+          </p>
+          <span class="note-stamp" aria-hidden="true">NOT YET<br />STILL YOURS</span>
+        </aside>
+      </div>
+    </div>
+    <div class="hero-orbit orbit-one" aria-hidden="true"></div>
+    <div class="hero-orbit orbit-two" aria-hidden="true"></div>
+  </section>
+
+  <section class="transparency" aria-label="About these stories and images">
+    <div class="container">
+      <div class="transparency-card">
+        <span class="transparency-icon" aria-hidden="true">✳</span>
+        <div>
+          <p class="transparency-title">An important note about this page</p>
+          <p>
+            These characters, storylines and quotes are fictional examples—not real customers or
+            testimonials. All album images are AI-generated illustrations styled as everyday mobile
+            snapshots. None are real customer photos or proof that a trip, wedding or event
+            happened.
+          </p>
+        </div>
+        <span class="transparency-tag">Illustrative stories</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="barriers" aria-labelledby="barriers-title">
+    <div class="container barriers-grid">
+      <div class="barriers-heading">
+        <p class="eyebrow">There is never just one reason</p>
+        <h2 id="barriers-title">Money is only one part of the journey.</h2>
+      </div>
+      <div class="barriers-copy">
+        <p>
+          Money can be a barrier, but it is never the only one. There are hundreds of thousands of
+          personal versions of “not now”: work pressure, caring for family, health or mobility,
+          grief, safety concerns, visa rules, anxiety, responsibilities at home, or simply a season
+          when nothing lines up. Sometimes several things happen at once. We should not assume that
+          someone can travel if they just save more, try harder or ask differently.
+        </p>
+        <p>
+          NeverBeen cannot remove those barriers. It is a small creative way to meet the emotional
+          ache of “I wish I could be there”: a personal image of a place that matters, made with
+          honesty about what is imagined and what is real.
+        </p>
+        <ul class="barrier-tags" aria-label="Reasons travel may not be possible">
+          <li>Work &amp; time</li>
+          <li>Care &amp; family</li>
+          <li>Health &amp; mobility</li>
+          <li>Safety &amp; access</li>
+          <li>Grief &amp; change</li>
+          <li>Life, in its own timing</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="story-albums" id="story-albums" aria-labelledby="albums-title">
+    <div class="container">
+      <header class="albums-heading">
+        <p class="eyebrow">Nine stories · thirty-six imagined frames</p>
+        <h2 id="albums-title">A little closer to the parallel universe</h2>
+        <p>
+          Each album contains four frames. Some imagine journeys or celebrations that never
+          happened; others fill gaps beside memories that are real. Read the reason, meet the
+          people, and remember: an imagined photograph is never the record.
+        </p>
+      </header>
+
+      <nav class="album-index" aria-label="Jump to a story album">
+        @for (album of albums; track album.id) {
+          <a [attr.href]="'#' + album.id">
+            <span>{{ album.number }}</span>
+            {{ album.place }}
+          </a>
+        }
+      </nav>
+
+      @for (album of albums; track album.id) {
+        <article
+          class="story-album"
+          [attr.id]="album.id"
+          [attr.aria-labelledby]="album.id + '-title'"
+        >
+          <header class="album-header">
+            <div class="album-id" aria-hidden="true">{{ album.number }}</div>
+            <div class="album-title-group">
+              <p class="album-place">
+                {{ album.place }} <span aria-hidden="true">·</span> {{ album.people }}
+              </p>
+              <h3 [id]="album.id + '-title'">{{ album.title }}</h3>
+              <p class="album-deck">{{ album.deck }}</p>
+            </div>
+            <span class="album-count">04 <span>imagined frames</span></span>
+          </header>
+
+          <div class="album-layout">
+            <div class="album-story">
+              <p class="chapter-label">The storyline</p>
+              @for (paragraph of album.story; track $index) {
+                <p class="story-paragraph">{{ paragraph }}</p>
+              }
+
+              <aside class="why-card">
+                <p class="chapter-label">Why they chose NeverBeen</p>
+                <p>{{ album.reason }}</p>
+              </aside>
+
+              <blockquote class="story-quote">
+                <p>“{{ album.quote }}”</p>
+                <footer>{{ album.quotedBy }} <span>· fictional quote</span></footer>
+              </blockquote>
+            </div>
+
+            <div class="photo-grid" [attr.aria-label]="album.place + ' illustrative photo album'">
+              @for (photo of album.photos; track photo.src; let photoIndex = $index) {
+                <figure class="album-photo" [class.feature-photo]="photoIndex === 0">
+                  <img [src]="photo.src" [alt]="photo.alt" loading="lazy" decoding="async" />
+                  <span class="photo-label">AI illustration</span>
+                  <figcaption>
+                    <span class="photo-number">0{{ photoIndex + 1 }}</span>
+                    <span>{{ photo.caption }}</span>
+                  </figcaption>
+                </figure>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="storyline-close" aria-labelledby="close-title">
+    <div class="container close-inner">
+      <p class="eyebrow">For every “not yet”</p>
+      <h2 id="close-title">Somewhere can still matter to you.</h2>
+      <p>
+        A NeverBeen photograph is not a substitute for being there, and it cannot make a hard season
+        disappear. It can give a wish a face and a place to live while the real journey waits.
+      </p>
+      <div class="close-actions">
+        <a class="btn btn-gold" routerLink="/" fragment="contact">Tell us about your somewhere</a>
+        <a class="close-secondary" routerLink="/" fragment="how-it-works"
+          >See how NeverBeen works <span aria-hidden="true">→</span></a
+        >
+      </div>
+    </div>
+  </section>
+</div>

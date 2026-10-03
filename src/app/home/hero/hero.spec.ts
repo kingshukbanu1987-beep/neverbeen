@@ -34,6 +34,7 @@ describe('Hero', () => {
     expect(labels).toEqual([
       'Connect to NeverBeen Community',
       'Brochure',
+      'The Storyline of Parallel Universe',
       'Know the Founder',
       'Create My Vacation',
       'Dream Destinations',
@@ -107,6 +108,20 @@ describe('Hero', () => {
     expect(getComputedStyle(brochure).color).toBe('rgb(255, 255, 255)');
   });
 
+  it('places the storyline link after Brochure and gives it the same gold button styling', () => {
+    const element: HTMLElement = create().nativeElement;
+    const buttons = buttonsOf(element);
+    const labels = labelsOf(element);
+    const brochureIndex = labels.indexOf('Brochure');
+    const storyline = buttons[brochureIndex + 1];
+
+    expect(storyline.textContent?.trim()).toBe('The Storyline of Parallel Universe');
+    expect(storyline.getAttribute('href')).toBe('/storyline-of-parallel-universe');
+    expect(storyline.classList.contains('btn-brochure')).toBe(true);
+    expect(getComputedStyle(storyline).backgroundColor).toBe('rgb(247, 195, 14)');
+    expect(getComputedStyle(storyline).color).toBe('rgb(255, 255, 255)');
+  });
+
   it('uses a native same-tab link for Brochure, without a RouterLink intercept', () => {
     const fixture = create();
     const links = fixture.debugElement.queryAll(By.directive(RouterLink));
@@ -125,7 +140,9 @@ describe('Hero', () => {
       'home.hero': { buttons: [...buttons.filter((b) => b.id !== 'documentation'), { ...brochure, label: 'Our brochure' }] },
     } }));
     const labels = labelsOf(create().nativeElement);
-    expect(labels[labels.indexOf('Connect to NeverBeen Community') + 1]).toBe('Our brochure');
+    const communityIndex = labels.indexOf('Connect to NeverBeen Community');
+    expect(labels[communityIndex + 1]).toBe('Our brochure');
+    expect(labels[communityIndex + 2]).toBe('The Storyline of Parallel Universe');
     expect(labels.at(-1)).toBe('Explore Gallery');
   });
 
