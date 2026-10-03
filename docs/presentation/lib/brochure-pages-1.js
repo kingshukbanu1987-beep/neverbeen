@@ -1013,7 +1013,7 @@ module.exports = [
   // ------------------------------------------------------------------ 13 destination atlas
   (k, ctx) => {
     k.startPage({ accent: '#FFD166', section: 'The destination atlas' });
-    k.background(GRADIENTS.grape, 'blobs', '#FFFFFF');
+    k.photoBackground(ctx.IMG.backgroundSingaporeMerlion, 0.8);
     k.heading(MARGIN, 68, 560, {
       eyebrow: 'The destination atlas',
       title: 'Unlimited destination guides \u2014 and the places you name yourself',

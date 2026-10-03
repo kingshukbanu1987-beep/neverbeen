@@ -102,6 +102,18 @@ const AUD = {
 };
 
 const IMG = {
+  closingEmiratesA380: path.join(__dirname, 'images', 'closing-emirates-a380.jpg'),
+  closingAntarcticaShip: path.join(__dirname, 'images', 'closing-antarctica-red-ship.jpg'),
+  backgroundSingaporeMerlion: path.join(__dirname, 'images', 'background-singapore-merlion.jpg'),
+  backgroundNorwayAurora: path.join(__dirname, 'images', 'background-norway-aurora.jpg'),
+  backgroundAmsterdamCanals: path.join(__dirname, 'images', 'background-amsterdam-canals.jpg'),
+  backgroundCanadaCouple: path.join(__dirname, 'images', 'background-canada-couple.jpg'),
+  backgroundSwitzerlandGlacierExpress: path.join(__dirname, 'images', 'background-switzerland-glacier-express.jpg'),
+  backgroundDubaiNightSafari: path.join(__dirname, 'images', 'background-dubai-night-safari.jpg'),
+  backgroundJapanCherryBlossoms: path.join(__dirname, 'images', 'background-japan-cherry-blossoms.jpg'),
+  backgroundBudapestEvening: path.join(__dirname, 'images', 'background-budapest-evening.jpg'),
+  backgroundSantoriniHoneymoon: path.join(__dirname, 'images', 'background-santorini-honeymoon.jpg'),
+
   cover: path.join(__dirname, 'images', 'lofoten-couple-selfie.jpg'),
   rome: path.join(__dirname, 'images', 'rome-couple-selfie.jpg'),
   florence: path.join(__dirname, 'images', 'florence-couple-selfie.jpg'),
@@ -189,7 +201,11 @@ const pagesWithOriginalTestimonials = interleave(
   [...require('./lib/brochure-pages-1'), ...require('./lib/brochure-pages-2')],
   testimonialPages,
 );
-const pages = interleaveAdditional(pagesWithOriginalTestimonials, additionalTestimonialPages);
+// Append the dream statements only after interleaving, preserving slides 1–51.
+const pages = [
+  ...interleaveAdditional(pagesWithOriginalTestimonials, additionalTestimonialPages),
+  ...require('./lib/brochure-closing-pages'),
+];
 
 kit.totalPages = pages.length;
 pages.forEach((draw) => draw(kit, context));

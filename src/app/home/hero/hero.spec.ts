@@ -1,5 +1,7 @@
+import { By } from '@angular/platform-browser';
+import { SiteConfigService } from '../../services/site-config.service';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { RouterLink, provideRouter } from '@angular/router';
 import { Hero } from './hero';
 
 describe('Hero', () => {
@@ -31,12 +33,12 @@ describe('Hero', () => {
 
     expect(labels).toEqual([
       'Connect to NeverBeen Community',
+      'Brochure',
       'Know the Founder',
       'Create My Vacation',
       'Dream Destinations',
       'Neverbeen Collection',
       'Explore Gallery',
-      'Brochure',
     ]);
 
     const community = buttons[0];
@@ -93,24 +95,44 @@ describe('Hero', () => {
     expect(labels[dreamIndex + 2]).toBe('Explore Gallery');
   });
 
-  it('adds the Brochure link immediately after Explore Gallery with the same ghost style', () => {
+  it('places Brochure after Community with a gold background and white text', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
-    const labels = labelsOf(element);
-    const galleryIndex = labels.indexOf('Explore Gallery');
+    const brochure = buttons[labelsOf(element).indexOf('Connect to NeverBeen Community') + 1];
 
-    expect(galleryIndex).toBeGreaterThan(-1);
-    expect(labels[galleryIndex + 1]).toBe('Brochure');
-
-    const gallery = buttons[galleryIndex];
-    const brochure = buttons[galleryIndex + 1];
+    expect(brochure.textContent?.trim()).toBe('Brochure');
     expect(brochure.getAttribute('href')).toBe('/documentation');
-    expect(brochure.classList.contains('btn-ghost')).toBe(true);
+    expect(brochure.classList.contains('btn-brochure')).toBe(true);
+    expect(getComputedStyle(brochure).backgroundColor).toBe('rgb(247, 195, 14)');
+    expect(getComputedStyle(brochure).color).toBe('rgb(255, 255, 255)');
+  });
 
-    const galleryStyle = getComputedStyle(gallery);
-    const brochureStyle = getComputedStyle(brochure);
-    expect(brochureStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
-    expect(brochureStyle.color).toBe(galleryStyle.color);
-    expect(brochureStyle.borderColor).toBe(galleryStyle.borderColor);
+  it('uses a native same-tab link for Brochure, without a RouterLink intercept', () => {
+    const fixture = create();
+    const links = fixture.debugElement.queryAll(By.directive(RouterLink));
+    expect(links.some((el) => el.nativeElement.getAttribute('href') === '/documentation')).toBe(false);
+    const brochure = fixture.nativeElement.querySelector('a[href="/documentation"]');
+    expect(brochure).toBeTruthy();
+    expect(brochure.getAttribute('target')).toBeNull();
+    expect(links.some((el) => el.nativeElement.getAttribute('href') === '/founder')).toBe(true);
+  });
+
+  it('also positions Brochure after Community when the CMS has a legacy order', () => {
+    const cms = TestBed.inject(SiteConfigService);
+    const buttons = cms.items('home.hero', 'buttons');
+    const brochure = buttons.find((b) => b.id === 'documentation')!;
+    cms.state.update((s) => ({ ...s, published: {
+      'home.hero': { buttons: [...buttons.filter((b) => b.id !== 'documentation'), { ...brochure, label: 'Our brochure' }] },
+    } }));
+    const labels = labelsOf(create().nativeElement);
+    expect(labels[labels.indexOf('Connect to NeverBeen Community') + 1]).toBe('Our brochure');
+    expect(labels.at(-1)).toBe('Explore Gallery');
+  });
+
+  it('keeps CMS visibility settings for the brochure', () => {
+    const cms = TestBed.inject(SiteConfigService);
+    const buttons = cms.items('home.hero', 'buttons').map((b) => ({ ...b, visible: b.id !== 'documentation' }));
+    cms.state.update((s) => ({ ...s, published: { 'home.hero': { buttons } } }));
+    expect(create().nativeElement.querySelector('a[href="/documentation"]')).toBeNull();
   });
 });

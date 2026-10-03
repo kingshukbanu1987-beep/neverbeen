@@ -102,12 +102,12 @@ export const NAV_LINKS: [string, string][] = [
 
 export const HERO_BUTTONS: [string, string][] = [
   ['community', 'Connect to NeverBeen Community'],
+  ['documentation', 'Brochure'],
   ['founder', 'Know the Founder'],
   ['create', 'Create My Vacation'],
   ['destinations', 'Dream Destinations'],
   ['collection', 'Neverbeen Collection'],
   ['gallery', 'Explore Gallery'],
-  ['documentation', 'Brochure'],
 ];
 
 export const PROFILE_SECTIONS: [string, string][] = [

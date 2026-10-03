@@ -1,5 +1,6 @@
+import { By } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { RouterLink, provideRouter } from '@angular/router';
 import { VISITOR_BROCHURE, DocumentationPage } from './documentation';
 
 const BROCHURE_URL = '/assets/documentation/NeverBeen_Brochure.pdf';
@@ -36,7 +37,7 @@ describe('DocumentationPage', () => {
     );
     expect(element.querySelector('h2')?.textContent).toContain('The NeverBeen brochure');
     expect(element.querySelector('.document-meta')?.textContent).toContain('Wide / landscape');
-    expect(element.querySelector('.document-meta')?.textContent).toContain('37 pages');
+    expect(element.querySelector('.document-meta')?.textContent).toContain('53 pages');
   });
 
   it('offers exactly an Open Brochure and a Download Brochure action, both for the landscape PDF', () => {
@@ -75,7 +76,9 @@ describe('DocumentationPage', () => {
   });
 
   it('still lets the visitor leave for the rest of the site', () => {
-    const element: HTMLElement = create().nativeElement;
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    expect(fixture.debugElement.queryAll(By.directive(RouterLink))).toHaveLength(0);
 
     expect(element.querySelector('.back-link')?.getAttribute('href')).toBe('/');
   });

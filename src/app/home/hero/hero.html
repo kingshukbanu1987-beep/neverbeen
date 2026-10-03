@@ -8,11 +8,17 @@
       @if (lede()) {
         <p class="lede">{{ lede() }}</p>
       }
-      <!-- Buttons, labels and order are managed in Admin Console → Website Management. -->
+      <!-- Labels and visibility are managed in Website Management; Brochure follows Community. -->
       @if (buttons().length) {
         <div class="actions">
           @for (b of buttons(); track b.id) {
-            <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{ b.label }}</a>
+            @if (b.id === 'documentation') {
+              <!-- A document navigation stays reliable after history restores or
+                   a deployment replaces the lazy route's JavaScript chunk. -->
+              <a [href]="b.path" [class]="'btn ' + b.cls">{{ b.label }}</a>
+            } @else {
+              <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{ b.label }}</a>
+            }
           }
         </div>
       }
