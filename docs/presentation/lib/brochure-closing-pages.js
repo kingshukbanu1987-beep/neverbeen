@@ -1,4 +1,4 @@
-/* Two full-bleed dream statements appended after the original 51 slides. */
+/* Closing dream statements and founder vision, after the original 51 slides. */
 const { PAGE, MARGIN, WHITE } = require('./brochure-kit');
 
 function dreamStatement(imageKey, headline, section) {
@@ -44,6 +44,46 @@ module.exports = [
     'Not everyone can fly. But everyone deserves to see the world through their dreams.',
     'Dreams · Flight',
   ),
+  // The founder's vision sits immediately before the Antarctica finale.
+  (k, ctx) => {
+    k.startPage({ chrome: false, section: 'The Illusion of Multiverse' });
+    k.photoBackground(ctx.IMG.founderMilkyWay, 0.9);
+
+    k.display('The Illusion of Multiverse', MARGIN, 68, {
+      size: 38,
+      color: WHITE,
+      width: PAGE.W - MARGIN * 2,
+      lineGap: 1,
+    });
+    k.line(MARGIN, 142, MARGIN + 88, 142, '#BCA5FF', 3);
+
+    // Preserve the original website portrait without inventing or retouching
+    // the founder's appearance. No biography or personal details are included.
+    k.photo(ctx.IMG.founderPortrait, 548, 180, 238, 348, {
+      radius: 16,
+      frame: 4,
+      imageFit: 'contain',
+    });
+    k.display('“', MARGIN - 4, 178, {
+      size: 74,
+      color: '#BCA5FF',
+      width: 80,
+    });
+    k.fit(
+      'I have not created this platform to make fake contents but to create a Parallel Universe where people can achieve their dreams that can never happen.',
+      MARGIN,
+      258,
+      450,
+      230,
+      {
+        font: 'DisplayItalic',
+        size: 25,
+        minSize: 23,
+        color: WHITE,
+        lineGap: 6,
+      },
+    );
+  },
   dreamStatement(
     'closingAntarcticaShip',
     'Not everyone can Sail. But everyone deserves to see the world through their dreams.',

@@ -102,6 +102,8 @@ const AUD = {
 };
 
 const IMG = {
+  founderMilkyWay: path.join(__dirname, 'images', 'founder-milky-way.jpg'),
+  founderPortrait: path.join(ROOT, 'public', 'author.jpeg'),
   closingEmiratesA380: path.join(__dirname, 'images', 'closing-emirates-a380.jpg'),
   closingAntarcticaShip: path.join(__dirname, 'images', 'closing-antarctica-red-ship.jpg'),
   backgroundSingaporeMerlion: path.join(__dirname, 'images', 'background-singapore-merlion.jpg'),
