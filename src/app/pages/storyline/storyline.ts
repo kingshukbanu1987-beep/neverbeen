@@ -150,5 +150,85 @@ export class StorylinePage {
         },
       ],
     },
+    {
+      id: 'italy-wedding-dream',
+      number: '05',
+      place: 'Tuscany, Italy',
+      people: 'Meera & Arjun · an Indian couple',
+      title: 'The Tuscany wedding that never took place',
+      deck: 'They imagined a destination wedding together. An accident ended that shared future before the ceremony could happen.',
+      story: [
+        'Meera and Arjun, a fictional Indian couple, used to picture a small destination wedding in Tuscany: an old stone courtyard, flowers from the garden, and both families sharing a long meal. They talked about the place and the feeling of the day, but the wedding was never held.',
+        'Before they could make those plans real, Meera died in an accident. The wedding never happened. Arjun holds the dream alongside the grief; he does not want an imagined album to turn into a claim that the ceremony took place or to speak for what Meera might have wanted.',
+        'For this fictional example, Arjun asks NeverBeen to create four clearly labelled, alternate-universe illustrations of the day they once imagined. The AI-made scenes are a creative keepsake—not photographs, a reconstruction of an actual wedding, or evidence of a real event. The memories they truly shared remain distinct and untouched.',
+      ],
+      reason:
+        'He chose NeverBeen to hold a shared dream gently in a clearly fictional keepsake, without pretending the wedding happened or using images to speak for Meera.',
+      quote:
+        'I know the wedding never took place. I wanted a way to remember the future we once pictured without confusing it with the life we actually shared.',
+      quotedBy: 'An imagined voice for Arjun',
+      photos: [
+        {
+          src: '/storyline/13-meera-arjun-tuscany-courtyard.jpg',
+          alt: 'AI-generated imagined illustration of fictional Indian couple Meera and Arjun at the Tuscan wedding they dreamed of but never held.',
+          caption: 'The courtyard they once pictured',
+        },
+        {
+          src: '/storyline/14-meera-arjun-tuscany-ceremony.jpg',
+          alt: 'AI-generated imagined wedding scene of fictional Indian couple Meera and Arjun beneath a flowered canopy in a Tuscan villa courtyard.',
+          caption: 'A ceremony in an imagined version',
+        },
+        {
+          src: '/storyline/15-meera-arjun-tuscany-dinner.jpg',
+          alt: 'AI-generated illustration of fictional Meera and Arjun at a long family table during an imagined Tuscan wedding reception.',
+          caption: 'A family table their plans never reached',
+        },
+        {
+          src: '/storyline/16-meera-arjun-tuscany-evening.jpg',
+          alt: 'AI-generated illustration of fictional Meera and Arjun walking through a Tuscan villa garden after their imagined wedding ceremony.',
+          caption: 'The evening walk in the parallel album',
+        },
+      ],
+    },
+    {
+      id: 'london-wedding-revisited',
+      number: '06',
+      place: 'London, United Kingdom',
+      people: 'Helen & James · a British couple',
+      title: 'The wedding album with a few pages left blank',
+      deck: 'Old photographs preserve their London registry-office wedding; they want companion images for the moments the camera missed.',
+      story: [
+        'Helen and James, a fictional British couple, married at a small London registry office decades ago. Their old wedding pictures are precious, but there are only a few: a portrait on the steps, a family picture softened by blur, and then the film ran out. The gaps are part of the album too.',
+        'Now they bring those original prints and their own memories to NeverBeen as references for a companion set: the walk after the ceremony, a toast with friends, the first dance. They want to revisit the day together, not replace the photographs that truly document it.',
+        'The new frames are AI-generated interpretations, not restorations or recovered images. They may evoke what the day felt like, but they cannot verify who stood where or recreate the exact moments. The original pictures remain the real record; these clearly labelled illustrations sit beside them as fiction.',
+      ],
+      reason:
+        'They chose NeverBeen to imagine the in-between moments and revisit their shared memories together, while keeping the original wedding photos untouched and the new images clearly identified as AI-made companions.',
+      quote:
+        'The old photographs tell us what was there. These imagined ones give us a way to talk about what happened between them.',
+      quotedBy: 'An imagined voice for Helen & James',
+      photos: [
+        {
+          src: '/storyline/17-helen-james-london-registry.jpg',
+          alt: 'AI-generated companion illustration of fictional British couple Helen and James outside a London registry office, inspired by their old wedding photographs.',
+          caption: 'Confetti outside the registry office',
+        },
+        {
+          src: '/storyline/18-helen-james-london-register.jpg',
+          alt: 'AI-generated illustration of fictional Helen and James signing a marriage register in an imagined London wedding moment, not an original photograph.',
+          caption: 'A moment missing from the surviving prints',
+        },
+        {
+          src: '/storyline/19-helen-james-london-reception.jpg',
+          alt: 'AI-generated illustration of fictional Helen and James sharing an imagined first dance at a small London wedding reception.',
+          caption: 'The first dance their old album could not show',
+        },
+        {
+          src: '/storyline/20-helen-james-london-thames.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James walking beside the Thames in their wedding clothes, an imagined moment rather than a real photograph.',
+          caption: 'A riverside walk imagined from their memories',
+        },
+      ],
+    },
   ];
 }

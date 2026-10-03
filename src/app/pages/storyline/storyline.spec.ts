@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the first three albums with exactly four pictures in each', () => {
+  it('shows the three original albums plus the requested Italy and London albums, with four pictures each', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -34,13 +34,23 @@ describe('StorylinePage', () => {
       'switzerland-honeymoon',
       'paris-solo-dream',
       'amazon-university-reunion',
+      'italy-wedding-dream',
+      'london-wedding-revisited',
+    ]);
+    expect(albums.map((album) => album.querySelector('.album-id')?.textContent?.trim())).toEqual([
+      '01',
+      '02',
+      '03',
+      '05',
+      '06',
     ]);
     expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 4)).toBe(true);
-    expect(element.querySelectorAll('.photo-label')).toHaveLength(12);
-    expect(element.querySelectorAll('.album-index a')).toHaveLength(3);
+    expect(element.querySelectorAll('.photo-label')).toHaveLength(20);
+    expect(element.querySelectorAll('.album-index a')).toHaveLength(5);
+    expect(element.querySelector('.albums-heading')?.textContent).toContain('Five stories');
   });
 
-  it('keeps the Dutch, Paris and university-friends storylines and removes later albums', () => {
+  it('keeps the original storylines, adds the Italy and London wedding stories, and excludes unrequested albums', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
     const copy = element.textContent ?? '';
@@ -53,11 +63,20 @@ describe('StorylinePage', () => {
     expect(albums[2].textContent).toContain('3 men & 2 women');
     expect(albums[2].textContent).toContain('university');
 
+    expect(albums[3].textContent).toContain('Tuscany, Italy');
+    expect(albums[3].textContent).toContain('Meera died in an accident');
+    expect(albums[3].textContent).toContain('wedding never happened');
+    expect(albums[3].textContent).toContain('fictional keepsake');
+
+    expect(albums[4].textContent).toContain('London, United Kingdom');
+    expect(albums[4].textContent).toContain('old wedding pictures');
+    expect(albums[4].textContent).toContain('photographs that truly document it');
+    expect(albums[4].textContent).toContain('not restorations or recovered images');
+
     expect(copy).not.toContain('The Iyer family');
-    expect(copy).not.toContain('Meera & Arjun');
-    expect(copy).not.toContain('Helen & James');
-    expect(copy).not.toContain('Clara');
+    expect(copy).not.toContain('Vienna, Austria');
     expect(copy).not.toContain('Elisabeth');
+    expect(copy).not.toContain('Everest Region, Nepal');
   });
 
   it('explains that barriers to travel are broader than money and avoids promising a real trip', () => {
