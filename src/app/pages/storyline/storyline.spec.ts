@@ -38,6 +38,8 @@ describe('StorylinePage', () => {
       'london-wedding-revisited',
       'vienna-birthday-missed',
       'everest-solo-dream',
+      'banaras-european-couple-dream',
+      'norway-anniversary-dream',
     ]);
     expect(albums.map((album) => album.querySelector('.album-id')?.textContent?.trim())).toEqual([
       '01',
@@ -47,11 +49,13 @@ describe('StorylinePage', () => {
       '06',
       '07',
       '08',
+      '10',
+      '11',
     ]);
     expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 4)).toBe(true);
-    expect(element.querySelectorAll('.photo-label')).toHaveLength(28);
-    expect(element.querySelectorAll('.album-index a')).toHaveLength(7);
-    expect(element.querySelector('.albums-heading')?.textContent).toContain('Seven stories');
+    expect(element.querySelectorAll('.photo-label')).toHaveLength(36);
+    expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
+    expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
   });
 
   it('keeps the original storylines, adds the requested albums, and excludes the unrequested Singapore story', () => {
@@ -90,6 +94,18 @@ describe('StorylinePage', () => {
     expect(albums[6].querySelectorAll('img')[1].getAttribute('src')).toBe(
       '/storyline/26-elisabeth-everest-village-stop.jpg',
     );
+
+    expect(albums[7].textContent).toContain('Benaras (Varanasi), India');
+    expect(albums[7].textContent).toContain('visa applications');
+    expect(albums[7].textContent).toContain('refused several times');
+    expect(albums[7].textContent).toContain('They never made the visit');
+    expect(albums[7].textContent).toContain('not evidence of a trip or visa approval');
+
+    expect(albums[8].textContent).toContain('50th wedding anniversary');
+    expect(albums[8].textContent).toContain('admitted to hospital');
+    expect(albums[8].textContent).toContain('trip on hold');
+    expect(albums[8].textContent).toContain('not a completed visit');
+    expect(albums[8].textContent).toContain('Asha has recovered');
 
     expect(copy).not.toContain('The Iyer family');
     expect(copy).not.toContain('Singapore');

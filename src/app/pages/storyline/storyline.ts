@@ -310,5 +310,85 @@ export class StorylinePage {
         },
       ],
     },
+    {
+      id: 'banaras-european-couple-dream',
+      number: '10',
+      place: 'Benaras (Varanasi), India',
+      people: 'Ingrid & Peter · an older European couple',
+      title: 'The Benaras visit that stayed on their map',
+      deck: 'They longed to explore Varanasi. Health complications and repeated visa refusals kept the journey from happening.',
+      story: [
+        'Ingrid and Peter, a fictional older European couple, had long wanted to explore Benaras (Varanasi): the riverfront at dawn, shaded lanes and time to pause for tea. They pictured taking the city slowly, with accessible walks and room to rest.',
+        'Health issues changed what the trip would require. As those concerns became part of their travel planning and visa applications, their visas were refused several times. Each refusal meant another wait, more uncertainty and another careful conversation about whether a long journey would be manageable. They never made the visit.',
+        'For this fictional example, they ask NeverBeen to imagine four snapshots of the city they hoped to see. The AI illustrations are not evidence of a trip or visa approval, and they cannot resolve health, access or paperwork barriers. They are a clearly labelled keepsake of a place that mattered even though they did not reach it.',
+      ],
+      reason:
+        'They chose NeverBeen to picture the city while health issues and repeated visa refusals kept travel on hold—not to suggest an application was approved or that they visited.',
+      quote:
+        'We kept Benaras on the map. I wanted one gentle picture of the place we hoped to explore together.',
+      quotedBy: 'An imagined voice for Ingrid & Peter',
+      photos: [
+        {
+          src: '/storyline/29-ingrid-peter-varanasi-riverfront.jpg',
+          alt: 'AI-generated imagined illustration of fictional older European couple Ingrid and Peter at a safe upper riverside viewpoint in Benaras (Varanasi), India; they never made this visit.',
+          caption: 'The riverfront at the quiet hour they imagined',
+        },
+        {
+          src: '/storyline/30-ingrid-peter-varanasi-boat.jpg',
+          alt: 'AI-generated imagined snapshot of fictional Ingrid and Peter seated safely in a passenger boat on the Ganges, viewing the Benaras riverfront.',
+          caption: 'A calm river view from their parallel visit',
+        },
+        {
+          src: '/storyline/31-ingrid-peter-varanasi-lane.jpg',
+          alt: 'AI-generated imagined snapshot of fictional older European couple Ingrid and Peter pausing in a level, shaded lane in Varanasi.',
+          caption: 'A slow walk through a shaded old-city lane',
+        },
+        {
+          src: '/storyline/32-ingrid-peter-varanasi-chai.jpg',
+          alt: 'AI-generated imagined snapshot of fictional Ingrid and Peter sharing chai over a map on a quiet riverside terrace in Banaras.',
+          caption: 'Time for chai and a map',
+        },
+      ],
+    },
+    {
+      id: 'norway-anniversary-dream',
+      number: '11',
+      place: 'Norway',
+      people: 'Asha & Ravi · an Indian couple planning their 50th anniversary',
+      title: 'The Norway anniversary they planned for years',
+      deck: 'Asha and Ravi hoped to celebrate their 50th wedding anniversary in Norway. Her recent hospitalization has put the trip on hold.',
+      story: [
+        'Asha and Ravi, a fictional older Indian couple, had talked about a Norway trip for years. They hoped to mark their 50th wedding anniversary with fjord views, a scenic train ride and slow days together—small plans they had saved and revisited over time. It was still a plan, not a completed visit.',
+        'Recently, Asha developed health issues and was admitted to hospital. Their attention is with her care and what she wants now; travel is on hold, with no assumption about what comes next. No imagined picture can stand in for medical care or promise a recovery.',
+        'In this fictional example, they ask NeverBeen to imagine four gentle snapshots from their Norway itinerary. The AI-generated scenes do not claim they reached Norway, celebrated there, or that Asha has recovered. They hold a shared plan in view while the real priority remains her health and choices.',
+      ],
+      reason:
+        'They chose NeverBeen to keep a long-planned anniversary dream somewhere they could picture together, while giving Asha’s care priority and leaving the future undecided.',
+      quote:
+        'We planned Norway long before this year. Right now her care comes first; I only wanted to keep the dream close.',
+      quotedBy: 'An imagined voice for Ravi',
+      photos: [
+        {
+          src: '/storyline/33-asha-ravi-norway-fjord.jpg',
+          alt: 'AI-generated imagined portrait of fictional older Indian couple Asha and Ravi at a Norwegian fjord viewpoint, for a trip they had not made.',
+          caption: 'A fjord view for their anniversary plan',
+        },
+        {
+          src: '/storyline/34-asha-ravi-norway-train.jpg',
+          alt: 'AI-generated imagined snapshot of fictional Asha and Ravi seated together on a Norwegian scenic train, not proof they travelled.',
+          caption: 'A train day from the itinerary they saved',
+        },
+        {
+          src: '/storyline/35-asha-ravi-norway-harbor.jpg',
+          alt: 'AI-generated imagined snapshot of fictional older Indian couple Asha and Ravi resting together beside a quiet Norwegian harbor.',
+          caption: 'A quiet pause by a Norwegian harbor',
+        },
+        {
+          src: '/storyline/36-asha-ravi-norway-anniversary-dinner.jpg',
+          alt: 'AI-generated imagined anniversary dinner for fictional Asha and Ravi in Norway; not a real celebration or proof of travel or recovery.',
+          caption: 'An anniversary dinner in their imagined Norway',
+        },
+      ],
+    },
   ];
 }
