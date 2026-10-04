@@ -117,9 +117,9 @@ describe('StorylinePage', () => {
     expect(albums).toHaveLength(9);
     for (const album of albums) {
       expect(album.querySelector<HTMLElement>('.album-layout')?.hidden).toBe(true);
-      expect(album.querySelector('.cover-photo-button img')?.getAttribute('src')).toContain(
-        '/storyline/',
-      );
+      const coverImage = album.querySelector<HTMLImageElement>('.cover-photo-button img')!;
+      expect(coverImage.getAttribute('src')).toContain('/storyline/');
+      expect(getComputedStyle(coverImage).opacity).toBe('1');
       expect(album.querySelector('.cover-photo-hint')?.textContent).toContain('AI ILLUSTRATION');
       expect(album.querySelector('.story-cover h3')?.textContent?.trim()).toBeTruthy();
       expect(album.querySelector('.cover-location-name')?.textContent?.trim()).toBeTruthy();
