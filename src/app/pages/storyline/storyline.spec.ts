@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 135 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 145 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      3, 3, 3, 3, 72, 33, 3, 3, 3,
+      3, 3, 3, 3, 72, 43, 3, 3, 3,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -67,14 +67,14 @@ describe('StorylinePage', () => {
     expect(
       element.querySelectorAll('.cover-photo-button img').length +
         element.querySelectorAll('.album-photo img').length,
-    ).toBe(135);
+    ).toBe(145);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
     expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
       '/storyline-of-parallel-universe#switzerland-honeymoon',
     );
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'one hundred and thirty-five imagined frames',
+      'one hundred and forty-five imagined frames',
     );
     expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
   });
@@ -226,7 +226,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(33);
+    expect(galleryImages).toHaveLength(43);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -238,7 +238,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/wide-angle/i);
     expect(addedDescriptions).toMatch(/selfie/i);
     expect(addedDescriptions).toMatch(/friends/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('34 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('44 FRAMES');
   });
 
   it('adds ten tilted macro-style solo and friends photos to Storyline 7', () => {
@@ -264,7 +264,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(33);
+    expect(galleryImages).toHaveLength(43);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -275,7 +275,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/macro/i);
     expect(addedDescriptions).toMatch(/portrait/i);
     expect(addedDescriptions).toMatch(/friends/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('34 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('44 FRAMES');
   });
 
   it('adds ten tilted macro-style solos and girlfriends moments to Storyline 7', () => {
@@ -301,7 +301,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(33);
+    expect(galleryImages).toHaveLength(43);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -312,7 +312,45 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/macro/i);
     expect(addedDescriptions).toMatch(/portrait/i);
     expect(addedDescriptions).toMatch(/female friends/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('34 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('44 FRAMES');
+  });
+
+  it('adds ten tilted candid talking portraits of Clara to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/147-clara-vienna-solo-mobile-candid-talking.jpg',
+      '/storyline/148-clara-vienna-solo-mobile-candid-gesture.jpg',
+      '/storyline/149-clara-vienna-solo-mobile-candid-profile-talk.jpg',
+      '/storyline/150-clara-vienna-solo-mobile-candid-across-table.jpg',
+      '/storyline/151-clara-vienna-solo-mobile-candid-low-story.jpg',
+      '/storyline/152-clara-vienna-solo-mobile-candid-chin-hand.jpg',
+      '/storyline/153-clara-vienna-solo-mobile-candid-lane-talk.jpg',
+      '/storyline/154-clara-vienna-solo-mobile-candid-night-laugh.jpg',
+      '/storyline/155-clara-vienna-solo-mobile-candid-lean-cake.jpg',
+      '/storyline/156-clara-vienna-solo-mobile-candid-window-talk.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(43);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /candid/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/talk/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('44 FRAMES');
   });
 
   it('keeps Helen’s existing solo portrait batch in Storyline 6', () => {

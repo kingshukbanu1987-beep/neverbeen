@@ -614,7 +614,7 @@ export class StorylinePage {
       story: [
         'Clara, a fictional Austrian woman, turned twenty-five during COVID restrictions. She had pictured a small dinner at a Vienna restaurant, a cake at the centre of the table and her friends around it. The reservation never happened; her birthday came through messages and a screen instead.',
         'She understood why people needed to keep apart, but missing that milestone with her friends still hurt. Time moved on and they stayed close, yet there was no way to revisit the exact evening she had hoped for. The celebration in this album is a what-if, not a hidden record of a party that took place.',
-        'In this fictional example, Clara asks NeverBeen to imagine thirty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
+        'In this fictional example, Clara asks NeverBeen to imagine forty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
       ],
       reason:
         'She chose NeverBeen to mark a milestone that was missed and picture the friends she wanted around her table—not to erase COVID restrictions or pretend the celebration occurred.',
@@ -791,6 +791,56 @@ export class StorylinePage {
           src: '/storyline/146-clara-vienna-girlfriends-mobile-night-huddle.jpg',
           alt: 'AI-generated tilted mobile night portrait of fictional Clara huddled with her two female friends under a flaring lamp after the imagined dinner.',
           caption: 'Three under the lamp',
+        },
+        {
+          src: '/storyline/147-clara-vienna-solo-mobile-candid-talking.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone caught mid-sentence talking to someone at the imagined Vienna dinner.',
+          caption: 'Caught mid-sentence',
+        },
+        {
+          src: '/storyline/148-clara-vienna-solo-mobile-candid-gesture.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone gesturing with a blurred hand while talking at the imagined dinner.',
+          caption: 'Talking with her hands',
+        },
+        {
+          src: '/storyline/149-clara-vienna-solo-mobile-candid-profile-talk.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone in profile, laughing mid-word to someone off-frame at the imagined dinner.',
+          caption: 'A laugh mid-word',
+        },
+        {
+          src: '/storyline/150-clara-vienna-solo-mobile-candid-across-table.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone telling a story across the table to a blurred listener at the imagined dinner.',
+          caption: 'The story across the table',
+        },
+        {
+          src: '/storyline/151-clara-vienna-solo-mobile-candid-low-story.jpg',
+          alt: 'AI-generated tilted low-angle candid mobile portrait of fictional Clara alone telling a story with her head tipped at the imagined dinner.',
+          caption: 'The story from below',
+        },
+        {
+          src: '/storyline/152-clara-vienna-solo-mobile-candid-chin-hand.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone making a point with her hand near her chin at the imagined dinner.',
+          caption: 'Making her point',
+        },
+        {
+          src: '/storyline/153-clara-vienna-solo-mobile-candid-lane-talk.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone talking to a friend on a cobbled Vienna lane after the imagined dinner.',
+          caption: 'Talking on the lane',
+        },
+        {
+          src: '/storyline/154-clara-vienna-solo-mobile-candid-night-laugh.jpg',
+          alt: 'AI-generated tilted candid mobile night portrait of fictional Clara alone laughing mid-talk under a flaring street lamp after the imagined dinner.',
+          caption: 'Laughing under the lamp',
+        },
+        {
+          src: '/storyline/155-clara-vienna-solo-mobile-candid-lean-cake.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone leaning over the birthday cake talking intently at the imagined dinner.',
+          caption: 'Leaning in to tell it',
+        },
+        {
+          src: '/storyline/156-clara-vienna-solo-mobile-candid-window-talk.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone answering someone in soft window light at the imagined dinner.',
+          caption: 'Answering in window light',
         },
       ],
     },
