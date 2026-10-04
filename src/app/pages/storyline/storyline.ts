@@ -127,16 +127,6 @@ export class StorylinePage {
           caption: 'A map, a pause, a day on her own terms',
         },
         {
-          src: '/storyline/07-ananya-cafe.jpg',
-          alt: 'AI-generated phone-style illustration of a woman sitting alone with a notebook at a Paris café.',
-          caption: 'A small table and nowhere else to be',
-        },
-        {
-          src: '/storyline/08-ananya-montmartre.jpg',
-          alt: 'AI-generated travel illustration of a woman walking alone on a Montmartre street in Paris.',
-          caption: 'A long walk, taken at her own pace',
-        },
-        {
           src: '/storyline/197-ananya-paris-portrait-trocadero.jpg',
           alt: 'AI-generated portrait of fictional Indian woman Ananya in a maroon kurta and mustard dupatta at Trocadéro, with the Eiffel Tower softly behind her.',
           caption: 'A portrait with the tower at a distance',
@@ -145,11 +135,6 @@ export class StorylinePage {
           src: '/storyline/198-ananya-paris-wide-notredame.jpg',
           alt: 'AI-generated wide-angle snapshot of fictional Ananya on the Seine quay beside Notre-Dame cathedral in Paris.',
           caption: 'The cathedral from the river walk',
-        },
-        {
-          src: '/storyline/199-ananya-paris-macro-croissant.jpg',
-          alt: 'AI-generated mobile macro photo of fictional Ananya’s hands tearing a croissant at a Paris café table beside espresso and a city map.',
-          caption: 'Pastry crumbs and a folded map',
         },
         {
           src: '/storyline/200-ananya-paris-selfie-montmartre.jpg',
@@ -180,11 +165,6 @@ export class StorylinePage {
           src: '/storyline/205-ananya-paris-selfie-local-market.jpg',
           alt: 'AI-generated mobile selfie of fictional Ananya with a Parisian market vendor and a paper cone of strawberries; the phone is not visible.',
           caption: 'Strawberries from a local stall',
-        },
-        {
-          src: '/storyline/206-ananya-paris-bookstore-portrait.jpg',
-          alt: 'AI-generated portrait of fictional Ananya reading between the shelves of a historic Paris bookshop.',
-          caption: 'A paperback found on a quiet aisle',
         },
         {
           src: '/storyline/207-ananya-paris-winter-selfie-tilted-street.jpg',
@@ -235,6 +215,56 @@ export class StorylinePage {
           src: '/storyline/216-ananya-paris-winter-selfie-tilted-seine.jpg',
           alt: 'Tilted amateur mobile selfie of fictional Ananya in an oatmeal winter coat by the Seine, hair across her face; the phone is not visible.',
           caption: 'Wind in her eyes beside the river',
+        },
+        {
+          src: '/storyline/217-ananya-france-winter-selfie-louvre-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local art student at the Louvre Pyramid in Paris; the phone is not visible.',
+          caption: 'A crooked snap at the pyramid',
+        },
+        {
+          src: '/storyline/218-ananya-france-winter-selfie-arc-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a Parisian local at the Arc de Triomphe; the phone is not visible.',
+          caption: 'Traffic and the arch, slightly off',
+        },
+        {
+          src: '/storyline/219-ananya-france-winter-selfie-eiffel-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya laughing with a local on Champ de Mars, Eiffel Tower behind; the phone is not visible.',
+          caption: 'A windy laugh under the tower',
+        },
+        {
+          src: '/storyline/220-ananya-france-winter-selfie-notredame-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local skipper beside Notre-Dame; the phone is not visible.',
+          caption: 'The cathedral from a river selfie',
+        },
+        {
+          src: '/storyline/221-ananya-france-winter-selfie-sacrecoeur-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local street musician on the Sacré-Cœur steps; the phone is not visible.',
+          caption: 'Accordion on the basilica steps',
+        },
+        {
+          src: '/storyline/222-ananya-france-winter-selfie-versailles-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local palace guide at the gold gates of Versailles; the phone is not visible.',
+          caption: 'Gold gates, a borrowed lanyard smile',
+        },
+        {
+          src: '/storyline/223-ananya-france-winter-selfie-montstmichel-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local innkeeper in front of Mont Saint-Michel; the phone is not visible.',
+          caption: 'Wind and the mount on the tide',
+        },
+        {
+          src: '/storyline/224-ananya-france-winter-selfie-nice-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a Nice local on the Promenade des Anglais; the phone is not visible.',
+          caption: 'A winter walk beside the pebbles',
+        },
+        {
+          src: '/storyline/225-ananya-france-winter-selfie-strasbourg-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local market vendor and chestnuts at Strasbourg Cathedral; the phone is not visible.',
+          caption: 'Chestnuts under the cathedral lights',
+        },
+        {
+          src: '/storyline/226-ananya-france-winter-selfie-moulinrouge-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local outside the Moulin Rouge at night; the phone is not visible.',
+          caption: 'Red neon, a late Pigalle snap',
         },
       ],
     },
