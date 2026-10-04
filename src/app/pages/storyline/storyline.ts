@@ -452,6 +452,56 @@ export class StorylinePage {
           alt: 'AI-generated candid smartphone portrait of fictional Helen turning back with her bouquet in the registry courtyard, wearing her ivory wedding dress.',
           caption: 'A tilted candid from the courtyard',
         },
+        {
+          src: '/storyline/77-helen-james-wedding-mobile-macro-candid-laugh.jpg',
+          alt: 'AI-generated close mobile portrait of fictional bride Helen laughing as groom James leans cheek-to-cheek with her outside the London registry office.',
+          caption: 'A laugh between the registry steps',
+        },
+        {
+          src: '/storyline/78-helen-james-wedding-mobile-macro-side-whisper.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen smiling with lowered eyes as James rests his forehead against hers outside the registry office.',
+          caption: 'A quiet moment, caught in profile',
+        },
+        {
+          src: '/storyline/79-helen-james-wedding-mobile-macro-over-shoulder.jpg',
+          alt: 'AI-generated over-the-shoulder wedding portrait of fictional Helen and James leaning together in their ivory dress and charcoal suit.',
+          caption: 'A close look over her shoulder',
+        },
+        {
+          src: '/storyline/80-helen-james-wedding-mobile-macro-high-angle.jpg',
+          alt: 'AI-generated high-angle mobile portrait of fictional bride Helen resting against James and glancing up at him on their London wedding day.',
+          caption: 'A soft glance from above',
+        },
+        {
+          src: '/storyline/81-helen-james-wedding-mobile-macro-low-angle.jpg',
+          alt: 'AI-generated low-angle smartphone portrait of fictional Helen turning in profile toward James in his charcoal wedding suit.',
+          caption: 'A low-angle look between the two of them',
+        },
+        {
+          src: '/storyline/82-helen-james-wedding-mobile-macro-forehead-kiss.jpg',
+          alt: 'AI-generated close portrait of fictional groom James kissing bride Helen on the forehead beside the London registry steps.',
+          caption: 'A forehead kiss above the bouquet',
+        },
+        {
+          src: '/storyline/83-helen-james-wedding-mobile-macro-laughing-selfie.jpg',
+          alt: 'AI-generated candid mobile portrait of fictional Helen laughing as James leans close to her for a wedding-day snapshot.',
+          caption: 'A laugh caught at close range',
+        },
+        {
+          src: '/storyline/84-helen-james-wedding-mobile-macro-back-view.jpg',
+          alt: 'AI-generated rear three-quarter smartphone portrait of fictional Helen facing James, with her wavy hair and ivory dress in the foreground.',
+          caption: 'The view from just behind Helen',
+        },
+        {
+          src: '/storyline/85-helen-james-wedding-mobile-macro-thames-profile.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen and James leaning toward each other beside the Thames in their wedding clothes.',
+          caption: 'A profile by the Thames',
+        },
+        {
+          src: '/storyline/86-helen-james-wedding-mobile-macro-courtyard-embrace.jpg',
+          alt: 'AI-generated intimate mobile portrait of fictional Helen with her eyes closed as James holds her in the registry courtyard.',
+          caption: 'A quiet embrace after the ceremony',
+        },
       ],
     },
     {

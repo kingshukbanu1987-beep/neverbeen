@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 75 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 85 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      3, 3, 3, 3, 42, 3, 3, 3, 3,
+      3, 3, 3, 3, 52, 3, 3, 3, 3,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -67,32 +67,31 @@ describe('StorylinePage', () => {
     expect(
       element.querySelectorAll('.cover-photo-button img').length +
         element.querySelectorAll('.album-photo img').length,
-    ).toBe(75);
+    ).toBe(85);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
     expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
       '/storyline-of-parallel-universe#switzerland-honeymoon',
     );
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'seventy-five imagined frames',
+      'eighty-five imagined frames',
     );
-    expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('43 FRAMES');
+    expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('53 FRAMES');
   });
 
-  it('adds ten tilted mobile portraits of Helen and keeps album arrows available', () => {
-    const fixture = create();
-    const element: HTMLElement = fixture.nativeElement;
+  it('keeps Helen’s existing solo portrait batch in Storyline 6', () => {
+    const element: HTMLElement = create().nativeElement;
     const londonAlbum = element.querySelector<HTMLElement>('#london-wedding-revisited')!;
     const galleryImages = Array.from(
       londonAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
     );
-    const newPortraits = galleryImages.slice(-10);
+    const soloPortraits = galleryImages.slice(32, 42);
 
-    expect(galleryImages).toHaveLength(42);
+    expect(galleryImages).toHaveLength(52);
     expect(
       londonAlbum.querySelector('img[src="/storyline/46-helen-james-london-album-memory.jpg"]'),
     ).toBeNull();
-    expect(newPortraits.map((image) => image.getAttribute('src'))).toEqual([
+    expect(soloPortraits.map((image) => image.getAttribute('src'))).toEqual([
       '/storyline/67-helen-london-wedding-mobile-macro-front.jpg',
       '/storyline/68-helen-london-wedding-mobile-macro-three-quarter.jpg',
       '/storyline/69-helen-london-wedding-mobile-macro-profile.jpg',
@@ -105,7 +104,7 @@ describe('StorylinePage', () => {
       '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
     ]);
     expect(
-      newPortraits.every(
+      soloPortraits.every(
         (image) =>
           image.alt.includes('Helen') &&
           image.alt.includes('portrait') &&
@@ -116,18 +115,50 @@ describe('StorylinePage', () => {
       Array.from(londonAlbum.querySelectorAll('.photo-number')).map((number) =>
         number.textContent?.trim(),
       ),
-    ).toEqual(Array.from({ length: 42 }, (_, index) => String(index + 2).padStart(2, '0')));
+    ).toEqual(Array.from({ length: 52 }, (_, index) => String(index + 2).padStart(2, '0')));
+  });
+
+  it('adds ten romantic couple portraits and navigates within Storyline 6', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const londonAlbum = element.querySelector<HTMLElement>('#london-wedding-revisited')!;
+    const galleryImages = Array.from(
+      londonAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const couplePortraits = galleryImages.slice(-10);
+
+    expect(galleryImages).toHaveLength(52);
+    expect(couplePortraits.map((image) => image.getAttribute('src'))).toEqual([
+      '/storyline/77-helen-james-wedding-mobile-macro-candid-laugh.jpg',
+      '/storyline/78-helen-james-wedding-mobile-macro-side-whisper.jpg',
+      '/storyline/79-helen-james-wedding-mobile-macro-over-shoulder.jpg',
+      '/storyline/80-helen-james-wedding-mobile-macro-high-angle.jpg',
+      '/storyline/81-helen-james-wedding-mobile-macro-low-angle.jpg',
+      '/storyline/82-helen-james-wedding-mobile-macro-forehead-kiss.jpg',
+      '/storyline/83-helen-james-wedding-mobile-macro-laughing-selfie.jpg',
+      '/storyline/84-helen-james-wedding-mobile-macro-back-view.jpg',
+      '/storyline/85-helen-james-wedding-mobile-macro-thames-profile.jpg',
+      '/storyline/86-helen-james-wedding-mobile-macro-courtyard-embrace.jpg',
+    ]);
+    expect(
+      couplePortraits.every(
+        (image) =>
+          image.alt.includes('Helen') &&
+          image.alt.includes('James') &&
+          image.alt.includes('portrait'),
+      ),
+    ).toBe(true);
 
     londonAlbum.querySelector<HTMLButtonElement>('.album-toggle')!.click();
     fixture.detectChanges();
     const photoButtons = londonAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
-    photoButtons[41].click();
+    photoButtons[51].click();
     fixture.detectChanges();
 
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
-      '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
+      '/storyline/86-helen-james-wedding-mobile-macro-courtyard-embrace.jpg',
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('43 / 43');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('53 / 53');
     expect(element.querySelector('.lightbox-arrow.previous')?.getAttribute('aria-label')).toBe(
       'Previous photo in this story',
     );
@@ -138,21 +169,18 @@ describe('StorylinePage', () => {
     (element.querySelector('.lightbox-arrow.previous') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
-      '/storyline/75-helen-london-wedding-mobile-macro-window.jpg',
+      '/storyline/85-helen-james-wedding-mobile-macro-thames-profile.jpg',
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('42 / 43');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('52 / 53');
 
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
-      '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
-    );
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
       '/storyline/17-helen-james-london-registry.jpg',
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('1 / 43');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('1 / 53');
     (element.querySelector('.lightbox-close') as HTMLButtonElement).click();
     fixture.detectChanges();
   });
