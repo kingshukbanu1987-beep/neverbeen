@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 interface StoryPhoto {
@@ -21,6 +32,17 @@ interface StoryAlbum {
   photos: StoryPhoto[];
 }
 
+interface ActiveStoryPhoto {
+  albumId: string;
+  photoIndex: number;
+}
+
+interface StoryLightboxPhoto {
+  album: StoryAlbum;
+  photo: StoryPhoto;
+  photoIndex: number;
+}
+
 @Component({
   selector: 'app-storyline-page',
   imports: [RouterLink],
@@ -29,9 +51,13 @@ interface StoryAlbum {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StorylinePage {
-  private readonly collapsedAlbums = signal<ReadonlySet<string>>(new Set());
-  protected readonly storylinePath = '/storyline-of-parallel-universe';
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly lightboxCloseButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
+  private lastFocusedTrigger: HTMLElement | null = null;
+  private previousBodyOverflow = '';
 
+  protected readonly storylinePath = '/storyline-of-parallel-universe';
   protected readonly albums: StoryAlbum[] = [
     {
       id: 'switzerland-honeymoon',
@@ -395,6 +421,53 @@ export class StorylinePage {
     },
   ];
 
+  private readonly collapsedAlbums = signal<ReadonlySet<string>>(
+    new Set(this.albums.map((album) => album.id)),
+  );
+  private readonly activePhotoSelection = signal<ActiveStoryPhoto | null>(null);
+  private readonly lightboxIsOpen = computed(() => this.activePhotoSelection() !== null);
+
+  protected readonly lightboxPhoto = computed<StoryLightboxPhoto | null>(() => {
+    const selection = this.activePhotoSelection();
+    if (!selection) return null;
+
+    const album = this.albums.find((story) => story.id === selection.albumId);
+    const photo = album?.photos[selection.photoIndex];
+    return album && photo ? { album, photo, photoIndex: selection.photoIndex } : null;
+  });
+
+  constructor() {
+    effect(() => {
+      if (this.lightboxIsOpen()) this.lightboxCloseButton()?.nativeElement.focus();
+    });
+
+    const onKeydown = (event: KeyboardEvent) => {
+      if (!this.activePhotoSelection()) return;
+
+      switch (event.key) {
+        case 'Escape':
+          this.closeLightbox();
+          break;
+        case 'ArrowRight':
+          this.stepPhoto(1);
+          break;
+        case 'ArrowLeft':
+          this.stepPhoto(-1);
+          break;
+        default:
+          return;
+      }
+
+      event.preventDefault();
+    };
+
+    this.document.addEventListener('keydown', onKeydown);
+    this.destroyRef.onDestroy(() => {
+      this.document.removeEventListener('keydown', onKeydown);
+      if (this.activePhotoSelection()) this.unlockScroll();
+    });
+  }
+
   protected isAlbumExpanded(albumId: string): boolean {
     return !this.collapsedAlbums().has(albumId);
   }
@@ -406,5 +479,50 @@ export class StorylinePage {
       else next.add(albumId);
       return next;
     });
+  }
+
+  protected openPhoto(albumId: string, photoIndex: number, event: Event): void {
+    this.lastFocusedTrigger = event.currentTarget as HTMLElement | null;
+    this.previousBodyOverflow = this.document.body.style.overflow;
+    this.activePhotoSelection.set({ albumId, photoIndex });
+    this.document.body.style.overflow = 'hidden';
+  }
+
+  protected closeLightbox(): void {
+    if (!this.activePhotoSelection()) return;
+
+    this.activePhotoSelection.set(null);
+    this.unlockScroll();
+    this.lastFocusedTrigger?.focus();
+    this.lastFocusedTrigger = null;
+  }
+
+  protected showPreviousPhoto(event: Event): void {
+    event.stopPropagation();
+    this.stepPhoto(-1);
+  }
+
+  protected showNextPhoto(event: Event): void {
+    event.stopPropagation();
+    this.stepPhoto(1);
+  }
+
+  private stepPhoto(delta: number): void {
+    this.activePhotoSelection.update((selection) => {
+      if (!selection) return null;
+
+      const album = this.albums.find((story) => story.id === selection.albumId);
+      const total = album?.photos.length ?? 0;
+      if (!total) return selection;
+
+      return {
+        ...selection,
+        photoIndex: (selection.photoIndex + delta + total) % total,
+      };
+    });
+  }
+
+  private unlockScroll(): void {
+    this.document.body.style.overflow = this.previousBodyOverflow;
   }
 }

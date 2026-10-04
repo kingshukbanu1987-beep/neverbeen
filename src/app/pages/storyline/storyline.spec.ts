@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and four pictures each', () => {
+  it('shows the original and requested albums with the right sequence and four frames each', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -41,19 +41,31 @@ describe('StorylinePage', () => {
       'banaras-european-couple-dream',
       'norway-anniversary-dream',
     ]);
-    expect(albums.map((album) => album.querySelector('.album-id')?.textContent?.trim())).toEqual([
-      '01',
-      '02',
-      '03',
-      '05',
-      '06',
-      '07',
-      '08',
-      '10',
-      '11',
+    expect(
+      albums.map((album) => album.querySelector('.cover-photo-button img')?.getAttribute('src')),
+    ).toEqual([
+      '/storyline/01-lotte-bram-lake-brienz.jpg',
+      '/storyline/02-ananya-paris-seine.jpg',
+      '/storyline/09-five-friends-amazon-river.jpg',
+      '/storyline/13-meera-arjun-tuscany-courtyard.jpg',
+      '/storyline/17-helen-james-london-registry.jpg',
+      '/storyline/21-clara-vienna-birthday-dinner.jpg',
+      '/storyline/25-elisabeth-everest-trail.jpg',
+      '/storyline/29-ingrid-peter-varanasi-riverfront.jpg',
+      '/storyline/33-asha-ravi-norway-fjord.jpg',
     ]);
-    expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 4)).toBe(true);
-    expect(element.querySelectorAll('.photo-label')).toHaveLength(36);
+    expect(
+      albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
+    ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
+    expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 3)).toBe(true);
+    expect(
+      albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
+    ).toBe(true);
+    expect(element.querySelectorAll('.photo-label')).toHaveLength(27);
+    expect(
+      element.querySelectorAll('.cover-photo-button img').length +
+        element.querySelectorAll('.album-photo img').length,
+    ).toBe(36);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
     expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
       '/storyline-of-parallel-universe#switzerland-honeymoon',
@@ -61,7 +73,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
   });
 
-  it('lets each storyline collapse and extend independently with accessible state', () => {
+  it('collapses every storyline by default and lets each one extend independently', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
@@ -70,18 +82,16 @@ describe('StorylinePage', () => {
     const firstContent = albums[0].querySelector<HTMLElement>('.album-layout')!;
 
     expect(element.querySelectorAll('.album-toggle')).toHaveLength(9);
-    expect(firstButton.getAttribute('aria-expanded')).toBe('true');
+    expect(
+      albums.every(
+        (album) => album.querySelector('.album-toggle')?.getAttribute('aria-expanded') === 'false',
+      ),
+    ).toBe(true);
+    expect(albums.every((album) => album.querySelector<HTMLElement>('.album-layout')?.hidden)).toBe(
+      true,
+    );
     expect(firstButton.getAttribute('aria-controls')).toBe(firstContent.id);
-    expect(firstContent.hidden).toBe(false);
-
-    firstButton.click();
-    fixture.detectChanges();
-
-    expect(firstButton.getAttribute('aria-expanded')).toBe('false');
-    expect(firstButton.textContent).toContain('Extend storyline');
     expect(firstContent.hidden).toBe(true);
-    expect(secondButton.getAttribute('aria-expanded')).toBe('true');
-    expect(albums[1].querySelector<HTMLElement>('.album-layout')?.hidden).toBe(false);
 
     firstButton.click();
     fixture.detectChanges();
@@ -89,6 +99,114 @@ describe('StorylinePage', () => {
     expect(firstButton.getAttribute('aria-expanded')).toBe('true');
     expect(firstButton.textContent).toContain('Collapse storyline');
     expect(firstContent.hidden).toBe(false);
+    expect(secondButton.getAttribute('aria-expanded')).toBe('false');
+    expect(albums[1].querySelector<HTMLElement>('.album-layout')?.hidden).toBe(true);
+
+    firstButton.click();
+    fixture.detectChanges();
+
+    expect(firstButton.getAttribute('aria-expanded')).toBe('false');
+    expect(firstButton.textContent).toContain('Extend storyline');
+    expect(firstContent.hidden).toBe(true);
+  });
+
+  it('keeps a cover photo, story title, destination, and characters visible on every collapsed card', () => {
+    const element: HTMLElement = create().nativeElement;
+    const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
+
+    expect(albums).toHaveLength(9);
+    for (const album of albums) {
+      expect(album.querySelector<HTMLElement>('.album-layout')?.hidden).toBe(true);
+      expect(album.querySelector('.cover-photo-button img')?.getAttribute('src')).toContain(
+        '/storyline/',
+      );
+      expect(album.querySelector('.cover-photo-hint')?.textContent).toContain('AI ILLUSTRATION');
+      expect(album.querySelector('.story-cover h3')?.textContent?.trim()).toBeTruthy();
+      expect(album.querySelector('.cover-location-name')?.textContent?.trim()).toBeTruthy();
+      expect(album.querySelector('.cover-people')?.textContent?.trim()).toBeTruthy();
+    }
+
+    expect(albums[0].querySelector('.story-cover')?.textContent).toContain(
+      'The honeymoon that kept getting postponed',
+    );
+    expect(albums[0].querySelector('.cover-location-name')?.textContent).toContain('Switzerland');
+    expect(albums[0].querySelector('.cover-people')?.textContent).toContain('Lotte & Bram');
+  });
+
+  it('keeps the reason section at the bottom, after every story and the closing call to action', () => {
+    const element: HTMLElement = create().nativeElement;
+    const sections = Array.from(element.querySelectorAll<HTMLElement>('.storyline-page > section'));
+
+    expect(sections.at(-1)?.classList.contains('barriers')).toBe(true);
+    expect(sections.indexOf(element.querySelector('.story-albums')!)).toBeLessThan(
+      sections.indexOf(element.querySelector('.barriers')!),
+    );
+    expect(sections.indexOf(element.querySelector('.storyline-close')!)).toBeLessThan(
+      sections.indexOf(element.querySelector('.barriers')!),
+    );
+  });
+
+  it('opens a collapsed story cover in the image lightbox and closes on a backdrop click', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const firstAlbum = element.querySelector<HTMLElement>('.story-album')!;
+    const coverButton = firstAlbum.querySelector<HTMLButtonElement>('.cover-photo-button')!;
+    const originalOverflow = document.body.style.overflow;
+
+    expect(firstAlbum.querySelector<HTMLElement>('.album-layout')?.hidden).toBe(true);
+    coverButton.click();
+    fixture.detectChanges();
+
+    const lightbox = element.querySelector<HTMLElement>('.story-lightbox');
+    expect(lightbox?.getAttribute('aria-modal')).toBe('true');
+    expect(lightbox?.querySelector('figure img')?.getAttribute('src')).toBe(
+      coverButton.querySelector('img')?.getAttribute('src'),
+    );
+    expect(document.body.style.overflow).toBe('hidden');
+
+    lightbox?.click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('.story-lightbox')).toBeNull();
+    expect(document.body.style.overflow).toBe(originalOverflow);
+    expect(document.activeElement).toBe(coverButton);
+  });
+
+  it('opens gallery photos and navigates within the selected story using controls and keyboard', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const firstAlbum = element.querySelector<HTMLElement>('.story-album')!;
+    const extendButton = firstAlbum.querySelector<HTMLButtonElement>('.album-toggle')!;
+    const photoButtons = firstAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
+    const press = (key: string) => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key }));
+      fixture.detectChanges();
+    };
+
+    extendButton.click();
+    fixture.detectChanges();
+    photoButtons[1].click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      '/storyline/04-lotte-bram-train.jpg',
+    );
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('3 / 4');
+
+    (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      '/storyline/05-lotte-bram-mountain-cafe.jpg',
+    );
+
+    press('ArrowLeft');
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      '/storyline/04-lotte-bram-train.jpg',
+    );
+
+    press('Escape');
+    expect(element.querySelector('.story-lightbox')).toBeNull();
+    expect(document.body.style.overflow).toBe('');
   });
 
   it('keeps the original storylines, adds the requested albums, and excludes the unrequested Singapore story', () => {
@@ -124,7 +242,7 @@ describe('StorylinePage', () => {
     expect(albums[6].textContent).toContain('solo trek');
     expect(albums[6].textContent).toContain('not evidence that she travelled');
     expect(albums[6].textContent).toContain('not climb a summit');
-    expect(albums[6].querySelectorAll('img')[1].getAttribute('src')).toBe(
+    expect(albums[6].querySelectorAll('.album-photo img')[0].getAttribute('src')).toBe(
       '/storyline/26-elisabeth-everest-village-stop.jpg',
     );
 
