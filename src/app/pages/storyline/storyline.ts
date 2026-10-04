@@ -467,6 +467,46 @@ export class StorylinePage {
           alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear sitting on the floor against the hotel bed in Paris, the lit Eiffel Tower in the window above her; the phone is not visible.',
           caption: 'One last look before sleep',
         },
+        {
+          src: '/storyline/287-ananya-paris-hotel-towel-selfie-tilted-mirror.jpg',
+          alt: 'Tilted amateur late-evening handheld mobile selfie of fictional Ananya in a white hotel towel with her wet hair twisted in a second towel, standing in the steam of her Paris hotel bathroom after her bath, water running down the shower glass; the phone is not visible.',
+          caption: 'Steam on the mirror after the water',
+        },
+        {
+          src: '/storyline/288-ananya-paris-hotel-towel-selfie-wet-hair-close.jpg',
+          alt: 'Very close amateur late-evening mobile selfie of fictional Ananya wrapped in a white hotel towel after her shower, wet hair across her cheek and flash glare on her face at the Paris bathroom mirror; the phone is not visible.',
+          caption: 'Too close, and still smiling',
+        },
+        {
+          src: '/storyline/289-ananya-paris-hotel-towel-selfie-bathroom-doorway-tilted.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel towel after her bath, leaning on the bathroom doorway of her Paris hotel room with wet hair and bare damp shoulders, suitcase and bed lamp behind her; the phone is not visible.',
+          caption: 'A crooked frame in the doorway',
+        },
+        {
+          src: '/storyline/290-ananya-paris-hotel-towel-selfie-shower-stall-steam.jpg',
+          alt: 'Amateur late-evening mobile selfie of fictional Ananya in a white hotel towel with a towel twisted on her wet hair inside the steamy shower cubicle of her Paris hotel bathroom after her bath; the phone is not visible.',
+          caption: 'One more minute under the water',
+        },
+        {
+          src: '/storyline/291-ananya-paris-hotel-towel-mirror-selfie-water-drops.jpg',
+          alt: 'Sloppy flash amateur late-evening mobile mirror selfie of fictional Ananya in a white hotel towel with wet hair pushed back and water droplets on her shoulders, reflected in the steamed bathroom mirror of her Paris hotel room; the phone is not visible.',
+          caption: 'Flash, spots and a wet mirror',
+        },
+        {
+          src: '/storyline/292-ananya-paris-hotel-towel-selfie-tilted-walking-drying-hair.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya walking out of the bathroom of her Paris hotel room in a white hotel towel while drying her wet hair with a second towel, warm lamp and unmade bed behind her; the phone is not visible.',
+          caption: 'A towel, a lamp, a slower hour',
+        },
+        {
+          src: '/storyline/293-ananya-paris-hotel-towel-selfie-glasses-counter-flash.jpg',
+          alt: 'Direct-flash amateur late-evening mobile selfie of fictional Ananya in a white hotel towel with her wet hair clipped back, laughing over the bathroom counter of her Paris hotel room with her glasses and toiletries beside her; the phone is not visible.',
+          caption: 'Laughing at the counter, glasses off',
+        },
+        {
+          src: '/storyline/294-ananya-paris-hotel-towel-selfie-tilted-window-tower.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel towel after her bath, wet hair loose and the lit Eiffel Tower off-centre in the blue dusk at the window of her Paris hotel room; the phone is not visible.',
+          caption: 'A bath, then the city at dusk',
+        },
       ],
     },
     {
