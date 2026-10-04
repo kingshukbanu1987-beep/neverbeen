@@ -467,6 +467,76 @@ export class StorylinePage {
           alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear sitting on the floor against the hotel bed in Paris, the lit Eiffel Tower in the window above her; the phone is not visible.',
           caption: 'One last look before sleep',
         },
+        {
+          src: '/storyline/287-ananya-paris-hotel-towel-selfie-tilted-mirror.jpg',
+          alt: 'Tilted amateur late-evening handheld mobile selfie of fictional Ananya in a white hotel towel with her wet hair twisted in a second towel, standing in the steam of her Paris hotel bathroom after her bath, water running down the shower glass; the phone is not visible.',
+          caption: 'Steam on the mirror after the water',
+        },
+        {
+          src: '/storyline/288-ananya-paris-hotel-towel-selfie-wet-hair-close.jpg',
+          alt: 'Very close amateur late-evening mobile selfie of fictional Ananya wrapped in a white hotel towel after her shower, wet hair across her cheek and flash glare on her face at the Paris bathroom mirror; the phone is not visible.',
+          caption: 'Too close, and still smiling',
+        },
+        {
+          src: '/storyline/289-ananya-paris-hotel-towel-selfie-bathroom-doorway-tilted.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel towel after her bath, leaning on the bathroom doorway of her Paris hotel room with wet hair and bare damp shoulders, suitcase and bed lamp behind her; the phone is not visible.',
+          caption: 'A crooked frame in the doorway',
+        },
+        {
+          src: '/storyline/290-ananya-paris-hotel-towel-selfie-shower-stall-steam.jpg',
+          alt: 'Amateur late-evening mobile selfie of fictional Ananya in a white hotel towel with a towel twisted on her wet hair inside the steamy shower cubicle of her Paris hotel bathroom after her bath; the phone is not visible.',
+          caption: 'One more minute under the water',
+        },
+        {
+          src: '/storyline/297-ananya-eiffel-winter-selfie-tilted-esplanade.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya in her black quilted puffer coat, cream beanie and maroon scarf on the Trocadéro esplanade with the lit Eiffel Tower behind her; the phone is not visible.',
+          caption: 'A crooked frame with the tower behind her',
+        },
+        {
+          src: '/storyline/298-ananya-eiffel-winter-selfie-under-tower-wide.jpg',
+          alt: 'Wide tilted winter mobile selfie of fictional Ananya in the same black puffer coat and cream beanie directly under the lit Eiffel Tower at night, looking up past the camera; the phone is not visible.',
+          caption: 'Standing right under the ironwork',
+        },
+        {
+          src: '/storyline/299-ananya-eiffel-winter-glass-lift-climbing.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya in the same black puffer coat inside the glass Eiffel Tower lift climbing from the esplanade towards the second floor, Paris lights sliding away through the smudged glass; the phone is not visible.',
+          caption: 'The glass lift going up',
+        },
+        {
+          src: '/storyline/300-ananya-eiffel-winter-glass-lift-reflection.jpg',
+          alt: 'Sloppy tilted winter mobile selfie of fictional Ananya in the same black puffer coat and maroon scarf doubled in the glass of the Eiffel Tower lift, the city lights far below; the phone is not visible.',
+          caption: 'Half her, half the reflection',
+        },
+        {
+          src: '/storyline/301-ananya-eiffel-winter-madame-brasserie-dinner-table.jpg',
+          alt: 'Crooked low-light winter mobile photo of fictional Ananya at a table in the Madame Brasserie restaurant inside the Eiffel Tower, cream turtleneck under her black puffer coat with red wine and the lit ironwork behind her; the phone is not visible.',
+          caption: 'Dinner above the city',
+        },
+        {
+          src: '/storyline/302-ananya-eiffel-winter-madame-brasserie-toast-selfie.jpg',
+          alt: 'Very close tilted winter mobile selfie of fictional Ananya at dinner in Madame Brasserie, cream turtleneck under the black puffer coat and a glass of red wine raised, the lit tower at the window behind her; the phone is not visible.',
+          caption: 'A glass raised to the view',
+        },
+        {
+          src: '/storyline/303-ananya-eiffel-winter-madame-brasserie-dessert-window.jpg',
+          alt: 'Dark amateur winter mobile photo of fictional Ananya at her Madame Brasserie table in the same cream turtleneck, looking off towards the lit ironwork through the restaurant window with dessert and coffee on the table; the phone is not visible.',
+          caption: 'Coffee, dessert, the lit ironwork',
+        },
+        {
+          src: '/storyline/304-ananya-eiffel-winter-second-floor-view-selfie.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya in the same black puffer coat and cream beanie on the second-floor viewing deck of the Eiffel Tower at night, wind-blown and flushed above the lit city; the phone is not visible.',
+          caption: 'The view from the second floor',
+        },
+        {
+          src: '/storyline/307-ananya-paris-hotel-bathrobe-sink-face-cream.jpg',
+          alt: 'Amateur late-evening mobile photo of fictional Ananya in a fluffy white hotel bathrobe with a towel on her wet hair, rubbing face cream into her cheek at the bathroom sink of her Paris hotel room; the phone is not visible.',
+          caption: 'Cream, glass shelf, the last routine',
+        },
+        {
+          src: '/storyline/308-ananya-paris-hotel-bathrobe-bed-tower-window.jpg',
+          alt: 'Tilted amateur late-evening mobile photo of fictional Ananya in a fluffy white hotel bathrobe with a towel on her wet hair, laughing on the edge of the bed in her Paris hotel room with the lit Eiffel Tower in the window behind her; the phone is not visible.',
+          caption: 'A bathrobe, a mug, the tower still lit',
+        },
       ],
     },
     {
@@ -1465,8 +1535,25 @@ export class StorylinePage {
     return {
       ...album,
       number: String(index + 1).padStart(2, '0'),
+      photos: this.shuffleAlbumPhotos(album.photos),
     };
   });
+
+  /**
+   * Keeps an album's cover frame in first place and shuffles every other frame
+   * into a new random order each time the page is opened, so the wall never
+   * repeats the same sequence twice.
+   */
+  private shuffleAlbumPhotos(photos: readonly StoryPhoto[]): StoryPhoto[] {
+    const order = photos.slice();
+
+    for (let i = order.length - 1; i > 1; i -= 1) {
+      const j = 1 + Math.floor(Math.random() * i);
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+
+    return order;
+  }
 
   private readonly collapsedAlbums = signal<ReadonlySet<string>>(
     new Set(this.albums.map((album) => album.id)),
