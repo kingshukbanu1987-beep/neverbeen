@@ -502,6 +502,56 @@ export class StorylinePage {
           alt: 'AI-generated close side-profile portrait of fictional Helen laughing with a friend at the registry steps, seen from behind her shoulder.',
           caption: 'A laugh over her shoulder',
         },
+        {
+          src: '/storyline/97-helen-james-mobile-family-registry.jpg',
+          alt: 'AI-generated wide-angle mobile snapshot of fictional British couple Helen and James with Helen’s parents outside their London registry office.',
+          caption: 'A family snapshot outside the registry office',
+        },
+        {
+          src: '/storyline/98-helen-mother-bride-mobile-portrait.jpg',
+          alt: 'AI-generated vertical smartphone portrait of fictional Helen in her ivory wedding dress as her mother straightens her sleeve at the registry doorway.',
+          caption: 'Her mother’s last-minute sleeve check',
+        },
+        {
+          src: '/storyline/99-helen-james-wedding-rings-mobile-macro.jpg',
+          alt: 'AI-generated mobile macro-style photo of fictional Helen and James’s wedding bands and hands beside Helen’s white bouquet.',
+          caption: 'Wedding bands beside the bouquet',
+        },
+        {
+          src: '/storyline/100-helen-james-parents-breakfast-mobile-candid.jpg',
+          alt: 'AI-generated candid phone photo of fictional Helen and James sharing a small wedding-breakfast toast with Helen’s parents.',
+          caption: 'A toast with her parents at the wedding breakfast',
+        },
+        {
+          src: '/storyline/101-helen-james-registry-room-mobile-wide-angle.jpg',
+          alt: 'AI-generated wide-angle mobile photo of fictional Helen and James after signing the register, with her parents watching from the foreground.',
+          caption: 'The signing seen from her parents’ seats',
+        },
+        {
+          src: '/storyline/102-helen-james-mobile-couple-portrait.jpg',
+          alt: 'AI-generated vertical mobile-camera portrait of fictional Helen laughing beside James under the registry-office doorway.',
+          caption: 'A laugh beneath the registry doorway',
+        },
+        {
+          src: '/storyline/103-helen-james-father-boutonniere-mobile-portrait.jpg',
+          alt: 'AI-generated mobile portrait of fictional Helen and James as her father adjusts James’s white wedding boutonniere.',
+          caption: 'A final touch before the family photo',
+        },
+        {
+          src: '/storyline/104-helen-james-family-registry-wide-phone.jpg',
+          alt: 'AI-generated wide-angle mobile snapshot of fictional Helen and James leaving the registry office arm in arm with her parents.',
+          caption: 'Out through the registry doorway together',
+        },
+        {
+          src: '/storyline/105-helen-james-bouquet-mobile-macro.jpg',
+          alt: 'AI-generated close mobile macro photo of fictional Helen’s white bouquet between her ringed hand and James’s charcoal-suited hand.',
+          caption: 'The bouquet between their hands',
+        },
+        {
+          src: '/storyline/106-helen-james-parents-mobile-group-selfie.jpg',
+          alt: 'AI-generated front-camera mobile selfie of fictional Helen and James with Helen’s parents just after their London registry wedding.',
+          caption: 'The four of them in one quick selfie',
+        },
       ],
     },
     {
