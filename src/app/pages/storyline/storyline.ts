@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 interface StoryPhoto {
@@ -29,6 +29,9 @@ interface StoryAlbum {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StorylinePage {
+  private readonly collapsedAlbums = signal<ReadonlySet<string>>(new Set());
+  protected readonly storylinePath = '/storyline-of-parallel-universe';
+
   protected readonly albums: StoryAlbum[] = [
     {
       id: 'switzerland-honeymoon',
@@ -391,4 +394,17 @@ export class StorylinePage {
       ],
     },
   ];
+
+  protected isAlbumExpanded(albumId: string): boolean {
+    return !this.collapsedAlbums().has(albumId);
+  }
+
+  protected toggleAlbum(albumId: string): void {
+    this.collapsedAlbums.update((collapsed) => {
+      const next = new Set(collapsed);
+      if (next.has(albumId)) next.delete(albumId);
+      else next.add(albumId);
+      return next;
+    });
+  }
 }

@@ -383,7 +383,15 @@ h1 em {
 .story-album {
   padding: clamp(2.25rem, 4.5vw, 3.75rem) 0 clamp(3rem, 6vw, 5rem);
   border-top: 1px solid rgb(29 25 20 / 13%);
-  scroll-margin-top: 2rem;
+  scroll-margin-top: calc(var(--site-nav-h, 7rem) + 1rem);
+}
+
+.story-album.album-collapsed {
+  padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.story-album.album-collapsed .album-header {
+  margin-bottom: 0;
 }
 
 .album-header {
@@ -458,11 +466,66 @@ h1 em {
   font-weight: 550;
 }
 
+.album-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.55rem;
+}
+
+.album-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 38px;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid rgb(36 53 44 / 16%);
+  border-radius: 999px;
+  background: #fffdf9;
+  color: var(--forest);
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.album-toggle:hover {
+  border-color: var(--gold);
+  background: #f3ece2;
+}
+
+.album-toggle:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 3px;
+}
+
+.album-toggle-icon {
+  display: grid;
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #f3ece2;
+  color: var(--bronze);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
 .album-layout {
   display: grid;
   grid-template-columns: minmax(290px, 0.82fr) minmax(0, 1.18fr);
   gap: clamp(2rem, 5vw, 4.5rem);
   align-items: start;
+}
+
+.album-layout[hidden] {
+  display: none;
 }
 
 .album-story {
@@ -760,10 +823,14 @@ h1 em {
     font-size: clamp(2rem, 9vw, 3rem);
   }
 
-  .album-count {
+  .album-tools {
     grid-column: 2;
-    justify-self: start;
+    align-items: flex-start;
     margin-top: -0.25rem;
+  }
+
+  .album-count {
+    justify-self: start;
   }
 
   .album-layout {

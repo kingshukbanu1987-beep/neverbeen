@@ -95,7 +95,7 @@
 
       <nav class="album-index" aria-label="Jump to a story album">
         @for (album of albums; track album.id) {
-          <a [attr.href]="'#' + album.id">
+          <a [routerLink]="storylinePath" [fragment]="album.id">
             <span>{{ album.number }}</span>
             {{ album.place }}
           </a>
@@ -105,6 +105,7 @@
       @for (album of albums; track album.id) {
         <article
           class="story-album"
+          [class.album-collapsed]="!isAlbumExpanded(album.id)"
           [attr.id]="album.id"
           [attr.aria-labelledby]="album.id + '-title'"
         >
@@ -117,10 +118,28 @@
               <h3 [id]="album.id + '-title'">{{ album.title }}</h3>
               <p class="album-deck">{{ album.deck }}</p>
             </div>
-            <span class="album-count">04 <span>imagined frames</span></span>
+            <div class="album-tools">
+              <span class="album-count">04 <span>imagined frames</span></span>
+              <button
+                class="album-toggle"
+                type="button"
+                [attr.aria-expanded]="isAlbumExpanded(album.id)"
+                [attr.aria-controls]="album.id + '-content'"
+                (click)="toggleAlbum(album.id)"
+              >
+                <span class="album-toggle-icon" aria-hidden="true">
+                  {{ isAlbumExpanded(album.id) ? '−' : '+' }}
+                </span>
+                {{ isAlbumExpanded(album.id) ? 'Collapse' : 'Extend' }} storyline
+              </button>
+            </div>
           </header>
 
-          <div class="album-layout">
+          <div
+            class="album-layout"
+            [id]="album.id + '-content'"
+            [hidden]="!isAlbumExpanded(album.id)"
+          >
             <div class="album-story">
               <p class="chapter-label">The storyline</p>
               @for (paragraph of album.story; track $index) {

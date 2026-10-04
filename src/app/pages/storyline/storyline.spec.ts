@@ -55,7 +55,40 @@ describe('StorylinePage', () => {
     expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 4)).toBe(true);
     expect(element.querySelectorAll('.photo-label')).toHaveLength(36);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
+    expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
+      '/storyline-of-parallel-universe#switzerland-honeymoon',
+    );
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
+  });
+
+  it('lets each storyline collapse and extend independently with accessible state', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
+    const firstButton = albums[0].querySelector<HTMLButtonElement>('.album-toggle')!;
+    const secondButton = albums[1].querySelector<HTMLButtonElement>('.album-toggle')!;
+    const firstContent = albums[0].querySelector<HTMLElement>('.album-layout')!;
+
+    expect(element.querySelectorAll('.album-toggle')).toHaveLength(9);
+    expect(firstButton.getAttribute('aria-expanded')).toBe('true');
+    expect(firstButton.getAttribute('aria-controls')).toBe(firstContent.id);
+    expect(firstContent.hidden).toBe(false);
+
+    firstButton.click();
+    fixture.detectChanges();
+
+    expect(firstButton.getAttribute('aria-expanded')).toBe('false');
+    expect(firstButton.textContent).toContain('Extend storyline');
+    expect(firstContent.hidden).toBe(true);
+    expect(secondButton.getAttribute('aria-expanded')).toBe('true');
+    expect(albums[1].querySelector<HTMLElement>('.album-layout')?.hidden).toBe(false);
+
+    firstButton.click();
+    fixture.detectChanges();
+
+    expect(firstButton.getAttribute('aria-expanded')).toBe('true');
+    expect(firstButton.textContent).toContain('Collapse storyline');
+    expect(firstContent.hidden).toBe(false);
   });
 
   it('keeps the original storylines, adds the requested albums, and excludes the unrequested Singapore story', () => {
