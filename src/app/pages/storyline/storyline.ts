@@ -257,6 +257,56 @@ export class StorylinePage {
           alt: 'AI-generated companion illustration of fictional Helen and James walking beside the Thames in their wedding clothes, an imagined moment rather than a real photograph.',
           caption: 'A riverside walk imagined from their memories',
         },
+        {
+          src: '/storyline/37-helen-james-london-confetti.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James sharing a confetti moment outside their London registry office.',
+          caption: 'Confetti outside the registry steps',
+        },
+        {
+          src: '/storyline/38-helen-james-london-black-cab.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James sharing a London black cab after their registry-office wedding.',
+          caption: 'A taxi ride through the city after the ceremony',
+        },
+        {
+          src: '/storyline/39-helen-james-london-thames-walk.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James taking a quiet, rain-softened walk beside the Thames.',
+          caption: 'The Thames walk they remember between photographs',
+        },
+        {
+          src: '/storyline/40-helen-james-london-pub-toast.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James raising a modest wedding toast with friends in a London pub.',
+          caption: 'A toast with friends in a neighbourhood pub',
+        },
+        {
+          src: '/storyline/41-helen-james-london-first-dance.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James sharing their first dance at a small London wedding reception.',
+          caption: 'Their first dance in the community hall',
+        },
+        {
+          src: '/storyline/42-helen-james-london-rainy-street.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James beneath an umbrella on a rainy London street after their wedding.',
+          caption: 'An umbrella for the walk back through London',
+        },
+        {
+          src: '/storyline/43-helen-james-london-monochrome-portrait.jpg',
+          alt: 'AI-generated black-and-white companion portrait of fictional Helen and James beneath a stone London arcade after their small wedding.',
+          caption: 'A quiet black-and-white portrait',
+        },
+        {
+          src: '/storyline/44-helen-james-london-wedding-breakfast.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James sharing tea and a small wedding cake with friends in London.',
+          caption: 'Tea and cake at their wedding breakfast',
+        },
+        {
+          src: '/storyline/45-helen-james-london-vintage-snapshot.jpg',
+          alt: 'AI-generated vintage-style companion illustration of fictional Helen and James laughing with friends in a London courtyard.',
+          caption: 'A courtyard snapshot with their friends',
+        },
+        {
+          src: '/storyline/46-helen-james-london-album-memory.jpg',
+          alt: 'AI-generated contemporary illustration of fictional Helen and James, now older, looking through their wedding album together at home.',
+          caption: 'Looking back through the album together',
+        },
       ],
     },
     {

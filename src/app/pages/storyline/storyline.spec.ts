@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and four frames each', () => {
+  it('shows the original and requested albums with the right sequence and all 46 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -57,20 +57,74 @@ describe('StorylinePage', () => {
     expect(
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
-    expect(albums.every((album) => album.querySelectorAll('.album-photo').length === 3)).toBe(true);
+    expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
+      3, 3, 3, 3, 13, 3, 3, 3, 3,
+    ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
     ).toBe(true);
-    expect(element.querySelectorAll('.photo-label')).toHaveLength(27);
+    expect(element.querySelectorAll('.photo-label')).toHaveLength(37);
     expect(
       element.querySelectorAll('.cover-photo-button img').length +
         element.querySelectorAll('.album-photo img').length,
-    ).toBe(36);
+    ).toBe(46);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
     expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
       '/storyline-of-parallel-universe#switzerland-honeymoon',
     );
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
+    expect(element.querySelector('.albums-heading')?.textContent).toContain(
+      'forty-six imagined frames',
+    );
+    expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('14 FRAMES');
+  });
+
+  it('adds ten companion photos to Storyline 6 and keeps the 14-frame lightbox navigable', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const londonAlbum = element.querySelector<HTMLElement>('#london-wedding-revisited')!;
+    const galleryImages = Array.from(
+      londonAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+
+    expect(galleryImages).toHaveLength(13);
+    expect(galleryImages.slice(-10).map((image) => image.getAttribute('src'))).toEqual([
+      '/storyline/37-helen-james-london-confetti.jpg',
+      '/storyline/38-helen-james-london-black-cab.jpg',
+      '/storyline/39-helen-james-london-thames-walk.jpg',
+      '/storyline/40-helen-james-london-pub-toast.jpg',
+      '/storyline/41-helen-james-london-first-dance.jpg',
+      '/storyline/42-helen-james-london-rainy-street.jpg',
+      '/storyline/43-helen-james-london-monochrome-portrait.jpg',
+      '/storyline/44-helen-james-london-wedding-breakfast.jpg',
+      '/storyline/45-helen-james-london-vintage-snapshot.jpg',
+      '/storyline/46-helen-james-london-album-memory.jpg',
+    ]);
+    expect(
+      Array.from(londonAlbum.querySelectorAll('.photo-number')).map((number) =>
+        number.textContent?.trim(),
+      ),
+    ).toEqual(['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14']);
+
+    londonAlbum.querySelector<HTMLButtonElement>('.album-toggle')!.click();
+    fixture.detectChanges();
+    const photoButtons = londonAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
+    photoButtons[12].click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      '/storyline/46-helen-james-london-album-memory.jpg',
+    );
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('14 / 14');
+
+    (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      '/storyline/17-helen-james-london-registry.jpg',
+    );
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('1 / 14');
+    (element.querySelector('.lightbox-close') as HTMLButtonElement).click();
+    fixture.detectChanges();
   });
 
   it('collapses every storyline by default and lets each one extend independently', () => {
