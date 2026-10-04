@@ -110,6 +110,7 @@ export class StorylinePage {
         'The reason she stayed home was never one simple answer. Some years money mattered; in others, family responsibilities needed her, work leave would not line up, or the thought of travelling solo felt bigger than the time she had to prepare. Each reason was real. Paris kept becoming “maybe next year”—not because she did not care enough, but because life was already asking a lot of her.',
         'For her birthday, she asked NeverBeen to imagine a small set of portraits in the city she still hopes to explore. They are not proof that she has been to Paris. They let her see herself inside a dream that belongs to her, while the actual journey remains out of reach for now.',
         'The quietest part of the imagined visit is the end of the day: a small hotel room above the rooftops, the Eiffel Tower blinking in the window, tea going cold on the desk and the camera turned on herself the way anyone would after a long first day somewhere. Those imperfect evening frames were the ones she kept looking at.',
+        'She ended that day the way a traveller does: a long bath, the hotel robe, her hair twisted up in a towel, the mirror still fogged, a notebook open at the desk and the tower still glowing past the window. Nothing staged, nothing polished—just an ordinary evening in a city she has not reached, kept exactly as it felt.',
       ],
       reason:
         'She chose NeverBeen to give a private, long-held wish a shape of its own—a gentle reminder that her dream matters too, even when family, timing, confidence or other responsibilities have to come first.',
@@ -466,6 +467,56 @@ export class StorylinePage {
           src: '/storyline/286-ananya-paris-hotel-selfie-floor-tower.jpg',
           alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear sitting on the floor against the hotel bed in Paris, the lit Eiffel Tower in the window above her; the phone is not visible.',
           caption: 'One last look before sleep',
+        },
+        {
+          src: '/storyline/287-ananya-paris-hotel-bathrobe-selfie-mirror.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe with her hair in a towel turban, standing at the steamed bathroom mirror of her Paris hotel room; the phone is not visible.',
+          caption: 'Steam and a fogged mirror',
+        },
+        {
+          src: '/storyline/288-ananya-paris-hotel-bathrobe-selfie-towel-hair.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe and towel turban, both hands wrapping the towel around her damp hair beside the bath in her Paris hotel room; the phone is not visible.',
+          caption: 'Twisting the towel up',
+        },
+        {
+          src: '/storyline/289-ananya-paris-hotel-bathrobe-selfie-sink.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe and towel turban as she leans over the bathroom sink with face cream in her hand, at her Paris hotel; the phone is not visible.',
+          caption: 'A slow sink routine',
+        },
+        {
+          src: '/storyline/290-ananya-paris-hotel-bathrobe-selfie-steam-mirror.jpg',
+          alt: 'Amateur late-evening smartphone selfie of fictional Ananya in a white hotel bathrobe and towel turban wiping a clear patch through the steaming bathroom mirror of her Paris hotel, taken at arm’s length on a selfie stick; the phone and stick are not visible.',
+          caption: 'A patch of clear glass',
+        },
+        {
+          src: '/storyline/291-ananya-paris-hotel-bathrobe-selfie-bathmat.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe and towel turban standing barefoot on the bath mat of her Paris hotel bathroom, tying the robe belt; the phone is not visible.',
+          caption: 'Barefoot on the bath mat',
+        },
+        {
+          src: '/storyline/292-ananya-paris-hotel-bathrobe-selfie-doorway.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe and towel turban leaning on the bathroom doorway of her Paris hotel room, shower glass behind her and the dim bedroom beyond; the phone is not visible.',
+          caption: 'The doorway between two lights',
+        },
+        {
+          src: '/storyline/293-ananya-paris-hotel-bathrobe-selfie-bathroom-window.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe and towel turban holding the blind aside at the frosted bathroom window of her Paris hotel, the dark blue evening outside; the phone is not visible.',
+          caption: 'Frosted glass and evening blue',
+        },
+        {
+          src: '/storyline/294-ananya-paris-hotel-bathrobe-selfie-bed-edge.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe and towel turban sitting on the edge of the hotel bed with a mug of tea, the lit Eiffel Tower small in the window behind her; the phone is not visible.',
+          caption: 'Tea on the edge of the bed',
+        },
+        {
+          src: '/storyline/295-ananya-paris-hotel-bathrobe-selfie-desk-journal.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in a white hotel bathrobe and towel turban writing in a notebook at the desk of her Paris hotel room, a café cup beside her; the phone is not visible.',
+          caption: 'A line in the notebook',
+        },
+        {
+          src: '/storyline/296-ananya-paris-hotel-bathrobe-selfie-window-tower.jpg',
+          alt: 'Amateur late-evening smartphone selfie of fictional Ananya in a white hotel bathrobe and towel turban by the open window of her Paris hotel room with the lit Eiffel Tower above the rooftops, taken at arm’s length on a selfie stick; the phone and stick are not visible.',
+          caption: 'Rooftops, tower and wet hair',
         },
       ],
     },
