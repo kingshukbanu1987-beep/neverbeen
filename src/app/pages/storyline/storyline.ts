@@ -614,7 +614,7 @@ export class StorylinePage {
       story: [
         'Clara, a fictional Austrian woman, turned twenty-five during COVID restrictions. She had pictured a small dinner at a Vienna restaurant, a cake at the centre of the table and her friends around it. The reservation never happened; her birthday came through messages and a screen instead.',
         'She understood why people needed to keep apart, but missing that milestone with her friends still hurt. Time moved on and they stayed close, yet there was no way to revisit the exact evening she had hoped for. The celebration in this album is a what-if, not a hidden record of a party that took place.',
-        'In this fictional example, Clara asks NeverBeen to imagine fifty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
+        'In this fictional example, Clara asks NeverBeen to imagine sixty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
       ],
       reason:
         'She chose NeverBeen to mark a milestone that was missed and picture the friends she wanted around her table—not to erase COVID restrictions or pretend the celebration occurred.',
@@ -891,6 +891,56 @@ export class StorylinePage {
           src: '/storyline/166-clara-vienna-dinner-mobile-macro-after-coffee.jpg',
           alt: 'AI-generated tilted mobile macro snapshot of espresso cups and crumbs with fictional Clara and friends chatting blurred behind at the imagined dinner.',
           caption: 'Coffee after the candles',
+        },
+        {
+          src: '/storyline/167-clara-vienna-cake-mobile-macro-cut.jpg',
+          alt: 'AI-generated tilted candid mobile macro snapshot of a knife cutting the chocolate birthday cake with fictional Clara and friends blurred behind at the imagined dinner.',
+          caption: 'The knife goes in',
+        },
+        {
+          src: '/storyline/168-clara-vienna-cake-mobile-macro-hands-knife.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of many hands guiding the knife into the cake with fictional Clara laughing behind at the imagined dinner.',
+          caption: 'All hands on the knife',
+        },
+        {
+          src: '/storyline/169-clara-vienna-cake-mobile-macro-candles-blow.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of candles bending with smoke over the cake and fictional Clara and friends blurred behind at the imagined dinner.',
+          caption: 'Flames bend, smoke curls',
+        },
+        {
+          src: '/storyline/170-clara-vienna-cake-mobile-portrait-plate.jpg',
+          alt: 'AI-generated tilted mobile portrait of fictional Clara holding up a plate with a cake slice while friends cheer behind at the imagined dinner.',
+          caption: 'She holds up the slice',
+        },
+        {
+          src: '/storyline/171-clara-vienna-cake-mobile-portrait-cheer.jpg',
+          alt: 'AI-generated tilted mobile portrait of fictional Clara beaming beside the cake as friends cheer blurred behind at the imagined dinner.',
+          caption: 'Beaming beside the cake',
+        },
+        {
+          src: '/storyline/172-clara-vienna-cake-mobile-portrait-clap.jpg',
+          alt: 'AI-generated tilted three-quarter mobile portrait of fictional Clara clapping with the glowing cake in front at the imagined dinner.',
+          caption: 'Clapping over the glow',
+        },
+        {
+          src: '/storyline/173-clara-vienna-cake-mobile-wide-cheer.jpg',
+          alt: 'AI-generated tilted wide-angle mobile snapshot of fictional Clara and friends clapping around the birthday table at the imagined dinner.',
+          caption: 'The whole table cheers',
+        },
+        {
+          src: '/storyline/174-clara-vienna-cake-mobile-wide-room.jpg',
+          alt: 'AI-generated tilted wide-angle mobile snapshot of fictional Clara cutting the cake with friends watching in the restaurant room at the imagined dinner.',
+          caption: 'The room watches her cut',
+        },
+        {
+          src: '/storyline/175-clara-vienna-cake-mobile-wide-toast.jpg',
+          alt: 'AI-generated tilted low wide-angle mobile snapshot of fictional Clara and friends raising glasses over the cake at the imagined dinner.',
+          caption: 'Glasses high over the cake',
+        },
+        {
+          src: '/storyline/176-clara-vienna-cake-mobile-candid-first-slice.jpg',
+          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara lifting the first cake slice as friends applaud at the imagined dinner.',
+          caption: 'Lifting the first slice',
         },
       ],
     },
