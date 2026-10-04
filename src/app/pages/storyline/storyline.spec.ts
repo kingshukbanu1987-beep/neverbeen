@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 65 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 75 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,28 +58,28 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      3, 3, 3, 3, 32, 3, 3, 3, 3,
+      3, 3, 3, 3, 42, 3, 3, 3, 3,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
     ).toBe(true);
-    expect(element.querySelectorAll('.photo-label')).toHaveLength(56);
+    expect(element.querySelectorAll('.photo-label, .lightbox-ai-label')).toHaveLength(0);
     expect(
       element.querySelectorAll('.cover-photo-button img').length +
         element.querySelectorAll('.album-photo img').length,
-    ).toBe(65);
+    ).toBe(75);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
     expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
       '/storyline-of-parallel-universe#switzerland-honeymoon',
     );
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'sixty-five imagined frames',
+      'seventy-five imagined frames',
     );
-    expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('33 FRAMES');
+    expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('43 FRAMES');
   });
 
-  it('adds ten solo wedding portraits of Helen from different angles', () => {
+  it('adds ten tilted mobile portraits of Helen and keeps album arrows available', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
     const londonAlbum = element.querySelector<HTMLElement>('#london-wedding-revisited')!;
@@ -88,21 +88,21 @@ describe('StorylinePage', () => {
     );
     const newPortraits = galleryImages.slice(-10);
 
-    expect(galleryImages).toHaveLength(32);
+    expect(galleryImages).toHaveLength(42);
     expect(
       londonAlbum.querySelector('img[src="/storyline/46-helen-james-london-album-memory.jpg"]'),
     ).toBeNull();
     expect(newPortraits.map((image) => image.getAttribute('src'))).toEqual([
-      '/storyline/57-helen-london-wedding-portrait-front.jpg',
-      '/storyline/58-helen-london-wedding-portrait-three-quarter.jpg',
-      '/storyline/59-helen-london-wedding-portrait-profile.jpg',
-      '/storyline/60-helen-london-wedding-portrait-laughing.jpg',
-      '/storyline/61-helen-london-wedding-portrait-monochrome.jpg',
-      '/storyline/62-helen-london-wedding-portrait-wide-angle.jpg',
-      '/storyline/63-helen-london-wedding-portrait-soft-focus.jpg',
-      '/storyline/64-helen-london-wedding-portrait-thames.jpg',
-      '/storyline/65-helen-london-wedding-portrait-low-angle.jpg',
-      '/storyline/66-helen-london-wedding-portrait-over-shoulder.jpg',
+      '/storyline/67-helen-london-wedding-mobile-macro-front.jpg',
+      '/storyline/68-helen-london-wedding-mobile-macro-three-quarter.jpg',
+      '/storyline/69-helen-london-wedding-mobile-macro-profile.jpg',
+      '/storyline/70-helen-london-wedding-mobile-macro-bouquet.jpg',
+      '/storyline/71-helen-london-wedding-mobile-macro-over-shoulder.jpg',
+      '/storyline/72-helen-london-wedding-mobile-macro-low-angle.jpg',
+      '/storyline/73-helen-london-wedding-mobile-macro-laugh.jpg',
+      '/storyline/74-helen-london-wedding-mobile-macro-back-view.jpg',
+      '/storyline/75-helen-london-wedding-mobile-macro-window.jpg',
+      '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
     ]);
     expect(
       newPortraits.every(
@@ -116,25 +116,43 @@ describe('StorylinePage', () => {
       Array.from(londonAlbum.querySelectorAll('.photo-number')).map((number) =>
         number.textContent?.trim(),
       ),
-    ).toEqual(Array.from({ length: 32 }, (_, index) => String(index + 2).padStart(2, '0')));
+    ).toEqual(Array.from({ length: 42 }, (_, index) => String(index + 2).padStart(2, '0')));
 
     londonAlbum.querySelector<HTMLButtonElement>('.album-toggle')!.click();
     fixture.detectChanges();
     const photoButtons = londonAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
-    photoButtons[31].click();
+    photoButtons[41].click();
     fixture.detectChanges();
 
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
-      '/storyline/66-helen-london-wedding-portrait-over-shoulder.jpg',
+      '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('33 / 33');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('43 / 43');
+    expect(element.querySelector('.lightbox-arrow.previous')?.getAttribute('aria-label')).toBe(
+      'Previous photo in this story',
+    );
+    expect(element.querySelector('.lightbox-arrow.next')?.getAttribute('aria-label')).toBe(
+      'Next photo in this story',
+    );
 
+    (element.querySelector('.lightbox-arrow.previous') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      '/storyline/75-helen-london-wedding-mobile-macro-window.jpg',
+    );
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('42 / 43');
+
+    (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
+    );
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
       '/storyline/17-helen-james-london-registry.jpg',
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('1 / 33');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('1 / 43');
     (element.querySelector('.lightbox-close') as HTMLButtonElement).click();
     fixture.detectChanges();
   });
@@ -186,7 +204,10 @@ describe('StorylinePage', () => {
       const coverImage = album.querySelector<HTMLImageElement>('.cover-photo-button img')!;
       expect(coverImage.getAttribute('src')).toContain('/storyline/');
       expect(getComputedStyle(coverImage).opacity).toBe('1');
-      expect(album.querySelector('.cover-photo-hint')?.textContent).toContain('AI ILLUSTRATION');
+      expect(album.querySelector('.cover-photo-hint')?.textContent).toContain('OPEN COVER');
+      expect(album.querySelector('.cover-photo-hint')?.textContent).not.toContain(
+        'AI ILLUSTRATION',
+      );
       expect(album.querySelector('.story-cover h3')?.textContent?.trim()).toBeTruthy();
       expect(album.querySelector('.cover-location-name')?.textContent?.trim()).toBeTruthy();
       expect(album.querySelector('.cover-people')?.textContent?.trim()).toBeTruthy();
@@ -257,6 +278,9 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
       '/storyline/04-lotte-bram-train.jpg',
     );
+    expect(firstAlbum.querySelectorAll('.photo-label')).toHaveLength(0);
+    expect(element.querySelectorAll('.lightbox-ai-label')).toHaveLength(0);
+    expect(element.querySelector('.story-lightbox')?.textContent).not.toMatch(/AI illustration/i);
     expect(element.querySelector('.lightbox-position')?.textContent).toContain('3 / 4');
 
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();

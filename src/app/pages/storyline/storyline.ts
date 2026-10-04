@@ -402,6 +402,56 @@ export class StorylinePage {
           alt: 'AI-generated over-the-shoulder portrait of fictional bride Helen turning to smile at the camera in her ivory wedding dress.',
           caption: 'A glance over her shoulder',
         },
+        {
+          src: '/storyline/67-helen-london-wedding-mobile-macro-front.jpg',
+          alt: 'AI-generated close smartphone portrait of fictional bride Helen in her ivory wedding dress, looking toward the camera with her white bouquet.',
+          caption: 'A close, tilted look toward the camera',
+        },
+        {
+          src: '/storyline/68-helen-london-wedding-mobile-macro-three-quarter.jpg',
+          alt: 'AI-generated three-quarter smartphone portrait of fictional Helen turning back toward the camera in her long-sleeved ivory wedding dress.',
+          caption: 'A three-quarter turn in the registry light',
+        },
+        {
+          src: '/storyline/69-helen-london-wedding-mobile-macro-profile.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen looking toward the registry-office street in her ivory wedding dress.',
+          caption: 'A quiet side profile by the window',
+        },
+        {
+          src: '/storyline/70-helen-london-wedding-mobile-macro-bouquet.jpg',
+          alt: 'AI-generated macro-style smartphone portrait of fictional Helen smiling down at her white wedding bouquet in her ivory dress.',
+          caption: 'A candid moment with her bouquet',
+        },
+        {
+          src: '/storyline/71-helen-london-wedding-mobile-macro-over-shoulder.jpg',
+          alt: 'AI-generated over-the-shoulder portrait of fictional bride Helen glancing back at the camera in her ivory wedding dress.',
+          caption: 'A glance back over her shoulder',
+        },
+        {
+          src: '/storyline/72-helen-london-wedding-mobile-macro-low-angle.jpg',
+          alt: 'AI-generated low-angle smartphone portrait of fictional Helen in her ivory wedding dress, looking toward the London registry doorway.',
+          caption: 'A low-angle look from the registry steps',
+        },
+        {
+          src: '/storyline/73-helen-london-wedding-mobile-macro-laugh.jpg',
+          alt: 'AI-generated candid close portrait of fictional bride Helen laughing on the registry steps in her ivory wedding dress.',
+          caption: 'A laugh caught at a Dutch angle',
+        },
+        {
+          src: '/storyline/74-helen-london-wedding-mobile-macro-back-view.jpg',
+          alt: 'AI-generated rear three-quarter smartphone portrait of fictional Helen in her ivory wedding dress, turning her face slightly toward the camera.',
+          caption: 'The dress from behind, her face turned aside',
+        },
+        {
+          src: '/storyline/75-helen-london-wedding-mobile-macro-window.jpg',
+          alt: 'AI-generated close mobile portrait of fictional Helen in her wedding dress, looking down beside the registry-office window.',
+          caption: 'A close profile in soft window light',
+        },
+        {
+          src: '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
+          alt: 'AI-generated candid smartphone portrait of fictional Helen turning back with her bouquet in the registry courtyard, wearing her ivory wedding dress.',
+          caption: 'A tilted candid from the courtyard',
+        },
       ],
     },
     {

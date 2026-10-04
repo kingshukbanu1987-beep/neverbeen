@@ -838,21 +838,6 @@ h1 em {
   opacity: 1;
 }
 
-.photo-label {
-  position: absolute;
-  top: 0.65rem;
-  left: 0.65rem;
-  padding: 0.3rem 0.55rem;
-  border: 1px solid rgb(255 255 255 / 35%);
-  border-radius: 999px;
-  background: rgb(24 36 30 / 68%);
-  color: #fffdf9;
-  font-size: 0.59rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  backdrop-filter: blur(8px);
-}
-
 .album-photo figcaption {
   position: absolute;
   z-index: 2;
@@ -1000,18 +985,6 @@ h1 em {
 .lightbox-figure figcaption div > span {
   color: var(--ink-soft);
   font-size: 0.83rem;
-}
-
-.lightbox-ai-label {
-  flex: 0 0 auto;
-  padding: 0.42rem 0.65rem;
-  border: 1px solid rgb(140 90 50 / 22%);
-  border-radius: 999px;
-  color: var(--bronze);
-  font-size: 0.58rem;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .story-lightbox .lightbox-arrow {
@@ -1383,13 +1356,6 @@ h1 em {
   .photo-grid {
     grid-auto-rows: 165px;
     gap: 0.45rem;
-  }
-
-  .photo-label {
-    top: 0.4rem;
-    left: 0.4rem;
-    padding: 0.28rem 0.45rem;
-    font-size: 0.55rem;
   }
 
   .album-photo figcaption {
