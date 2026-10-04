@@ -186,6 +186,56 @@ export class StorylinePage {
           alt: 'AI-generated portrait of fictional Ananya reading between the shelves of a historic Paris bookshop.',
           caption: 'A paperback found on a quiet aisle',
         },
+        {
+          src: '/storyline/207-ananya-paris-winter-selfie-tilted-street.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a camel winter coat, beanie and red scarf on a wet Paris street; the phone is not visible.',
+          caption: 'A crooked snap on a wet street',
+        },
+        {
+          src: '/storyline/208-ananya-paris-winter-selfie-local-bookseller.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a black winter puffer jacket with a Parisian bookseller; the phone is not visible.',
+          caption: 'Squeezed in a bookshop doorway',
+        },
+        {
+          src: '/storyline/209-ananya-paris-winter-selfie-tilted-nightlights.jpg',
+          alt: 'Tilted night-time mobile selfie of fictional Ananya in a navy winter coat and beanie under Paris market lights; the phone is not visible.',
+          caption: 'Streetlamp grain and Christmas lights',
+        },
+        {
+          src: '/storyline/210-ananya-paris-winter-selfie-local-baker.jpg',
+          alt: 'Amateur mobile selfie of fictional Ananya in an olive winter parka with a Parisian baker and a bag of bread; the phone is not visible.',
+          caption: 'Warm bread, fogged bakery glass',
+        },
+        {
+          src: '/storyline/211-ananya-paris-winter-selfie-metro.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a black winter coat on the Paris Métro, glasses catching the lights; the phone is not visible.',
+          caption: 'A tired smile between stations',
+        },
+        {
+          src: '/storyline/212-ananya-paris-winter-selfie-local-florist.jpg',
+          alt: 'Amateur mobile selfie of fictional Ananya in a cream winter coat with a Parisian florist and winter flowers; the phone is not visible.',
+          caption: 'Seasonal flowers, a shared grin',
+        },
+        {
+          src: '/storyline/213-ananya-paris-winter-selfie-tilted-close.jpg',
+          alt: 'Very close tilted amateur mobile selfie of fictional Ananya in a charcoal turtleneck and camel winter coat; the phone is not visible.',
+          caption: 'Too close, and a little crooked',
+        },
+        {
+          src: '/storyline/214-ananya-paris-winter-selfie-tilted-tower.jpg',
+          alt: 'Tilted walking mobile selfie of fictional Ananya in a black winter coat with the Eiffel Tower off-centre behind her; the phone is not visible.',
+          caption: 'Caught mid-word in the wind',
+        },
+        {
+          src: '/storyline/215-ananya-paris-winter-selfie-local-barista.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a camel winter coat laughing with a Parisian barista; the phone is not visible.',
+          caption: 'A laugh over the espresso machine',
+        },
+        {
+          src: '/storyline/216-ananya-paris-winter-selfie-tilted-seine.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in an oatmeal winter coat by the Seine, hair across her face; the phone is not visible.',
+          caption: 'Wind in her eyes beside the river',
+        },
       ],
     },
     {
