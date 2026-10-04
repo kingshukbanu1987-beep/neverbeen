@@ -316,6 +316,56 @@ export class StorylinePage {
           alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of Saint-Sulpice church in Paris; the phone is not visible.',
           caption: 'Twin towers on a wet plaza',
         },
+        {
+          src: '/storyline/237-ananya-paris-nightflash-metro-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local commuter inside a Paris Métro car.',
+          caption: 'Flash on the carriage floor',
+        },
+        {
+          src: '/storyline/238-ananya-paris-nightflash-busstation-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local at a Paris bus station.',
+          caption: 'Wet asphalt and a night bus',
+        },
+        {
+          src: '/storyline/239-ananya-paris-nightflash-cafe-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local waiter at a Paris café.',
+          caption: 'Flash by the espresso machine',
+        },
+        {
+          src: '/storyline/240-ananya-paris-nightflash-trainstation-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local at Gare du Nord train station.',
+          caption: 'A suitcase under the night roof',
+        },
+        {
+          src: '/storyline/241-ananya-paris-nightflash-eiffel-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter puffer with a local in front of the Eiffel Tower.',
+          caption: 'Flash at the lit tower',
+        },
+        {
+          src: '/storyline/242-ananya-paris-nightflash-church-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of a Paris church, Église de la Madeleine.',
+          caption: 'Steps, columns, a hard flash',
+        },
+        {
+          src: '/storyline/243-ananya-paris-nightflash-metroplatform-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local student on a Paris Métro platform.',
+          caption: 'Yellow line, a night train',
+        },
+        {
+          src: '/storyline/244-ananya-paris-nightflash-garedelyon-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local baker at Gare de Lyon train station.',
+          caption: 'Clock tower after dark',
+        },
+        {
+          src: '/storyline/245-ananya-paris-nightflash-cafeterrace-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local regular on a Paris café terrace.',
+          caption: 'Heat lamp and a night table',
+        },
+        {
+          src: '/storyline/246-ananya-paris-nightflash-saintsulpice-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of Saint-Sulpice church in Paris.',
+          caption: 'Wet plaza, two dark towers',
+        },
       ],
     },
     {

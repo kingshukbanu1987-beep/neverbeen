@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 211 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 221 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '04', '05', '06', '07', '08', '09']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      73, 74, 40, 4, 4, 4, 4, 4, 4,
+      73, 74, 50, 4, 4, 4, 4, 4, 4,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -71,18 +71,18 @@ describe('StorylinePage', () => {
       ),
     ).toBe(true);
     expect(element.querySelectorAll('.photo-label, .lightbox-ai-label')).toHaveLength(0);
-    expect(element.querySelectorAll('.album-photo img')).toHaveLength(211);
+    expect(element.querySelectorAll('.album-photo img')).toHaveLength(221);
     expect(element.querySelectorAll('.album-index')).toHaveLength(0);
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'two hundred and eleven imagined frames',
+      'two hundred and twenty-one imagined frames',
     );
     expect(element.querySelector('.albums-heading')?.textContent).not.toContain(
       'Album sizes vary',
     );
     expect(albums[0].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
     expect(albums[1].querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
-    expect(albums[2].querySelector('.cover-frame-count')?.textContent).toContain('40 FRAMES');
+    expect(albums[2].querySelector('.cover-frame-count')?.textContent).toContain('50 FRAMES');
   });
 
   it('adds ten mixed-style Paris photos matching Ananya to Storyline 3', () => {
@@ -115,7 +115,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(40);
+    expect(galleryImages).toHaveLength(50);
     expect(addedPhotos).toHaveLength(8);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...retainedPhotoSources].sort(),
@@ -130,7 +130,7 @@ describe('StorylinePage', () => {
         .filter((image) => /selfie/i.test(image.alt))
         .every((image) => /phone is not visible/i.test(image.alt)),
     ).toBe(true);
-    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('40 FRAMES');
+    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('50 FRAMES');
     expect(parisAlbum.querySelector('.cover-index strong')?.textContent?.trim()).toBe('03');
   });
 
@@ -157,7 +157,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(40);
+    expect(galleryImages).toHaveLength(50);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -171,7 +171,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/baker/i);
     expect(addedDescriptions).toMatch(/florist/i);
     expect(addedDescriptions).toMatch(/barista/i);
-    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('40 FRAMES');
+    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('50 FRAMES');
   });
 
   it('adds ten tilted winter selfies with locals at French landmarks to Storyline 3', () => {
@@ -197,7 +197,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(40);
+    expect(galleryImages).toHaveLength(50);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -218,7 +218,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/Nice/i);
     expect(addedDescriptions).toMatch(/Strasbourg/i);
     expect(addedDescriptions).toMatch(/Moulin Rouge/i);
-    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('40 FRAMES');
+    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('50 FRAMES');
   });
 
   it('adds ten tilted winter selfies with locals at Paris stations, cafés and landmarks to Storyline 3', () => {
@@ -244,7 +244,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(40);
+    expect(galleryImages).toHaveLength(50);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -261,7 +261,51 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/train station/i);
     expect(addedDescriptions).toMatch(/Eiffel Tower/i);
     expect(addedDescriptions).toMatch(/church/i);
-    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('40 FRAMES');
+    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('50 FRAMES');
+  });
+
+  it('adds ten tilted night-flash full-figure photos with locals in Paris to Storyline 3', () => {
+    const element: HTMLElement = create().nativeElement;
+    const parisAlbum = element.querySelector<HTMLElement>('#paris-solo-dream')!;
+    const galleryImages = Array.from(
+      parisAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/237-ananya-paris-nightflash-metro-full.jpg',
+      '/storyline/238-ananya-paris-nightflash-busstation-full.jpg',
+      '/storyline/239-ananya-paris-nightflash-cafe-full.jpg',
+      '/storyline/240-ananya-paris-nightflash-trainstation-full.jpg',
+      '/storyline/241-ananya-paris-nightflash-eiffel-full.jpg',
+      '/storyline/242-ananya-paris-nightflash-church-full.jpg',
+      '/storyline/243-ananya-paris-nightflash-metroplatform-full.jpg',
+      '/storyline/244-ananya-paris-nightflash-garedelyon-full.jpg',
+      '/storyline/245-ananya-paris-nightflash-cafeterrace-full.jpg',
+      '/storyline/246-ananya-paris-nightflash-saintsulpice-full.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(50);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Ananya'))).toBe(true);
+    expect(addedPhotos.every((image) => /full-figure/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /night/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /flash/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /winter/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /local/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/Métro/i);
+    expect(addedDescriptions).toMatch(/bus station/i);
+    expect(addedDescriptions).toMatch(/café/i);
+    expect(addedDescriptions).toMatch(/train station/i);
+    expect(addedDescriptions).toMatch(/Eiffel Tower/i);
+    expect(addedDescriptions).toMatch(/church/i);
+    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('50 FRAMES');
   });
 
   it('removes the requested picture IDs from Storyline 3', () => {
@@ -278,13 +322,13 @@ describe('StorylinePage', () => {
       '/storyline/206-ananya-paris-bookstore-portrait.jpg', // 14
     ];
 
-    expect(galleryImages).toHaveLength(40);
+    expect(galleryImages).toHaveLength(50);
     expect(
       removedPictureSources.every(
         (src) => !galleryImages.some((image) => image.getAttribute('src') === src),
       ),
     ).toBe(true);
-    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('40 FRAMES');
+    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('50 FRAMES');
   });
 
   it('keeps the Storyline 6 cover and shuffles the remaining photo order', () => {
