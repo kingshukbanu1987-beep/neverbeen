@@ -79,6 +79,27 @@ describe('StorylinePage', () => {
     expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
   });
 
+  it('keeps the Storyline 6 cover and shuffles the remaining photo order', () => {
+    const element: HTMLElement = create().nativeElement;
+    const londonAlbum = element.querySelector<HTMLElement>('#london-wedding-revisited')!;
+    const coverSource = londonAlbum
+      .querySelector<HTMLImageElement>('.cover-photo-button img')
+      ?.getAttribute('src');
+    const gallerySources = Array.from(
+      londonAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    ).map((image) => image.getAttribute('src'));
+
+    expect(coverSource).toBe('/storyline/17-helen-james-london-registry.jpg');
+    expect(gallerySources).toHaveLength(72);
+    expect(new Set(gallerySources).size).toBe(72);
+    expect(gallerySources.slice(0, 4)).not.toEqual([
+      '/storyline/18-helen-james-london-register.jpg',
+      '/storyline/19-helen-james-london-reception.jpg',
+      '/storyline/20-helen-james-london-thames.jpg',
+      '/storyline/37-helen-james-london-confetti.jpg',
+    ]);
+  });
+
   it('removes the requested picture IDs from Storyline 6', () => {
     const element: HTMLElement = create().nativeElement;
     const londonAlbum = element.querySelector<HTMLElement>('#london-wedding-revisited')!;
@@ -110,10 +131,7 @@ describe('StorylinePage', () => {
     const galleryImages = Array.from(
       londonAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
     );
-    const addedPhotos = galleryImages.slice(-20, -10);
-    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
-
-    expect(addedPhotos.map((image) => image.getAttribute('src'))).toEqual([
+    const addedPhotoSources = [
       '/storyline/97-helen-james-mobile-family-registry.jpg',
       '/storyline/98-helen-mother-bride-mobile-portrait.jpg',
       '/storyline/99-helen-james-wedding-rings-mobile-macro.jpg',
@@ -124,7 +142,16 @@ describe('StorylinePage', () => {
       '/storyline/104-helen-james-family-registry-wide-phone.jpg',
       '/storyline/105-helen-james-bouquet-mobile-macro.jpg',
       '/storyline/106-helen-james-parents-mobile-group-selfie.jpg',
-    ]);
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
     expect(addedPhotos.every((image) => image.alt.includes('Helen'))).toBe(true);
     expect(addedDescriptions).toMatch(/mobile|smartphone|phone/i);
     expect(addedDescriptions).toMatch(/macro/i);
@@ -143,10 +170,7 @@ describe('StorylinePage', () => {
     const galleryImages = Array.from(
       londonAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
     );
-    const blackAndWhitePhotos = galleryImages.slice(-10);
-    const descriptions = blackAndWhitePhotos.map((image) => image.alt).join(' ');
-
-    expect(blackAndWhitePhotos.map((image) => image.getAttribute('src'))).toEqual([
+    const blackAndWhiteSources = [
       '/storyline/107-helen-james-black-white-mobile-family-wide.jpg',
       '/storyline/108-helen-mother-bride-black-white-phone-portrait.jpg',
       '/storyline/109-helen-james-wedding-rings-bw-phone-macro.jpg',
@@ -157,7 +181,16 @@ describe('StorylinePage', () => {
       '/storyline/114-helen-james-black-white-registry-exit-wide.jpg',
       '/storyline/115-helen-james-wedding-details-bw-phone-macro.jpg',
       '/storyline/116-helen-james-parents-black-white-phone-candid.jpg',
-    ]);
+    ];
+    const blackAndWhitePhotos = galleryImages.filter((image) =>
+      blackAndWhiteSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const descriptions = blackAndWhitePhotos.map((image) => image.alt).join(' ');
+
+    expect(blackAndWhitePhotos).toHaveLength(10);
+    expect(blackAndWhitePhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...blackAndWhiteSources].sort(),
+    );
     expect(blackAndWhitePhotos.every((image) => /black-and-white/i.test(image.alt))).toBe(true);
     expect(blackAndWhitePhotos.every((image) => /mobile|smartphone|phone/i.test(image.alt))).toBe(
       true,
@@ -176,7 +209,21 @@ describe('StorylinePage', () => {
     const galleryImages = Array.from(
       londonAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
     );
-    const soloPortraits = galleryImages.slice(24, 34);
+    const soloPortraitSources = [
+      '/storyline/67-helen-london-wedding-mobile-macro-front.jpg',
+      '/storyline/68-helen-london-wedding-mobile-macro-three-quarter.jpg',
+      '/storyline/69-helen-london-wedding-mobile-macro-profile.jpg',
+      '/storyline/70-helen-london-wedding-mobile-macro-bouquet.jpg',
+      '/storyline/71-helen-london-wedding-mobile-macro-over-shoulder.jpg',
+      '/storyline/72-helen-london-wedding-mobile-macro-low-angle.jpg',
+      '/storyline/73-helen-london-wedding-mobile-macro-laugh.jpg',
+      '/storyline/74-helen-london-wedding-mobile-macro-back-view.jpg',
+      '/storyline/75-helen-london-wedding-mobile-macro-window.jpg',
+      '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
+    ];
+    const soloPortraits = galleryImages.filter((image) =>
+      soloPortraitSources.includes(image.getAttribute('src') ?? ''),
+    );
 
     expect(galleryImages).toHaveLength(72);
     expect(
@@ -190,18 +237,10 @@ describe('StorylinePage', () => {
         '/storyline/44-helen-james-london-wedding-breakfast.jpg',
       ].every((src) => !galleryImages.some((image) => image.getAttribute('src') === src)),
     ).toBe(true);
-    expect(soloPortraits.map((image) => image.getAttribute('src'))).toEqual([
-      '/storyline/67-helen-london-wedding-mobile-macro-front.jpg',
-      '/storyline/68-helen-london-wedding-mobile-macro-three-quarter.jpg',
-      '/storyline/69-helen-london-wedding-mobile-macro-profile.jpg',
-      '/storyline/70-helen-london-wedding-mobile-macro-bouquet.jpg',
-      '/storyline/71-helen-london-wedding-mobile-macro-over-shoulder.jpg',
-      '/storyline/72-helen-london-wedding-mobile-macro-low-angle.jpg',
-      '/storyline/73-helen-london-wedding-mobile-macro-laugh.jpg',
-      '/storyline/74-helen-london-wedding-mobile-macro-back-view.jpg',
-      '/storyline/75-helen-london-wedding-mobile-macro-window.jpg',
-      '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
-    ]);
+    expect(soloPortraits).toHaveLength(10);
+    expect(soloPortraits.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...soloPortraitSources].sort(),
+    );
     expect(
       soloPortraits.every(
         (image) =>
@@ -228,16 +267,18 @@ describe('StorylinePage', () => {
     );
 
     expect(galleryImages).toHaveLength(72);
-    expect(couplePortraits.map((image) => image.getAttribute('src'))).toEqual([
-      '/storyline/77-helen-james-wedding-mobile-macro-candid-laugh.jpg',
-      '/storyline/79-helen-james-wedding-mobile-macro-over-shoulder.jpg',
-      '/storyline/80-helen-james-wedding-mobile-macro-high-angle.jpg',
-      '/storyline/82-helen-james-wedding-mobile-macro-forehead-kiss.jpg',
-      '/storyline/83-helen-james-wedding-mobile-macro-laughing-selfie.jpg',
-      '/storyline/84-helen-james-wedding-mobile-macro-back-view.jpg',
-      '/storyline/85-helen-james-wedding-mobile-macro-thames-profile.jpg',
-      '/storyline/86-helen-james-wedding-mobile-macro-courtyard-embrace.jpg',
-    ]);
+    expect(couplePortraits.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [
+        '/storyline/77-helen-james-wedding-mobile-macro-candid-laugh.jpg',
+        '/storyline/79-helen-james-wedding-mobile-macro-over-shoulder.jpg',
+        '/storyline/80-helen-james-wedding-mobile-macro-high-angle.jpg',
+        '/storyline/82-helen-james-wedding-mobile-macro-forehead-kiss.jpg',
+        '/storyline/83-helen-james-wedding-mobile-macro-laughing-selfie.jpg',
+        '/storyline/84-helen-james-wedding-mobile-macro-back-view.jpg',
+        '/storyline/85-helen-james-wedding-mobile-macro-thames-profile.jpg',
+        '/storyline/86-helen-james-wedding-mobile-macro-courtyard-embrace.jpg',
+      ].sort(),
+    );
     expect(
       couplePortraits.every(
         (image) =>
@@ -260,18 +301,20 @@ describe('StorylinePage', () => {
     );
 
     expect(galleryImages).toHaveLength(72);
-    expect(familyPortraits.map((image) => image.getAttribute('src'))).toEqual([
-      '/storyline/87-helen-wedding-mobile-macro-friends-laugh.jpg',
-      '/storyline/88-helen-wedding-mobile-macro-mother-embrace.jpg',
-      '/storyline/89-helen-wedding-mobile-macro-sister-whisper.jpg',
-      '/storyline/90-helen-wedding-mobile-macro-bouquet-friend.jpg',
-      '/storyline/91-helen-wedding-mobile-macro-family-toast.jpg',
-      '/storyline/92-helen-wedding-mobile-macro-back-view-friend.jpg',
-      '/storyline/93-helen-wedding-mobile-macro-mother-profile.jpg',
-      '/storyline/94-helen-wedding-mobile-macro-window-friend.jpg',
-      '/storyline/95-helen-wedding-mobile-macro-courtyard-friends.jpg',
-      '/storyline/96-helen-wedding-mobile-macro-laugh-over-shoulder.jpg',
-    ]);
+    expect(familyPortraits.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [
+        '/storyline/87-helen-wedding-mobile-macro-friends-laugh.jpg',
+        '/storyline/88-helen-wedding-mobile-macro-mother-embrace.jpg',
+        '/storyline/89-helen-wedding-mobile-macro-sister-whisper.jpg',
+        '/storyline/90-helen-wedding-mobile-macro-bouquet-friend.jpg',
+        '/storyline/91-helen-wedding-mobile-macro-family-toast.jpg',
+        '/storyline/92-helen-wedding-mobile-macro-back-view-friend.jpg',
+        '/storyline/93-helen-wedding-mobile-macro-mother-profile.jpg',
+        '/storyline/94-helen-wedding-mobile-macro-window-friend.jpg',
+        '/storyline/95-helen-wedding-mobile-macro-courtyard-friends.jpg',
+        '/storyline/96-helen-wedding-mobile-macro-laugh-over-shoulder.jpg',
+      ].sort(),
+    );
     expect(
       familyPortraits.every(
         (image) =>
@@ -284,14 +327,23 @@ describe('StorylinePage', () => {
 
     londonAlbum.querySelector<HTMLButtonElement>('.album-toggle')!.click();
     fixture.detectChanges();
-    const photoButtons = londonAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
-    photoButtons[71].click();
+    const photoButtons = Array.from(
+      londonAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button'),
+    );
+    const selectedSource = '/storyline/116-helen-james-parents-black-white-phone-candid.jpg';
+    const selectedPhotoIndex = galleryImages.findIndex(
+      (image) => image.getAttribute('src') === selectedSource,
+    );
+    expect(selectedPhotoIndex).toBeGreaterThanOrEqual(0);
+    photoButtons[selectedPhotoIndex].click();
     fixture.detectChanges();
 
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
-      '/storyline/116-helen-james-parents-black-white-phone-candid.jpg',
+      selectedSource,
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('73 / 73');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain(
+      `${selectedPhotoIndex + 2} / 73`,
+    );
     expect(element.querySelector('.lightbox-arrow.previous')?.getAttribute('aria-label')).toBe(
       'Previous photo in this story',
     );
@@ -299,21 +351,36 @@ describe('StorylinePage', () => {
       'Next photo in this story',
     );
 
+    const previousSource =
+      selectedPhotoIndex === 0
+        ? '/storyline/17-helen-james-london-registry.jpg'
+        : galleryImages[selectedPhotoIndex - 1].getAttribute('src');
     (element.querySelector('.lightbox-arrow.previous') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
-      '/storyline/115-helen-james-wedding-details-bw-phone-macro.jpg',
+      previousSource,
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('72 / 73');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain(
+      `${selectedPhotoIndex === 0 ? 1 : selectedPhotoIndex + 1} / 73`,
+    );
 
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
     fixture.detectChanges();
+    expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
+      selectedSource,
+    );
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
     fixture.detectChanges();
+    const nextSource =
+      selectedPhotoIndex === galleryImages.length - 1
+        ? '/storyline/17-helen-james-london-registry.jpg'
+        : galleryImages[selectedPhotoIndex + 1].getAttribute('src');
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
-      '/storyline/17-helen-james-london-registry.jpg',
+      nextSource,
     );
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('1 / 73');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain(
+      `${selectedPhotoIndex === galleryImages.length - 1 ? 1 : selectedPhotoIndex + 3} / 73`,
+    );
     (element.querySelector('.lightbox-close') as HTMLButtonElement).click();
     fixture.detectChanges();
   });
