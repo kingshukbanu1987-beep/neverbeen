@@ -326,58 +326,7 @@ h1 em {
 }
 
 .albums-heading h2 {
-  margin-bottom: 0.9rem;
-}
-
-.albums-heading > p:last-child {
-  max-width: 640px;
-  margin-inline: auto;
-  color: var(--ink-soft);
-  font-size: 0.96rem;
-  line-height: 1.7;
-}
-
-.album-index {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.55rem;
-  margin: -2rem auto 3rem;
-}
-
-.album-index a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 38px;
-  padding: 0.42rem 0.75rem;
-  border: 1px solid rgb(36 53 44 / 15%);
-  border-radius: 999px;
-  background: #fffdf9;
-  color: var(--forest);
-  font-size: 0.72rem;
-  font-weight: 650;
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.album-index a:hover {
-  transform: translateY(-1px);
-  border-color: var(--gold);
-  background: #f3ece2;
-}
-
-.album-index a:focus-visible {
-  outline: 2px solid var(--bronze);
-  outline-offset: 3px;
-}
-
-.album-index a span {
-  color: var(--bronze);
-  font-size: 0.62rem;
-  font-weight: 750;
+  margin-bottom: 0;
 }
 
 .story-album {
@@ -409,7 +358,7 @@ h1 em {
   overflow: hidden;
   border: 0;
   background: #18241e;
-  cursor: zoom-in;
+  cursor: pointer;
 }
 
 .cover-photo-button img {
@@ -685,8 +634,8 @@ h1 em {
 
 .album-layout {
   display: grid;
-  grid-template-columns: minmax(290px, 0.82fr) minmax(0, 1.18fr);
-  gap: clamp(2rem, 5vw, 4.5rem);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.6rem, 3.5vw, 2.6rem);
   align-items: start;
   padding-top: clamp(2rem, 4vw, 3.5rem);
 }
@@ -696,7 +645,21 @@ h1 em {
 }
 
 .album-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
   padding-top: 0.3rem;
+}
+
+.story-copy {
+  min-width: 0;
+}
+
+.story-notes {
+  display: grid;
+  gap: 1.15rem;
+  min-width: 0;
 }
 
 .chapter-label {
@@ -765,8 +728,8 @@ h1 em {
 
 .photo-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: clamp(185px, 21vw, 255px);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: clamp(185px, 16vw, 240px);
   gap: 0.8rem;
 }
 
@@ -1110,11 +1073,13 @@ h1 em {
   }
 
   .album-story {
-    max-width: 740px;
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
   }
 
   .photo-grid {
-    grid-auto-rows: clamp(220px, 36vw, 330px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: clamp(200px, 28vw, 280px);
   }
 }
 
@@ -1281,6 +1246,7 @@ h1 em {
   }
 
   .photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-auto-rows: clamp(165px, 48vw, 255px);
     gap: 0.55rem;
   }

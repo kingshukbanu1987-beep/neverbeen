@@ -57,8 +57,7 @@ export class StorylinePage {
   private lastFocusedTrigger: HTMLElement | null = null;
   private previousBodyOverflow = '';
 
-  protected readonly storylinePath = '/storyline-of-parallel-universe';
-  protected readonly albums: StoryAlbum[] = [
+  private readonly albumCatalog: StoryAlbum[] = [
     {
       id: 'switzerland-honeymoon',
       number: '01',
@@ -128,14 +127,394 @@ export class StorylinePage {
           caption: 'A map, a pause, a day on her own terms',
         },
         {
-          src: '/storyline/07-ananya-cafe.jpg',
-          alt: 'AI-generated phone-style illustration of a woman sitting alone with a notebook at a Paris café.',
-          caption: 'A small table and nowhere else to be',
+          src: '/storyline/197-ananya-paris-portrait-trocadero.jpg',
+          alt: 'AI-generated portrait of fictional Indian woman Ananya in a maroon kurta and mustard dupatta at Trocadéro, with the Eiffel Tower softly behind her.',
+          caption: 'A portrait with the tower at a distance',
         },
         {
-          src: '/storyline/08-ananya-montmartre.jpg',
-          alt: 'AI-generated travel illustration of a woman walking alone on a Montmartre street in Paris.',
-          caption: 'A long walk, taken at her own pace',
+          src: '/storyline/198-ananya-paris-wide-notredame.jpg',
+          alt: 'AI-generated wide-angle snapshot of fictional Ananya on the Seine quay beside Notre-Dame cathedral in Paris.',
+          caption: 'The cathedral from the river walk',
+        },
+        {
+          src: '/storyline/200-ananya-paris-selfie-montmartre.jpg',
+          alt: 'AI-generated mobile selfie of fictional Ananya on a Montmartre street with Sacré-Cœur behind her; the phone is not visible.',
+          caption: 'A quiet selfie under the dome',
+        },
+        {
+          src: '/storyline/201-ananya-paris-selfie-local-cafe.jpg',
+          alt: 'AI-generated mobile selfie of fictional Ananya with a Parisian café waiter on a pavement terrace; the phone is not visible.',
+          caption: 'A smile shared with the waiter',
+        },
+        {
+          src: '/storyline/202-ananya-paris-portrait-bridge.jpg',
+          alt: 'AI-generated evening portrait of fictional Ananya in a navy coat on Pont Alexandre III in Paris.',
+          caption: 'Lamp-light on the gold bridge',
+        },
+        {
+          src: '/storyline/203-ananya-paris-wide-gardens.jpg',
+          alt: 'AI-generated wide-angle snapshot of fictional Ananya reading in a mustard kurta on a chair in the Luxembourg Gardens.',
+          caption: 'A book and an unhurried park hour',
+        },
+        {
+          src: '/storyline/204-ananya-paris-macro-jewelry.jpg',
+          alt: 'AI-generated mobile macro photo of fictional Ananya’s gold jhumka earring, dupatta weave and bangles against a Paris building.',
+          caption: 'Gold from home, close to the camera',
+        },
+        {
+          src: '/storyline/205-ananya-paris-selfie-local-market.jpg',
+          alt: 'AI-generated mobile selfie of fictional Ananya with a Parisian market vendor and a paper cone of strawberries; the phone is not visible.',
+          caption: 'Strawberries from a local stall',
+        },
+        {
+          src: '/storyline/207-ananya-paris-winter-selfie-tilted-street.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a camel winter coat, beanie and red scarf on a wet Paris street; the phone is not visible.',
+          caption: 'A crooked snap on a wet street',
+        },
+        {
+          src: '/storyline/208-ananya-paris-winter-selfie-local-bookseller.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a black winter puffer jacket with a Parisian bookseller; the phone is not visible.',
+          caption: 'Squeezed in a bookshop doorway',
+        },
+        {
+          src: '/storyline/209-ananya-paris-winter-selfie-tilted-nightlights.jpg',
+          alt: 'Tilted night-time mobile selfie of fictional Ananya in a navy winter coat and beanie under Paris market lights; the phone is not visible.',
+          caption: 'Streetlamp grain and Christmas lights',
+        },
+        {
+          src: '/storyline/210-ananya-paris-winter-selfie-local-baker.jpg',
+          alt: 'Amateur mobile selfie of fictional Ananya in an olive winter parka with a Parisian baker and a bag of bread; the phone is not visible.',
+          caption: 'Warm bread, fogged bakery glass',
+        },
+        {
+          src: '/storyline/211-ananya-paris-winter-selfie-metro.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a black winter coat on the Paris Métro, glasses catching the lights; the phone is not visible.',
+          caption: 'A tired smile between stations',
+        },
+        {
+          src: '/storyline/212-ananya-paris-winter-selfie-local-florist.jpg',
+          alt: 'Amateur mobile selfie of fictional Ananya in a cream winter coat with a Parisian florist and winter flowers; the phone is not visible.',
+          caption: 'Seasonal flowers, a shared grin',
+        },
+        {
+          src: '/storyline/213-ananya-paris-winter-selfie-tilted-close.jpg',
+          alt: 'Very close tilted amateur mobile selfie of fictional Ananya in a charcoal turtleneck and camel winter coat; the phone is not visible.',
+          caption: 'Too close, and a little crooked',
+        },
+        {
+          src: '/storyline/214-ananya-paris-winter-selfie-tilted-tower.jpg',
+          alt: 'Tilted walking mobile selfie of fictional Ananya in a black winter coat with the Eiffel Tower off-centre behind her; the phone is not visible.',
+          caption: 'Caught mid-word in the wind',
+        },
+        {
+          src: '/storyline/215-ananya-paris-winter-selfie-local-barista.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in a camel winter coat laughing with a Parisian barista; the phone is not visible.',
+          caption: 'A laugh over the espresso machine',
+        },
+        {
+          src: '/storyline/216-ananya-paris-winter-selfie-tilted-seine.jpg',
+          alt: 'Tilted amateur mobile selfie of fictional Ananya in an oatmeal winter coat by the Seine, hair across her face; the phone is not visible.',
+          caption: 'Wind in her eyes beside the river',
+        },
+        {
+          src: '/storyline/217-ananya-france-winter-selfie-louvre-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local art student at the Louvre Pyramid in Paris; the phone is not visible.',
+          caption: 'A crooked snap at the pyramid',
+        },
+        {
+          src: '/storyline/218-ananya-france-winter-selfie-arc-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a Parisian local at the Arc de Triomphe; the phone is not visible.',
+          caption: 'Traffic and the arch, slightly off',
+        },
+        {
+          src: '/storyline/219-ananya-france-winter-selfie-eiffel-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya laughing with a local on Champ de Mars, Eiffel Tower behind; the phone is not visible.',
+          caption: 'A windy laugh under the tower',
+        },
+        {
+          src: '/storyline/220-ananya-france-winter-selfie-notredame-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local skipper beside Notre-Dame; the phone is not visible.',
+          caption: 'The cathedral from a river selfie',
+        },
+        {
+          src: '/storyline/221-ananya-france-winter-selfie-sacrecoeur-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local street musician on the Sacré-Cœur steps; the phone is not visible.',
+          caption: 'Accordion on the basilica steps',
+        },
+        {
+          src: '/storyline/222-ananya-france-winter-selfie-versailles-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local palace guide at the gold gates of Versailles; the phone is not visible.',
+          caption: 'Gold gates, a borrowed lanyard smile',
+        },
+        {
+          src: '/storyline/223-ananya-france-winter-selfie-montstmichel-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local innkeeper in front of Mont Saint-Michel; the phone is not visible.',
+          caption: 'Wind and the mount on the tide',
+        },
+        {
+          src: '/storyline/224-ananya-france-winter-selfie-nice-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a Nice local on the Promenade des Anglais; the phone is not visible.',
+          caption: 'A winter walk beside the pebbles',
+        },
+        {
+          src: '/storyline/225-ananya-france-winter-selfie-strasbourg-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local market vendor and chestnuts at Strasbourg Cathedral; the phone is not visible.',
+          caption: 'Chestnuts under the cathedral lights',
+        },
+        {
+          src: '/storyline/226-ananya-france-winter-selfie-moulinrouge-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local outside the Moulin Rouge at night; the phone is not visible.',
+          caption: 'Red neon, a late Pigalle snap',
+        },
+        {
+          src: '/storyline/227-ananya-paris-winter-selfie-metro-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local commuter inside a Paris Métro car; the phone is not visible.',
+          caption: 'Green lights between stations',
+        },
+        {
+          src: '/storyline/228-ananya-paris-winter-selfie-busstation-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local at a rainy Paris bus station; the phone is not visible.',
+          caption: 'A wet stop for the number 15',
+        },
+        {
+          src: '/storyline/229-ananya-paris-winter-selfie-cafe-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local waiter at a Paris café; the phone is not visible.',
+          caption: 'Espresso steam and a borrowed smile',
+        },
+        {
+          src: '/storyline/230-ananya-paris-winter-selfie-trainstation-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local at Gare du Nord train station; the phone is not visible.',
+          caption: 'Departure boards and a suitcase',
+        },
+        {
+          src: '/storyline/231-ananya-paris-winter-selfie-eiffel-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of the Eiffel Tower; the phone is not visible.',
+          caption: 'A crooked laugh under the tower',
+        },
+        {
+          src: '/storyline/232-ananya-paris-winter-selfie-church-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of a Paris church, Église de la Madeleine; the phone is not visible.',
+          caption: 'Columns and a parish volunteer',
+        },
+        {
+          src: '/storyline/233-ananya-paris-winter-selfie-metroplatform-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local student on a Paris Métro platform; the phone is not visible.',
+          caption: 'A train blur on the tiles',
+        },
+        {
+          src: '/storyline/234-ananya-paris-winter-selfie-garedelyon-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local baker at Gare de Lyon train station; the phone is not visible.',
+          caption: 'Clock tower and baguettes',
+        },
+        {
+          src: '/storyline/235-ananya-paris-winter-selfie-cafeterrace-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local regular on a Paris café terrace; the phone is not visible.',
+          caption: 'Heat lamp, two small coffees',
+        },
+        {
+          src: '/storyline/236-ananya-paris-winter-selfie-saintsulpice-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of Saint-Sulpice church in Paris; the phone is not visible.',
+          caption: 'Twin towers on a wet plaza',
+        },
+        {
+          src: '/storyline/237-ananya-paris-nightflash-metro-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local commuter inside a Paris Métro car.',
+          caption: 'Flash on the carriage floor',
+        },
+        {
+          src: '/storyline/238-ananya-paris-nightflash-busstation-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local at a Paris bus station.',
+          caption: 'Wet asphalt and a night bus',
+        },
+        {
+          src: '/storyline/239-ananya-paris-nightflash-cafe-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local waiter at a Paris café.',
+          caption: 'Flash by the espresso machine',
+        },
+        {
+          src: '/storyline/240-ananya-paris-nightflash-trainstation-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local at Gare du Nord train station.',
+          caption: 'A suitcase under the night roof',
+        },
+        {
+          src: '/storyline/241-ananya-paris-nightflash-eiffel-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter puffer with a local in front of the Eiffel Tower.',
+          caption: 'Flash at the lit tower',
+        },
+        {
+          src: '/storyline/242-ananya-paris-nightflash-church-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of a Paris church, Église de la Madeleine.',
+          caption: 'Steps, columns, a hard flash',
+        },
+        {
+          src: '/storyline/243-ananya-paris-nightflash-metroplatform-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local student on a Paris Métro platform.',
+          caption: 'Yellow line, a night train',
+        },
+        {
+          src: '/storyline/244-ananya-paris-nightflash-garedelyon-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local baker at Gare de Lyon train station.',
+          caption: 'Clock tower after dark',
+        },
+        {
+          src: '/storyline/245-ananya-paris-nightflash-cafeterrace-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local regular on a Paris café terrace.',
+          caption: 'Heat lamp and a night table',
+        },
+        {
+          src: '/storyline/246-ananya-paris-nightflash-saintsulpice-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of Saint-Sulpice church in Paris.',
+          caption: 'Wet plaza, two dark towers',
+        },
+        {
+          src: '/storyline/247-ananya-paris-nightflash-metro-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local commuter inside a Paris Métro car.',
+          caption: 'Green tubes, a wet carriage floor',
+        },
+        {
+          src: '/storyline/248-ananya-paris-nightflash-busstation-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local at a Paris bus station.',
+          caption: 'Noctilien in the rain',
+        },
+        {
+          src: '/storyline/249-ananya-paris-nightflash-cafe-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local waiter at a Paris café.',
+          caption: 'Flash on the zinc bar',
+        },
+        {
+          src: '/storyline/250-ananya-paris-nightflash-trainstation-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local at a Paris train station.',
+          caption: 'Departure boards after dark',
+        },
+        {
+          src: '/storyline/251-ananya-paris-nightflash-eiffel-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter puffer with a local in front of the Eiffel Tower.',
+          caption: 'Puddles under the lit tower',
+        },
+        {
+          src: '/storyline/252-ananya-paris-nightflash-church-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of a Paris church, Saint-Eustache.',
+          caption: 'Wet cobbles, a parish smile',
+        },
+        {
+          src: '/storyline/253-ananya-paris-nightflash-metroplatform-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local student on a Paris Métro platform.',
+          caption: 'Yellow line, an incoming train',
+        },
+        {
+          src: '/storyline/254-ananya-paris-nightflash-garedelyon-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local baker at Gare de Lyon train station.',
+          caption: 'Clock tower and baguettes',
+        },
+        {
+          src: '/storyline/255-ananya-paris-nightflash-cafeterrace-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local regular on a Paris café terrace.',
+          caption: 'Heat lamp, two winter coats',
+        },
+        {
+          src: '/storyline/256-ananya-paris-nightflash-saintsulpice-full.jpg',
+          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of Saint-Sulpice church in Paris.',
+          caption: 'Fountain spray, two dark towers',
+        },
+        {
+          src: '/storyline/257-ananya-cdg-morning-terminal-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local airport worker at CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
+          caption: 'Terminal 2E, a red cabin case',
+        },
+        {
+          src: '/storyline/258-ananya-cdg-morning-checkin-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local check-in agent at CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
+          caption: 'Air France desks before the rush',
+        },
+        {
+          src: '/storyline/259-ananya-cdg-morning-security-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter puffer with a local traveller in the CDG Airport security queue, holding a red Delsey Paris cabin trolley.',
+          caption: 'Grey trays and a yellow line',
+        },
+        {
+          src: '/storyline/260-ananya-cdg-morning-gate-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local traveller at a CDG Airport gate, holding a red Delsey Paris cabin trolley.',
+          caption: 'Dawn on the wet tarmac',
+        },
+        {
+          src: '/storyline/261-ananya-cdg-morning-exterior-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local taxi driver outside CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
+          caption: 'Wet kerb under the CDG letters',
+        },
+        {
+          src: '/storyline/262-ananya-cdg-morning-cdgval-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local commuter on the CDGVAL at CDG Airport, holding a red Delsey Paris cabin trolley.',
+          caption: 'Shuttle doors, a red cabin case',
+        },
+        {
+          src: '/storyline/263-ananya-cdg-morning-cafe-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local barista at a CDG Airport café, holding a red Delsey Paris cabin trolley.',
+          caption: 'Espresso before the boarding call',
+        },
+        {
+          src: '/storyline/264-ananya-cdg-morning-arrivals-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter parka with a local greeter in the CDG Airport arrivals hall, holding a red Delsey Paris cabin trolley.',
+          caption: 'A cardboard name at arrivals',
+        },
+        {
+          src: '/storyline/265-ananya-cdg-morning-baggage-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local traveller at a CDG Airport baggage carousel, holding a red Delsey Paris cabin trolley.',
+          caption: 'An empty belt, still waiting',
+        },
+        {
+          src: '/storyline/266-ananya-cdg-morning-rerb-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local commuter on the RER B platform at CDG Airport, holding a red Delsey Paris cabin trolley.',
+          caption: 'A blue train into the city',
+        },
+        {
+          src: '/storyline/267-ananya-af-biz-selfie-window.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya in an Air France business class cabin with other passengers by the window; the phone is not visible.',
+          caption: 'A window seat before climb-out',
+        },
+        {
+          src: '/storyline/268-ananya-af-biz-selfie-attendant.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a flight attendant and other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'A red scarf in the aisle',
+        },
+        {
+          src: '/storyline/269-ananya-af-biz-selfie-neighbour.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a neighbouring passenger in an Air France business class cabin; the phone is not visible.',
+          caption: 'CDG to JFK, two winter jumpers',
+        },
+        {
+          src: '/storyline/270-ananya-af-biz-selfie-meal.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya at meal service with other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'Small plates over the wing',
+        },
+        {
+          src: '/storyline/271-ananya-af-biz-selfie-champagne.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a welcome glass and other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'Bubbles after pushback',
+        },
+        {
+          src: '/storyline/272-ananya-af-biz-selfie-cabin.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya looking down an Air France business class cabin full of other passengers; the phone is not visible.',
+          caption: 'Blue seats, a boarding shuffle',
+        },
+        {
+          src: '/storyline/273-ananya-af-biz-selfie-blanket.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya under a blanket with other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'Grey wool after the lights dim',
+        },
+        {
+          src: '/storyline/274-ananya-af-biz-selfie-aisle.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a passenger in the aisle of an Air France business class cabin; the phone is not visible.',
+          caption: 'Overhead bins and a puffer',
+        },
+        {
+          src: '/storyline/275-ananya-af-biz-selfie-laugh.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya laughing with another passenger in an Air France business class cabin; the phone is not visible.',
+          caption: 'A borrowed laugh at cruise',
+        },
+        {
+          src: '/storyline/276-ananya-af-biz-selfie-close.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya close to camera with other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'IFE glow on a winter scarf',
         },
       ],
     },
@@ -1116,6 +1495,28 @@ export class StorylinePage {
     },
   ];
 
+  protected readonly albums: StoryAlbum[] = [
+    'london-wedding-revisited',
+    'vienna-birthday-missed',
+    'paris-solo-dream',
+    'switzerland-honeymoon',
+    'amazon-university-reunion',
+    'italy-wedding-dream',
+    'everest-solo-dream',
+    'banaras-european-couple-dream',
+    'norway-anniversary-dream',
+  ].map((id, index) => {
+    const album = this.albumCatalog.find((story) => story.id === id);
+    if (!album) {
+      throw new Error(`Missing storyline album: ${id}`);
+    }
+
+    return {
+      ...album,
+      number: String(index + 1).padStart(2, '0'),
+    };
+  });
+
   private readonly collapsedAlbums = signal<ReadonlySet<string>>(
     new Set(this.albums.map((album) => album.id)),
   );
@@ -1165,6 +1566,11 @@ export class StorylinePage {
 
   protected isAlbumExpanded(albumId: string): boolean {
     return !this.collapsedAlbums().has(albumId);
+  }
+
+  protected expandAlbum(albumId: string): void {
+    if (this.isAlbumExpanded(albumId)) return;
+    this.toggleAlbum(albumId);
   }
 
   protected toggleAlbum(albumId: string): void {
