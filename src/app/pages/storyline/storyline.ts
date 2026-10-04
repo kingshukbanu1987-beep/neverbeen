@@ -416,6 +416,56 @@ export class StorylinePage {
           alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of Saint-Sulpice church in Paris.',
           caption: 'Fountain spray, two dark towers',
         },
+        {
+          src: '/storyline/257-ananya-cdg-morning-terminal-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local airport worker at CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
+          caption: 'Terminal 2E, a red cabin case',
+        },
+        {
+          src: '/storyline/258-ananya-cdg-morning-checkin-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local check-in agent at CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
+          caption: 'Air France desks before the rush',
+        },
+        {
+          src: '/storyline/259-ananya-cdg-morning-security-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter puffer with a local traveller in the CDG Airport security queue, holding a red Delsey Paris cabin trolley.',
+          caption: 'Grey trays and a yellow line',
+        },
+        {
+          src: '/storyline/260-ananya-cdg-morning-gate-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local traveller at a CDG Airport gate, holding a red Delsey Paris cabin trolley.',
+          caption: 'Dawn on the wet tarmac',
+        },
+        {
+          src: '/storyline/261-ananya-cdg-morning-exterior-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local taxi driver outside CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
+          caption: 'Wet kerb under the CDG letters',
+        },
+        {
+          src: '/storyline/262-ananya-cdg-morning-cdgval-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local commuter on the CDGVAL at CDG Airport, holding a red Delsey Paris cabin trolley.',
+          caption: 'Shuttle doors, a red cabin case',
+        },
+        {
+          src: '/storyline/263-ananya-cdg-morning-cafe-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local barista at a CDG Airport café, holding a red Delsey Paris cabin trolley.',
+          caption: 'Espresso before the boarding call',
+        },
+        {
+          src: '/storyline/264-ananya-cdg-morning-arrivals-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter parka with a local greeter in the CDG Airport arrivals hall, holding a red Delsey Paris cabin trolley.',
+          caption: 'A cardboard name at arrivals',
+        },
+        {
+          src: '/storyline/265-ananya-cdg-morning-baggage-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local traveller at a CDG Airport baggage carousel, holding a red Delsey Paris cabin trolley.',
+          caption: 'An empty belt, still waiting',
+        },
+        {
+          src: '/storyline/266-ananya-cdg-morning-rerb-full.jpg',
+          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local commuter on the RER B platform at CDG Airport, holding a red Delsey Paris cabin trolley.',
+          caption: 'A blue train into the city',
+        },
       ],
     },
     {
