@@ -614,7 +614,7 @@ export class StorylinePage {
       story: [
         'Clara, a fictional Austrian woman, turned twenty-five during COVID restrictions. She had pictured a small dinner at a Vienna restaurant, a cake at the centre of the table and her friends around it. The reservation never happened; her birthday came through messages and a screen instead.',
         'She understood why people needed to keep apart, but missing that milestone with her friends still hurt. Time moved on and they stayed close, yet there was no way to revisit the exact evening she had hoped for. The celebration in this album is a what-if, not a hidden record of a party that took place.',
-        'In this fictional example, Clara asks NeverBeen to imagine sixty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
+        'In this fictional example, Clara asks NeverBeen to imagine seventy-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
       ],
       reason:
         'She chose NeverBeen to mark a milestone that was missed and picture the friends she wanted around her table—not to erase COVID restrictions or pretend the celebration occurred.',
@@ -941,6 +941,56 @@ export class StorylinePage {
           src: '/storyline/176-clara-vienna-cake-mobile-candid-first-slice.jpg',
           alt: 'AI-generated tilted candid mobile snapshot of fictional Clara lifting the first cake slice as friends applaud at the imagined dinner.',
           caption: 'Lifting the first slice',
+        },
+        {
+          src: '/storyline/177-clara-vienna-standing-mobile-macro-window.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing by the restaurant window laughing at the imagined dinner.',
+          caption: 'Laughing by the window',
+        },
+        {
+          src: '/storyline/178-clara-vienna-standing-mobile-portrait-coatrack.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing beside the coat rack at the imagined Vienna dinner.',
+          caption: 'Waiting by the coats',
+        },
+        {
+          src: '/storyline/179-clara-vienna-standing-mobile-macro-archway.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing by the wooden archway, leaning on it laughing at the imagined dinner.',
+          caption: 'Leaning on the archway',
+        },
+        {
+          src: '/storyline/180-clara-vienna-standing-mobile-portrait-bar.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing at the bar with a wine glass at the imagined dinner.',
+          caption: 'A glass at the bar',
+        },
+        {
+          src: '/storyline/181-clara-vienna-standing-mobile-macro-doorway.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing at the restaurant doorway, turning with a surprised smile at the imagined dinner.',
+          caption: 'Turning at the doorway',
+        },
+        {
+          src: '/storyline/182-clara-vienna-standing-mobile-portrait-table.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing by the birthday table looking back laughing at the imagined dinner.',
+          caption: 'A look back at the table',
+        },
+        {
+          src: '/storyline/183-clara-vienna-standing-mobile-macro-hair.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing and tucking her hair behind her ear at the imagined Vienna dinner.',
+          caption: 'Tucking her hair back',
+        },
+        {
+          src: '/storyline/184-clara-vienna-standing-mobile-portrait-hallway.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing in the restaurant hallway laughing at the imagined dinner.',
+          caption: 'Laughing down the hallway',
+        },
+        {
+          src: '/storyline/185-clara-vienna-standing-mobile-macro-wineglass.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing, holding her wine glass near her smiling face at the imagined dinner.',
+          caption: 'Wine glass, held high',
+        },
+        {
+          src: '/storyline/186-clara-vienna-standing-mobile-portrait-dessert.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing and laughing by the dessert counter at the imagined Vienna dinner.',
+          caption: 'Choosing at the counter',
         },
       ],
     },
