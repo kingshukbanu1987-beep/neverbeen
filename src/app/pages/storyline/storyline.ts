@@ -266,6 +266,56 @@ export class StorylinePage {
           alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local outside the Moulin Rouge at night; the phone is not visible.',
           caption: 'Red neon, a late Pigalle snap',
         },
+        {
+          src: '/storyline/227-ananya-paris-winter-selfie-metro-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local commuter inside a Paris Métro car; the phone is not visible.',
+          caption: 'Green lights between stations',
+        },
+        {
+          src: '/storyline/228-ananya-paris-winter-selfie-busstation-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local at a rainy Paris bus station; the phone is not visible.',
+          caption: 'A wet stop for the number 15',
+        },
+        {
+          src: '/storyline/229-ananya-paris-winter-selfie-cafe-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local waiter at a Paris café; the phone is not visible.',
+          caption: 'Espresso steam and a borrowed smile',
+        },
+        {
+          src: '/storyline/230-ananya-paris-winter-selfie-trainstation-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local at Gare du Nord train station; the phone is not visible.',
+          caption: 'Departure boards and a suitcase',
+        },
+        {
+          src: '/storyline/231-ananya-paris-winter-selfie-eiffel-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of the Eiffel Tower; the phone is not visible.',
+          caption: 'A crooked laugh under the tower',
+        },
+        {
+          src: '/storyline/232-ananya-paris-winter-selfie-church-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of a Paris church, Église de la Madeleine; the phone is not visible.',
+          caption: 'Columns and a parish volunteer',
+        },
+        {
+          src: '/storyline/233-ananya-paris-winter-selfie-metroplatform-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local student on a Paris Métro platform; the phone is not visible.',
+          caption: 'A train blur on the tiles',
+        },
+        {
+          src: '/storyline/234-ananya-paris-winter-selfie-garedelyon-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local baker at Gare de Lyon train station; the phone is not visible.',
+          caption: 'Clock tower and baguettes',
+        },
+        {
+          src: '/storyline/235-ananya-paris-winter-selfie-cafeterrace-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local regular on a Paris café terrace; the phone is not visible.',
+          caption: 'Heat lamp, two small coffees',
+        },
+        {
+          src: '/storyline/236-ananya-paris-winter-selfie-saintsulpice-local.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of Saint-Sulpice church in Paris; the phone is not visible.',
+          caption: 'Twin towers on a wet plaza',
+        },
       ],
     },
     {
