@@ -303,9 +303,54 @@ export class StorylinePage {
           caption: 'A courtyard snapshot with their friends',
         },
         {
-          src: '/storyline/46-helen-james-london-album-memory.jpg',
-          alt: 'AI-generated contemporary illustration of fictional Helen and James, now older, looking through their wedding album together at home.',
-          caption: 'Looking back through the album together',
+          src: '/storyline/47-helen-james-wedding-macro-rings.jpg',
+          alt: 'AI-generated macro companion illustration of fictional Helen and James with their wedding rings, ivory sleeve and charcoal suit cuff in focus.',
+          caption: 'The rings, close to the moment',
+        },
+        {
+          src: '/storyline/48-helen-james-wedding-portrait.jpg',
+          alt: 'AI-generated portrait-style companion illustration of fictional Helen and James in their original wedding outfits outside the registry office.',
+          caption: 'An unposed portrait between the official shots',
+        },
+        {
+          src: '/storyline/49-helen-james-wedding-wide-registry.jpg',
+          alt: 'AI-generated wide-angle companion illustration of fictional Helen and James in their wedding clothes inside a modest London registry room.',
+          caption: 'The registry room seen from the back',
+        },
+        {
+          src: '/storyline/50-helen-james-wedding-romantic-steps.jpg',
+          alt: 'AI-generated romantic companion illustration of fictional Helen and James sharing a quiet moment on the registry-office steps after confetti.',
+          caption: 'A quiet pause after the confetti',
+        },
+        {
+          src: '/storyline/51-helen-james-wedding-wide-thames.jpg',
+          alt: 'AI-generated wide-angle companion illustration of fictional Helen and James walking beside the Thames in their original wedding outfits.',
+          caption: 'A wider view of their riverside walk',
+        },
+        {
+          src: '/storyline/52-helen-james-wedding-boutonniere.jpg',
+          alt: 'AI-generated portrait-style companion illustration of fictional Helen straightening James’s white boutonniere during their wedding day.',
+          caption: 'The little white boutonniere',
+        },
+        {
+          src: '/storyline/53-helen-james-wedding-first-dance-bw.jpg',
+          alt: 'AI-generated black-and-white companion illustration of fictional Helen and James slow-dancing in their original wedding attire.',
+          caption: 'A slow dance in monochrome',
+        },
+        {
+          src: '/storyline/54-helen-james-wedding-family-portrait.jpg',
+          alt: 'AI-generated wide group companion illustration of fictional Helen and James with family outside the London registry office.',
+          caption: 'The family picture, imagined in sharper focus',
+        },
+        {
+          src: '/storyline/55-helen-james-wedding-macro-register.jpg',
+          alt: 'AI-generated macro companion illustration of fictional Helen and James’s ringed hands signing the registry in their wedding outfits.',
+          caption: 'The final stroke beside their rings',
+        },
+        {
+          src: '/storyline/56-helen-james-wedding-kiss-courtyard.jpg',
+          alt: 'AI-generated romantic companion illustration of fictional Helen and James kissing in the registry garden in their wedding clothes.',
+          caption: 'A kiss in the registry garden',
         },
       ],
     },
