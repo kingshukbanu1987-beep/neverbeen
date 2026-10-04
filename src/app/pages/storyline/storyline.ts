@@ -109,6 +109,7 @@ export class StorylinePage {
         'Ananya grew up in a middle-class family in Pune, collecting Paris in library books, films and the travel pages she saved for later. She pictured a day on her own terms: a walk beside the Seine, a map open at the Louvre, coffee at a little pavement table.',
         'The reason she stayed home was never one simple answer. Some years money mattered; in others, family responsibilities needed her, work leave would not line up, or the thought of travelling solo felt bigger than the time she had to prepare. Each reason was real. Paris kept becoming “maybe next year”—not because she did not care enough, but because life was already asking a lot of her.',
         'For her birthday, she asked NeverBeen to imagine a small set of portraits in the city she still hopes to explore. They are not proof that she has been to Paris. They let her see herself inside a dream that belongs to her, while the actual journey remains out of reach for now.',
+        'The quietest part of the imagined visit is the end of the day: a small hotel room above the rooftops, the Eiffel Tower blinking in the window, tea going cold on the desk and the camera turned on herself the way anyone would after a long first day somewhere. Those imperfect evening frames were the ones she kept looking at.',
       ],
       reason:
         'She chose NeverBeen to give a private, long-held wish a shape of its own—a gentle reminder that her dream matters too, even when family, timing, confidence or other responsibilities have to come first.',
@@ -515,6 +516,56 @@ export class StorylinePage {
           src: '/storyline/276-ananya-af-biz-selfie-close.jpg',
           alt: 'Tilted amateur winter mobile selfie of fictional Ananya close to camera with other passengers in an Air France business class cabin; the phone is not visible.',
           caption: 'IFE glow on a winter scarf',
+        },
+        {
+          src: '/storyline/277-ananya-paris-hotel-selfie-bed-tower.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear, sitting cross-legged on the hotel bed in her small Paris room with the lit Eiffel Tower framed in the window behind her; the phone is not visible.',
+          caption: 'The tower, lit, from the bed',
+        },
+        {
+          src: '/storyline/278-ananya-paris-hotel-selfie-windowsill-rooftops.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear perched on the open window sill of her Paris hotel room, rooftops and chimney pots at dusk behind her; the phone is not visible.',
+          caption: 'An open window and cold rooftops',
+        },
+        {
+          src: '/storyline/279-ananya-paris-hotel-selfie-side-bed-tower.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear lying on her side across the hotel bed in Paris, the lit Eiffel Tower visible through the window past the duvet; the phone is not visible.',
+          caption: 'Lying down with the city still awake',
+        },
+        {
+          src: '/storyline/280-ananya-paris-hotel-selfie-far-side-lamp.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear on the far side of the bed beside a glowing hotel lamp in her Paris room, the window out of frame behind her; the phone is not visible.',
+          caption: 'A lamp, a suitcase, a slower hour',
+        },
+        {
+          src: '/storyline/281-ananya-paris-hotel-selfie-lying-pillows.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear lying back among the pillows of her Paris hotel bed at an unflattering angle, hair fanned across the pillow; the phone is not visible.',
+          caption: 'Bed hair and a hotel ceiling',
+        },
+        {
+          src: '/storyline/282-ananya-paris-hotel-selfie-mirror.jpg',
+          alt: 'Tilted amateur late-evening mobile mirror selfie of fictional Ananya in her dove-grey sleepwear standing barefoot in the wardrobe mirror of her Paris hotel room, cardigan on the chair behind her; the phone is not visible.',
+          caption: 'The mirror in a rented room',
+        },
+        {
+          src: '/storyline/283-ananya-paris-hotel-selfie-close-lamp.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear sitting too close to the hotel lamp in her Paris room, chin and cheek softly out of focus; the phone is not visible.',
+          caption: 'Too close to the lamp',
+        },
+        {
+          src: '/storyline/284-ananya-paris-hotel-selfie-bathroom-doorway.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear leaning on the bathroom doorway of her Paris hotel room, a folded towel behind her shoulder; the phone is not visible.',
+          caption: 'Steam, towels and a tired smile',
+        },
+        {
+          src: '/storyline/285-ananya-paris-hotel-selfie-desk-suitcase.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear at the writing desk of her Paris hotel room, a paper cup of tea, her passport and an open suitcase nearby; the phone is not visible.',
+          caption: 'Tea, passport, tomorrow’s plan',
+        },
+        {
+          src: '/storyline/286-ananya-paris-hotel-selfie-floor-tower.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear sitting on the floor against the hotel bed in Paris, the lit Eiffel Tower in the window above her; the phone is not visible.',
+          caption: 'One last look before sleep',
         },
       ],
     },
