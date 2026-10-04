@@ -109,6 +109,7 @@ export class StorylinePage {
         'Ananya grew up in a middle-class family in Pune, collecting Paris in library books, films and the travel pages she saved for later. She pictured a day on her own terms: a walk beside the Seine, a map open at the Louvre, coffee at a little pavement table.',
         'The reason she stayed home was never one simple answer. Some years money mattered; in others, family responsibilities needed her, work leave would not line up, or the thought of travelling solo felt bigger than the time she had to prepare. Each reason was real. Paris kept becoming “maybe next year”—not because she did not care enough, but because life was already asking a lot of her.',
         'For her birthday, she asked NeverBeen to imagine a small set of portraits in the city she still hopes to explore. They are not proof that she has been to Paris. They let her see herself inside a dream that belongs to her, while the actual journey remains out of reach for now.',
+        'The quietest part of the imagined visit is the end of the day: a small hotel room above the rooftops, the Eiffel Tower blinking in the window, tea going cold on the desk and the camera turned on herself the way anyone would after a long first day somewhere. Those imperfect evening frames were the ones she kept looking at.',
       ],
       reason:
         'She chose NeverBeen to give a private, long-held wish a shape of its own—a gentle reminder that her dream matters too, even when family, timing, confidence or other responsibilities have to come first.',
@@ -125,11 +126,6 @@ export class StorylinePage {
           src: '/storyline/06-ananya-louvre.jpg',
           alt: 'AI-generated illustration of a woman holding a map in the Louvre courtyard in Paris.',
           caption: 'A map, a pause, a day on her own terms',
-        },
-        {
-          src: '/storyline/197-ananya-paris-portrait-trocadero.jpg',
-          alt: 'AI-generated portrait of fictional Indian woman Ananya in a maroon kurta and mustard dupatta at Trocadéro, with the Eiffel Tower softly behind her.',
-          caption: 'A portrait with the tower at a distance',
         },
         {
           src: '/storyline/198-ananya-paris-wide-notredame.jpg',
@@ -155,11 +151,6 @@ export class StorylinePage {
           src: '/storyline/203-ananya-paris-wide-gardens.jpg',
           alt: 'AI-generated wide-angle snapshot of fictional Ananya reading in a mustard kurta on a chair in the Luxembourg Gardens.',
           caption: 'A book and an unhurried park hour',
-        },
-        {
-          src: '/storyline/204-ananya-paris-macro-jewelry.jpg',
-          alt: 'AI-generated mobile macro photo of fictional Ananya’s gold jhumka earring, dupatta weave and bangles against a Paris building.',
-          caption: 'Gold from home, close to the camera',
         },
         {
           src: '/storyline/205-ananya-paris-selfie-local-market.jpg',
@@ -287,11 +278,6 @@ export class StorylinePage {
           caption: 'Departure boards and a suitcase',
         },
         {
-          src: '/storyline/231-ananya-paris-winter-selfie-eiffel-local.jpg',
-          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of the Eiffel Tower; the phone is not visible.',
-          caption: 'A crooked laugh under the tower',
-        },
-        {
           src: '/storyline/232-ananya-paris-winter-selfie-church-local.jpg',
           alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a local in front of a Paris church, Église de la Madeleine; the phone is not visible.',
           caption: 'Columns and a parish volunteer',
@@ -337,11 +323,6 @@ export class StorylinePage {
           caption: 'A suitcase under the night roof',
         },
         {
-          src: '/storyline/241-ananya-paris-nightflash-eiffel-full.jpg',
-          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter puffer with a local in front of the Eiffel Tower.',
-          caption: 'Flash at the lit tower',
-        },
-        {
           src: '/storyline/242-ananya-paris-nightflash-church-full.jpg',
           alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local in front of a Paris church, Église de la Madeleine.',
           caption: 'Steps, columns, a hard flash',
@@ -370,11 +351,6 @@ export class StorylinePage {
           src: '/storyline/247-ananya-paris-nightflash-metro-full.jpg',
           alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in a winter coat with a local commuter inside a Paris Métro car.',
           caption: 'Green tubes, a wet carriage floor',
-        },
-        {
-          src: '/storyline/248-ananya-paris-nightflash-busstation-full.jpg',
-          alt: 'Tilted full-figure night flash mobile photo of fictional Ananya in winter clothes with a local at a Paris bus station.',
-          caption: 'Noctilien in the rain',
         },
         {
           src: '/storyline/249-ananya-paris-nightflash-cafe-full.jpg',
@@ -417,49 +393,9 @@ export class StorylinePage {
           caption: 'Fountain spray, two dark towers',
         },
         {
-          src: '/storyline/257-ananya-cdg-morning-terminal-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local airport worker at CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
-          caption: 'Terminal 2E, a red cabin case',
-        },
-        {
           src: '/storyline/258-ananya-cdg-morning-checkin-full.jpg',
           alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local check-in agent at CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
           caption: 'Air France desks before the rush',
-        },
-        {
-          src: '/storyline/259-ananya-cdg-morning-security-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter puffer with a local traveller in the CDG Airport security queue, holding a red Delsey Paris cabin trolley.',
-          caption: 'Grey trays and a yellow line',
-        },
-        {
-          src: '/storyline/260-ananya-cdg-morning-gate-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local traveller at a CDG Airport gate, holding a red Delsey Paris cabin trolley.',
-          caption: 'Dawn on the wet tarmac',
-        },
-        {
-          src: '/storyline/261-ananya-cdg-morning-exterior-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local taxi driver outside CDG Airport in Paris, holding a red Delsey Paris cabin trolley.',
-          caption: 'Wet kerb under the CDG letters',
-        },
-        {
-          src: '/storyline/262-ananya-cdg-morning-cdgval-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local commuter on the CDGVAL at CDG Airport, holding a red Delsey Paris cabin trolley.',
-          caption: 'Shuttle doors, a red cabin case',
-        },
-        {
-          src: '/storyline/263-ananya-cdg-morning-cafe-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local barista at a CDG Airport café, holding a red Delsey Paris cabin trolley.',
-          caption: 'Espresso before the boarding call',
-        },
-        {
-          src: '/storyline/264-ananya-cdg-morning-arrivals-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter parka with a local greeter in the CDG Airport arrivals hall, holding a red Delsey Paris cabin trolley.',
-          caption: 'A cardboard name at arrivals',
-        },
-        {
-          src: '/storyline/265-ananya-cdg-morning-baggage-full.jpg',
-          alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in winter clothes with a local traveller at a CDG Airport baggage carousel, holding a red Delsey Paris cabin trolley.',
-          caption: 'An empty belt, still waiting',
         },
         {
           src: '/storyline/266-ananya-cdg-morning-rerb-full.jpg',
@@ -467,34 +403,9 @@ export class StorylinePage {
           caption: 'A blue train into the city',
         },
         {
-          src: '/storyline/267-ananya-af-biz-selfie-window.jpg',
-          alt: 'Tilted amateur winter mobile selfie of fictional Ananya in an Air France business class cabin with other passengers by the window; the phone is not visible.',
-          caption: 'A window seat before climb-out',
-        },
-        {
           src: '/storyline/268-ananya-af-biz-selfie-attendant.jpg',
           alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a flight attendant and other passengers in an Air France business class cabin; the phone is not visible.',
           caption: 'A red scarf in the aisle',
-        },
-        {
-          src: '/storyline/269-ananya-af-biz-selfie-neighbour.jpg',
-          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a neighbouring passenger in an Air France business class cabin; the phone is not visible.',
-          caption: 'CDG to JFK, two winter jumpers',
-        },
-        {
-          src: '/storyline/270-ananya-af-biz-selfie-meal.jpg',
-          alt: 'Tilted amateur winter mobile selfie of fictional Ananya at meal service with other passengers in an Air France business class cabin; the phone is not visible.',
-          caption: 'Small plates over the wing',
-        },
-        {
-          src: '/storyline/271-ananya-af-biz-selfie-champagne.jpg',
-          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a welcome glass and other passengers in an Air France business class cabin; the phone is not visible.',
-          caption: 'Bubbles after pushback',
-        },
-        {
-          src: '/storyline/272-ananya-af-biz-selfie-cabin.jpg',
-          alt: 'Tilted amateur winter mobile selfie of fictional Ananya looking down an Air France business class cabin full of other passengers; the phone is not visible.',
-          caption: 'Blue seats, a boarding shuffle',
         },
         {
           src: '/storyline/273-ananya-af-biz-selfie-blanket.jpg',
@@ -515,6 +426,46 @@ export class StorylinePage {
           src: '/storyline/276-ananya-af-biz-selfie-close.jpg',
           alt: 'Tilted amateur winter mobile selfie of fictional Ananya close to camera with other passengers in an Air France business class cabin; the phone is not visible.',
           caption: 'IFE glow on a winter scarf',
+        },
+        {
+          src: '/storyline/279-ananya-paris-hotel-selfie-side-bed-tower.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear lying on her side across the hotel bed in Paris, the lit Eiffel Tower visible through the window past the duvet; the phone is not visible.',
+          caption: 'Lying down with the city still awake',
+        },
+        {
+          src: '/storyline/280-ananya-paris-hotel-selfie-far-side-lamp.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear on the far side of the bed beside a glowing hotel lamp in her Paris room, the window out of frame behind her; the phone is not visible.',
+          caption: 'A lamp, a suitcase, a slower hour',
+        },
+        {
+          src: '/storyline/281-ananya-paris-hotel-selfie-lying-pillows.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear lying back among the pillows of her Paris hotel bed at an unflattering angle, hair fanned across the pillow; the phone is not visible.',
+          caption: 'Bed hair and a hotel ceiling',
+        },
+        {
+          src: '/storyline/282-ananya-paris-hotel-selfie-mirror.jpg',
+          alt: 'Tilted amateur late-evening mobile mirror selfie of fictional Ananya in her dove-grey sleepwear standing barefoot in the wardrobe mirror of her Paris hotel room, cardigan on the chair behind her; the phone is not visible.',
+          caption: 'The mirror in a rented room',
+        },
+        {
+          src: '/storyline/283-ananya-paris-hotel-selfie-close-lamp.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear sitting too close to the hotel lamp in her Paris room, chin and cheek softly out of focus; the phone is not visible.',
+          caption: 'Too close to the lamp',
+        },
+        {
+          src: '/storyline/284-ananya-paris-hotel-selfie-bathroom-doorway.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear leaning on the bathroom doorway of her Paris hotel room, a folded towel behind her shoulder; the phone is not visible.',
+          caption: 'Steam, towels and a tired smile',
+        },
+        {
+          src: '/storyline/285-ananya-paris-hotel-selfie-desk-suitcase.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear at the writing desk of her Paris hotel room, a paper cup of tea, her passport and an open suitcase nearby; the phone is not visible.',
+          caption: 'Tea, passport, tomorrow’s plan',
+        },
+        {
+          src: '/storyline/286-ananya-paris-hotel-selfie-floor-tower.jpg',
+          alt: 'Tilted amateur late-evening mobile selfie of fictional Ananya in her dove-grey sleepwear sitting on the floor against the hotel bed in Paris, the lit Eiffel Tower in the window above her; the phone is not visible.',
+          caption: 'One last look before sleep',
         },
       ],
     },
