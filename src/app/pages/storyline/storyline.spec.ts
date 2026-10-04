@@ -31,12 +31,12 @@ describe('StorylinePage', () => {
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
     expect(albums.map((album) => album.id)).toEqual([
-      'switzerland-honeymoon',
-      'paris-solo-dream',
-      'amazon-university-reunion',
-      'italy-wedding-dream',
       'london-wedding-revisited',
       'vienna-birthday-missed',
+      'paris-solo-dream',
+      'switzerland-honeymoon',
+      'amazon-university-reunion',
+      'italy-wedding-dream',
       'everest-solo-dream',
       'banaras-european-couple-dream',
       'norway-anniversary-dream',
@@ -44,40 +44,44 @@ describe('StorylinePage', () => {
     expect(
       albums.map((album) => album.querySelector('.cover-photo-button img')?.getAttribute('src')),
     ).toEqual([
-      '/storyline/01-lotte-bram-lake-brienz.jpg',
-      '/storyline/02-ananya-paris-seine.jpg',
-      '/storyline/09-five-friends-amazon-river.jpg',
-      '/storyline/13-meera-arjun-tuscany-courtyard.jpg',
       '/storyline/17-helen-james-london-registry.jpg',
       '/storyline/21-clara-vienna-birthday-dinner.jpg',
+      '/storyline/02-ananya-paris-seine.jpg',
+      '/storyline/01-lotte-bram-lake-brienz.jpg',
+      '/storyline/09-five-friends-amazon-river.jpg',
+      '/storyline/13-meera-arjun-tuscany-courtyard.jpg',
       '/storyline/25-elisabeth-everest-trail.jpg',
       '/storyline/29-ingrid-peter-varanasi-riverfront.jpg',
       '/storyline/33-asha-ravi-norway-fjord.jpg',
     ]);
     expect(
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
-    ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
+    ).toEqual(['01', '02', '03', '04', '05', '06', '07', '08', '09']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      3, 3, 3, 3, 72, 73, 3, 3, 3,
+      73, 74, 4, 4, 4, 4, 4, 4, 4,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
     ).toBe(true);
-    expect(element.querySelectorAll('.photo-label, .lightbox-ai-label')).toHaveLength(0);
     expect(
-      element.querySelectorAll('.cover-photo-button img').length +
-        element.querySelectorAll('.album-photo img').length,
-    ).toBe(175);
-    expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
-    expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
-      '/storyline-of-parallel-universe#switzerland-honeymoon',
-    );
+      albums.every(
+        (album) =>
+          album.querySelector<HTMLImageElement>('.album-photo img')?.getAttribute('src') ===
+          album.querySelector<HTMLImageElement>('.cover-photo-button img')?.getAttribute('src'),
+      ),
+    ).toBe(true);
+    expect(element.querySelectorAll('.photo-label, .lightbox-ai-label')).toHaveLength(0);
+    expect(element.querySelectorAll('.album-photo img')).toHaveLength(175);
+    expect(element.querySelectorAll('.album-index')).toHaveLength(0);
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
       'one hundred and seventy-five imagined frames',
     );
-    expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
-    expect(albums[5].querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(element.querySelector('.albums-heading')?.textContent).not.toContain(
+      'Album sizes vary',
+    );
+    expect(albums[0].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
+    expect(albums[1].querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
   });
 
   it('keeps the Storyline 6 cover and shuffles the remaining photo order', () => {
@@ -91,9 +95,10 @@ describe('StorylinePage', () => {
     ).map((image) => image.getAttribute('src'));
 
     expect(coverSource).toBe('/storyline/17-helen-james-london-registry.jpg');
-    expect(gallerySources).toHaveLength(72);
-    expect(new Set(gallerySources).size).toBe(72);
-    expect(gallerySources.slice(0, 4)).not.toEqual([
+    expect(gallerySources).toHaveLength(73);
+    expect(gallerySources[0]).toBe(coverSource);
+    expect(new Set(gallerySources).size).toBe(73);
+    expect(gallerySources.slice(1, 5)).not.toEqual([
       '/storyline/18-helen-james-london-register.jpg',
       '/storyline/19-helen-james-london-reception.jpg',
       '/storyline/20-helen-james-london-thames.jpg',
@@ -117,7 +122,7 @@ describe('StorylinePage', () => {
       '/storyline/81-helen-james-wedding-mobile-macro-low-angle.jpg', // 44
     ];
 
-    expect(galleryImages).toHaveLength(72);
+    expect(galleryImages).toHaveLength(73);
     expect(
       removedPictureSources.every(
         (src) => !galleryImages.some((image) => image.getAttribute('src') === src),
@@ -234,7 +239,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(9);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...retainedPhotoSources].sort(),
@@ -279,7 +284,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(9);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...retainedPhotoSources].sort(),
@@ -325,7 +330,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(7);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...retainedPhotoSources].sort(),
@@ -370,7 +375,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(8);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...retainedPhotoSources].sort(),
@@ -416,7 +421,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(8);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...retainedPhotoSources].sort(),
@@ -454,7 +459,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -492,7 +497,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -530,7 +535,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -558,9 +563,10 @@ describe('StorylinePage', () => {
     ).map((image) => image.getAttribute('src'));
 
     expect(coverSource).toBe('/storyline/21-clara-vienna-birthday-dinner.jpg');
-    expect(gallerySources).toHaveLength(73);
-    expect(new Set(gallerySources).size).toBe(73);
-    expect(gallerySources.slice(0, 4)).not.toEqual([
+    expect(gallerySources).toHaveLength(74);
+    expect(gallerySources[0]).toBe(coverSource);
+    expect(new Set(gallerySources).size).toBe(74);
+    expect(gallerySources.slice(1, 5)).not.toEqual([
       '/storyline/22-clara-vienna-birthday-candles.jpg',
       '/storyline/23-clara-vienna-friends.jpg',
       '/storyline/24-clara-vienna-toast.jpg',
@@ -572,7 +578,7 @@ describe('StorylinePage', () => {
       Array.from(viennaAlbum.querySelectorAll('.photo-number')).map((number) =>
         number.textContent?.trim(),
       ),
-    ).toEqual(Array.from({ length: 73 }, (_, index) => String(index + 2).padStart(2, '0')));
+    ).toEqual(Array.from({ length: 74 }, (_, index) => String(index + 1).padStart(2, '0')));
   });
 
   it('removes the requested picture IDs from Storyline 7', () => {
@@ -595,7 +601,7 @@ describe('StorylinePage', () => {
       '/storyline/162-clara-vienna-dinner-mobile-macro-glasses-clink.jpg', // 50
     ];
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(74);
     expect(
       removedPictureSources.every(
         (src) => !galleryImages.some((image) => image.getAttribute('src') === src),
@@ -627,7 +633,7 @@ describe('StorylinePage', () => {
       soloPortraitSources.includes(image.getAttribute('src') ?? ''),
     );
 
-    expect(galleryImages).toHaveLength(72);
+    expect(galleryImages).toHaveLength(73);
     expect(
       londonAlbum.querySelector('img[src="/storyline/46-helen-james-london-album-memory.jpg"]'),
     ).toBeNull();
@@ -655,7 +661,7 @@ describe('StorylinePage', () => {
       Array.from(londonAlbum.querySelectorAll('.photo-number')).map((number) =>
         number.textContent?.trim(),
       ),
-    ).toEqual(Array.from({ length: 72 }, (_, index) => String(index + 2).padStart(2, '0')));
+    ).toEqual(Array.from({ length: 73 }, (_, index) => String(index + 1).padStart(2, '0')));
   });
 
   it('retains the earlier romantic couple portrait batch in Storyline 6', () => {
@@ -668,7 +674,7 @@ describe('StorylinePage', () => {
       image.getAttribute('src')?.includes('helen-james-wedding-mobile-macro'),
     );
 
-    expect(galleryImages).toHaveLength(72);
+    expect(galleryImages).toHaveLength(73);
     expect(couplePortraits.map((image) => image.getAttribute('src')).sort()).toEqual(
       [
         '/storyline/77-helen-james-wedding-mobile-macro-candid-laugh.jpg',
@@ -702,7 +708,7 @@ describe('StorylinePage', () => {
       /\/(?:8[7-9]|9[0-6])-helen-wedding-mobile-macro-/.test(image.getAttribute('src') ?? ''),
     );
 
-    expect(galleryImages).toHaveLength(72);
+    expect(galleryImages).toHaveLength(73);
     expect(familyPortraits.map((image) => image.getAttribute('src')).sort()).toEqual(
       [
         '/storyline/87-helen-wedding-mobile-macro-friends-laugh.jpg',
@@ -744,7 +750,7 @@ describe('StorylinePage', () => {
       selectedSource,
     );
     expect(element.querySelector('.lightbox-position')?.textContent).toContain(
-      `${selectedPhotoIndex + 2} / 73`,
+      `${selectedPhotoIndex + 1} / 73`,
     );
     expect(element.querySelector('.lightbox-arrow.previous')?.getAttribute('aria-label')).toBe(
       'Previous photo in this story',
@@ -755,7 +761,7 @@ describe('StorylinePage', () => {
 
     const previousSource =
       selectedPhotoIndex === 0
-        ? '/storyline/17-helen-james-london-registry.jpg'
+        ? galleryImages[galleryImages.length - 1].getAttribute('src')
         : galleryImages[selectedPhotoIndex - 1].getAttribute('src');
     (element.querySelector('.lightbox-arrow.previous') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -763,7 +769,7 @@ describe('StorylinePage', () => {
       previousSource,
     );
     expect(element.querySelector('.lightbox-position')?.textContent).toContain(
-      `${selectedPhotoIndex === 0 ? 1 : selectedPhotoIndex + 1} / 73`,
+      `${selectedPhotoIndex === 0 ? galleryImages.length : selectedPhotoIndex} / 73`,
     );
 
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
@@ -775,13 +781,13 @@ describe('StorylinePage', () => {
     fixture.detectChanges();
     const nextSource =
       selectedPhotoIndex === galleryImages.length - 1
-        ? '/storyline/17-helen-james-london-registry.jpg'
+        ? galleryImages[0].getAttribute('src')
         : galleryImages[selectedPhotoIndex + 1].getAttribute('src');
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
       nextSource,
     );
     expect(element.querySelector('.lightbox-position')?.textContent).toContain(
-      `${selectedPhotoIndex === galleryImages.length - 1 ? 1 : selectedPhotoIndex + 3} / 73`,
+      `${selectedPhotoIndex === galleryImages.length - 1 ? 1 : selectedPhotoIndex + 2} / 73`,
     );
     (element.querySelector('.lightbox-close') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -834,7 +840,7 @@ describe('StorylinePage', () => {
       const coverImage = album.querySelector<HTMLImageElement>('.cover-photo-button img')!;
       expect(coverImage.getAttribute('src')).toContain('/storyline/');
       expect(getComputedStyle(coverImage).opacity).toBe('1');
-      expect(album.querySelector('.cover-photo-hint')?.textContent).toContain('OPEN COVER');
+      expect(album.querySelector('.cover-photo-hint')?.textContent).toContain('EXTEND STORYLINE');
       expect(album.querySelector('.cover-photo-hint')?.textContent).not.toContain(
         'AI ILLUSTRATION',
       );
@@ -844,10 +850,10 @@ describe('StorylinePage', () => {
     }
 
     expect(albums[0].querySelector('.story-cover')?.textContent).toContain(
-      'The honeymoon that kept getting postponed',
+      'The wedding album with a few pages left blank',
     );
-    expect(albums[0].querySelector('.cover-location-name')?.textContent).toContain('Switzerland');
-    expect(albums[0].querySelector('.cover-people')?.textContent).toContain('Lotte & Bram');
+    expect(albums[0].querySelector('.cover-location-name')?.textContent).toContain('London');
+    expect(albums[0].querySelector('.cover-people')?.textContent).toContain('Helen & James');
   });
 
   it('keeps the reason section at the bottom, after every story and the closing call to action', () => {
@@ -863,36 +869,33 @@ describe('StorylinePage', () => {
     );
   });
 
-  it('opens a collapsed story cover in the image lightbox and closes on a backdrop click', () => {
+  it('expands a collapsed storyline when the cover area is clicked', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
     const firstAlbum = element.querySelector<HTMLElement>('.story-album')!;
     const coverButton = firstAlbum.querySelector<HTMLButtonElement>('.cover-photo-button')!;
-    const originalOverflow = document.body.style.overflow;
+    const layout = firstAlbum.querySelector<HTMLElement>('.album-layout')!;
+    const toggle = firstAlbum.querySelector<HTMLButtonElement>('.album-toggle')!;
 
-    expect(firstAlbum.querySelector<HTMLElement>('.album-layout')?.hidden).toBe(true);
+    expect(layout.hidden).toBe(true);
+    expect(coverButton.getAttribute('aria-expanded')).toBe('false');
     coverButton.click();
     fixture.detectChanges();
 
-    const lightbox = element.querySelector<HTMLElement>('.story-lightbox');
-    expect(lightbox?.getAttribute('aria-modal')).toBe('true');
-    expect(lightbox?.querySelector('figure img')?.getAttribute('src')).toBe(
-      coverButton.querySelector('img')?.getAttribute('src'),
-    );
-    expect(document.body.style.overflow).toBe('hidden');
-
-    lightbox?.click();
-    fixture.detectChanges();
-
+    expect(layout.hidden).toBe(false);
+    expect(coverButton.getAttribute('aria-expanded')).toBe('true');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(element.querySelector('.story-lightbox')).toBeNull();
-    expect(document.body.style.overflow).toBe(originalOverflow);
-    expect(document.activeElement).toBe(coverButton);
+
+    coverButton.click();
+    fixture.detectChanges();
+    expect(layout.hidden).toBe(false);
   });
 
   it('opens gallery photos and navigates within the selected story using controls and keyboard', () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
-    const firstAlbum = element.querySelector<HTMLElement>('.story-album')!;
+    const firstAlbum = element.querySelector<HTMLElement>('#switzerland-honeymoon')!;
     const extendButton = firstAlbum.querySelector<HTMLButtonElement>('.album-toggle')!;
     const photoButtons = firstAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
     const press = (key: string) => {
@@ -902,7 +905,7 @@ describe('StorylinePage', () => {
 
     extendButton.click();
     fixture.detectChanges();
-    photoButtons[1].click();
+    photoButtons[2].click();
     fixture.detectChanges();
 
     expect(element.querySelector('.story-lightbox figure img')?.getAttribute('src')).toBe(
@@ -934,28 +937,30 @@ describe('StorylinePage', () => {
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
     const copy = element.textContent ?? '';
 
-    expect(albums[0].textContent).toContain('Switzerland');
-    expect(albums[0].textContent).toContain('work pressure');
-    expect(albums[1].textContent).toContain('Paris, France');
-    expect(albums[1].textContent).toContain('middle-class family');
-    expect(albums[2].textContent).toContain('Amazon Rainforest');
-    expect(albums[2].textContent).toContain('3 men & 2 women');
-    expect(albums[2].textContent).toContain('university');
+    expect(albums[0].textContent).toContain('London, United Kingdom');
+    expect(albums[0].textContent).toContain('old wedding pictures');
+    expect(albums[0].textContent).toContain('photographs that truly document it');
+    expect(albums[0].textContent).toContain('not restorations or recovered images');
 
-    expect(albums[3].textContent).toContain('Tuscany, Italy');
-    expect(albums[3].textContent).toContain('Meera died in an accident');
-    expect(albums[3].textContent).toContain('wedding never happened');
-    expect(albums[3].textContent).toContain('fictional keepsake');
+    expect(albums[1].textContent).toContain('Vienna, Austria');
+    expect(albums[1].textContent).toContain('COVID restrictions');
+    expect(albums[1].textContent).toContain('twenty-fifth birthday');
+    expect(albums[1].textContent).toContain('friends');
 
-    expect(albums[4].textContent).toContain('London, United Kingdom');
-    expect(albums[4].textContent).toContain('old wedding pictures');
-    expect(albums[4].textContent).toContain('photographs that truly document it');
-    expect(albums[4].textContent).toContain('not restorations or recovered images');
+    expect(albums[2].textContent).toContain('Paris, France');
+    expect(albums[2].textContent).toContain('middle-class family');
 
-    expect(albums[5].textContent).toContain('Vienna, Austria');
-    expect(albums[5].textContent).toContain('COVID restrictions');
-    expect(albums[5].textContent).toContain('twenty-fifth birthday');
-    expect(albums[5].textContent).toContain('friends');
+    expect(albums[3].textContent).toContain('Switzerland');
+    expect(albums[3].textContent).toContain('work pressure');
+
+    expect(albums[4].textContent).toContain('Amazon Rainforest');
+    expect(albums[4].textContent).toContain('3 men & 2 women');
+    expect(albums[4].textContent).toContain('university');
+
+    expect(albums[5].textContent).toContain('Tuscany, Italy');
+    expect(albums[5].textContent).toContain('Meera died in an accident');
+    expect(albums[5].textContent).toContain('wedding never happened');
+    expect(albums[5].textContent).toContain('fictional keepsake');
 
     expect(albums[6].textContent).toContain('Everest Region, Nepal');
     expect(albums[6].textContent).toContain('Work pressure');
@@ -963,7 +968,7 @@ describe('StorylinePage', () => {
     expect(albums[6].textContent).toContain('not evidence that she travelled');
     expect(albums[6].textContent).toContain('not climb a summit');
     expect(albums[6].querySelectorAll('.album-photo img')[0].getAttribute('src')).toBe(
-      '/storyline/26-elisabeth-everest-village-stop.jpg',
+      '/storyline/25-elisabeth-everest-trail.jpg',
     );
 
     expect(albums[7].textContent).toContain('Benaras (Varanasi), India');

@@ -57,8 +57,7 @@ export class StorylinePage {
   private lastFocusedTrigger: HTMLElement | null = null;
   private previousBodyOverflow = '';
 
-  protected readonly storylinePath = '/storyline-of-parallel-universe';
-  protected readonly albums: StoryAlbum[] = [
+  private readonly albumCatalog: StoryAlbum[] = [
     {
       id: 'switzerland-honeymoon',
       number: '01',
@@ -1116,6 +1115,28 @@ export class StorylinePage {
     },
   ];
 
+  protected readonly albums: StoryAlbum[] = [
+    'london-wedding-revisited',
+    'vienna-birthday-missed',
+    'paris-solo-dream',
+    'switzerland-honeymoon',
+    'amazon-university-reunion',
+    'italy-wedding-dream',
+    'everest-solo-dream',
+    'banaras-european-couple-dream',
+    'norway-anniversary-dream',
+  ].map((id, index) => {
+    const album = this.albumCatalog.find((story) => story.id === id);
+    if (!album) {
+      throw new Error(`Missing storyline album: ${id}`);
+    }
+
+    return {
+      ...album,
+      number: String(index + 1).padStart(2, '0'),
+    };
+  });
+
   private readonly collapsedAlbums = signal<ReadonlySet<string>>(
     new Set(this.albums.map((album) => album.id)),
   );
@@ -1165,6 +1186,11 @@ export class StorylinePage {
 
   protected isAlbumExpanded(albumId: string): boolean {
     return !this.collapsedAlbums().has(albumId);
+  }
+
+  protected expandAlbum(albumId: string): void {
+    if (this.isAlbumExpanded(albumId)) return;
+    this.toggleAlbum(albumId);
   }
 
   protected toggleAlbum(albumId: string): void {
