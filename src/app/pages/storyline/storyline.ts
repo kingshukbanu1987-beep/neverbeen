@@ -614,7 +614,7 @@ export class StorylinePage {
       story: [
         'Clara, a fictional Austrian woman, turned twenty-five during COVID restrictions. She had pictured a small dinner at a Vienna restaurant, a cake at the centre of the table and her friends around it. The reservation never happened; her birthday came through messages and a screen instead.',
         'She understood why people needed to keep apart, but missing that milestone with her friends still hurt. Time moved on and they stayed close, yet there was no way to revisit the exact evening she had hoped for. The celebration in this album is a what-if, not a hidden record of a party that took place.',
-        'In this fictional example, Clara asks NeverBeen to imagine eighty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
+        'In this fictional example, Clara asks NeverBeen to imagine seventy-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
       ],
       reason:
         'She chose NeverBeen to mark a milestone that was missed and picture the friends she wanted around her table—not to erase COVID restrictions or pretend the celebration occurred.',
@@ -628,14 +628,154 @@ export class StorylinePage {
           caption: 'The table she hoped to share',
         },
         {
-          src: '/storyline/22-clara-vienna-birthday-candles.jpg',
-          alt: 'AI-generated imagined snapshot of fictional Clara blowing out candles at the birthday dinner she missed during COVID restrictions.',
-          caption: 'A candlelit wish in the parallel version',
+          src: '/storyline/189-clara-vienna-posegroup-mobile-happy-window.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends hugging happily by the window for her camera at the imagined dinner.',
+          caption: 'A happy hug by the window',
         },
         {
-          src: '/storyline/23-clara-vienna-friends.jpg',
-          alt: 'AI-generated imagined snapshot of fictional Clara and friends walking together in Vienna after a birthday dinner that never took place.',
-          caption: 'Friends after the dinner in another timeline',
+          src: '/storyline/170-clara-vienna-cake-mobile-portrait-plate.jpg',
+          alt: 'AI-generated tilted mobile portrait of fictional Clara holding up a plate with a cake slice while friends cheer behind at the imagined dinner.',
+          caption: 'She holds up the slice',
+        },
+        {
+          src: '/storyline/132-clara-vienna-friends-mobile-cheek-laugh.jpg',
+          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara laughing cheek-to-cheek with a friend at the imagined birthday dinner.',
+          caption: 'Foreheads almost touching',
+        },
+        {
+          src: '/storyline/191-clara-vienna-posegroup-mobile-serious-archway.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends posing dramatic and serious at the archway at the imagined dinner.',
+          caption: 'Drama at the archway',
+        },
+        {
+          src: '/storyline/158-clara-vienna-dinner-mobile-macro-cake-slice.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of a chocolate cake slice with raspberries and a fork, fictional Clara and friends blurred behind at the imagined dinner.',
+          caption: 'One slice, still warm',
+        },
+        {
+          src: '/storyline/187-clara-vienna-posegroup-mobile-funny-faces.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends pulling funny faces by the coat rack for her camera at the imagined dinner.',
+          caption: 'Silly faces by the coats',
+        },
+        {
+          src: '/storyline/131-clara-vienna-solo-mobile-awkward-crop.jpg',
+          alt: 'AI-generated tightly cropped tilted mobile macro portrait of fictional Clara alone, half-smiling beside the blurred birthday cake at the imagined dinner.',
+          caption: 'Half in the frame',
+        },
+        {
+          src: '/storyline/152-clara-vienna-solo-mobile-candid-chin-hand.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone making a point with her hand near her chin at the imagined dinner.',
+          caption: 'Making her point',
+        },
+        {
+          src: '/storyline/151-clara-vienna-solo-mobile-candid-low-story.jpg',
+          alt: 'AI-generated tilted low-angle candid mobile portrait of fictional Clara alone telling a story with her head tipped at the imagined dinner.',
+          caption: 'The story from below',
+        },
+        {
+          src: '/storyline/181-clara-vienna-standing-mobile-macro-doorway.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing at the restaurant doorway, turning with a surprised smile at the imagined dinner.',
+          caption: 'Turning at the doorway',
+        },
+        {
+          src: '/storyline/190-clara-vienna-posegroup-mobile-funny-photobomb.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends with a funny bunny-ears photobomb at the imagined dinner.',
+          caption: 'Bunny ears behind them',
+        },
+        {
+          src: '/storyline/165-clara-vienna-dinner-mobile-candid-share-bite.jpg',
+          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara clapping as friends share a bite of cake at the imagined dinner.',
+          caption: 'One bite, shared',
+        },
+        {
+          src: '/storyline/143-clara-vienna-girlfriends-mobile-embrace.jpg',
+          alt: 'AI-generated tilted mobile snapshot of fictional Clara embraced and kissed on the cheek by her two female friends at the imagined dinner.',
+          caption: 'A kiss on each side',
+        },
+        {
+          src: '/storyline/179-clara-vienna-standing-mobile-macro-archway.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing by the wooden archway, leaning on it laughing at the imagined dinner.',
+          caption: 'Leaning on the archway',
+        },
+        {
+          src: '/storyline/142-clara-vienna-girlfriends-mobile-selfie.jpg',
+          alt: 'AI-generated tilted mobile selfie of fictional Clara with her two female friends laughing around the birthday cake at the imagined dinner.',
+          caption: 'Three of them, one selfie',
+        },
+        {
+          src: '/storyline/139-clara-vienna-solo-mobile-macro-back-view.jpg',
+          alt: 'AI-generated tilted rear mobile macro portrait of fictional Clara alone, hair and shoulder close with her smile turning back at the imagined dinner.',
+          caption: 'Hair first, smile after',
+        },
+        {
+          src: '/storyline/153-clara-vienna-solo-mobile-candid-lane-talk.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone talking to a friend on a cobbled Vienna lane after the imagined dinner.',
+          caption: 'Talking on the lane',
+        },
+        {
+          src: '/storyline/177-clara-vienna-standing-mobile-macro-window.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing by the restaurant window laughing at the imagined dinner.',
+          caption: 'Laughing by the window',
+        },
+        {
+          src: '/storyline/125-clara-vienna-birthday-laugh-mobile.jpg',
+          alt: 'AI-generated candid mobile snapshot of fictional Clara laughing with her hand near her mouth as friends share a story at the imagined birthday dinner.',
+          caption: 'A story that made the table laugh',
+        },
+        {
+          src: '/storyline/167-clara-vienna-cake-mobile-macro-cut.jpg',
+          alt: 'AI-generated tilted candid mobile macro snapshot of a knife cutting the chocolate birthday cake with fictional Clara and friends blurred behind at the imagined dinner.',
+          caption: 'The knife goes in',
+        },
+        {
+          src: '/storyline/144-clara-vienna-girlfriends-mobile-toast-macro.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of fictional Clara and her two female friends clinking small glasses over the birthday cake at the imagined dinner.',
+          caption: 'Three glasses over the cake',
+        },
+        {
+          src: '/storyline/127-clara-vienna-solo-mobile-macro-front.jpg',
+          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone, face close to the lens with soft focus and grain at the imagined Vienna dinner.',
+          caption: 'Too close to miss',
+        },
+        {
+          src: '/storyline/130-clara-vienna-solo-mobile-low-angle-laugh.jpg',
+          alt: 'AI-generated tilted low-angle mobile portrait of fictional Clara alone laughing at the imagined Vienna restaurant dinner.',
+          caption: 'A laugh from below',
+        },
+        {
+          src: '/storyline/118-clara-vienna-birthday-portrait-mobile.jpg',
+          alt: 'AI-generated mobile portrait of fictional Clara in her olive-green blouse smiling at the camera, the birthday cake blurred in front and her three friends behind at the imagined Vienna restaurant.',
+          caption: 'The birthday girl in portrait mode',
+        },
+        {
+          src: '/storyline/161-clara-vienna-dinner-mobile-macro-serving-hands.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of hands passing a bowl of pasta across the table to fictional Clara and friends at the imagined dinner.',
+          caption: 'Passing the pasta',
+        },
+        {
+          src: '/storyline/128-clara-vienna-solo-mobile-macro-profile.jpg',
+          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone in profile, smiling down at the birthday candles with a warm flare at the imagined dinner.',
+          caption: 'A profile over the candles',
+        },
+        {
+          src: '/storyline/174-clara-vienna-cake-mobile-wide-room.jpg',
+          alt: 'AI-generated tilted wide-angle mobile snapshot of fictional Clara cutting the cake with friends watching in the restaurant room at the imagined dinner.',
+          caption: 'The room watches her cut',
+        },
+        {
+          src: '/storyline/140-clara-vienna-solo-mobile-macro-candle-glow.jpg',
+          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone lit by candle glow with a soft flare at the imagined Vienna dinner.',
+          caption: 'Lit by the candles',
+        },
+        {
+          src: '/storyline/192-clara-vienna-posegroup-mobile-happy-jump.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends jumping and cheering in the hallway at the imagined dinner.',
+          caption: 'Jumping down the hallway',
+        },
+        {
+          src: '/storyline/133-clara-vienna-friends-mobile-huddle-crop.jpg',
+          alt: 'AI-generated tilted mobile snapshot of fictional Clara half-cut at the frame edge while two friends huddle laughing at the imagined dinner.',
+          caption: 'Half-cut but laughing',
         },
         {
           src: '/storyline/24-clara-vienna-toast.jpg',
@@ -648,14 +788,9 @@ export class StorylinePage {
           caption: 'Five candles in close-up',
         },
         {
-          src: '/storyline/118-clara-vienna-birthday-portrait-mobile.jpg',
-          alt: 'AI-generated mobile portrait of fictional Clara in her olive-green blouse smiling at the camera, the birthday cake blurred in front and her three friends behind at the imagined Vienna restaurant.',
-          caption: 'The birthday girl in portrait mode',
-        },
-        {
-          src: '/storyline/119-clara-vienna-birthday-wide-mobile.jpg',
-          alt: 'AI-generated wide-angle mobile snapshot of fictional Clara and three friends around the birthday table with cake and wine glasses at the imagined Vienna restaurant dinner.',
-          caption: 'The whole table in one wide frame',
+          src: '/storyline/184-clara-vienna-standing-mobile-portrait-hallway.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing in the restaurant hallway laughing at the imagined dinner.',
+          caption: 'Laughing down the hallway',
         },
         {
           src: '/storyline/120-clara-vienna-friends-group-selfie-mobile.jpg',
@@ -663,134 +798,9 @@ export class StorylinePage {
           caption: 'A quick selfie between laughs',
         },
         {
-          src: '/storyline/121-clara-vienna-birthday-over-shoulder-mobile.jpg',
-          alt: 'AI-generated candid mobile snapshot from behind fictional Clara toward her three friends laughing across the imagined birthday table.',
-          caption: 'Seen over Clara’s shoulder',
-        },
-        {
-          src: '/storyline/122-clara-vienna-friends-street-wide-mobile.jpg',
-          alt: 'AI-generated wide-angle mobile snapshot of fictional Clara and three friends walking and laughing on a cobbled Vienna lane after the imagined dinner.',
-          caption: 'The walk home they pictured',
-        },
-        {
-          src: '/storyline/123-clara-vienna-toast-hands-mobile-macro.jpg',
-          alt: 'AI-generated mobile macro snapshot of fictional Clara and friends clinking small glasses over the birthday cake at the imagined Vienna dinner.',
-          caption: 'Four glasses over the cake',
-        },
-        {
-          src: '/storyline/124-clara-vienna-friends-portrait-mobile.jpg',
-          alt: 'AI-generated mobile portrait of fictional Clara’s two friends leaning together laughing, with Clara and the birthday cake softly blurred behind at the imagined dinner.',
-          caption: 'Two friends, one shared laugh',
-        },
-        {
-          src: '/storyline/125-clara-vienna-birthday-laugh-mobile.jpg',
-          alt: 'AI-generated candid mobile snapshot of fictional Clara laughing with her hand near her mouth as friends share a story at the imagined birthday dinner.',
-          caption: 'A story that made the table laugh',
-        },
-        {
-          src: '/storyline/126-clara-vienna-friends-night-portrait-mobile.jpg',
-          alt: 'AI-generated mobile night portrait of fictional Clara huddled with three friends under a street lamp on a Vienna lane after the imagined dinner.',
-          caption: 'Under the lamp after dinner',
-        },
-        {
-          src: '/storyline/127-clara-vienna-solo-mobile-macro-front.jpg',
-          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone, face close to the lens with soft focus and grain at the imagined Vienna dinner.',
-          caption: 'Too close to miss',
-        },
-        {
-          src: '/storyline/128-clara-vienna-solo-mobile-macro-profile.jpg',
-          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone in profile, smiling down at the birthday candles with a warm flare at the imagined dinner.',
-          caption: 'A profile over the candles',
-        },
-        {
-          src: '/storyline/129-clara-vienna-solo-mobile-over-shoulder.jpg',
-          alt: 'AI-generated tilted over-the-shoulder mobile portrait of fictional Clara alone turning back toward the camera at the imagined Vienna dinner.',
-          caption: 'Caught turning back',
-        },
-        {
-          src: '/storyline/130-clara-vienna-solo-mobile-low-angle-laugh.jpg',
-          alt: 'AI-generated tilted low-angle mobile portrait of fictional Clara alone laughing at the imagined Vienna restaurant dinner.',
-          caption: 'A laugh from below',
-        },
-        {
-          src: '/storyline/131-clara-vienna-solo-mobile-awkward-crop.jpg',
-          alt: 'AI-generated tightly cropped tilted mobile macro portrait of fictional Clara alone, half-smiling beside the blurred birthday cake at the imagined dinner.',
-          caption: 'Half in the frame',
-        },
-        {
-          src: '/storyline/132-clara-vienna-friends-mobile-cheek-laugh.jpg',
-          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara laughing cheek-to-cheek with a friend at the imagined birthday dinner.',
-          caption: 'Foreheads almost touching',
-        },
-        {
-          src: '/storyline/133-clara-vienna-friends-mobile-huddle-crop.jpg',
-          alt: 'AI-generated tilted mobile snapshot of fictional Clara half-cut at the frame edge while two friends huddle laughing at the imagined dinner.',
-          caption: 'Half-cut but laughing',
-        },
-        {
-          src: '/storyline/134-clara-vienna-friends-mobile-toast-low.jpg',
-          alt: 'AI-generated tilted low-angle mobile snapshot of fictional Clara and friends toasting behind a blurred wine glass at the imagined dinner.',
-          caption: 'The toast behind the glass',
-        },
-        {
-          src: '/storyline/135-clara-vienna-friends-mobile-street-walk.jpg',
-          alt: 'AI-generated tilted mobile snapshot of fictional Clara and friends mid-step on a cobbled Vienna lane after the imagined dinner.',
-          caption: 'Mid-step on the lane',
-        },
-        {
-          src: '/storyline/136-clara-vienna-friends-mobile-night-hug.jpg',
-          alt: 'AI-generated tilted mobile night portrait of fictional Clara hugging friends under a flaring street lamp after the imagined dinner.',
-          caption: 'A hug under the flare',
-        },
-        {
-          src: '/storyline/137-clara-vienna-solo-mobile-macro-smile.jpg',
-          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone smiling softly past the lens with grain at the imagined Vienna dinner.',
-          caption: 'A soft smile past the lens',
-        },
-        {
-          src: '/storyline/138-clara-vienna-solo-mobile-macro-three-quarter.jpg',
-          alt: 'AI-generated tilted three-quarter mobile macro portrait of fictional Clara alone laughing with a flash hotspot at the imagined dinner.',
-          caption: 'A three-quarter laugh',
-        },
-        {
-          src: '/storyline/139-clara-vienna-solo-mobile-macro-back-view.jpg',
-          alt: 'AI-generated tilted rear mobile macro portrait of fictional Clara alone, hair and shoulder close with her smile turning back at the imagined dinner.',
-          caption: 'Hair first, smile after',
-        },
-        {
-          src: '/storyline/140-clara-vienna-solo-mobile-macro-candle-glow.jpg',
-          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone lit by candle glow with a soft flare at the imagined Vienna dinner.',
-          caption: 'Lit by the candles',
-        },
-        {
-          src: '/storyline/141-clara-vienna-solo-mobile-macro-window.jpg',
-          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone in side light, focus slipped onto her hair at the imagined dinner.',
-          caption: 'Focus on the hair',
-        },
-        {
-          src: '/storyline/142-clara-vienna-girlfriends-mobile-selfie.jpg',
-          alt: 'AI-generated tilted mobile selfie of fictional Clara with her two female friends laughing around the birthday cake at the imagined dinner.',
-          caption: 'Three of them, one selfie',
-        },
-        {
-          src: '/storyline/143-clara-vienna-girlfriends-mobile-embrace.jpg',
-          alt: 'AI-generated tilted mobile snapshot of fictional Clara embraced and kissed on the cheek by her two female friends at the imagined dinner.',
-          caption: 'A kiss on each side',
-        },
-        {
-          src: '/storyline/144-clara-vienna-girlfriends-mobile-toast-macro.jpg',
-          alt: 'AI-generated tilted mobile macro snapshot of fictional Clara and her two female friends clinking small glasses over the birthday cake at the imagined dinner.',
-          caption: 'Three glasses over the cake',
-        },
-        {
-          src: '/storyline/145-clara-vienna-girlfriends-mobile-street-arm.jpg',
-          alt: 'AI-generated tilted mobile snapshot of fictional Clara walking arm-in-arm with her two female friends on a cobbled Vienna lane after the imagined dinner.',
-          caption: 'Arm-in-arm on the lane',
-        },
-        {
-          src: '/storyline/146-clara-vienna-girlfriends-mobile-night-huddle.jpg',
-          alt: 'AI-generated tilted mobile night portrait of fictional Clara huddled with her two female friends under a flaring lamp after the imagined dinner.',
-          caption: 'Three under the lamp',
+          src: '/storyline/196-clara-vienna-posegroup-mobile-funny-toast.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends making goofy cheers faces over shots at the imagined dinner.',
+          caption: 'Goofy cheers all round',
         },
         {
           src: '/storyline/147-clara-vienna-solo-mobile-candid-talking.jpg',
@@ -798,109 +808,9 @@ export class StorylinePage {
           caption: 'Caught mid-sentence',
         },
         {
-          src: '/storyline/148-clara-vienna-solo-mobile-candid-gesture.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone gesturing with a blurred hand while talking at the imagined dinner.',
-          caption: 'Talking with her hands',
-        },
-        {
-          src: '/storyline/149-clara-vienna-solo-mobile-candid-profile-talk.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone in profile, laughing mid-word to someone off-frame at the imagined dinner.',
-          caption: 'A laugh mid-word',
-        },
-        {
-          src: '/storyline/150-clara-vienna-solo-mobile-candid-across-table.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone telling a story across the table to a blurred listener at the imagined dinner.',
-          caption: 'The story across the table',
-        },
-        {
-          src: '/storyline/151-clara-vienna-solo-mobile-candid-low-story.jpg',
-          alt: 'AI-generated tilted low-angle candid mobile portrait of fictional Clara alone telling a story with her head tipped at the imagined dinner.',
-          caption: 'The story from below',
-        },
-        {
-          src: '/storyline/152-clara-vienna-solo-mobile-candid-chin-hand.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone making a point with her hand near her chin at the imagined dinner.',
-          caption: 'Making her point',
-        },
-        {
-          src: '/storyline/153-clara-vienna-solo-mobile-candid-lane-talk.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone talking to a friend on a cobbled Vienna lane after the imagined dinner.',
-          caption: 'Talking on the lane',
-        },
-        {
-          src: '/storyline/154-clara-vienna-solo-mobile-candid-night-laugh.jpg',
-          alt: 'AI-generated tilted candid mobile night portrait of fictional Clara alone laughing mid-talk under a flaring street lamp after the imagined dinner.',
-          caption: 'Laughing under the lamp',
-        },
-        {
-          src: '/storyline/155-clara-vienna-solo-mobile-candid-lean-cake.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone leaning over the birthday cake talking intently at the imagined dinner.',
-          caption: 'Leaning in to tell it',
-        },
-        {
-          src: '/storyline/156-clara-vienna-solo-mobile-candid-window-talk.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone answering someone in soft window light at the imagined dinner.',
-          caption: 'Answering in window light',
-        },
-        {
-          src: '/storyline/157-clara-vienna-dinner-mobile-macro-wine-pour.jpg',
-          alt: 'AI-generated tilted candid mobile macro snapshot of red wine pouring into a glass with fictional Clara and friends blurred behind at the imagined dinner.',
-          caption: 'The pour before dinner',
-        },
-        {
-          src: '/storyline/158-clara-vienna-dinner-mobile-macro-cake-slice.jpg',
-          alt: 'AI-generated tilted mobile macro snapshot of a chocolate cake slice with raspberries and a fork, fictional Clara and friends blurred behind at the imagined dinner.',
-          caption: 'One slice, still warm',
-        },
-        {
-          src: '/storyline/159-clara-vienna-dinner-mobile-candid-first-bite.jpg',
-          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara laughing with a forkful of cake halfway to her mouth at the imagined dinner.',
-          caption: 'The first bite',
-        },
-        {
-          src: '/storyline/160-clara-vienna-dinner-mobile-tilted-table-spread.jpg',
-          alt: 'AI-generated tilted overhead mobile snapshot of the full dinner spread with fictional Clara and friends reaching for pasta, bread and cake at the imagined dinner.',
-          caption: 'The whole spread, tilted',
-        },
-        {
-          src: '/storyline/161-clara-vienna-dinner-mobile-macro-serving-hands.jpg',
-          alt: 'AI-generated tilted mobile macro snapshot of hands passing a bowl of pasta across the table to fictional Clara and friends at the imagined dinner.',
-          caption: 'Passing the pasta',
-        },
-        {
-          src: '/storyline/162-clara-vienna-dinner-mobile-macro-glasses-clink.jpg',
-          alt: 'AI-generated tilted mobile macro snapshot of two wine glasses clinking with fictional Clara and friends blurred behind at the imagined dinner.',
-          caption: 'Two glasses meet',
-        },
-        {
-          src: '/storyline/163-clara-vienna-dinner-mobile-macro-dessert-clara.jpg',
-          alt: 'AI-generated tilted mobile macro snapshot of the chocolate cake with candles and fictional Clara leaning in blurred behind at the imagined dinner.',
-          caption: 'Dessert with Clara behind',
-        },
-        {
-          src: '/storyline/164-clara-vienna-dinner-mobile-candid-pasta-laugh.jpg',
-          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara watching a friend twirl pasta and laugh at the imagined dinner.',
-          caption: 'Pasta, twirled and laughed',
-        },
-        {
-          src: '/storyline/165-clara-vienna-dinner-mobile-candid-share-bite.jpg',
-          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara clapping as friends share a bite of cake at the imagined dinner.',
-          caption: 'One bite, shared',
-        },
-        {
-          src: '/storyline/166-clara-vienna-dinner-mobile-macro-after-coffee.jpg',
-          alt: 'AI-generated tilted mobile macro snapshot of espresso cups and crumbs with fictional Clara and friends chatting blurred behind at the imagined dinner.',
-          caption: 'Coffee after the candles',
-        },
-        {
-          src: '/storyline/167-clara-vienna-cake-mobile-macro-cut.jpg',
-          alt: 'AI-generated tilted candid mobile macro snapshot of a knife cutting the chocolate birthday cake with fictional Clara and friends blurred behind at the imagined dinner.',
-          caption: 'The knife goes in',
-        },
-        {
-          src: '/storyline/168-clara-vienna-cake-mobile-macro-hands-knife.jpg',
-          alt: 'AI-generated tilted mobile macro snapshot of many hands guiding the knife into the cake with fictional Clara laughing behind at the imagined dinner.',
-          caption: 'All hands on the knife',
+          src: '/storyline/195-clara-vienna-posegroup-mobile-happy-hug.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends squeezing into a happy hug at the doorway at the imagined dinner.',
+          caption: 'Squeezed in the doorway',
         },
         {
           src: '/storyline/169-clara-vienna-cake-mobile-macro-candles-blow.jpg',
@@ -908,44 +818,9 @@ export class StorylinePage {
           caption: 'Flames bend, smoke curls',
         },
         {
-          src: '/storyline/170-clara-vienna-cake-mobile-portrait-plate.jpg',
-          alt: 'AI-generated tilted mobile portrait of fictional Clara holding up a plate with a cake slice while friends cheer behind at the imagined dinner.',
-          caption: 'She holds up the slice',
-        },
-        {
-          src: '/storyline/171-clara-vienna-cake-mobile-portrait-cheer.jpg',
-          alt: 'AI-generated tilted mobile portrait of fictional Clara beaming beside the cake as friends cheer blurred behind at the imagined dinner.',
-          caption: 'Beaming beside the cake',
-        },
-        {
-          src: '/storyline/172-clara-vienna-cake-mobile-portrait-clap.jpg',
-          alt: 'AI-generated tilted three-quarter mobile portrait of fictional Clara clapping with the glowing cake in front at the imagined dinner.',
-          caption: 'Clapping over the glow',
-        },
-        {
-          src: '/storyline/173-clara-vienna-cake-mobile-wide-cheer.jpg',
-          alt: 'AI-generated tilted wide-angle mobile snapshot of fictional Clara and friends clapping around the birthday table at the imagined dinner.',
-          caption: 'The whole table cheers',
-        },
-        {
-          src: '/storyline/174-clara-vienna-cake-mobile-wide-room.jpg',
-          alt: 'AI-generated tilted wide-angle mobile snapshot of fictional Clara cutting the cake with friends watching in the restaurant room at the imagined dinner.',
-          caption: 'The room watches her cut',
-        },
-        {
-          src: '/storyline/175-clara-vienna-cake-mobile-wide-toast.jpg',
-          alt: 'AI-generated tilted low wide-angle mobile snapshot of fictional Clara and friends raising glasses over the cake at the imagined dinner.',
-          caption: 'Glasses high over the cake',
-        },
-        {
-          src: '/storyline/176-clara-vienna-cake-mobile-candid-first-slice.jpg',
-          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara lifting the first cake slice as friends applaud at the imagined dinner.',
-          caption: 'Lifting the first slice',
-        },
-        {
-          src: '/storyline/177-clara-vienna-standing-mobile-macro-window.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing by the restaurant window laughing at the imagined dinner.',
-          caption: 'Laughing by the window',
+          src: '/storyline/149-clara-vienna-solo-mobile-candid-profile-talk.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone in profile, laughing mid-word to someone off-frame at the imagined dinner.',
+          caption: 'A laugh mid-word',
         },
         {
           src: '/storyline/178-clara-vienna-standing-mobile-portrait-coatrack.jpg',
@@ -953,34 +828,9 @@ export class StorylinePage {
           caption: 'Waiting by the coats',
         },
         {
-          src: '/storyline/179-clara-vienna-standing-mobile-macro-archway.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing by the wooden archway, leaning on it laughing at the imagined dinner.',
-          caption: 'Leaning on the archway',
-        },
-        {
-          src: '/storyline/180-clara-vienna-standing-mobile-portrait-bar.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing at the bar with a wine glass at the imagined dinner.',
-          caption: 'A glass at the bar',
-        },
-        {
-          src: '/storyline/181-clara-vienna-standing-mobile-macro-doorway.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing at the restaurant doorway, turning with a surprised smile at the imagined dinner.',
-          caption: 'Turning at the doorway',
-        },
-        {
-          src: '/storyline/182-clara-vienna-standing-mobile-portrait-table.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing by the birthday table looking back laughing at the imagined dinner.',
-          caption: 'A look back at the table',
-        },
-        {
-          src: '/storyline/183-clara-vienna-standing-mobile-macro-hair.jpg',
-          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing and tucking her hair behind her ear at the imagined Vienna dinner.',
-          caption: 'Tucking her hair back',
-        },
-        {
-          src: '/storyline/184-clara-vienna-standing-mobile-portrait-hallway.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing in the restaurant hallway laughing at the imagined dinner.',
-          caption: 'Laughing down the hallway',
+          src: '/storyline/168-clara-vienna-cake-mobile-macro-hands-knife.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of many hands guiding the knife into the cake with fictional Clara laughing behind at the imagined dinner.',
+          caption: 'All hands on the knife',
         },
         {
           src: '/storyline/185-clara-vienna-standing-mobile-macro-wineglass.jpg',
@@ -988,14 +838,64 @@ export class StorylinePage {
           caption: 'Wine glass, held high',
         },
         {
-          src: '/storyline/186-clara-vienna-standing-mobile-portrait-dessert.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing and laughing by the dessert counter at the imagined Vienna dinner.',
-          caption: 'Choosing at the counter',
+          src: '/storyline/121-clara-vienna-birthday-over-shoulder-mobile.jpg',
+          alt: 'AI-generated candid mobile snapshot from behind fictional Clara toward her three friends laughing across the imagined birthday table.',
+          caption: 'Seen over Clara’s shoulder',
         },
         {
-          src: '/storyline/187-clara-vienna-posegroup-mobile-funny-faces.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends pulling funny faces by the coat rack for her camera at the imagined dinner.',
-          caption: 'Silly faces by the coats',
+          src: '/storyline/173-clara-vienna-cake-mobile-wide-cheer.jpg',
+          alt: 'AI-generated tilted wide-angle mobile snapshot of fictional Clara and friends clapping around the birthday table at the imagined dinner.',
+          caption: 'The whole table cheers',
+        },
+        {
+          src: '/storyline/150-clara-vienna-solo-mobile-candid-across-table.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone telling a story across the table to a blurred listener at the imagined dinner.',
+          caption: 'The story across the table',
+        },
+        {
+          src: '/storyline/172-clara-vienna-cake-mobile-portrait-clap.jpg',
+          alt: 'AI-generated tilted three-quarter mobile portrait of fictional Clara clapping with the glowing cake in front at the imagined dinner.',
+          caption: 'Clapping over the glow',
+        },
+        {
+          src: '/storyline/180-clara-vienna-standing-mobile-portrait-bar.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing at the bar with a wine glass at the imagined dinner.',
+          caption: 'A glass at the bar',
+        },
+        {
+          src: '/storyline/171-clara-vienna-cake-mobile-portrait-cheer.jpg',
+          alt: 'AI-generated tilted mobile portrait of fictional Clara beaming beside the cake as friends cheer blurred behind at the imagined dinner.',
+          caption: 'Beaming beside the cake',
+        },
+        {
+          src: '/storyline/176-clara-vienna-cake-mobile-candid-first-slice.jpg',
+          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara lifting the first cake slice as friends applaud at the imagined dinner.',
+          caption: 'Lifting the first slice',
+        },
+        {
+          src: '/storyline/129-clara-vienna-solo-mobile-over-shoulder.jpg',
+          alt: 'AI-generated tilted over-the-shoulder mobile portrait of fictional Clara alone turning back toward the camera at the imagined Vienna dinner.',
+          caption: 'Caught turning back',
+        },
+        {
+          src: '/storyline/166-clara-vienna-dinner-mobile-macro-after-coffee.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of espresso cups and crumbs with fictional Clara and friends chatting blurred behind at the imagined dinner.',
+          caption: 'Coffee after the candles',
+        },
+        {
+          src: '/storyline/156-clara-vienna-solo-mobile-candid-window-talk.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone answering someone in soft window light at the imagined dinner.',
+          caption: 'Answering in window light',
+        },
+        {
+          src: '/storyline/124-clara-vienna-friends-portrait-mobile.jpg',
+          alt: 'AI-generated mobile portrait of fictional Clara’s two friends leaning together laughing, with Clara and the birthday cake softly blurred behind at the imagined dinner.',
+          caption: 'Two friends, one shared laugh',
+        },
+        {
+          src: '/storyline/119-clara-vienna-birthday-wide-mobile.jpg',
+          alt: 'AI-generated wide-angle mobile snapshot of fictional Clara and three friends around the birthday table with cake and wine glasses at the imagined Vienna restaurant dinner.',
+          caption: 'The whole table in one wide frame',
         },
         {
           src: '/storyline/188-clara-vienna-posegroup-mobile-serious-bar.jpg',
@@ -1003,29 +903,49 @@ export class StorylinePage {
           caption: 'Serious looks at the bar',
         },
         {
-          src: '/storyline/189-clara-vienna-posegroup-mobile-happy-window.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends hugging happily by the window for her camera at the imagined dinner.',
-          caption: 'A happy hug by the window',
+          src: '/storyline/141-clara-vienna-solo-mobile-macro-window.jpg',
+          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone in side light, focus slipped onto her hair at the imagined dinner.',
+          caption: 'Focus on the hair',
         },
         {
-          src: '/storyline/190-clara-vienna-posegroup-mobile-funny-photobomb.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends with a funny bunny-ears photobomb at the imagined dinner.',
-          caption: 'Bunny ears behind them',
+          src: '/storyline/163-clara-vienna-dinner-mobile-macro-dessert-clara.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of the chocolate cake with candles and fictional Clara leaning in blurred behind at the imagined dinner.',
+          caption: 'Dessert with Clara behind',
         },
         {
-          src: '/storyline/191-clara-vienna-posegroup-mobile-serious-archway.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends posing dramatic and serious at the archway at the imagined dinner.',
-          caption: 'Drama at the archway',
+          src: '/storyline/175-clara-vienna-cake-mobile-wide-toast.jpg',
+          alt: 'AI-generated tilted low wide-angle mobile snapshot of fictional Clara and friends raising glasses over the cake at the imagined dinner.',
+          caption: 'Glasses high over the cake',
         },
         {
-          src: '/storyline/192-clara-vienna-posegroup-mobile-happy-jump.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends jumping and cheering in the hallway at the imagined dinner.',
-          caption: 'Jumping down the hallway',
+          src: '/storyline/182-clara-vienna-standing-mobile-portrait-table.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing by the birthday table looking back laughing at the imagined dinner.',
+          caption: 'A look back at the table',
         },
         {
-          src: '/storyline/193-clara-vienna-posegroup-mobile-funny-cakesteal.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends making funny sneaky faces stealing the cake at the imagined dinner.',
-          caption: 'Sneaking the cake',
+          src: '/storyline/135-clara-vienna-friends-mobile-street-walk.jpg',
+          alt: 'AI-generated tilted mobile snapshot of fictional Clara and friends mid-step on a cobbled Vienna lane after the imagined dinner.',
+          caption: 'Mid-step on the lane',
+        },
+        {
+          src: '/storyline/126-clara-vienna-friends-night-portrait-mobile.jpg',
+          alt: 'AI-generated mobile night portrait of fictional Clara huddled with three friends under a street lamp on a Vienna lane after the imagined dinner.',
+          caption: 'Under the lamp after dinner',
+        },
+        {
+          src: '/storyline/186-clara-vienna-standing-mobile-portrait-dessert.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing and laughing by the dessert counter at the imagined Vienna dinner.',
+          caption: 'Choosing at the counter',
+        },
+        {
+          src: '/storyline/134-clara-vienna-friends-mobile-toast-low.jpg',
+          alt: 'AI-generated tilted low-angle mobile snapshot of fictional Clara and friends toasting behind a blurred wine glass at the imagined dinner.',
+          caption: 'The toast behind the glass',
+        },
+        {
+          src: '/storyline/22-clara-vienna-birthday-candles.jpg',
+          alt: 'AI-generated imagined snapshot of fictional Clara blowing out candles at the birthday dinner she missed during COVID restrictions.',
+          caption: 'A candlelit wish in the parallel version',
         },
         {
           src: '/storyline/194-clara-vienna-posegroup-mobile-serious-lineup.jpg',
@@ -1033,14 +953,44 @@ export class StorylinePage {
           caption: 'Models by the counter',
         },
         {
-          src: '/storyline/195-clara-vienna-posegroup-mobile-happy-hug.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends squeezing into a happy hug at the doorway at the imagined dinner.',
-          caption: 'Squeezed in the doorway',
+          src: '/storyline/123-clara-vienna-toast-hands-mobile-macro.jpg',
+          alt: 'AI-generated mobile macro snapshot of fictional Clara and friends clinking small glasses over the birthday cake at the imagined Vienna dinner.',
+          caption: 'Four glasses over the cake',
         },
         {
-          src: '/storyline/196-clara-vienna-posegroup-mobile-funny-toast.jpg',
-          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends making goofy cheers faces over shots at the imagined dinner.',
-          caption: 'Goofy cheers all round',
+          src: '/storyline/193-clara-vienna-posegroup-mobile-funny-cakesteal.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends making funny sneaky faces stealing the cake at the imagined dinner.',
+          caption: 'Sneaking the cake',
+        },
+        {
+          src: '/storyline/164-clara-vienna-dinner-mobile-candid-pasta-laugh.jpg',
+          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara watching a friend twirl pasta and laugh at the imagined dinner.',
+          caption: 'Pasta, twirled and laughed',
+        },
+        {
+          src: '/storyline/160-clara-vienna-dinner-mobile-tilted-table-spread.jpg',
+          alt: 'AI-generated tilted overhead mobile snapshot of the full dinner spread with fictional Clara and friends reaching for pasta, bread and cake at the imagined dinner.',
+          caption: 'The whole spread, tilted',
+        },
+        {
+          src: '/storyline/159-clara-vienna-dinner-mobile-candid-first-bite.jpg',
+          alt: 'AI-generated tilted candid mobile snapshot of fictional Clara laughing with a forkful of cake halfway to her mouth at the imagined dinner.',
+          caption: 'The first bite',
+        },
+        {
+          src: '/storyline/155-clara-vienna-solo-mobile-candid-lean-cake.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara alone leaning over the birthday cake talking intently at the imagined dinner.',
+          caption: 'Leaning in to tell it',
+        },
+        {
+          src: '/storyline/183-clara-vienna-standing-mobile-macro-hair.jpg',
+          alt: 'AI-generated tilted candid mobile macro portrait of fictional Clara standing and tucking her hair behind her ear at the imagined Vienna dinner.',
+          caption: 'Tucking her hair back',
+        },
+        {
+          src: '/storyline/146-clara-vienna-girlfriends-mobile-night-huddle.jpg',
+          alt: 'AI-generated tilted mobile night portrait of fictional Clara huddled with her two female friends under a flaring lamp after the imagined dinner.',
+          caption: 'Three under the lamp',
         },
       ],
     },
