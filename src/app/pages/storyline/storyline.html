@@ -130,20 +130,24 @@
             [hidden]="!isAlbumExpanded(album.id)"
           >
             <div class="album-story">
-              <p class="chapter-label">The storyline</p>
-              @for (paragraph of album.story; track $index) {
-                <p class="story-paragraph">{{ paragraph }}</p>
-              }
+              <div class="story-copy">
+                <p class="chapter-label">The storyline</p>
+                @for (paragraph of album.story; track $index) {
+                  <p class="story-paragraph">{{ paragraph }}</p>
+                }
+              </div>
 
-              <aside class="why-card">
-                <p class="chapter-label">Why they chose NeverBeen</p>
-                <p>{{ album.reason }}</p>
-              </aside>
+              <div class="story-notes">
+                <aside class="why-card">
+                  <p class="chapter-label">Why they chose NeverBeen</p>
+                  <p>{{ album.reason }}</p>
+                </aside>
 
-              <blockquote class="story-quote">
-                <p>“{{ album.quote }}”</p>
-                <footer>{{ album.quotedBy }} <span>· fictional quote</span></footer>
-              </blockquote>
+                <blockquote class="story-quote">
+                  <p>“{{ album.quote }}”</p>
+                  <footer>{{ album.quotedBy }} <span>· fictional quote</span></footer>
+                </blockquote>
+              </div>
             </div>
 
             <div class="photo-grid" [attr.aria-label]="album.place + ' illustrative photo album'">

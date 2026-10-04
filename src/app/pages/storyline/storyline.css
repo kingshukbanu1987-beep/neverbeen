@@ -645,8 +645,21 @@ h1 em {
 }
 
 .album-story {
-  max-width: 46rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
   padding-top: 0.3rem;
+}
+
+.story-copy {
+  min-width: 0;
+}
+
+.story-notes {
+  display: grid;
+  gap: 1.15rem;
+  min-width: 0;
 }
 
 .chapter-label {
@@ -1060,7 +1073,8 @@ h1 em {
   }
 
   .album-story {
-    max-width: 740px;
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
   }
 
   .photo-grid {

@@ -819,6 +819,10 @@ describe('StorylinePage', () => {
     expect(firstButton.getAttribute('aria-expanded')).toBe('true');
     expect(firstButton.textContent).toContain('Collapse storyline');
     expect(firstContent.hidden).toBe(false);
+    expect(firstContent.querySelector('.story-copy')).toBeTruthy();
+    expect(firstContent.querySelector('.story-notes')).toBeTruthy();
+    expect(firstContent.querySelector('.story-notes .why-card')).toBeTruthy();
+    expect(firstContent.querySelector('.story-notes .story-quote')).toBeTruthy();
     expect(secondButton.getAttribute('aria-expanded')).toBe('false');
     expect(albums[1].querySelector<HTMLElement>('.album-layout')?.hidden).toBe(true);
 
