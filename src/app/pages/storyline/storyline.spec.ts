@@ -119,7 +119,7 @@ describe('StorylinePage', () => {
       expect(album.querySelector<HTMLElement>('.album-layout')?.hidden).toBe(true);
       const coverImage = album.querySelector<HTMLImageElement>('.cover-photo-button img')!;
       expect(coverImage.getAttribute('src')).toContain('/storyline/');
-      expect(getComputedStyle(coverImage).opacity).toBe('1');
+      expect(getComputedStyle(coverImage).opacity).toBe('0.95');
       expect(album.querySelector('.cover-photo-hint')?.textContent).toContain('AI ILLUSTRATION');
       expect(album.querySelector('.story-cover h3')?.textContent?.trim()).toBeTruthy();
       expect(album.querySelector('.cover-location-name')?.textContent?.trim()).toBeTruthy();
