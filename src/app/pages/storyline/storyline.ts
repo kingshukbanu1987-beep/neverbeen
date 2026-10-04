@@ -466,6 +466,56 @@ export class StorylinePage {
           alt: 'Tilted full-figure early-morning mobile photo of fictional Ananya in a winter coat with a local commuter on the RER B platform at CDG Airport, holding a red Delsey Paris cabin trolley.',
           caption: 'A blue train into the city',
         },
+        {
+          src: '/storyline/267-ananya-af-biz-selfie-window.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya in an Air France business class cabin with other passengers by the window; the phone is not visible.',
+          caption: 'A window seat before climb-out',
+        },
+        {
+          src: '/storyline/268-ananya-af-biz-selfie-attendant.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a flight attendant and other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'A red scarf in the aisle',
+        },
+        {
+          src: '/storyline/269-ananya-af-biz-selfie-neighbour.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a neighbouring passenger in an Air France business class cabin; the phone is not visible.',
+          caption: 'CDG to JFK, two winter jumpers',
+        },
+        {
+          src: '/storyline/270-ananya-af-biz-selfie-meal.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya at meal service with other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'Small plates over the wing',
+        },
+        {
+          src: '/storyline/271-ananya-af-biz-selfie-champagne.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a welcome glass and other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'Bubbles after pushback',
+        },
+        {
+          src: '/storyline/272-ananya-af-biz-selfie-cabin.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya looking down an Air France business class cabin full of other passengers; the phone is not visible.',
+          caption: 'Blue seats, a boarding shuffle',
+        },
+        {
+          src: '/storyline/273-ananya-af-biz-selfie-blanket.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya under a blanket with other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'Grey wool after the lights dim',
+        },
+        {
+          src: '/storyline/274-ananya-af-biz-selfie-aisle.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya with a passenger in the aisle of an Air France business class cabin; the phone is not visible.',
+          caption: 'Overhead bins and a puffer',
+        },
+        {
+          src: '/storyline/275-ananya-af-biz-selfie-laugh.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya laughing with another passenger in an Air France business class cabin; the phone is not visible.',
+          caption: 'A borrowed laugh at cruise',
+        },
+        {
+          src: '/storyline/276-ananya-af-biz-selfie-close.jpg',
+          alt: 'Tilted amateur winter mobile selfie of fictional Ananya close to camera with other passengers in an Air France business class cabin; the phone is not visible.',
+          caption: 'IFE glow on a winter scarf',
+        },
       ],
     },
     {
