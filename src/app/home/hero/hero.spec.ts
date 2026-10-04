@@ -125,20 +125,47 @@ describe('Hero', () => {
   it('uses a native same-tab link for Brochure, without a RouterLink intercept', () => {
     const fixture = create();
     const links = fixture.debugElement.queryAll(By.directive(RouterLink));
-    expect(links.some((el) => el.nativeElement.getAttribute('href') === '/documentation')).toBe(false);
+    expect(links.some((el) => el.nativeElement.getAttribute('href') === '/documentation')).toBe(
+      false,
+    );
     const brochure = fixture.nativeElement.querySelector('a[href="/documentation"]');
     expect(brochure).toBeTruthy();
     expect(brochure.getAttribute('target')).toBeNull();
     expect(links.some((el) => el.nativeElement.getAttribute('href') === '/founder')).toBe(true);
   });
 
+  it('uses a native same-tab direct link for Storyline instead of lazy-route navigation', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const storyline = element.querySelector<HTMLAnchorElement>(
+      'a[href="/storyline-of-parallel-universe"]',
+    )!;
+    const routerLinks = fixture.debugElement.queryAll(By.directive(RouterLink));
+
+    expect(storyline).toBeTruthy();
+    expect(storyline.getAttribute('target')).toBeNull();
+    expect(
+      routerLinks.some(
+        (link) => link.nativeElement.getAttribute('href') === '/storyline-of-parallel-universe',
+      ),
+    ).toBe(false);
+  });
+
   it('also positions Brochure after Community when the CMS has a legacy order', () => {
     const cms = TestBed.inject(SiteConfigService);
     const buttons = cms.items('home.hero', 'buttons');
     const brochure = buttons.find((b) => b.id === 'documentation')!;
-    cms.state.update((s) => ({ ...s, published: {
-      'home.hero': { buttons: [...buttons.filter((b) => b.id !== 'documentation'), { ...brochure, label: 'Our brochure' }] },
-    } }));
+    cms.state.update((s) => ({
+      ...s,
+      published: {
+        'home.hero': {
+          buttons: [
+            ...buttons.filter((b) => b.id !== 'documentation'),
+            { ...brochure, label: 'Our brochure' },
+          ],
+        },
+      },
+    }));
     const labels = labelsOf(create().nativeElement);
     const communityIndex = labels.indexOf('Connect to NeverBeen Community');
     expect(labels[communityIndex + 1]).toBe('Our brochure');
@@ -148,7 +175,9 @@ describe('Hero', () => {
 
   it('keeps CMS visibility settings for the brochure', () => {
     const cms = TestBed.inject(SiteConfigService);
-    const buttons = cms.items('home.hero', 'buttons').map((b) => ({ ...b, visible: b.id !== 'documentation' }));
+    const buttons = cms
+      .items('home.hero', 'buttons')
+      .map((b) => ({ ...b, visible: b.id !== 'documentation' }));
     cms.state.update((s) => ({ ...s, published: { 'home.hero': { buttons } } }));
     expect(create().nativeElement.querySelector('a[href="/documentation"]')).toBeNull();
   });

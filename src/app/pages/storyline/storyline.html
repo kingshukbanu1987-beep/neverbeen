@@ -40,12 +40,168 @@
           <p class="transparency-title">An important note about this page</p>
           <p>
             These characters, storylines and quotes are fictional examples—not real customers or
-            testimonials. All album images are AI-generated illustrations styled as everyday mobile
-            snapshots. None are real customer photos or proof that a trip, wedding or event
-            happened.
+            testimonials. All album images are AI-generated illustrations with varied snapshot, film
+            and portrait styles chosen to suit each story. None are real customer photos or proof
+            that a trip, wedding or event happened.
           </p>
         </div>
         <span class="transparency-tag">Illustrative stories</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="story-albums" id="story-albums" aria-labelledby="albums-title">
+    <div class="container">
+      <header class="albums-heading">
+        <p class="eyebrow">Nine stories · ninety-one imagined frames</p>
+        <h2 id="albums-title">A little closer to the parallel universe</h2>
+        <p>
+          Album sizes vary. Some frames imagine journeys or celebrations that never happened; others
+          fill gaps beside memories that are real. Read the reason, meet the people, and remember:
+          an imagined photograph is never the record.
+        </p>
+      </header>
+
+      <nav class="album-index" aria-label="Jump to a story album">
+        @for (album of albums; track album.id) {
+          <a [routerLink]="storylinePath" [fragment]="album.id">
+            <span>{{ album.number }}</span>
+            {{ album.place }}
+          </a>
+        }
+      </nav>
+
+      @for (album of albums; track album.id) {
+        <article
+          class="story-album"
+          [class.album-collapsed]="!isAlbumExpanded(album.id)"
+          [attr.id]="album.id"
+          [attr.aria-labelledby]="album.id + '-title'"
+        >
+          <header class="story-cover">
+            <button
+              class="cover-photo-button"
+              type="button"
+              (click)="openPhoto(album.id, 0, $event)"
+              [attr.aria-label]="'Enlarge cover photo: ' + album.photos[0].caption"
+              aria-haspopup="dialog"
+            >
+              <img [src]="album.photos[0].src" alt="" loading="lazy" decoding="async" />
+            </button>
+            <div class="cover-scrim" aria-hidden="true"></div>
+
+            <div class="cover-content">
+              <div class="cover-topline">
+                <p class="cover-brand">
+                  <span aria-hidden="true">NB</span> STORY / PARALLEL UNIVERSE
+                </p>
+                <p class="cover-index">
+                  STORY <strong>{{ album.number }}</strong> <span>/ 09</span>
+                </p>
+              </div>
+
+              <div class="cover-copy">
+                <p class="cover-location">
+                  <span class="cover-location-kicker">Somewhere, in the parallel universe</span>
+                  <span class="cover-location-name">{{ album.place }}</span>
+                </p>
+                <h3 [id]="album.id + '-title'">{{ album.title }}</h3>
+                <p class="cover-people"><span>FEATURING</span> {{ album.people }}</p>
+              </div>
+
+              <div class="cover-bottom">
+                <p class="cover-deck">{{ album.deck }}</p>
+                <div class="cover-tools">
+                  <span class="cover-frame-count">
+                    <strong
+                      >{{ album.photos.length < 10 ? '0' : '' }}{{ album.photos.length }}</strong
+                    >
+                    {{ album.photos.length === 1 ? 'FRAME' : 'FRAMES' }}
+                  </span>
+                  <button
+                    class="album-toggle"
+                    type="button"
+                    [attr.aria-expanded]="isAlbumExpanded(album.id)"
+                    [attr.aria-controls]="album.id + '-content'"
+                    (click)="toggleAlbum(album.id)"
+                  >
+                    <span class="album-toggle-icon" aria-hidden="true">
+                      {{ isAlbumExpanded(album.id) ? '−' : '+' }}
+                    </span>
+                    {{ isAlbumExpanded(album.id) ? 'Collapse' : 'Extend' }} storyline
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <span class="cover-photo-hint" aria-hidden="true">OPEN COVER <span>↗</span></span>
+          </header>
+
+          <div
+            class="album-layout"
+            [id]="album.id + '-content'"
+            [hidden]="!isAlbumExpanded(album.id)"
+          >
+            <div class="album-story">
+              <p class="chapter-label">The storyline</p>
+              @for (paragraph of album.story; track $index) {
+                <p class="story-paragraph">{{ paragraph }}</p>
+              }
+
+              <aside class="why-card">
+                <p class="chapter-label">Why they chose NeverBeen</p>
+                <p>{{ album.reason }}</p>
+              </aside>
+
+              <blockquote class="story-quote">
+                <p>“{{ album.quote }}”</p>
+                <footer>{{ album.quotedBy }} <span>· fictional quote</span></footer>
+              </blockquote>
+            </div>
+
+            <div class="photo-grid" [attr.aria-label]="album.place + ' illustrative photo album'">
+              @for (photo of album.photos; track photo.src; let photoIndex = $index) {
+                @if (photoIndex > 0) {
+                  <figure class="album-photo">
+                    <button
+                      class="photo-open-button"
+                      type="button"
+                      (click)="openPhoto(album.id, photoIndex, $event)"
+                      [attr.aria-label]="'Enlarge photo: ' + photo.caption"
+                      aria-haspopup="dialog"
+                    >
+                      <img [src]="photo.src" [alt]="photo.alt" loading="lazy" decoding="async" />
+                      <span class="photo-open-hint" aria-hidden="true">EXPAND <span>↗</span></span>
+                    </button>
+                    <figcaption>
+                      <span class="photo-number"
+                        >{{ photoIndex + 1 < 10 ? '0' : '' }}{{ photoIndex + 1 }}</span
+                      >
+                      <span>{{ photo.caption }}</span>
+                    </figcaption>
+                  </figure>
+                }
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="storyline-close" aria-labelledby="close-title">
+    <div class="container close-inner">
+      <p class="eyebrow">For every “not yet”</p>
+      <h2 id="close-title">Somewhere can still matter to you.</h2>
+      <p>
+        A NeverBeen photograph is not a substitute for being there, and it cannot make a hard season
+        disappear. It can give a wish a face and a place to live while the real journey waits.
+      </p>
+      <div class="close-actions">
+        <a class="btn btn-gold" routerLink="/" fragment="contact">Tell us about your somewhere</a>
+        <a class="close-secondary" routerLink="/" fragment="how-it-works"
+          >See how NeverBeen works <span aria-hidden="true">→</span></a
+        >
       </div>
     </div>
   </section>
@@ -81,95 +237,58 @@
     </div>
   </section>
 
-  <section class="story-albums" id="story-albums" aria-labelledby="albums-title">
-    <div class="container">
-      <header class="albums-heading">
-        <p class="eyebrow">Nine stories · thirty-six imagined frames</p>
-        <h2 id="albums-title">A little closer to the parallel universe</h2>
-        <p>
-          Each album contains four frames. Some imagine journeys or celebrations that never
-          happened; others fill gaps beside memories that are real. Read the reason, meet the
-          people, and remember: an imagined photograph is never the record.
-        </p>
-      </header>
-
-      <nav class="album-index" aria-label="Jump to a story album">
-        @for (album of albums; track album.id) {
-          <a [attr.href]="'#' + album.id">
-            <span>{{ album.number }}</span>
-            {{ album.place }}
-          </a>
-        }
-      </nav>
-
-      @for (album of albums; track album.id) {
-        <article
-          class="story-album"
-          [attr.id]="album.id"
-          [attr.aria-labelledby]="album.id + '-title'"
+  @if (lightboxPhoto(); as active) {
+    <div
+      class="story-lightbox"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="active.photo.caption"
+      (click)="closeLightbox()"
+    >
+      <div class="lightbox-bar" (click)="$event.stopPropagation()">
+        <span class="lightbox-position">
+          STORY {{ active.album.number }} <span>·</span> {{ active.album.place }} <span>·</span>
+          {{ active.photoIndex + 1 }} / {{ active.album.photos.length }}
+        </span>
+        <button
+          #lightboxClose
+          type="button"
+          class="lightbox-close"
+          (click)="closeLightbox()"
+          aria-label="Close enlarged photo"
         >
-          <header class="album-header">
-            <div class="album-id" aria-hidden="true">{{ album.number }}</div>
-            <div class="album-title-group">
-              <p class="album-place">
-                {{ album.place }} <span aria-hidden="true">·</span> {{ album.people }}
-              </p>
-              <h3 [id]="album.id + '-title'">{{ album.title }}</h3>
-              <p class="album-deck">{{ album.deck }}</p>
-            </div>
-            <span class="album-count">04 <span>imagined frames</span></span>
-          </header>
-
-          <div class="album-layout">
-            <div class="album-story">
-              <p class="chapter-label">The storyline</p>
-              @for (paragraph of album.story; track $index) {
-                <p class="story-paragraph">{{ paragraph }}</p>
-              }
-
-              <aside class="why-card">
-                <p class="chapter-label">Why they chose NeverBeen</p>
-                <p>{{ album.reason }}</p>
-              </aside>
-
-              <blockquote class="story-quote">
-                <p>“{{ album.quote }}”</p>
-                <footer>{{ album.quotedBy }} <span>· fictional quote</span></footer>
-              </blockquote>
-            </div>
-
-            <div class="photo-grid" [attr.aria-label]="album.place + ' illustrative photo album'">
-              @for (photo of album.photos; track photo.src; let photoIndex = $index) {
-                <figure class="album-photo" [class.feature-photo]="photoIndex === 0">
-                  <img [src]="photo.src" [alt]="photo.alt" loading="lazy" decoding="async" />
-                  <span class="photo-label">AI illustration</span>
-                  <figcaption>
-                    <span class="photo-number">0{{ photoIndex + 1 }}</span>
-                    <span>{{ photo.caption }}</span>
-                  </figcaption>
-                </figure>
-              }
-            </div>
-          </div>
-        </article>
-      }
-    </div>
-  </section>
-
-  <section class="storyline-close" aria-labelledby="close-title">
-    <div class="container close-inner">
-      <p class="eyebrow">For every “not yet”</p>
-      <h2 id="close-title">Somewhere can still matter to you.</h2>
-      <p>
-        A NeverBeen photograph is not a substitute for being there, and it cannot make a hard season
-        disappear. It can give a wish a face and a place to live while the real journey waits.
-      </p>
-      <div class="close-actions">
-        <a class="btn btn-gold" routerLink="/" fragment="contact">Tell us about your somewhere</a>
-        <a class="close-secondary" routerLink="/" fragment="how-it-works"
-          >See how NeverBeen works <span aria-hidden="true">→</span></a
-        >
+          Close <span aria-hidden="true">×</span>
+        </button>
       </div>
+
+      <button
+        type="button"
+        class="lightbox-arrow previous"
+        (click)="showPreviousPhoto($event)"
+        aria-label="Previous photo in this story"
+      >
+        ‹
+      </button>
+
+      <figure class="lightbox-figure" (click)="$event.stopPropagation()">
+        <img [src]="active.photo.src" [alt]="active.photo.alt" />
+        <figcaption>
+          <div>
+            <p>{{ active.album.title }}</p>
+            <strong>{{ active.album.place }}</strong>
+            <span>{{ active.photo.caption }}</span>
+          </div>
+        </figcaption>
+      </figure>
+
+      <button
+        type="button"
+        class="lightbox-arrow next"
+        (click)="showNextPhoto($event)"
+        aria-label="Next photo in this story"
+      >
+        ›
+      </button>
     </div>
-  </section>
+  }
 </div>

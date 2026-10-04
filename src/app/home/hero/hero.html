@@ -12,12 +12,14 @@
       @if (buttons().length) {
         <div class="actions">
           @for (b of buttons(); track b.id) {
-            @if (b.id === 'documentation') {
-              <!-- A document navigation stays reliable after history restores or
-                   a deployment replaces the lazy route's JavaScript chunk. -->
+            @if (b.id === 'documentation' || b.id === 'storyline') {
+              <!-- Native same-tab navigation stays reliable after history restores
+                   or a deployment replaces the lazy route's JavaScript chunk. -->
               <a [href]="b.path" [class]="'btn ' + b.cls">{{ b.label }}</a>
             } @else {
-              <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{ b.label }}</a>
+              <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{
+                b.label
+              }}</a>
             }
           }
         </div>
@@ -26,7 +28,11 @@
     <figure class="frame">
       <img [src]="destination().image" [alt]="destination().caption" />
       <nav class="slide-controls" aria-label="Hero destinations">
-        <button type="button" (click)="showPreviousDestination()" aria-label="Show previous destination">
+        <button
+          type="button"
+          (click)="showPreviousDestination()"
+          aria-label="Show previous destination"
+        >
           Previous
         </button>
         <button type="button" (click)="showNextDestination()" aria-label="Show next destination">

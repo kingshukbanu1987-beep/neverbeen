@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 interface StoryPhoto {
@@ -21,6 +32,17 @@ interface StoryAlbum {
   photos: StoryPhoto[];
 }
 
+interface ActiveStoryPhoto {
+  albumId: string;
+  photoIndex: number;
+}
+
+interface StoryLightboxPhoto {
+  album: StoryAlbum;
+  photo: StoryPhoto;
+  photoIndex: number;
+}
+
 @Component({
   selector: 'app-storyline-page',
   imports: [RouterLink],
@@ -29,6 +51,13 @@ interface StoryAlbum {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StorylinePage {
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly lightboxCloseButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
+  private lastFocusedTrigger: HTMLElement | null = null;
+  private previousBodyOverflow = '';
+
+  protected readonly storylinePath = '/storyline-of-parallel-universe';
   protected readonly albums: StoryAlbum[] = [
     {
       id: 'switzerland-honeymoon',
@@ -228,6 +257,281 @@ export class StorylinePage {
           alt: 'AI-generated companion illustration of fictional Helen and James walking beside the Thames in their wedding clothes, an imagined moment rather than a real photograph.',
           caption: 'A riverside walk imagined from their memories',
         },
+        {
+          src: '/storyline/37-helen-james-london-confetti.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James sharing a confetti moment outside their London registry office.',
+          caption: 'Confetti outside the registry steps',
+        },
+        {
+          src: '/storyline/38-helen-james-london-black-cab.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James sharing a London black cab after their registry-office wedding.',
+          caption: 'A taxi ride through the city after the ceremony',
+        },
+        {
+          src: '/storyline/40-helen-james-london-pub-toast.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James raising a modest wedding toast with friends in a London pub.',
+          caption: 'A toast with friends in a neighbourhood pub',
+        },
+        {
+          src: '/storyline/42-helen-james-london-rainy-street.jpg',
+          alt: 'AI-generated companion illustration of fictional Helen and James beneath an umbrella on a rainy London street after their wedding.',
+          caption: 'An umbrella for the walk back through London',
+        },
+        {
+          src: '/storyline/45-helen-james-london-vintage-snapshot.jpg',
+          alt: 'AI-generated vintage-style companion illustration of fictional Helen and James laughing with friends in a London courtyard.',
+          caption: 'A courtyard snapshot with their friends',
+        },
+        {
+          src: '/storyline/47-helen-james-wedding-macro-rings.jpg',
+          alt: 'AI-generated macro companion illustration of fictional Helen and James with their wedding rings, ivory sleeve and charcoal suit cuff in focus.',
+          caption: 'The rings, close to the moment',
+        },
+        {
+          src: '/storyline/48-helen-james-wedding-portrait.jpg',
+          alt: 'AI-generated portrait-style companion illustration of fictional Helen and James in their original wedding outfits outside the registry office.',
+          caption: 'An unposed portrait between the official shots',
+        },
+        {
+          src: '/storyline/49-helen-james-wedding-wide-registry.jpg',
+          alt: 'AI-generated wide-angle companion illustration of fictional Helen and James in their wedding clothes inside a modest London registry room.',
+          caption: 'The registry room seen from the back',
+        },
+        {
+          src: '/storyline/50-helen-james-wedding-romantic-steps.jpg',
+          alt: 'AI-generated romantic companion illustration of fictional Helen and James sharing a quiet moment on the registry-office steps after confetti.',
+          caption: 'A quiet pause after the confetti',
+        },
+        {
+          src: '/storyline/51-helen-james-wedding-wide-thames.jpg',
+          alt: 'AI-generated wide-angle companion illustration of fictional Helen and James walking beside the Thames in their original wedding outfits.',
+          caption: 'A wider view of their riverside walk',
+        },
+        {
+          src: '/storyline/52-helen-james-wedding-boutonniere.jpg',
+          alt: 'AI-generated portrait-style companion illustration of fictional Helen straightening James’s white boutonniere during their wedding day.',
+          caption: 'The little white boutonniere',
+        },
+        {
+          src: '/storyline/53-helen-james-wedding-first-dance-bw.jpg',
+          alt: 'AI-generated black-and-white companion illustration of fictional Helen and James slow-dancing in their original wedding attire.',
+          caption: 'A slow dance in monochrome',
+        },
+        {
+          src: '/storyline/54-helen-james-wedding-family-portrait.jpg',
+          alt: 'AI-generated wide group companion illustration of fictional Helen and James with family outside the London registry office.',
+          caption: 'The family picture, imagined in sharper focus',
+        },
+        {
+          src: '/storyline/55-helen-james-wedding-macro-register.jpg',
+          alt: 'AI-generated macro companion illustration of fictional Helen and James’s ringed hands signing the registry in their wedding outfits.',
+          caption: 'The final stroke beside their rings',
+        },
+        {
+          src: '/storyline/56-helen-james-wedding-kiss-courtyard.jpg',
+          alt: 'AI-generated romantic companion illustration of fictional Helen and James kissing in the registry garden in their wedding clothes.',
+          caption: 'A kiss in the registry garden',
+        },
+        {
+          src: '/storyline/57-helen-london-wedding-portrait-front.jpg',
+          alt: 'AI-generated front-facing portrait of fictional bride Helen in her long-sleeved ivory wedding dress, holding her bouquet outside the London registry office.',
+          caption: 'A front-facing portrait in the registry light',
+        },
+        {
+          src: '/storyline/58-helen-london-wedding-portrait-three-quarter.jpg',
+          alt: 'AI-generated three-quarter portrait of fictional bride Helen in her ivory wedding dress, turning toward the camera beside a London brick wall.',
+          caption: 'A three-quarter turn toward the camera',
+        },
+        {
+          src: '/storyline/59-helen-london-wedding-portrait-profile.jpg',
+          alt: 'AI-generated profile portrait of fictional bride Helen by a registry-office window, looking down at her white bouquet in her ivory wedding dress.',
+          caption: 'A quiet profile by the window',
+        },
+        {
+          src: '/storyline/60-helen-london-wedding-portrait-laughing.jpg',
+          alt: 'AI-generated candid portrait of fictional bride Helen laughing on the London registry steps in her ivory wedding dress.',
+          caption: 'A laugh caught on the registry steps',
+        },
+        {
+          src: '/storyline/61-helen-london-wedding-portrait-monochrome.jpg',
+          alt: 'AI-generated black-and-white portrait of fictional bride Helen beneath a stone registry-office arch, holding her wedding bouquet.',
+          caption: 'A monochrome portrait under the stone arch',
+        },
+        {
+          src: '/storyline/62-helen-london-wedding-portrait-wide-angle.jpg',
+          alt: 'AI-generated wide-angle environmental portrait of fictional bride Helen alone on the London registry steps in her ivory wedding dress.',
+          caption: 'A wide portrait on the registry steps',
+        },
+        {
+          src: '/storyline/63-helen-london-wedding-portrait-soft-focus.jpg',
+          alt: 'AI-generated soft-focus portrait of fictional bride Helen smiling down at her bouquet in the registry-office window light.',
+          caption: 'A soft-focus pause with her bouquet',
+        },
+        {
+          src: '/storyline/64-helen-london-wedding-portrait-thames.jpg',
+          alt: 'AI-generated environmental portrait of fictional bride Helen by the Thames, turned toward the river in her original ivory wedding dress.',
+          caption: 'A riverside bridal portrait',
+        },
+        {
+          src: '/storyline/65-helen-london-wedding-portrait-low-angle.jpg',
+          alt: 'AI-generated low-angle portrait of fictional bride Helen beneath the registry-office doorway, wearing her long-sleeved ivory dress.',
+          caption: 'A low-angle view beneath the doorway',
+        },
+        {
+          src: '/storyline/66-helen-london-wedding-portrait-over-shoulder.jpg',
+          alt: 'AI-generated over-the-shoulder portrait of fictional bride Helen turning to smile at the camera in her ivory wedding dress.',
+          caption: 'A glance over her shoulder',
+        },
+        {
+          src: '/storyline/67-helen-london-wedding-mobile-macro-front.jpg',
+          alt: 'AI-generated close smartphone portrait of fictional bride Helen in her ivory wedding dress, looking toward the camera with her white bouquet.',
+          caption: 'A close, tilted look toward the camera',
+        },
+        {
+          src: '/storyline/68-helen-london-wedding-mobile-macro-three-quarter.jpg',
+          alt: 'AI-generated three-quarter smartphone portrait of fictional Helen turning back toward the camera in her long-sleeved ivory wedding dress.',
+          caption: 'A three-quarter turn in the registry light',
+        },
+        {
+          src: '/storyline/69-helen-london-wedding-mobile-macro-profile.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen looking toward the registry-office street in her ivory wedding dress.',
+          caption: 'A quiet side profile by the window',
+        },
+        {
+          src: '/storyline/70-helen-london-wedding-mobile-macro-bouquet.jpg',
+          alt: 'AI-generated macro-style smartphone portrait of fictional Helen smiling down at her white wedding bouquet in her ivory dress.',
+          caption: 'A candid moment with her bouquet',
+        },
+        {
+          src: '/storyline/71-helen-london-wedding-mobile-macro-over-shoulder.jpg',
+          alt: 'AI-generated over-the-shoulder portrait of fictional bride Helen glancing back at the camera in her ivory wedding dress.',
+          caption: 'A glance back over her shoulder',
+        },
+        {
+          src: '/storyline/72-helen-london-wedding-mobile-macro-low-angle.jpg',
+          alt: 'AI-generated low-angle smartphone portrait of fictional Helen in her ivory wedding dress, looking toward the London registry doorway.',
+          caption: 'A low-angle look from the registry steps',
+        },
+        {
+          src: '/storyline/73-helen-london-wedding-mobile-macro-laugh.jpg',
+          alt: 'AI-generated candid close portrait of fictional bride Helen laughing on the registry steps in her ivory wedding dress.',
+          caption: 'A laugh caught at a Dutch angle',
+        },
+        {
+          src: '/storyline/74-helen-london-wedding-mobile-macro-back-view.jpg',
+          alt: 'AI-generated rear three-quarter smartphone portrait of fictional Helen in her ivory wedding dress, turning her face slightly toward the camera.',
+          caption: 'The dress from behind, her face turned aside',
+        },
+        {
+          src: '/storyline/75-helen-london-wedding-mobile-macro-window.jpg',
+          alt: 'AI-generated close mobile portrait of fictional Helen in her wedding dress, looking down beside the registry-office window.',
+          caption: 'A close profile in soft window light',
+        },
+        {
+          src: '/storyline/76-helen-london-wedding-mobile-macro-courtyard.jpg',
+          alt: 'AI-generated candid smartphone portrait of fictional Helen turning back with her bouquet in the registry courtyard, wearing her ivory wedding dress.',
+          caption: 'A tilted candid from the courtyard',
+        },
+        {
+          src: '/storyline/77-helen-james-wedding-mobile-macro-candid-laugh.jpg',
+          alt: 'AI-generated close mobile portrait of fictional bride Helen laughing as groom James leans cheek-to-cheek with her outside the London registry office.',
+          caption: 'A laugh between the registry steps',
+        },
+        {
+          src: '/storyline/78-helen-james-wedding-mobile-macro-side-whisper.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen smiling with lowered eyes as James rests his forehead against hers outside the registry office.',
+          caption: 'A quiet moment, caught in profile',
+        },
+        {
+          src: '/storyline/79-helen-james-wedding-mobile-macro-over-shoulder.jpg',
+          alt: 'AI-generated over-the-shoulder wedding portrait of fictional Helen and James leaning together in their ivory dress and charcoal suit.',
+          caption: 'A close look over her shoulder',
+        },
+        {
+          src: '/storyline/80-helen-james-wedding-mobile-macro-high-angle.jpg',
+          alt: 'AI-generated high-angle mobile portrait of fictional bride Helen resting against James and glancing up at him on their London wedding day.',
+          caption: 'A soft glance from above',
+        },
+        {
+          src: '/storyline/81-helen-james-wedding-mobile-macro-low-angle.jpg',
+          alt: 'AI-generated low-angle smartphone portrait of fictional Helen turning in profile toward James in his charcoal wedding suit.',
+          caption: 'A low-angle look between the two of them',
+        },
+        {
+          src: '/storyline/82-helen-james-wedding-mobile-macro-forehead-kiss.jpg',
+          alt: 'AI-generated close portrait of fictional groom James kissing bride Helen on the forehead beside the London registry steps.',
+          caption: 'A forehead kiss above the bouquet',
+        },
+        {
+          src: '/storyline/83-helen-james-wedding-mobile-macro-laughing-selfie.jpg',
+          alt: 'AI-generated candid mobile portrait of fictional Helen laughing as James leans close to her for a wedding-day snapshot.',
+          caption: 'A laugh caught at close range',
+        },
+        {
+          src: '/storyline/84-helen-james-wedding-mobile-macro-back-view.jpg',
+          alt: 'AI-generated rear three-quarter smartphone portrait of fictional Helen facing James, with her wavy hair and ivory dress in the foreground.',
+          caption: 'The view from just behind Helen',
+        },
+        {
+          src: '/storyline/85-helen-james-wedding-mobile-macro-thames-profile.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen and James leaning toward each other beside the Thames in their wedding clothes.',
+          caption: 'A profile by the Thames',
+        },
+        {
+          src: '/storyline/86-helen-james-wedding-mobile-macro-courtyard-embrace.jpg',
+          alt: 'AI-generated intimate mobile portrait of fictional Helen with her eyes closed as James holds her in the registry courtyard.',
+          caption: 'A quiet embrace after the ceremony',
+        },
+        {
+          src: '/storyline/87-helen-wedding-mobile-macro-friends-laugh.jpg',
+          alt: 'AI-generated close smartphone portrait of fictional Helen laughing in side profile with a friend softly out of focus beside her on the registry steps.',
+          caption: 'A friend’s laugh just out of frame',
+        },
+        {
+          src: '/storyline/88-helen-wedding-mobile-macro-mother-embrace.jpg',
+          alt: 'AI-generated tilted candid portrait of fictional Helen embracing her mother in the registry office, her ivory dress and smiling profile in focus.',
+          caption: 'A happy embrace with her mother',
+        },
+        {
+          src: '/storyline/89-helen-wedding-mobile-macro-sister-whisper.jpg',
+          alt: 'AI-generated close side-profile mobile portrait of fictional Helen laughing as a friend leans in to whisper outside the London registry office.',
+          caption: 'A whisper shared on the steps',
+        },
+        {
+          src: '/storyline/90-helen-wedding-mobile-macro-bouquet-friend.jpg',
+          alt: 'AI-generated close-up portrait of fictional Helen smiling down at her white bouquet while a companion adjusts its ribbon in the registry courtyard.',
+          caption: 'The bouquet ribbon, straightened by a friend',
+        },
+        {
+          src: '/storyline/91-helen-wedding-mobile-macro-family-toast.jpg',
+          alt: 'AI-generated candid side-profile portrait of fictional Helen laughing at the wedding breakfast as an older relative shares a teacup in soft focus.',
+          caption: 'Tea and laughter at the wedding breakfast',
+        },
+        {
+          src: '/storyline/92-helen-wedding-mobile-macro-back-view-friend.jpg',
+          alt: 'AI-generated rear three-quarter mobile portrait of fictional Helen smiling over her shoulder at a friend in the registry courtyard.',
+          caption: 'A glance back toward a friend',
+        },
+        {
+          src: '/storyline/93-helen-wedding-mobile-macro-mother-profile.jpg',
+          alt: 'AI-generated close candid portrait of fictional Helen smiling beside her mother on the registry steps, wearing her ivory wedding dress.',
+          caption: 'A portrait beside her mother',
+        },
+        {
+          src: '/storyline/94-helen-wedding-mobile-macro-window-friend.jpg',
+          alt: 'AI-generated over-the-shoulder profile portrait of fictional Helen smiling back toward a friend by the registry-office window.',
+          caption: 'A smile back toward the window',
+        },
+        {
+          src: '/storyline/95-helen-wedding-mobile-macro-courtyard-friends.jpg',
+          alt: 'AI-generated candid mobile portrait of fictional Helen laughing in the courtyard with a friend softly blurred in the foreground.',
+          caption: 'A candid from the courtyard',
+        },
+        {
+          src: '/storyline/96-helen-wedding-mobile-macro-laugh-over-shoulder.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen laughing with a friend at the registry steps, seen from behind her shoulder.',
+          caption: 'A laugh over her shoulder',
+        },
       ],
     },
     {
@@ -391,4 +695,109 @@ export class StorylinePage {
       ],
     },
   ];
+
+  private readonly collapsedAlbums = signal<ReadonlySet<string>>(
+    new Set(this.albums.map((album) => album.id)),
+  );
+  private readonly activePhotoSelection = signal<ActiveStoryPhoto | null>(null);
+  private readonly lightboxIsOpen = computed(() => this.activePhotoSelection() !== null);
+
+  protected readonly lightboxPhoto = computed<StoryLightboxPhoto | null>(() => {
+    const selection = this.activePhotoSelection();
+    if (!selection) return null;
+
+    const album = this.albums.find((story) => story.id === selection.albumId);
+    const photo = album?.photos[selection.photoIndex];
+    return album && photo ? { album, photo, photoIndex: selection.photoIndex } : null;
+  });
+
+  constructor() {
+    effect(() => {
+      if (this.lightboxIsOpen()) this.lightboxCloseButton()?.nativeElement.focus();
+    });
+
+    const onKeydown = (event: KeyboardEvent) => {
+      if (!this.activePhotoSelection()) return;
+
+      switch (event.key) {
+        case 'Escape':
+          this.closeLightbox();
+          break;
+        case 'ArrowRight':
+          this.stepPhoto(1);
+          break;
+        case 'ArrowLeft':
+          this.stepPhoto(-1);
+          break;
+        default:
+          return;
+      }
+
+      event.preventDefault();
+    };
+
+    this.document.addEventListener('keydown', onKeydown);
+    this.destroyRef.onDestroy(() => {
+      this.document.removeEventListener('keydown', onKeydown);
+      if (this.activePhotoSelection()) this.unlockScroll();
+    });
+  }
+
+  protected isAlbumExpanded(albumId: string): boolean {
+    return !this.collapsedAlbums().has(albumId);
+  }
+
+  protected toggleAlbum(albumId: string): void {
+    this.collapsedAlbums.update((collapsed) => {
+      const next = new Set(collapsed);
+      if (next.has(albumId)) next.delete(albumId);
+      else next.add(albumId);
+      return next;
+    });
+  }
+
+  protected openPhoto(albumId: string, photoIndex: number, event: Event): void {
+    this.lastFocusedTrigger = event.currentTarget as HTMLElement | null;
+    this.previousBodyOverflow = this.document.body.style.overflow;
+    this.activePhotoSelection.set({ albumId, photoIndex });
+    this.document.body.style.overflow = 'hidden';
+  }
+
+  protected closeLightbox(): void {
+    if (!this.activePhotoSelection()) return;
+
+    this.activePhotoSelection.set(null);
+    this.unlockScroll();
+    this.lastFocusedTrigger?.focus();
+    this.lastFocusedTrigger = null;
+  }
+
+  protected showPreviousPhoto(event: Event): void {
+    event.stopPropagation();
+    this.stepPhoto(-1);
+  }
+
+  protected showNextPhoto(event: Event): void {
+    event.stopPropagation();
+    this.stepPhoto(1);
+  }
+
+  private stepPhoto(delta: number): void {
+    this.activePhotoSelection.update((selection) => {
+      if (!selection) return null;
+
+      const album = this.albums.find((story) => story.id === selection.albumId);
+      const total = album?.photos.length ?? 0;
+      if (!total) return selection;
+
+      return {
+        ...selection,
+        photoIndex: (selection.photoIndex + delta + total) % total,
+      };
+    });
+  }
+
+  private unlockScroll(): void {
+    this.document.body.style.overflow = this.previousBodyOverflow;
+  }
 }
