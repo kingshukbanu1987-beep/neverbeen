@@ -352,6 +352,56 @@ export class StorylinePage {
           alt: 'AI-generated romantic companion illustration of fictional Helen and James kissing in the registry garden in their wedding clothes.',
           caption: 'A kiss in the registry garden',
         },
+        {
+          src: '/storyline/57-helen-london-wedding-portrait-front.jpg',
+          alt: 'AI-generated front-facing portrait of fictional bride Helen in her long-sleeved ivory wedding dress, holding her bouquet outside the London registry office.',
+          caption: 'A front-facing portrait in the registry light',
+        },
+        {
+          src: '/storyline/58-helen-london-wedding-portrait-three-quarter.jpg',
+          alt: 'AI-generated three-quarter portrait of fictional bride Helen in her ivory wedding dress, turning toward the camera beside a London brick wall.',
+          caption: 'A three-quarter turn toward the camera',
+        },
+        {
+          src: '/storyline/59-helen-london-wedding-portrait-profile.jpg',
+          alt: 'AI-generated profile portrait of fictional bride Helen by a registry-office window, looking down at her white bouquet in her ivory wedding dress.',
+          caption: 'A quiet profile by the window',
+        },
+        {
+          src: '/storyline/60-helen-london-wedding-portrait-laughing.jpg',
+          alt: 'AI-generated candid portrait of fictional bride Helen laughing on the London registry steps in her ivory wedding dress.',
+          caption: 'A laugh caught on the registry steps',
+        },
+        {
+          src: '/storyline/61-helen-london-wedding-portrait-monochrome.jpg',
+          alt: 'AI-generated black-and-white portrait of fictional bride Helen beneath a stone registry-office arch, holding her wedding bouquet.',
+          caption: 'A monochrome portrait under the stone arch',
+        },
+        {
+          src: '/storyline/62-helen-london-wedding-portrait-wide-angle.jpg',
+          alt: 'AI-generated wide-angle environmental portrait of fictional bride Helen alone on the London registry steps in her ivory wedding dress.',
+          caption: 'A wide portrait on the registry steps',
+        },
+        {
+          src: '/storyline/63-helen-london-wedding-portrait-soft-focus.jpg',
+          alt: 'AI-generated soft-focus portrait of fictional bride Helen smiling down at her bouquet in the registry-office window light.',
+          caption: 'A soft-focus pause with her bouquet',
+        },
+        {
+          src: '/storyline/64-helen-london-wedding-portrait-thames.jpg',
+          alt: 'AI-generated environmental portrait of fictional bride Helen by the Thames, turned toward the river in her original ivory wedding dress.',
+          caption: 'A riverside bridal portrait',
+        },
+        {
+          src: '/storyline/65-helen-london-wedding-portrait-low-angle.jpg',
+          alt: 'AI-generated low-angle portrait of fictional bride Helen beneath the registry-office doorway, wearing her long-sleeved ivory dress.',
+          caption: 'A low-angle view beneath the doorway',
+        },
+        {
+          src: '/storyline/66-helen-london-wedding-portrait-over-shoulder.jpg',
+          alt: 'AI-generated over-the-shoulder portrait of fictional bride Helen turning to smile at the camera in her ivory wedding dress.',
+          caption: 'A glance over her shoulder',
+        },
       ],
     },
     {
