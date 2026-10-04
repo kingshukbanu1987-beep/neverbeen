@@ -614,7 +614,7 @@ export class StorylinePage {
       story: [
         'Clara, a fictional Austrian woman, turned twenty-five during COVID restrictions. She had pictured a small dinner at a Vienna restaurant, a cake at the centre of the table and her friends around it. The reservation never happened; her birthday came through messages and a screen instead.',
         'She understood why people needed to keep apart, but missing that milestone with her friends still hurt. Time moved on and they stayed close, yet there was no way to revisit the exact evening she had hoped for. The celebration in this album is a what-if, not a hidden record of a party that took place.',
-        'In this fictional example, Clara asks NeverBeen to imagine twenty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
+        'In this fictional example, Clara asks NeverBeen to imagine thirty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
       ],
       reason:
         'She chose NeverBeen to mark a milestone that was missed and picture the friends she wanted around her table—not to erase COVID restrictions or pretend the celebration occurred.',
@@ -741,6 +741,56 @@ export class StorylinePage {
           src: '/storyline/136-clara-vienna-friends-mobile-night-hug.jpg',
           alt: 'AI-generated tilted mobile night portrait of fictional Clara hugging friends under a flaring street lamp after the imagined dinner.',
           caption: 'A hug under the flare',
+        },
+        {
+          src: '/storyline/137-clara-vienna-solo-mobile-macro-smile.jpg',
+          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone smiling softly past the lens with grain at the imagined Vienna dinner.',
+          caption: 'A soft smile past the lens',
+        },
+        {
+          src: '/storyline/138-clara-vienna-solo-mobile-macro-three-quarter.jpg',
+          alt: 'AI-generated tilted three-quarter mobile macro portrait of fictional Clara alone laughing with a flash hotspot at the imagined dinner.',
+          caption: 'A three-quarter laugh',
+        },
+        {
+          src: '/storyline/139-clara-vienna-solo-mobile-macro-back-view.jpg',
+          alt: 'AI-generated tilted rear mobile macro portrait of fictional Clara alone, hair and shoulder close with her smile turning back at the imagined dinner.',
+          caption: 'Hair first, smile after',
+        },
+        {
+          src: '/storyline/140-clara-vienna-solo-mobile-macro-candle-glow.jpg',
+          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone lit by candle glow with a soft flare at the imagined Vienna dinner.',
+          caption: 'Lit by the candles',
+        },
+        {
+          src: '/storyline/141-clara-vienna-solo-mobile-macro-window.jpg',
+          alt: 'AI-generated tilted mobile macro portrait of fictional Clara alone in side light, focus slipped onto her hair at the imagined dinner.',
+          caption: 'Focus on the hair',
+        },
+        {
+          src: '/storyline/142-clara-vienna-girlfriends-mobile-selfie.jpg',
+          alt: 'AI-generated tilted mobile selfie of fictional Clara with her two female friends laughing around the birthday cake at the imagined dinner.',
+          caption: 'Three of them, one selfie',
+        },
+        {
+          src: '/storyline/143-clara-vienna-girlfriends-mobile-embrace.jpg',
+          alt: 'AI-generated tilted mobile snapshot of fictional Clara embraced and kissed on the cheek by her two female friends at the imagined dinner.',
+          caption: 'A kiss on each side',
+        },
+        {
+          src: '/storyline/144-clara-vienna-girlfriends-mobile-toast-macro.jpg',
+          alt: 'AI-generated tilted mobile macro snapshot of fictional Clara and her two female friends clinking small glasses over the birthday cake at the imagined dinner.',
+          caption: 'Three glasses over the cake',
+        },
+        {
+          src: '/storyline/145-clara-vienna-girlfriends-mobile-street-arm.jpg',
+          alt: 'AI-generated tilted mobile snapshot of fictional Clara walking arm-in-arm with her two female friends on a cobbled Vienna lane after the imagined dinner.',
+          caption: 'Arm-in-arm on the lane',
+        },
+        {
+          src: '/storyline/146-clara-vienna-girlfriends-mobile-night-huddle.jpg',
+          alt: 'AI-generated tilted mobile night portrait of fictional Clara huddled with her two female friends under a flaring lamp after the imagined dinner.',
+          caption: 'Three under the lamp',
         },
       ],
     },
