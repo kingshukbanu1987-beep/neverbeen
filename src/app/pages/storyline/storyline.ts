@@ -268,34 +268,14 @@ export class StorylinePage {
           caption: 'A taxi ride through the city after the ceremony',
         },
         {
-          src: '/storyline/39-helen-james-london-thames-walk.jpg',
-          alt: 'AI-generated companion illustration of fictional Helen and James taking a quiet, rain-softened walk beside the Thames.',
-          caption: 'The Thames walk they remember between photographs',
-        },
-        {
           src: '/storyline/40-helen-james-london-pub-toast.jpg',
           alt: 'AI-generated companion illustration of fictional Helen and James raising a modest wedding toast with friends in a London pub.',
           caption: 'A toast with friends in a neighbourhood pub',
         },
         {
-          src: '/storyline/41-helen-james-london-first-dance.jpg',
-          alt: 'AI-generated companion illustration of fictional Helen and James sharing their first dance at a small London wedding reception.',
-          caption: 'Their first dance in the community hall',
-        },
-        {
           src: '/storyline/42-helen-james-london-rainy-street.jpg',
           alt: 'AI-generated companion illustration of fictional Helen and James beneath an umbrella on a rainy London street after their wedding.',
           caption: 'An umbrella for the walk back through London',
-        },
-        {
-          src: '/storyline/43-helen-james-london-monochrome-portrait.jpg',
-          alt: 'AI-generated black-and-white companion portrait of fictional Helen and James beneath a stone London arcade after their small wedding.',
-          caption: 'A quiet black-and-white portrait',
-        },
-        {
-          src: '/storyline/44-helen-james-london-wedding-breakfast.jpg',
-          alt: 'AI-generated companion illustration of fictional Helen and James sharing tea and a small wedding cake with friends in London.',
-          caption: 'Tea and cake at their wedding breakfast',
         },
         {
           src: '/storyline/45-helen-james-london-vintage-snapshot.jpg',
@@ -501,6 +481,56 @@ export class StorylinePage {
           src: '/storyline/86-helen-james-wedding-mobile-macro-courtyard-embrace.jpg',
           alt: 'AI-generated intimate mobile portrait of fictional Helen with her eyes closed as James holds her in the registry courtyard.',
           caption: 'A quiet embrace after the ceremony',
+        },
+        {
+          src: '/storyline/87-helen-wedding-mobile-macro-friends-laugh.jpg',
+          alt: 'AI-generated close smartphone portrait of fictional Helen laughing in side profile with a friend softly out of focus beside her on the registry steps.',
+          caption: 'A friend’s laugh just out of frame',
+        },
+        {
+          src: '/storyline/88-helen-wedding-mobile-macro-mother-embrace.jpg',
+          alt: 'AI-generated tilted candid portrait of fictional Helen embracing her mother in the registry office, her ivory dress and smiling profile in focus.',
+          caption: 'A happy embrace with her mother',
+        },
+        {
+          src: '/storyline/89-helen-wedding-mobile-macro-sister-whisper.jpg',
+          alt: 'AI-generated close side-profile mobile portrait of fictional Helen laughing as a friend leans in to whisper outside the London registry office.',
+          caption: 'A whisper shared on the steps',
+        },
+        {
+          src: '/storyline/90-helen-wedding-mobile-macro-bouquet-friend.jpg',
+          alt: 'AI-generated close-up portrait of fictional Helen smiling down at her white bouquet while a companion adjusts its ribbon in the registry courtyard.',
+          caption: 'The bouquet ribbon, straightened by a friend',
+        },
+        {
+          src: '/storyline/91-helen-wedding-mobile-macro-family-toast.jpg',
+          alt: 'AI-generated candid side-profile portrait of fictional Helen laughing at the wedding breakfast as an older relative shares a teacup in soft focus.',
+          caption: 'Tea and laughter at the wedding breakfast',
+        },
+        {
+          src: '/storyline/92-helen-wedding-mobile-macro-back-view-friend.jpg',
+          alt: 'AI-generated rear three-quarter mobile portrait of fictional Helen smiling over her shoulder at a friend in the registry courtyard.',
+          caption: 'A glance back toward a friend',
+        },
+        {
+          src: '/storyline/93-helen-wedding-mobile-macro-mother-profile.jpg',
+          alt: 'AI-generated close candid portrait of fictional Helen smiling beside her mother on the registry steps, wearing her ivory wedding dress.',
+          caption: 'A portrait beside her mother',
+        },
+        {
+          src: '/storyline/94-helen-wedding-mobile-macro-window-friend.jpg',
+          alt: 'AI-generated over-the-shoulder profile portrait of fictional Helen smiling back toward a friend by the registry-office window.',
+          caption: 'A smile back toward the window',
+        },
+        {
+          src: '/storyline/95-helen-wedding-mobile-macro-courtyard-friends.jpg',
+          alt: 'AI-generated candid mobile portrait of fictional Helen laughing in the courtyard with a friend softly blurred in the foreground.',
+          caption: 'A candid from the courtyard',
+        },
+        {
+          src: '/storyline/96-helen-wedding-mobile-macro-laugh-over-shoulder.jpg',
+          alt: 'AI-generated close side-profile portrait of fictional Helen laughing with a friend at the registry steps, seen from behind her shoulder.',
+          caption: 'A laugh over her shoulder',
         },
       ],
     },
