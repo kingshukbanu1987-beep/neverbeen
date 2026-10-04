@@ -136,6 +136,56 @@ export class StorylinePage {
           alt: 'AI-generated travel illustration of a woman walking alone on a Montmartre street in Paris.',
           caption: 'A long walk, taken at her own pace',
         },
+        {
+          src: '/storyline/197-ananya-paris-portrait-trocadero.jpg',
+          alt: 'AI-generated portrait of fictional Indian woman Ananya in a maroon kurta and mustard dupatta at Trocadéro, with the Eiffel Tower softly behind her.',
+          caption: 'A portrait with the tower at a distance',
+        },
+        {
+          src: '/storyline/198-ananya-paris-wide-notredame.jpg',
+          alt: 'AI-generated wide-angle snapshot of fictional Ananya on the Seine quay beside Notre-Dame cathedral in Paris.',
+          caption: 'The cathedral from the river walk',
+        },
+        {
+          src: '/storyline/199-ananya-paris-macro-croissant.jpg',
+          alt: 'AI-generated mobile macro photo of fictional Ananya’s hands tearing a croissant at a Paris café table beside espresso and a city map.',
+          caption: 'Pastry crumbs and a folded map',
+        },
+        {
+          src: '/storyline/200-ananya-paris-selfie-montmartre.jpg',
+          alt: 'AI-generated mobile selfie of fictional Ananya on a Montmartre street with Sacré-Cœur behind her; the phone is not visible.',
+          caption: 'A quiet selfie under the dome',
+        },
+        {
+          src: '/storyline/201-ananya-paris-selfie-local-cafe.jpg',
+          alt: 'AI-generated mobile selfie of fictional Ananya with a Parisian café waiter on a pavement terrace; the phone is not visible.',
+          caption: 'A smile shared with the waiter',
+        },
+        {
+          src: '/storyline/202-ananya-paris-portrait-bridge.jpg',
+          alt: 'AI-generated evening portrait of fictional Ananya in a navy coat on Pont Alexandre III in Paris.',
+          caption: 'Lamp-light on the gold bridge',
+        },
+        {
+          src: '/storyline/203-ananya-paris-wide-gardens.jpg',
+          alt: 'AI-generated wide-angle snapshot of fictional Ananya reading in a mustard kurta on a chair in the Luxembourg Gardens.',
+          caption: 'A book and an unhurried park hour',
+        },
+        {
+          src: '/storyline/204-ananya-paris-macro-jewelry.jpg',
+          alt: 'AI-generated mobile macro photo of fictional Ananya’s gold jhumka earring, dupatta weave and bangles against a Paris building.',
+          caption: 'Gold from home, close to the camera',
+        },
+        {
+          src: '/storyline/205-ananya-paris-selfie-local-market.jpg',
+          alt: 'AI-generated mobile selfie of fictional Ananya with a Parisian market vendor and a paper cone of strawberries; the phone is not visible.',
+          caption: 'Strawberries from a local stall',
+        },
+        {
+          src: '/storyline/206-ananya-paris-bookstore-portrait.jpg',
+          alt: 'AI-generated portrait of fictional Ananya reading between the shelves of a historic Paris bookshop.',
+          caption: 'A paperback found on a quiet aisle',
+        },
       ],
     },
     {

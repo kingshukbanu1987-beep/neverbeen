@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 175 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 185 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '04', '05', '06', '07', '08', '09']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      73, 74, 4, 4, 4, 4, 4, 4, 4,
+      73, 74, 14, 4, 4, 4, 4, 4, 4,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -71,17 +71,62 @@ describe('StorylinePage', () => {
       ),
     ).toBe(true);
     expect(element.querySelectorAll('.photo-label, .lightbox-ai-label')).toHaveLength(0);
-    expect(element.querySelectorAll('.album-photo img')).toHaveLength(175);
+    expect(element.querySelectorAll('.album-photo img')).toHaveLength(185);
     expect(element.querySelectorAll('.album-index')).toHaveLength(0);
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'one hundred and seventy-five imagined frames',
+      'one hundred and eighty-five imagined frames',
     );
     expect(element.querySelector('.albums-heading')?.textContent).not.toContain(
       'Album sizes vary',
     );
     expect(albums[0].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
     expect(albums[1].querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(albums[2].querySelector('.cover-frame-count')?.textContent).toContain('14 FRAMES');
+  });
+
+  it('adds ten mixed-style Paris photos matching Ananya to Storyline 3', () => {
+    const element: HTMLElement = create().nativeElement;
+    const parisAlbum = element.querySelector<HTMLElement>('#paris-solo-dream')!;
+    const galleryImages = Array.from(
+      parisAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/197-ananya-paris-portrait-trocadero.jpg',
+      '/storyline/198-ananya-paris-wide-notredame.jpg',
+      '/storyline/199-ananya-paris-macro-croissant.jpg',
+      '/storyline/200-ananya-paris-selfie-montmartre.jpg',
+      '/storyline/201-ananya-paris-selfie-local-cafe.jpg',
+      '/storyline/202-ananya-paris-portrait-bridge.jpg',
+      '/storyline/203-ananya-paris-wide-gardens.jpg',
+      '/storyline/204-ananya-paris-macro-jewelry.jpg',
+      '/storyline/205-ananya-paris-selfie-local-market.jpg',
+      '/storyline/206-ananya-paris-bookstore-portrait.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(14);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Ananya'))).toBe(true);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/wide-angle/i);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/selfie/i);
+    expect(addedDescriptions).toMatch(/waiter|vendor|market/i);
+    expect(addedPhotos.filter((image) => /selfie/i.test(image.alt))).toHaveLength(3);
+    expect(
+      addedPhotos
+        .filter((image) => /selfie/i.test(image.alt))
+        .every((image) => /phone is not visible/i.test(image.alt)),
+    ).toBe(true);
+    expect(parisAlbum.querySelector('.cover-frame-count')?.textContent).toContain('14 FRAMES');
+    expect(parisAlbum.querySelector('.cover-index strong')?.textContent?.trim()).toBe('03');
   });
 
   it('keeps the Storyline 6 cover and shuffles the remaining photo order', () => {
