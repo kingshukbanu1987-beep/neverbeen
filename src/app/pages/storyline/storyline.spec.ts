@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 175 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 185 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      3, 3, 3, 3, 72, 73, 3, 3, 3,
+      3, 3, 3, 3, 72, 83, 3, 3, 3,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -67,14 +67,14 @@ describe('StorylinePage', () => {
     expect(
       element.querySelectorAll('.cover-photo-button img').length +
         element.querySelectorAll('.album-photo img').length,
-    ).toBe(175);
+    ).toBe(185);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
     expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
       '/storyline-of-parallel-universe#switzerland-honeymoon',
     );
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'one hundred and seventy-five imagined frames',
+      'one hundred and eighty-five imagined frames',
     );
     expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
   });
@@ -226,7 +226,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(83);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -238,7 +238,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/wide-angle/i);
     expect(addedDescriptions).toMatch(/selfie/i);
     expect(addedDescriptions).toMatch(/friends/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('adds ten tilted macro-style solo and friends photos to Storyline 7', () => {
@@ -264,7 +264,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(83);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -275,7 +275,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/macro/i);
     expect(addedDescriptions).toMatch(/portrait/i);
     expect(addedDescriptions).toMatch(/friends/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('adds ten tilted macro-style solos and girlfriends moments to Storyline 7', () => {
@@ -301,7 +301,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(83);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -312,7 +312,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/macro/i);
     expect(addedDescriptions).toMatch(/portrait/i);
     expect(addedDescriptions).toMatch(/female friends/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('adds ten tilted candid talking portraits of Clara to Storyline 7', () => {
@@ -338,7 +338,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(83);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -350,7 +350,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/macro/i);
     expect(addedDescriptions).toMatch(/portrait/i);
     expect(addedDescriptions).toMatch(/talk/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('adds ten tilted dinner and food macro photos to Storyline 7', () => {
@@ -376,7 +376,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(83);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -388,7 +388,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/candid/i);
     expect(addedDescriptions).toMatch(/dinner/i);
     expect(addedDescriptions).toMatch(/cake|pasta|wine|espresso/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('adds ten tilted cake-cutting celebration photos to Storyline 7', () => {
@@ -414,7 +414,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(83);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -426,7 +426,7 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/portrait/i);
     expect(addedDescriptions).toMatch(/wide-angle/i);
     expect(addedDescriptions).toMatch(/cake/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('adds ten tilted standing portraits of Clara around the restaurant to Storyline 7', () => {
@@ -452,7 +452,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(73);
+    expect(galleryImages).toHaveLength(83);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -464,7 +464,47 @@ describe('StorylinePage', () => {
     expect(addedDescriptions).toMatch(/macro/i);
     expect(addedDescriptions).toMatch(/portrait/i);
     expect(addedDescriptions).toMatch(/candid/i);
-    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted friends pose-group portraits to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/187-clara-vienna-posegroup-mobile-funny-faces.jpg',
+      '/storyline/188-clara-vienna-posegroup-mobile-serious-bar.jpg',
+      '/storyline/189-clara-vienna-posegroup-mobile-happy-window.jpg',
+      '/storyline/190-clara-vienna-posegroup-mobile-funny-photobomb.jpg',
+      '/storyline/191-clara-vienna-posegroup-mobile-serious-archway.jpg',
+      '/storyline/192-clara-vienna-posegroup-mobile-happy-jump.jpg',
+      '/storyline/193-clara-vienna-posegroup-mobile-funny-cakesteal.jpg',
+      '/storyline/194-clara-vienna-posegroup-mobile-serious-lineup.jpg',
+      '/storyline/195-clara-vienna-posegroup-mobile-happy-hug.jpg',
+      '/storyline/196-clara-vienna-posegroup-mobile-funny-toast.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /friends/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/candid/i);
+    expect(addedDescriptions).toMatch(/funny/i);
+    expect(addedDescriptions).toMatch(/serious/i);
+    expect(addedDescriptions).toMatch(/happy/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('keeps Helen’s existing solo portrait batch in Storyline 6', () => {

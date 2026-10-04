@@ -614,7 +614,7 @@ export class StorylinePage {
       story: [
         'Clara, a fictional Austrian woman, turned twenty-five during COVID restrictions. She had pictured a small dinner at a Vienna restaurant, a cake at the centre of the table and her friends around it. The reservation never happened; her birthday came through messages and a screen instead.',
         'She understood why people needed to keep apart, but missing that milestone with her friends still hurt. Time moved on and they stayed close, yet there was no way to revisit the exact evening she had hoped for. The celebration in this album is a what-if, not a hidden record of a party that took place.',
-        'In this fictional example, Clara asks NeverBeen to imagine seventy-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
+        'In this fictional example, Clara asks NeverBeen to imagine eighty-four casual mobile-style snapshots of the restaurant evening she missed. They are not photographs from that year, and they do not rewrite the pandemic; they give a shape to a memory she wished she could have made with her friends.',
       ],
       reason:
         'She chose NeverBeen to mark a milestone that was missed and picture the friends she wanted around her table—not to erase COVID restrictions or pretend the celebration occurred.',
@@ -991,6 +991,56 @@ export class StorylinePage {
           src: '/storyline/186-clara-vienna-standing-mobile-portrait-dessert.jpg',
           alt: 'AI-generated tilted candid mobile portrait of fictional Clara standing and laughing by the dessert counter at the imagined Vienna dinner.',
           caption: 'Choosing at the counter',
+        },
+        {
+          src: '/storyline/187-clara-vienna-posegroup-mobile-funny-faces.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends pulling funny faces by the coat rack for her camera at the imagined dinner.',
+          caption: 'Silly faces by the coats',
+        },
+        {
+          src: '/storyline/188-clara-vienna-posegroup-mobile-serious-bar.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends posing serious with crossed arms at the bar at the imagined dinner.',
+          caption: 'Serious looks at the bar',
+        },
+        {
+          src: '/storyline/189-clara-vienna-posegroup-mobile-happy-window.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends hugging happily by the window for her camera at the imagined dinner.',
+          caption: 'A happy hug by the window',
+        },
+        {
+          src: '/storyline/190-clara-vienna-posegroup-mobile-funny-photobomb.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends with a funny bunny-ears photobomb at the imagined dinner.',
+          caption: 'Bunny ears behind them',
+        },
+        {
+          src: '/storyline/191-clara-vienna-posegroup-mobile-serious-archway.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends posing dramatic and serious at the archway at the imagined dinner.',
+          caption: 'Drama at the archway',
+        },
+        {
+          src: '/storyline/192-clara-vienna-posegroup-mobile-happy-jump.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends jumping and cheering in the hallway at the imagined dinner.',
+          caption: 'Jumping down the hallway',
+        },
+        {
+          src: '/storyline/193-clara-vienna-posegroup-mobile-funny-cakesteal.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends making funny sneaky faces stealing the cake at the imagined dinner.',
+          caption: 'Sneaking the cake',
+        },
+        {
+          src: '/storyline/194-clara-vienna-posegroup-mobile-serious-lineup.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends in a serious model lineup by the dessert counter at the imagined dinner.',
+          caption: 'Models by the counter',
+        },
+        {
+          src: '/storyline/195-clara-vienna-posegroup-mobile-happy-hug.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends squeezing into a happy hug at the doorway at the imagined dinner.',
+          caption: 'Squeezed in the doorway',
+        },
+        {
+          src: '/storyline/196-clara-vienna-posegroup-mobile-funny-toast.jpg',
+          alt: 'AI-generated tilted candid mobile portrait of fictional Clara’s friends making goofy cheers faces over shots at the imagined dinner.',
+          caption: 'Goofy cheers all round',
         },
       ],
     },
