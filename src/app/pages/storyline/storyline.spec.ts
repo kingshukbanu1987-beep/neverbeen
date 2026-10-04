@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 105 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 185 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '05', '06', '07', '08', '10', '11']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      3, 3, 3, 3, 72, 3, 3, 3, 3,
+      3, 3, 3, 3, 72, 83, 3, 3, 3,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -67,14 +67,14 @@ describe('StorylinePage', () => {
     expect(
       element.querySelectorAll('.cover-photo-button img').length +
         element.querySelectorAll('.album-photo img').length,
-    ).toBe(105);
+    ).toBe(185);
     expect(element.querySelectorAll('.album-index a')).toHaveLength(9);
     expect(element.querySelector<HTMLAnchorElement>('.album-index a')?.getAttribute('href')).toBe(
       '/storyline-of-parallel-universe#switzerland-honeymoon',
     );
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'one hundred and five imagined frames',
+      'one hundred and eighty-five imagined frames',
     );
     expect(albums[4].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
   });
@@ -201,6 +201,310 @@ describe('StorylinePage', () => {
     expect(descriptions).toMatch(/wide-angle/i);
     expect(descriptions).toMatch(/parents/i);
     expect(londonAlbum.querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
+  });
+
+  it('adds ten mobile-camera birthday photos with matching outfits and friends moments to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/117-clara-vienna-birthday-cake-mobile-macro.jpg',
+      '/storyline/118-clara-vienna-birthday-portrait-mobile.jpg',
+      '/storyline/119-clara-vienna-birthday-wide-mobile.jpg',
+      '/storyline/120-clara-vienna-friends-group-selfie-mobile.jpg',
+      '/storyline/121-clara-vienna-birthday-over-shoulder-mobile.jpg',
+      '/storyline/122-clara-vienna-friends-street-wide-mobile.jpg',
+      '/storyline/123-clara-vienna-toast-hands-mobile-macro.jpg',
+      '/storyline/124-clara-vienna-friends-portrait-mobile.jpg',
+      '/storyline/125-clara-vienna-birthday-laugh-mobile.jpg',
+      '/storyline/126-clara-vienna-friends-night-portrait-mobile.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/wide-angle/i);
+    expect(addedDescriptions).toMatch(/selfie/i);
+    expect(addedDescriptions).toMatch(/friends/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted macro-style solo and friends photos to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/127-clara-vienna-solo-mobile-macro-front.jpg',
+      '/storyline/128-clara-vienna-solo-mobile-macro-profile.jpg',
+      '/storyline/129-clara-vienna-solo-mobile-over-shoulder.jpg',
+      '/storyline/130-clara-vienna-solo-mobile-low-angle-laugh.jpg',
+      '/storyline/131-clara-vienna-solo-mobile-awkward-crop.jpg',
+      '/storyline/132-clara-vienna-friends-mobile-cheek-laugh.jpg',
+      '/storyline/133-clara-vienna-friends-mobile-huddle-crop.jpg',
+      '/storyline/134-clara-vienna-friends-mobile-toast-low.jpg',
+      '/storyline/135-clara-vienna-friends-mobile-street-walk.jpg',
+      '/storyline/136-clara-vienna-friends-mobile-night-hug.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/friends/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted macro-style solos and girlfriends moments to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/137-clara-vienna-solo-mobile-macro-smile.jpg',
+      '/storyline/138-clara-vienna-solo-mobile-macro-three-quarter.jpg',
+      '/storyline/139-clara-vienna-solo-mobile-macro-back-view.jpg',
+      '/storyline/140-clara-vienna-solo-mobile-macro-candle-glow.jpg',
+      '/storyline/141-clara-vienna-solo-mobile-macro-window.jpg',
+      '/storyline/142-clara-vienna-girlfriends-mobile-selfie.jpg',
+      '/storyline/143-clara-vienna-girlfriends-mobile-embrace.jpg',
+      '/storyline/144-clara-vienna-girlfriends-mobile-toast-macro.jpg',
+      '/storyline/145-clara-vienna-girlfriends-mobile-street-arm.jpg',
+      '/storyline/146-clara-vienna-girlfriends-mobile-night-huddle.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/female friends/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted candid talking portraits of Clara to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/147-clara-vienna-solo-mobile-candid-talking.jpg',
+      '/storyline/148-clara-vienna-solo-mobile-candid-gesture.jpg',
+      '/storyline/149-clara-vienna-solo-mobile-candid-profile-talk.jpg',
+      '/storyline/150-clara-vienna-solo-mobile-candid-across-table.jpg',
+      '/storyline/151-clara-vienna-solo-mobile-candid-low-story.jpg',
+      '/storyline/152-clara-vienna-solo-mobile-candid-chin-hand.jpg',
+      '/storyline/153-clara-vienna-solo-mobile-candid-lane-talk.jpg',
+      '/storyline/154-clara-vienna-solo-mobile-candid-night-laugh.jpg',
+      '/storyline/155-clara-vienna-solo-mobile-candid-lean-cake.jpg',
+      '/storyline/156-clara-vienna-solo-mobile-candid-window-talk.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /candid/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/talk/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted dinner and food macro photos to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/157-clara-vienna-dinner-mobile-macro-wine-pour.jpg',
+      '/storyline/158-clara-vienna-dinner-mobile-macro-cake-slice.jpg',
+      '/storyline/159-clara-vienna-dinner-mobile-candid-first-bite.jpg',
+      '/storyline/160-clara-vienna-dinner-mobile-tilted-table-spread.jpg',
+      '/storyline/161-clara-vienna-dinner-mobile-macro-serving-hands.jpg',
+      '/storyline/162-clara-vienna-dinner-mobile-macro-glasses-clink.jpg',
+      '/storyline/163-clara-vienna-dinner-mobile-macro-dessert-clara.jpg',
+      '/storyline/164-clara-vienna-dinner-mobile-candid-pasta-laugh.jpg',
+      '/storyline/165-clara-vienna-dinner-mobile-candid-share-bite.jpg',
+      '/storyline/166-clara-vienna-dinner-mobile-macro-after-coffee.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/candid/i);
+    expect(addedDescriptions).toMatch(/dinner/i);
+    expect(addedDescriptions).toMatch(/cake|pasta|wine|espresso/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted cake-cutting celebration photos to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/167-clara-vienna-cake-mobile-macro-cut.jpg',
+      '/storyline/168-clara-vienna-cake-mobile-macro-hands-knife.jpg',
+      '/storyline/169-clara-vienna-cake-mobile-macro-candles-blow.jpg',
+      '/storyline/170-clara-vienna-cake-mobile-portrait-plate.jpg',
+      '/storyline/171-clara-vienna-cake-mobile-portrait-cheer.jpg',
+      '/storyline/172-clara-vienna-cake-mobile-portrait-clap.jpg',
+      '/storyline/173-clara-vienna-cake-mobile-wide-cheer.jpg',
+      '/storyline/174-clara-vienna-cake-mobile-wide-room.jpg',
+      '/storyline/175-clara-vienna-cake-mobile-wide-toast.jpg',
+      '/storyline/176-clara-vienna-cake-mobile-candid-first-slice.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/wide-angle/i);
+    expect(addedDescriptions).toMatch(/cake/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted standing portraits of Clara around the restaurant to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/177-clara-vienna-standing-mobile-macro-window.jpg',
+      '/storyline/178-clara-vienna-standing-mobile-portrait-coatrack.jpg',
+      '/storyline/179-clara-vienna-standing-mobile-macro-archway.jpg',
+      '/storyline/180-clara-vienna-standing-mobile-portrait-bar.jpg',
+      '/storyline/181-clara-vienna-standing-mobile-macro-doorway.jpg',
+      '/storyline/182-clara-vienna-standing-mobile-portrait-table.jpg',
+      '/storyline/183-clara-vienna-standing-mobile-macro-hair.jpg',
+      '/storyline/184-clara-vienna-standing-mobile-portrait-hallway.jpg',
+      '/storyline/185-clara-vienna-standing-mobile-macro-wineglass.jpg',
+      '/storyline/186-clara-vienna-standing-mobile-portrait-dessert.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /standing/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/candid/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+  });
+
+  it('adds ten tilted friends pose-group portraits to Storyline 7', () => {
+    const element: HTMLElement = create().nativeElement;
+    const viennaAlbum = element.querySelector<HTMLElement>('#vienna-birthday-missed')!;
+    const galleryImages = Array.from(
+      viennaAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/187-clara-vienna-posegroup-mobile-funny-faces.jpg',
+      '/storyline/188-clara-vienna-posegroup-mobile-serious-bar.jpg',
+      '/storyline/189-clara-vienna-posegroup-mobile-happy-window.jpg',
+      '/storyline/190-clara-vienna-posegroup-mobile-funny-photobomb.jpg',
+      '/storyline/191-clara-vienna-posegroup-mobile-serious-archway.jpg',
+      '/storyline/192-clara-vienna-posegroup-mobile-happy-jump.jpg',
+      '/storyline/193-clara-vienna-posegroup-mobile-funny-cakesteal.jpg',
+      '/storyline/194-clara-vienna-posegroup-mobile-serious-lineup.jpg',
+      '/storyline/195-clara-vienna-posegroup-mobile-happy-hug.jpg',
+      '/storyline/196-clara-vienna-posegroup-mobile-funny-toast.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(83);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => image.alt.includes('Clara'))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /friends/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/candid/i);
+    expect(addedDescriptions).toMatch(/funny/i);
+    expect(addedDescriptions).toMatch(/serious/i);
+    expect(addedDescriptions).toMatch(/happy/i);
+    expect(viennaAlbum.querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
   });
 
   it('keeps Helen’s existing solo portrait batch in Storyline 6', () => {
@@ -607,3 +911,4 @@ describe('StorylinePage', () => {
     ).toBe('/#contact');
   });
 });
+
