@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 295 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 305 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '04', '05', '06', '07', '08', '09']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      73, 74, 84, 44, 4, 4, 4, 4, 4,
+      73, 74, 84, 54, 4, 4, 4, 4, 4,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -71,17 +71,17 @@ describe('StorylinePage', () => {
       ),
     ).toBe(true);
     expect(element.querySelectorAll('.photo-label, .lightbox-ai-label')).toHaveLength(0);
-    expect(element.querySelectorAll('.album-photo img')).toHaveLength(295);
+    expect(element.querySelectorAll('.album-photo img')).toHaveLength(305);
     expect(element.querySelectorAll('.album-index')).toHaveLength(0);
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'two hundred and ninety-five imagined frames',
+      'three hundred and five imagined frames',
     );
     expect(element.querySelector('.albums-heading')?.textContent).not.toContain('Album sizes vary');
     expect(albums[0].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
     expect(albums[1].querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
     expect(albums[2].querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
-    expect(albums[3].querySelector('.cover-frame-count')?.textContent).toContain('44 FRAMES');
+    expect(albums[3].querySelector('.cover-frame-count')?.textContent).toContain('54 FRAMES');
   });
 
   it('keeps the first ten mixed-style mobile photos matching Lotte and Bram in Storyline 4', () => {
@@ -107,7 +107,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(44);
+    expect(galleryImages).toHaveLength(54);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -129,7 +129,7 @@ describe('StorylinePage', () => {
         .every((image) => /phone is not visible/i.test(image.alt)),
     ).toBe(true);
     expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
-      '44 FRAMES',
+      '54 FRAMES',
     );
     expect(switzerlandAlbum.querySelector('.cover-index strong')?.textContent?.trim()).toBe('04');
   });
@@ -157,7 +157,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(44);
+    expect(galleryImages).toHaveLength(54);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -183,7 +183,7 @@ describe('StorylinePage', () => {
         .every((image) => /phone is not visible/i.test(image.alt)),
     ).toBe(true);
     expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
-      '44 FRAMES',
+      '54 FRAMES',
     );
   });
 
@@ -210,7 +210,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(44);
+    expect(galleryImages).toHaveLength(54);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -238,7 +238,7 @@ describe('StorylinePage', () => {
         .every((image) => /phone is not visible/i.test(image.alt)),
     ).toBe(true);
     expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
-      '44 FRAMES',
+      '54 FRAMES',
     );
     expect(switzerlandAlbum.textContent).toContain('same travel-day clothes throughout');
   });
@@ -266,7 +266,7 @@ describe('StorylinePage', () => {
     );
     const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
 
-    expect(galleryImages).toHaveLength(44);
+    expect(galleryImages).toHaveLength(54);
     expect(addedPhotos).toHaveLength(10);
     expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
       [...addedPhotoSources].sort(),
@@ -294,10 +294,68 @@ describe('StorylinePage', () => {
         .every((image) => /phone is not visible/i.test(image.alt)),
     ).toBe(true);
     expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
-      '44 FRAMES',
+      '54 FRAMES',
     );
     expect(switzerlandAlbum.textContent).toContain('Zermatt');
     expect(switzerlandAlbum.textContent).toContain('same outfits');
+  });
+
+  it('adds another ten same-outfit Zermatt shop and local snapshots to Storyline 4', () => {
+    const element: HTMLElement = create().nativeElement;
+    const switzerlandAlbum = element.querySelector<HTMLElement>('#switzerland-honeymoon')!;
+    const galleryImages = Array.from(
+      switzerlandAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/349-lotte-bram-zermatt-hinterdorf-lane-wide.jpg',
+      '/storyline/350-lotte-bram-zermatt-craft-stall-macro.jpg',
+      '/storyline/351-lotte-bram-zermatt-florist-selfie.jpg',
+      '/storyline/352-lotte-bram-zermatt-market-wide.jpg',
+      '/storyline/353-lotte-bram-zermatt-friends-bookshop-selfie.jpg',
+      '/storyline/354-lotte-bram-zermatt-post-office-candid.jpg',
+      '/storyline/355-lotte-bram-zermatt-riverside-romantic-selfie.jpg',
+      '/storyline/356-lotte-bram-zermatt-tea-shop-macro.jpg',
+      '/storyline/357-lotte-bram-zermatt-mountain-shop-portrait.jpg',
+      '/storyline/358-lotte-bram-zermatt-friends-shopfront-wide.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(54);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => /Lotte/.test(image.alt) && /Bram/.test(image.alt))).toBe(
+      true,
+    );
+    expect(addedPhotos.every((image) => /AI-generated/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /camel/i.test(image.alt) && /navy/i.test(image.alt))).toBe(
+      true,
+    );
+    expect(addedDescriptions).toMatch(/Zermatt/i);
+    expect(addedDescriptions).toMatch(/Hinterdorf/i);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/wide-angle/i);
+    expect(addedDescriptions).toMatch(/selfie/i);
+    expect(addedDescriptions).toMatch(/florist|shopkeeper|vendor|local/i);
+    expect(addedDescriptions).toMatch(/friends/i);
+    expect(addedDescriptions).toMatch(/blur|glare|crop|motion|hazy|soft/i);
+    expect(
+      addedPhotos
+        .filter((image) => /selfie/i.test(image.alt))
+        .every((image) => /phone is not visible/i.test(image.alt)),
+    ).toBe(true);
+    expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
+      '54 FRAMES',
+    );
+    expect(switzerlandAlbum.textContent).toContain('Hinterdorf');
+    expect(switzerlandAlbum.textContent).toContain('same clothes');
   });
 
   it('adds ten mixed-style Paris photos matching Ananya to Storyline 3', () => {
@@ -1769,7 +1827,7 @@ describe('StorylinePage', () => {
       firstAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
     ).map((image) => image.getAttribute('src'));
     const photoButtons = firstAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
-    expect(gallerySources).toHaveLength(44);
+    expect(gallerySources).toHaveLength(54);
 
     photoButtons[2].click();
     fixture.detectChanges();
@@ -1780,7 +1838,7 @@ describe('StorylinePage', () => {
     expect(firstAlbum.querySelectorAll('.photo-label')).toHaveLength(0);
     expect(element.querySelectorAll('.lightbox-ai-label')).toHaveLength(0);
     expect(element.querySelector('.story-lightbox')?.textContent).not.toMatch(/AI illustration/i);
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('3 / 44');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('3 / 54');
 
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
     fixture.detectChanges();
