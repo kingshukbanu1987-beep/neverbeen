@@ -537,6 +537,43 @@
   outline-offset: 2px;
 }
 
+.shuffle-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--studio-line);
+  border-radius: 999px;
+  background: var(--studio-glass);
+  color: var(--studio-text);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.shuffle-button span {
+  color: #f070a8;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.shuffle-button:hover,
+.shuffle-button:focus-visible {
+  border-color: rgb(240 112 168 / 55%);
+  color: #fff;
+}
+
+.shuffle-button:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 2px;
+}
+
 .gallery-count {
   color: #f070a8;
   font-family: var(--serif);

@@ -154,6 +154,14 @@
                 <span aria-hidden="true">▤</span> Feed
               </button>
             </div>
+            <button
+              type="button"
+              class="shuffle-button"
+              (click)="shuffleNow()"
+              aria-label="Shuffle the photographs again"
+            >
+              <span aria-hidden="true">⤨</span> Shuffle
+            </button>
             <span class="gallery-count">{{ photoCount() }} <i>IMAGES</i></span>
           </div>
         </header>

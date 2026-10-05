@@ -322,6 +322,36 @@ describe('AiModelPortfolioPage photo shuffle', () => {
     }
   });
 
+  it('re-arranges the grid when the visitor asks for another shuffle', () => {
+    const profile = withPhotos(4);
+    const random = vi.spyOn(Math, 'random');
+    // The first draw puts the album in its natural order; the second reverses it.
+    random.mockReturnValueOnce(0).mockReturnValueOnce(0).mockReturnValueOnce(0);
+    random.mockReturnValueOnce(0.9).mockReturnValueOnce(0.9).mockReturnValueOnce(0.9);
+
+    try {
+      const fixture = TestBed.createComponent(AiModelPortfolioPage);
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const before = shownOrder(element);
+      const tiles = element.querySelectorAll('.grid-tile');
+      expect(tiles.length).toBe(4);
+
+      const shuffle = element.querySelector<HTMLButtonElement>('.shuffle-button');
+      expect(shuffle, 'shuffle button').toBeTruthy();
+      shuffle!.click();
+      fixture.detectChanges();
+
+      const after = shownOrder(element);
+      expect(after).not.toEqual(before);
+      expect([...after].sort()).toEqual(profile.photos.map((photo) => photo.src).sort());
+      expect(element.querySelectorAll('.grid-tile').length).toBe(4);
+    } finally {
+      random.mockRestore();
+      release(profile);
+    }
+  });
+
   it('shufflePhotos returns a permutation and leaves the album untouched', () => {
     const profile = withPhotos(6);
     const album = profile.photos;

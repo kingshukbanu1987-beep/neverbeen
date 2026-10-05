@@ -85,7 +85,8 @@ bar — no artwork or decorative panels. Portfolios appear in the published orde
 model has in her portfolio. Each cover opens its own
 portfolio at `/ai-models/:slug`: an Instagram-style profile header (avatar, handle, photographs
 count, location, age, height, weight, body shape, tags and short introduction) above a photo grid that
-is shuffled into a fresh random order on every visit.
+is shuffled into a fresh random order on every visit — with a **Shuffle** control in the toolbar for
+another arrangement on demand.
 Clicking any photograph expands it in a full-screen pop-up that can be browsed with the arrow keys,
 the on-screen arrows, the thumbnail strip or a swipe on mobile, with a grid/feed layout switch.
 Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative

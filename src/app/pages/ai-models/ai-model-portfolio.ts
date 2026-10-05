@@ -18,17 +18,24 @@ import { AiModelBookingDialog } from './booking/ai-model-booking';
 type PortfolioView = 'grid' | 'feed';
 type ShareState = 'idle' | 'shared' | 'copied' | 'unsupported';
 
+/** Fisher-Yates draw: which photograph lands in position 1, 2, 3 … of the album. */
+function drawOrder(length: number): number[] {
+  const positions = Array.from({ length }, (_, index) => index);
+  for (let index = length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [positions[index], positions[swap]] = [positions[swap], positions[index]];
+  }
+  return positions;
+}
+
 /**
- * Fisher-Yates shuffle. The portfolio re-arranges itself on every visit, so the same album never
- * opens in the same order twice; the cover, the avatar and the counts are unaffected.
+ * A fresh random arrangement of the album. The portfolio re-arranges itself on every visit, so the
+ * same album never opens in the same order twice; the cover, the avatar and the counts are
+ * unaffected.
  */
 export function shufflePhotos(photos: readonly AiModelPhoto[]): AiModelPhoto[] {
-  const shuffled = [...photos];
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swap]] = [shuffled[swap], shuffled[index]];
-  }
-  return shuffled;
+  const order = drawOrder(photos.length);
+  return order.map((source) => photos[source]);
 }
 
 @Component({
@@ -53,10 +60,15 @@ export class AiModelPortfolioPage implements OnDestroy {
   );
 
   /**
-   * Every photograph in the model's album, shuffled fresh for this visit. Recomputes whenever the
-   * model changes — opening a portfolio (or moving to another model and back) re-arranges the grid.
+   * Every photograph in the model's album, shuffled fresh for this visit. It recomputes whenever the
+   * model changes — opening a portfolio (or moving to another model and back) re-arranges the grid —
+   * and whenever the visitor asks for another arrangement from the gallery toolbar.
    */
-  protected readonly photos = computed(() => shufflePhotos(this.model()?.photos ?? []));
+  protected readonly shuffleTick = signal(0);
+  protected readonly photos = computed(() => {
+    this.shuffleTick();
+    return shufflePhotos(this.model()?.photos ?? []);
+  });
 
   protected readonly view = signal<PortfolioView>('grid');
 
@@ -161,6 +173,11 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected closeBooking(): void {
     this.bookingOpen.set(false);
     this.rentButton()?.nativeElement.focus({ preventScroll: true });
+  }
+
+  /** Another arrangement of the same album, without leaving the page. */
+  protected shuffleNow(): void {
+    this.shuffleTick.update((tick) => tick + 1);
   }
 
   protected setView(view: PortfolioView): void {
