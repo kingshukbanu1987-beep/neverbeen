@@ -9,51 +9,78 @@
     </nav>
 
     @if (model(); as profile) {
-      <section class="portfolio-cover" aria-labelledby="portfolio-title">
-        <div class="cover-photo">
-          @if (profile.cover) {
-            <img
-              [src]="profile.cover"
-              [alt]="profile.name + ' — portfolio cover'"
-              fetchpriority="high"
-            />
-          } @else {
-            <div
-              class="cover-portrait-placeholder"
-              role="img"
-              [attr.aria-label]="'Original portrait pending for ' + profile.name"
-            >
-              <span class="placeholder-symbol" aria-hidden="true">✳</span>
-              <span aria-hidden="true">Original portrait pending</span>
-            </div>
-          }
-          <div class="cover-shade" aria-hidden="true"></div>
-          <div class="cover-photo-topline">
-            <span>NB / DIGITAL TALENT</span>
-            <span>PORTFOLIO <i>·</i> PROFILE</span>
-          </div>
-          <div class="cover-photo-footer">
-            <span class="cover-status"><i aria-hidden="true"></i> Model profile</span>
-            <span class="cover-location">{{ profile.location || 'Location to be announced' }}</span>
-          </div>
+      <section class="profile-header" aria-labelledby="portfolio-title">
+        @if (profile.cover) {
+          <img class="header-backdrop" [src]="profile.cover" alt="" aria-hidden="true" />
+        }
+        <span class="header-scrim" aria-hidden="true"></span>
+
+        <div class="header-topline">
+          <span>NB / DIGITAL TALENT</span>
+          <span>PORTFOLIO <i aria-hidden="true">·</i> PROFILE</span>
         </div>
 
-        <div class="portfolio-copy">
-          <p class="eyebrow">The NeverBeen model portfolio</p>
-          <h1 id="portfolio-title">{{ profile.name }}</h1>
-          <p class="location-line">
-            <span aria-hidden="true">⌖</span> {{ profile.location || 'Location to be announced' }}
-          </p>
-          <p class="profile-bio">
-            {{ profile.bio || 'A short introduction to this model is on its way.' }}
-          </p>
-          @if (profile.illustrative) {
-            <p class="illustrative-note" role="note">
-              Randomized illustrative profile details — verify and replace before publication.
-            </p>
-          }
+        <div class="header-body">
+          <div class="identity-row">
+            <div class="avatar-ring">
+              <span class="avatar">
+                @if (profile.cover) {
+                  <img
+                    [src]="profile.cover"
+                    [alt]="profile.name + ' — portfolio cover'"
+                    fetchpriority="high"
+                  />
+                } @else {
+                  <span class="avatar-placeholder" aria-hidden="true">✳</span>
+                }
+              </span>
+              <span class="avatar-badge" aria-hidden="true">NB</span>
+            </div>
 
-          <dl class="profile-facts" aria-label="Model information">
+            <div class="identity-copy">
+              <p class="eyebrow">NeverBeen AI model</p>
+              <h1 id="portfolio-title">{{ profile.name }}</h1>
+              <p class="handle-line">
+                <span class="handle">{{ profile.handle }}</span>
+                @if (profile.availability) {
+                  <span class="availability"
+                    ><i aria-hidden="true"></i>{{ profile.availability }}</span
+                  >
+                }
+              </p>
+
+              <p class="profile-bio">
+                {{ profile.bio || 'A short introduction to this model is on its way.' }}
+              </p>
+
+              @if (profile.tags.length > 0) {
+                <ul class="tag-list" aria-label="Portfolio tags">
+                  @for (tag of profile.tags; track tag) {
+                    <li>{{ tag }}</li>
+                  }
+                </ul>
+              }
+
+              <div class="profile-actions">
+                <button
+                  type="button"
+                  class="action-button action-primary"
+                  (click)="shareProfile(profile)"
+                >
+                  <span aria-hidden="true">↗</span> {{ shareLabel() }}
+                </button>
+                <a routerLink="/ai-models" class="action-button">
+                  <span aria-hidden="true">▦</span> All portfolios
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <dl class="profile-stats" aria-label="Model information">
+            <div>
+              <dt>Photographs</dt>
+              <dd>{{ photoCount() }}</dd>
+            </div>
             <div>
               <dt>Age</dt>
               <dd>{{ fact(profile.age) }}</dd>
@@ -70,49 +97,118 @@
               <dt>Body shape</dt>
               <dd>{{ fact(profile.bodyShape) }}</dd>
             </div>
+            <div>
+              <dt>Location</dt>
+              <dd>{{ profile.location || 'To be announced' }}</dd>
+            </div>
           </dl>
 
-          <div class="portfolio-stamp">
-            <span class="stamp-mark" aria-hidden="true">✳</span>
-            <span>NEVERBEEN<br /><b>AI MODEL STUDIO</b></span>
-          </div>
+          @if (profile.illustrative) {
+            <p class="illustrative-note" role="note">
+              <span aria-hidden="true">!</span>
+              Randomized illustrative profile details — verify and replace before publication.
+            </p>
+          }
         </div>
       </section>
 
       <section class="gallery-section" aria-labelledby="gallery-title">
         <header class="gallery-heading">
-          <div>
-            <p class="eyebrow">A closer look</p>
-            <h2 id="gallery-title">Selected frames</h2>
+          <div class="gallery-heading-copy">
+            <p class="eyebrow">Portfolio grid</p>
+            <h2 id="gallery-title">Every frame</h2>
+            <p class="gallery-intro">
+              Tap any photograph to open it full screen, then browse the whole album with the
+              arrows, the keyboard or a swipe.
+            </p>
           </div>
-          <span class="gallery-count"
-            >{{ profile.gallery.length.toString().padStart(2, '0') }} <i>IMAGES</i></span
-          >
+
+          <div class="gallery-tools">
+            <div class="view-switch" role="group" aria-label="Gallery layout">
+              <button
+                type="button"
+                [class.is-active]="view() === 'grid'"
+                [attr.aria-pressed]="view() === 'grid'"
+                (click)="setView('grid')"
+              >
+                <span aria-hidden="true">▦</span> Grid
+              </button>
+              <button
+                type="button"
+                [class.is-active]="view() === 'feed'"
+                [attr.aria-pressed]="view() === 'feed'"
+                (click)="setView('feed')"
+              >
+                <span aria-hidden="true">▤</span> Feed
+              </button>
+            </div>
+            <span class="gallery-count">{{ photoCount() }} <i>IMAGES</i></span>
+          </div>
         </header>
 
-        @if (profile.gallery.length > 0) {
-          <div class="portfolio-gallery">
-            @for (photo of profile.gallery; track photo; let index = $index) {
-              <figure class="gallery-frame">
-                <img
-                  [src]="photo"
-                  [alt]="photoAlt(profile.name, index)"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <figcaption>
-                  <span>{{ profile.name }}</span
-                  ><span>FRAME / {{ (index + 1).toString().padStart(2, '0') }}</span>
-                </figcaption>
-              </figure>
-            }
-          </div>
+        @if (photos().length > 0) {
+          @if (view() === 'grid') {
+            <div class="portfolio-grid">
+              @for (photo of photos(); track photo.src; let index = $index) {
+                <button
+                  type="button"
+                  class="grid-tile"
+                  (click)="openLightbox(index)"
+                  [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                  [style.animation-delay.ms]="tileDelay(index)"
+                >
+                  <img
+                    [src]="photo.src"
+                    [alt]="photoAlt(profile.name, index)"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="tile-glow" aria-hidden="true"></span>
+                  <span class="tile-overlay" aria-hidden="true">
+                    <span class="tile-number">FRAME / {{ frameLabel(index) }}</span>
+                    <span class="tile-expand">⤢</span>
+                  </span>
+                </button>
+              }
+            </div>
+          } @else {
+            <div class="portfolio-feed">
+              @for (photo of photos(); track photo.src; let index = $index) {
+                <figure class="feed-item" [style.animation-delay.ms]="tileDelay(index)">
+                  <button
+                    type="button"
+                    class="feed-photo"
+                    (click)="openLightbox(index)"
+                    [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                  >
+                    <img
+                      [src]="photo.src"
+                      [alt]="photoAlt(profile.name, index)"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span class="tile-overlay" aria-hidden="true">
+                      <span class="tile-number">FRAME / {{ frameLabel(index) }}</span>
+                      <span class="tile-expand">⤢</span>
+                    </span>
+                  </button>
+                  <figcaption>
+                    <span class="feed-index">{{ frameLabel(index) }}</span>
+                    <span class="feed-caption">{{ photoCaption(index) }}</span>
+                  </figcaption>
+                </figure>
+              }
+            </div>
+          }
         } @else {
           <div class="gallery-pending">
             <span class="gallery-pending-mark" aria-hidden="true">✳</span>
             <div>
-              <p>More frames, soon</p>
-              <span>Additional portfolio photographs will be added here.</span>
+              <p>Photographs are on their way</p>
+              <span
+                >Add images to <b>public/NeverBeenModels/{{ profile.album }}</b> and they will
+                appear here.</span
+              >
             </div>
           </div>
         }
@@ -134,3 +230,84 @@
     }
   </div>
 </main>
+
+@if (lightboxPhoto(); as lightbox) {
+  <div
+    class="lightbox"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="photoCaption(lightbox.index)"
+    (click)="onLightboxBackdropClick($event)"
+  >
+    <div class="lightbox-panel">
+      <header class="lightbox-bar">
+        <span class="lightbox-counter">
+          <b>{{ frameLabel(lightbox.index) }}</b> / {{ totalLabel() }}
+        </span>
+        <span class="lightbox-title">
+          {{ model()?.name }}<i aria-hidden="true">·</i>{{ model()?.handle }}
+        </span>
+        <button
+          #lightboxClose
+          type="button"
+          class="lightbox-close"
+          (click)="closeLightbox()"
+          aria-label="Close photograph"
+        >
+          ✕
+        </button>
+      </header>
+
+      <div
+        class="lightbox-stage"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd($event)"
+      >
+        <img
+          class="lightbox-image"
+          [src]="lightbox.photo.src"
+          [alt]="photoAlt(model()?.name ?? 'Portfolio', lightbox.index)"
+        />
+
+        @if (photos().length > 1) {
+          <button
+            type="button"
+            class="lightbox-arrow lightbox-prev"
+            (click)="showPrevious()"
+            aria-label="Previous photograph"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            class="lightbox-arrow lightbox-next"
+            (click)="showNext()"
+            aria-label="Next photograph"
+          >
+            →
+          </button>
+        }
+      </div>
+
+      <footer class="lightbox-foot">
+        <p class="lightbox-caption">{{ photoCaption(lightbox.index) }}</p>
+        @if (photos().length > 1) {
+          <div class="lightbox-thumbs" role="group" aria-label="Choose a photograph">
+            @for (photo of photos(); track photo.src; let index = $index) {
+              <button
+                type="button"
+                class="lightbox-thumb"
+                [class.is-active]="index === lightbox.index"
+                [attr.aria-current]="index === lightbox.index ? 'true' : null"
+                (click)="selectPhoto(index)"
+                [attr.aria-label]="'Show photograph ' + frameLabel(index)"
+              >
+                <img [src]="photo.src" alt="" loading="lazy" decoding="async" />
+              </button>
+            }
+          </div>
+        }
+      </footer>
+    </div>
+  </div>
+}

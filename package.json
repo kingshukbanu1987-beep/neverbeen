@@ -10,6 +10,7 @@
     "generate:collection": "node scripts/generate-collection.mjs",
     "generate:ai-models": "node scripts/generate-ai-models.mjs",
     "ingest:collection": "node scripts/ingest-collection-uploads.mjs",
+    "ingest:model-photos": "node scripts/ingest-model-photos.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "generate:brochure": "node docs/presentation/generate-neverbeen-brochure.js"

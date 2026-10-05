@@ -1,0 +1,65 @@
+{
+  "albums": [
+    {
+      "album": "NourhanDurrani",
+      "cover": "Nourhan Durrani.png",
+      "entries": [
+        {
+          "uuid": "6KwmL5Du72XDmxsV1I5p0B84lDPMM0QmOahIDdSw6xs",
+          "file": "01-magenta-ruffles-portrait.png",
+          "caption": "Magenta ruffles, studio session"
+        },
+        {
+          "uuid": "q5mPPUoXm65tngyAVAaMVUMw8eWq_pVUliDF8y-5-mw",
+          "file": "02-magenta-ruffles-profile.png",
+          "caption": "Profile study, studio session"
+        },
+        {
+          "uuid": "9wmLz-uuKqjhcygedYYb1WR0J67GYl79IcEAlpqe8hk",
+          "file": "03-magenta-ruffles-turned.png",
+          "caption": "Turned away, studio session"
+        },
+        {
+          "uuid": "oWE-KRYfWvcPVCd1TY1RCxSyhVQlg_ApVv2q5XXCJ_w",
+          "file": "04-magenta-ruffles-downturn.png",
+          "caption": "Quiet moment, studio session"
+        },
+        {
+          "uuid": "tIpoqfYsUqD5hN3Dn2fI9dUZIfEW-4R2OeEhLaXa6kE",
+          "file": "05-magenta-ruffles-hair-swept.png",
+          "caption": "Hair in motion, studio session"
+        },
+        {
+          "uuid": "s8Vb2EmiVMgyvXRU3b2pMRrRswX8KSlhfrjGpvlmqmg",
+          "file": "06-satin-stripes-smile.png",
+          "caption": "Satin stripes, laughing"
+        },
+        {
+          "uuid": "Wh7G8U8S6Aftxe_XF0GCac1u0Necqc3rvlEfIJY2w0s",
+          "file": "07-satin-stripes-bow.png",
+          "caption": "Tying the bow, satin stripes"
+        },
+        {
+          "uuid": "ZrM3lMVLgRf5wVuxbX1lmVeqZp2uA1ZlQGo1tYnR2Is",
+          "file": "08-satin-stripes-closeup.png",
+          "caption": "Close-up, satin stripes"
+        },
+        {
+          "uuid": "Wob2V7ZpZQFS9ipqJKvCtLumUZIuD6OygWwbhw_NWuA",
+          "file": "09-iridescent-tailoring.png",
+          "caption": "Iridescent tailoring"
+        },
+        {
+          "uuid": "YWDRy0OdZDKbI4Zd4sXmX0oYTf0yHj_kZqCDNibN7ig",
+          "file": "10-velvet-embroidery.png",
+          "caption": "Velvet and embroidery"
+        },
+        {
+          "uuid": "z6G193m8ng-USzmgDxpy6jZWG1HscmrYh2NOMQ9Zuw8",
+          "file": "11-black-knit-portrait.png",
+          "caption": "Black knit, low key"
+        }
+      ]
+    }
+  ]
+}

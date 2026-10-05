@@ -80,17 +80,32 @@ ng test
 ## NeverBeen AI Models
 
 The `/ai-models` page is a dark, magenta-accented studio directory. Each cover opens its own
-portfolio at `/ai-models/:slug`, with the model's name, location, age, height, weight, body shape,
-short introduction and optional photo gallery. Unspecified fields remain blank; randomized or
-unverified profile details are marked as illustrative until verified.
+portfolio at `/ai-models/:slug`: an Instagram-style profile header (avatar, handle, photographs
+count, location, age, height, weight, body shape, tags and short introduction) above a photo grid.
+Clicking any photograph expands it in a full-screen pop-up that can be browsed with the arrow keys,
+the on-screen arrows, the thumbnail strip or a swipe on mobile, with a grid/feed layout switch.
+Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative
+until verified.
 
-Add cover portraits to `public/NeverBeenModels` and put each model's details in
-`data/ai-models/profiles.json`. The cover filename (without its extension) becomes the displayed
-model name. A metadata entry can be added before its portrait; the portfolio then shows a designed
-placeholder until a matching image is added. Additional images go in `public/ai-model-assets/gallery`
-and can be referenced in the matching profile's `gallery` array. See `data/ai-models/README.md` for
-the metadata format. Refresh the manifest with `npm run generate:ai-models`; `npm start` and
-`npm run build` run it automatically.
+Each model owns one album folder inside `public/NeverBeenModels`, named after the model with no
+spaces (for example `public/NeverBeenModels/NourhanDurrani`). Drop the model's photographs into that
+folder and they appear in the portfolio grid; the first image (or the one named `cover.*`) is used as
+the cover and avatar. Optional details live in `<album>/profile.json` or in
+`data/ai-models/profiles.json` — see `data/ai-models/README.md` for the metadata format and
+`public/NeverBeenModels/README.md` for the folder layout. The legacy
+`public/ai-model-assets/portraits` and `public/ai-model-assets/gallery` folders remain supported.
+Refresh the manifest with `npm run generate:ai-models`; `npm start` and `npm run build` run it
+automatically.
+
+Photographs attached in Arena chat land in `/home/user/uploads` as UUID-named files. Run
+
+```bash
+npm run ingest:model-photos
+```
+
+to copy them into their model album with readable names and captions
+(`scripts/model-ingest-map.json` holds the album, filename and caption for each attachment), record
+the album's frame order in its `profile.json` and regenerate the manifest in one step.
 
 ## The Collection page
 
