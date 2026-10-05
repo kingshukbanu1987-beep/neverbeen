@@ -53,6 +53,16 @@ export const routes: Routes = [
       import('./pages/documentation/documentation').then((m) => m.DocumentationPage),
   },
   {
+    path: 'ai-models',
+    pathMatch: 'full',
+    loadComponent: () => import('./pages/ai-models/ai-models').then((m) => m.AiModelsPage),
+  },
+  {
+    path: 'ai-models/:slug',
+    loadComponent: () =>
+      import('./pages/ai-models/ai-model-portfolio').then((m) => m.AiModelPortfolioPage),
+  },
+  {
     path: 'storyline-of-parallel-universe',
     loadComponent: () => import('./pages/storyline/storyline').then((m) => m.StorylinePage),
   },

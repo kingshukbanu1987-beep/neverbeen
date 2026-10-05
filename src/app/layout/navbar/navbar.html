@@ -1,4 +1,9 @@
-<header class="nav" [class.community-nav]="isCommunity()" [class.compact-nav]="!isCommunity() && isCompactLogo()">
+<header
+  class="nav"
+  [class.community-nav]="isCommunity()"
+  [class.ai-models-nav]="isAiModels()"
+  [class.compact-nav]="!isCommunity() && isCompactLogo()"
+>
   @if (isCommunity()) {
     <!-- ============================================================
          Community header (Community pages only).

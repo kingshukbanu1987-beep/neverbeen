@@ -57,6 +57,22 @@ h1 {
   background: #0c2b4d;
 }
 
+.btn-ai-models {
+  background: #ad141a;
+  color: #fff;
+}
+
+.btn-ai-models:hover,
+.btn-ai-models:focus-visible {
+  background: #891017;
+  color: #fff;
+}
+
+.btn-ai-models:focus-visible {
+  outline: 2px solid #ad141a;
+  outline-offset: 3px;
+}
+
 .btn-dream {
   background: #5bb523;
   color: #fff;
