@@ -58,6 +58,46 @@
           "uuid": "z6G193m8ng-USzmgDxpy6jZWG1HscmrYh2NOMQ9Zuw8",
           "file": "11-black-knit-portrait.png",
           "caption": "Black knit, low key"
+        },
+        {
+          "uuid": "0gCQ0wbHMA0JMak-nzMmqs2WSzLJia4Mre7O0M6_41Y",
+          "file": "12-red-off-shoulder-portrait.png",
+          "caption": "Red off-shoulder, looking to camera"
+        },
+        {
+          "uuid": "vzoZDvHb3kPk6W2rAONs-e7q-Vkdxg5HGivuCgMsPeE",
+          "file": "13-red-off-shoulder-gaze.png",
+          "caption": "Quiet gaze, red off-shoulder"
+        },
+        {
+          "uuid": "Qjin-Jea6P8gkPNnXPf1rTOTIURXSjDoT_YZwgYkGOk",
+          "file": "14-red-off-shoulder-reclined.png",
+          "caption": "Reclined close-up, red off-shoulder"
+        },
+        {
+          "uuid": "5C61w_pUI450h-VqlftxabeL1FE9Q_DFB3k2eG0Kakk",
+          "file": "15-blue-shirt-laughing.png",
+          "caption": "Laughing out loud, light blue shirt"
+        },
+        {
+          "uuid": "8mebr770vEaTQi5APSUR1GtdHLgeZwldscf31T0lrEg",
+          "file": "16-blue-shirt-seated.png",
+          "caption": "Seated study, light blue shirt"
+        },
+        {
+          "uuid": "m16NLq70Ql8u4DYgen8yvZFvXu_XTniQs8vKDTFoZPA",
+          "file": "17-crew-uniform-portrait.png",
+          "caption": "Crew uniform, looking to camera"
+        },
+        {
+          "uuid": "_a_fR7aCidSS6J8ItcWazABYn1_FVO52gf6kGjJ2hJk",
+          "file": "18-crew-uniform-turned.png",
+          "caption": "Crew uniform, turned away"
+        },
+        {
+          "uuid": "vAJ-bm0kGGn1ihQkUIhXCQ0NP4kW2q_dEqp3HMbnFbE",
+          "file": "19-crew-uniform-scarf.png",
+          "caption": "Adjusting the scarf, crew uniform"
         }
       ]
     }
