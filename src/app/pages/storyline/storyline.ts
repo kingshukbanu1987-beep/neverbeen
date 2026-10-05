@@ -68,7 +68,7 @@ export class StorylinePage {
       story: [
         'Before they married, Lotte and Bram drew a tiny blue train on the back of their wedding invitation. It marked the honeymoon they imagined: Lucerne by rail, a slow afternoon beside Lake Brienz, and no alarm set for the next morning.',
         'Then work kept asking for one more thing. A teammate was away; a launch slipped; urgent shifts landed on the same dates. Their leave requests moved from spring to autumn, then off the calendar. They could afford the idea. What they could not find was a clear week when both of them could step away without letting someone down.',
-        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. The next stop wanders Zermatt’s shop-lined streets, pauses at a bakery and small local stores, and catches Lotte and Bram with friendly shopkeepers and two friends from the train in the same outfits. Another slow turn follows Zermatt’s old Hinterdorf lanes and a few smaller stalls, with more moments beside a local florist, shopkeepers and their train friends; Lotte and Bram stay in those same clothes. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
+        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. The next stop wanders Zermatt’s shop-lined streets, pauses at a bakery and small local stores, and catches Lotte and Bram with friendly shopkeepers and two friends from the train in the same outfits. Another slow turn follows Zermatt’s old Hinterdorf lanes and a few smaller stalls, with more moments beside a local florist, shopkeepers and their train friends; Lotte and Bram stay in those same clothes. A separate snowy chapter follows Lotte on her own beneath the Matterhorn; she wanders empty mountain trails and pauses for frost, boot prints, wide views and solo selfies in one consistent winter outfit. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
       ],
       reason:
         'They chose NeverBeen for a personal, imagined keepsake while work pressure kept shifting their plans—not to pretend the honeymoon had happened, but to honour a promise they still hope to keep.',
@@ -345,6 +345,56 @@ export class StorylinePage {
           src: '/storyline/358-lotte-bram-zermatt-friends-shopfront-wide.jpg',
           alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf saying goodbye to two adult train friends and a local florist outside a Zermatt shop, with motion blur, window glare and a foreground shoulder.',
           caption: 'One more hello before the next train',
+        },
+        {
+          src: '/storyline/359-lotte-matterhorn-snow-trail-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte alone on a snowy Matterhorn trail near Zermatt, wearing her rust-red parka, cream wool scarf, charcoal beanie, black snow trousers and tan boots, with the peak behind her and a softly blurred edge.',
+          caption: 'A quiet turn toward the Matterhorn',
+        },
+        {
+          src: '/storyline/360-lotte-matterhorn-frost-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte alone, showing the rust-red parka cuff, cream scarf edge and charcoal glove holding a tiny snowflake over powder, with the snowy Matterhorn slope out of focus.',
+          caption: 'A snowflake on her glove',
+        },
+        {
+          src: '/storyline/361-lotte-matterhorn-snow-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte alone beside a snow-laden larch, her auburn hair, freckles, rust-red parka, cream wool scarf and charcoal beanie visible against the snowy Matterhorn; the crop is slightly imperfect.',
+          caption: 'Snow caught in her auburn hair',
+        },
+        {
+          src: '/storyline/362-lotte-matterhorn-solo-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte alone in her rust-red parka, cream wool scarf and charcoal beanie with the snowy Matterhorn behind her, windblown hair and bright snow glare; the phone is not visible.',
+          caption: 'A solo selfie beneath the snowy peak',
+        },
+        {
+          src: '/storyline/363-lotte-matterhorn-glacier-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte alone crossing a broad snowfield in her rust-red parka, cream wool scarf, charcoal beanie, black snow trousers and tan boots, with the Matterhorn towering behind and a boot partly cropped.',
+          caption: 'One small figure in a wide white landscape',
+        },
+        {
+          src: '/storyline/364-lotte-matterhorn-bootprints-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte alone, her charcoal glove and rust-red parka sleeve above tan boot prints fading into clean snow, with a cream scarf edge and the Matterhorn foothills blurred beyond.',
+          caption: 'Her boot prints across fresh powder',
+        },
+        {
+          src: '/storyline/365-lotte-matterhorn-snow-candid.jpg',
+          alt: 'AI-generated, slightly tilted candid mobile snapshot of fictional Lotte alone brushing snow from her rust-red parka beside an empty Matterhorn trail, wearing a cream wool scarf and charcoal beanie, with falling-snow blur and an awkwardly cropped edge.',
+          caption: 'A pause to brush the snow away',
+        },
+        {
+          src: '/storyline/366-lotte-matterhorn-snowfall-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte alone in her rust-red parka, cream wool scarf and charcoal beanie during soft snowfall, with the snowy Matterhorn behind her, a tiny snow fleck near the lens and phone grain; the phone is not visible.',
+          caption: 'A second selfie as the snow starts',
+        },
+        {
+          src: '/storyline/367-lotte-matterhorn-snow-hut-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte alone beside an empty snow-covered wooden mountain shelter below the Matterhorn, wearing the same rust-red parka, cream wool scarf, charcoal beanie and black snow trousers, with soft edge blur.',
+          caption: 'The trail shelter before the climb back',
+        },
+        {
+          src: '/storyline/368-lotte-matterhorn-sunset-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte alone in her rust-red parka, cream wool scarf, charcoal beanie, black snow trousers and tan boots on a snowy Matterhorn overlook at pink dusk, with a little edge blur and uneven snow exposure.',
+          caption: 'The last light on the snowy Matterhorn',
         },
       ],
     },
