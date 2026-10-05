@@ -62,26 +62,24 @@ directory and portfolio show a visible notice until it is removed or set to `fal
 `order` is the position on the `/ai-models` directory (1-based; entries without one keep their
 discovery order after the numbered ones), so the running order is data, not code.
 
-4. Give each model her booking terms in the same shared entry. `rates` powers the Rent form — the
-   list of terms in the pop-up, the running total, and the `From … USD` hint on the portfolio:
+4. Give each model her own price for a single photograph in the same shared entry. `photoRate` is in
+   INR and powers the Rent form — the packages in the pop-up, the running total, and the
+   `From ₹… per photograph` hint on the portfolio:
 
 ```json
 {
   "Nourhan Durrani.png": {
-    "rates": [
-      { "term": "Half day", "detail": "4 hours on set", "usd": 950 },
-      { "term": "Full day", "detail": "8 hours on set", "usd": 1700 },
-      { "term": "Three days", "detail": "3 x 8 hour days", "usd": 4800 },
-      { "term": "Week", "detail": "7 days, one booking", "usd": 9800 }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 550,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   }
 }
 ```
 
-Every rate needs a `term` and a positive `usd`; entries without either are dropped. A model
-without rates still takes enquiries — the pop-up says the rates are being finalised instead of
-showing empty cards. `rateNote` is optional and shown under the totals.
+Rates start at ₹550 a photograph and vary slightly between the models. The packages are 10 photographs
+(the minimum order), 25, 50 and 100 — priced at `photoRate` each — plus a customized order that the
+studio quotes separately, so every model needs just one number. A model without a rate still takes
+enquiries: the pop-up says the rate is being finalised instead of showing empty cards. `photoNote` is
+optional and shown under the totals.
 
 5. Nothing else to do. The album watcher that runs with `npm start` regenerates the manifest the
    moment photographs land in a folder, and `npm run build` regenerates it as part of the build —
@@ -95,5 +93,6 @@ for the Angular pages.
 
 Each cover on `/ai-models` states how many photographs that model has in her album — the count is
 read from the manifest, so it follows the folder. Every portfolio also carries a **Rent this model**
-button; the pop-up it opens shows the model's booking information, her rates per term in USD and a
-calendar for the shoot date, and sends the request to the studio's WhatsApp (see the main README).
+button; the pop-up it opens shows the model's booking information, her rate per photo in INR, the 10 /
+25 / 50 / 100 photograph packages and a customized order, plus a calendar for the delivery date, and
+sends the request to the studio's WhatsApp (see the main README).

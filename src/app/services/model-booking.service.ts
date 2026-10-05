@@ -1,10 +1,55 @@
 import { Injectable } from '@angular/core';
 
-/** One priced booking term, as published on the model's portfolio. */
-export interface BookingTerm {
-  term: string;
+/**
+ * One photo order: a package of photographs priced at the model's per-photo rate, or a customized
+ * order the studio quotes after reading the brief (`custom`, with no price yet).
+ */
+export interface BookingPhotoOrder {
+  label: string;
   detail: string;
-  usd: number;
+  photos: number;
+  ratePerPhoto: number;
+  amount: number;
+  custom: boolean;
+}
+
+/** The packages every model offers, priced at her own per-photo rate (INR). */
+export const BOOKING_PACKAGES: readonly { photos: number; label: string; detail: string }[] = [
+  { photos: 10, label: '10 photographs', detail: 'Minimum order' },
+  { photos: 25, label: '25 photographs', detail: 'Editorial pick' },
+  { photos: 50, label: '50 photographs', detail: 'Campaign set' },
+  { photos: 100, label: '100 photographs', detail: 'Full portfolio' },
+];
+
+export const CUSTOM_ORDER_LABEL = 'Customized order';
+export const CUSTOM_ORDER_DETAIL = 'Selective charge, quoted after we read your brief';
+
+/** Builds the selectable orders for a model: her packages plus the customized order. */
+export function photoOrdersFor(ratePerPhoto: number): BookingPhotoOrder[] {
+  const orders: BookingPhotoOrder[] = BOOKING_PACKAGES.map((pack) => ({
+    label: pack.label,
+    detail: pack.detail,
+    photos: pack.photos,
+    ratePerPhoto,
+    amount: pack.photos * ratePerPhoto,
+    custom: false,
+  }));
+
+  orders.push({
+    label: CUSTOM_ORDER_LABEL,
+    detail: CUSTOM_ORDER_DETAIL,
+    photos: 0,
+    ratePerPhoto,
+    amount: 0,
+    custom: true,
+  });
+
+  return orders;
+}
+
+/** Indian rupee amount, e.g. "₹5,500". */
+export function formatInr(amount: number): string {
+  return `₹${amount.toLocaleString('en-IN')}`;
 }
 
 /** Where the request should be filed. */
@@ -17,7 +62,7 @@ export interface BookingModelSummary {
 
 export interface BookingRequest {
   model: BookingModelSummary;
-  term: BookingTerm;
+  order: BookingPhotoOrder;
   booking: {
     date: string;
     project: string;

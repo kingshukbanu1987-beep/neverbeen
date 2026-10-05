@@ -1,6 +1,7 @@
 import {
   buildBookingMessage,
   createBookingReference,
+  formatInr,
   formatShootDate,
   handleModelBookingRequest,
   validateBookingRequest,
@@ -17,7 +18,14 @@ function payload(overrides: Record<string, unknown> = {}) {
       slug: 'nourhan-durrani',
       location: 'Sarajevo, Bosnia and Herzegovina',
     },
-    term: { term: 'Full day', detail: '8 hours on set', usd: 1700 },
+    order: {
+      label: '25 photographs',
+      detail: 'Editorial pick',
+      photos: 25,
+      ratePerPhoto: 550,
+      amount: 13750,
+      custom: false,
+    },
     booking: {
       date: '2026-11-14',
       project: 'Editorial shoot',
@@ -62,8 +70,9 @@ describe('model booking core', () => {
     const message = messages[0];
     expect(message).toContain('New booking request');
     expect(message).toContain('Nourhan Durrani (@nourhan.durrani)');
-    expect(message).toContain('Full day — 8 hours on set');
-    expect(message).toContain('$1,700 USD');
+    expect(message).toContain('25 photographs — Editorial pick');
+    expect(message).toContain('Rate: ₹550 per photo');
+    expect(message).toContain('Total: ₹13,750 INR');
     expect(message).toContain('Sat, 14 Nov 2026');
     expect(message).toContain('Ada Lovelace');
     expect(message).toContain('ada@studio.example');
@@ -151,7 +160,7 @@ describe('model booking core', () => {
     expect(empty.body.error).toBe('validation');
     const fields = (empty.body.fields ?? []).map((entry: { field: string }) => entry.field);
     expect(fields).toEqual(
-      expect.arrayContaining(['model', 'term', 'date', 'name', 'email', 'phone']),
+      expect.arrayContaining(['model', 'order', 'date', 'name', 'email', 'phone']),
     );
 
     const past = validateBookingRequest(payload({ booking: { date: '2020-01-01' } }), NOW);
@@ -181,7 +190,70 @@ describe('model booking core', () => {
     const { booking } = validateBookingRequest(payload(), NOW);
     expect(booking).not.toBeNull();
     const message = buildBookingMessage(booking!);
-    expect(message).toContain('Price: $1,700 USD');
+    expect(message).toContain('*Delivery date*');
+    expect(message).toContain('Total: ₹13,750 INR');
     expect(message.split('\n').length).toBeGreaterThan(20);
+  });
+
+  it('prices the ten-photo minimum and the larger packages in INR', () => {
+    expect(formatInr(550)).toBe('₹550');
+    expect(formatInr(5500)).toBe('₹5,500');
+    expect(formatInr(55000)).toBe('₹55,000');
+    expect(formatInr(137500)).toBe('₹1,37,500');
+
+    const minimum = validateBookingRequest(
+      payload({
+        order: {
+          label: '10 photographs',
+          detail: 'Minimum order',
+          photos: 10,
+          ratePerPhoto: 550,
+          amount: 5500,
+          custom: false,
+        },
+      }),
+      NOW,
+    );
+    expect(minimum.booking).not.toBeNull();
+    expect(buildBookingMessage(minimum.booking!)).toContain('Total: ₹5,500 INR');
+
+    const belowMinimum = validateBookingRequest(
+      payload({
+        order: {
+          label: '5 photographs',
+          photos: 5,
+          ratePerPhoto: 550,
+          amount: 2750,
+          custom: false,
+        },
+      }),
+      NOW,
+    );
+    expect(belowMinimum.booking).toBeNull();
+    expect(belowMinimum.errors['order']).toContain('minimum');
+  });
+
+  it('accepts a customized order without a price and marks it a selective charge', async () => {
+    const messages: string[] = [];
+    const result = await handleModelBookingRequest({
+      method: 'POST',
+      payload: payload({
+        order: {
+          label: 'Customized order',
+          detail: 'Selective charge, quoted after we read your brief',
+          photos: 0,
+          ratePerPhoto: 550,
+          amount: 0,
+          custom: true,
+        },
+      }),
+      now: NOW,
+      outbox: (message: string) => messages.push(message),
+    });
+
+    expect(result.status).toBe(200);
+    expect(messages[0]).toContain('Customized order — selective charge');
+    expect(messages[0]).toContain('quoted by the studio');
+    expect(messages[0]).not.toContain('₹0');
   });
 });

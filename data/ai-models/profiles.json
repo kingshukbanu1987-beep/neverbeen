@@ -8,29 +8,8 @@
     "bio": "A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.",
     "illustrative": true,
     "order": 1,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 950
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1700
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4800
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 9800
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 550,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Nirvana Noorzai.png": {
     "location": "Dubai, United Arab Emirates",
@@ -41,29 +20,8 @@
     "bio": "A polished, versatile presence imagined between bold architecture, soft light and new destinations.",
     "illustrative": true,
     "order": 2,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 900
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1650
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4600
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 9400
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 570,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Sereenah Noorzai.png": {
     "location": "Muscat, Oman",
@@ -74,29 +32,8 @@
     "bio": "A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.",
     "illustrative": true,
     "order": 3,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 800
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1450
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4100
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 8300
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 540,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Rozalin El Masry.png": {
     "location": "Alexandria, Egypt",
@@ -107,29 +44,8 @@
     "bio": "A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.",
     "illustrative": true,
     "order": 4,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 880
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1600
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4500
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 9200
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 580,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Fatima Sana Hussaini.png": {
     "location": "Kuala Lumpur, Malaysia",
@@ -140,29 +56,8 @@
     "bio": "A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.",
     "illustrative": true,
     "order": 5,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 820
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1500
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4200
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 8600
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 560,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Salma Ahmadzai.png": {
     "location": "Tbilisi, Georgia",
@@ -173,29 +68,8 @@
     "bio": "A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.",
     "illustrative": true,
     "order": 6,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 780
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1400
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 3950
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 8100
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 530,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Toulene Arslan.png": {
     "location": "Istanbul, Türkiye",
@@ -206,29 +80,8 @@
     "bio": "A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.",
     "illustrative": true,
     "order": 7,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 900
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1620
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4550
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 9300
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 590,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Zeina Al-Sabbagh.png": {
     "location": "Beirut, Lebanon",
@@ -239,29 +92,8 @@
     "bio": "A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.",
     "illustrative": true,
     "order": 8,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 850
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1540
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4350
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 8900
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 555,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Nermin Akhundzada.png": {
     "location": "Baku, Azerbaijan",
@@ -272,29 +104,8 @@
     "bio": "A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.",
     "illustrative": true,
     "order": 9,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 760
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1380
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 3900
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 7950
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 520,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Rasha Fakhoury.png": {
     "location": "Amman, Jordan",
@@ -305,28 +116,7 @@
     "bio": "An understated editorial spirit with a confident point of view and an eye for sculptural details.",
     "illustrative": true,
     "order": 10,
-    "rates": [
-      {
-        "term": "Half day",
-        "detail": "4 hours on set",
-        "usd": 920
-      },
-      {
-        "term": "Full day",
-        "detail": "8 hours on set",
-        "usd": 1660
-      },
-      {
-        "term": "Three days",
-        "detail": "3 x 8 hour days",
-        "usd": 4700
-      },
-      {
-        "term": "Week",
-        "detail": "7 days, one booking",
-        "usd": 9600
-      }
-    ],
-    "rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+    "photoRate": 600,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   }
 }

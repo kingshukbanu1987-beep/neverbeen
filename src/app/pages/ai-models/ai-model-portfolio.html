@@ -78,12 +78,11 @@
                 </a>
               </div>
 
-              @if (rateFrom(); as rate) {
+              @if (ratePerPhoto() > 0) {
                 <p class="rate-hint">
                   <span aria-hidden="true">✳</span> From
-                  <b>{{ rate.usd.toLocaleString('en-US') }} USD</b> per
-                  {{ rate.term.toLowerCase() }}
-                  <i>— {{ profile.rates.length }} booking terms</i>
+                  <b>₹{{ ratePerPhoto().toLocaleString('en-IN') }}</b> per photograph
+                  <i>— 10 photographs minimum, up to 100 or a custom order</i>
                 </p>
               }
             </div>
@@ -131,8 +130,8 @@
             <p class="eyebrow">Portfolio grid</p>
             <h2 id="gallery-title">Every frame</h2>
             <p class="gallery-intro">
-              Tap any photograph to open it full screen, then browse the whole album with the
-              arrows, the keyboard or a swipe.
+              The album is shuffled for every visit. Tap any photograph to open it full screen, then
+              browse the whole set with the arrows, the keyboard or a swipe.
             </p>
           </div>
 

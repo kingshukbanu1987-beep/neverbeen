@@ -79,11 +79,13 @@ ng test
 
 ## NeverBeen AI Models
 
-The `/ai-models` page is a dark, magenta-accented studio directory. Portfolios appear in the published
-order (`order` in `data/ai-models/profiles.json`) and every cover states, in large bold type, how many
-photographs that model has in her portfolio. Each cover opens its own
+The `/ai-models` page is a dark, magenta-accented studio directory that opens on a short, plain title
+bar — no artwork or decorative panels. Portfolios appear in the published order (`order` in
+`data/ai-models/profiles.json`) and every cover states, in large bold type, how many photographs that
+model has in her portfolio. Each cover opens its own
 portfolio at `/ai-models/:slug`: an Instagram-style profile header (avatar, handle, photographs
-count, location, age, height, weight, body shape, tags and short introduction) above a photo grid.
+count, location, age, height, weight, body shape, tags and short introduction) above a photo grid that
+is shuffled into a fresh random order on every visit.
 Clicking any photograph expands it in a full-screen pop-up that can be browsed with the arrow keys,
 the on-screen arrows, the thumbnail strip or a swipe on mobile, with a grid/feed layout switch.
 Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative
@@ -114,21 +116,22 @@ by an upload is renamed in place.
 
 ### Renting a model
 
-Every portfolio carries a **Rent this model** button (with a `From … USD per …` hint taken from the
-cheapest published term). It opens an ultra-modern dark booking pop-up that matches the studio
-directory: a calendar for the shoot date, the model's own booking information, and a USD price per
-term. The term, its duration and the price all come from `rates` in `data/ai-models/profiles.json`, so
-each model quotes her own numbers:
+Every portfolio carries a **Rent this model** button with a `From ₹550 per photograph` hint. It opens
+an ultra-modern dark booking pop-up that matches the studio directory: a calendar for the **delivery
+date**, the model's booking information, and a **Rate per Photo** in INR. Prices start at ₹550 a
+photograph and each model quotes her own rate, published in `data/ai-models/profiles.json`:
 
 ```jsonc
-"rates": [
-  { "term": "Half day", "detail": "4 hours on set", "usd": 950 },
-  { "term": "Full day", "detail": "8 hours on set", "usd": 1700 }
-],
-"rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+"photoRate": 550,
+"photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
 ```
 
-Submitting the form posts the model, the chosen term and the client's booking information to
+The pop-up offers **10 photographs** (the minimum order), **25**, **50** and **100**, each priced at
+that model's per-photo rate (10 photographs at ₹550 is ₹5,500, 100 at ₹550 is ₹55,000), plus a
+**Customized order** for anything else. A customized order is a selective charge: it carries no price
+and the studio quotes it after reading the brief.
+
+Submitting the form posts the model, the order and the client's booking information to
 `POST /api/model-booking`. The Worker (`worker/index.ts`, logic in `worker/model-booking-core.mjs`)
 validates the request and sends a formatted WhatsApp message to the founder through the WhatsApp Cloud
 API. The founder's number is a Worker secret — it is never sent to the browser, never embedded in the

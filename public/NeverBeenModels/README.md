@@ -30,8 +30,10 @@ public/NeverBeenModels/
    (for example `Nourhan Durrani.png`), or name it `cover.*`, or point at it with the `cover` field
    of the folder's `profile.json`.
 
-Photographs are listed cover first, then in natural filename order. Set `photos` in `profile.json`
-to choose the exact order, and use `captions` to give a frame its own caption in the pop-up.
+Photographs are recorded cover first, then in natural filename order. Set `photos` in `profile.json`
+to choose that order, and use `captions` to give a frame its own caption. The portfolio page shuffles
+the album into a fresh random order on every visit, so the grid never opens the same way twice; the
+cover stays the model's avatar and the photograph count is unchanged.
 
 The number of photographs in the folder is what the model's cover on `/ai-models` reports, so moving
 a file in or out updates that count on the next manifest refresh.

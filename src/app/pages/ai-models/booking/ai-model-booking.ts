@@ -13,7 +13,12 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AiModelProfile } from '../ai-model-data';
-import { BookingTerm, ModelBookingService } from '../../../services/model-booking.service';
+import {
+  BookingPhotoOrder,
+  ModelBookingService,
+  formatInr,
+  photoOrdersFor,
+} from '../../../services/model-booking.service';
 
 interface CalendarDay {
   iso: string;
@@ -68,8 +73,14 @@ export class AiModelBookingDialog implements OnDestroy {
   protected readonly projectTypes = PROJECT_TYPES;
   protected readonly weekdayLabels = WEEKDAY_LABELS;
 
-  protected readonly terms = computed<BookingTerm[]>(() => this.model().rates);
-  protected readonly selectedTerm = signal<BookingTerm | null>(null);
+  /** Packages sized at the model's own per-photo rate, plus the customized order. */
+  protected readonly orders = computed<BookingPhotoOrder[]>(() => {
+    const rate = this.model().photoRate;
+    return rate > 0 ? photoOrdersFor(rate) : [];
+  });
+  protected readonly selectedOrder = signal<BookingPhotoOrder | null>(null);
+  protected readonly ratePerPhoto = computed(() => this.model().photoRate);
+  protected readonly formatInr = formatInr;
   protected readonly today = startOfToday();
   protected readonly viewMonth = signal<Date>(startOfMonth(startOfToday()));
   protected readonly selectedDate = signal<string | null>(null);
@@ -145,9 +156,9 @@ export class AiModelBookingDialog implements OnDestroy {
   });
 
   protected readonly total = computed(() => {
-    const term = this.selectedTerm();
-    if (!term) return '';
-    return `$${term.usd.toLocaleString('en-US')}`;
+    const order = this.selectedOrder();
+    if (!order) return '';
+    return order.custom ? '' : formatInr(order.amount);
   });
 
   protected readonly showFieldErrors = signal(false);
@@ -156,10 +167,10 @@ export class AiModelBookingDialog implements OnDestroy {
   private lastFocused: HTMLElement | null = null;
 
   constructor() {
-    // The first rate is the default selection, matching the highlighted card.
+    // The smallest package is the default selection, matching the highlighted card.
     effect(() => {
-      const first = this.terms()[0] ?? null;
-      if (this.selectedTerm() === null && first) this.selectedTerm.set(first);
+      const first = this.orders()[0] ?? null;
+      if (this.selectedOrder() === null && first) this.selectedOrder.set(first);
     });
 
     effect((onCleanup) => {
@@ -181,8 +192,13 @@ export class AiModelBookingDialog implements OnDestroy {
     if (typeof document !== 'undefined') document.body.style.overflow = '';
   }
 
-  protected selectTerm(term: BookingTerm): void {
-    this.selectedTerm.set(term);
+  protected selectOrder(order: BookingPhotoOrder): void {
+    this.selectedOrder.set(order);
+  }
+
+  /** Total of the selected order, in the wording the order deserves. */
+  protected totalLabel(): string {
+    return this.selectedOrder()?.custom ? 'Quoted after review' : 'Selected total';
   }
 
   protected selectDate(day: CalendarDay): void {
@@ -218,10 +234,10 @@ export class AiModelBookingDialog implements OnDestroy {
     if (this.status() === 'sending') return;
 
     this.showFieldErrors.set(true);
-    const term = this.selectedTerm();
+    const order = this.selectedOrder();
     const date = this.selectedDate();
 
-    if (this.form.invalid || !term || !date) {
+    if (this.form.invalid || !order || !date) {
       this.form.markAllAsTouched();
       this.status.set('error');
       this.resultMessage.set('Add the missing details so the studio can reply.');
@@ -229,7 +245,7 @@ export class AiModelBookingDialog implements OnDestroy {
         ...Object.entries(this.form.controls)
           .filter(([, control]) => control.invalid)
           .map(([key]) => key),
-        ...(term ? [] : ['term']),
+        ...(order ? [] : ['order']),
         ...(date ? [] : ['date']),
       ]);
       return;
@@ -247,7 +263,7 @@ export class AiModelBookingDialog implements OnDestroy {
         slug: profile.slug,
         location: profile.location,
       },
-      term,
+      order,
       booking: {
         date,
         project: value.project,

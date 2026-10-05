@@ -1,50 +1,17 @@
 <main class="ai-models-page">
   <section class="studio-hero" aria-labelledby="ai-models-title">
-    <div class="hero-gridlines" aria-hidden="true"></div>
-    <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
-    <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
-
     <div class="container hero-shell">
       <div class="studio-bar">
         <a class="back-link" routerLink="/" aria-label="Back to NeverBeen homepage">
           <span aria-hidden="true">←</span> NeverBeen
         </a>
-        <p class="studio-label">
-          <span class="live-dot" aria-hidden="true"></span> Digital talent studio
-        </p>
+        <p class="studio-label">{{ totalCount() }} model profiles</p>
       </div>
 
-      <div class="hero-content">
-        <div class="hero-copy">
-          <p class="eyebrow"><span>01</span> / The model directory</p>
-          <h1 id="ai-models-title">NeverBeen <em>AI Models</em></h1>
-          <p class="hero-lede">
-            Meet the faces and stories behind our digital model portfolios. Every profile is its own
-            world—made to be explored, remembered, and imagined in a new light.
-          </p>
-          <a class="scroll-cue" href="#model-directory">
-            <span class="scroll-cue-mark" aria-hidden="true">↓</span>
-            Explore the directory
-          </a>
-        </div>
-
-        <aside class="hero-art" aria-label="NeverBeen AI Model Studio">
-          <div class="art-orbit orbit-outer" aria-hidden="true"></div>
-          <div class="art-orbit orbit-inner" aria-hidden="true"></div>
-          <div class="art-core" aria-hidden="true">
-            <span class="art-core-star">✳</span>
-            <span class="art-core-nb">NB</span>
-          </div>
-          <span class="art-coordinate coordinate-top">NB / AI 001</span>
-          <span class="art-coordinate coordinate-bottom">IDENTITY · IMAGE · STORY</span>
-          <span class="art-index">{{ totalCount() }}<small>PROFILES</small></span>
-        </aside>
-      </div>
-
-      <div class="hero-footer">
-        <span>NeverBeen / Studio index</span>
-        <span>Curated identities <i aria-hidden="true">✳</i> Independent portfolios</span>
-      </div>
+      <h1 id="ai-models-title">NeverBeen <em>AI Models</em></h1>
+      <p class="hero-lede">
+        Digital model portfolios — rent a shoot from &#8377;550 per photograph.
+      </p>
     </div>
   </section>
 

@@ -50,15 +50,17 @@
             <dt>Model</dt>
             <dd>{{ model().name }}</dd>
           </div>
-          @if (selectedTerm(); as term) {
+          @if (selectedOrder(); as order) {
             <div>
-              <dt>Term</dt>
-              <dd>{{ term.term }} · {{ total() }} USD</dd>
+              <dt>Order</dt>
+              <dd>
+                {{ order.label }} · {{ order.custom ? 'selective charge' : total() + ' INR' }}
+              </dd>
             </div>
           }
           @if (selectedDateLabel()) {
             <div>
-              <dt>Shoot date</dt>
+              <dt>Delivery date</dt>
               <dd>{{ selectedDateLabel() }}</dd>
             </div>
           }
@@ -72,7 +74,7 @@
       <form class="booking-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="booking-main">
           <section class="booking-block" aria-labelledby="booking-when">
-            <h3 id="booking-when"><span aria-hidden="true">01</span> When is the shoot?</h3>
+            <h3 id="booking-when"><span aria-hidden="true">01</span> Select a Delivery Date?</h3>
 
             <div class="calendar">
               <div class="calendar-head">
@@ -100,7 +102,7 @@
               <div
                 class="calendar-grid"
                 role="grid"
-                [attr.aria-label]="'Shoot date, ' + monthLabel()"
+                [attr.aria-label]="'Delivery date, ' + monthLabel()"
               >
                 @for (label of weekdayLabels; track label) {
                   <span class="calendar-weekday" role="columnheader">{{ label }}</span>
@@ -132,7 +134,7 @@
                   <span class="calendar-pin" aria-hidden="true">⌖</span>
                   {{ selectedDateLabel() }}
                 } @else {
-                  Choose an available date for the shoot.
+                  Choose the date you need the photographs delivered.
                 }
               </p>
             </div>
@@ -270,23 +272,33 @@
             </ul>
           }
 
-          <h3 class="booking-side-title booking-rates-title">Rates per term</h3>
+          <h3 class="booking-side-title booking-rates-title">Rate per Photo</h3>
 
-          <div class="rate-list" role="radiogroup" aria-label="Booking term">
-            @for (term of terms(); track term.term) {
+          @if (ratePerPhoto() > 0) {
+            <p class="rate-per-photo">
+              <b>{{ formatInr(ratePerPhoto()) }}</b>
+              <i>per photograph · INR</i>
+            </p>
+          }
+
+          <div class="rate-list" role="radiogroup" aria-label="Photo order">
+            @for (order of orders(); track order.label) {
               <button
                 type="button"
                 class="rate-card"
                 role="radio"
-                [class.is-active]="selectedTerm()?.term === term.term"
-                [attr.aria-checked]="selectedTerm()?.term === term.term"
-                (click)="selectTerm(term)"
+                [class.is-active]="selectedOrder()?.label === order.label"
+                [class.is-custom]="order.custom"
+                [attr.aria-checked]="selectedOrder()?.label === order.label"
+                (click)="selectOrder(order)"
               >
                 <span class="rate-copy">
-                  <b>{{ term.term }}</b>
-                  <i>{{ term.detail }}</i>
+                  <b>{{ order.label }}</b>
+                  <i>{{ order.detail }}</i>
                 </span>
-                <span class="rate-price">${{ term.usd.toLocaleString('en-US') }}</span>
+                <span class="rate-price">
+                  {{ order.custom ? 'On request' : formatInr(order.amount) }}
+                </span>
               </button>
             } @empty {
               <p class="rate-empty">
@@ -296,12 +308,16 @@
           </div>
 
           <div class="booking-total">
-            <span>Selected total</span>
-            <b>{{ total() || '—' }}<i>USD</i></b>
+            <span>{{ totalLabel() }}</span>
+            @if (total()) {
+              <b>{{ total() }}<i>INR</i></b>
+            } @else {
+              <b class="is-quote">Selective charge</b>
+            }
           </div>
 
-          @if (model().rateNote) {
-            <p class="booking-note">{{ model().rateNote }}</p>
+          @if (model().photoNote) {
+            <p class="booking-note">{{ model().photoNote }}</p>
           }
 
           <button

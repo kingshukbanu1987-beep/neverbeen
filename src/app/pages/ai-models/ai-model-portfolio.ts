@@ -12,11 +12,24 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { AiModelProfile, aiModelProfiles } from './ai-model-data';
+import { AiModelPhoto, AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
 
 type PortfolioView = 'grid' | 'feed';
 type ShareState = 'idle' | 'shared' | 'copied' | 'unsupported';
+
+/**
+ * Fisher-Yates shuffle. The portfolio re-arranges itself on every visit, so the same album never
+ * opens in the same order twice; the cover, the avatar and the counts are unaffected.
+ */
+export function shufflePhotos(photos: readonly AiModelPhoto[]): AiModelPhoto[] {
+  const shuffled = [...photos];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swap]] = [shuffled[swap], shuffled[index]];
+  }
+  return shuffled;
+}
 
 @Component({
   selector: 'app-ai-model-portfolio-page',
@@ -39,8 +52,11 @@ export class AiModelPortfolioPage implements OnDestroy {
     () => aiModelProfiles.find((profile) => profile.slug === this.slug()) ?? null,
   );
 
-  /** Every photograph in the model's album — cover first. */
-  protected readonly photos = computed(() => this.model()?.photos ?? []);
+  /**
+   * Every photograph in the model's album, shuffled fresh for this visit. Recomputes whenever the
+   * model changes — opening a portfolio (or moving to another model and back) re-arranges the grid.
+   */
+  protected readonly photos = computed(() => shufflePhotos(this.model()?.photos ?? []));
 
   protected readonly view = signal<PortfolioView>('grid');
 
@@ -52,12 +68,8 @@ export class AiModelPortfolioPage implements OnDestroy {
   /** The Rent form pop-up. */
   protected readonly bookingOpen = signal(false);
 
-  /** Cheapest published term, shown next to the Rent button. */
-  protected readonly rateFrom = computed(() => {
-    const rates = this.model()?.rates ?? [];
-    if (rates.length === 0) return null;
-    return rates.reduce((cheapest, rate) => (rate.usd < cheapest.usd ? rate : cheapest), rates[0]);
-  });
+  /** The model's own rate for one photograph, shown next to the Rent button. */
+  protected readonly ratePerPhoto = computed(() => this.model()?.photoRate ?? 0);
 
   protected readonly lightboxPhoto = computed(() => {
     const index = this.activeIndex();

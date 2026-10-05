@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { of } from 'rxjs';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
-import { AiModelPortfolioPage } from './ai-model-portfolio';
+import { AiModelPortfolioPage, shufflePhotos } from './ai-model-portfolio';
 
 const testRoutes = [
   {
@@ -31,11 +32,8 @@ function withPhotos(count: number): AiModelProfile {
     tags: ['Editorial', 'Campaign'],
     availability: 'Open for bookings',
     order: 99,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 700 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1250 },
-    ],
-    rateNote: 'Rates are in USD per booking term.',
+    photoRate: 550,
+    photoNote: 'Rates are in INR per photograph.',
     bio: 'A temporary portfolio used by the unit test suite.',
     illustrative: true,
     gallery: photos.slice(1).map((photo) => photo.src),
@@ -55,6 +53,13 @@ async function openPortfolio(slug: string): Promise<RouterTestingHarness> {
   const harness = await RouterTestingHarness.create(`/ai-models/${slug}`);
   harness.detectChanges();
   return harness;
+}
+
+/** The album is shuffled per visit, so every assertion reads the order the page is showing. */
+function shownOrder(element: HTMLElement): string[] {
+  return Array.from(element.querySelectorAll('.grid-tile img')).map(
+    (image) => image.getAttribute('src') ?? '',
+  );
 }
 
 describe('AiModelPortfolioPage', () => {
@@ -78,7 +83,11 @@ describe('AiModelPortfolioPage', () => {
 
       const tiles = element.querySelectorAll('.grid-tile');
       expect(tiles.length).toBe(3);
-      expect(tiles[0].querySelector('img')?.getAttribute('src')).toBe(profile.photos[0].src);
+
+      // The album is shuffled per visit, so the tiles are the same photographs in a new order.
+      const shown = Array.from(tiles).map((tile) => tile.querySelector('img')?.getAttribute('src'));
+      expect([...shown].sort()).toEqual(profile.photos.map((photo) => photo.src).sort());
+      expect(new Set(shown).size).toBe(3);
       expect(tiles[0].getAttribute('aria-label')).toContain('portfolio photograph 1');
 
       const tags = Array.from(element.querySelectorAll('.tag-list li')).map((tag) =>
@@ -97,6 +106,7 @@ describe('AiModelPortfolioPage', () => {
 
     try {
       const tile = element.querySelectorAll<HTMLButtonElement>('.grid-tile')[1];
+      const opened = tile.querySelector('img')?.getAttribute('src');
       tile.focus();
       tile.click();
       harness.detectChanges();
@@ -104,9 +114,8 @@ describe('AiModelPortfolioPage', () => {
       const lightbox = element.querySelector('.lightbox');
       expect(lightbox).not.toBeNull();
       expect(lightbox?.getAttribute('aria-modal')).toBe('true');
-      expect(lightbox?.querySelector('.lightbox-image')?.getAttribute('src')).toBe(
-        profile.photos[1].src,
-      );
+      expect(lightbox?.querySelector('.lightbox-image')?.getAttribute('src')).toBe(opened);
+      expect(profile.photos.some((photo) => photo.src === opened)).toBe(true);
       expect(lightbox?.querySelector('.lightbox-counter')?.textContent).toContain('02');
       expect(document.activeElement?.classList.contains('lightbox-close')).toBe(true);
       expect(document.body.style.overflow).toBe('hidden');
@@ -145,6 +154,7 @@ describe('AiModelPortfolioPage', () => {
     const harness = await openPortfolio(profile.slug);
     const element = harness.routeNativeElement as HTMLElement;
     const counter = () => element.querySelector('.lightbox-counter')?.textContent?.trim();
+    const order = shownOrder(element);
 
     try {
       (element.querySelectorAll('.grid-tile')[0] as HTMLButtonElement).click();
@@ -162,9 +172,7 @@ describe('AiModelPortfolioPage', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
       harness.detectChanges();
       expect(counter()).toBe('03 / 03');
-      expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(
-        profile.photos[2].src,
-      );
+      expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(order[2]);
     } finally {
       release(profile);
     }
@@ -174,6 +182,7 @@ describe('AiModelPortfolioPage', () => {
     const profile = withPhotos(4);
     const harness = await openPortfolio(profile.slug);
     const element = harness.routeNativeElement as HTMLElement;
+    const order = shownOrder(element);
 
     try {
       (element.querySelectorAll('.grid-tile')[0] as HTMLButtonElement).click();
@@ -189,15 +198,11 @@ describe('AiModelPortfolioPage', () => {
 
       (element.querySelector('.lightbox-next') as HTMLButtonElement).click();
       harness.detectChanges();
-      expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(
-        profile.photos[3].src,
-      );
+      expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(order[3]);
 
       (element.querySelector('.lightbox-prev') as HTMLButtonElement).click();
       harness.detectChanges();
-      expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(
-        profile.photos[2].src,
-      );
+      expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(order[2]);
     } finally {
       release(profile);
     }
@@ -207,6 +212,7 @@ describe('AiModelPortfolioPage', () => {
     const profile = withPhotos(2);
     const harness = await openPortfolio(profile.slug);
     const element = harness.routeNativeElement as HTMLElement;
+    const order = shownOrder(element);
 
     try {
       expect(element.querySelector('.portfolio-grid')).not.toBeNull();
@@ -220,7 +226,13 @@ describe('AiModelPortfolioPage', () => {
       expect(element.querySelector('.portfolio-grid')).toBeNull();
       const feedItems = element.querySelectorAll('.feed-item');
       expect(feedItems.length).toBe(2);
-      expect(feedItems[0].textContent).toContain('Studio cover frame');
+      // The feed follows the shuffled order, so its captions are the album's captions.
+      const expectedCaptions = order.map(
+        (src) => profile.photos.find((photo) => photo.src === src)?.caption ?? '',
+      );
+      for (const [index, caption] of expectedCaptions.entries()) {
+        expect(feedItems[index].textContent).toContain(caption);
+      }
 
       element.querySelector<HTMLButtonElement>('.feed-photo')?.click();
       harness.detectChanges();
@@ -257,5 +269,73 @@ describe('AiModelPortfolioPage', () => {
     expect(nourhan?.album).toBe('NourhanDurrani');
     expect(nourhan?.handle).toBe('@nourhan.durrani');
     expect(nourhan?.tags.length).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * The shuffle is per visit, so these tests render the page component directly — two instances are
+ * two visits, where RouterTestingHarness would only allow one visit per test.
+ */
+describe('AiModelPortfolioPage photo shuffle', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AiModelPortfolioPage],
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap: of(convertToParamMap({ slug: 'test-studio-model' })),
+            snapshot: { paramMap: convertToParamMap({ slug: 'test-studio-model' }) },
+          },
+        },
+      ],
+    }).compileComponents();
+  });
+
+  function visit(): string[] {
+    const fixture = TestBed.createComponent(AiModelPortfolioPage);
+    fixture.detectChanges();
+    return shownOrder(fixture.nativeElement as HTMLElement);
+  }
+
+  it('re-arranges the album on every visit without losing or duplicating a frame', () => {
+    const profile = withPhotos(4);
+    const random = vi.spyOn(Math, 'random');
+    // Each visit to a 4-photo album consumes three random numbers.
+    random.mockReturnValueOnce(0).mockReturnValueOnce(0).mockReturnValueOnce(0);
+    random.mockReturnValueOnce(0.9).mockReturnValueOnce(0.9).mockReturnValueOnce(0.9);
+
+    try {
+      const firstOrder = visit();
+      const secondOrder = visit();
+
+      for (const order of [firstOrder, secondOrder]) {
+        expect(order.length).toBe(4);
+        expect([...order].sort()).toEqual(profile.photos.map((photo) => photo.src).sort());
+      }
+
+      expect(secondOrder).not.toEqual(firstOrder);
+    } finally {
+      random.mockRestore();
+      release(profile);
+    }
+  });
+
+  it('shufflePhotos returns a permutation and leaves the album untouched', () => {
+    const profile = withPhotos(6);
+    const album = profile.photos;
+
+    try {
+      const shuffled = shufflePhotos(album);
+      expect(shuffled.length).toBe(album.length);
+      expect([...shuffled].sort((a, b) => a.src.localeCompare(b.src))).toEqual(
+        [...album].sort((a, b) => a.src.localeCompare(b.src)),
+      );
+      expect(shuffled).not.toBe(album);
+      expect(album[0].src).toBe('/NeverBeenModels/TestStudioModel/frame-1.jpg');
+    } finally {
+      release(profile);
+    }
   });
 });

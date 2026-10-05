@@ -3,15 +3,6 @@
  * Regenerate with: npm run generate:ai-models
  */
 
-export interface AiModelRate {
-  /** Booking term name, e.g. "Half day". */
-  term: string;
-  /** What the term includes, e.g. "4 hours on set". */
-  detail: string;
-  /** Price of the term in US dollars. */
-  usd: number;
-}
-
 export interface AiModelPhoto {
   /** Public URL of the photograph. */
   src: string;
@@ -41,10 +32,10 @@ export interface AiModelProfile {
   availability: string;
   /** Directory display position (1-based); 0 when unspecified. */
   order: number;
-  /** Booking terms priced in USD — every model has its own rates. */
-  rates: AiModelRate[];
-  /** Note shown with the rates in the booking pop-up. */
-  rateNote: string;
+  /** Rate for a single photograph in INR — every model quotes her own. 0 when unpublished. */
+  photoRate: number;
+  /** Note shown with the rate in the booking pop-up. */
+  photoNote: string;
   /** Short profile introduction. */
   bio: string;
   /** Whether profile details are illustrative placeholders pending verification. */
@@ -70,14 +61,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: ['Editorial', 'Portrait', 'Campaign', 'Travel', 'Studio'],
     availability: 'Open for editorial and campaign bookings',
     order: 1,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 950 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1700 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4800 },
-      { term: 'Week', detail: '7 days, one booking', usd: 9800 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 550,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets. Nourhan moves easily between quiet editorial portraits and bold campaign frames, and she is at her best in natural light.',
     illustrative: true,
     gallery: [
@@ -138,14 +124,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 2,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 900 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1650 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4600 },
-      { term: 'Week', detail: '7 days, one booking', usd: 9400 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 570,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A polished, versatile presence imagined between bold architecture, soft light and new destinations.',
     illustrative: true,
     gallery: [],
@@ -165,14 +146,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 3,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 800 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1450 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4100 },
-      { term: 'Week', detail: '7 days, one booking', usd: 8300 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 540,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.',
     illustrative: true,
     gallery: [],
@@ -192,14 +168,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 4,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 880 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1600 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4500 },
-      { term: 'Week', detail: '7 days, one booking', usd: 9200 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 580,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.',
     illustrative: true,
     gallery: [],
@@ -219,14 +190,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 5,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 820 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1500 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4200 },
-      { term: 'Week', detail: '7 days, one booking', usd: 8600 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 560,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.',
     illustrative: true,
     gallery: [],
@@ -248,14 +214,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 6,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 780 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1400 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 3950 },
-      { term: 'Week', detail: '7 days, one booking', usd: 8100 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 530,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.',
     illustrative: true,
     gallery: [],
@@ -275,14 +236,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 7,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 900 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1620 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4550 },
-      { term: 'Week', detail: '7 days, one booking', usd: 9300 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 590,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.',
     illustrative: true,
     gallery: [],
@@ -302,14 +258,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 8,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 850 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1540 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4350 },
-      { term: 'Week', detail: '7 days, one booking', usd: 8900 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 555,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.',
     illustrative: true,
     gallery: [],
@@ -329,14 +280,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 9,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 760 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1380 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 3900 },
-      { term: 'Week', detail: '7 days, one booking', usd: 7950 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 520,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.',
     illustrative: true,
     gallery: [],
@@ -356,14 +302,9 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 10,
-    rates: [
-      { term: 'Half day', detail: '4 hours on set', usd: 920 },
-      { term: 'Full day', detail: '8 hours on set', usd: 1660 },
-      { term: 'Three days', detail: '3 x 8 hour days', usd: 4700 },
-      { term: 'Week', detail: '7 days, one booking', usd: 9600 },
-    ],
-    rateNote:
-      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    photoRate: 600,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'An understated editorial spirit with a confident point of view and an eye for sculptural details.',
     illustrative: true,
     gallery: [],

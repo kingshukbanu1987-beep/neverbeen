@@ -500,6 +500,33 @@
   color: var(--booking-muted);
 }
 
+.rate-per-photo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgb(239 106 165 / 26%);
+  border-radius: 14px;
+  background: linear-gradient(120deg, rgb(239 106 165 / 12%), rgb(255 255 255 / 2%));
+}
+
+.rate-per-photo b {
+  font-family: var(--serif, Georgia, serif);
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.rate-per-photo i {
+  color: var(--booking-muted);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .rate-list {
   display: grid;
   gap: 0.5rem;
@@ -564,6 +591,27 @@
   white-space: nowrap;
 }
 
+.rate-card.is-custom {
+  border-style: dashed;
+}
+
+.rate-card.is-custom .rate-copy b {
+  letter-spacing: 0.01em;
+}
+
+.rate-card.is-custom .rate-price {
+  color: var(--booking-pink);
+  font-family: var(--sans, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rate-card.is-custom.is-active .rate-price {
+  color: #fff;
+}
+
 .rate-empty {
   margin: 0;
   color: var(--booking-muted);
@@ -604,6 +652,13 @@
   font-style: normal;
   font-weight: 700;
   letter-spacing: 0.14em;
+}
+
+.booking-total b.is-quote {
+  color: var(--booking-pink);
+  font-size: 1.05rem;
+  font-style: italic;
+  font-weight: 600;
 }
 
 .booking-note {

@@ -27,7 +27,7 @@ const FIELD_LIMITS = {
   project: 120,
   usage: 160,
   notes: 1000,
-  term: 60,
+  label: 60,
   detail: 120,
   slug: 120,
   handle: 80,
@@ -67,7 +67,7 @@ function parseIsoDate(value) {
   return parsed;
 }
 
-/** Human-readable shoot date, e.g. "Fri, 24 Oct 2026". */
+/** Human-readable delivery date, e.g. "Fri, 24 Oct 2026". */
 export function formatShootDate(iso) {
   const parsed = parseIsoDate(iso);
   if (!parsed) return iso;
@@ -80,8 +80,9 @@ export function formatShootDate(iso) {
   }).format(parsed);
 }
 
-export function formatUsd(amount) {
-  return `$${Number(amount).toLocaleString('en-US')}`;
+/** Indian rupee amount, e.g. "₹5,500" (Indian digit grouping). */
+export function formatInr(amount) {
+  return `₹${Number(amount).toLocaleString('en-IN')}`;
 }
 
 /** Short, human-quotable reference such as "NB-7K2M4Q". */
@@ -106,29 +107,36 @@ export function validateBookingRequest(payload, now = new Date()) {
   const errors = {};
   const source = isRecord(payload) ? payload : {};
   const model = isRecord(source.model) ? source.model : {};
-  const term = isRecord(source.term) ? source.term : {};
+  const orderInput = isRecord(source.order) ? source.order : {};
   const bookingInput = isRecord(source.booking) ? source.booking : {};
   const clientInput = isRecord(source.client) ? source.client : {};
 
   const modelName = clean(model.name, FIELD_LIMITS.name);
-  const termName = clean(term.term, FIELD_LIMITS.term);
-  const usd = Number(term.usd);
+  const orderLabel = clean(orderInput.label, FIELD_LIMITS.label);
+  const custom = orderInput.custom === true;
+  const photos = Math.trunc(Number(orderInput.photos));
+  const ratePerPhoto = Math.trunc(Number(orderInput.ratePerPhoto));
+  const amount = Math.trunc(Number(orderInput.amount));
   const clientName = clean(clientInput.name, FIELD_LIMITS.name);
   const email = clean(clientInput.email, FIELD_LIMITS.email);
   const phone = clean(clientInput.phone, FIELD_LIMITS.phone);
   const date = clean(bookingInput.date, 10);
 
   if (!modelName) errors['model'] = 'The model could not be identified.';
-  if (!termName) errors['term'] = 'Choose a booking term.';
-  else if (!Number.isFinite(usd) || usd <= 0)
-    errors['term'] = 'Choose a booking term with a price.';
+  if (!orderLabel) errors['order'] = 'Choose how many photographs you need.';
+  else if (custom) {
+    // A customized order is quoted by the studio, so it carries no price yet.
+  } else if (!Number.isFinite(photos) || photos < 10)
+    errors['order'] = 'The minimum order is ten photographs.';
+  else if (!Number.isFinite(amount) || amount <= 0)
+    errors['order'] = 'That photo order does not have a price.';
 
-  if (!date) errors['date'] = 'Choose a shoot date.';
+  if (!date) errors['date'] = 'Choose a delivery date.';
   else {
     const parsed = parseIsoDate(date);
-    if (!parsed) errors['date'] = 'That shoot date is not a real date.';
+    if (!parsed) errors['date'] = 'That delivery date is not a real date.';
     else if (parsed.getTime() < startOfDay(now).getTime())
-      errors['date'] = 'The shoot date cannot be in the past.';
+      errors['date'] = 'The delivery date cannot be in the past.';
   }
 
   if (!clientName) errors['name'] = 'Add your name.';
@@ -150,8 +158,15 @@ export function validateBookingRequest(payload, now = new Date()) {
         slug: clean(model.slug, FIELD_LIMITS.slug),
         location: clean(model.location, FIELD_LIMITS.location),
       },
-      term: { term: termName, detail: clean(term.detail, FIELD_LIMITS.detail), usd },
-      shootDate: date,
+      order: {
+        label: orderLabel,
+        detail: clean(orderInput.detail, FIELD_LIMITS.detail),
+        photos: custom ? 0 : photos,
+        ratePerPhoto: Number.isFinite(ratePerPhoto) && ratePerPhoto > 0 ? ratePerPhoto : 0,
+        amount: custom ? 0 : amount,
+        custom,
+      },
+      deliveryDate: date,
       client: {
         name: clientName,
         email,
@@ -171,7 +186,7 @@ export function validateBookingRequest(payload, now = new Date()) {
 
 /** The WhatsApp message that reaches the founder. */
 export function buildBookingMessage(booking) {
-  const { model, term, client, brief } = booking;
+  const { model, order, client, brief } = booking;
   const lines = [
     '*New booking request — NeverBeen AI Models*',
     '',
@@ -179,12 +194,17 @@ export function buildBookingMessage(booking) {
     model.location ? `Based in ${model.location}` : '',
     model.slug ? `Portfolio: /ai-models/${model.slug}` : '',
     '',
-    '*Term*',
-    `${term.term}${term.detail ? ` — ${term.detail}` : ''}`,
-    `Price: ${formatUsd(term.usd)} USD`,
+    '*Order*',
+    order.custom
+      ? `${order.label} — selective charge`
+      : `${order.label}${order.detail ? ` — ${order.detail}` : ''}`,
+    order.custom
+      ? 'Price: quoted by the studio after reviewing the brief'
+      : `Rate: ${formatInr(order.ratePerPhoto)} per photo`,
+    order.custom ? '' : `Total: ${formatInr(order.amount)} INR`,
     '',
-    '*Shoot date*',
-    formatShootDate(booking.shootDate),
+    '*Delivery date*',
+    formatShootDate(booking.deliveryDate),
     '',
     '*Client*',
     `Name: ${client.name}`,

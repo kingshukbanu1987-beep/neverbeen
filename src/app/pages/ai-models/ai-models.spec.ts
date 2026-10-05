@@ -64,18 +64,40 @@ describe('AiModelsPage', () => {
     }
   });
 
-  it('publishes per-model booking rates in USD that differ between models', () => {
+  it('publishes a per-photo rate in INR for every model, starting at ₹550', () => {
     for (const profile of aiModelProfiles) {
-      expect(profile.rates.length, `${profile.name} booking terms`).toBeGreaterThan(0);
-      for (const rate of profile.rates) {
-        expect(rate.term).toBeTruthy();
-        expect(rate.usd).toBeGreaterThan(0);
-      }
-      expect(profile.rateNote).toBeTruthy();
+      expect(profile.photoRate, `${profile.name} photo rate`).toBeGreaterThan(0);
+      expect(profile.photoNote).toContain('INR');
     }
 
-    const firstTerms = aiModelProfiles.map((profile) => profile.rates[0].usd);
-    expect(new Set(firstTerms).size).toBeGreaterThan(1);
+    // The entry rate is ₹550 a photograph; the models vary slightly around it.
+    expect(aiModelProfiles[0].photoRate).toBe(550);
+    expect(Math.min(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(520);
+    expect(Math.max(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(600);
+  });
+
+  it('keeps the header to a short, graphic-free title', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const hero = element.querySelector('.studio-hero');
+
+    expect(hero?.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
+    expect(hero?.textContent).toContain('model profiles');
+    expect(hero?.textContent).toContain('per photograph');
+
+    // No decorative artwork, glow layers or scroll cue in the header.
+    for (const selector of [
+      '.hero-art',
+      '.hero-gridlines',
+      '.hero-glow',
+      '.scroll-cue',
+      '.hero-content',
+      '.hero-footer',
+    ]) {
+      expect(element.querySelector(selector), selector).toBeNull();
+    }
   });
 
   it('renders a designed portrait placeholder when an original cover is not available', () => {

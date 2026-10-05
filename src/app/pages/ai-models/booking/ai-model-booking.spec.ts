@@ -62,7 +62,8 @@ describe('Rent this model', () => {
     expect(backdrop?.getAttribute('role')).toBe('dialog');
     expect(backdrop?.getAttribute('aria-modal')).toBe('true');
     expect(panel.textContent).toContain('Book a shoot');
-    expect(panel.textContent).toContain('Rates per term');
+    expect(panel.textContent).toContain('Select a Delivery Date?');
+    expect(panel.textContent).toContain('Rate per Photo');
     expect(panel.querySelector('.calendar')?.textContent).toBeTruthy();
     expect(panel.querySelectorAll('.rate-card').length).toBeGreaterThan(0);
     expect(document.body.style.overflow).toBe('hidden');
@@ -86,33 +87,50 @@ describe('Rent this model', () => {
     expect(tags).toEqual(NOURHAN.tags);
   });
 
-  it('lists every booking term in USD with the model’s own rates and a running total', async () => {
+  it('prices every photo package in INR at the model’s own per-photo rate', async () => {
     const { harness, element } = await openDialog();
     const panel = dialog(element);
 
-    const rateCards = Array.from(panel.querySelectorAll<HTMLButtonElement>('.rate-card'));
-    expect(rateCards.length).toBe(NOURHAN.rates.length);
+    expect(panel.querySelector('.rate-per-photo')?.textContent).toContain(
+      `₹${NOURHAN.photoRate.toLocaleString('en-IN')}`,
+    );
 
-    for (const [index, rate] of NOURHAN.rates.entries()) {
-      expect(rateCards[index].textContent).toContain(rate.term);
-      expect(rateCards[index].textContent).toContain(`$${rate.usd.toLocaleString('en-US')}`);
+    const rateCards = Array.from(panel.querySelectorAll<HTMLButtonElement>('.rate-card'));
+    expect(rateCards.length).toBe(5);
+
+    const photos = [10, 25, 50, 100];
+    for (const [index, count] of photos.entries()) {
+      const amount = count * NOURHAN.photoRate;
+      expect(rateCards[index].textContent).toContain(`${count} photographs`);
+      expect(rateCards[index].textContent).toContain(`₹${amount.toLocaleString('en-IN')}`);
     }
 
-    // The first term is selected by default and drives the total.
+    // The customized order is the last card and carries no price.
+    const custom = rateCards[4];
+    expect(custom.textContent).toContain('Customized order');
+    expect(custom.textContent).toContain('On request');
+    expect(custom.classList.contains('is-custom')).toBe(true);
+
+    // The minimum package is selected by default and drives the total.
     expect(panel.querySelector('.booking-total')?.textContent).toContain(
-      `$${NOURHAN.rates[0].usd.toLocaleString('en-US')}`,
+      `₹${(10 * NOURHAN.photoRate).toLocaleString('en-IN')}`,
     );
 
-    // Choosing another term updates the selection and the total.
-    rateCards[1].click();
+    // Choosing a larger package updates the selection and the total.
+    rateCards[2].click();
     tick(harness);
-    expect(rateCards[1].classList.contains('is-active')).toBe(true);
+    expect(rateCards[2].classList.contains('is-active')).toBe(true);
     expect(panel.querySelector('.booking-total')?.textContent).toContain(
-      `$${NOURHAN.rates[1].usd.toLocaleString('en-US')}`,
+      `₹${(50 * NOURHAN.photoRate).toLocaleString('en-IN')}`,
     );
+
+    // The customized order asks for a quote instead of showing a price.
+    rateCards[4].click();
+    tick(harness);
+    expect(panel.querySelector('.booking-total')?.textContent).toContain('Selective charge');
   });
 
-  it('renders a calendar that blocks past dates and records the chosen shoot date', async () => {
+  it('renders a delivery-date calendar that blocks past dates and records the choice', async () => {
     const { harness, element } = await openDialog();
     const panel = dialog(element);
 
@@ -185,7 +203,7 @@ describe('Rent this model', () => {
     const panel = dialog(element);
     const target = futureIsoDate(5);
 
-    // Term, shoot date and contact details.
+    // Package, delivery date and contact details.
     panel.querySelectorAll<HTMLButtonElement>('.rate-card')[2].click();
     panel.querySelector<HTMLButtonElement>(`.calendar-day[data-date="${target}"]`)!.click();
     tick(harness);
@@ -221,8 +239,11 @@ describe('Rent this model', () => {
     const body = calls[0].body;
     expect(body.model.name).toBe('Nourhan Durrani');
     expect(body.model.slug).toBe('nourhan-durrani');
-    expect(body.term.term).toBe(NOURHAN.rates[2].term);
-    expect(body.term.usd).toBe(NOURHAN.rates[2].usd);
+    expect(body.order.label).toBe('50 photographs');
+    expect(body.order.photos).toBe(50);
+    expect(body.order.ratePerPhoto).toBe(NOURHAN.photoRate);
+    expect(body.order.amount).toBe(50 * NOURHAN.photoRate);
+    expect(body.order.custom).toBe(false);
     expect(body.booking.date).toBe(target);
     expect(body.booking.project).toBeTruthy();
     expect(body.booking.location).toBe('Kuala Lumpur');
@@ -317,7 +338,7 @@ describe('Rent this model', () => {
   });
 
   it('keeps a model without published rates usable', async () => {
-    const profile: AiModelProfile = { ...NOURHAN, slug: 'rate-test-model', rates: [] };
+    const profile: AiModelProfile = { ...NOURHAN, slug: 'rate-test-model', photoRate: 0 };
     aiModelProfiles.push(profile);
 
     try {
