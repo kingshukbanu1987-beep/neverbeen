@@ -604,9 +604,24 @@ ${entries}
 `;
 }
 
+/**
+ * The manifest is committed, so it is written in the project's Prettier style: without this every
+ * `npm start`/`npm run build` would leave the same file looking modified. Prettier is optional — if
+ * it cannot be loaded the raw manifest is written instead.
+ */
+async function formatSource(source) {
+  try {
+    const prettier = await import('prettier');
+    const config = (await prettier.resolveConfig(outputFile)) ?? {};
+    return await prettier.format(source, { ...config, filepath: outputFile });
+  } catch {
+    return source;
+  }
+}
+
 const profiles = buildProfiles();
 mkdirSync(dirname(outputFile), { recursive: true });
-writeFileSync(outputFile, renderTypeScript(profiles), 'utf8');
+writeFileSync(outputFile, await formatSource(renderTypeScript(profiles)), 'utf8');
 console.log(
   `[ai-models] Wrote ${relative(projectRoot, outputFile)} — ${profiles.length} model portfolio${profiles.length === 1 ? '' : 's'}.`,
 );
