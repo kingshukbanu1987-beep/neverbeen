@@ -58,8 +58,10 @@ placeholder until images are dropped into the album folder.
 }
 ```
 
-4. Run `npm run generate:ai-models`, or use `npm start` / `npm run build` (both regenerate the
-   manifest automatically).
+4. Nothing else to do. The album watcher that runs with `npm start` regenerates the manifest the
+   moment photographs land in a folder, and `npm run build` regenerates it as part of the build —
+   dropping images into `public/NeverBeenModels/<ModelName>/` (or adding a whole new folder) is
+   enough. `npm run generate:ai-models` refreshes it by hand if ever needed.
 
 The portfolio shows the cover, handle, location, age, height, weight, body shape, tags,
 availability and short introduction. Facts that have not been supplied are labelled **Details to be

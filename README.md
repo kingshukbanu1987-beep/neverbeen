@@ -90,12 +90,13 @@ until verified.
 Each model owns one album folder inside `public/NeverBeenModels`, named after the model with no
 spaces (for example `public/NeverBeenModels/NourhanDurrani`). Drop the model's photographs into that
 folder and they appear in the portfolio grid; the first image (or the one named `cover.*`) is used as
-the cover and avatar. Optional details live in `<album>/profile.json` or in
-`data/ai-models/profiles.json` — see `data/ai-models/README.md` for the metadata format and
-`public/NeverBeenModels/README.md` for the folder layout. The legacy
-`public/ai-model-assets/portraits` and `public/ai-model-assets/gallery` folders remain supported.
-Refresh the manifest with `npm run generate:ai-models`; `npm start` and `npm run build` run it
-automatically.
+the cover and avatar. Nothing needs to be run or edited: while `npm start` is running an album
+watcher regenerates the manifest as the files land and the dev server reloads the page, `npm run
+build` refreshes it in its prebuild step, and a brand-new folder becomes a new portfolio page on its
+own. Optional details live in `<album>/profile.json` or in `data/ai-models/profiles.json` — see
+`data/ai-models/README.md` for the metadata format and `public/NeverBeenModels/README.md` for the
+folder layout. The legacy `public/ai-model-assets/portraits` and `public/ai-model-assets/gallery`
+folders remain supported.
 
 Photographs attached in Arena chat land in `/home/user/uploads` as UUID-named files. Run
 

@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "prestart": "node scripts/generate-collection.mjs && node scripts/generate-ai-models.mjs",
-    "start": "ng serve",
+    "start": "node scripts/dev.mjs",
+    "serve": "ng serve",
     "prebuild": "node scripts/generate-collection.mjs && node scripts/generate-ai-models.mjs",
     "build": "ng build",
     "generate:collection": "node scripts/generate-collection.mjs",

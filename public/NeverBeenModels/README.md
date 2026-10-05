@@ -18,10 +18,17 @@ public/NeverBeenModels/
 
 1. Open the model's folder (create it with the model's name and no spaces if it does not exist yet)
    and drop the images in — `jpg`, `jpeg`, `png`, `webp`, `avif` and `gif` are supported.
-2. Keep the cover portrait named exactly as listed in `data/ai-models/profiles.json`
+2. That is all. Nothing has to be run or edited: the album watcher regenerates the portfolio
+   manifest as soon as the files land, and the running site picks them up on its own.
+   - While `npm start` is running, the watcher refreshes the manifest and the dev server reloads the
+     page — a photograph dropped into a folder appears in that model's grid within seconds.
+   - `npm run build` refreshes the manifest in its prebuild step, so a deployment always carries
+     whatever is in the folders.
+   - To refresh it by hand at any time, run `npm run generate:ai-models`.
+   - A brand-new folder with photographs in it becomes a new portfolio page automatically.
+3. Optional: keep the cover portrait named exactly as listed in `data/ai-models/profiles.json`
    (for example `Nourhan Durrani.png`), or name it `cover.*`, or point at it with the `cover` field
    of the folder's `profile.json`.
-3. Run `npm run generate:ai-models`. `npm start` and `npm run build` run it automatically.
 
 Photographs are listed cover first, then in natural filename order. Set `photos` in `profile.json`
 to choose the exact order, and use `captions` to give a frame its own caption in the pop-up.
