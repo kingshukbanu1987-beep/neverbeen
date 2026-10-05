@@ -68,7 +68,7 @@ export class StorylinePage {
       story: [
         'Before they married, Lotte and Bram drew a tiny blue train on the back of their wedding invitation. It marked the honeymoon they imagined: Lucerne by rail, a slow afternoon beside Lake Brienz, and no alarm set for the next morning.',
         'Then work kept asking for one more thing. A teammate was away; a launch slipped; urgent shifts landed on the same dates. Their leave requests moved from spring to autumn, then off the calendar. They could afford the idea. What they could not find was a clear week when both of them could step away without letting someone down.',
-        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The photographs here are imagined—not evidence of a trip. They gave the couple a picture to place beside the invitation, and a way to keep the promise visible until life makes room.',
+        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
       ],
       reason:
         'They chose NeverBeen for a personal, imagined keepsake while work pressure kept shifting their plans—not to pretend the honeymoon had happened, but to honour a promise they still hope to keep.',
@@ -95,6 +95,156 @@ export class StorylinePage {
           src: '/storyline/05-lotte-bram-mountain-cafe.jpg',
           alt: 'AI-generated illustration of a couple studying a map at a mountain café.',
           caption: 'An unhurried stop for coffee and a map',
+        },
+        {
+          src: '/storyline/309-lotte-bram-switzerland-lucerne-chapel-bridge.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera wide-angle snapshot of fictional Lotte and Bram walking across Lucerne’s wooden Chapel Bridge in rain jackets, with a softly blurred hand at the edge of the frame.',
+          caption: 'A crooked walk across Chapel Bridge',
+        },
+        {
+          src: '/storyline/310-lotte-bram-switzerland-lucerne-cafe-map-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s wedding-ringed hands meeting over a folded Swiss rail map and two coffees in a Lucerne café, with a small blue train doodle on their invitation.',
+          caption: 'Their little blue train, over coffee',
+        },
+        {
+          src: '/storyline/311-lotte-bram-switzerland-brienz-lakeside-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte and Bram cheek-to-cheek at a Lake Brienz landing, with windblown hair and bright water behind them; the phone is not visible.',
+          caption: 'A close selfie beside Lake Brienz',
+        },
+        {
+          src: '/storyline/312-lotte-bram-switzerland-lauterbrunnen-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera portrait of fictional Lotte and Bram laughing together in a Lauterbrunnen meadow, with Staubbach Falls in the background and an imperfectly cropped edge.',
+          caption: 'A laugh beneath the Lauterbrunnen falls',
+        },
+        {
+          src: '/storyline/313-lotte-bram-switzerland-interlaken-train-candid.jpg',
+          alt: 'AI-generated, slightly tilted candid mobile snapshot of fictional Lotte and Bram on a regional train leaving Interlaken, with window glare and a little motion blur across the lake outside.',
+          caption: 'The view slipping past the train window',
+        },
+        {
+          src: '/storyline/314-lotte-bram-switzerland-grindelwald-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle photo of fictional Lotte and Bram on a Grindelwald trail beneath the peaks, with a thumb partly intruding into the lower corner.',
+          caption: 'Small figures under the Grindelwald peaks',
+        },
+        {
+          src: '/storyline/315-lotte-bram-switzerland-wengen-cafe-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of a shared apple tart, coffee cups and map on a Wengen café table, with fictional Lotte and Bram’s sleeves and hands at the edges and crumbs left behind.',
+          caption: 'Crumbs and coffee in Wengen',
+        },
+        {
+          src: '/storyline/316-lotte-bram-switzerland-oeschinen-romantic-kiss.jpg',
+          alt: 'AI-generated, slightly tilted mobile snapshot of fictional Bram kissing Lotte’s forehead beside Lake Oeschinen, with windblown hair, a soft-focus edge and the lake behind them.',
+          caption: 'A quiet forehead kiss by the lake',
+        },
+        {
+          src: '/storyline/317-lotte-bram-switzerland-murren-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte and Bram in a flower-lined Mürren lane, with an awkwardly cropped beanie and softly blurred chalets behind them; the phone is not visible.',
+          caption: 'A beanie-weather selfie in Mürren',
+        },
+        {
+          src: '/storyline/318-lotte-bram-switzerland-lucerne-dusk-candid.jpg',
+          alt: 'AI-generated, slightly tilted low-light mobile snapshot of fictional Lotte and Bram sharing a scarf on a Lucerne lakeside bench after dusk, with grain, slight hand-shake blur and a streetlamp flare.',
+          caption: 'The lake after the lights came on',
+        },
+        {
+          src: '/storyline/319-lotte-bram-switzerland-goldenpass-train-candid.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera snapshot of fictional Lotte and Bram on a Swiss train journey between Interlaken and Gstaad, with a soft window reflection and motion blur in the valley.',
+          caption: 'The GoldenPass route, watched from the window',
+        },
+        {
+          src: '/storyline/320-lotte-bram-switzerland-train-ticket-map-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s wedding-ringed hands on a folded Swiss rail map and two punched train tickets, with an imperfect focus edge.',
+          caption: 'Two tickets and the route between them',
+        },
+        {
+          src: '/storyline/321-lotte-bram-interlaken-hohematte-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle photo of fictional Lotte and Bram walking across Interlaken’s Hohematte meadow beneath the Jungfrau, with a thumb softening one corner.',
+          caption: 'A long walk across Hohematte',
+        },
+        {
+          src: '/storyline/322-lotte-bram-interlaken-aare-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte and Bram beside the turquoise Aare River in Interlaken, with windblown hair and bright highlights; the phone is not visible.',
+          caption: 'A river-side selfie in Interlaken',
+        },
+        {
+          src: '/storyline/323-lotte-bram-gstaad-chalet-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera portrait of fictional Lotte and Bram laughing outside a snowy Gstaad chalet, with a softly blurred edge and natural winter light.',
+          caption: 'A laugh outside a Gstaad chalet',
+        },
+        {
+          src: '/storyline/324-lotte-bram-gstaad-village-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte and Bram walking through a snow-dusted Gstaad village lane, with one boot awkwardly cropped and a chalet window overexposed.',
+          caption: 'A crooked walk through Gstaad',
+        },
+        {
+          src: '/storyline/325-lotte-bram-lake-brienz-steamer-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte and Bram aboard a Lake Brienz passenger steamer, with windblown hair and a softly blurred boat rail; the phone is not visible.',
+          caption: 'A windy boat-deck selfie',
+        },
+        {
+          src: '/storyline/326-lotte-bram-lake-brienz-boat-rail-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s wedding-ringed hands on a wet wooden boat rail above Lake Brienz, with water droplets and a hazy lens corner.',
+          caption: 'Rings, rain drops and lake water',
+        },
+        {
+          src: '/storyline/327-lotte-bram-lake-brienz-jetty-romantic.jpg',
+          alt: 'AI-generated, slightly tilted candid mobile snapshot of fictional Lotte and Bram touching foreheads and laughing on a Lake Brienz jetty, with a soft-focus corner and evening blur on the water.',
+          caption: 'Foreheads together before sunset',
+        },
+        {
+          src: '/storyline/328-lotte-bram-gstaad-cafe-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte and Bram squeezed together at a Gstaad café window with steaming mugs and fogged glass; the phone is not visible.',
+          caption: 'Warm mugs after a cold village walk',
+        },
+        {
+          src: '/storyline/329-lotte-bram-glacier-express-boarding.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera snapshot of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf boarding the Glacier Express at Zermatt, with a blurred fingertip in one corner.',
+          caption: 'Boarding the Glacier Express at Zermatt',
+        },
+        {
+          src: '/storyline/330-lotte-bram-glacier-express-front-train-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf standing in front of the red-and-white Glacier Express, with a soft-focus edge.',
+          caption: 'A quick portrait beside the carriage',
+        },
+        {
+          src: '/storyline/331-lotte-bram-glacier-express-ticket-map-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s wedding-ringed hands, camel coat cuff and navy quilted sleeve beside Glacier Express tickets and a folded rail map.',
+          caption: 'Tickets and the route on the little table',
+        },
+        {
+          src: '/storyline/332-lotte-bram-glacier-express-panoramic-window.jpg',
+          alt: 'AI-generated, slightly tilted mobile snapshot of fictional Lotte in the same camel coat and burgundy scarf and Bram in the same navy quilted jacket and olive scarf watching snowy peaks through a Glacier Express panoramic window, with faint reflection glare.',
+          caption: 'The view from their window seat',
+        },
+        {
+          src: '/storyline/333-lotte-bram-glacier-express-wide-interior.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle photo of fictional Lotte and Bram in their matching camel and navy travel outfits seated in the panoramic Glacier Express carriage, with bright snow outside and imperfect window exposure.',
+          caption: 'A wide carriage view over the Oberalp Pass',
+        },
+        {
+          src: '/storyline/334-lotte-bram-glacier-express-romantic-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf leaning cheek-to-cheek on the Glacier Express; the phone is not visible.',
+          caption: 'A cheek-to-cheek train selfie',
+        },
+        {
+          src: '/storyline/335-lotte-bram-glacier-express-dining-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s hands sharing a pastry and tea on the Glacier Express, with her camel sleeve and burgundy scarf and his navy quilted cuff visible.',
+          caption: 'Tea, pastry and crumbs between stations',
+        },
+        {
+          src: '/storyline/336-lotte-bram-glacier-express-andermatt-platform.jpg',
+          alt: 'AI-generated, slightly tilted mobile snapshot of fictional Lotte in the same camel coat and burgundy scarf and Bram in the same navy quilted jacket and olive scarf during an Andermatt platform stop, with blurred passengers behind them.',
+          caption: 'A short stop on the Andermatt platform',
+        },
+        {
+          src: '/storyline/337-lotte-bram-glacier-express-window-reflection-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte and Bram in their matching camel and navy outfits reflected in the Glacier Express window, with river scenery and soft glare doubled in the glass.',
+          caption: 'Two reflections in the panoramic glass',
+        },
+        {
+          src: '/storyline/338-lotte-bram-glacier-express-st-moritz-arrival-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf arriving beside the Glacier Express in St. Moritz, with a passer-by blurred in the foreground.',
+          caption: 'The train at the end of the imagined line',
         },
       ],
     },

@@ -26,7 +26,7 @@ describe('StorylinePage', () => {
     expect(element.querySelector('.transparency')?.textContent).toContain('not real customer');
   });
 
-  it('shows the original and requested albums with the right sequence and all 251 frames', () => {
+  it('shows the original and requested albums with the right sequence and all 285 frames', () => {
     const element: HTMLElement = create().nativeElement;
     const albums = Array.from(element.querySelectorAll<HTMLElement>('.story-album'));
 
@@ -58,7 +58,7 @@ describe('StorylinePage', () => {
       albums.map((album) => album.querySelector('.cover-index strong')?.textContent?.trim()),
     ).toEqual(['01', '02', '03', '04', '05', '06', '07', '08', '09']);
     expect(albums.map((album) => album.querySelectorAll('.album-photo').length)).toEqual([
-      73, 74, 84, 4, 4, 4, 4, 4, 4,
+      73, 74, 84, 34, 4, 4, 4, 4, 4,
     ]);
     expect(
       albums.every((album) => album.querySelectorAll('.cover-photo-button').length === 1),
@@ -71,16 +71,176 @@ describe('StorylinePage', () => {
       ),
     ).toBe(true);
     expect(element.querySelectorAll('.photo-label, .lightbox-ai-label')).toHaveLength(0);
-    expect(element.querySelectorAll('.album-photo img')).toHaveLength(255);
+    expect(element.querySelectorAll('.album-photo img')).toHaveLength(285);
     expect(element.querySelectorAll('.album-index')).toHaveLength(0);
     expect(element.querySelector('.albums-heading')?.textContent).toContain('Nine stories');
     expect(element.querySelector('.albums-heading')?.textContent).toContain(
-      'two hundred and fifty-five imagined frames',
+      'two hundred and eighty-five imagined frames',
     );
     expect(element.querySelector('.albums-heading')?.textContent).not.toContain('Album sizes vary');
     expect(albums[0].querySelector('.cover-frame-count')?.textContent).toContain('73 FRAMES');
     expect(albums[1].querySelector('.cover-frame-count')?.textContent).toContain('74 FRAMES');
     expect(albums[2].querySelector('.cover-frame-count')?.textContent).toContain('84 FRAMES');
+    expect(albums[3].querySelector('.cover-frame-count')?.textContent).toContain('34 FRAMES');
+  });
+
+  it('keeps the first ten mixed-style mobile photos matching Lotte and Bram in Storyline 4', () => {
+    const element: HTMLElement = create().nativeElement;
+    const switzerlandAlbum = element.querySelector<HTMLElement>('#switzerland-honeymoon')!;
+    const galleryImages = Array.from(
+      switzerlandAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/309-lotte-bram-switzerland-lucerne-chapel-bridge.jpg',
+      '/storyline/310-lotte-bram-switzerland-lucerne-cafe-map-macro.jpg',
+      '/storyline/311-lotte-bram-switzerland-brienz-lakeside-selfie.jpg',
+      '/storyline/312-lotte-bram-switzerland-lauterbrunnen-portrait.jpg',
+      '/storyline/313-lotte-bram-switzerland-interlaken-train-candid.jpg',
+      '/storyline/314-lotte-bram-switzerland-grindelwald-wide.jpg',
+      '/storyline/315-lotte-bram-switzerland-wengen-cafe-macro.jpg',
+      '/storyline/316-lotte-bram-switzerland-oeschinen-romantic-kiss.jpg',
+      '/storyline/317-lotte-bram-switzerland-murren-selfie.jpg',
+      '/storyline/318-lotte-bram-switzerland-lucerne-dusk-candid.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(34);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => /Lotte/.test(image.alt) && /Bram/.test(image.alt))).toBe(
+      true,
+    );
+    expect(addedPhotos.every((image) => /AI-generated/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/wide-angle/i);
+    expect(addedDescriptions).toMatch(/selfie/i);
+    expect(addedDescriptions).toMatch(/motion blur|glare|thumb|grain|cropped|flare/i);
+    expect(
+      addedPhotos
+        .filter((image) => /selfie/i.test(image.alt))
+        .every((image) => /phone is not visible/i.test(image.alt)),
+    ).toBe(true);
+    expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
+      '34 FRAMES',
+    );
+    expect(switzerlandAlbum.querySelector('.cover-index strong')?.textContent?.trim()).toBe('04');
+  });
+
+  it('adds ten more tilted mobile photos around Interlaken, Gstaad, Lake Brienz and the Swiss train to Storyline 4', () => {
+    const element: HTMLElement = create().nativeElement;
+    const switzerlandAlbum = element.querySelector<HTMLElement>('#switzerland-honeymoon')!;
+    const galleryImages = Array.from(
+      switzerlandAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/319-lotte-bram-switzerland-goldenpass-train-candid.jpg',
+      '/storyline/320-lotte-bram-switzerland-train-ticket-map-macro.jpg',
+      '/storyline/321-lotte-bram-interlaken-hohematte-wide.jpg',
+      '/storyline/322-lotte-bram-interlaken-aare-selfie.jpg',
+      '/storyline/323-lotte-bram-gstaad-chalet-portrait.jpg',
+      '/storyline/324-lotte-bram-gstaad-village-wide.jpg',
+      '/storyline/325-lotte-bram-lake-brienz-steamer-selfie.jpg',
+      '/storyline/326-lotte-bram-lake-brienz-boat-rail-macro.jpg',
+      '/storyline/327-lotte-bram-lake-brienz-jetty-romantic.jpg',
+      '/storyline/328-lotte-bram-gstaad-cafe-selfie.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(34);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => /Lotte/.test(image.alt) && /Bram/.test(image.alt))).toBe(
+      true,
+    );
+    expect(addedPhotos.every((image) => /AI-generated/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/wide-angle/i);
+    expect(addedDescriptions).toMatch(/selfie/i);
+    expect(addedDescriptions).toMatch(/Interlaken/i);
+    expect(addedDescriptions).toMatch(/Gstaad/i);
+    expect(addedDescriptions).toMatch(/Lake Brienz/i);
+    expect(addedDescriptions).toMatch(/train journey/i);
+    expect(addedDescriptions).toMatch(/blur|thumb|grain|overexposed|cropped|smudge/i);
+    expect(
+      addedPhotos
+        .filter((image) => /selfie/i.test(image.alt))
+        .every((image) => /phone is not visible/i.test(image.alt)),
+    ).toBe(true);
+    expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
+      '34 FRAMES',
+    );
+  });
+
+  it('adds ten same-outfit Glacier Express mobile photos to Storyline 4', () => {
+    const element: HTMLElement = create().nativeElement;
+    const switzerlandAlbum = element.querySelector<HTMLElement>('#switzerland-honeymoon')!;
+    const galleryImages = Array.from(
+      switzerlandAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
+    );
+    const addedPhotoSources = [
+      '/storyline/329-lotte-bram-glacier-express-boarding.jpg',
+      '/storyline/330-lotte-bram-glacier-express-front-train-portrait.jpg',
+      '/storyline/331-lotte-bram-glacier-express-ticket-map-macro.jpg',
+      '/storyline/332-lotte-bram-glacier-express-panoramic-window.jpg',
+      '/storyline/333-lotte-bram-glacier-express-wide-interior.jpg',
+      '/storyline/334-lotte-bram-glacier-express-romantic-selfie.jpg',
+      '/storyline/335-lotte-bram-glacier-express-dining-macro.jpg',
+      '/storyline/336-lotte-bram-glacier-express-andermatt-platform.jpg',
+      '/storyline/337-lotte-bram-glacier-express-window-reflection-portrait.jpg',
+      '/storyline/338-lotte-bram-glacier-express-st-moritz-arrival-wide.jpg',
+    ];
+    const addedPhotos = galleryImages.filter((image) =>
+      addedPhotoSources.includes(image.getAttribute('src') ?? ''),
+    );
+    const addedDescriptions = addedPhotos.map((image) => image.alt).join(' ');
+
+    expect(galleryImages).toHaveLength(34);
+    expect(addedPhotos).toHaveLength(10);
+    expect(addedPhotos.map((image) => image.getAttribute('src')).sort()).toEqual(
+      [...addedPhotoSources].sort(),
+    );
+    expect(addedPhotos.every((image) => /Lotte/.test(image.alt) && /Bram/.test(image.alt))).toBe(
+      true,
+    );
+    expect(addedPhotos.every((image) => /AI-generated/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /mobile/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /tilted/i.test(image.alt))).toBe(true);
+    expect(addedPhotos.every((image) => /camel/i.test(image.alt) && /navy/i.test(image.alt))).toBe(
+      true,
+    );
+    expect(addedDescriptions).toMatch(/boarding/i);
+    expect(addedDescriptions).toMatch(/portrait/i);
+    expect(addedDescriptions).toMatch(/macro/i);
+    expect(addedDescriptions).toMatch(/wide-angle/i);
+    expect(addedDescriptions).toMatch(/selfie/i);
+    expect(addedDescriptions).toMatch(/Andermatt/i);
+    expect(addedDescriptions).toMatch(/St\. Moritz/i);
+    expect(addedDescriptions).toMatch(/blur|glare|grain|cropped|soft-focus|finger/i);
+    expect(
+      addedPhotos
+        .filter((image) => /selfie/i.test(image.alt))
+        .every((image) => /phone is not visible/i.test(image.alt)),
+    ).toBe(true);
+    expect(switzerlandAlbum.querySelector('.cover-frame-count')?.textContent).toContain(
+      '34 FRAMES',
+    );
+    expect(switzerlandAlbum.textContent).toContain('same travel-day clothes throughout');
   });
 
   it('adds ten mixed-style Paris photos matching Ananya to Storyline 3', () => {
@@ -1552,7 +1712,7 @@ describe('StorylinePage', () => {
       firstAlbum.querySelectorAll<HTMLImageElement>('.album-photo img'),
     ).map((image) => image.getAttribute('src'));
     const photoButtons = firstAlbum.querySelectorAll<HTMLButtonElement>('.photo-open-button');
-    expect(gallerySources).toHaveLength(4);
+    expect(gallerySources).toHaveLength(34);
 
     photoButtons[2].click();
     fixture.detectChanges();
@@ -1563,7 +1723,7 @@ describe('StorylinePage', () => {
     expect(firstAlbum.querySelectorAll('.photo-label')).toHaveLength(0);
     expect(element.querySelectorAll('.lightbox-ai-label')).toHaveLength(0);
     expect(element.querySelector('.story-lightbox')?.textContent).not.toMatch(/AI illustration/i);
-    expect(element.querySelector('.lightbox-position')?.textContent).toContain('3 / 4');
+    expect(element.querySelector('.lightbox-position')?.textContent).toContain('3 / 34');
 
     (element.querySelector('.lightbox-arrow.next') as HTMLButtonElement).click();
     fixture.detectChanges();
