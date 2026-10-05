@@ -68,7 +68,7 @@ export class StorylinePage {
       story: [
         'Before they married, Lotte and Bram drew a tiny blue train on the back of their wedding invitation. It marked the honeymoon they imagined: Lucerne by rail, a slow afternoon beside Lake Brienz, and no alarm set for the next morning.',
         'Then work kept asking for one more thing. A teammate was away; a launch slipped; urgent shifts landed on the same dates. Their leave requests moved from spring to autumn, then off the calendar. They could afford the idea. What they could not find was a clear week when both of them could step away without letting someone down.',
-        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. The next stop wanders Zermatt’s shop-lined streets, pauses at a bakery and small local stores, and catches Lotte and Bram with friendly shopkeepers and two friends from the train in the same outfits. Another slow turn follows Zermatt’s old Hinterdorf lanes and a few smaller stalls, with more moments beside a local florist, shopkeepers and their train friends; Lotte and Bram stay in those same clothes. A separate snowy chapter follows Lotte on her own beneath the Matterhorn; she wanders empty mountain trails and pauses for frost, boot prints, wide views and solo selfies in one consistent winter outfit. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
+        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. The next stop wanders Zermatt’s shop-lined streets, pauses at a bakery and small local stores, and catches Lotte and Bram with friendly shopkeepers and two friends from the train in the same outfits. Another slow turn follows Zermatt’s old Hinterdorf lanes and a few smaller stalls, with more moments beside a local florist, shopkeepers and their train friends; Lotte and Bram stay in those same clothes. A separate snowy chapter follows Lotte on her own beneath the Matterhorn; she wanders empty mountain trails and pauses for frost, boot prints, wide views and solo selfies in one consistent winter outfit. A final sequence picks up later that night in a Swiss hotel room: Lotte and Bram unwind together in the same ivory-and-navy cotton sleepwear throughout, sharing cocoa, linked hands and phone-out-of-frame selfies beneath a bedside lamp. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
       ],
       reason:
         'They chose NeverBeen for a personal, imagined keepsake while work pressure kept shifting their plans—not to pretend the honeymoon had happened, but to honour a promise they still hope to keep.',
@@ -395,6 +395,56 @@ export class StorylinePage {
           src: '/storyline/368-lotte-matterhorn-sunset-wide.jpg',
           alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte alone in her rust-red parka, cream wool scarf, charcoal beanie, black snow trousers and tan boots on a snowy Matterhorn overlook at pink dusk, with a little edge blur and uneven snow exposure.',
           caption: 'The last light on the snowy Matterhorn',
+        },
+        {
+          src: '/storyline/369-lotte-bram-switzerland-hotel-night-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte and Bram in the same ivory cotton pajamas with burgundy piping and midnight-navy pajamas with slate piping, sitting close together in their Swiss hotel room at night, with a warm bedside lamp and soft low-light grain.',
+          caption: 'A quiet laugh after the snowy day',
+        },
+        {
+          src: '/storyline/370-lotte-bram-hotel-wedding-rings-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s linked wedding-ringed hands, her ivory pajama cuff with burgundy piping and his midnight-navy pajama cuff with slate piping, beside cocoa cups and a brass hotel key under warm lamplight.',
+          caption: 'Two rings beside the room key',
+        },
+        {
+          src: '/storyline/371-lotte-bram-hotel-night-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte in her ivory cotton pajamas with burgundy piping and Bram in his midnight-navy cotton pajamas with slate piping, leaning forehead-to-forehead by the Swiss hotel window at night, with a softly blurred snowy view.',
+          caption: 'Foreheads together in the lamplight',
+        },
+        {
+          src: '/storyline/372-lotte-bram-hotel-window-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte in ivory pajamas with burgundy piping and Bram in midnight-navy pajamas with slate piping, cheek-to-cheek beside their Swiss hotel window at night, with gentle grain and window glare; the phone is not visible.',
+          caption: 'A sleepy window-side selfie',
+        },
+        {
+          src: '/storyline/373-lotte-bram-hotel-cocoa-candid.jpg',
+          alt: 'AI-generated, slightly tilted candid mobile snapshot of fictional Lotte in her ivory cotton pajamas with burgundy piping and Bram in his midnight-navy cotton pajamas with slate piping, sharing cocoa on the bed in their Swiss hotel room at night, with a folded map and slight motion blur.',
+          caption: 'Cocoa and a map before sleep',
+        },
+        {
+          src: '/storyline/374-lotte-bram-hotel-nightstand-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s linked hands and wedding bands, her ivory pajama sleeve with burgundy piping beside his midnight-navy pajama cuff with slate piping, two tea cups and a folded postcard on the hotel nightstand at night.',
+          caption: 'A postcard left beside the cups',
+        },
+        {
+          src: '/storyline/375-lotte-bram-hotel-lamp-candid-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Bram gently tucking Lotte’s auburn hair behind her ear; she wears ivory cotton pajamas with burgundy piping and he wears midnight-navy pajamas with slate piping in their Swiss hotel room at night, with a lamp flare and soft focus.',
+          caption: 'A small, unplanned gesture',
+        },
+        {
+          src: '/storyline/376-lotte-bram-hotel-duvet-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte in ivory pajamas with burgundy piping and Bram in midnight-navy pajamas with slate piping, sitting close against the headboard beneath a quilt in their Swiss hotel room at night, with grain and an imperfect crop; the phone is not visible.',
+          caption: 'One last selfie before the lights go out',
+        },
+        {
+          src: '/storyline/377-lotte-bram-hotel-rug-romantic-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte in the same ivory cotton pajama set with burgundy piping and Bram in the same midnight-navy set with slate piping, leaning together after a quiet hotel-room dance at night, with low-light grain and soft motion blur; the phone is not visible.',
+          caption: 'A slow dance and a close selfie',
+        },
+        {
+          src: '/storyline/378-lotte-bram-hotel-night-window-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in ivory cotton pajamas with burgundy piping and Bram in midnight-navy pajamas with slate piping, standing hand-in-hand by a dark snowy Swiss hotel window at night, with a bedside lamp slightly overexposed.',
+          caption: 'The mountain night outside their window',
         },
       ],
     },
