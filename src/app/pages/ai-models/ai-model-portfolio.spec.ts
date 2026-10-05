@@ -30,6 +30,12 @@ function withPhotos(count: number): AiModelProfile {
     handle: '@test.studio.model',
     tags: ['Editorial', 'Campaign'],
     availability: 'Open for bookings',
+    order: 99,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 700 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1250 },
+    ],
+    rateNote: 'Rates are in USD per booking term.',
     bio: 'A temporary portfolio used by the unit test suite.',
     illustrative: true,
     gallery: photos.slice(1).map((photo) => photo.src),

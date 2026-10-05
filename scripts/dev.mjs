@@ -26,6 +26,12 @@ const watcher = spawn(process.execPath, ['scripts/watch-ai-models.mjs'], {
   stdio: 'inherit',
 });
 
+// Local stand-in for the Worker's booking endpoint; the dev server proxies /api/* to it.
+const bookingApi = spawn(process.execPath, ['scripts/dev-booking-api.mjs'], {
+  cwd: projectRoot,
+  stdio: 'inherit',
+});
+
 const server = spawn(process.execPath, [ngEntry, 'serve', ...process.argv.slice(2)], {
   cwd: projectRoot,
   stdio: 'inherit',
@@ -36,6 +42,7 @@ function shutdown(code) {
   if (stopping) return;
   stopping = true;
   watcher.kill('SIGTERM');
+  bookingApi.kill('SIGTERM');
   server.kill('SIGTERM');
   process.exitCode = code;
 }
@@ -44,6 +51,9 @@ server.on('exit', (code, signal) => shutdown(signal ? 0 : (code ?? 0)));
 server.on('error', (error) => {
   console.error(`[dev] Could not start the dev server: ${error.message}`);
   shutdown(1);
+});
+bookingApi.on('exit', (code) => {
+  if (!stopping && code) console.warn(`[ai-models] The local booking API stopped (exit ${code}).`);
 });
 watcher.on('exit', (code) => {
   if (!stopping && code) console.warn(`[ai-models] The album watcher stopped (exit ${code}).`);

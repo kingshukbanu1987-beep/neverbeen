@@ -1,0 +1,292 @@
+<div
+  class="booking-backdrop"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="booking-title"
+  (click)="onBackdropClick($event)"
+>
+  <div class="booking-panel">
+    <header class="booking-head">
+      <span class="booking-avatar">
+        @if (model().cover) {
+          <img [src]="model().cover" alt="" />
+        } @else {
+          <span aria-hidden="true">✳</span>
+        }
+      </span>
+      <div class="booking-identity">
+        <p class="booking-kicker">Book a shoot</p>
+        <h2 id="booking-title">{{ model().name }}</h2>
+        <p class="booking-sub">
+          <span>{{ model().handle }}</span>
+          <i aria-hidden="true">·</i>
+          <span>{{ model().location || 'Location to be announced' }}</span>
+        </p>
+      </div>
+      <button
+        #closeButton
+        type="button"
+        class="booking-close"
+        (click)="close()"
+        aria-label="Close booking form"
+      >
+        ✕
+      </button>
+    </header>
+
+    @if (status() === 'sent') {
+      <div class="booking-done" role="status">
+        <span class="booking-done-mark" aria-hidden="true">✳</span>
+        <h3>Request sent to the studio</h3>
+        <p>{{ resultMessage() }}</p>
+        <dl class="booking-done-facts">
+          @if (resultReference()) {
+            <div>
+              <dt>Reference</dt>
+              <dd>{{ resultReference() }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Model</dt>
+            <dd>{{ model().name }}</dd>
+          </div>
+          @if (selectedTerm(); as term) {
+            <div>
+              <dt>Term</dt>
+              <dd>{{ term.term }} · {{ total() }} USD</dd>
+            </div>
+          }
+          @if (selectedDateLabel()) {
+            <div>
+              <dt>Shoot date</dt>
+              <dd>{{ selectedDateLabel() }}</dd>
+            </div>
+          }
+        </dl>
+        <p class="booking-done-note">
+          The studio replies on WhatsApp to the number you gave — keep an eye on that chat.
+        </p>
+        <button type="button" class="booking-submit" (click)="close()">Done</button>
+      </div>
+    } @else {
+      <form class="booking-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="booking-main">
+          <section class="booking-block" aria-labelledby="booking-when">
+            <h3 id="booking-when"><span aria-hidden="true">01</span> When is the shoot?</h3>
+
+            <div class="calendar">
+              <div class="calendar-head">
+                <button
+                  type="button"
+                  class="calendar-nav"
+                  (click)="previousMonth()"
+                  [disabled]="!canGoBack()"
+                  aria-label="Previous month"
+                >
+                  ←
+                </button>
+                <p class="calendar-month" aria-live="polite">{{ monthLabel() }}</p>
+                <button
+                  type="button"
+                  class="calendar-nav"
+                  (click)="nextMonth()"
+                  [disabled]="!canGoForward()"
+                  aria-label="Next month"
+                >
+                  →
+                </button>
+              </div>
+
+              <div
+                class="calendar-grid"
+                role="grid"
+                [attr.aria-label]="'Shoot date, ' + monthLabel()"
+              >
+                @for (label of weekdayLabels; track label) {
+                  <span class="calendar-weekday" role="columnheader">{{ label }}</span>
+                }
+                @for (week of calendar(); track $index) {
+                  @for (day of week; track day.iso) {
+                    <button
+                      type="button"
+                      class="calendar-day"
+                      role="gridcell"
+                      [class.is-outside]="!day.inMonth"
+                      [class.is-today]="day.isToday"
+                      [class.is-selected]="day.isSelected"
+                      [disabled]="!day.selectable"
+                      [attr.data-date]="day.iso"
+                      [attr.aria-pressed]="day.isSelected"
+                      [attr.aria-current]="day.isToday ? 'date' : null"
+                      [attr.aria-label]="day.label"
+                      (click)="selectDate(day)"
+                    >
+                      {{ day.day }}
+                    </button>
+                  }
+                }
+              </div>
+
+              <p class="calendar-selection" [class.is-missing]="dateMissing()">
+                @if (selectedDateLabel()) {
+                  <span class="calendar-pin" aria-hidden="true">⌖</span>
+                  {{ selectedDateLabel() }}
+                } @else {
+                  Choose an available date for the shoot.
+                }
+              </p>
+            </div>
+          </section>
+
+          <section class="booking-block" aria-labelledby="booking-info">
+            <h3 id="booking-info"><span aria-hidden="true">02</span> Booking information</h3>
+
+            <div class="booking-grid">
+              <label class="field">
+                <span>Project type</span>
+                <select formControlName="project" [class.is-invalid]="fieldError('project')">
+                  @for (type of projectTypes; track type) {
+                    <option [value]="type">{{ type }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Shoot location <i>optional</i></span>
+                <input type="text" formControlName="location" placeholder="City, country" />
+              </label>
+
+              <label class="field field-wide">
+                <span>Usage / territory <i>optional</i></span>
+                <input
+                  type="text"
+                  formControlName="usage"
+                  placeholder="Digital and print, 12 months worldwide"
+                />
+              </label>
+
+              <label class="field field-wide">
+                <span>Notes for the studio <i>optional</i></span>
+                <textarea
+                  rows="3"
+                  formControlName="notes"
+                  placeholder="Schedule, styling, references…"
+                ></textarea>
+              </label>
+            </div>
+          </section>
+
+          <section class="booking-block" aria-labelledby="booking-you">
+            <h3 id="booking-you"><span aria-hidden="true">03</span> Where do we reach you?</h3>
+
+            <div class="booking-grid">
+              <label class="field">
+                <span>Full name</span>
+                <input
+                  type="text"
+                  formControlName="name"
+                  autocomplete="name"
+                  [class.is-invalid]="fieldError('name')"
+                />
+                @if (fieldError('name')) {
+                  <em class="field-error">Add the name the studio should address you by.</em>
+                }
+              </label>
+
+              <label class="field">
+                <span>Email</span>
+                <input
+                  type="email"
+                  formControlName="email"
+                  autocomplete="email"
+                  [class.is-invalid]="fieldError('email')"
+                />
+                @if (fieldError('email')) {
+                  <em class="field-error">Add a valid email address.</em>
+                }
+              </label>
+
+              <label class="field">
+                <span>WhatsApp number</span>
+                <input
+                  type="tel"
+                  formControlName="phone"
+                  autocomplete="tel"
+                  placeholder="+60 12 345 6789"
+                  [class.is-invalid]="fieldError('phone')"
+                />
+                @if (fieldError('phone')) {
+                  <em class="field-error">Add the number the studio should reply to.</em>
+                }
+              </label>
+
+              <label class="field">
+                <span>Company / agency <i>optional</i></span>
+                <input type="text" formControlName="company" autocomplete="organization" />
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <aside class="booking-side" aria-labelledby="booking-rates">
+          <h3 id="booking-rates" class="booking-side-title">Rates per term</h3>
+
+          <div class="rate-list" role="radiogroup" aria-label="Booking term">
+            @for (term of terms(); track term.term) {
+              <button
+                type="button"
+                class="rate-card"
+                role="radio"
+                [class.is-active]="selectedTerm()?.term === term.term"
+                [attr.aria-checked]="selectedTerm()?.term === term.term"
+                (click)="selectTerm(term)"
+              >
+                <span class="rate-copy">
+                  <b>{{ term.term }}</b>
+                  <i>{{ term.detail }}</i>
+                </span>
+                <span class="rate-price">${{ term.usd.toLocaleString('en-US') }}</span>
+              </button>
+            } @empty {
+              <p class="rate-empty">
+                Rates for this model are being finalised — send an enquiry below.
+              </p>
+            }
+          </div>
+
+          <div class="booking-total">
+            <span>Selected total</span>
+            <b>{{ total() || '—' }}<i>USD</i></b>
+          </div>
+
+          @if (model().rateNote) {
+            <p class="booking-note">{{ model().rateNote }}</p>
+          }
+
+          <button
+            type="button"
+            class="booking-submit"
+            (click)="submit()"
+            [disabled]="status() === 'sending'"
+          >
+            @if (status() === 'sending') {
+              Sending…
+            } @else {
+              <span aria-hidden="true">➤</span> Send booking request
+            }
+          </button>
+
+          <p class="booking-privacy">
+            <span aria-hidden="true">✳</span>
+            Your request goes straight to the NeverBeen studio on WhatsApp. Nothing is posted
+            publicly.
+          </p>
+
+          @if (status() === 'error' && resultMessage()) {
+            <p class="booking-error" role="alert">{{ resultMessage() }}</p>
+          }
+        </aside>
+      </form>
+    }
+  </div>
+</div>

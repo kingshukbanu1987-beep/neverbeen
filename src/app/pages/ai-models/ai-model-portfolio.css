@@ -399,6 +399,34 @@
   overflow-wrap: anywhere;
 }
 
+.rate-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 1.1rem 0 0;
+  color: var(--studio-muted);
+  font-size: 0.76rem;
+}
+
+.rate-hint span {
+  color: var(--studio-pink);
+}
+
+.rate-hint b {
+  color: #f9eff5;
+  font-weight: 700;
+}
+
+.rate-hint i {
+  color: var(--studio-faint);
+  font-style: normal;
+}
+
+.action-rent span {
+  font-size: 0.9rem;
+}
+
 .illustrative-note {
   display: flex;
   align-items: flex-start;

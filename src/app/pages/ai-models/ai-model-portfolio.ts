@@ -13,13 +13,14 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
+import { AiModelBookingDialog } from './booking/ai-model-booking';
 
 type PortfolioView = 'grid' | 'feed';
 type ShareState = 'idle' | 'shared' | 'copied' | 'unsupported';
 
 @Component({
   selector: 'app-ai-model-portfolio-page',
-  imports: [RouterLink],
+  imports: [RouterLink, AiModelBookingDialog],
   templateUrl: './ai-model-portfolio.html',
   styleUrl: './ai-model-portfolio.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,6 +49,16 @@ export class AiModelPortfolioPage implements OnDestroy {
 
   protected readonly shareState = signal<ShareState>('idle');
 
+  /** The Rent form pop-up. */
+  protected readonly bookingOpen = signal(false);
+
+  /** Cheapest published term, shown next to the Rent button. */
+  protected readonly rateFrom = computed(() => {
+    const rates = this.model()?.rates ?? [];
+    if (rates.length === 0) return null;
+    return rates.reduce((cheapest, rate) => (rate.usd < cheapest.usd ? rate : cheapest), rates[0]);
+  });
+
   protected readonly lightboxPhoto = computed(() => {
     const index = this.activeIndex();
     if (index === null) return null;
@@ -69,6 +80,7 @@ export class AiModelPortfolioPage implements OnDestroy {
   });
 
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
+  private readonly rentButton = viewChild<ElementRef<HTMLButtonElement>>('rentButton');
   private lastFocused: HTMLElement | null = null;
   private touchStartX = 0;
   private shareTimer: ReturnType<typeof setTimeout> | null = null;
@@ -128,6 +140,15 @@ export class AiModelPortfolioPage implements OnDestroy {
     return (
       photo.caption || `${this.model()?.name ?? 'Portfolio'} · frame ${this.frameLabel(index)}`
     );
+  }
+
+  protected openBooking(): void {
+    this.bookingOpen.set(true);
+  }
+
+  protected closeBooking(): void {
+    this.bookingOpen.set(false);
+    this.rentButton()?.nativeElement.focus({ preventScroll: true });
   }
 
   protected setView(view: PortfolioView): void {

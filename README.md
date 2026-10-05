@@ -79,7 +79,9 @@ ng test
 
 ## NeverBeen AI Models
 
-The `/ai-models` page is a dark, magenta-accented studio directory. Each cover opens its own
+The `/ai-models` page is a dark, magenta-accented studio directory. Portfolios appear in the published
+order (`order` in `data/ai-models/profiles.json`) and every cover states, in large bold type, how many
+photographs that model has in her portfolio. Each cover opens its own
 portfolio at `/ai-models/:slug`: an Instagram-style profile header (avatar, handle, photographs
 count, location, age, height, weight, body shape, tags and short introduction) above a photo grid.
 Clicking any photograph expands it in a full-screen pop-up that can be browsed with the arrow keys,
@@ -98,15 +100,51 @@ own. Optional details live in `<album>/profile.json` or in `data/ai-models/profi
 folder layout. The legacy `public/ai-model-assets/portraits` and `public/ai-model-assets/gallery`
 folders remain supported.
 
-Photographs attached in Arena chat land in `/home/user/uploads` as UUID-named files. Run
+Uploaded or attached photographs are filed with
 
 ```bash
-npm run ingest:model-photos
+npm run ingest:model-photos -- <source-folder>   # defaults to /home/user/uploads
 ```
 
-to copy them into their model album with readable names and captions
-(`scripts/model-ingest-map.json` holds the album, filename and caption for each attachment), record
-the album's frame order in its `profile.json` and regenerate the manifest in one step.
+which copies each image into its model album with a readable name and caption
+(`scripts/model-ingest-map.json` holds the album, filename and caption for each attachment), records
+the album's frame order in its `profile.json` and regenerates the manifest in one step. It is safe to
+run repeatedly: a photograph already in the album is never copied twice, and a UUID-named file left
+by an upload is renamed in place.
+
+### Renting a model
+
+Every portfolio carries a **Rent this model** button (with a `From … USD per …` hint taken from the
+cheapest published term). It opens an ultra-modern dark booking pop-up that matches the studio
+directory: a calendar for the shoot date, the model's own booking information, and a USD price per
+term. The term, its duration and the price all come from `rates` in `data/ai-models/profiles.json`, so
+each model quotes her own numbers:
+
+```jsonc
+"rates": [
+  { "term": "Half day", "detail": "4 hours on set", "usd": 950 },
+  { "term": "Full day", "detail": "8 hours on set", "usd": 1700 }
+],
+"rateNote": "Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately."
+```
+
+Submitting the form posts the model, the chosen term and the client's booking information to
+`POST /api/model-booking`. The Worker (`worker/index.ts`, logic in `worker/model-booking-core.mjs`)
+validates the request and sends a formatted WhatsApp message to the founder through the WhatsApp Cloud
+API. The founder's number is a Worker secret — it is never sent to the browser, never embedded in the
+page and never echoed back in the response; when the channel is not configured the endpoint answers
+`503` and the form says the booking channel is not connected yet.
+
+```bash
+npx wrangler secret put WHATSAPP_TOKEN             # WhatsApp Cloud API token
+npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID   # sender phone number id
+npx wrangler secret put FOUNDER_WHATSAPP_NUMBER    # where the bookings go
+```
+
+`npm start` runs a local stand-in for the endpoint (`scripts/dev-booking-api.mjs`, port 8787, proxied
+by `proxy.conf.json`) over the same shared logic, so the form works end-to-end in development. Without
+the three variables above it appends the message to the gitignored `booking-outbox.log` instead of
+sending it.
 
 ## The Collection page
 

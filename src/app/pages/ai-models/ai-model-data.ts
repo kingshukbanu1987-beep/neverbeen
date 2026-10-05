@@ -3,6 +3,15 @@
  * Regenerate with: npm run generate:ai-models
  */
 
+export interface AiModelRate {
+  /** Booking term name, e.g. "Half day". */
+  term: string;
+  /** What the term includes, e.g. "4 hours on set". */
+  detail: string;
+  /** Price of the term in US dollars. */
+  usd: number;
+}
+
 export interface AiModelPhoto {
   /** Public URL of the photograph. */
   src: string;
@@ -30,6 +39,12 @@ export interface AiModelProfile {
   tags: string[];
   /** Optional booking/availability line. */
   availability: string;
+  /** Directory display position (1-based); 0 when unspecified. */
+  order: number;
+  /** Booking terms priced in USD — every model has its own rates. */
+  rates: AiModelRate[];
+  /** Note shown with the rates in the booking pop-up. */
+  rateNote: string;
   /** Short profile introduction. */
   bio: string;
   /** Whether profile details are illustrative placeholders pending verification. */
@@ -41,14 +56,371 @@ export interface AiModelProfile {
 }
 
 export const aiModelProfiles: AiModelProfile[] = [
-  {"slug":"toulene-arslan","name":"Toulene Arslan","cover":"/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png","album":"TouleneArslan","location":"Istanbul, Türkiye","age":"27","height":"168 cm","weight":"55 kg","bodyShape":"Hourglass","handle":"@toulene.arslan","tags":[],"availability":"","bio":"A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png","caption":""}]},
-  {"slug":"zeina-al-sabbagh","name":"Zeina Al-Sabbagh","cover":"/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png","album":"ZeinaAlSabbagh","location":"Beirut, Lebanon","age":"25","height":"165 cm","weight":"53 kg","bodyShape":"Rectangle","handle":"@zeina.al.sabbagh","tags":[],"availability":"","bio":"A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png","caption":""}]},
-  {"slug":"fatima-sana-hussaini","name":"Fatima Sana Hussaini","cover":"/NeverBeenModels/FatimaSanaHussaini/Fatima%20Sana%20Hussaini.png","album":"FatimaSanaHussaini","location":"Kuala Lumpur, Malaysia","age":"26","height":"164 cm","weight":"52 kg","bodyShape":"Pear","handle":"@fatima.sana.hussaini","tags":[],"availability":"","bio":"A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/FatimaSanaHussaini/Fatima%20Sana%20Hussaini.png","caption":""}]},
-  {"slug":"rasha-fakhoury","name":"Rasha Fakhoury","cover":"/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.png","album":"RashaFakhoury","location":"Amman, Jordan","age":"28","height":"170 cm","weight":"59 kg","bodyShape":"Hourglass","handle":"@rasha.fakhoury","tags":[],"availability":"","bio":"An understated editorial spirit with a confident point of view and an eye for sculptural details.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.png","caption":""}]},
-  {"slug":"salma-ahmadzai","name":"Salma Ahmadzai","cover":"/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png","album":"SalmaAhmadzai","location":"Tbilisi, Georgia","age":"24","height":"166 cm","weight":"54 kg","bodyShape":"Athletic","handle":"@salma.ahmadzai","tags":[],"availability":"","bio":"A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png","caption":""}]},
-  {"slug":"rozalin-el-masry","name":"Rozalin El Masry","cover":"/NeverBeenModels/RozalinElMasry/Rozalin%20El%20Masry.png","album":"RozalinElMasry","location":"Alexandria, Egypt","age":"29","height":"171 cm","weight":"58 kg","bodyShape":"Rectangle","handle":"@rozalin.el.masry","tags":[],"availability":"","bio":"A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/RozalinElMasry/Rozalin%20El%20Masry.png","caption":""}]},
-  {"slug":"nermin-akhundzada","name":"Nermin Akhundzada","cover":"/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png","album":"NerminAkhundzada","location":"Baku, Azerbaijan","age":"26","height":"167 cm","weight":"55 kg","bodyShape":"Pear","handle":"@nermin.akhundzada","tags":[],"availability":"","bio":"A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png","caption":""}]},
-  {"slug":"nirvana-noorzai","name":"Nirvana Noorzai","cover":"/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png","album":"NirvanaNoorzai","location":"Dubai, United Arab Emirates","age":"27","height":"169 cm","weight":"57 kg","bodyShape":"Hourglass","handle":"@nirvana.noorzai","tags":[],"availability":"","bio":"A polished, versatile presence imagined between bold architecture, soft light and new destinations.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png","caption":""}]},
-  {"slug":"sereenah-noorzai","name":"Sereenah Noorzai","cover":"/NeverBeenModels/SereenahNoorzai/Sereenah%20Noorzai.png","album":"SereenahNoorzai","location":"Muscat, Oman","age":"25","height":"163 cm","weight":"50 kg","bodyShape":"Athletic","handle":"@sereenah.noorzai","tags":[],"availability":"","bio":"A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.","illustrative":true,"gallery":[],"photos":[{"src":"/NeverBeenModels/SereenahNoorzai/Sereenah%20Noorzai.png","caption":""}]},
-  {"slug":"nourhan-durrani","name":"Nourhan Durrani","cover":"/NeverBeenModels/NourhanDurrani/Nourhan%20Durrani.png","album":"NourhanDurrani","location":"Sarajevo, Bosnia and Herzegovina","age":"30","height":"172 cm","weight":"60 kg","bodyShape":"Pear","handle":"@nourhan.durrani","tags":["Editorial","Portrait","Campaign","Travel","Studio"],"availability":"Open for editorial and campaign bookings","bio":"A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets. Nourhan moves easily between quiet editorial portraits and bold campaign frames, and she is at her best in natural light.","illustrative":true,"gallery":["/NeverBeenModels/NourhanDurrani/01-magenta-ruffles-portrait.png"],"photos":[{"src":"/NeverBeenModels/NourhanDurrani/Nourhan%20Durrani.png","caption":""},{"src":"/NeverBeenModels/NourhanDurrani/01-magenta-ruffles-portrait.png","caption":""}]},
+  {
+    slug: 'nourhan-durrani',
+    name: 'Nourhan Durrani',
+    cover: '/NeverBeenModels/NourhanDurrani/Nourhan%20Durrani.png',
+    album: 'NourhanDurrani',
+    location: 'Sarajevo, Bosnia and Herzegovina',
+    age: '30',
+    height: '172 cm',
+    weight: '60 kg',
+    bodyShape: 'Pear',
+    handle: '@nourhan.durrani',
+    tags: ['Editorial', 'Portrait', 'Campaign', 'Travel', 'Studio'],
+    availability: 'Open for editorial and campaign bookings',
+    order: 1,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 950 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1700 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4800 },
+      { term: 'Week', detail: '7 days, one booking', usd: 9800 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets. Nourhan moves easily between quiet editorial portraits and bold campaign frames, and she is at her best in natural light.',
+    illustrative: true,
+    gallery: [
+      '/NeverBeenModels/NourhanDurrani/01-magenta-ruffles-portrait.png',
+      '/NeverBeenModels/NourhanDurrani/_a_fR7aCidSS6J8ItcWazABYn1_FVO52gf6kGjJ2hJk.png',
+      '/NeverBeenModels/NourhanDurrani/0gCQ0wbHMA0JMak-nzMmqs2WSzLJia4Mre7O0M6_41Y.png',
+      '/NeverBeenModels/NourhanDurrani/5C61w_pUI450h-VqlftxabeL1FE9Q_DFB3k2eG0Kakk.png',
+      '/NeverBeenModels/NourhanDurrani/8mebr770vEaTQi5APSUR1GtdHLgeZwldscf31T0lrEg.png',
+      '/NeverBeenModels/NourhanDurrani/9wmLz-uuKqjhcygedYYb1WR0J67GYl79IcEAlpqe8hk.png',
+      '/NeverBeenModels/NourhanDurrani/m16NLq70Ql8u4DYgen8yvZFvXu_XTniQs8vKDTFoZPA.png',
+      '/NeverBeenModels/NourhanDurrani/oWE-KRYfWvcPVCd1TY1RCxSyhVQlg_ApVv2q5XXCJ_w.png',
+      '/NeverBeenModels/NourhanDurrani/q5mPPUoXm65tngyAVAaMVUMw8eWq_pVUliDF8y-5-mw.png',
+      '/NeverBeenModels/NourhanDurrani/Qjin-Jea6P8gkPNnXPf1rTOTIURXSjDoT_YZwgYkGOk.png',
+      '/NeverBeenModels/NourhanDurrani/s8Vb2EmiVMgyvXRU3b2pMRrRswX8KSlhfrjGpvlmqmg.png',
+      '/NeverBeenModels/NourhanDurrani/tIpoqfYsUqD5hN3Dn2fI9dUZIfEW-4R2OeEhLaXa6kE.png',
+      '/NeverBeenModels/NourhanDurrani/vAJ-bm0kGGn1ihQkUIhXCQ0NP4kW2q_dEqp3HMbnFbE.png',
+      '/NeverBeenModels/NourhanDurrani/vzoZDvHb3kPk6W2rAONs-e7q-Vkdxg5HGivuCgMsPeE.png',
+      '/NeverBeenModels/NourhanDurrani/Wh7G8U8S6Aftxe_XF0GCac1u0Necqc3rvlEfIJY2w0s.png',
+      '/NeverBeenModels/NourhanDurrani/Wob2V7ZpZQFS9ipqJKvCtLumUZIuD6OygWwbhw_NWuA.png',
+      '/NeverBeenModels/NourhanDurrani/YWDRy0OdZDKbI4Zd4sXmX0oYTf0yHj_kZqCDNibN7ig.png',
+      '/NeverBeenModels/NourhanDurrani/z6G193m8ng-USzmgDxpy6jZWG1HscmrYh2NOMQ9Zuw8.png',
+      '/NeverBeenModels/NourhanDurrani/ZrM3lMVLgRf5wVuxbX1lmVeqZp2uA1ZlQGo1tYnR2Is.png',
+    ],
+    photos: [
+      { src: '/NeverBeenModels/NourhanDurrani/Nourhan%20Durrani.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/01-magenta-ruffles-portrait.png', caption: '' },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/_a_fR7aCidSS6J8ItcWazABYn1_FVO52gf6kGjJ2hJk.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/0gCQ0wbHMA0JMak-nzMmqs2WSzLJia4Mre7O0M6_41Y.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/5C61w_pUI450h-VqlftxabeL1FE9Q_DFB3k2eG0Kakk.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/8mebr770vEaTQi5APSUR1GtdHLgeZwldscf31T0lrEg.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/9wmLz-uuKqjhcygedYYb1WR0J67GYl79IcEAlpqe8hk.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/m16NLq70Ql8u4DYgen8yvZFvXu_XTniQs8vKDTFoZPA.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/oWE-KRYfWvcPVCd1TY1RCxSyhVQlg_ApVv2q5XXCJ_w.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/q5mPPUoXm65tngyAVAaMVUMw8eWq_pVUliDF8y-5-mw.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/Qjin-Jea6P8gkPNnXPf1rTOTIURXSjDoT_YZwgYkGOk.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/s8Vb2EmiVMgyvXRU3b2pMRrRswX8KSlhfrjGpvlmqmg.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/tIpoqfYsUqD5hN3Dn2fI9dUZIfEW-4R2OeEhLaXa6kE.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/vAJ-bm0kGGn1ihQkUIhXCQ0NP4kW2q_dEqp3HMbnFbE.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/vzoZDvHb3kPk6W2rAONs-e7q-Vkdxg5HGivuCgMsPeE.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/Wh7G8U8S6Aftxe_XF0GCac1u0Necqc3rvlEfIJY2w0s.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/Wob2V7ZpZQFS9ipqJKvCtLumUZIuD6OygWwbhw_NWuA.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/YWDRy0OdZDKbI4Zd4sXmX0oYTf0yHj_kZqCDNibN7ig.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/z6G193m8ng-USzmgDxpy6jZWG1HscmrYh2NOMQ9Zuw8.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/NourhanDurrani/ZrM3lMVLgRf5wVuxbX1lmVeqZp2uA1ZlQGo1tYnR2Is.png',
+        caption: '',
+      },
+    ],
+  },
+  {
+    slug: 'nirvana-noorzai',
+    name: 'Nirvana Noorzai',
+    cover: '/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png',
+    album: 'NirvanaNoorzai',
+    location: 'Dubai, United Arab Emirates',
+    age: '27',
+    height: '169 cm',
+    weight: '57 kg',
+    bodyShape: 'Hourglass',
+    handle: '@nirvana.noorzai',
+    tags: [],
+    availability: '',
+    order: 2,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 900 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1650 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4600 },
+      { term: 'Week', detail: '7 days, one booking', usd: 9400 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A polished, versatile presence imagined between bold architecture, soft light and new destinations.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png', caption: '' }],
+  },
+  {
+    slug: 'sereenah-noorzai',
+    name: 'Sereenah Noorzai',
+    cover: '/NeverBeenModels/SereenahNoorzai/Sereenah%20Noorzai.png',
+    album: 'SereenahNoorzai',
+    location: 'Muscat, Oman',
+    age: '25',
+    height: '163 cm',
+    weight: '50 kg',
+    bodyShape: 'Athletic',
+    handle: '@sereenah.noorzai',
+    tags: [],
+    availability: '',
+    order: 3,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 800 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1450 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4100 },
+      { term: 'Week', detail: '7 days, one booking', usd: 8300 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/SereenahNoorzai/Sereenah%20Noorzai.png', caption: '' }],
+  },
+  {
+    slug: 'rozalin-el-masry',
+    name: 'Rozalin El Masry',
+    cover: '/NeverBeenModels/RozalinElMasry/Rozalin%20El%20Masry.png',
+    album: 'RozalinElMasry',
+    location: 'Alexandria, Egypt',
+    age: '29',
+    height: '171 cm',
+    weight: '58 kg',
+    bodyShape: 'Rectangle',
+    handle: '@rozalin.el.masry',
+    tags: [],
+    availability: '',
+    order: 4,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 880 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1600 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4500 },
+      { term: 'Week', detail: '7 days, one booking', usd: 9200 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/RozalinElMasry/Rozalin%20El%20Masry.png', caption: '' }],
+  },
+  {
+    slug: 'fatima-sana-hussaini',
+    name: 'Fatima Sana Hussaini',
+    cover: '/NeverBeenModels/FatimaSanaHussaini/Fatima%20Sana%20Hussaini.png',
+    album: 'FatimaSanaHussaini',
+    location: 'Kuala Lumpur, Malaysia',
+    age: '26',
+    height: '164 cm',
+    weight: '52 kg',
+    bodyShape: 'Pear',
+    handle: '@fatima.sana.hussaini',
+    tags: [],
+    availability: '',
+    order: 5,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 820 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1500 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4200 },
+      { term: 'Week', detail: '7 days, one booking', usd: 8600 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.',
+    illustrative: true,
+    gallery: [],
+    photos: [
+      { src: '/NeverBeenModels/FatimaSanaHussaini/Fatima%20Sana%20Hussaini.png', caption: '' },
+    ],
+  },
+  {
+    slug: 'salma-ahmadzai',
+    name: 'Salma Ahmadzai',
+    cover: '/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png',
+    album: 'SalmaAhmadzai',
+    location: 'Tbilisi, Georgia',
+    age: '24',
+    height: '166 cm',
+    weight: '54 kg',
+    bodyShape: 'Athletic',
+    handle: '@salma.ahmadzai',
+    tags: [],
+    availability: '',
+    order: 6,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 780 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1400 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 3950 },
+      { term: 'Week', detail: '7 days, one booking', usd: 8100 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png', caption: '' }],
+  },
+  {
+    slug: 'toulene-arslan',
+    name: 'Toulene Arslan',
+    cover: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png',
+    album: 'TouleneArslan',
+    location: 'Istanbul, Türkiye',
+    age: '27',
+    height: '168 cm',
+    weight: '55 kg',
+    bodyShape: 'Hourglass',
+    handle: '@toulene.arslan',
+    tags: [],
+    availability: '',
+    order: 7,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 900 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1620 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4550 },
+      { term: 'Week', detail: '7 days, one booking', usd: 9300 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png', caption: '' }],
+  },
+  {
+    slug: 'zeina-al-sabbagh',
+    name: 'Zeina Al-Sabbagh',
+    cover: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png',
+    album: 'ZeinaAlSabbagh',
+    location: 'Beirut, Lebanon',
+    age: '25',
+    height: '165 cm',
+    weight: '53 kg',
+    bodyShape: 'Rectangle',
+    handle: '@zeina.al.sabbagh',
+    tags: [],
+    availability: '',
+    order: 8,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 850 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1540 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4350 },
+      { term: 'Week', detail: '7 days, one booking', usd: 8900 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png', caption: '' }],
+  },
+  {
+    slug: 'nermin-akhundzada',
+    name: 'Nermin Akhundzada',
+    cover: '/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png',
+    album: 'NerminAkhundzada',
+    location: 'Baku, Azerbaijan',
+    age: '26',
+    height: '167 cm',
+    weight: '55 kg',
+    bodyShape: 'Pear',
+    handle: '@nermin.akhundzada',
+    tags: [],
+    availability: '',
+    order: 9,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 760 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1380 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 3900 },
+      { term: 'Week', detail: '7 days, one booking', usd: 7950 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png', caption: '' }],
+  },
+  {
+    slug: 'rasha-fakhoury',
+    name: 'Rasha Fakhoury',
+    cover: '/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.png',
+    album: 'RashaFakhoury',
+    location: 'Amman, Jordan',
+    age: '28',
+    height: '170 cm',
+    weight: '59 kg',
+    bodyShape: 'Hourglass',
+    handle: '@rasha.fakhoury',
+    tags: [],
+    availability: '',
+    order: 10,
+    rates: [
+      { term: 'Half day', detail: '4 hours on set', usd: 920 },
+      { term: 'Full day', detail: '8 hours on set', usd: 1660 },
+      { term: 'Three days', detail: '3 x 8 hour days', usd: 4700 },
+      { term: 'Week', detail: '7 days, one booking', usd: 9600 },
+    ],
+    rateNote:
+      'Rates are in USD per booking term. Travel, styling and usage buyout are quoted separately.',
+    bio: 'An understated editorial spirit with a confident point of view and an eye for sculptural details.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.png', caption: '' }],
+  },
 ];

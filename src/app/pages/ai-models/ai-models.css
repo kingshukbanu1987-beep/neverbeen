@@ -684,16 +684,59 @@
   overflow-wrap: anywhere;
 }
 
-.card-action {
+.card-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
   margin-top: 0.9rem;
   padding-top: 0.75rem;
   border-top: 1px solid rgb(255 255 255 / 19%);
+}
+
+.card-action {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   color: rgb(255 255 255 / 76%);
   font-size: 0.73rem;
   font-weight: 600;
+}
+
+/* How many photographs the portfolio holds — deliberately large and heavy. */
+.card-photo-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.34rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.7rem;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background: rgb(9 7 11 / 48%);
+  backdrop-filter: blur(12px);
+}
+
+.card-photo-count b {
+  color: #fff;
+  font-family: var(--serif);
+  font-size: clamp(1.7rem, 2.5vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-shadow: 0 6px 22px rgb(0 0 0 / 55%);
+}
+
+.card-photo-count i {
+  color: rgb(255 255 255 / 68%);
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.model-card:hover .card-photo-count {
+  border-color: rgb(240 112 168 / 62%);
+  background: rgb(173 20 26 / 42%);
 }
 
 .card-action i {

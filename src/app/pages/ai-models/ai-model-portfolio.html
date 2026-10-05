@@ -63,16 +63,29 @@
 
               <div class="profile-actions">
                 <button
+                  #rentButton
                   type="button"
-                  class="action-button action-primary"
-                  (click)="shareProfile(profile)"
+                  class="action-button action-primary action-rent"
+                  (click)="openBooking()"
                 >
+                  <span aria-hidden="true">✦</span> Rent this model
+                </button>
+                <button type="button" class="action-button" (click)="shareProfile(profile)">
                   <span aria-hidden="true">↗</span> {{ shareLabel() }}
                 </button>
                 <a routerLink="/ai-models" class="action-button">
                   <span aria-hidden="true">▦</span> All portfolios
                 </a>
               </div>
+
+              @if (rateFrom(); as rate) {
+                <p class="rate-hint">
+                  <span aria-hidden="true">✳</span> From
+                  <b>{{ rate.usd.toLocaleString('en-US') }} USD</b> per
+                  {{ rate.term.toLowerCase() }}
+                  <i>— {{ profile.rates.length }} booking terms</i>
+                </p>
+              }
             </div>
           </div>
 
@@ -230,6 +243,10 @@
     }
   </div>
 </main>
+
+@if (bookingOpen() && model(); as bookable) {
+  <app-ai-model-booking [model]="bookable" (closed)="closeBooking()" />
+}
 
 @if (lightboxPhoto(); as lightbox) {
   <div

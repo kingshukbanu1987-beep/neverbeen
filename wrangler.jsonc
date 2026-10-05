@@ -1,13 +1,18 @@
 {
   "name": "neverbeen",
+  // Worker entry: serves the static app and handles /api/* (the model booking endpoint) so the
+  // founder's WhatsApp number stays a server-side secret.
+  "main": "worker/index.ts",
   "compatibility_date": "2026-09-15",
   "assets": {
     "directory": "./dist/neverbeen/browser",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
     // Single-page-app mode: any URL that does not match a static file (deep links like
     // /community, /profile?id=…, /admin/… or any redirect target) serves index.html with
     // a 200, so refreshing the browser on any route loads the app instead of a 404.
     // The Angular router then resolves the route and CommunityService restores the
     // signed-in session from the auth cookie.
-    "not_found_handling": "single-page-application"
-  }
+    "not_found_handling": "single-page-application",
+  },
 }
