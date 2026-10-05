@@ -3,35 +3,311 @@
  * Regenerate with: npm run generate:ai-models
  */
 
+export interface AiModelPhoto {
+  /** Public URL of the photograph. */
+  src: string;
+  /** Optional caption shown in the portfolio lightbox. */
+  caption: string;
+}
+
 export interface AiModelProfile {
-  /** URL-safe path segment derived from the cover image filename. */
+  /** URL-safe path segment derived from the model name. */
   slug: string;
-  /** Cover filename without its extension. */
+  /** Model name, taken from the album profile or cover filename. */
   name: string;
-  /** Main portfolio cover image. */
+  /** Cover/avatar photograph used by the directory and portfolio header. */
   cover: string;
+  /** Album folder inside public/NeverBeenModels. */
+  album: string;
   location: string;
   age: string;
   height: string;
   weight: string;
   bodyShape: string;
+  /** Instagram-style handle shown on the portfolio header. */
+  handle: string;
+  /** Portfolio tags, shown as chips on the header. */
+  tags: string[];
+  /** Optional booking/availability line. */
+  availability: string;
+  /** Directory display position (1-based); 0 when unspecified. */
+  order: number;
+  /** Rate for a single photograph in INR — every model quotes her own. 0 when unpublished. */
+  photoRate: number;
+  /** Note shown with the rate in the booking pop-up. */
+  photoNote: string;
   /** Short profile introduction. */
   bio: string;
   /** Whether profile details are illustrative placeholders pending verification. */
   illustrative: boolean;
-  /** Additional gallery images, beyond the cover. */
+  /** Photographs beyond the cover, kept for backwards compatibility. */
   gallery: string[];
+  /** Every photograph in the album, cover first — the Instagram-style grid. */
+  photos: AiModelPhoto[];
 }
 
 export const aiModelProfiles: AiModelProfile[] = [
-  {"slug":"toulene-arslan","name":"Toulene Arslan","cover":"","location":"Istanbul, Türkiye","age":"27","height":"168 cm","weight":"55 kg","bodyShape":"Hourglass","bio":"A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.","illustrative":true,"gallery":[]},
-  {"slug":"zeina-al-sabbagh","name":"Zeina Al-Sabbagh","cover":"","location":"Beirut, Lebanon","age":"25","height":"165 cm","weight":"53 kg","bodyShape":"Rectangle","bio":"A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.","illustrative":true,"gallery":[]},
-  {"slug":"fatima-sana-hussaini","name":"Fatima Sana Hussaini","cover":"","location":"Kuala Lumpur, Malaysia","age":"26","height":"164 cm","weight":"52 kg","bodyShape":"Pear","bio":"A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.","illustrative":true,"gallery":[]},
-  {"slug":"rasha-fakhoury","name":"Rasha Fakhoury","cover":"","location":"Amman, Jordan","age":"28","height":"170 cm","weight":"59 kg","bodyShape":"Hourglass","bio":"An understated editorial spirit with a confident point of view and an eye for sculptural details.","illustrative":true,"gallery":[]},
-  {"slug":"salma-ahmadzai","name":"Salma Ahmadzai","cover":"","location":"Tbilisi, Georgia","age":"24","height":"166 cm","weight":"54 kg","bodyShape":"Athletic","bio":"A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.","illustrative":true,"gallery":[]},
-  {"slug":"rozalin-el-masry","name":"Rozalin El Masry","cover":"","location":"Alexandria, Egypt","age":"29","height":"171 cm","weight":"58 kg","bodyShape":"Rectangle","bio":"A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.","illustrative":true,"gallery":[]},
-  {"slug":"nermin-akhundzada","name":"Nermin Akhundzada","cover":"","location":"Baku, Azerbaijan","age":"26","height":"167 cm","weight":"55 kg","bodyShape":"Pear","bio":"A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.","illustrative":true,"gallery":[]},
-  {"slug":"nirvana-noorzai","name":"Nirvana Noorzai","cover":"","location":"Dubai, United Arab Emirates","age":"27","height":"169 cm","weight":"57 kg","bodyShape":"Hourglass","bio":"A polished, versatile presence imagined between bold architecture, soft light and new destinations.","illustrative":true,"gallery":[]},
-  {"slug":"sereenah-noorzai","name":"Sereenah Noorzai","cover":"","location":"Muscat, Oman","age":"25","height":"163 cm","weight":"50 kg","bodyShape":"Athletic","bio":"A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.","illustrative":true,"gallery":[]},
-  {"slug":"nourhan-durrani","name":"Nourhan Durrani","cover":"","location":"Sarajevo, Bosnia and Herzegovina","age":"30","height":"172 cm","weight":"60 kg","bodyShape":"Pear","bio":"A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.","illustrative":true,"gallery":[]},
+  {
+    slug: 'nourhan-durrani',
+    name: 'Nourhan Durrani',
+    cover: '/NeverBeenModels/NourhanDurrani/Nourhan%20Durrani.png',
+    album: 'NourhanDurrani',
+    location: 'Sarajevo, Bosnia and Herzegovina',
+    age: '30',
+    height: '172 cm',
+    weight: '60 kg',
+    bodyShape: 'Pear',
+    handle: '@nourhan.durrani',
+    tags: ['Editorial', 'Portrait', 'Campaign', 'Travel', 'Studio'],
+    availability: 'Open for editorial and campaign bookings',
+    order: 1,
+    photoRate: 550,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets. Nourhan moves easily between quiet editorial portraits and bold campaign frames, and she is at her best in natural light.',
+    illustrative: true,
+    gallery: [
+      '/NeverBeenModels/NourhanDurrani/01-magenta-ruffles-portrait.png',
+      '/NeverBeenModels/NourhanDurrani/02-magenta-ruffles-profile.png',
+      '/NeverBeenModels/NourhanDurrani/03-magenta-ruffles-turned.png',
+      '/NeverBeenModels/NourhanDurrani/04-magenta-ruffles-downturn.png',
+      '/NeverBeenModels/NourhanDurrani/05-magenta-ruffles-hair-swept.png',
+      '/NeverBeenModels/NourhanDurrani/06-satin-stripes-smile.png',
+      '/NeverBeenModels/NourhanDurrani/07-satin-stripes-bow.png',
+      '/NeverBeenModels/NourhanDurrani/08-satin-stripes-closeup.png',
+      '/NeverBeenModels/NourhanDurrani/09-iridescent-tailoring.png',
+      '/NeverBeenModels/NourhanDurrani/10-velvet-embroidery.png',
+      '/NeverBeenModels/NourhanDurrani/11-black-knit-portrait.png',
+      '/NeverBeenModels/NourhanDurrani/12-red-off-shoulder-portrait.png',
+      '/NeverBeenModels/NourhanDurrani/13-red-off-shoulder-gaze.png',
+      '/NeverBeenModels/NourhanDurrani/14-red-off-shoulder-reclined.png',
+      '/NeverBeenModels/NourhanDurrani/15-blue-shirt-laughing.png',
+      '/NeverBeenModels/NourhanDurrani/16-blue-shirt-seated.png',
+      '/NeverBeenModels/NourhanDurrani/17-crew-uniform-portrait.png',
+      '/NeverBeenModels/NourhanDurrani/18-crew-uniform-turned.png',
+      '/NeverBeenModels/NourhanDurrani/19-crew-uniform-scarf.png',
+    ],
+    photos: [
+      { src: '/NeverBeenModels/NourhanDurrani/Nourhan%20Durrani.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/01-magenta-ruffles-portrait.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/02-magenta-ruffles-profile.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/03-magenta-ruffles-turned.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/04-magenta-ruffles-downturn.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/05-magenta-ruffles-hair-swept.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/06-satin-stripes-smile.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/07-satin-stripes-bow.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/08-satin-stripes-closeup.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/09-iridescent-tailoring.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/10-velvet-embroidery.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/11-black-knit-portrait.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/12-red-off-shoulder-portrait.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/13-red-off-shoulder-gaze.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/14-red-off-shoulder-reclined.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/15-blue-shirt-laughing.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/16-blue-shirt-seated.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/17-crew-uniform-portrait.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/18-crew-uniform-turned.png', caption: '' },
+      { src: '/NeverBeenModels/NourhanDurrani/19-crew-uniform-scarf.png', caption: '' },
+    ],
+  },
+  {
+    slug: 'nirvana-noorzai',
+    name: 'Nirvana Noorzai',
+    cover: '/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png',
+    album: 'NirvanaNoorzai',
+    location: 'Dubai, United Arab Emirates',
+    age: '27',
+    height: '169 cm',
+    weight: '57 kg',
+    bodyShape: 'Hourglass',
+    handle: '@nirvana.noorzai',
+    tags: [],
+    availability: '',
+    order: 2,
+    photoRate: 570,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A polished, versatile presence imagined between bold architecture, soft light and new destinations.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png', caption: '' }],
+  },
+  {
+    slug: 'sereenah-noorzai',
+    name: 'Sereenah Noorzai',
+    cover: '/NeverBeenModels/SereenahNoorzai/Sereenah%20Noorzai.png',
+    album: 'SereenahNoorzai',
+    location: 'Muscat, Oman',
+    age: '25',
+    height: '163 cm',
+    weight: '50 kg',
+    bodyShape: 'Athletic',
+    handle: '@sereenah.noorzai',
+    tags: [],
+    availability: '',
+    order: 3,
+    photoRate: 540,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/SereenahNoorzai/Sereenah%20Noorzai.png', caption: '' }],
+  },
+  {
+    slug: 'rozalin-el-masry',
+    name: 'Rozalin El Masry',
+    cover: '/NeverBeenModels/RozalinElMasry/Rozalin%20El%20Masry.png',
+    album: 'RozalinElMasry',
+    location: 'Alexandria, Egypt',
+    age: '29',
+    height: '171 cm',
+    weight: '58 kg',
+    bodyShape: 'Rectangle',
+    handle: '@rozalin.el.masry',
+    tags: [],
+    availability: '',
+    order: 4,
+    photoRate: 580,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/RozalinElMasry/Rozalin%20El%20Masry.png', caption: '' }],
+  },
+  {
+    slug: 'fatima-sana-hussaini',
+    name: 'Fatima Sana Hussaini',
+    cover: '/NeverBeenModels/FatimaSanaHussaini/Fatima%20Sana%20Hussaini.png',
+    album: 'FatimaSanaHussaini',
+    location: 'Kuala Lumpur, Malaysia',
+    age: '26',
+    height: '164 cm',
+    weight: '52 kg',
+    bodyShape: 'Pear',
+    handle: '@fatima.sana.hussaini',
+    tags: [],
+    availability: '',
+    order: 5,
+    photoRate: 560,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.',
+    illustrative: true,
+    gallery: [],
+    photos: [
+      { src: '/NeverBeenModels/FatimaSanaHussaini/Fatima%20Sana%20Hussaini.png', caption: '' },
+    ],
+  },
+  {
+    slug: 'salma-ahmadzai',
+    name: 'Salma Ahmadzai',
+    cover: '/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png',
+    album: 'SalmaAhmadzai',
+    location: 'Tbilisi, Georgia',
+    age: '24',
+    height: '166 cm',
+    weight: '54 kg',
+    bodyShape: 'Athletic',
+    handle: '@salma.ahmadzai',
+    tags: [],
+    availability: '',
+    order: 6,
+    photoRate: 530,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png', caption: '' }],
+  },
+  {
+    slug: 'toulene-arslan',
+    name: 'Toulene Arslan',
+    cover: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png',
+    album: 'TouleneArslan',
+    location: 'Istanbul, Türkiye',
+    age: '27',
+    height: '168 cm',
+    weight: '55 kg',
+    bodyShape: 'Hourglass',
+    handle: '@toulene.arslan',
+    tags: [],
+    availability: '',
+    order: 7,
+    photoRate: 590,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png', caption: '' }],
+  },
+  {
+    slug: 'zeina-al-sabbagh',
+    name: 'Zeina Al-Sabbagh',
+    cover: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png',
+    album: 'ZeinaAlSabbagh',
+    location: 'Beirut, Lebanon',
+    age: '25',
+    height: '165 cm',
+    weight: '53 kg',
+    bodyShape: 'Rectangle',
+    handle: '@zeina.al.sabbagh',
+    tags: [],
+    availability: '',
+    order: 8,
+    photoRate: 555,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png', caption: '' }],
+  },
+  {
+    slug: 'nermin-akhundzada',
+    name: 'Nermin Akhundzada',
+    cover: '/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png',
+    album: 'NerminAkhundzada',
+    location: 'Baku, Azerbaijan',
+    age: '26',
+    height: '167 cm',
+    weight: '55 kg',
+    bodyShape: 'Pear',
+    handle: '@nermin.akhundzada',
+    tags: [],
+    availability: '',
+    order: 9,
+    photoRate: 520,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png', caption: '' }],
+  },
+  {
+    slug: 'rasha-fakhoury',
+    name: 'Rasha Fakhoury',
+    cover: '/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.png',
+    album: 'RashaFakhoury',
+    location: 'Amman, Jordan',
+    age: '28',
+    height: '170 cm',
+    weight: '59 kg',
+    bodyShape: 'Hourglass',
+    handle: '@rasha.fakhoury',
+    tags: [],
+    availability: '',
+    order: 10,
+    photoRate: 600,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: 'An understated editorial spirit with a confident point of view and an eye for sculptural details.',
+    illustrative: true,
+    gallery: [],
+    photos: [{ src: '/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.png', caption: '' }],
+  },
 ];

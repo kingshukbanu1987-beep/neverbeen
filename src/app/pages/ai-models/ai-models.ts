@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { aiModelProfiles } from './ai-model-data';
+import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 
 @Component({
   selector: 'app-ai-models-page',
@@ -35,5 +35,14 @@ export class AiModelsPage {
 
   protected indexLabel(index: number): string {
     return String(index + 1).padStart(2, '0');
+  }
+
+  /** How many photographs the model's album holds — shown large on the cover. */
+  protected photoCount(model: AiModelProfile): number {
+    return model.photos.length;
+  }
+
+  protected photoLabel(model: AiModelProfile): string {
+    return model.photos.length === 1 ? 'photograph' : 'photographs';
   }
 }

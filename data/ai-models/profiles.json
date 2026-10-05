@@ -1,66 +1,15 @@
 {
-  "Toulene Arslan.png": {
-    "location": "Istanbul, Türkiye",
-    "age": "27",
-    "height": "168 cm",
-    "weight": "55 kg",
-    "bodyShape": "Hourglass",
-    "bio": "A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.",
-    "illustrative": true
-  },
-  "Zeina Al-Sabbagh.png": {
-    "location": "Beirut, Lebanon",
-    "age": "25",
-    "height": "165 cm",
-    "weight": "53 kg",
-    "bodyShape": "Rectangle",
-    "bio": "A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.",
-    "illustrative": true
-  },
-  "Fatima Sana Hussaini.png": {
-    "location": "Kuala Lumpur, Malaysia",
-    "age": "26",
-    "height": "164 cm",
-    "weight": "52 kg",
+  "Nourhan Durrani.png": {
+    "location": "Sarajevo, Bosnia and Herzegovina",
+    "age": "30",
+    "height": "172 cm",
+    "weight": "60 kg",
     "bodyShape": "Pear",
-    "bio": "A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.",
-    "illustrative": true
-  },
-  "Rasha Fakhoury.png": {
-    "location": "Amman, Jordan",
-    "age": "28",
-    "height": "170 cm",
-    "weight": "59 kg",
-    "bodyShape": "Hourglass",
-    "bio": "An understated editorial spirit with a confident point of view and an eye for sculptural details.",
-    "illustrative": true
-  },
-  "Salma Ahmadzai.png": {
-    "location": "Tbilisi, Georgia",
-    "age": "24",
-    "height": "166 cm",
-    "weight": "54 kg",
-    "bodyShape": "Athletic",
-    "bio": "A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.",
-    "illustrative": true
-  },
-  "Rozalin El Masry.png": {
-    "location": "Alexandria, Egypt",
-    "age": "29",
-    "height": "171 cm",
-    "weight": "58 kg",
-    "bodyShape": "Rectangle",
-    "bio": "A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.",
-    "illustrative": true
-  },
-  "Nermin Akhundzada.png": {
-    "location": "Baku, Azerbaijan",
-    "age": "26",
-    "height": "167 cm",
-    "weight": "55 kg",
-    "bodyShape": "Pear",
-    "bio": "A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.",
-    "illustrative": true
+    "bio": "A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.",
+    "illustrative": true,
+    "order": 1,
+    "photoRate": 550,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Nirvana Noorzai.png": {
     "location": "Dubai, United Arab Emirates",
@@ -69,7 +18,10 @@
     "weight": "57 kg",
     "bodyShape": "Hourglass",
     "bio": "A polished, versatile presence imagined between bold architecture, soft light and new destinations.",
-    "illustrative": true
+    "illustrative": true,
+    "order": 2,
+    "photoRate": 570,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
   "Sereenah Noorzai.png": {
     "location": "Muscat, Oman",
@@ -78,15 +30,93 @@
     "weight": "50 kg",
     "bodyShape": "Athletic",
     "bio": "A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.",
-    "illustrative": true
+    "illustrative": true,
+    "order": 3,
+    "photoRate": 540,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   },
-  "Nourhan Durrani.png": {
-    "location": "Sarajevo, Bosnia and Herzegovina",
-    "age": "30",
-    "height": "172 cm",
-    "weight": "60 kg",
+  "Rozalin El Masry.png": {
+    "location": "Alexandria, Egypt",
+    "age": "29",
+    "height": "171 cm",
+    "weight": "58 kg",
+    "bodyShape": "Rectangle",
+    "bio": "A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.",
+    "illustrative": true,
+    "order": 4,
+    "photoRate": 580,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+  },
+  "Fatima Sana Hussaini.png": {
+    "location": "Kuala Lumpur, Malaysia",
+    "age": "26",
+    "height": "164 cm",
+    "weight": "52 kg",
     "bodyShape": "Pear",
-    "bio": "A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.",
-    "illustrative": true
+    "bio": "A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.",
+    "illustrative": true,
+    "order": 5,
+    "photoRate": 560,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+  },
+  "Salma Ahmadzai.png": {
+    "location": "Tbilisi, Georgia",
+    "age": "24",
+    "height": "166 cm",
+    "weight": "54 kg",
+    "bodyShape": "Athletic",
+    "bio": "A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.",
+    "illustrative": true,
+    "order": 6,
+    "photoRate": 530,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+  },
+  "Toulene Arslan.png": {
+    "location": "Istanbul, Türkiye",
+    "age": "27",
+    "height": "168 cm",
+    "weight": "55 kg",
+    "bodyShape": "Hourglass",
+    "bio": "A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.",
+    "illustrative": true,
+    "order": 7,
+    "photoRate": 590,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+  },
+  "Zeina Al-Sabbagh.png": {
+    "location": "Beirut, Lebanon",
+    "age": "25",
+    "height": "165 cm",
+    "weight": "53 kg",
+    "bodyShape": "Rectangle",
+    "bio": "A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.",
+    "illustrative": true,
+    "order": 8,
+    "photoRate": 555,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+  },
+  "Nermin Akhundzada.png": {
+    "location": "Baku, Azerbaijan",
+    "age": "26",
+    "height": "167 cm",
+    "weight": "55 kg",
+    "bodyShape": "Pear",
+    "bio": "A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.",
+    "illustrative": true,
+    "order": 9,
+    "photoRate": 520,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+  },
+  "Rasha Fakhoury.png": {
+    "location": "Amman, Jordan",
+    "age": "28",
+    "height": "170 cm",
+    "weight": "59 kg",
+    "bodyShape": "Hourglass",
+    "bio": "An understated editorial spirit with a confident point of view and an eye for sculptural details.",
+    "illustrative": true,
+    "order": 10,
+    "photoRate": 600,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   }
 }

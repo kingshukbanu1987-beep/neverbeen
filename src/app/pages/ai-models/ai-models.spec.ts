@@ -11,30 +11,93 @@ describe('AiModelsPage', () => {
     }).compileComponents();
   });
 
-  it('renders the ten filename-named portfolios and labels randomized details as illustrative', () => {
+  it('renders the portfolios in the published order and labels randomized details as illustrative', () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     fixture.detectChanges();
 
     const element: HTMLElement = fixture.nativeElement;
     const expectedNames = [
-      'Toulene Arslan',
-      'Zeina Al-Sabbagh',
-      'Fatima Sana Hussaini',
-      'Rasha Fakhoury',
-      'Salma Ahmadzai',
-      'Rozalin El Masry',
-      'Nermin Akhundzada',
+      'Nourhan Durrani',
       'Nirvana Noorzai',
       'Sereenah Noorzai',
-      'Nourhan Durrani',
+      'Rozalin El Masry',
+      'Fatima Sana Hussaini',
+      'Salma Ahmadzai',
+      'Toulene Arslan',
+      'Zeina Al-Sabbagh',
+      'Nermin Akhundzada',
+      'Rasha Fakhoury',
     ];
 
     expect(element.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
     expect(aiModelProfiles.map((profile) => profile.name)).toEqual(expectedNames);
+    expect(aiModelProfiles.map((profile) => profile.order)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    ]);
     expect(element.querySelectorAll('.model-card').length).toBe(expectedNames.length);
     expect(element.querySelector('.empty-studio')).toBeNull();
     expect(element.querySelector('.profile-data-note')?.textContent).toContain('illustrative');
     expect(aiModelProfiles.every((profile) => profile.illustrative)).toBe(true);
+
+    // The cards follow the data order, not the folder order.
+    const cardNames = Array.from(element.querySelectorAll('.model-card h3')).map((heading) =>
+      heading.textContent?.trim(),
+    );
+    expect(cardNames).toEqual(expectedNames);
+  });
+
+  it('shows how many photographs each portfolio holds, in large bold type on the cover', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const cards = Array.from(element.querySelectorAll('.model-card'));
+
+    for (const [index, profile] of aiModelProfiles.entries()) {
+      const badge = cards[index].querySelector('.card-photo-count');
+      expect(badge, `${profile.name} photo count`).toBeTruthy();
+      expect(badge?.querySelector('b')?.textContent?.trim()).toBe(String(profile.photos.length));
+      expect(badge?.querySelector('i')?.textContent?.trim()).toBe(
+        profile.photos.length === 1 ? 'photograph' : 'photographs',
+      );
+      expect(badge?.getAttribute('aria-label')).toContain(String(profile.photos.length));
+    }
+  });
+
+  it('publishes a per-photo rate in INR for every model, starting at ₹550', () => {
+    for (const profile of aiModelProfiles) {
+      expect(profile.photoRate, `${profile.name} photo rate`).toBeGreaterThan(0);
+      expect(profile.photoNote).toContain('INR');
+    }
+
+    // The entry rate is ₹550 a photograph; the models vary slightly around it.
+    expect(aiModelProfiles[0].photoRate).toBe(550);
+    expect(Math.min(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(520);
+    expect(Math.max(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(600);
+  });
+
+  it('keeps the header to a short, graphic-free title', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const hero = element.querySelector('.studio-hero');
+
+    expect(hero?.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
+    expect(hero?.textContent).toContain('model profiles');
+    expect(hero?.textContent).toContain('per photograph');
+
+    // No decorative artwork, glow layers or scroll cue in the header.
+    for (const selector of [
+      '.hero-art',
+      '.hero-gridlines',
+      '.hero-glow',
+      '.scroll-cue',
+      '.hero-content',
+      '.hero-footer',
+    ]) {
+      expect(element.querySelector(selector), selector).toBeNull();
+    }
   });
 
   it('renders a designed portrait placeholder when an original cover is not available', () => {

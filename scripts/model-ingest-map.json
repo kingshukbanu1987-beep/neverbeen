@@ -1,0 +1,105 @@
+{
+  "albums": [
+    {
+      "album": "NourhanDurrani",
+      "cover": "Nourhan Durrani.png",
+      "entries": [
+        {
+          "uuid": "6KwmL5Du72XDmxsV1I5p0B84lDPMM0QmOahIDdSw6xs",
+          "file": "01-magenta-ruffles-portrait.png",
+          "caption": "Magenta ruffles, studio session"
+        },
+        {
+          "uuid": "q5mPPUoXm65tngyAVAaMVUMw8eWq_pVUliDF8y-5-mw",
+          "file": "02-magenta-ruffles-profile.png",
+          "caption": "Profile study, studio session"
+        },
+        {
+          "uuid": "9wmLz-uuKqjhcygedYYb1WR0J67GYl79IcEAlpqe8hk",
+          "file": "03-magenta-ruffles-turned.png",
+          "caption": "Turned away, studio session"
+        },
+        {
+          "uuid": "oWE-KRYfWvcPVCd1TY1RCxSyhVQlg_ApVv2q5XXCJ_w",
+          "file": "04-magenta-ruffles-downturn.png",
+          "caption": "Quiet moment, studio session"
+        },
+        {
+          "uuid": "tIpoqfYsUqD5hN3Dn2fI9dUZIfEW-4R2OeEhLaXa6kE",
+          "file": "05-magenta-ruffles-hair-swept.png",
+          "caption": "Hair in motion, studio session"
+        },
+        {
+          "uuid": "s8Vb2EmiVMgyvXRU3b2pMRrRswX8KSlhfrjGpvlmqmg",
+          "file": "06-satin-stripes-smile.png",
+          "caption": "Satin stripes, laughing"
+        },
+        {
+          "uuid": "Wh7G8U8S6Aftxe_XF0GCac1u0Necqc3rvlEfIJY2w0s",
+          "file": "07-satin-stripes-bow.png",
+          "caption": "Tying the bow, satin stripes"
+        },
+        {
+          "uuid": "ZrM3lMVLgRf5wVuxbX1lmVeqZp2uA1ZlQGo1tYnR2Is",
+          "file": "08-satin-stripes-closeup.png",
+          "caption": "Close-up, satin stripes"
+        },
+        {
+          "uuid": "Wob2V7ZpZQFS9ipqJKvCtLumUZIuD6OygWwbhw_NWuA",
+          "file": "09-iridescent-tailoring.png",
+          "caption": "Iridescent tailoring"
+        },
+        {
+          "uuid": "YWDRy0OdZDKbI4Zd4sXmX0oYTf0yHj_kZqCDNibN7ig",
+          "file": "10-velvet-embroidery.png",
+          "caption": "Velvet and embroidery"
+        },
+        {
+          "uuid": "z6G193m8ng-USzmgDxpy6jZWG1HscmrYh2NOMQ9Zuw8",
+          "file": "11-black-knit-portrait.png",
+          "caption": "Black knit, low key"
+        },
+        {
+          "uuid": "0gCQ0wbHMA0JMak-nzMmqs2WSzLJia4Mre7O0M6_41Y",
+          "file": "12-red-off-shoulder-portrait.png",
+          "caption": "Red off-shoulder, looking to camera"
+        },
+        {
+          "uuid": "vzoZDvHb3kPk6W2rAONs-e7q-Vkdxg5HGivuCgMsPeE",
+          "file": "13-red-off-shoulder-gaze.png",
+          "caption": "Quiet gaze, red off-shoulder"
+        },
+        {
+          "uuid": "Qjin-Jea6P8gkPNnXPf1rTOTIURXSjDoT_YZwgYkGOk",
+          "file": "14-red-off-shoulder-reclined.png",
+          "caption": "Reclined close-up, red off-shoulder"
+        },
+        {
+          "uuid": "5C61w_pUI450h-VqlftxabeL1FE9Q_DFB3k2eG0Kakk",
+          "file": "15-blue-shirt-laughing.png",
+          "caption": "Laughing out loud, light blue shirt"
+        },
+        {
+          "uuid": "8mebr770vEaTQi5APSUR1GtdHLgeZwldscf31T0lrEg",
+          "file": "16-blue-shirt-seated.png",
+          "caption": "Seated study, light blue shirt"
+        },
+        {
+          "uuid": "m16NLq70Ql8u4DYgen8yvZFvXu_XTniQs8vKDTFoZPA",
+          "file": "17-crew-uniform-portrait.png",
+          "caption": "Crew uniform, looking to camera"
+        },
+        {
+          "uuid": "_a_fR7aCidSS6J8ItcWazABYn1_FVO52gf6kGjJ2hJk",
+          "file": "18-crew-uniform-turned.png",
+          "caption": "Crew uniform, turned away"
+        },
+        {
+          "uuid": "vAJ-bm0kGGn1ihQkUIhXCQ0NP4kW2q_dEqp3HMbnFbE",
+          "file": "19-crew-uniform-scarf.png",
+          "caption": "Adjusting the scarf, crew uniform"
+        }
+      ]
+    }
+  ]
+}

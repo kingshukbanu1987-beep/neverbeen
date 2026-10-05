@@ -79,18 +79,76 @@ ng test
 
 ## NeverBeen AI Models
 
-The `/ai-models` page is a dark, magenta-accented studio directory. Each cover opens its own
-portfolio at `/ai-models/:slug`, with the model's name, location, age, height, weight, body shape,
-short introduction and optional photo gallery. Unspecified fields remain blank; randomized or
-unverified profile details are marked as illustrative until verified.
+The `/ai-models` page is a dark, magenta-accented studio directory that opens on a short, plain title
+bar — no artwork or decorative panels. Portfolios appear in the published order (`order` in
+`data/ai-models/profiles.json`) and every cover states, in large bold type, how many photographs that
+model has in her portfolio. Each cover opens its own
+portfolio at `/ai-models/:slug`: an Instagram-style profile header (avatar, handle, photographs
+count, location, age, height, weight, body shape, tags and short introduction) above a photo grid that
+is shuffled into a fresh random order on every visit — with a **Shuffle** control in the toolbar for
+another arrangement on demand.
+Clicking any photograph expands it in a full-screen pop-up that can be browsed with the arrow keys,
+the on-screen arrows, the thumbnail strip or a swipe on mobile, with a grid/feed layout switch.
+Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative
+until verified.
 
-Add cover portraits to `public/NeverBeenModels` and put each model's details in
-`data/ai-models/profiles.json`. The cover filename (without its extension) becomes the displayed
-model name. A metadata entry can be added before its portrait; the portfolio then shows a designed
-placeholder until a matching image is added. Additional images go in `public/ai-model-assets/gallery`
-and can be referenced in the matching profile's `gallery` array. See `data/ai-models/README.md` for
-the metadata format. Refresh the manifest with `npm run generate:ai-models`; `npm start` and
-`npm run build` run it automatically.
+Each model owns one album folder inside `public/NeverBeenModels`, named after the model with no
+spaces (for example `public/NeverBeenModels/NourhanDurrani`). Drop the model's photographs into that
+folder and they appear in the portfolio grid; the first image (or the one named `cover.*`) is used as
+the cover and avatar. Nothing needs to be run or edited: while `npm start` is running an album
+watcher regenerates the manifest as the files land and the dev server reloads the page, `npm run
+build` refreshes it in its prebuild step, and a brand-new folder becomes a new portfolio page on its
+own. Optional details live in `<album>/profile.json` or in `data/ai-models/profiles.json` — see
+`data/ai-models/README.md` for the metadata format and `public/NeverBeenModels/README.md` for the
+folder layout. The legacy `public/ai-model-assets/portraits` and `public/ai-model-assets/gallery`
+folders remain supported.
+
+Uploaded or attached photographs are filed with
+
+```bash
+npm run ingest:model-photos -- <source-folder>   # defaults to /home/user/uploads
+```
+
+which copies each image into its model album with a readable name and caption
+(`scripts/model-ingest-map.json` holds the album, filename and caption for each attachment), records
+the album's frame order in its `profile.json` and regenerates the manifest in one step. It is safe to
+run repeatedly: a photograph already in the album is never copied twice, and a UUID-named file left
+by an upload is renamed in place.
+
+### Renting a model
+
+Every portfolio carries a **Rent this model** button with a `From ₹550 per photograph` hint. It opens
+an ultra-modern dark booking pop-up that matches the studio directory: a calendar for the **delivery
+date**, the model's booking information, and a **Rate per Photo** in INR. Prices start at ₹550 a
+photograph and each model quotes her own rate, published in `data/ai-models/profiles.json`:
+
+```jsonc
+"photoRate": 550,
+"photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+```
+
+The pop-up offers **10 photographs** (the minimum order), **25**, **50** and **100**, each priced at
+that model's per-photo rate (10 photographs at ₹550 is ₹5,500, 100 at ₹550 is ₹55,000), plus a
+**Customized order** for anything else. A customized order is a selective charge: it carries no price
+and the studio quotes it after reading the brief.
+
+Submitting the form posts the model, the order and the client's booking information to
+`POST /api/model-booking`. The Worker (`worker/index.ts`, logic in `worker/model-booking-core.mjs`)
+validates the request and sends a formatted WhatsApp message to the founder through the WhatsApp Cloud
+API. The founder's number is a Worker secret — it is never sent to the browser, never embedded in the
+page and never echoed back in the response; when the channel is not configured the endpoint answers
+`503` and the form says the booking channel is not connected yet.
+
+```bash
+npx wrangler secret put WHATSAPP_TOKEN             # WhatsApp Cloud API token
+npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID   # sender phone number id
+npx wrangler secret put FOUNDER_WHATSAPP_NUMBER    # where the bookings go
+```
+
+`npm start` runs a local stand-in for the endpoint (`scripts/dev-booking-api.mjs`, port 8787, proxied
+by `proxy.conf.json`) over the same shared logic, so the form works end-to-end in development. Without
+the three variables above it appends the message to the gitignored `booking-outbox.log` instead of
+sending it.
 
 ## The Collection page
 
