@@ -68,7 +68,7 @@ export class StorylinePage {
       story: [
         'Before they married, Lotte and Bram drew a tiny blue train on the back of their wedding invitation. It marked the honeymoon they imagined: Lucerne by rail, a slow afternoon beside Lake Brienz, and no alarm set for the next morning.',
         'Then work kept asking for one more thing. A teammate was away; a launch slipped; urgent shifts landed on the same dates. Their leave requests moved from spring to autumn, then off the calendar. They could afford the idea. What they could not find was a clear week when both of them could step away without letting someone down.',
-        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
+        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. The next stop wanders Zermatt’s shop-lined streets, pauses at a bakery and small local stores, and catches Lotte and Bram with friendly shopkeepers and two friends from the train in the same outfits. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
       ],
       reason:
         'They chose NeverBeen for a personal, imagined keepsake while work pressure kept shifting their plans—not to pretend the honeymoon had happened, but to honour a promise they still hope to keep.',
@@ -245,6 +245,56 @@ export class StorylinePage {
           src: '/storyline/338-lotte-bram-glacier-express-st-moritz-arrival-wide.jpg',
           alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf arriving beside the Glacier Express in St. Moritz, with a passer-by blurred in the foreground.',
           caption: 'The train at the end of the imagined line',
+        },
+        {
+          src: '/storyline/339-lotte-bram-zermatt-bahnhofstrasse-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf exploring Zermatt’s shop-lined Bahnhofstrasse, with the Matterhorn between rooftops and a passer-by blurred at the edge.',
+          caption: 'A shop-window detour on Bahnhofstrasse',
+        },
+        {
+          src: '/storyline/340-lotte-bram-zermatt-woodshop-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte in the same camel coat and burgundy scarf and Bram in the same navy quilted jacket and olive scarf chatting with an older local woodcarver outside his Zermatt shop, holding a tiny carved chalet.',
+          caption: 'A carved chalet from the wood shop',
+        },
+        {
+          src: '/storyline/341-lotte-bram-zermatt-bakery-owner-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf beside a friendly adult Zermatt bakery owner at the doorway, with paper bags and a softly cropped edge; the phone is not visible.',
+          caption: 'A quick bakery-door selfie with a local',
+        },
+        {
+          src: '/storyline/342-lotte-bram-zermatt-shop-chocolate-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte’s camel coat and cream-knit sleeve and Bram’s navy quilted cuff beside their wedding-ringed hands choosing Swiss chocolates and a small carved Matterhorn at a shop counter, with a crinkled paper bag and shallow focus.',
+          caption: 'Chocolate, rings and a tiny Matterhorn',
+        },
+        {
+          src: '/storyline/343-lotte-bram-zermatt-friends-group-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile group selfie of fictional Lotte in the same camel coat and burgundy scarf and Bram in the same navy quilted jacket and olive scarf leaning in with two adult friends they met on the Glacier Express beneath a Zermatt café awning; the phone is not visible.',
+          caption: 'Four smiles beneath the café awning',
+        },
+        {
+          src: '/storyline/344-lotte-bram-zermatt-village-friends-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf walking with one adult train friend between Zermatt’s wooden shops, with the Matterhorn above the rooftops and a passer-by in motion blur.',
+          caption: 'Another block through the old village',
+        },
+        {
+          src: '/storyline/345-lotte-bram-zermatt-local-shopkeeper-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf laughing with a friendly adult local shopkeeper at a Zermatt cheese counter, with window glare and an imperfectly cropped edge.',
+          caption: 'A cheese-counter recommendation',
+        },
+        {
+          src: '/storyline/346-lotte-bram-zermatt-postcard-shop-candid.jpg',
+          alt: 'AI-generated, slightly tilted candid mobile snapshot of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf browsing Matterhorn postcards in a small Zermatt shop, with their friends softly blurred in the doorway and one card partly blocking the frame.',
+          caption: 'Postcards before the next train',
+        },
+        {
+          src: '/storyline/347-lotte-bram-zermatt-evening-romantic-selfie.jpg',
+          alt: 'AI-generated, slightly tilted low-light mobile selfie of fictional Lotte in her camel coat and burgundy scarf and Bram in his navy quilted jacket and olive scarf touching foreheads beside a warmly lit Zermatt chalet shop window, with streetlamp flare and windblown hair; the phone is not visible.',
+          caption: 'One last close selfie at dusk',
+        },
+        {
+          src: '/storyline/348-lotte-bram-zermatt-cafe-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte’s camel coat and cream-knit sleeve and Bram’s navy quilted cuff beside their wedding-ringed hands sharing a pastry and hot chocolate at an outdoor Zermatt café table, with crumbs and a folded local map in soft focus.',
+          caption: 'Hot chocolate, one pastry, two hands',
         },
       ],
     },
