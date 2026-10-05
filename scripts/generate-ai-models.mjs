@@ -2,8 +2,9 @@
 /**
  * Builds the NeverBeen AI Models portfolio manifest.
  *
- * Add one cover image per model to `public/ai-model-assets/portraits`. The cover's
- * filename (without its extension) becomes the model name. Optional model facts
+ * Add one cover image per model to `public/NeverBeenModels`. The cover's filename
+ * (without its extension) becomes the model name. The legacy
+ * `public/ai-model-assets/portraits` folder remains supported. Optional model facts
  * live in `data/ai-models/profiles.json`; additional photos live in the gallery folder.
  *
  * The generated TypeScript is rebuilt by `npm start` / `npm run build` and can
@@ -16,7 +17,9 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const publicDir = join(projectRoot, 'public');
 const modelsDir = join(publicDir, 'ai-model-assets');
-const portraitsDir = join(modelsDir, 'portraits');
+const portraitsDir = join(publicDir, 'NeverBeenModels');
+const legacyPortraitsDir = join(modelsDir, 'portraits');
+const portraitDirectories = [portraitsDir, legacyPortraitsDir];
 const galleryDir = join(modelsDir, 'gallery');
 const profilesFile = join(projectRoot, 'data', 'ai-models', 'profiles.json');
 const outputFile = join(projectRoot, 'src', 'app', 'pages', 'ai-models', 'ai-model-data.ts');
@@ -75,6 +78,15 @@ function publicUrl(absolutePath) {
   return `/${urlPath}`;
 }
 
+function portraitRelativePath(absolutePath) {
+  const sourceDirectory = portraitDirectories.find((directory) =>
+    absolutePath.startsWith(`${directory}${sep}`),
+  );
+  return sourceDirectory
+    ? relative(sourceDirectory, absolutePath).split(sep).join('/')
+    : relative(portraitsDir, absolutePath).split(sep).join('/');
+}
+
 function galleryUrls(entries, modelName, coverFile) {
   if (!Array.isArray(entries)) return [];
 
@@ -83,7 +95,7 @@ function galleryUrls(entries, modelName, coverFile) {
   for (const entry of entries) {
     if (typeof entry !== 'string' || !entry.trim()) continue;
 
-    const normalized = entry.trim().replaceAll('\\', '/');
+    const normalized = entry.trim().replaceAll(String.fromCharCode(92), '/');
     const absolutePath = resolve(galleryDir, normalized);
     if (absolutePath !== galleryDir && !absolutePath.startsWith(`${galleryDir}${sep}`)) {
       console.warn(
@@ -104,43 +116,79 @@ function galleryUrls(entries, modelName, coverFile) {
   return result;
 }
 
+function imageStem(fileName) {
+  return fileName.replace(/\.[^.]+$/, '');
+}
+
 function buildProfiles() {
   const profileData = readProfiles();
-  const images = listImages(portraitsDir).sort((a, b) =>
-    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }),
+  const images = portraitDirectories.flatMap((directory) =>
+    listImages(directory).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }),
+    ),
   );
-  const usedSlugs = new Set();
+  const imagesByStem = new Map();
+  for (const imagePath of images) {
+    const fileName = imagePath.split(sep).pop();
+    const key = imageStem(fileName).toLocaleLowerCase();
+    imagesByStem.set(key, [...(imagesByStem.get(key) ?? []), imagePath]);
+  }
 
-  return images.map((coverPath) => {
-    const coverFile = relative(portraitsDir, coverPath).split(sep).join('/');
-    const fileName = coverFile.split('/').pop();
-    const name = fileName.replace(/\.[^.]+$/, '');
-    const baseName = name;
+  const usedImages = new Set();
+  const usedSlugs = new Set();
+  const profiles = [];
+
+  const createProfile = (name, coverPath, rawProfile) => {
     const initialSlug = slugify(name);
     let slug = initialSlug;
     let suffix = 2;
     while (usedSlugs.has(slug)) slug = `${initialSlug}-${suffix++}`;
     usedSlugs.add(slug);
 
-    const rawProfile =
-      profileData[coverFile] ?? profileData[fileName] ?? profileData[baseName] ?? {};
     const profile =
       rawProfile && typeof rawProfile === 'object' && !Array.isArray(rawProfile) ? rawProfile : {};
-    const additionalPhotos = galleryUrls(profile.gallery, name, coverPath);
 
     return {
       slug,
       name,
-      cover: publicUrl(coverPath),
+      cover: coverPath ? publicUrl(coverPath) : '',
       location: text(profile.location),
       age: text(profile.age),
       height: text(profile.height),
       weight: text(profile.weight),
       bodyShape: text(profile.bodyShape),
       bio: text(profile.bio ?? profile.shortInfo ?? profile.description),
-      gallery: additionalPhotos,
+      illustrative: profile.illustrative === true,
+      gallery: galleryUrls(profile.gallery, name, coverPath),
     };
-  });
+  };
+
+  // Keep metadata-only entries visible while their portrait files are unavailable. When a
+  // matching image is added later, it is bound to this same profile by filename stem.
+  for (const [profileKey, rawProfile] of Object.entries(profileData)) {
+    const fileName = profileKey.replaceAll(String.fromCharCode(92), '/').split('/').pop();
+    const name = imageStem(fileName ?? '');
+    if (!name) continue;
+
+    const matchingImage = (imagesByStem.get(name.toLocaleLowerCase()) ?? []).find(
+      (imagePath) => !usedImages.has(imagePath),
+    );
+    if (matchingImage) usedImages.add(matchingImage);
+    profiles.push(createProfile(name, matchingImage, rawProfile));
+  }
+
+  // Images without an explicit metadata entry still become profiles named from their filename.
+  for (const coverPath of images) {
+    if (usedImages.has(coverPath)) continue;
+    const coverFile = portraitRelativePath(coverPath);
+    const fileName = coverFile.split('/').pop();
+    const name = imageStem(fileName);
+    const rawProfile = profileData[coverFile] ?? profileData[fileName] ?? profileData[name] ?? {};
+    usedImages.add(coverPath);
+    profiles.push(createProfile(name, coverPath, rawProfile));
+  }
+
+  return profiles;
 }
 
 function renderTypeScript(profiles) {
@@ -164,6 +212,8 @@ export interface AiModelProfile {
   bodyShape: string;
   /** Short profile introduction. */
   bio: string;
+  /** Whether profile details are illustrative placeholders pending verification. */
+  illustrative: boolean;
   /** Additional gallery images, beyond the cover. */
   gallery: string[];
 }

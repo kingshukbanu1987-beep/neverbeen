@@ -1,1 +1,1 @@
-Photo assets for the NeverBeen AI Model portfolios. Add one cover per model in `portraits/`; add optional gallery photographs in `gallery/` and reference them in `data/ai-models/profiles.json`.
+Photo assets for the NeverBeen AI Model portfolios. The preferred cover image folder is `public/NeverBeenModels/`; this `portraits/` folder remains supported for existing cover images. Add optional gallery photographs in `gallery/` and reference them in `data/ai-models/profiles.json`.

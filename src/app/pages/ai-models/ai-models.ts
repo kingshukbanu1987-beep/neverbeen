@@ -13,6 +13,9 @@ export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   protected readonly search = signal('');
   protected readonly totalCount = computed(() => String(this.models.length).padStart(2, '0'));
+  protected readonly hasIllustrativeProfiles = computed(() =>
+    this.models.some((model) => model.illustrative),
+  );
   protected readonly filteredModels = computed(() => {
     const query = this.search().trim().toLocaleLowerCase();
     if (!query) return this.models;

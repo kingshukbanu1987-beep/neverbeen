@@ -133,6 +133,36 @@
   object-position: center 36%;
 }
 
+.cover-portrait-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1rem;
+  background:
+    radial-gradient(circle at 51% 39%, rgb(188 35 104 / 24%), transparent 32%),
+    linear-gradient(150deg, #281323, #100c11 76%);
+  color: #c3adbf;
+  font-size: 0.59rem;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.placeholder-symbol {
+  display: grid;
+  width: 86px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgb(240 112 168 / 42%);
+  border-radius: 50%;
+  color: #f070a8;
+  font-size: 2.7rem;
+  box-shadow: 0 0 54px rgb(169 17 85 / 17%);
+}
+
 .cover-shade {
   position: absolute;
   inset: 0;
@@ -247,6 +277,17 @@
   color: rgb(247 240 244 / 69%);
   font-size: 0.96rem;
   line-height: 1.8;
+}
+
+.illustrative-note {
+  max-width: 490px;
+  margin: 0.9rem 0 0;
+  padding: 0.7rem 0.8rem;
+  border-left: 2px solid rgb(240 112 168 / 66%);
+  background: rgb(105 16 59 / 10%);
+  color: #c9b7c5;
+  font-size: 0.68rem;
+  line-height: 1.55;
 }
 
 .profile-facts {

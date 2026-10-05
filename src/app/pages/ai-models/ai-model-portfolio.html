@@ -11,11 +11,22 @@
     @if (model(); as profile) {
       <section class="portfolio-cover" aria-labelledby="portfolio-title">
         <div class="cover-photo">
-          <img
-            [src]="profile.cover"
-            [alt]="profile.name + ' — portfolio cover'"
-            fetchpriority="high"
-          />
+          @if (profile.cover) {
+            <img
+              [src]="profile.cover"
+              [alt]="profile.name + ' — portfolio cover'"
+              fetchpriority="high"
+            />
+          } @else {
+            <div
+              class="cover-portrait-placeholder"
+              role="img"
+              [attr.aria-label]="'Original portrait pending for ' + profile.name"
+            >
+              <span class="placeholder-symbol" aria-hidden="true">✳</span>
+              <span aria-hidden="true">Original portrait pending</span>
+            </div>
+          }
           <div class="cover-shade" aria-hidden="true"></div>
           <div class="cover-photo-topline">
             <span>NB / DIGITAL TALENT</span>
@@ -36,6 +47,11 @@
           <p class="profile-bio">
             {{ profile.bio || 'A short introduction to this model is on its way.' }}
           </p>
+          @if (profile.illustrative) {
+            <p class="illustrative-note" role="note">
+              Randomized illustrative profile details — verify and replace before publication.
+            </p>
+          }
 
           <dl class="profile-facts" aria-label="Model information">
             <div>
