@@ -443,6 +443,63 @@
   color: var(--booking-muted);
 }
 
+.booking-rates-title {
+  margin-top: 0.35rem;
+}
+
+.booking-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem 0.75rem;
+  margin: 0;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--booking-line);
+  border-radius: 14px;
+  background: linear-gradient(150deg, rgb(239 106 165 / 9%), rgb(255 255 255 / 2%));
+}
+
+.booking-fact {
+  min-width: 0;
+}
+
+.booking-fact-wide {
+  grid-column: 1 / -1;
+}
+
+.booking-fact dt {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--booking-faint);
+}
+
+.booking-fact dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--booking-text);
+}
+
+.booking-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booking-tags li {
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--booking-line);
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--booking-muted);
+}
+
 .rate-list {
   display: grid;
   gap: 0.5rem;

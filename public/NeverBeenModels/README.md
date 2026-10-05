@@ -33,6 +33,16 @@ public/NeverBeenModels/
 Photographs are listed cover first, then in natural filename order. Set `photos` in `profile.json`
 to choose the exact order, and use `captions` to give a frame its own caption in the pop-up.
 
+The number of photographs in the folder is what the model's cover on `/ai-models` reports, so moving
+a file in or out updates that count on the next manifest refresh.
+
+## Naming photographs
+
+Name a model's frames with the frame number first so the folder, the grid and the ingest map all read
+in the same order — for example `01-magenta-ruffles-portrait.png`, `12-red-off-shoulder-gaze.png`.
+The cover keeps the model's own name (`Nourhan Durrani.png`). Any name works, but numbers keep the
+portfolio in sequence and make the folder easy to scan.
+
 Images placed directly in `public/NeverBeenModels` (outside the folders) are still picked up, and
 `public/ai-model-assets/portraits` + `public/ai-model-assets/gallery` remain supported as legacy
 locations.
@@ -49,3 +59,8 @@ to copy each attachment into its album with a readable filename, set the album's
 captions in `<album>/profile.json` and regenerate the manifest in one step.
 `scripts/model-ingest-map.json` holds the album, filename and caption for each attachment; the
 script reports anything it could not find and exits with an error listing the missing frames.
+
+Every entry is matched by the upload's UUID, so an upload that has already been filed is left alone
+and the script can be run again safely at any time — a later upload only needs its own entry appended
+to the map. Files that arrive through the GitHub web uploader land in the album directly; add their
+UUIDs to the same map, or simply rename them in place following the naming convention above.

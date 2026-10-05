@@ -229,7 +229,48 @@
         </div>
 
         <aside class="booking-side" aria-labelledby="booking-rates">
-          <h3 id="booking-rates" class="booking-side-title">Rates per term</h3>
+          <h3 id="booking-rates" class="booking-side-title">Booking information</h3>
+
+          <dl class="booking-facts">
+            @if (model().availability) {
+              <div class="booking-fact booking-fact-wide">
+                <dt>Availability</dt>
+                <dd>{{ model().availability }}</dd>
+              </div>
+            }
+            <div class="booking-fact">
+              <dt>Based in</dt>
+              <dd>{{ model().location || 'To be announced' }}</dd>
+            </div>
+            @if (model().height) {
+              <div class="booking-fact">
+                <dt>Height</dt>
+                <dd>{{ model().height }}</dd>
+              </div>
+            }
+            @if (model().age) {
+              <div class="booking-fact">
+                <dt>Age</dt>
+                <dd>{{ model().age }}</dd>
+              </div>
+            }
+            @if (model().bodyShape) {
+              <div class="booking-fact">
+                <dt>Body shape</dt>
+                <dd>{{ model().bodyShape }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (model().tags.length) {
+            <ul class="booking-tags" aria-label="Portfolio tags">
+              @for (tag of model().tags; track tag) {
+                <li>{{ tag }}</li>
+              }
+            </ul>
+          }
+
+          <h3 class="booking-side-title booking-rates-title">Rates per term</h3>
 
           <div class="rate-list" role="radiogroup" aria-label="Booking term">
             @for (term of terms(); track term.term) {

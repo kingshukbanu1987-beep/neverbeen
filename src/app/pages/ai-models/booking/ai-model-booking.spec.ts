@@ -68,6 +68,24 @@ describe('Rent this model', () => {
     expect(document.body.style.overflow).toBe('hidden');
   });
 
+  it('carries the model’s booking information alongside the calendar and the rates', async () => {
+    const { element } = await openDialog();
+    const panel = dialog(element);
+
+    const facts = panel.querySelector('.booking-facts');
+    expect(facts, 'booking facts').toBeTruthy();
+    expect(panel.textContent).toContain('Booking information');
+    expect(facts?.textContent).toContain(NOURHAN.availability);
+    expect(facts?.textContent).toContain(NOURHAN.height);
+    expect(facts?.textContent).toContain(NOURHAN.bodyShape);
+    expect(facts?.textContent).toContain('Based in');
+
+    const tags = Array.from(panel.querySelectorAll('.booking-tags li')).map((tag) =>
+      tag.textContent?.trim(),
+    );
+    expect(tags).toEqual(NOURHAN.tags);
+  });
+
   it('lists every booking term in USD with the model’s own rates and a running total', async () => {
     const { harness, element } = await openDialog();
     const panel = dialog(element);
