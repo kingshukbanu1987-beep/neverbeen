@@ -735,6 +735,9 @@
   max-width: 620px;
   margin-inline: auto;
   padding: clamp(1.6rem, 5vw, 3rem) clamp(1.2rem, 4vw, 2rem);
+  /* On short screens the confirmation scrolls instead of pushing its Done button out of the sheet. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   text-align: center;
 }
 
@@ -829,13 +832,25 @@
 }
 
 @media (max-width: 900px) {
+  /*
+   * Stacked on phones the two halves live in one grid column, and `.booking-body` becomes the only
+   * scroller for the sheet. The rows must therefore be sized by their content: while they inherited
+   * `min-height: 0` from the desktop scroller layout they were squeezed into the panel's height and
+   * their text spilled over each other. `min-height: auto` plus content-sized rows keeps every
+   * section inside its own box, and the single overflow below scrolls the whole form.
+   */
   .booking-body {
     grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
+    align-content: start;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .booking-main,
   .booking-side {
+    min-height: auto;
     overflow: visible;
   }
 }
@@ -843,15 +858,35 @@
 @media (max-width: 620px) {
   .booking-panel {
     border-radius: 20px;
-    max-height: 94vh;
-  }
-
-  .booking-grid {
-    grid-template-columns: minmax(0, 1fr);
+    /* `dvh` keeps the sheet clear of the mobile browser chrome; `vh` is the fallback. */
+    max-height: min(94vh, 900px);
+    max-height: min(94dvh, 900px);
   }
 
   .booking-head {
     grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    padding: 0.85rem 0.9rem;
+  }
+
+  .booking-avatar {
+    width: 46px;
+  }
+
+  .booking-identity h2 {
+    font-size: 1.45rem;
+  }
+
+  .booking-body {
+    padding: 0.9rem 0.9rem 1.1rem;
+  }
+
+  .booking-close {
+    width: 36px;
+  }
+
+  .booking-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .booking-sub {
