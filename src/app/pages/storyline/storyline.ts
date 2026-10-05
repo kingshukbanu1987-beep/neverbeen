@@ -68,7 +68,7 @@ export class StorylinePage {
       story: [
         'Before they married, Lotte and Bram drew a tiny blue train on the back of their wedding invitation. It marked the honeymoon they imagined: Lucerne by rail, a slow afternoon beside Lake Brienz, and no alarm set for the next morning.',
         'Then work kept asking for one more thing. A teammate was away; a launch slipped; urgent shifts landed on the same dates. Their leave requests moved from spring to autumn, then off the calendar. They could afford the idea. What they could not find was a clear week when both of them could step away without letting someone down.',
-        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. The next stop wanders Zermatt’s shop-lined streets, pauses at a bakery and small local stores, and catches Lotte and Bram with friendly shopkeepers and two friends from the train in the same outfits. Another slow turn follows Zermatt’s old Hinterdorf lanes and a few smaller stalls, with more moments beside a local florist, shopkeepers and their train friends; Lotte and Bram stay in those same clothes. A separate snowy chapter follows Lotte on her own beneath the Matterhorn; she wanders empty mountain trails and pauses for frost, boot prints, wide views and solo selfies in one consistent winter outfit. A final sequence picks up later that night in a Swiss hotel room: Lotte and Bram unwind together in the same ivory-and-navy cotton sleepwear throughout, sharing cocoa, linked hands and phone-out-of-frame selfies beneath a bedside lamp. The night continues with another run of phone snapshots: the invitation’s tiny blue train, map-reading, late cocoa, quiet goodnight gestures and one last look through the snowy window, still in those same pajamas. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
+        'On their anniversary, they sent NeverBeen portraits they already owned and asked to see the version of the story where the train did leave. The imagined album follows the route they sketched—Lucerne by rail, Interlaken, Gstaad and Lake Brienz—through train windows, café tables, crooked phone snapshots and quiet moments together. A new Glacier Express sequence follows one imagined day from boarding at Zermatt to a platform stop and arrival in St. Moritz, with the couple in the same travel-day clothes throughout. The next stop wanders Zermatt’s shop-lined streets, pauses at a bakery and small local stores, and catches Lotte and Bram with friendly shopkeepers and two friends from the train in the same outfits. Another slow turn follows Zermatt’s old Hinterdorf lanes and a few smaller stalls, with more moments beside a local florist, shopkeepers and their train friends; Lotte and Bram stay in those same clothes. A separate snowy chapter follows Lotte on her own beneath the Matterhorn; she wanders empty mountain trails and pauses for frost, boot prints, wide views and solo selfies in one consistent winter outfit. A final sequence picks up later that night in a Swiss hotel room: Lotte and Bram unwind together in the same ivory-and-navy cotton sleepwear throughout, sharing cocoa, linked hands and phone-out-of-frame selfies beneath a bedside lamp. The night continues with another run of phone snapshots: the invitation’s tiny blue train, map-reading, late cocoa, quiet goodnight gestures and one last look through the snowy window, still in those same pajamas. Early the next morning, they find a window table in the Swiss hotel restaurant, still in their rust-terracotta and olive-green casual layers. Over coffee, croissants and muesli, they trade small, affectionate gestures among other European guests; the snapshots move between wide room views, close portraits, food details and phone-free selfies while keeping the same table and outfits throughout. These AI-generated scenes are not evidence that a trip happened; they gave the couple a picture to place beside their invitation while the real honeymoon waits.',
       ],
       reason:
         'They chose NeverBeen for a personal, imagined keepsake while work pressure kept shifting their plans—not to pretend the honeymoon had happened, but to honour a promise they still hope to keep.',
@@ -495,6 +495,56 @@ export class StorylinePage {
           src: '/storyline/388-lotte-bram-hotel-alpine-window-wide.jpg',
           alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in ivory cotton pajamas with burgundy piping and Bram in midnight-navy cotton pajamas with slate piping, standing hand-in-hand at their Swiss hotel window at night, with snowy mountains, lamp glare and an imperfect crop.',
           caption: 'A final look at the snowy mountains',
+        },
+        {
+          src: '/storyline/389-lotte-bram-hotel-breakfast-window-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in her rust-terracotta cardigan and Bram in his olive-green pullover at the same window-side breakfast table in a Swiss hotel restaurant, with coffee, croissants, a blue vase and other European guests; both glance toward the camera amid mild window glare and imperfect framing.',
+          caption: 'The first light over coffee and croissants',
+        },
+        {
+          src: '/storyline/390-lotte-bram-hotel-breakfast-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s hands sharing a croissant over the same window-side breakfast table, rust-terracotta and olive-green sleeves visible beside jam and muesli, with European hotel guests softly blurred behind them and a few pastry crumbs in the shallow focus.',
+          caption: 'A croissant pulled in two',
+        },
+        {
+          src: '/storyline/391-lotte-bram-hotel-breakfast-window-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte in her rust-terracotta cardigan and Bram in his olive-green pullover at the same window-side breakfast table, cups in hand with snowy Swiss peaks and other European guests behind them; Lotte looks toward the camera through soft window glare and a slightly uneven crop.',
+          caption: 'A quiet coffee by the mountain window',
+        },
+        {
+          src: '/storyline/392-lotte-bram-hotel-breakfast-selfie.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte in her rust-terracotta cardigan and Bram in his olive-green pullover leaning together at the same window-side breakfast table, with other European guests in the bright hotel restaurant; both look at the camera in a close, imperfect crop with gentle grain, and the phone is not visible.',
+          caption: 'A morning selfie before the coffee cools',
+        },
+        {
+          src: '/storyline/393-lotte-bram-hotel-breakfast-candid.jpg',
+          alt: 'AI-generated, slightly tilted candid mobile snapshot of fictional Lotte in her rust-terracotta cardigan and Bram in his olive-green pullover sharing a warm laugh at the same window-side breakfast table over coffee and croissants, with European hotel guests in the background, softened by a hint of motion blur.',
+          caption: 'A laugh between bites',
+        },
+        {
+          src: '/storyline/394-lotte-bram-hotel-breakfast-muesli-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte’s rust-terracotta sleeve and Bram’s olive-green sleeve beside a spoonful of muesli at their same window-side breakfast table, with the blue flower vase and European hotel guests softly out of focus, plus a few loose crumbs on the table.',
+          caption: 'Muesli, berries and a little morning light',
+        },
+        {
+          src: '/storyline/395-lotte-bram-hotel-breakfast-couple-portrait.jpg',
+          alt: 'AI-generated, slightly tilted mobile portrait of fictional Lotte in her rust-terracotta cardigan and Bram in his olive-green pullover seated together at the same window-side breakfast table, with their cups, croissants and European guests around them; both look at the camera in soft focus with imperfect headroom.',
+          caption: 'Their favourite table for two',
+        },
+        {
+          src: '/storyline/396-lotte-bram-hotel-breakfast-selfie-guests.jpg',
+          alt: 'AI-generated, slightly tilted mobile selfie of fictional Lotte in her rust-terracotta cardigan and Bram in his olive-green pullover at the same window-side breakfast table, smiling with European guests and snowy mountains behind them, with gentle motion blur; the phone is not visible.',
+          caption: 'The room waking up around them',
+        },
+        {
+          src: '/storyline/397-lotte-bram-hotel-breakfast-table-wide.jpg',
+          alt: 'AI-generated, slightly tilted mobile wide-angle snapshot of fictional Lotte in her rust-terracotta cardigan and Bram in his olive-green pullover sharing breakfast at the same window-side breakfast table, cups raised over croissants and muesli while European hotel guests fill the room, with window glare and off-kilter framing.',
+          caption: 'A toast to an unhurried morning',
+        },
+        {
+          src: '/storyline/398-lotte-bram-hotel-breakfast-croissant-macro.jpg',
+          alt: 'AI-generated, slightly tilted mobile-camera macro of fictional Lotte and Bram’s hands breaking a flaky croissant above the same window-side breakfast table, her rust-terracotta cuff and his olive-green cuff beside jam and coffee, with European guests softly blurred behind them and a few loose crumbs in the shallow focus.',
+          caption: 'The flaky middle piece',
         },
       ],
     },
