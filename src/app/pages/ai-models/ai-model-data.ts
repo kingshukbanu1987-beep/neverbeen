@@ -3,6 +3,15 @@
  * Regenerate with: npm run generate:ai-models
  */
 
+export interface AiModelGalleryFrame {
+  /** Public URL of the photograph. */
+  src: string;
+  /** Short look title. Empty when the metadata has no title. */
+  title: string;
+  /** Lighting or set note. Empty when the metadata has no note. */
+  note: string;
+}
+
 export interface AiModelProfile {
   /** URL-safe path segment derived from the cover image filename. */
   slug: string;
@@ -20,18 +29,18 @@ export interface AiModelProfile {
   /** Whether profile details are illustrative placeholders pending verification. */
   illustrative: boolean;
   /** Additional gallery images, beyond the cover. */
-  gallery: string[];
+  gallery: AiModelGalleryFrame[];
 }
 
 export const aiModelProfiles: AiModelProfile[] = [
-  {"slug":"toulene-arslan","name":"Toulene Arslan","cover":"","location":"Istanbul, Türkiye","age":"27","height":"168 cm","weight":"55 kg","bodyShape":"Hourglass","bio":"A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.","illustrative":true,"gallery":[]},
-  {"slug":"zeina-al-sabbagh","name":"Zeina Al-Sabbagh","cover":"","location":"Beirut, Lebanon","age":"25","height":"165 cm","weight":"53 kg","bodyShape":"Rectangle","bio":"A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.","illustrative":true,"gallery":[]},
-  {"slug":"fatima-sana-hussaini","name":"Fatima Sana Hussaini","cover":"","location":"Kuala Lumpur, Malaysia","age":"26","height":"164 cm","weight":"52 kg","bodyShape":"Pear","bio":"A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.","illustrative":true,"gallery":[]},
-  {"slug":"rasha-fakhoury","name":"Rasha Fakhoury","cover":"","location":"Amman, Jordan","age":"28","height":"170 cm","weight":"59 kg","bodyShape":"Hourglass","bio":"An understated editorial spirit with a confident point of view and an eye for sculptural details.","illustrative":true,"gallery":[]},
-  {"slug":"salma-ahmadzai","name":"Salma Ahmadzai","cover":"","location":"Tbilisi, Georgia","age":"24","height":"166 cm","weight":"54 kg","bodyShape":"Athletic","bio":"A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.","illustrative":true,"gallery":[]},
-  {"slug":"rozalin-el-masry","name":"Rozalin El Masry","cover":"","location":"Alexandria, Egypt","age":"29","height":"171 cm","weight":"58 kg","bodyShape":"Rectangle","bio":"A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.","illustrative":true,"gallery":[]},
-  {"slug":"nermin-akhundzada","name":"Nermin Akhundzada","cover":"","location":"Baku, Azerbaijan","age":"26","height":"167 cm","weight":"55 kg","bodyShape":"Pear","bio":"A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.","illustrative":true,"gallery":[]},
-  {"slug":"nirvana-noorzai","name":"Nirvana Noorzai","cover":"","location":"Dubai, United Arab Emirates","age":"27","height":"169 cm","weight":"57 kg","bodyShape":"Hourglass","bio":"A polished, versatile presence imagined between bold architecture, soft light and new destinations.","illustrative":true,"gallery":[]},
-  {"slug":"sereenah-noorzai","name":"Sereenah Noorzai","cover":"","location":"Muscat, Oman","age":"25","height":"163 cm","weight":"50 kg","bodyShape":"Athletic","bio":"A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.","illustrative":true,"gallery":[]},
-  {"slug":"nourhan-durrani","name":"Nourhan Durrani","cover":"","location":"Sarajevo, Bosnia and Herzegovina","age":"30","height":"172 cm","weight":"60 kg","bodyShape":"Pear","bio":"A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.","illustrative":true,"gallery":[]},
+  {"slug":"toulene-arslan","name":"Toulene Arslan","cover":"/NeverBeenModels/Toulene%20Arslan.png","location":"Istanbul, Türkiye","age":"27","height":"168 cm","weight":"55 kg","bodyShape":"Hourglass","bio":"A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.","illustrative":true,"gallery":[]},
+  {"slug":"zeina-al-sabbagh","name":"Zeina Al-Sabbagh","cover":"/NeverBeenModels/Zeina%20Al-Sabbagh.png","location":"Beirut, Lebanon","age":"25","height":"165 cm","weight":"53 kg","bodyShape":"Rectangle","bio":"A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.","illustrative":true,"gallery":[]},
+  {"slug":"fatima-sana-hussaini","name":"Fatima Sana Hussaini","cover":"/NeverBeenModels/Fatima%20Sana%20Hussaini.png","location":"Kuala Lumpur, Malaysia","age":"26","height":"164 cm","weight":"52 kg","bodyShape":"Pear","bio":"A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.","illustrative":true,"gallery":[]},
+  {"slug":"rasha-fakhoury","name":"Rasha Fakhoury","cover":"/NeverBeenModels/Rasha%20Fakhoury.png","location":"Amman, Jordan","age":"28","height":"170 cm","weight":"59 kg","bodyShape":"Hourglass","bio":"An understated editorial spirit with a confident point of view and an eye for sculptural details.","illustrative":true,"gallery":[]},
+  {"slug":"salma-ahmadzai","name":"Salma Ahmadzai","cover":"/NeverBeenModels/Salma%20Ahmadzai.png","location":"Tbilisi, Georgia","age":"24","height":"166 cm","weight":"54 kg","bodyShape":"Athletic","bio":"A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.","illustrative":true,"gallery":[]},
+  {"slug":"rozalin-el-masry","name":"Rozalin El Masry","cover":"/NeverBeenModels/Rozalin%20El%20Masry.png","location":"Alexandria, Egypt","age":"29","height":"171 cm","weight":"58 kg","bodyShape":"Rectangle","bio":"A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.","illustrative":true,"gallery":[]},
+  {"slug":"nermin-akhundzada","name":"Nermin Akhundzada","cover":"/NeverBeenModels/Nermin%20Akhundzada.png","location":"Baku, Azerbaijan","age":"26","height":"167 cm","weight":"55 kg","bodyShape":"Pear","bio":"A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.","illustrative":true,"gallery":[]},
+  {"slug":"nirvana-noorzai","name":"Nirvana Noorzai","cover":"/NeverBeenModels/Nirvana%20Noorzai.png","location":"Dubai, United Arab Emirates","age":"27","height":"169 cm","weight":"57 kg","bodyShape":"Hourglass","bio":"A polished, versatile presence imagined between bold architecture, soft light and new destinations.","illustrative":true,"gallery":[]},
+  {"slug":"sereenah-noorzai","name":"Sereenah Noorzai","cover":"/NeverBeenModels/Sereenah%20Noorzai.png","location":"Muscat, Oman","age":"25","height":"163 cm","weight":"50 kg","bodyShape":"Athletic","bio":"A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.","illustrative":true,"gallery":[]},
+  {"slug":"nourhan-durrani","name":"Nourhan Durrani","cover":"/NeverBeenModels/Nourhan%20Durrani.png","location":"Sarajevo, Bosnia and Herzegovina","age":"30","height":"172 cm","weight":"60 kg","bodyShape":"Pear","bio":"A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.","illustrative":true,"gallery":[{"src":"/ai-model-assets/gallery/nourhan-durrani/01-ivory-architecture.jpg","title":"Ivory Architecture","note":"White cyclorama · soft key"},{"src":"/ai-model-assets/gallery/nourhan-durrani/02-liquid-mercury.jpg","title":"Liquid Mercury","note":"Charcoal studio · side light"},{"src":"/ai-model-assets/gallery/nourhan-durrani/03-black-tailoring.jpg","title":"Black Tailoring","note":"Warm grey seamless · beauty light"},{"src":"/ai-model-assets/gallery/nourhan-durrani/04-cobalt-structure.jpg","title":"Cobalt Structure","note":"White cube · high key"},{"src":"/ai-model-assets/gallery/nourhan-durrani/05-burgundy-satin.jpg","title":"Burgundy Satin","note":"Warm taupe studio · satin light"},{"src":"/ai-model-assets/gallery/nourhan-durrani/06-chartreuse-coat.jpg","title":"Chartreuse Coat","note":"Cool grey cyclorama · edge light"},{"src":"/ai-model-assets/gallery/nourhan-durrani/07-blush-drape.jpg","title":"Blush Drape","note":"Blush seamless · soft beauty"},{"src":"/ai-model-assets/gallery/nourhan-durrani/08-graphite-avant.jpg","title":"Graphite Avant","note":"Steel grey studio · controlled key"},{"src":"/ai-model-assets/gallery/nourhan-durrani/09-emerald-tuxedo.jpg","title":"Emerald Tuxedo","note":"Black seamless · velvet light"},{"src":"/ai-model-assets/gallery/nourhan-durrani/10-ice-futura.jpg","title":"Ice Futura","note":"Cool white cyclorama · high key"}]},
 ];

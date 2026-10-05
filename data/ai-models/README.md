@@ -25,13 +25,21 @@ portrait placeholder until an image with a matching filename is added.
     "bodyShape": "Pear",
     "bio": "A short introduction to the model.",
     "illustrative": false,
-    "gallery": ["ariya-sen/editorial-01.jpg", "ariya-sen/editorial-02.jpg"]
+    "gallery": [
+      {
+        "src": "ariya-sen/editorial-01.jpg",
+        "title": "Ivory Column",
+        "note": "White cyclorama · soft key"
+      },
+      "ariya-sen/editorial-02.jpg"
+    ]
   }
 }
 ```
 
 4. Put any additional photos in `public/ai-model-assets/gallery/`. Gallery paths in `profiles.json`
-   are relative to that folder.
+   are relative to that folder. A gallery item can be a path string, or an object with `src`,
+   `title`, and `note` so the portfolio lightbox can name the look.
 5. Run `npm run generate:ai-models`, or use `npm start` / `npm run build` (both regenerate the
    manifest automatically).
 

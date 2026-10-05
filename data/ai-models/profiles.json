@@ -87,6 +87,58 @@
     "weight": "60 kg",
     "bodyShape": "Pear",
     "bio": "A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.",
-    "illustrative": true
+    "illustrative": true,
+    "gallery": [
+      {
+        "src": "nourhan-durrani/01-ivory-architecture.jpg",
+        "title": "Ivory Architecture",
+        "note": "White cyclorama · soft key"
+      },
+      {
+        "src": "nourhan-durrani/02-liquid-mercury.jpg",
+        "title": "Liquid Mercury",
+        "note": "Charcoal studio · side light"
+      },
+      {
+        "src": "nourhan-durrani/03-black-tailoring.jpg",
+        "title": "Black Tailoring",
+        "note": "Warm grey seamless · beauty light"
+      },
+      {
+        "src": "nourhan-durrani/04-cobalt-structure.jpg",
+        "title": "Cobalt Structure",
+        "note": "White cube · high key"
+      },
+      {
+        "src": "nourhan-durrani/05-burgundy-satin.jpg",
+        "title": "Burgundy Satin",
+        "note": "Warm taupe studio · satin light"
+      },
+      {
+        "src": "nourhan-durrani/06-chartreuse-coat.jpg",
+        "title": "Chartreuse Coat",
+        "note": "Cool grey cyclorama · edge light"
+      },
+      {
+        "src": "nourhan-durrani/07-blush-drape.jpg",
+        "title": "Blush Drape",
+        "note": "Blush seamless · soft beauty"
+      },
+      {
+        "src": "nourhan-durrani/08-graphite-avant.jpg",
+        "title": "Graphite Avant",
+        "note": "Steel grey studio · controlled key"
+      },
+      {
+        "src": "nourhan-durrani/09-emerald-tuxedo.jpg",
+        "title": "Emerald Tuxedo",
+        "note": "Black seamless · velvet light"
+      },
+      {
+        "src": "nourhan-durrani/10-ice-futura.jpg",
+        "title": "Ice Futura",
+        "note": "Cool white cyclorama · high key"
+      }
+    ]
   }
 }

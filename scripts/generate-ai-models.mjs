@@ -87,15 +87,24 @@ function portraitRelativePath(absolutePath) {
     : relative(portraitsDir, absolutePath).split(sep).join('/');
 }
 
-function galleryUrls(entries, modelName, coverFile) {
+function galleryFrames(entries, modelName, coverFile) {
   if (!Array.isArray(entries)) return [];
 
-  const seen = new Set([coverFile]);
+  const seen = new Set(coverFile ? [coverFile] : []);
   const result = [];
   for (const entry of entries) {
-    if (typeof entry !== 'string' || !entry.trim()) continue;
+    const raw =
+      typeof entry === 'string'
+        ? { src: entry }
+        : entry && typeof entry === 'object' && !Array.isArray(entry)
+          ? entry
+          : null;
+    if (!raw) continue;
 
-    const normalized = entry.trim().replaceAll(String.fromCharCode(92), '/');
+    const source = text(raw.src ?? raw.file ?? raw.path);
+    if (!source) continue;
+
+    const normalized = source.replaceAll(String.fromCharCode(92), '/');
     const absolutePath = resolve(galleryDir, normalized);
     if (absolutePath !== galleryDir && !absolutePath.startsWith(`${galleryDir}${sep}`)) {
       console.warn(
@@ -107,11 +116,16 @@ function galleryUrls(entries, modelName, coverFile) {
       console.warn(`[ai-models] Missing gallery photograph for ${modelName}: ${normalized}`);
       continue;
     }
-    if (!imageExtensions.has(extname(absolutePath).toLowerCase()) || seen.has(absolutePath))
+    if (!imageExtensions.has(extname(absolutePath).toLowerCase()) || seen.has(absolutePath)) {
       continue;
+    }
 
     seen.add(absolutePath);
-    result.push(publicUrl(absolutePath));
+    result.push({
+      src: publicUrl(absolutePath),
+      title: text(raw.title),
+      note: text(raw.note),
+    });
   }
   return result;
 }
@@ -159,7 +173,7 @@ function buildProfiles() {
       bodyShape: text(profile.bodyShape),
       bio: text(profile.bio ?? profile.shortInfo ?? profile.description),
       illustrative: profile.illustrative === true,
-      gallery: galleryUrls(profile.gallery, name, coverPath),
+      gallery: galleryFrames(profile.gallery, name, coverPath),
     };
   };
 
@@ -198,6 +212,15 @@ function renderTypeScript(profiles) {
  * Regenerate with: npm run generate:ai-models
  */
 
+export interface AiModelGalleryFrame {
+  /** Public URL of the photograph. */
+  src: string;
+  /** Short look title. Empty when the metadata has no title. */
+  title: string;
+  /** Lighting or set note. Empty when the metadata has no note. */
+  note: string;
+}
+
 export interface AiModelProfile {
   /** URL-safe path segment derived from the cover image filename. */
   slug: string;
@@ -215,7 +238,7 @@ export interface AiModelProfile {
   /** Whether profile details are illustrative placeholders pending verification. */
   illustrative: boolean;
   /** Additional gallery images, beyond the cover. */
-  gallery: string[];
+  gallery: AiModelGalleryFrame[];
 }
 
 export const aiModelProfiles: AiModelProfile[] = [

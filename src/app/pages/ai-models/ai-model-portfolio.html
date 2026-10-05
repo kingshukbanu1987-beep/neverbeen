@@ -9,41 +9,17 @@
     </nav>
 
     @if (model(); as profile) {
-      <section class="portfolio-cover" aria-labelledby="portfolio-title">
-        <div class="cover-photo">
-          @if (profile.cover) {
-            <img
-              [src]="profile.cover"
-              [alt]="profile.name + ' — portfolio cover'"
-              fetchpriority="high"
-            />
+      <ng-template #identity>
+        <div class="portfolio-copy" [class.identity-band]="!!leadFrame()">
+          @if (leadFrame()) {
+            <p class="eyebrow">Profile</p>
           } @else {
-            <div
-              class="cover-portrait-placeholder"
-              role="img"
-              [attr.aria-label]="'Original portrait pending for ' + profile.name"
-            >
-              <span class="placeholder-symbol" aria-hidden="true">✳</span>
-              <span aria-hidden="true">Original portrait pending</span>
-            </div>
+            <p class="eyebrow">The NeverBeen model portfolio</p>
+            <h1 id="portfolio-title">{{ profile.name }}</h1>
+            <p class="location-line">
+              <span aria-hidden="true">⌖</span> {{ profile.location || 'Location to be announced' }}
+            </p>
           }
-          <div class="cover-shade" aria-hidden="true"></div>
-          <div class="cover-photo-topline">
-            <span>NB / DIGITAL TALENT</span>
-            <span>PORTFOLIO <i>·</i> PROFILE</span>
-          </div>
-          <div class="cover-photo-footer">
-            <span class="cover-status"><i aria-hidden="true"></i> Model profile</span>
-            <span class="cover-location">{{ profile.location || 'Location to be announced' }}</span>
-          </div>
-        </div>
-
-        <div class="portfolio-copy">
-          <p class="eyebrow">The NeverBeen model portfolio</p>
-          <h1 id="portfolio-title">{{ profile.name }}</h1>
-          <p class="location-line">
-            <span aria-hidden="true">⌖</span> {{ profile.location || 'Location to be announced' }}
-          </p>
           <p class="profile-bio">
             {{ profile.bio || 'A short introduction to this model is on its way.' }}
           </p>
@@ -77,37 +53,83 @@
             <span>NEVERBEEN<br /><b>AI MODEL STUDIO</b></span>
           </div>
         </div>
-      </section>
+      </ng-template>
 
-      <section class="gallery-section" aria-labelledby="gallery-title">
-        <header class="gallery-heading">
-          <div>
-            <p class="eyebrow">A closer look</p>
-            <h2 id="gallery-title">Selected frames</h2>
+      @if (leadFrame(); as lead) {
+        <section class="studio-stage" aria-labelledby="portfolio-title">
+          <div class="stage-caption">
+            <p class="eyebrow">Studio session · seamless light</p>
+            <h1 id="portfolio-title">{{ profile.name }}</h1>
+            <p class="location-line">
+              <span aria-hidden="true">⌖</span> {{ profile.location || 'Location to be announced' }}
+            </p>
+            <p class="stage-look">{{ frameTitle(lead, 0) }}</p>
+            <p class="stage-note">{{ frameNote(lead) }} · click the photograph to expand</p>
           </div>
-          <span class="gallery-count"
-            >{{ profile.gallery.length.toString().padStart(2, '0') }} <i>IMAGES</i></span
+
+          <button
+            type="button"
+            class="cover-shot"
+            (click)="open(0, $event)"
+            aria-haspopup="dialog"
+            [attr.aria-label]="'Enlarge ' + frameTitle(lead, 0)"
           >
-        </header>
+            <img [src]="lead.src" [alt]="photoAlt(profile.name, lead, 0)" fetchpriority="high" />
+            <span class="expand-chip">Expand</span>
+          </button>
 
-        @if (profile.gallery.length > 0) {
-          <div class="portfolio-gallery">
-            @for (photo of profile.gallery; track photo; let index = $index) {
-              <figure class="gallery-frame">
-                <img
-                  [src]="photo"
-                  [alt]="photoAlt(profile.name, index)"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <figcaption>
-                  <span>{{ profile.name }}</span
-                  ><span>FRAME / {{ (index + 1).toString().padStart(2, '0') }}</span>
-                </figcaption>
-              </figure>
+          <p class="stage-index">
+            <span>01</span>
+            <i>/ {{ profile.gallery.length.toString().padStart(2, '0') }}</i>
+          </p>
+        </section>
+
+        <ng-container [ngTemplateOutlet]="identity" />
+      } @else {
+        <section class="portfolio-cover" aria-labelledby="portfolio-title">
+          <div class="cover-photo">
+            @if (profile.cover) {
+              <img
+                [src]="profile.cover"
+                [alt]="profile.name + ' — portfolio cover'"
+                fetchpriority="high"
+              />
+            } @else {
+              <div
+                class="cover-portrait-placeholder"
+                role="img"
+                [attr.aria-label]="'Original portrait pending for ' + profile.name"
+              >
+                <span class="placeholder-symbol" aria-hidden="true">✳</span>
+                <span aria-hidden="true">Original portrait pending</span>
+              </div>
             }
+            <div class="cover-shade" aria-hidden="true"></div>
+            <div class="cover-photo-topline">
+              <span>NB / DIGITAL TALENT</span>
+              <span>PORTFOLIO <i>·</i> PROFILE</span>
+            </div>
+            <div class="cover-photo-footer">
+              <span class="cover-status"><i aria-hidden="true"></i> Model profile</span>
+              <span class="cover-location">{{
+                profile.location || 'Location to be announced'
+              }}</span>
+            </div>
           </div>
-        } @else {
+
+          <ng-container [ngTemplateOutlet]="identity" />
+        </section>
+      }
+
+      @if (profile.gallery.length === 0) {
+        <section class="gallery-section" aria-labelledby="gallery-title">
+          <header class="gallery-heading">
+            <div>
+              <p class="eyebrow">A closer look</p>
+              <h2 id="gallery-title">Selected frames</h2>
+            </div>
+            <span class="gallery-count">00 <i>IMAGES</i></span>
+          </header>
           <div class="gallery-pending">
             <span class="gallery-pending-mark" aria-hidden="true">✳</span>
             <div>
@@ -115,8 +137,50 @@
               <span>Additional portfolio photographs will be added here.</span>
             </div>
           </div>
-        }
-      </section>
+        </section>
+      } @else if (restFrames().length > 0) {
+        <section class="gallery-section" aria-labelledby="gallery-title">
+          <header class="gallery-heading">
+            <div>
+              <p class="eyebrow">Seamless studio · click to expand</p>
+              <h2 id="gallery-title">Continue the set</h2>
+            </div>
+            <span class="gallery-count"
+              >{{ profile.gallery.length.toString().padStart(2, '0') }} <i>IMAGES</i></span
+            >
+          </header>
+          <p class="gallery-hint">
+            Select a frame to open it full size. Arrow keys move through the session.
+          </p>
+          <div class="portfolio-gallery">
+            @for (frame of restFrames(); track frame.src; let index = $index) {
+              <button
+                type="button"
+                class="gallery-frame"
+                [class.is-wide]="isWide(index)"
+                (click)="open(index + 1, $event)"
+                aria-haspopup="dialog"
+                [attr.aria-label]="'Enlarge ' + frameTitle(frame, index + 1)"
+              >
+                <img
+                  [src]="frame.src"
+                  [alt]="photoAlt(profile.name, frame, index + 1)"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span class="frame-meta">
+                  <span class="frame-index">{{ frameNumber(index + 1) }}</span>
+                  <span class="frame-copy">
+                    <strong>{{ frameTitle(frame, index + 1) }}</strong>
+                    <em>{{ frameNote(frame) }}</em>
+                  </span>
+                  <span class="frame-expand">Expand</span>
+                </span>
+              </button>
+            }
+          </div>
+        </section>
+      }
 
       <footer class="portfolio-footer">
         <a routerLink="/ai-models"><span aria-hidden="true">←</span> Back to all models</a>
@@ -133,4 +197,56 @@
       </section>
     }
   </div>
+
+  @if (activeView(); as view) {
+    <div
+      appStudioPortal
+      class="photo-lightbox-backdrop studio-lightbox"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="view.title"
+      (click)="close()"
+    >
+      <div class="lightbox-top">
+        <span class="lightbox-kicker"
+          >NeverBeen Studio <i aria-hidden="true">·</i> {{ view.name }}</span
+        >
+        <span class="lightbox-position">{{ view.position }}</span>
+        <button
+          #lightboxClose
+          type="button"
+          class="lightbox-close"
+          (click)="closeFromControl($event)"
+        >
+          Close
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="lightbox-arrow previous"
+        (click)="showPrevious($event)"
+        aria-label="Previous photograph"
+      >
+        <span aria-hidden="true">←</span>
+      </button>
+
+      <figure (click)="$event.stopPropagation()">
+        <img [src]="view.frame.src" [alt]="view.alt" />
+        <figcaption>
+          <strong>{{ view.title }}</strong>
+          <span>{{ view.note }}</span>
+        </figcaption>
+      </figure>
+
+      <button
+        type="button"
+        class="lightbox-arrow next"
+        (click)="showNext($event)"
+        aria-label="Next photograph"
+      >
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+  }
 </main>
