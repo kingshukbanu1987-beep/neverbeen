@@ -103,6 +103,7 @@ export const NAV_LINKS: [string, string][] = [
 export const HERO_BUTTONS: [string, string][] = [
   ['community', 'Connect to NeverBeen Community'],
   ['documentation', 'Brochure'],
+  ['ai-models', 'NeverBeen AI Models'],
   ['storyline', 'The Storyline of Parallel Universe'],
   ['founder', 'Know the Founder'],
   ['create', 'Create My Vacation'],

@@ -1,0 +1,159 @@
+<main class="ai-models-page">
+  <section class="studio-hero" aria-labelledby="ai-models-title">
+    <div class="hero-gridlines" aria-hidden="true"></div>
+    <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
+    <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
+
+    <div class="container hero-shell">
+      <div class="studio-bar">
+        <a class="back-link" routerLink="/" aria-label="Back to NeverBeen homepage">
+          <span aria-hidden="true">←</span> NeverBeen
+        </a>
+        <p class="studio-label">
+          <span class="live-dot" aria-hidden="true"></span> Digital talent studio
+        </p>
+      </div>
+
+      <div class="hero-content">
+        <div class="hero-copy">
+          <p class="eyebrow"><span>01</span> / The model directory</p>
+          <h1 id="ai-models-title">NeverBeen <em>AI Models</em></h1>
+          <p class="hero-lede">
+            Meet the faces and stories behind our digital model portfolios. Every profile is its own
+            world—made to be explored, remembered, and imagined in a new light.
+          </p>
+          <a class="scroll-cue" href="#model-directory">
+            <span class="scroll-cue-mark" aria-hidden="true">↓</span>
+            Explore the directory
+          </a>
+        </div>
+
+        <aside class="hero-art" aria-label="NeverBeen AI Model Studio">
+          <div class="art-orbit orbit-outer" aria-hidden="true"></div>
+          <div class="art-orbit orbit-inner" aria-hidden="true"></div>
+          <div class="art-core" aria-hidden="true">
+            <span class="art-core-star">✳</span>
+            <span class="art-core-nb">NB</span>
+          </div>
+          <span class="art-coordinate coordinate-top">NB / AI 001</span>
+          <span class="art-coordinate coordinate-bottom">IDENTITY · IMAGE · STORY</span>
+          <span class="art-index">{{ totalCount() }}<small>PROFILES</small></span>
+        </aside>
+      </div>
+
+      <div class="hero-footer">
+        <span>NeverBeen / Studio index</span>
+        <span>Curated identities <i aria-hidden="true">✳</i> Independent portfolios</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="directory-section" id="model-directory" aria-labelledby="directory-title">
+    <div class="container directory-shell">
+      <header class="directory-header">
+        <div class="directory-heading">
+          <p class="eyebrow">Portfolio index <span aria-hidden="true">/</span> 2026</p>
+          <h2 id="directory-title">The models</h2>
+          <p class="directory-intro">
+            A closer look at the people who give our ideas a point of view.
+          </p>
+        </div>
+
+        @if (models.length > 0) {
+          <div class="directory-tools">
+            <label class="search-field">
+              <span class="visually-hidden">Search models by name or location</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="m20 20-4-4"></path>
+              </svg>
+              <input
+                type="search"
+                [value]="search()"
+                (input)="updateSearch($event)"
+                placeholder="Find a model"
+                autocomplete="off"
+              />
+              @if (search()) {
+                <button
+                  type="button"
+                  class="clear-search"
+                  (click)="clearSearch()"
+                  aria-label="Clear search"
+                >
+                  ×
+                </button>
+              }
+            </label>
+            <span class="results-count">{{ filteredModels().length }} / {{ models.length }}</span>
+          </div>
+        }
+      </header>
+
+      @if (models.length === 0) {
+        <div class="empty-studio">
+          <div class="empty-visual" aria-hidden="true">
+            <span class="empty-ring ring-large"></span>
+            <span class="empty-ring ring-small"></span>
+            <span class="empty-spark spark-one">✳</span>
+            <span class="empty-spark spark-two">✦</span>
+            <span class="empty-monogram">NB</span>
+            <span class="empty-visual-caption">PORTRAITS IN PROGRESS</span>
+          </div>
+          <div class="empty-copy">
+            <p class="empty-kicker"><span></span> Studio opening soon</p>
+            <h3>Our first profiles are <em>coming into focus.</em></h3>
+            <p>
+              Model portraits and their stories will appear here as the collection grows. Each model
+              will have a dedicated portfolio with a cover, personal details, and a photo gallery.
+            </p>
+            <a routerLink="/" class="text-link"
+              >Return to NeverBeen <span aria-hidden="true">↗</span></a
+            >
+          </div>
+          <div class="empty-number" aria-hidden="true">00</div>
+        </div>
+      } @else if (filteredModels().length === 0) {
+        <div class="no-results" role="status">
+          <span class="no-results-mark" aria-hidden="true">⌕</span>
+          <p>No model profiles match “{{ search() }}”.</p>
+          <button type="button" class="text-link" (click)="clearSearch()">
+            Clear search <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      } @else {
+        <div class="model-grid">
+          @for (model of filteredModels(); track model.slug; let index = $index) {
+            <a
+              class="model-card"
+              [routerLink]="['/ai-models', model.slug]"
+              [attr.aria-label]="'View the portfolio of ' + model.name"
+            >
+              <div class="card-image">
+                <img
+                  [src]="model.cover"
+                  [alt]="model.name + ' — NeverBeen AI model portfolio cover'"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span class="card-image-tint" aria-hidden="true"></span>
+                <span class="card-index">NB / {{ indexLabel(index) }}</span>
+                <span class="card-open" aria-hidden="true">↗</span>
+                <div class="card-copy">
+                  <p class="card-location">{{ model.location || 'Location to be announced' }}</p>
+                  <h3>{{ model.name }}</h3>
+                  <span class="card-action">View portfolio <i aria-hidden="true">↗</i></span>
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+      }
+
+      <footer class="directory-footer">
+        <span>NEVERBEEN / AI MODEL STUDIO</span>
+        <span>Created with intention <b aria-hidden="true">✳</b></span>
+      </footer>
+    </div>
+  </section>
+</main>

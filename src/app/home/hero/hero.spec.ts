@@ -34,6 +34,7 @@ describe('Hero', () => {
     expect(labels).toEqual([
       'Connect to NeverBeen Community',
       'Brochure',
+      'NeverBeen AI Models',
       'The Storyline of Parallel Universe',
       'Know the Founder',
       'Create My Vacation',
@@ -108,12 +109,26 @@ describe('Hero', () => {
     expect(getComputedStyle(brochure).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('places the storyline link after Brochure and gives it the same gold button styling', () => {
+  it('puts NeverBeen AI Models directly after Brochure with the requested founder-button styling and color', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
     const brochureIndex = labels.indexOf('Brochure');
-    const storyline = buttons[brochureIndex + 1];
+    const aiModels = buttons[brochureIndex + 1];
+
+    expect(aiModels.textContent?.trim()).toBe('NeverBeen AI Models');
+    expect(aiModels.getAttribute('href')).toBe('/ai-models');
+    expect(aiModels.classList.contains('btn-ai-models')).toBe(true);
+    expect(getComputedStyle(aiModels).backgroundColor).toBe('rgb(173, 20, 26)');
+    expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
+  });
+
+  it('places the storyline link after AI Models and keeps its gold button styling', () => {
+    const element: HTMLElement = create().nativeElement;
+    const buttons = buttonsOf(element);
+    const labels = labelsOf(element);
+    const aiModelsIndex = labels.indexOf('NeverBeen AI Models');
+    const storyline = buttons[aiModelsIndex + 1];
 
     expect(storyline.textContent?.trim()).toBe('The Storyline of Parallel Universe');
     expect(storyline.getAttribute('href')).toBe('/storyline-of-parallel-universe');
@@ -169,7 +184,8 @@ describe('Hero', () => {
     const labels = labelsOf(create().nativeElement);
     const communityIndex = labels.indexOf('Connect to NeverBeen Community');
     expect(labels[communityIndex + 1]).toBe('Our brochure');
-    expect(labels[communityIndex + 2]).toBe('The Storyline of Parallel Universe');
+    expect(labels[communityIndex + 2]).toBe('NeverBeen AI Models');
+    expect(labels[communityIndex + 3]).toBe('The Storyline of Parallel Universe');
     expect(labels.at(-1)).toBe('Explore Gallery');
   });
 

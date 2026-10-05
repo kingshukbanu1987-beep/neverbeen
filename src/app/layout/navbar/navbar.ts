@@ -72,8 +72,13 @@ export class Navbar {
    */
   private readonly isCommunitySignIn = computed(() => /^\/community(?:\/register)?\/?(\?|#|$)/.test(this.currentUrl()));
 
+  /** Give the AI model studio the same compact, ink-dark site chrome as its portfolio pages. */
+  protected readonly isAiModels = computed(() =>
+    /^\/ai-models(?:\/|\?|#|$)/.test(this.currentUrl()),
+  );
+
   /**
-   * Compact header (smaller bar + 50% logo) on the Community, member profiles and the whole
+   * Compact header (smaller bar + 50% logo) on the Community, AI Models, member profiles and the whole
    * Admin Console, so as much of the working area as possible is visible. The Community
    * sign-in page keeps the full-size website header.
    */
@@ -81,7 +86,10 @@ export class Navbar {
     const url = this.currentUrl();
     return (
       !this.isCommunitySignIn() &&
-      (url.includes('/community') || url.includes('/profile') || /^\/admin(\/|\?|#|$)/.test(url))
+      (this.isAiModels() ||
+        url.includes('/community') ||
+        url.includes('/profile') ||
+        /^\/admin(\/|\?|#|$)/.test(url))
     );
   });
 

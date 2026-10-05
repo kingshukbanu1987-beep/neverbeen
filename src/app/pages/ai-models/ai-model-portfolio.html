@@ -1,0 +1,120 @@
+<main class="ai-models-page">
+  <div class="portfolio-glow" aria-hidden="true"></div>
+  <div class="container portfolio-shell">
+    <nav class="portfolio-nav" aria-label="Portfolio navigation">
+      <a routerLink="/ai-models" class="back-link"
+        ><span aria-hidden="true">←</span> All AI models</a
+      >
+      <span class="portfolio-label">NeverBeen <i aria-hidden="true">/</i> AI model portfolio</span>
+    </nav>
+
+    @if (model(); as profile) {
+      <section class="portfolio-cover" aria-labelledby="portfolio-title">
+        <div class="cover-photo">
+          <img
+            [src]="profile.cover"
+            [alt]="profile.name + ' — portfolio cover'"
+            fetchpriority="high"
+          />
+          <div class="cover-shade" aria-hidden="true"></div>
+          <div class="cover-photo-topline">
+            <span>NB / DIGITAL TALENT</span>
+            <span>PORTFOLIO <i>·</i> PROFILE</span>
+          </div>
+          <div class="cover-photo-footer">
+            <span class="cover-status"><i aria-hidden="true"></i> Model profile</span>
+            <span class="cover-location">{{ profile.location || 'Location to be announced' }}</span>
+          </div>
+        </div>
+
+        <div class="portfolio-copy">
+          <p class="eyebrow">The NeverBeen model portfolio</p>
+          <h1 id="portfolio-title">{{ profile.name }}</h1>
+          <p class="location-line">
+            <span aria-hidden="true">⌖</span> {{ profile.location || 'Location to be announced' }}
+          </p>
+          <p class="profile-bio">
+            {{ profile.bio || 'A short introduction to this model is on its way.' }}
+          </p>
+
+          <dl class="profile-facts" aria-label="Model information">
+            <div>
+              <dt>Age</dt>
+              <dd>{{ fact(profile.age) }}</dd>
+            </div>
+            <div>
+              <dt>Height</dt>
+              <dd>{{ fact(profile.height) }}</dd>
+            </div>
+            <div>
+              <dt>Weight</dt>
+              <dd>{{ fact(profile.weight) }}</dd>
+            </div>
+            <div>
+              <dt>Body shape</dt>
+              <dd>{{ fact(profile.bodyShape) }}</dd>
+            </div>
+          </dl>
+
+          <div class="portfolio-stamp">
+            <span class="stamp-mark" aria-hidden="true">✳</span>
+            <span>NEVERBEEN<br /><b>AI MODEL STUDIO</b></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="gallery-section" aria-labelledby="gallery-title">
+        <header class="gallery-heading">
+          <div>
+            <p class="eyebrow">A closer look</p>
+            <h2 id="gallery-title">Selected frames</h2>
+          </div>
+          <span class="gallery-count"
+            >{{ profile.gallery.length.toString().padStart(2, '0') }} <i>IMAGES</i></span
+          >
+        </header>
+
+        @if (profile.gallery.length > 0) {
+          <div class="portfolio-gallery">
+            @for (photo of profile.gallery; track photo; let index = $index) {
+              <figure class="gallery-frame">
+                <img
+                  [src]="photo"
+                  [alt]="photoAlt(profile.name, index)"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>
+                  <span>{{ profile.name }}</span
+                  ><span>FRAME / {{ (index + 1).toString().padStart(2, '0') }}</span>
+                </figcaption>
+              </figure>
+            }
+          </div>
+        } @else {
+          <div class="gallery-pending">
+            <span class="gallery-pending-mark" aria-hidden="true">✳</span>
+            <div>
+              <p>More frames, soon</p>
+              <span>Additional portfolio photographs will be added here.</span>
+            </div>
+          </div>
+        }
+      </section>
+
+      <footer class="portfolio-footer">
+        <a routerLink="/ai-models"><span aria-hidden="true">←</span> Back to all models</a>
+        <span>NEVERBEEN <i>·</i> AI MODEL STUDIO</span>
+      </footer>
+    } @else {
+      <section class="not-found" aria-labelledby="not-found-title">
+        <p class="eyebrow">Portfolio / 404</p>
+        <h1 id="not-found-title">This profile is <em>out of frame.</em></h1>
+        <p>The portfolio may have moved, or it has not been added to the directory yet.</p>
+        <a routerLink="/ai-models" class="back-to-directory"
+          >Browse all AI models <span aria-hidden="true">↗</span></a
+        >
+      </section>
+    }
+  </div>
+</main>

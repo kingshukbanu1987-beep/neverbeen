@@ -74,7 +74,21 @@ ng test
 | `/collection`    | Collection | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
 | `/founder`       | Founder    | Founder profile and expertise                                                                        |
 | `/documentation` | Brochure   | Visitor brochure: 36 pages on how to place a Neverbeen Request, packages and destinations            |
+| `/ai-models`     | AI Models  | Dark studio directory and individual model portfolios at `/ai-models/:slug`                          |
 | `/login`         | Login      | Sign-in form                                                                                         |
+
+## NeverBeen AI Models
+
+The `/ai-models` page is a dark, magenta-accented studio directory. Each cover opens its own
+portfolio at `/ai-models/:slug`, with the model's name, location, age, height, weight, body shape,
+short introduction and optional photo gallery. No profile details are invented when a field has
+not been supplied.
+
+Add cover portraits to `public/ai-model-assets/portraits` and put each model's details in
+`data/ai-models/profiles.json`. The cover filename (without its extension) becomes the displayed
+model name. Additional images go in `public/ai-model-assets/gallery` and can be referenced in the
+matching profile's `gallery` array. See `data/ai-models/README.md` for the metadata format. Refresh the
+manifest with `npm run generate:ai-models`; `npm start` and `npm run build` run it automatically.
 
 ## The Collection page
 
