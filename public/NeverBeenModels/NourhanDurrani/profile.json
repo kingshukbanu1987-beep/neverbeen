@@ -7,9 +7,21 @@
   "weight": "60 kg",
   "bodyShape": "Pear",
   "bio": "A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets. Nourhan moves easily between quiet editorial portraits and bold campaign frames, and she is at her best in natural light.",
-  "tags": ["Editorial", "Portrait", "Campaign", "Travel", "Studio"],
+  "tags": [
+    "Editorial",
+    "Portrait",
+    "Campaign",
+    "Travel",
+    "Studio"
+  ],
   "availability": "Open for editorial and campaign bookings",
   "illustrative": true,
   "cover": "Nourhan Durrani.png",
-  "photos": ["Nourhan Durrani.png"]
+  "photos": [
+    "Nourhan Durrani.png",
+    "01-magenta-ruffles-portrait.png"
+  ],
+  "captions": {
+    "01-magenta-ruffles-portrait.png": "Magenta ruffles, studio session"
+  }
 }
