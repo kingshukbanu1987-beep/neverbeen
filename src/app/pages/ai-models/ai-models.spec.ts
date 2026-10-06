@@ -21,6 +21,7 @@ describe('AiModelsPage', () => {
       'Nourhan Durrani',
       'Nazanin Maeve Al-Farsi',
       'Sereenah Noorzai',
+      'Alisha Bhattacharya',
       'Maeve Anahita',
       'Rozalin El Masry',
       'Ava Amira Gallagher',
@@ -44,6 +45,7 @@ describe('AiModelsPage', () => {
     expect(aiModelProfiles.map((profile) => profile.order)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
       11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+      21,
     ]);
     expect(element.querySelectorAll('.model-card').length).toBe(expectedNames.length);
     expect(element.querySelector('.empty-studio')).toBeNull();

@@ -521,6 +521,31 @@ export const aiModelProfiles: AiModelProfile[] = [
     ],
   },
   {
+    slug: 'alisha-bhattacharya',
+    name: 'Alisha Bhattacharya',
+    cover: '',
+    album: 'AlishaBhattacharya',
+    location: 'Darjeeling, India',
+    age: '25',
+    height: '165 cm',
+    weight: '53 kg',
+    bodyShape: 'Hourglass',
+    bust: '84 cm',
+    waist: '63 cm',
+    hip: '90 cm',
+    handle: '@alisha.bhattacharya',
+    tags: [],
+    availability: '',
+    order: 5,
+    photoRate: 545,
+    photoNote:
+      'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
+    bio: "A warm, expressive presence imagined between Darjeeling's tea-garden terraces, old-town lanes and the soft light of the Himalayan foothills.",
+    illustrative: true,
+    gallery: [],
+    photos: [],
+  },
+  {
     slug: 'maeve-anahita',
     name: 'Maeve Anahita',
     cover: '/NeverBeenModels/MaeveAnahita/Maeve%20Anahita.jpg',
@@ -536,7 +561,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@maeve.anahita',
     tags: [],
     availability: '',
-    order: 5,
+    order: 6,
     photoRate: 550,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -561,7 +586,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@rozalin.el.masry',
     tags: [],
     availability: '',
-    order: 6,
+    order: 7,
     photoRate: 580,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -586,7 +611,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@ava.amira.gallagher',
     tags: [],
     availability: '',
-    order: 7,
+    order: 8,
     photoRate: 565,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -613,7 +638,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@banafsheh.saoirse.yazdani',
     tags: [],
     availability: '',
-    order: 8,
+    order: 9,
     photoRate: 575,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -643,7 +668,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@nirvana.noorzai',
     tags: [],
     availability: '',
-    order: 9,
+    order: 10,
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -668,7 +693,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@sorcha.golsa.maccarthy',
     tags: [],
     availability: '',
-    order: 10,
+    order: 11,
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -695,7 +720,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@fatima.sana.hussaini',
     tags: [],
     availability: '',
-    order: 11,
+    order: 12,
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -722,7 +747,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@zeina.al.sabbagh',
     tags: [],
     availability: '',
-    order: 12,
+    order: 13,
     photoRate: 555,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -747,7 +772,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@toulene.arslan',
     tags: [],
     availability: '',
-    order: 13,
+    order: 14,
     photoRate: 590,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -772,7 +797,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@caoimhe.niloufar.rahimi',
     tags: [],
     availability: '',
-    order: 14,
+    order: 15,
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -802,7 +827,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@salma.ahmadzai',
     tags: [],
     availability: '',
-    order: 15,
+    order: 16,
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -827,7 +852,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@nermin.akhundzada',
     tags: [],
     availability: '',
-    order: 16,
+    order: 17,
     photoRate: 520,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -852,7 +877,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@rasha.fakhoury',
     tags: [],
     availability: '',
-    order: 17,
+    order: 18,
     photoRate: 600,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -877,7 +902,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@lana.mahvash.kennedy',
     tags: [],
     availability: '',
-    order: 18,
+    order: 19,
     photoRate: 585,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -904,7 +929,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@donya.caoimhe.yazdani',
     tags: [],
     availability: '',
-    order: 19,
+    order: 20,
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -931,7 +956,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     handle: '@priyanka.chatterjee',
     tags: [],
     availability: '',
-    order: 20,
+    order: 21,
     photoRate: 540,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
