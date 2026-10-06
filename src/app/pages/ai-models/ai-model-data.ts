@@ -96,15 +96,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg', caption: '' }],
-    videos: [
-      {
-        src: '/NeverBeenModels/FiadhDara/video/sample-clip-replace-me.mp4',
-        fileName: 'sample-clip-replace-me.mp4',
-        caption: '',
-        poster: '',
-        type: 'video/mp4',
-      },
-    ],
+    videos: [],
   },
   {
     slug: 'nourhan-durrani',
@@ -351,7 +343,15 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
     ],
-    videos: [],
+    videos: [
+      {
+        src: '/NeverBeenModels/NourhanDurrani/video/Nourhan_Durrani_01.mp4',
+        fileName: 'Nourhan_Durrani_01.mp4',
+        caption: '',
+        poster: '',
+        type: 'video/mp4',
+      },
+    ],
   },
   {
     slug: 'nazanin-maeve-al-farsi',
