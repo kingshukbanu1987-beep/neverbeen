@@ -240,6 +240,36 @@
   right: clamp(0.6rem, 2vw, 1.4rem);
 }
 
+.player-muted-note {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgb(239 106 165 / 45%);
+  border-radius: 999px;
+  background: rgb(9 7 11 / 82%);
+  backdrop-filter: blur(6px);
+  color: var(--player-text);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 600;
+  transform: translateX(-50%);
+  transition: background 180ms ease;
+}
+
+.player-muted-note:hover,
+.player-muted-note:focus-visible {
+  background: var(--player-accent);
+}
+
+.player-muted-note:focus-visible {
+  outline: 2px solid var(--player-pink);
+  outline-offset: 3px;
+}
+
 .player-error {
   position: absolute;
   max-width: 24rem;

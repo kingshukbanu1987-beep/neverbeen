@@ -438,14 +438,12 @@
   </div>
 }
 
-@if (activeVideoIndex(); as videoIndex) {
-  @if (videos().length > 0) {
-    <app-ai-model-video-player
-      [videos]="videos()"
-      [startIndex]="videoIndex"
-      [modelName]="model()?.name ?? ''"
-      [modelHandle]="model()?.handle ?? ''"
-      (closed)="closeVideo()"
-    />
-  }
+@if (videoPlayerOpen()) {
+  <app-ai-model-video-player
+    [videos]="videos()"
+    [startIndex]="activeVideoIndex() ?? 0"
+    [modelName]="model()?.name ?? ''"
+    [modelHandle]="model()?.handle ?? ''"
+    (closed)="closeVideo()"
+  />
 }

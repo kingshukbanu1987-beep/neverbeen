@@ -32,6 +32,7 @@
           [src]="video.src"
           [attr.poster]="video.poster || null"
           [attr.aria-label]="caption()"
+          autoplay
           playsinline
           preload="auto"
           (click)="onVideoClick()"
@@ -41,6 +42,7 @@
           (durationchange)="onDurationChange($event)"
           (volumechange)="onVolumeChange($event)"
           (play)="onPlay()"
+          (playing)="onPlaying()"
           (pause)="onPause()"
           (ended)="onEnded()"
           (error)="onError()"
@@ -81,6 +83,13 @@
           aria-label="Next clip"
         >
           →
+        </button>
+      }
+
+      @if (mutedByPolicy() && !failed()) {
+        <button type="button" class="player-muted-note" (click)="toggleMute()">
+          <span aria-hidden="true">🔇</span>
+          This browser started the clip muted — tap to hear it
         </button>
       }
 

@@ -418,6 +418,9 @@ describe('AiModelVideoPlayer', () => {
   }
 
   it('plays the tapped clip and offers every playback control', () => {
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(() => Promise.resolve());
     const { fixture, element } = open(0, false);
     fixture.detectChanges();
     const video = element.querySelector('video');
@@ -444,16 +447,21 @@ describe('AiModelVideoPlayer', () => {
     expect(download?.getAttribute('download')).toBe('clip-1.mp4');
     expect(download?.getAttribute('type')).toBe('video/mp4');
 
-    // The clip starts on its own, so the badge is only painted once it is paused again.
-    const pauseButton = Array.from(
-      element.querySelectorAll<HTMLButtonElement>('.player-control'),
-    ).find((button) => button.getAttribute('aria-label') === 'Pause video');
-    expect(pauseButton, 'pause control').toBeTruthy();
+    // Play and pause share one control; the label follows what the clip is actually doing.
+    const toggle = Array.from(element.querySelectorAll<HTMLButtonElement>('.player-control')).find(
+      (button) => /^(Play|Pause) video$/.test(button.getAttribute('aria-label') ?? ''),
+    );
+    expect(toggle, 'play/pause control').toBeTruthy();
 
-    pauseButton!.click();
-    fixture.detectChanges();
-    expect(element.querySelector('.player-big-play')).not.toBeNull();
-    expect(element.querySelector('.player-big-play')?.textContent).toContain('Play');
+    // Whatever the autoplay policy decides, the big badge is there to start the clip by hand.
+    const badge = element.querySelector<HTMLButtonElement>('.player-big-play');
+    expect(badge?.textContent).toContain('Play');
+
+    playSpy.mockClear();
+    badge!.click();
+    expect(playSpy).toHaveBeenCalled();
+
+    playSpy.mockRestore();
   });
 
   it('plays the tapped clip on open, then pauses, resumes and stops', () => {
@@ -522,6 +530,35 @@ describe('AiModelVideoPlayer', () => {
     speed!.value = '1.5';
     speed!.dispatchEvent(new Event('change'));
     expect(video.playbackRate).toBe(1.5);
+  });
+
+  it('falls back to muted playback when the browser refuses sound', async () => {
+    const refusal = Object.assign(new Error('play() failed'), { name: 'NotAllowedError' });
+    const playSpy = vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValueOnce(refusal);
+
+    try {
+      const { fixture, element } = open();
+      const video = element.querySelector('video') as HTMLVideoElement;
+
+      // The refused attempt is retried muted, so the clip plays in the pop-up either way.
+      await Promise.resolve();
+      await Promise.resolve();
+      fixture.detectChanges();
+
+      expect(playSpy.mock.calls.length).toBeGreaterThan(1);
+      expect(video.muted).toBe(true);
+
+      const note = element.querySelector('.player-muted-note') as HTMLButtonElement;
+      expect(note?.textContent).toContain('muted');
+
+      // One tap on the note (or the speaker) brings the sound back.
+      note.click();
+      fixture.detectChanges();
+      expect(video.muted).toBe(false);
+      expect(element.querySelector('.player-muted-note')).toBeNull();
+    } finally {
+      playSpy.mockRestore();
+    }
   });
 
   it('closes with the ✕ button, Escape and reports it to the portfolio', () => {
@@ -617,6 +654,25 @@ describe('AiModelPortfolioPage video reel', () => {
       expect(element.querySelector('app-ai-model-video-player')).toBeNull();
       expect(document.body.style.overflow).toBe('');
       expect(document.activeElement?.classList.contains('video-tile')).toBe(true);
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('opens the player for the first clip too, where the index is zero', async () => {
+    const profile = withPhotos(1, 2);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      // Index 0 is falsy — the pop-up must not be skipped because of that.
+      element.querySelectorAll<HTMLButtonElement>('.video-tile')[0].click();
+      harness.detectChanges();
+
+      const player = element.querySelector('app-ai-model-video-player');
+      expect(player, 'player for the first clip').not.toBeNull();
+      expect(player?.querySelector('video')?.getAttribute('src')).toBe(profile.videos[0].src);
+      expect(player?.querySelector('.player-counter')?.textContent?.trim()).toBe('01 / 02');
     } finally {
       release(profile);
     }

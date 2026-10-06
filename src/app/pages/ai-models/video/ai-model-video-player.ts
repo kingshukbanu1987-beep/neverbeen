@@ -73,6 +73,11 @@ export class AiModelVideoPlayer {
   protected readonly rate = signal(1);
   protected readonly fullscreen = signal(false);
   protected readonly failed = signal(false);
+  /**
+   * True when the browser refused to start the clip with sound and it was started muted instead —
+   * the visitor then only has to tap the speaker to hear it.
+   */
+  protected readonly mutedByPolicy = signal(false);
   /** True once the clip ends — the play button then reads as a replay. */
   protected readonly ended = signal(false);
 
@@ -130,20 +135,50 @@ export class AiModelVideoPlayer {
   }
 
   protected play(): void {
-    const video = this.videoRef()?.nativeElement;
     this.shouldPlay.set(true);
+    const video = this.videoRef()?.nativeElement;
     if (!video) return;
 
+    this.ended.set(false);
+    this.startPlayback(video, video.muted);
+  }
+
+  /**
+   * Starts the clip and settles the playing state from what the browser actually did. If playback
+   * with sound is refused (an autoplay policy, an embedded frame without the autoplay permission,
+   * a locked screen) the clip is started muted so it plays in the pop-up regardless, and the
+   * visitor is told that sound is one tap away.
+   */
+  private startPlayback(video: HTMLVideoElement, alreadyMuted: boolean): void {
+    let started: Promise<void> | undefined;
     try {
-      const started = video.play();
-      if (started && typeof started.catch === 'function') {
-        started.catch(() => this.playing.set(false));
-      }
-      this.playing.set(true);
-      this.ended.set(false);
+      started = video.play();
     } catch {
       this.playing.set(false);
+      return;
     }
+
+    // The `play`/`pause` events keep the UI honest in every browser; the promise only reports
+    // whether playback was refused.
+    if (!started || typeof started.then !== 'function') return;
+
+    started.then(
+      () => undefined,
+      (error: unknown) => {
+        const name = error instanceof Error ? error.name : '';
+        const refused = name === 'NotAllowedError' || name === 'SecurityError';
+
+        if (refused && !alreadyMuted) {
+          video.muted = true;
+          this.muted.set(true);
+          this.mutedByPolicy.set(true);
+          this.startPlayback(video, true);
+          return;
+        }
+
+        this.playing.set(false);
+      },
+    );
   }
 
   protected pause(): void {
@@ -153,6 +188,8 @@ export class AiModelVideoPlayer {
     } catch {
       // A detached or unloaded clip cannot be paused — nothing left to do.
     }
+    // The `pause` event normally does this; setting it here keeps the button in step in browsers
+    // that stay silent when the clip has no data yet.
     this.playing.set(false);
   }
 
@@ -208,6 +245,7 @@ export class AiModelVideoPlayer {
     if (volume > 0) {
       if (video) video.muted = false;
       this.muted.set(false);
+      this.mutedByPolicy.set(false);
     }
   }
 
@@ -222,6 +260,7 @@ export class AiModelVideoPlayer {
     if (video) video.muted = next;
     this.muted.set(next);
     if (!next && this.volume() === 0) this.setVolume(1);
+    if (!next) this.mutedByPolicy.set(false);
   }
 
   protected setRate(event: Event): void {
@@ -330,11 +369,17 @@ export class AiModelVideoPlayer {
     const video = event.target as HTMLVideoElement;
     this.volume.set(Number.isFinite(video.volume) ? video.volume : 1);
     this.muted.set(video.muted === true);
+    if (!video.muted) this.mutedByPolicy.set(false);
   }
 
   protected onPlay(): void {
     this.playing.set(true);
     this.ended.set(false);
+    this.failed.set(false);
+  }
+
+  protected onPlaying(): void {
+    this.playing.set(true);
     this.failed.set(false);
   }
 
