@@ -354,6 +354,9 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     height: text(merged.height),
     weight: text(merged.weight),
     bodyShape: text(merged.bodyShape),
+    bust: text(merged.bust),
+    waist: text(merged.waist),
+    hip: text(merged.hip),
     handle: normalizeHandle(merged.handle, name),
     tags: textList(merged.tags),
     availability: text(merged.availability),
@@ -410,6 +413,9 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     height: text(profile.height),
     weight: text(profile.weight),
     bodyShape: text(profile.bodyShape),
+    bust: text(profile.bust),
+    waist: text(profile.waist),
+    hip: text(profile.hip),
     handle: normalizeHandle(profile.handle, name),
     tags: textList(profile.tags),
     availability: text(profile.availability),
@@ -572,7 +578,14 @@ export interface AiModelProfile {
   age: string;
   height: string;
   weight: string;
+  /** Body shape, e.g. "Hourglass". */
   bodyShape: string;
+  /** Bust measurement, e.g. "84 cm". */
+  bust: string;
+  /** Waist measurement, e.g. "64 cm". */
+  waist: string;
+  /** Hip measurement, e.g. "90 cm". */
+  hip: string;
   /** Instagram-style handle shown on the portfolio header. */
   handle: string;
   /** Portfolio tags, shown as chips on the header. */

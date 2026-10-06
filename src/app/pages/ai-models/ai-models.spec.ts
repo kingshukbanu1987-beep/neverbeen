@@ -17,22 +17,35 @@ describe('AiModelsPage', () => {
 
     const element: HTMLElement = fixture.nativeElement;
     const expectedNames = [
+      'Fiadh Dara',
       'Nourhan Durrani',
-      'Nirvana Noorzai',
+      'Nazanin Maeve Al-Farsi',
       'Sereenah Noorzai',
+      'Alisha Bhattacharya',
+      'Maeve Anahita',
       'Rozalin El Masry',
+      'Ava Amira Gallagher',
+      'Banafsheh Saoirse Yazdani',
+      'Nirvana Noorzai',
+      'Sorcha Golsa MacCarthy',
       'Fatima Sana Hussaini',
-      'Salma Ahmadzai',
-      'Toulene Arslan',
       'Zeina Al-Sabbagh',
+      'Toulene Arslan',
+      'Caoimhe Niloufar Rahimi',
+      'Salma Ahmadzai',
       'Nermin Akhundzada',
       'Rasha Fakhoury',
+      'Lana Mahvash Kennedy',
+      'Donya Caoimhe Yazdani',
+      'Priyanka Chatterjee',
     ];
 
     expect(element.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
     expect(aiModelProfiles.map((profile) => profile.name)).toEqual(expectedNames);
     expect(aiModelProfiles.map((profile) => profile.order)).toEqual([
       1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+      11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+      21,
     ]);
     expect(element.querySelectorAll('.model-card').length).toBe(expectedNames.length);
     expect(element.querySelector('.empty-studio')).toBeNull();
@@ -70,8 +83,8 @@ describe('AiModelsPage', () => {
       expect(profile.photoNote).toContain('INR');
     }
 
-    // The entry rate is ₹550 a photograph; the models vary slightly around it.
-    expect(aiModelProfiles[0].photoRate).toBe(550);
+    // The leading profile (Fiadh Dara) quotes ₹535; the models vary slightly around it.
+    expect(aiModelProfiles[0].photoRate).toBe(535);
     expect(Math.min(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(520);
     expect(Math.max(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(600);
   });
@@ -86,6 +99,10 @@ describe('AiModelsPage', () => {
     expect(hero?.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
     expect(hero?.textContent).toContain('model profiles');
     expect(hero?.textContent).toContain('per photograph');
+    // The hero discloses that the models are AI creations, not real people.
+    expect(hero?.textContent).toContain('None of the models below exists in reality');
+    expect(hero?.textContent).toContain('created using');
+    expect(hero?.textContent).toContain('artificial intelligence');
 
     // No decorative artwork, glow layers or scroll cue in the header.
     for (const selector of [

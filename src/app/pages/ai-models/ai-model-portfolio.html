@@ -82,7 +82,10 @@
                 <p class="rate-hint">
                   <span aria-hidden="true">✳</span> From
                   <b>₹{{ ratePerPhoto().toLocaleString('en-IN') }}</b> per photograph
-                  <i>— 10 photographs minimum, up to 100 or a custom order</i>
+                  <i
+                    >— <span class="num">10</span> photographs minimum, up to
+                    <span class="num">100</span> or a custom order</i
+                  >
                 </p>
               }
             </div>
@@ -91,19 +94,31 @@
           <dl class="profile-stats" aria-label="Model information">
             <div>
               <dt>Photographs</dt>
-              <dd>{{ photoCount() }}</dd>
+              <dd class="num">{{ photoCount() }}</dd>
             </div>
             <div>
               <dt>Age</dt>
-              <dd>{{ fact(profile.age) }}</dd>
+              <dd class="num">{{ fact(profile.age) }}</dd>
             </div>
             <div>
               <dt>Height</dt>
-              <dd>{{ fact(profile.height) }}</dd>
+              <dd class="num">{{ fact(profile.height) }}</dd>
             </div>
             <div>
               <dt>Weight</dt>
-              <dd>{{ fact(profile.weight) }}</dd>
+              <dd class="num">{{ fact(profile.weight) }}</dd>
+            </div>
+            <div>
+              <dt>Bust</dt>
+              <dd class="num">{{ fact(profile.bust) }}</dd>
+            </div>
+            <div>
+              <dt>Waist</dt>
+              <dd class="num">{{ fact(profile.waist) }}</dd>
+            </div>
+            <div>
+              <dt>Hip</dt>
+              <dd class="num">{{ fact(profile.hip) }}</dd>
             </div>
             <div>
               <dt>Body shape</dt>
@@ -162,7 +177,7 @@
             >
               <span aria-hidden="true">⤨</span> Shuffle
             </button>
-            <span class="gallery-count">{{ photoCount() }} <i>IMAGES</i></span>
+            <span class="gallery-count"><span class="num">{{ photoCount() }}</span> <i>IMAGES</i></span>
           </div>
         </header>
 
@@ -185,7 +200,9 @@
                   />
                   <span class="tile-glow" aria-hidden="true"></span>
                   <span class="tile-overlay" aria-hidden="true">
-                    <span class="tile-number">FRAME / {{ frameLabel(index) }}</span>
+                    <span class="tile-number"
+                      >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
+                    >
                     <span class="tile-expand">⤢</span>
                   </span>
                 </button>
@@ -208,13 +225,20 @@
                       decoding="async"
                     />
                     <span class="tile-overlay" aria-hidden="true">
-                      <span class="tile-number">FRAME / {{ frameLabel(index) }}</span>
+                      <span class="tile-number"
+                        >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
+                      >
                       <span class="tile-expand">⤢</span>
                     </span>
                   </button>
                   <figcaption>
                     <span class="feed-index">{{ frameLabel(index) }}</span>
-                    <span class="feed-caption">{{ photoCaption(index) }}</span>
+                    <span class="feed-caption">
+                      {{ captionParts(index).text }}
+                      @if (captionParts(index).frame) {
+                        <span class="num">{{ captionParts(index).frame }}</span>
+                      }
+                    </span>
                   </figcaption>
                 </figure>
               }
@@ -314,7 +338,12 @@
       </div>
 
       <footer class="lightbox-foot">
-        <p class="lightbox-caption">{{ photoCaption(lightbox.index) }}</p>
+        <p class="lightbox-caption">
+          {{ captionParts(lightbox.index).text }}
+          @if (captionParts(lightbox.index).frame) {
+            <span class="num">{{ captionParts(lightbox.index).frame }}</span>
+          }
+        </p>
         @if (photos().length > 1) {
           <div class="lightbox-thumbs" role="group" aria-label="Choose a photograph">
             @for (photo of photos(); track photo.src; let index = $index) {

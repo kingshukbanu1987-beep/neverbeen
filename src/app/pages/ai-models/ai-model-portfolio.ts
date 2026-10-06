@@ -166,6 +166,17 @@ export class AiModelPortfolioPage implements OnDestroy {
     );
   }
 
+  /**
+   * The caption split so its frame number can be set in the numeric face: a custom caption is
+   * returned whole, while the generated "Name · frame NN" fallback keeps NN in `frame`.
+   */
+  protected captionParts(index: number): { text: string; frame: string } {
+    const photo = this.photos()[index];
+    if (!photo) return { text: '', frame: '' };
+    if (photo.caption) return { text: photo.caption, frame: '' };
+    return { text: `${this.model()?.name ?? 'Portfolio'} · frame `, frame: this.frameLabel(index) };
+  }
+
   protected openBooking(): void {
     this.bookingOpen.set(true);
   }

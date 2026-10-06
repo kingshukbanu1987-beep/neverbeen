@@ -9,6 +9,8 @@
   --studio-line: rgb(255 255 255 / 10%);
   --studio-accent: #ad141a;
   --studio-pink: #ef4b8c;
+  /* Every numeric readout on the page is set in Calibri. */
+  --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   background: var(--studio-bg);
   color: var(--studio-text);
 }
@@ -112,6 +114,32 @@
   color: rgb(247 240 244 / 70%);
   font-size: clamp(0.95rem, 1.4vw, 1.05rem);
   line-height: 1.6;
+}
+
+.hero-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  max-width: 620px;
+  margin: 0.85rem 0 0;
+  color: var(--studio-faint);
+  font-size: 0.74rem;
+  line-height: 1.65;
+  letter-spacing: 0.02em;
+}
+
+.hero-notice span {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
+  place-items: center;
+  border: 1px solid rgb(240 112 168 / 50%);
+  border-radius: 50%;
+  color: #f47caf;
+  font-size: 0.58rem;
+  font-weight: 700;
 }
 
 .directory-section {
@@ -835,4 +863,13 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ------------------------------------------------------------- numeric faces */
+/* Digits are set in Calibri on every numeric readout of the page. */
+.num,
+.results-count,
+.card-photo-count b,
+.empty-number {
+  font-family: var(--numeric-font);
 }

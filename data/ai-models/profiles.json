@@ -7,9 +7,12 @@
     "bodyShape": "Pear",
     "bio": "A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.",
     "illustrative": true,
-    "order": 1,
+    "order": 2,
     "photoRate": 550,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "88 cm",
+    "waist": "68 cm",
+    "hip": "96 cm"
   },
   "Nirvana Noorzai.png": {
     "location": "Dubai, United Arab Emirates",
@@ -19,9 +22,12 @@
     "bodyShape": "Hourglass",
     "bio": "A polished, versatile presence imagined between bold architecture, soft light and new destinations.",
     "illustrative": true,
-    "order": 2,
+    "order": 10,
     "photoRate": 570,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "86 cm",
+    "waist": "64 cm",
+    "hip": "92 cm"
   },
   "Sereenah Noorzai.png": {
     "location": "Muscat, Oman",
@@ -31,9 +37,12 @@
     "bodyShape": "Athletic",
     "bio": "A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.",
     "illustrative": true,
-    "order": 3,
+    "order": 4,
     "photoRate": 540,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "82 cm",
+    "waist": "62 cm",
+    "hip": "88 cm"
   },
   "Rozalin El Masry.png": {
     "location": "Alexandria, Egypt",
@@ -43,9 +52,12 @@
     "bodyShape": "Rectangle",
     "bio": "A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.",
     "illustrative": true,
-    "order": 4,
+    "order": 7,
     "photoRate": 580,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "87 cm",
+    "waist": "70 cm",
+    "hip": "92 cm"
   },
   "Fatima Sana Hussaini.png": {
     "location": "Kuala Lumpur, Malaysia",
@@ -55,9 +67,12 @@
     "bodyShape": "Pear",
     "bio": "A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.",
     "illustrative": true,
-    "order": 5,
+    "order": 12,
     "photoRate": 560,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "84 cm",
+    "waist": "64 cm",
+    "hip": "90 cm"
   },
   "Salma Ahmadzai.png": {
     "location": "Tbilisi, Georgia",
@@ -67,9 +82,12 @@
     "bodyShape": "Athletic",
     "bio": "A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.",
     "illustrative": true,
-    "order": 6,
+    "order": 16,
     "photoRate": 530,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "83 cm",
+    "waist": "63 cm",
+    "hip": "89 cm"
   },
   "Toulene Arslan.png": {
     "location": "Istanbul, Türkiye",
@@ -79,9 +97,12 @@
     "bodyShape": "Hourglass",
     "bio": "A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.",
     "illustrative": true,
-    "order": 7,
+    "order": 14,
     "photoRate": 590,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "85 cm",
+    "waist": "64 cm",
+    "hip": "91 cm"
   },
   "Zeina Al-Sabbagh.png": {
     "location": "Beirut, Lebanon",
@@ -91,9 +112,12 @@
     "bodyShape": "Rectangle",
     "bio": "A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.",
     "illustrative": true,
-    "order": 8,
+    "order": 13,
     "photoRate": 555,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "84 cm",
+    "waist": "66 cm",
+    "hip": "90 cm"
   },
   "Nermin Akhundzada.png": {
     "location": "Baku, Azerbaijan",
@@ -103,9 +127,12 @@
     "bodyShape": "Pear",
     "bio": "A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.",
     "illustrative": true,
-    "order": 9,
+    "order": 17,
     "photoRate": 520,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "85 cm",
+    "waist": "65 cm",
+    "hip": "91 cm"
   },
   "Rasha Fakhoury.png": {
     "location": "Amman, Jordan",
@@ -115,9 +142,12 @@
     "bodyShape": "Hourglass",
     "bio": "An understated editorial spirit with a confident point of view and an eye for sculptural details.",
     "illustrative": true,
-    "order": 10,
+    "order": 18,
     "photoRate": 600,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "87 cm",
+    "waist": "66 cm",
+    "hip": "94 cm"
   },
   "Ava Amira Gallagher.png": {
     "name": "Ava Amira Gallagher",
@@ -128,9 +158,12 @@
     "bodyShape": "Hourglass",
     "bio": "A graceful, camera-confident presence imagined between Dublin's Georgian streets, soft northern light and contemporary editorial styling.",
     "illustrative": true,
-    "order": 11,
+    "order": 8,
     "photoRate": 565,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "84 cm",
+    "waist": "62 cm",
+    "hip": "89 cm"
   },
   "Banafsheh Saoirse Yazdani.png": {
     "name": "Banafsheh Saoirse Yazdani",
@@ -141,9 +174,12 @@
     "bodyShape": "Pear",
     "bio": "A striking, versatile muse whose imagined style blends Tehran's modern energy with timeless Persian elegance and bold colour.",
     "illustrative": true,
-    "order": 12,
+    "order": 9,
     "photoRate": 575,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "86 cm",
+    "waist": "66 cm",
+    "hip": "93 cm"
   },
   "Caoimhe Niloufar Rahimi.png": {
     "name": "Caoimhe Niloufar Rahimi",
@@ -154,9 +190,12 @@
     "bodyShape": "Rectangle",
     "bio": "A poised, expressive presence imagined among Isfahan's tiled archways, garden pavilions and rich craft traditions.",
     "illustrative": true,
-    "order": 13,
+    "order": 15,
     "photoRate": 560,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "84 cm",
+    "waist": "65 cm",
+    "hip": "90 cm"
   },
   "Fiadh Dara.png": {
     "name": "Fiadh Dara",
@@ -167,9 +206,12 @@
     "bodyShape": "Athletic",
     "bio": "A fresh, spirited portfolio presence inspired by Shiraz's poetry, rose gardens and golden afternoon light.",
     "illustrative": true,
-    "order": 14,
+    "order": 1,
     "photoRate": 535,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "82 cm",
+    "waist": "61 cm",
+    "hip": "88 cm"
   },
   "Lana Mahvash Kennedy.png": {
     "name": "Lana Mahvash Kennedy",
@@ -180,9 +222,12 @@
     "bodyShape": "Hourglass",
     "bio": "A warm, self-assured editorial presence imagined between Cork's harbour light, knit textures and relaxed modern tailoring.",
     "illustrative": true,
-    "order": 15,
+    "order": 19,
     "photoRate": 585,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "86 cm",
+    "waist": "64 cm",
+    "hip": "93 cm"
   },
   "Maeve Anahita.png": {
     "name": "Maeve Anahita",
@@ -193,9 +238,12 @@
     "bodyShape": "Pear",
     "bio": "A luminous, contemporary muse with an imagined love of desert architecture, handwoven textures and quiet portraiture.",
     "illustrative": true,
-    "order": 16,
+    "order": 6,
     "photoRate": 550,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "84 cm",
+    "waist": "63 cm",
+    "hip": "90 cm"
   },
   "Nazanin Maeve Al-Farsi.png": {
     "name": "Nazanin Maeve Al-Farsi",
@@ -206,9 +254,12 @@
     "bodyShape": "Rectangle",
     "bio": "A polished, modern presence imagined between sculptural skylines, gallery spaces and refined evening styling.",
     "illustrative": true,
-    "order": 17,
+    "order": 3,
     "photoRate": 595,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "85 cm",
+    "waist": "67 cm",
+    "hip": "91 cm"
   },
   "Sorcha Golsa MacCarthy.png": {
     "name": "Sorcha Golsa MacCarthy",
@@ -219,9 +270,12 @@
     "bodyShape": "Athletic",
     "bio": "A bright, grounded editorial spirit whose imagined style pairs Ireland's western light with clean lines and natural textures.",
     "illustrative": true,
-    "order": 18,
+    "order": 11,
     "photoRate": 530,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "85 cm",
+    "waist": "65 cm",
+    "hip": "90 cm"
   },
   "Donya Caoimhe Yazdani.png": {
     "name": "Donya Caoimhe Yazdani",
@@ -232,9 +286,12 @@
     "bodyShape": "Hourglass",
     "bio": "A thoughtful, magnetic presence imagined among historic shrines, bazaar colour and soft, considered portraiture.",
     "illustrative": true,
-    "order": 19,
+    "order": 20,
     "photoRate": 570,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "83 cm",
+    "waist": "62 cm",
+    "hip": "89 cm"
   },
   "Priyanka Chatterjee.png": {
     "name": "Priyanka Chatterjee",
@@ -245,8 +302,27 @@
     "bodyShape": "Pear",
     "bio": "A warm, expressive muse imagined between Kolkata's colonial verandahs, handloom saris and the glow of festival season.",
     "illustrative": true,
-    "order": 20,
+    "order": 21,
     "photoRate": 540,
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "bust": "82 cm",
+    "waist": "62 cm",
+    "hip": "88 cm"
+  },
+  "Alisha Bhattacharya.png": {
+    "name": "Alisha Bhattacharya",
+    "location": "Darjeeling, India",
+    "age": "25",
+    "height": "165 cm",
+    "weight": "53 kg",
+    "bodyShape": "Hourglass",
+    "bust": "84 cm",
+    "waist": "63 cm",
+    "hip": "90 cm",
+    "bio": "A warm, expressive presence imagined between Darjeeling's tea-garden terraces, old-town lanes and the soft light of the Himalayan foothills.",
+    "illustrative": true,
+    "order": 5,
+    "photoRate": 545,
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
   }
 }

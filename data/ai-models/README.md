@@ -24,6 +24,9 @@ placeholder until images are dropped into the album folder.
   "height": "172 cm",
   "weight": "60 kg",
   "bodyShape": "Pear",
+  "bust": "88 cm",
+  "waist": "68 cm",
+  "hip": "96 cm",
   "bio": "A short introduction to the model.",
   "tags": ["Editorial", "Portrait"],
   "availability": "Open for editorial and campaign bookings",
@@ -86,9 +89,9 @@ optional and shown under the totals.
    dropping images into `public/NeverBeenModels/<ModelName>/` (or adding a whole new folder) is
    enough. `npm run generate:ai-models` refreshes it by hand if ever needed.
 
-The portfolio shows the cover, handle, location, age, height, weight, body shape, tags,
-availability and short introduction. Facts that have not been supplied are labelled **Details to be
-added** rather than being guessed. The build compiles the data into a typed, static model manifest
+The portfolio shows the cover, handle, location, age, height, weight, bust, waist, hip,
+body shape, tags, availability and short introduction. Facts that have not been supplied are
+labelled **Details to be added** rather than being guessed. The build compiles the data into a typed, static model manifest
 for the Angular pages.
 
 Each cover on `/ai-models` states how many photographs that model has in her album — the count is
