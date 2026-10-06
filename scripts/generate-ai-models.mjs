@@ -7,6 +7,12 @@
  * `cover.*`, or the `cover` field of the album's `profile.json`) becomes the portfolio
  * avatar/cover, and every image in the folder becomes a post in the Instagram-style grid.
  *
+ * The videos of the same model live in the album's own video sub-folder,
+ * `public/NeverBeenModels/<ModelNameNoSpaces>/video/`. Every clip dropped in there appears in
+ * the portfolio's video reel, just below the model's personal details, and plays in the
+ * portfolio's full-screen player (play/pause, stop, seek, volume, speed, full screen and
+ * download). `videos/` is accepted as an alias of `video/`.
+ *
  * Optional per-model facts live in `<album>/profile.json`; the shared
  * `data/ai-models/profiles.json` remains supported and can be keyed by cover filename,
  * model name or album folder. The legacy `public/ai-model-assets/portraits` folder and
@@ -28,24 +34,56 @@ const legacyGalleryDir = join(modelsDir, 'gallery');
 const profilesFile = join(projectRoot, 'data', 'ai-models', 'profiles.json');
 const outputFile = join(projectRoot, 'src', 'app', 'pages', 'ai-models', 'ai-model-data.ts');
 const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
+/**
+ * The clips a browser can play back with its native <video> element, mapped to the MIME type the
+ * portfolio advertises for them.
+ */
+const videoExtensions = new Map([
+  ['.mp4', 'video/mp4'],
+  ['.m4v', 'video/mp4'],
+  ['.webm', 'video/webm'],
+  ['.ogv', 'video/ogg'],
+  ['.ogg', 'video/ogg'],
+  ['.mov', 'video/quicktime'],
+]);
+
+/** Where a model's clips are looked for, inside her own album folder. `video/` is canonical. */
+const videoFolderNames = ['video', 'videos'];
 
 function isImage(fileName) {
   return imageExtensions.has(extname(fileName).toLowerCase());
 }
 
-function listImages(directory) {
+function isVideo(fileName) {
+  return videoExtensions.has(extname(fileName).toLowerCase());
+}
+
+function videoType(fileName) {
+  return videoExtensions.get(extname(fileName).toLowerCase()) ?? '';
+}
+
+/** Collects every file under `directory` that the predicate accepts. */
+function listFiles(directory, accepts) {
   if (!existsSync(directory)) return [];
 
   const found = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const absolute = join(directory, entry.name);
     if (entry.isDirectory()) {
-      found.push(...listImages(absolute));
-    } else if (entry.isFile() && isImage(entry.name)) {
+      found.push(...listFiles(absolute, accepts));
+    } else if (entry.isFile() && accepts(entry.name)) {
       found.push(absolute);
     }
   }
   return found;
+}
+
+function listImages(directory) {
+  return listFiles(directory, isImage);
+}
+
+function listVideos(directory) {
+  return listFiles(directory, isVideo);
 }
 
 function listAlbumDirectories() {
@@ -191,18 +229,32 @@ function baseName(value) {
 }
 
 /**
- * Resolves a photograph reference (a file name inside an album, or a path relative to the
- * legacy gallery folder) to an absolute path that stays inside the allowed root.
+ * Resolves a media reference (a file name inside an album, or a path relative to the legacy
+ * gallery folder) to an absolute path that stays inside the allowed root. Photographs are the
+ * default; `accepts` widens that to video clips where a video is expected.
  */
-function resolveInside(root, reference) {
+function resolveInside(root, reference, accepts = isImage) {
   const normalized = text(reference).replaceAll(String.fromCharCode(92), '/');
   if (!normalized) return null;
 
   const absolutePath = resolve(root, normalized);
   if (absolutePath !== root && !absolutePath.startsWith(`${root}${sep}`)) return null;
   if (!existsSync(absolutePath) || !statSync(absolutePath).isFile()) return null;
-  if (!isImage(absolutePath)) return null;
+  if (!accepts(absolutePath)) return null;
   return absolutePath;
+}
+
+/**
+ * Resolves a reference that may be written relative to the album folder (`video/reel.mp4`) or
+ * relative to the album's video sub-folder (`reel.mp4` / `posters/reel.jpg`).
+ */
+function resolveInAlbum(albumDir, reference, accepts) {
+  const roots = [albumDir, ...videoFolderNames.map((folder) => join(albumDir, folder))];
+  for (const root of roots) {
+    const resolved = resolveInside(root, reference, accepts);
+    if (resolved) return resolved;
+  }
+  return null;
 }
 
 function readProfiles() {
@@ -266,6 +318,96 @@ function albumPhotos({ albumDir, coverPath, preferredOrder, captions, modelName 
   for (const file of files) push(file);
 
   return ordered;
+}
+
+/**
+ * `videos` entries accept a bare file name or an object, mirroring `photos`:
+ * `"reel-01.mp4"` / `{ "file": "reel-01.mp4", "caption": "…", "poster": "reel-01.jpg" }`.
+ */
+function normalizeVideoEntries(entries) {
+  if (!Array.isArray(entries)) return [];
+
+  const videos = [];
+  for (const entry of entries) {
+    if (typeof entry === 'string') {
+      if (entry.trim()) videos.push({ file: entry.trim(), caption: '', poster: '' });
+      continue;
+    }
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      const file = text(entry.file ?? entry.src ?? entry.video);
+      if (file) {
+        videos.push({
+          file,
+          caption: text(entry.caption),
+          poster: text(entry.poster ?? entry.thumbnail ?? entry.image),
+        });
+      }
+    }
+  }
+  return videos;
+}
+
+/** `videoCaptions` / `videoPosters` maps, keyed by any path that reaches the file. */
+function mediaMap(albumDir, value, accepts) {
+  const map = new Map();
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return map;
+
+  for (const [reference, mapped] of Object.entries(value)) {
+    const resolved = resolveInAlbum(albumDir, reference, accepts);
+    if (resolved) map.set(resolved, text(mapped));
+    else
+      console.warn(
+        `[ai-models] Could not match the album entry "${reference}" — check the file name.`,
+      );
+  }
+  return map;
+}
+
+/**
+ * Every clip in the album's `video/` sub-folder, `profile.json` order first (then natural file
+ * order), each with its caption, its poster frame and the MIME type to advertise.
+ */
+function albumVideos({ albumDir, modelName, merged }) {
+  const files = naturalSort(
+    videoFolderNames.flatMap((folder) => listVideos(join(albumDir, folder))),
+  );
+  const captions = mediaMap(albumDir, merged.videoCaptions, isVideo);
+  const posters = mediaMap(albumDir, merged.videoPosters, isImage);
+  const seen = new Set();
+  const ordered = [];
+
+  const push = (absolutePath, caption, poster) => {
+    if (!absolutePath || seen.has(absolutePath)) return;
+    seen.add(absolutePath);
+    ordered.push({
+      absolutePath,
+      caption: caption || captions.get(absolutePath) || '',
+      posterPath: poster ? resolveInAlbum(albumDir, poster, isImage) : null,
+    });
+  };
+
+  for (const entry of normalizeVideoEntries(merged.videos)) {
+    const resolved = resolveInAlbum(albumDir, entry.file, isVideo);
+    if (!resolved) {
+      console.warn(`[ai-models] Missing video for ${modelName}: ${entry.file}`);
+      continue;
+    }
+    push(resolved, entry.caption, entry.poster);
+  }
+
+  for (const file of files) {
+    push(file, '', posters.get(file) ?? '');
+  }
+
+  return ordered.map((entry) => ({
+    src: publicUrl(entry.absolutePath),
+    fileName: entry.absolutePath.split(sep).pop(),
+    caption: entry.caption,
+    poster: entry.posterPath
+      ? publicUrl(entry.posterPath)
+      : (posters.get(entry.absolutePath) ?? ''),
+    type: videoType(entry.absolutePath),
+  }));
 }
 
 function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover = null }) {
@@ -338,6 +480,8 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     modelName: name,
   });
 
+  const videos = albumVideos({ albumDir, modelName: name, merged });
+
   const photos = albumEntries.map((entry) => ({
     src: publicUrl(entry.absolutePath),
     caption: entry.caption,
@@ -367,6 +511,8 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     illustrative: merged.illustrative === true,
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
+    /** Clips from `public/NeverBeenModels/<album>/video/`, played in the portfolio's reel. */
+    videos,
   };
 }
 
@@ -426,6 +572,8 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     illustrative: profile.illustrative === true,
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
+    // Flat (legacy) profiles have no album folder, so they carry no video folder either.
+    videos: [],
   };
 }
 
@@ -565,6 +713,19 @@ export interface AiModelPhoto {
   caption: string;
 }
 
+export interface AiModelVideo {
+  /** Public URL of the video clip inside the model's album. */
+  src: string;
+  /** File name on disk, offered as the download name in the player. */
+  fileName: string;
+  /** Optional caption shown under the clip and in the player. */
+  caption: string;
+  /** Optional poster frame URL; empty when the player should use the clip's first frame. */
+  poster: string;
+  /** MIME type of the clip, e.g. "video/mp4". */
+  type: string;
+}
+
 export interface AiModelProfile {
   /** URL-safe path segment derived from the model name. */
   slug: string;
@@ -606,6 +767,11 @@ export interface AiModelProfile {
   gallery: string[];
   /** Every photograph in the album, cover first — the Instagram-style grid. */
   photos: AiModelPhoto[];
+  /**
+   * Every clip in the album's video/ sub-folder, in album order — the video reel shown just
+   * below the model's personal details.
+   */
+  videos: AiModelVideo[];
 }
 
 export const aiModelProfiles: AiModelProfile[] = [
@@ -636,7 +802,11 @@ console.log(
   `[ai-models] Wrote ${relative(projectRoot, outputFile)} — ${profiles.length} model portfolio${profiles.length === 1 ? '' : 's'}.`,
 );
 for (const profile of profiles) {
+  const videoNote =
+    profile.videos.length > 0
+      ? `, ${profile.videos.length} video${profile.videos.length === 1 ? '' : 's'} in video/`
+      : '';
   console.log(
-    `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
+    `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${videoNote}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
   );
 }

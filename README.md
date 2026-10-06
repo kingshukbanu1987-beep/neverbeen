@@ -89,13 +89,20 @@ is shuffled into a fresh random order on every visit — with a **Shuffle** cont
 another arrangement on demand.
 Clicking any photograph expands it in a full-screen pop-up that can be browsed with the arrow keys,
 the on-screen arrows, the thumbnail strip or a swipe on mobile, with a grid/feed layout switch.
+Right below the personal details, a **Videos** reel plays the clips from the model's own
+`<album>/video/` folder: tap a clip to open it in the portfolio's player — play, pause, stop, scrub,
+volume, playback speed, previous/next clip, picture-in-picture, true full screen (F or a double
+click) and a **Download** button for the file. Tapping the picture plays or pauses it, and
+Space/K, ←/→, ↑/↓ and M work as shortcuts.
 Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative
 until verified.
 
 Each model owns one album folder inside `public/NeverBeenModels`, named after the model with no
 spaces (for example `public/NeverBeenModels/NourhanDurrani`). Drop the model's photographs into that
 folder and they appear in the portfolio grid; the first image (or the one named `cover.*`) is used as
-the cover and avatar. Nothing needs to be run or edited: while `npm start` is running an album
+the cover and avatar. Each model's album also holds a `video/` sub-folder — drop the clips in there
+and they appear in her portfolio's video reel, in file-name order. Nothing needs to be run or edited:
+while `npm start` is running an album
 watcher regenerates the manifest as the files land and the dev server reloads the page, `npm run
 build` refreshes it in its prebuild step, and a brand-new folder becomes a new portfolio page on its
 own. Optional details live in `<album>/profile.json` or in `data/ai-models/profiles.json` — see

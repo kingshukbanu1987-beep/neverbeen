@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Watches `public/NeverBeenModels` and regenerates the AI model manifest whenever photographs are
- * added, replaced or removed — so a photo dropped into a model's album folder appears on that
- * model's portfolio page without any further command or code change.
+ * Watches `public/NeverBeenModels` and regenerates the AI model manifest whenever photographs or
+ * videos are added, replaced or removed — so a photo dropped into a model's album folder, or a
+ * clip dropped into her `video/` sub-folder, appears on that model's portfolio page without any
+ * further command or code change.
  *
  * `npm start` runs this next to `ng serve`; the Angular dev server then rebuilds and reloads the
  * page by itself. Run it on its own with:
@@ -17,6 +18,8 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const albumsDir = join(projectRoot, 'public', 'NeverBeenModels');
 const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
+/** The clip formats the portfolio's video reel can play. */
+const videoExtensions = new Set(['.mp4', '.m4v', '.webm', '.ogv', '.ogg', '.mov']);
 const debounceMs = 300;
 
 let timer = null;
@@ -93,9 +96,11 @@ if (!existsSync(albumsDir)) {
 let watchingEvents = false;
 try {
   watch(albumsDir, { recursive: true }, (eventType, fileName) => {
+    const extension = fileName ? extname(fileName).toLowerCase() : '';
     if (
       fileName &&
-      !imageExtensions.has(extname(fileName).toLowerCase()) &&
+      !imageExtensions.has(extension) &&
+      !videoExtensions.has(extension) &&
       fileName !== 'profile.json'
     ) {
       return;
@@ -111,9 +116,10 @@ try {
 }
 
 console.log(
-  `[ai-models] Watching public/NeverBeenModels — drop photographs into a model's folder and ${
-    watchingEvents ? 'they appear' : 'they appear (scan mode)'
-  } on that portfolio page automatically.`,
+  "[ai-models] Watching public/NeverBeenModels — drop photographs into a model's folder, or " +
+    'videos into her video/ sub-folder, and ' +
+    `${watchingEvents ? 'they appear' : 'they appear (scan mode)'} on that portfolio page ` +
+    'automatically.',
 );
 
 function shutdown() {

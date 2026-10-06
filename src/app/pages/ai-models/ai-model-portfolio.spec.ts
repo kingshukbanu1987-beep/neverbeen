@@ -4,6 +4,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelPortfolioPage, shufflePhotos } from './ai-model-portfolio';
+import { AiModelVideoPlayer, formatTime } from './video/ai-model-video-player';
 
 const testRoutes = [
   {
@@ -13,10 +14,17 @@ const testRoutes = [
 ];
 
 /** Builds a temporary portfolio so multi-photograph behaviour can be exercised. */
-function withPhotos(count: number): AiModelProfile {
+function withPhotos(count: number, videoCount = 0): AiModelProfile {
   const photos = Array.from({ length: count }, (_, index) => ({
     src: `/NeverBeenModels/TestStudioModel/frame-${index + 1}.jpg`,
     caption: index === 0 ? 'Studio cover frame' : `Frame ${index + 1} caption`,
+  }));
+  const videos = Array.from({ length: videoCount }, (_, index) => ({
+    src: `/NeverBeenModels/TestStudioModel/video/clip-${index + 1}.mp4`,
+    fileName: `clip-${index + 1}.mp4`,
+    caption: index === 0 ? 'Studio reel' : `Clip ${index + 1} caption`,
+    poster: '',
+    type: 'video/mp4',
   }));
   const profile: AiModelProfile = {
     slug: 'test-studio-model',
@@ -41,6 +49,7 @@ function withPhotos(count: number): AiModelProfile {
     illustrative: true,
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
+    videos,
   };
 
   aiModelProfiles.push(profile);
@@ -370,6 +379,270 @@ describe('AiModelPortfolioPage photo shuffle', () => {
       expect(album[0].src).toBe('/NeverBeenModels/TestStudioModel/frame-1.jpg');
     } finally {
       release(profile);
+    }
+  });
+});
+
+/** The player is rendered on its own, as the portfolio renders it, so its controls can be driven. */
+describe('AiModelVideoPlayer', () => {
+  const clips = [
+    {
+      src: '/NeverBeenModels/TestStudioModel/video/clip-1.mp4',
+      fileName: 'clip-1.mp4',
+      caption: 'Studio reel',
+      poster: '',
+      type: 'video/mp4',
+    },
+    {
+      src: '/NeverBeenModels/TestStudioModel/video/clip-2.mp4',
+      fileName: 'clip-2.mp4',
+      caption: '',
+      poster: '/NeverBeenModels/TestStudioModel/video/clip-2.jpg',
+      type: 'video/mp4',
+    },
+  ];
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [AiModelVideoPlayer] }).compileComponents();
+  });
+
+  /** Built without rendering first, so a test can install its spies before playback starts. */
+  function open(startIndex = 0, render = true) {
+    const fixture = TestBed.createComponent(AiModelVideoPlayer);
+    fixture.componentRef.setInput('videos', clips);
+    fixture.componentRef.setInput('startIndex', startIndex);
+    fixture.componentRef.setInput('modelName', 'Test Studio Model');
+    fixture.componentRef.setInput('modelHandle', '@test.studio.model');
+    if (render) fixture.detectChanges();
+    return { fixture, element: fixture.nativeElement as HTMLElement };
+  }
+
+  it('plays the tapped clip and offers every playback control', () => {
+    const { fixture, element } = open(0, false);
+    fixture.detectChanges();
+    const video = element.querySelector('video');
+
+    expect(video?.getAttribute('src')).toBe(clips[0].src);
+    // The player draws its own controls, so the browser's are switched off.
+    expect(video?.hasAttribute('controls')).toBe(false);
+
+    const labels = Array.from(element.querySelectorAll('[aria-label]')).map((node) =>
+      node.getAttribute('aria-label'),
+    );
+    // Play/pause share one control, so it reads as "Pause video" while the clip is running.
+    expect(labels.some((label) => /^(Play|Pause) video$/.test(label ?? ''))).toBe(true);
+    expect(labels).toContain('Stop video');
+    expect(labels).toContain('Seek within the clip');
+    expect(labels).toContain('Volume');
+    expect(labels).toContain('Playback speed');
+    expect(labels).toContain('Play full screen');
+    expect(element.querySelectorAll('.player-speed option').length).toBeGreaterThan(1);
+
+    const download = element.querySelector<HTMLAnchorElement>('.player-download');
+    expect(download?.getAttribute('href')).toBe(clips[0].src);
+    expect(download?.hasAttribute('download')).toBe(true);
+    expect(download?.getAttribute('download')).toBe('clip-1.mp4');
+    expect(download?.getAttribute('type')).toBe('video/mp4');
+
+    // The clip starts on its own, so the badge is only painted once it is paused again.
+    const pauseButton = Array.from(
+      element.querySelectorAll<HTMLButtonElement>('.player-control'),
+    ).find((button) => button.getAttribute('aria-label') === 'Pause video');
+    expect(pauseButton, 'pause control').toBeTruthy();
+
+    pauseButton!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.player-big-play')).not.toBeNull();
+    expect(element.querySelector('.player-big-play')?.textContent).toContain('Play');
+  });
+
+  it('plays the tapped clip on open, then pauses, resumes and stops', () => {
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(() => Promise.resolve());
+    const pauseSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'pause')
+      .mockImplementation(() => undefined);
+
+    try {
+      const { fixture, element } = open();
+      const video = element.querySelector('video') as HTMLVideoElement;
+      const player = fixture.componentInstance as unknown as {
+        pause(): void;
+        play(): void;
+        stop(): void;
+      };
+
+      // Opening the player starts the tapped clip on its own.
+      expect(playSpy).toHaveBeenCalled();
+
+      player.pause();
+      expect(pauseSpy).toHaveBeenCalled();
+
+      const playsBeforeResume = playSpy.mock.calls.length;
+      player.play();
+      expect(playSpy.mock.calls.length).toBe(playsBeforeResume + 1);
+
+      video.currentTime = 42;
+      player.stop();
+      expect(pauseSpy.mock.calls.length).toBeGreaterThan(1);
+      expect(video.currentTime).toBe(0);
+    } finally {
+      playSpy.mockRestore();
+      pauseSpy.mockRestore();
+    }
+  });
+
+  it('keeps the counter, volume and speed in step with the clip', () => {
+    const { fixture, element } = open();
+    const counter = () => element.querySelector('.player-counter')?.textContent?.trim();
+
+    expect(counter()).toBe('01 / 02');
+
+    (element.querySelector('.player-next') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const switched = element.querySelector('video') as HTMLVideoElement;
+    expect(switched.getAttribute('src')).toBe(clips[1].src);
+    expect(counter()).toBe('02 / 02');
+
+    (element.querySelector('.player-prev') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(element.querySelector('video')?.getAttribute('src')).toBe(clips[0].src);
+    expect(counter()).toBe('01 / 02');
+
+    const video = element.querySelector('video') as HTMLVideoElement;
+    const volume = element.querySelector<HTMLInputElement>('.player-volume');
+    expect(volume?.value).toBe('100');
+    volume!.value = '40';
+    volume!.dispatchEvent(new Event('input'));
+    expect(video.volume).toBeCloseTo(0.4);
+
+    const speed = element.querySelector<HTMLSelectElement>('.player-speed select');
+    speed!.value = '1.5';
+    speed!.dispatchEvent(new Event('change'));
+    expect(video.playbackRate).toBe(1.5);
+  });
+
+  it('closes with the ✕ button, Escape and reports it to the portfolio', () => {
+    const { fixture, element } = open();
+    const closed = vi.fn();
+    fixture.componentInstance.closed.subscribe(closed);
+
+    (element.querySelector('.player-close') as HTMLButtonElement).click();
+    expect(closed).toHaveBeenCalledTimes(1);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(closed).toHaveBeenCalledTimes(2);
+  });
+
+  it('formats the readouts for short and long clips', () => {
+    expect(formatTime(0)).toBe('0:00');
+    expect(formatTime(5.4)).toBe('0:05');
+    expect(formatTime(65)).toBe('1:05');
+    expect(formatTime(3725)).toBe('1:02:05');
+    expect(formatTime(Number.NaN)).toBe('0:00');
+  });
+});
+
+describe('AiModelPortfolioPage video reel', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AiModelPortfolioPage],
+      providers: [provideRouter(testRoutes)],
+    }).compileComponents();
+  });
+
+  it('shows a tile per clip in the album video folder, under the personal details', async () => {
+    const profile = withPhotos(2, 3);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      const reel = element.querySelector('.video-section');
+      expect(reel).not.toBeNull();
+
+      // The reel sits below the profile header (the personal details) and above the gallery.
+      const sections = Array.from(
+        element.querySelectorAll('.profile-header, .video-section, .gallery-section'),
+      );
+      expect(sections.map((section) => section.className.split(' ')[0])).toEqual([
+        'profile-header',
+        'video-section',
+        'gallery-section',
+      ]);
+
+      // The reel names the album folder the clips are read from.
+      expect(reel?.textContent).toContain('TestStudioModel');
+      expect(reel?.textContent).toContain('video');
+      expect(element.querySelector('.video-count')?.textContent).toContain('3');
+
+      const tiles = element.querySelectorAll('.video-tile');
+      expect(tiles.length).toBe(3);
+      expect(tiles[0].querySelector('video')?.getAttribute('src')).toBe(profile.videos[0].src);
+      expect(tiles[0].getAttribute('aria-label')).toContain('Play');
+      expect(element.textContent).toContain('Studio reel');
+
+      const stats = Array.from(element.querySelectorAll('.profile-stats dt')).map((term) =>
+        term.textContent?.trim(),
+      );
+      expect(stats).toContain('Videos');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('opens the player on the tapped clip and closes it again', async () => {
+    const profile = withPhotos(1, 2);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelector('app-ai-model-video-player')).toBeNull();
+
+      const tile = element.querySelectorAll<HTMLButtonElement>('.video-tile')[1];
+      tile.focus();
+      tile.click();
+      harness.detectChanges();
+
+      const player = element.querySelector('app-ai-model-video-player');
+      expect(player).not.toBeNull();
+      expect(player?.querySelector('video')?.getAttribute('src')).toBe(profile.videos[1].src);
+      expect(player?.querySelector('.player-counter')?.textContent?.trim()).toBe('02 / 02');
+      expect(document.body.style.overflow).toBe('hidden');
+
+      (player?.querySelector('.player-close') as HTMLButtonElement).click();
+      harness.detectChanges();
+
+      expect(element.querySelector('app-ai-model-video-player')).toBeNull();
+      expect(document.body.style.overflow).toBe('');
+      expect(document.activeElement?.classList.contains('video-tile')).toBe(true);
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('leaves the reel out for a model whose video folder is still empty', async () => {
+    const profile = withPhotos(2, 0);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelector('.video-section')).toBeNull();
+      expect(element.querySelectorAll('.video-tile').length).toBe(0);
+      expect(element.querySelectorAll('.grid-tile').length).toBe(2);
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('publishes every clip the album video folder holds', () => {
+    for (const profile of aiModelProfiles) {
+      for (const clip of profile.videos) {
+        expect(clip.src).toContain(`/NeverBeenModels/${profile.album}/video/`);
+        expect(clip.fileName.length).toBeGreaterThan(0);
+        expect(clip.type.startsWith('video/')).toBe(true);
+      }
     }
   });
 });

@@ -14,6 +14,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { AiModelPhoto, AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
+import { AiModelVideoPlayer } from './video/ai-model-video-player';
 
 type PortfolioView = 'grid' | 'feed';
 type ShareState = 'idle' | 'shared' | 'copied' | 'unsupported';
@@ -40,7 +41,7 @@ export function shufflePhotos(photos: readonly AiModelPhoto[]): AiModelPhoto[] {
 
 @Component({
   selector: 'app-ai-model-portfolio-page',
-  imports: [RouterLink, AiModelBookingDialog],
+  imports: [RouterLink, AiModelBookingDialog, AiModelVideoPlayer],
   templateUrl: './ai-model-portfolio.html',
   styleUrl: './ai-model-portfolio.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,8 +73,20 @@ export class AiModelPortfolioPage implements OnDestroy {
 
   protected readonly view = signal<PortfolioView>('grid');
 
+  /**
+   * The clips in the album's `video/` folder, in album order — the reel shown directly under the
+   * model's personal details. Unlike the photographs, the reel keeps its order so a series reads
+   * the way it was uploaded.
+   */
+  protected readonly videos = computed(() => this.model()?.videos ?? []);
+
   /** Index of the photograph expanded in the pop-up, or null when it is closed. */
   protected readonly activeIndex = signal<number | null>(null);
+
+  /** Index of the clip open in the video player, or null when the player is closed. */
+  protected readonly activeVideoIndex = signal<number | null>(null);
+
+  protected readonly videoPlayerOpen = computed(() => this.activeVideoIndex() !== null);
 
   protected readonly shareState = signal<ShareState>('idle');
 
@@ -106,6 +119,7 @@ export class AiModelPortfolioPage implements OnDestroy {
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
   private readonly rentButton = viewChild<ElementRef<HTMLButtonElement>>('rentButton');
   private lastFocused: HTMLElement | null = null;
+  private lastFocusedVideo: HTMLElement | null = null;
   private touchStartX = 0;
   private shareTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -115,7 +129,9 @@ export class AiModelPortfolioPage implements OnDestroy {
       if (typeof document === 'undefined') return;
       const body = document.body;
       const previousOverflow = body.style.overflow;
-      if (this.activeIndex() !== null) body.style.overflow = 'hidden';
+      if (this.activeIndex() !== null || this.activeVideoIndex() !== null) {
+        body.style.overflow = 'hidden';
+      }
       onCleanup(() => {
         body.style.overflow = previousOverflow;
       });
@@ -151,6 +167,21 @@ export class AiModelPortfolioPage implements OnDestroy {
 
   protected photoCount(): string {
     return String(this.photos().length).padStart(2, '0');
+  }
+
+  /** How many clips the album's video folder holds. */
+  protected videoCount(): number {
+    return this.videos().length;
+  }
+
+  protected videoLabel(): string {
+    return this.videos().length === 1 ? 'video' : 'videos';
+  }
+
+  protected videoTitle(index: number): string {
+    const clip = this.videos()[index];
+    if (!clip) return '';
+    return clip.caption || `${this.model()?.name ?? 'Portfolio'} · clip ${this.frameLabel(index)}`;
   }
 
   /** Staggered reveal for the grid, capped so long albums do not wait on the animation. */
@@ -201,6 +232,19 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.activeIndex.set(index);
   }
 
+  protected openVideo(index: number): void {
+    this.lastFocusedVideo =
+      typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null;
+    this.activeVideoIndex.set(index);
+  }
+
+  protected closeVideo(): void {
+    if (this.activeVideoIndex() === null) return;
+    this.activeVideoIndex.set(null);
+    this.lastFocusedVideo?.focus?.({ preventScroll: true });
+    this.lastFocusedVideo = null;
+  }
+
   protected closeLightbox(): void {
     if (this.activeIndex() === null) return;
     this.activeIndex.set(null);
@@ -226,7 +270,8 @@ export class AiModelPortfolioPage implements OnDestroy {
   }
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
-    if (this.activeIndex() === null) return;
+    // The video player runs its own shortcuts while it is open.
+    if (this.activeIndex() === null || this.activeVideoIndex() !== null) return;
 
     switch (event.key) {
       case 'Escape':

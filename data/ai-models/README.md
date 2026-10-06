@@ -33,13 +33,18 @@ placeholder until images are dropped into the album folder.
   "illustrative": true,
   "cover": "Nourhan Durrani.png",
   "photos": ["Nourhan Durrani.png", "editorial-01.jpg"],
-  "captions": { "editorial-01.jpg": "Old town, golden hour" }
+  "captions": { "editorial-01.jpg": "Old town, golden hour" },
+  "videos": ["reel-01.mp4", { "file": "reel-02.mp4", "caption": "Rooftop, golden hour" }],
+  "videoCaptions": { "reel-03.mp4": "Studio, behind the scenes" }
 }
 ```
 
 Every field is optional. `photos` fixes the grid order (`gallery` is accepted as an alias and as
 the legacy list of gallery paths); without it, the cover comes first and the remaining images
-follow in natural filename order. `illustrative` marks randomized or unverified details, and the
+follow in natural filename order. `videos` does the same for the clips in the album's `video/`
+sub-folder — each entry is a file name or `{ file, caption, poster }` — and `videoCaptions` /
+`videoPosters` map a file name to its caption or poster frame. See
+`public/NeverBeenModels/README.md` for the video folder layout. `illustrative` marks randomized or unverified details, and the
 directory and portfolio show a visible notice until it is removed or set to `false`.
 
 3. Shared metadata for every model can also live in `data/ai-models/profiles.json`, keyed by cover
@@ -90,7 +95,9 @@ optional and shown under the totals.
    enough. `npm run generate:ai-models` refreshes it by hand if ever needed.
 
 The portfolio shows the cover, handle, location, age, height, weight, bust, waist, hip,
-body shape, tags, availability and short introduction. Facts that have not been supplied are
+body shape, tags, availability and short introduction, followed by the video reel of the clips in
+her album's `video/` folder (each one playing in the portfolio's full-screen player, with a download
+button) and then the photograph grid. Facts that have not been supplied are
 labelled **Details to be added** rather than being guessed. The build compiles the data into a typed, static model manifest
 for the Angular pages.
 
