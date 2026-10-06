@@ -8,6 +8,8 @@
   --booking-line: rgb(255 255 255 / 11%);
   --booking-pink: #ef6aa5;
   --booking-deep: #ad141a;
+  /* Every numeric readout on the page is set in Calibri. */
+  --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 .booking-backdrop {
@@ -903,4 +905,18 @@
   * {
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ------------------------------------------------------------- numeric faces */
+/* Digits are set in Calibri on every numeric readout of the booking pop-up. */
+.num,
+.booking-block h3 span.num,
+.calendar-month,
+.calendar-day,
+.calendar-selection,
+.rate-per-photo b,
+.rate-copy b,
+.rate-price,
+.booking-total b {
+  font-family: var(--numeric-font);
 }

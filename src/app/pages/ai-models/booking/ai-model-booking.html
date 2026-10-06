@@ -43,7 +43,7 @@
           @if (resultReference()) {
             <div>
               <dt>Reference</dt>
-              <dd>{{ resultReference() }}</dd>
+              <dd class="num">{{ resultReference() }}</dd>
             </div>
           }
           <div>
@@ -53,7 +53,7 @@
           @if (selectedOrder(); as order) {
             <div>
               <dt>Order</dt>
-              <dd>
+              <dd class="num">
                 {{ order.label }} · {{ order.custom ? 'selective charge' : total() + ' INR' }}
               </dd>
             </div>
@@ -61,7 +61,7 @@
           @if (selectedDateLabel()) {
             <div>
               <dt>Delivery date</dt>
-              <dd>{{ selectedDateLabel() }}</dd>
+              <dd class="num">{{ selectedDateLabel() }}</dd>
             </div>
           }
         </dl>
@@ -74,7 +74,7 @@
       <form class="booking-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="booking-main">
           <section class="booking-block" aria-labelledby="booking-when">
-            <h3 id="booking-when"><span aria-hidden="true">01</span> Select a Delivery Date?</h3>
+            <h3 id="booking-when"><span class="num" aria-hidden="true">01</span> Select a Delivery Date?</h3>
 
             <div class="calendar">
               <div class="calendar-head">
@@ -141,7 +141,7 @@
           </section>
 
           <section class="booking-block" aria-labelledby="booking-info">
-            <h3 id="booking-info"><span aria-hidden="true">02</span> Booking information</h3>
+            <h3 id="booking-info"><span class="num" aria-hidden="true">02</span> Booking information</h3>
 
             <div class="booking-grid">
               <label class="field">
@@ -179,7 +179,7 @@
           </section>
 
           <section class="booking-block" aria-labelledby="booking-you">
-            <h3 id="booking-you"><span aria-hidden="true">03</span> Where do we reach you?</h3>
+            <h3 id="booking-you"><span class="num" aria-hidden="true">03</span> Where do we reach you?</h3>
 
             <div class="booking-grid">
               <label class="field">
@@ -247,13 +247,13 @@
             @if (model().height) {
               <div class="booking-fact">
                 <dt>Height</dt>
-                <dd>{{ model().height }}</dd>
+                <dd class="num">{{ model().height }}</dd>
               </div>
             }
             @if (model().age) {
               <div class="booking-fact">
                 <dt>Age</dt>
-                <dd>{{ model().age }}</dd>
+                <dd class="num">{{ model().age }}</dd>
               </div>
             }
             @if (model().bodyShape) {

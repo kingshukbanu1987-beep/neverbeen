@@ -9,6 +9,8 @@
   --studio-line: rgb(255 255 255 / 10%);
   --studio-accent: #ad141a;
   --studio-pink: #ef4b8c;
+  /* Every numeric readout on the page is set in Calibri. */
+  --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   background: var(--studio-bg);
   color: var(--studio-text);
 }
@@ -835,4 +837,13 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ------------------------------------------------------------- numeric faces */
+/* Digits are set in Calibri on every numeric readout of the page. */
+.num,
+.results-count,
+.card-photo-count b,
+.empty-number {
+  font-family: var(--numeric-font);
 }

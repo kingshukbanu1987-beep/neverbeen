@@ -5,7 +5,7 @@
         <a class="back-link" routerLink="/" aria-label="Back to NeverBeen homepage">
           <span aria-hidden="true">←</span> NeverBeen
         </a>
-        <p class="studio-label">{{ totalCount() }} model profiles</p>
+        <p class="studio-label"><span class="num">{{ totalCount() }}</span> model profiles</p>
       </div>
 
       <h1 id="ai-models-title">NeverBeen <em>AI Models</em></h1>
@@ -19,7 +19,9 @@
     <div class="container directory-shell">
       <header class="directory-header">
         <div class="directory-heading">
-          <p class="eyebrow">Portfolio index <span aria-hidden="true">/</span> 2026</p>
+            <p class="eyebrow"
+              >Portfolio index <span aria-hidden="true">/</span> <span class="num">2026</span></p
+            >
           <h2 id="directory-title">The models</h2>
           <p class="directory-intro">
             A closer look at the people who give our ideas a point of view.
@@ -119,7 +121,7 @@
                   </div>
                 }
                 <span class="card-image-tint" aria-hidden="true"></span>
-                <span class="card-index">NB / {{ indexLabel(index) }}</span>
+                <span class="card-index">NB / <span class="num">{{ indexLabel(index) }}</span></span>
                 <span class="card-open" aria-hidden="true">↗</span>
                 <div class="card-copy">
                   <p class="card-location">{{ model.location || 'Location to be announced' }}</p>
