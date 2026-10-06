@@ -523,7 +523,7 @@ export const aiModelProfiles: AiModelProfile[] = [
   {
     slug: 'alisha-bhattacharya',
     name: 'Alisha Bhattacharya',
-    cover: '',
+    cover: '/NeverBeenModels/AlishaBhattacharya/Alisha%20Bhattacharya.jpg',
     album: 'AlishaBhattacharya',
     location: 'Darjeeling, India',
     age: '25',
@@ -543,7 +543,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     bio: "A warm, expressive presence imagined between Darjeeling's tea-garden terraces, old-town lanes and the soft light of the Himalayan foothills.",
     illustrative: true,
     gallery: [],
-    photos: [],
+    photos: [{ src: '/NeverBeenModels/AlishaBhattacharya/Alisha%20Bhattacharya.jpg', caption: '' }],
   },
   {
     slug: 'maeve-anahita',
@@ -734,7 +734,7 @@ export const aiModelProfiles: AiModelProfile[] = [
   {
     slug: 'zeina-al-sabbagh',
     name: 'Zeina Al-Sabbagh',
-    cover: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png',
+    cover: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.jpg',
     album: 'ZeinaAlSabbagh',
     location: 'Beirut, Lebanon',
     age: '25',
@@ -754,12 +754,12 @@ export const aiModelProfiles: AiModelProfile[] = [
     bio: 'A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.',
     illustrative: true,
     gallery: [],
-    photos: [{ src: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.png', caption: '' }],
+    photos: [{ src: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.jpg', caption: '' }],
   },
   {
     slug: 'toulene-arslan',
     name: 'Toulene Arslan',
-    cover: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png',
+    cover: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.jpg',
     album: 'TouleneArslan',
     location: 'Istanbul, Türkiye',
     age: '27',
@@ -779,7 +779,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     bio: 'A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.',
     illustrative: true,
     gallery: [],
-    photos: [{ src: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.png', caption: '' }],
+    photos: [{ src: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.jpg', caption: '' }],
   },
   {
     slug: 'caoimhe-niloufar-rahimi',
