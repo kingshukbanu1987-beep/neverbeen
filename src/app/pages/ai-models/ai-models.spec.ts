@@ -99,6 +99,10 @@ describe('AiModelsPage', () => {
     expect(hero?.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
     expect(hero?.textContent).toContain('model profiles');
     expect(hero?.textContent).toContain('per photograph');
+    // The hero discloses that the models are AI creations, not real people.
+    expect(hero?.textContent).toContain('None of the models below exists in reality');
+    expect(hero?.textContent).toContain('created using');
+    expect(hero?.textContent).toContain('artificial intelligence');
 
     // No decorative artwork, glow layers or scroll cue in the header.
     for (const selector of [
