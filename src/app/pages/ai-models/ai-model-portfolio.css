@@ -457,6 +457,187 @@
   font-weight: 700;
 }
 
+/* ------------------------------------------------------------------ video reel */
+
+.video-section {
+  padding: clamp(2.4rem, 5vw, 3.8rem) 0 0;
+}
+
+.video-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--studio-line);
+}
+
+.video-heading h2 {
+  margin: 0.45rem 0 0;
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.video-intro {
+  max-width: 470px;
+  margin: 0.85rem 0 0;
+  color: var(--studio-muted);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.video-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.video-count {
+  color: #f070a8;
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.video-count i {
+  margin-left: 0.2rem;
+  color: var(--studio-faint);
+  font-family: var(--sans);
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.video-source {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--studio-line);
+  border-radius: 999px;
+  background: var(--studio-glass);
+  color: var(--studio-faint);
+  font-family: var(--numeric-font);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+}
+
+.video-source b {
+  margin-inline: 0.25rem;
+  color: #f070a8;
+  font-weight: 700;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 1.6rem;
+}
+
+.video-tile {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid var(--studio-line);
+  border-radius: 16px;
+  background: linear-gradient(150deg, #1d1221, #0c0a10);
+  cursor: pointer;
+  text-align: left;
+  animation: tile-in 520ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+  transition:
+    border-color 220ms ease,
+    transform 320ms cubic-bezier(0.22, 0.68, 0.32, 1);
+}
+
+.video-tile:hover,
+.video-tile:focus-visible {
+  border-color: rgb(240 112 168 / 55%);
+  transform: translateY(-4px);
+}
+
+.video-tile:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 3px;
+}
+
+.video-poster,
+.video-preview {
+  width: 100%;
+  height: 100%;
+  background: #08060a;
+  object-fit: cover;
+  transition: transform 620ms cubic-bezier(0.22, 0.68, 0.32, 1);
+}
+
+.video-tile:hover .video-poster,
+.video-tile:hover .video-preview {
+  transform: scale(1.045);
+}
+
+.video-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(9 7 11 / 6%) 18%, rgb(9 7 11 / 90%));
+}
+
+.video-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 3.4rem;
+  height: 3.4rem;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 50%;
+  background: rgb(9 7 11 / 52%);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  transition:
+    background 220ms ease,
+    transform 220ms ease;
+}
+
+.video-tile:hover .video-play {
+  background: linear-gradient(120deg, #b8171f, #ef6aa5);
+  transform: translate(-50%, -50%) scale(1.07);
+}
+
+.video-tile-copy {
+  position: absolute;
+  inset-inline: 1rem;
+  bottom: 0.85rem;
+  display: grid;
+  gap: 0.15rem;
+  color: #fff;
+}
+
+.video-tile-index {
+  color: #f070a8;
+  font-family: var(--numeric-font);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.video-tile-name {
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ---------------------------------------------------------------------- gallery */
 
 .gallery-section {
@@ -1104,6 +1285,10 @@
   .avatar-ring {
     width: clamp(140px, 34vw, 190px);
   }
+
+  .video-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 720px) {
@@ -1141,9 +1326,14 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .gallery-heading {
+  .gallery-heading,
+  .video-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .video-grid {
+    gap: 10px;
   }
 
   .gallery-tools {
@@ -1167,6 +1357,16 @@
   .portfolio-footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .video-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .video-tile {
+    border-radius: 14px;
   }
 }
 

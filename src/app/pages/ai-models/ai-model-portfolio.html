@@ -96,6 +96,12 @@
               <dt>Photographs</dt>
               <dd class="num">{{ photoCount() }}</dd>
             </div>
+            @if (videoCount() > 0) {
+              <div>
+                <dt>Videos</dt>
+                <dd class="num">{{ videoCount() }}</dd>
+              </div>
+            }
             <div>
               <dt>Age</dt>
               <dd class="num">{{ fact(profile.age) }}</dd>
@@ -139,6 +145,71 @@
         </div>
       </section>
 
+      @if (videos().length > 0) {
+        <section class="video-section" aria-labelledby="video-title">
+          <header class="video-heading">
+            <div class="video-heading-copy">
+              <p class="eyebrow">Motion reel</p>
+              <h2 id="video-title">Videos</h2>
+              <p class="video-intro">
+                Tap a clip to open the player — play, pause or stop it, scrub through it, go full
+                screen, or download it to keep.
+              </p>
+            </div>
+
+            <div class="video-tools">
+              <span class="video-count"
+                ><span class="num">{{ videoCount() }}</span> <i>{{ videoLabel() }}</i></span
+              >
+              <span class="video-source"
+                >NeverBeen <b>·</b> {{ profile.album }} <b>·</b> video</span
+              >
+            </div>
+          </header>
+
+          <div class="video-grid">
+            @for (clip of videos(); track clip.src; let index = $index) {
+              <button
+                type="button"
+                class="video-tile"
+                (click)="openVideo(index)"
+                [attr.aria-label]="'Play ' + videoTitle(index)"
+                [style.animation-delay.ms]="tileDelay(index)"
+              >
+                @if (clip.poster) {
+                  <img
+                    class="video-poster"
+                    [src]="clip.poster"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                } @else {
+                  <video
+                    class="video-preview"
+                    [src]="clip.src"
+                    preload="metadata"
+                    muted
+                    playsinline
+                    aria-hidden="true"
+                    tabindex="-1"
+                  ></video>
+                }
+
+                <span class="video-scrim" aria-hidden="true"></span>
+                <span class="video-play" aria-hidden="true">▶</span>
+                <span class="video-tile-copy" aria-hidden="true">
+                  <span class="video-tile-index"
+                    >CLIP / <span class="num">{{ frameLabel(index) }}</span></span
+                  >
+                  <span class="video-tile-name">{{ clip.caption || clip.fileName }}</span>
+                </span>
+              </button>
+            }
+          </div>
+        </section>
+      }
+
       <section class="gallery-section" aria-labelledby="gallery-title">
         <header class="gallery-heading">
           <div class="gallery-heading-copy">
@@ -177,7 +248,9 @@
             >
               <span aria-hidden="true">⤨</span> Shuffle
             </button>
-            <span class="gallery-count"><span class="num">{{ photoCount() }}</span> <i>IMAGES</i></span>
+            <span class="gallery-count"
+              ><span class="num">{{ photoCount() }}</span> <i>IMAGES</i></span
+            >
           </div>
         </header>
 
@@ -363,4 +436,14 @@
       </footer>
     </div>
   </div>
+}
+
+@if (videoPlayerOpen()) {
+  <app-ai-model-video-player
+    [videos]="videos()"
+    [startIndex]="activeVideoIndex() ?? 0"
+    [modelName]="model()?.name ?? ''"
+    [modelHandle]="model()?.handle ?? ''"
+    (closed)="closeVideo()"
+  />
 }

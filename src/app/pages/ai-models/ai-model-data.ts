@@ -10,6 +10,19 @@ export interface AiModelPhoto {
   caption: string;
 }
 
+export interface AiModelVideo {
+  /** Public URL of the video clip inside the model's album. */
+  src: string;
+  /** File name on disk, offered as the download name in the player. */
+  fileName: string;
+  /** Optional caption shown under the clip and in the player. */
+  caption: string;
+  /** Optional poster frame URL; empty when the player should use the clip's first frame. */
+  poster: string;
+  /** MIME type of the clip, e.g. "video/mp4". */
+  type: string;
+}
+
 export interface AiModelProfile {
   /** URL-safe path segment derived from the model name. */
   slug: string;
@@ -51,6 +64,11 @@ export interface AiModelProfile {
   gallery: string[];
   /** Every photograph in the album, cover first — the Instagram-style grid. */
   photos: AiModelPhoto[];
+  /**
+   * Every clip in the album's video/ sub-folder, in album order — the video reel shown just
+   * below the model's personal details.
+   */
+  videos: AiModelVideo[];
 }
 
 export const aiModelProfiles: AiModelProfile[] = [
@@ -78,6 +96,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg', caption: '' }],
+    videos: [],
   },
   {
     slug: 'nourhan-durrani',
@@ -324,6 +343,15 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
     ],
+    videos: [
+      {
+        src: '/NeverBeenModels/NourhanDurrani/video/Nourhan_Durrani_01.mp4',
+        fileName: 'Nourhan_Durrani_01.mp4',
+        caption: '',
+        poster: '',
+        type: 'video/mp4',
+      },
+    ],
   },
   {
     slug: 'nazanin-maeve-al-farsi',
@@ -351,6 +379,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photos: [
       { src: '/NeverBeenModels/NazaninMaeveAlFarsi/Nazanin%20Maeve%20Al-Farsi.jpg', caption: '' },
     ],
+    videos: [],
   },
   {
     slug: 'sereenah-noorzai',
@@ -519,6 +548,7 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
     ],
+    videos: [],
   },
   {
     slug: 'alisha-bhattacharya',
@@ -544,6 +574,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/AlishaBhattacharya/Alisha%20Bhattacharya.jpg', caption: '' }],
+    videos: [],
   },
   {
     slug: 'maeve-anahita',
@@ -569,6 +600,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/MaeveAnahita/Maeve%20Anahita.jpg', caption: '' }],
+    videos: [],
   },
   {
     slug: 'rozalin-el-masry',
@@ -594,6 +626,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/RozalinElMasry/Rozalin%20El%20Masry.png', caption: '' }],
+    videos: [],
   },
   {
     slug: 'ava-amira-gallagher',
@@ -621,6 +654,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photos: [
       { src: '/NeverBeenModels/AvaAmiraGallagher/Ava%20Amira%20Gallagher.jpg', caption: '' },
     ],
+    videos: [],
   },
   {
     slug: 'banafsheh-saoirse-yazdani',
@@ -651,6 +685,7 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
     ],
+    videos: [],
   },
   {
     slug: 'nirvana-noorzai',
@@ -676,6 +711,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png', caption: '' }],
+    videos: [],
   },
   {
     slug: 'sorcha-golsa-maccarthy',
@@ -703,6 +739,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photos: [
       { src: '/NeverBeenModels/SorchaGolsaMacCarthy/Sorcha%20Golsa%20MacCarthy.jpg', caption: '' },
     ],
+    videos: [],
   },
   {
     slug: 'fatima-sana-hussaini',
@@ -730,6 +767,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photos: [
       { src: '/NeverBeenModels/FatimaSanaHussaini/Fatima%20Sana%20Hussaini.png', caption: '' },
     ],
+    videos: [],
   },
   {
     slug: 'zeina-al-sabbagh',
@@ -755,6 +793,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.jpg', caption: '' }],
+    videos: [],
   },
   {
     slug: 'toulene-arslan',
@@ -780,6 +819,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.jpg', caption: '' }],
+    videos: [],
   },
   {
     slug: 'caoimhe-niloufar-rahimi',
@@ -810,6 +850,7 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
     ],
+    videos: [],
   },
   {
     slug: 'salma-ahmadzai',
@@ -835,6 +876,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png', caption: '' }],
+    videos: [],
   },
   {
     slug: 'nermin-akhundzada',
@@ -860,6 +902,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png', caption: '' }],
+    videos: [],
   },
   {
     slug: 'rasha-fakhoury',
@@ -885,6 +928,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.png', caption: '' }],
+    videos: [],
   },
   {
     slug: 'lana-mahvash-kennedy',
@@ -912,6 +956,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photos: [
       { src: '/NeverBeenModels/LanaMahvashKennedy/Lana%20Mahvash%20Kennedy.jpg', caption: '' },
     ],
+    videos: [],
   },
   {
     slug: 'donya-caoimhe-yazdani',
@@ -939,6 +984,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photos: [
       { src: '/NeverBeenModels/DonyaCaoimheYazdani/Donya%20Caoimhe%20Yazdani.jpg', caption: '' },
     ],
+    videos: [],
   },
   {
     slug: 'priyanka-chatterjee',
@@ -964,5 +1010,6 @@ export const aiModelProfiles: AiModelProfile[] = [
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/PriyankaChatterjee/Priyanka%20Chatterjee.png', caption: '' }],
+    videos: [],
   },
 ];
