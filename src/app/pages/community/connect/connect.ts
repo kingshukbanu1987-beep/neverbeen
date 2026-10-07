@@ -70,6 +70,17 @@ export class CommunityConnect implements OnInit {
 
     this.loadingProvider.set(provider);
     try {
+      // When the NeverBeen Web API is reachable the sign-in must end in an OAuth
+      // **authorization code**: the API exchanges it server-side, creates/loads the member
+      // in the database and returns the JWT that `POST /api/registration` requires. The
+      // provider sends the browser back to `/auth/callback` with that code. When the API is
+      // not reachable (offline demo, sandbox preview, unit tests) the local flow below runs.
+      if (await this.service.checkApiOnline(true)) {
+        if (this.service.startOAuthRedirect(provider)) {
+          return; // leaving this page — the provider redirects back to /auth/callback
+        }
+      }
+
       if (provider === 'google') {
         const step = await this.service.signInWithGoogle();
 

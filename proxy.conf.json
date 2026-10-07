@@ -4,5 +4,12 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "warn"
+  },
+  "/neverbeen-api": {
+    "target": "https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/neverbeen-api": "" },
+    "logLevel": "warn"
   }
 }

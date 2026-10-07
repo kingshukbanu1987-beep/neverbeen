@@ -247,7 +247,9 @@ replace the placeholder email, WhatsApp number and domain with the live studio d
 
 ## Community Backend API
 
-The NeverBeen Community backend is an ASP.NET Core (.NET 7) Web API located in [`NeverBeen.API/`](./NeverBeen.API/README.md). It powers:
+The NeverBeen Community backend is the ASP.NET Core Web API in the separate
+[`neverbeen-api`](https://github.com/kingshukbanu1987-beep/neverbeen-api) repository, backed by
+PostgreSQL on Supabase (deployed to the Azure App Service `neverbeen-api-kingshuk`). It powers:
 
 - **OAuth (SSO) authentication** with Google, Facebook, and Microsoft Outlook accounts
 - **New member registration**
@@ -256,7 +258,61 @@ The NeverBeen Community backend is an ASP.NET Core (.NET 7) Web API located in [
 - **Community Message Book** (posts, nested replies, like/dislike reactions)
 - **Geographic and profession lookup data**
 
-See the [NeverBeen.API README](./NeverBeen.API/README.md) for architecture, configuration, database options (Azure SQL and SQLite), and API endpoints.
+### How the website reaches the API
+
+**`apiBaseUrl` in `src/environments/environment.ts` (development) and
+`src/environments/environment.prod.ts` (production build) is the API address — change it there and
+rebuild.** Both files default to the deployed API:
+
+```
+https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net
+```
+
+In this mode the browser calls the API directly, so the API must allow this site's origin in
+`Cors:AllowedOrigins` (`appsettings.json`):
+
+- deployed site — `https://youneverbeen.kingshukbanu1987.workers.dev` (already listed)
+- local development — `http://localhost:4200` (already listed)
+- sandbox preview — the preview's own origin, e.g. `https://4200-<sandbox>.e2b.app`
+
+A blocked origin shows up as a failed request with **no** HTTP status in the browser console
+(`Access to XMLHttpRequest … has been blocked by CORS policy`); the registration page then reports
+the API address and the origin that has to be allowed.
+
+**Alternative — CORS-free same-origin mode.** Set `apiBaseUrl: '/neverbeen-api'` in both environment
+files and let a proxy forward the path to the API server-side (no CORS entry needed at all):
+
+| Where           | Forwarded by                                               | Target                                                                                        |
+| --------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `npm start`     | `proxy.conf.json` (`/neverbeen-api`)                       | the Azure host above (change it for a local API: `http://localhost:5080`, keep `pathRewrite`) |
+| Deployed Worker | `worker/index.ts` (`/neverbeen-api/*`, `run_worker_first`) | `NEVERBEEN_API_URL` in `wrangler.jsonc` (same Azure host by default)                          |
+
+Every API failure is reported with the URL that was called, the reason (timeout / unreachable /
+wrong address) and the origin that must be in `Cors:AllowedOrigins`, both in the UI and — with the
+technical detail — in the browser console (`[neverbeen] … failed at <url>`).
+
+### Member sign-up (Create Neverbeen Account)
+
+Signing up a new member is a two-step round trip to the Web API, and the browser only shows the
+community profile once the database has answered:
+
+1. **Sign in with Google / Facebook** on `/community` → the browser is sent to the provider with
+   the authorization-code flow (`redirect_uri = <site origin>/auth/callback`). The provider returns
+   to `/auth/callback`, and the app calls `POST /api/auth/oauth/login` with `{ provider, code }`.
+   The API exchanges the code (its client secret stays server-side) and answers with a JWT — a
+   brand-new account is created with the `Pending` status and the page continues to `/community/register`.
+2. **Create Neverbeen Account** (`/community/register`) posts the form to `POST /api/registration` as
+   `multipart/form-data` with `Authorization: Bearer <jwt>` — full name, gender, date of birth,
+   country/city ids, email, profession and the profile photograph. The API stores the row in
+   PostgreSQL, flips the member to `Active` and returns the stored profile, which the page shows.
+
+The Country / State / City cascade, gender and profession lists are filled from
+`GET /api/lookup/...` (with the generated seed data as the offline fallback), so every value the
+form offers is one the API accepts.
+
+When the API cannot be reached — offline development, the sandbox preview, or a visitor who never
+signed in with Google/Facebook — the account is created in the browser only and the header/notice
+says so (`service.accountSaveNotice()`); nothing is ever reported as saved to the database unless it was.
 
 ## Deploying to Cloudflare Pages
 

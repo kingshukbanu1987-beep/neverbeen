@@ -13,6 +13,7 @@ export class CommunityHub {
   private readonly cms = inject(SiteConfigService);
   /** Publishes chat and notification counts to the community header on every community route. */
   private readonly community = inject(CommunityService);
+  protected readonly service = this.community;
   protected readonly aurora = computed(() => this.cms.flag('community.shell', 'aurora'));
 
   constructor() {

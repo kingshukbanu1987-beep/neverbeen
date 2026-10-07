@@ -70,6 +70,13 @@ export const routes: Routes = [
     path: 'profile',
     loadComponent: () => import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
   },
+  // OAuth callback registered with Google / Facebook / Microsoft (and with the Web API's
+  // `OAuth:FrontendRedirectUri`): the provider appends `?code=…&state=<provider>` here.
+  {
+    path: 'auth/callback',
+    loadComponent: () =>
+      import('./pages/community/callback/callback').then((m) => m.CommunityCallback),
+  },
   {
     path: 'community',
     loadComponent: () => import('./pages/community/community').then((m) => m.CommunityHub),
