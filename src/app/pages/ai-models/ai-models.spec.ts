@@ -38,15 +38,34 @@ describe('AiModelsPage', () => {
       'Lana Mahvash Kennedy',
       'Donya Caoimhe Yazdani',
       'Priyanka Chatterjee',
+      'Fatima Al-Mansoor',
+      'Aoife Pahlavi',
+      'Amira Bint Tariq Al-Sayed',
+      'Aisha Bint Mohammed Al-Husseini',
+      "Shirina O'Brien",
+      'Tasneem Al-Rifai',
+      'Zahra Mahmoud Al-Khatib',
+      'Soha Haddad',
+      'Ameera Lone',
+      'Saoirse Rezaei',
+      'Farah Al-Shaar',
+      'Florencia Fontana Gatti',
+      'Zaynab Jones',
+      'Reema Ganguly',
+      'Lucía Gomensoro Rossi',
+      'Ziba Nazrin',
+      'Nour El-Sherif',
+      'Soraya Smith',
+      'Zeina Al-Atassi',
+      'Amina El-Maghraby',
+      'Valentina Rodríguez Silva',
     ];
 
     expect(element.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
     expect(aiModelProfiles.map((profile) => profile.name)).toEqual(expectedNames);
-    expect(aiModelProfiles.map((profile) => profile.order)).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-      11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-      21,
-    ]);
+    expect(aiModelProfiles.map((profile) => profile.order)).toEqual(
+      Array.from({ length: expectedNames.length }, (_, index) => index + 1),
+    );
     expect(element.querySelectorAll('.model-card').length).toBe(expectedNames.length);
     expect(element.querySelector('.empty-studio')).toBeNull();
     expect(element.querySelector('.profile-data-note')?.textContent).toContain('illustrative');
@@ -74,6 +93,84 @@ describe('AiModelsPage', () => {
         profile.photos.length === 1 ? 'photograph' : 'photographs',
       );
       expect(badge?.getAttribute('aria-label')).toContain(String(profile.photos.length));
+
+      const videoBadge = cards[index].querySelector('.card-video-count');
+      expect(videoBadge, `${profile.name} video count`).toBeTruthy();
+      expect(videoBadge?.querySelector('b')?.textContent?.trim()).toBe(
+        String(profile.videos.length),
+      );
+      expect(videoBadge?.querySelector('i')?.textContent?.trim()).toBe(
+        profile.videos.length === 1 ? 'video' : 'videos',
+      );
+      expect(videoBadge?.getAttribute('aria-label')).toContain(String(profile.videos.length));
+    }
+  });
+
+  it('shows a standard availability status and starting price on each model card', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const cards = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.model-card'),
+    );
+    for (const [index, profile] of aiModelProfiles.entries()) {
+      const card = cards[index];
+      expect(card.querySelector('.card-availability')?.textContent?.trim()).toBe(
+        'Available for Contract',
+      );
+      expect(card.querySelector('.card-availability')?.classList.contains('is-available')).toBe(
+        true,
+      );
+      expect(card.querySelector('.card-price-label')?.textContent?.trim()).toBe(
+        'Starting Price / Photograph',
+      );
+      expect(card.querySelector('.card-price-value')?.textContent?.trim()).toBe(
+        `₹${profile.photoRate.toLocaleString('en-IN')}`,
+      );
+    }
+  });
+
+  it('uses the green, red, and orange availability indicators for the three statuses', () => {
+    const [available, unavailable, future] = aiModelProfiles;
+    const previousAvailability = [
+      available.availability,
+      unavailable.availability,
+      future.availability,
+    ];
+
+    try {
+      available.availability = 'Open for bookings';
+      unavailable.availability = 'Currently Unavailable';
+      future.availability = 'Looking for Future Contract';
+
+      const fixture = TestBed.createComponent(AiModelsPage);
+      fixture.detectChanges();
+      const cards = Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll('.model-card'),
+      );
+
+      expect(cards[0].querySelector('.card-availability')?.textContent?.trim()).toBe(
+        'Available for Contract',
+      );
+      expect(cards[0].querySelector('.card-availability')?.classList.contains('is-available')).toBe(
+        true,
+      );
+      expect(cards[1].querySelector('.card-availability')?.textContent?.trim()).toBe(
+        'Currently Unavailable',
+      );
+      expect(
+        cards[1].querySelector('.card-availability')?.classList.contains('is-unavailable'),
+      ).toBe(true);
+      expect(cards[2].querySelector('.card-availability')?.textContent?.trim()).toBe(
+        'Looking for Future Contract',
+      );
+      expect(cards[2].querySelector('.card-availability')?.classList.contains('is-future')).toBe(
+        true,
+      );
+      fixture.destroy();
+    } finally {
+      [available.availability, unavailable.availability, future.availability] =
+        previousAvailability;
     }
   });
 

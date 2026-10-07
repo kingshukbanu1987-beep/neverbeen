@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 
+type AvailabilityState = 'available' | 'unavailable' | 'future';
+
 @Component({
   selector: 'app-ai-models-page',
   imports: [RouterLink],
@@ -44,5 +46,40 @@ export class AiModelsPage {
 
   protected photoLabel(model: AiModelProfile): string {
     return model.photos.length === 1 ? 'photograph' : 'photographs';
+  }
+
+  /** How many video clips the model's portfolio holds. */
+  protected videoCount(model: AiModelProfile): number {
+    return model.videos.length;
+  }
+
+  protected videoLabel(model: AiModelProfile): string {
+    return model.videos.length === 1 ? 'video' : 'videos';
+  }
+
+  /**
+   * Profile data may contain one of the directory labels already, a longer legacy booking note,
+   * or no availability note yet. Legacy/open notes fall back to the standard available state.
+   */
+  protected availabilityState(model: AiModelProfile): AvailabilityState {
+    const availability = model.availability.trim().toLocaleLowerCase();
+    if (/unavailable|fully booked|not accepting/.test(availability)) return 'unavailable';
+    if (/future|looking for|coming soon/.test(availability)) return 'future';
+    return 'available';
+  }
+
+  protected availabilityLabel(model: AiModelProfile): string {
+    switch (this.availabilityState(model)) {
+      case 'unavailable':
+        return 'Currently Unavailable';
+      case 'future':
+        return 'Looking for Future Contract';
+      default:
+        return 'Available for Contract';
+    }
+  }
+
+  protected startingPrice(model: AiModelProfile): string {
+    return model.photoRate > 0 ? `₹${model.photoRate.toLocaleString('en-IN')}` : 'On request';
   }
 }
