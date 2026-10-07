@@ -85,9 +85,11 @@ discovery order after the numbered ones), so the running order is data, not code
 
 Rates start at ₹550 a photograph and vary slightly between the models. The packages are 10 photographs
 (the minimum order), 25, 50 and 100 — priced at `photoRate` each — plus a customized order that the
-studio quotes separately, so every model needs just one number. A model without a rate still takes
-enquiries: the pop-up says the rate is being finalised instead of showing empty cards. `photoNote` is
-optional and shown under the totals.
+studio quotes separately, so every model needs just one number. The booking form starts with 25
+photographs selected and includes 5% service tax in the final total. Coupon codes and their flat INR
+discounts and expiry dates are editable in `src/app/pages/ai-models/booking/coupons.json`. A model
+without a rate still takes enquiries: the pop-up says the rate is being finalised instead of showing
+empty cards. `photoNote` is optional and shown under the totals.
 
 5. Nothing else to do. The album watcher that runs with `npm start` regenerates the manifest the
    moment photographs land in a folder, and `npm run build` regenerates it as part of the build —

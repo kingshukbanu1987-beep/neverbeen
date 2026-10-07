@@ -318,14 +318,82 @@
             }
           </div>
 
-          <div class="booking-total">
-            <span>{{ totalLabel() }}</span>
-            @if (total()) {
-              <b>{{ total() }}<i>INR</i></b>
+          <div class="booking-pricing" aria-label="Price summary">
+            @if (selectedOrder(); as order) {
+              @if (order.custom) {
+                <div class="booking-total">
+                  <span>Final total</span>
+                  <b class="is-quote">Selective charge</b>
+                </div>
+              } @else {
+                <div class="price-line">
+                  <span>Subtotal · {{ order.photos }} photographs</span>
+                  <b>{{ formatInr(subtotal()) }}</b>
+                </div>
+                <div class="price-line">
+                  <span>Service tax ({{ serviceTaxPercent }}%)</span>
+                  <b>{{ formatInr(serviceTax()) }}</b>
+                </div>
+                @if (appliedCoupon(); as coupon) {
+                  <div class="price-line price-discount">
+                    <span>Discount · {{ coupon.code }}</span>
+                    <b>−{{ formatInr(discountAmount()) }}</b>
+                  </div>
+                }
+                <div class="booking-total">
+                  <span>Final total</span>
+                  <b>{{ formatInr(finalTotal()) }}<i>INR</i></b>
+                </div>
+              }
             } @else {
-              <b class="is-quote">Selective charge</b>
+              <div class="booking-total">
+                <span>Final total</span>
+                <b class="is-quote">Price on request</b>
+              </div>
             }
           </div>
+
+          <section class="coupon-box" aria-label="Coupon code">
+            <label class="coupon-label" for="booking-coupon-code">Coupon code</label>
+            <div class="coupon-entry">
+              <input
+                id="booking-coupon-code"
+                type="text"
+                [value]="couponCode()"
+                (input)="onCouponInput($event)"
+                [disabled]="!couponEligible()"
+                placeholder="Enter coupon code"
+                autocomplete="off"
+                autocapitalize="characters"
+              />
+              <button
+                type="button"
+                class="coupon-validate"
+                (click)="validateCoupon()"
+                [disabled]="!couponEligible()"
+              >
+                Validate
+              </button>
+            </div>
+            @if (couponMessage()) {
+              <p
+                class="coupon-message"
+                [class.is-success]="couponStatus() === 'valid'"
+                [class.is-error]="
+                  couponStatus() === 'expired' ||
+                  couponStatus() === 'unavailable' ||
+                  couponStatus() === 'empty'
+                "
+                role="status"
+                aria-live="polite"
+              >
+                {{ couponMessage() }}
+              </p>
+            }
+            @if (!couponEligible()) {
+              <p class="coupon-hint">Coupons apply to priced photograph packages.</p>
+            }
+          </section>
 
           @if (model().photoNote) {
             <p class="booking-note">{{ model().photoNote }}</p>

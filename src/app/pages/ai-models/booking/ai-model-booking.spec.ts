@@ -3,6 +3,12 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { AiModelPortfolioPage } from '../ai-model-portfolio';
+import {
+  ModelBookingService,
+  formatInr,
+  serviceTaxFor,
+  validateBookingCoupon,
+} from '../../../services/model-booking.service';
 
 const testRoutes = [{ path: 'ai-models/:slug', component: AiModelPortfolioPage }];
 
@@ -103,6 +109,7 @@ describe('Rent this model', () => {
     expect(panel.querySelector('.rate-per-photo')?.textContent).toContain(
       `₹${NOURHAN.photoRate.toLocaleString('en-IN')}`,
     );
+    expect(formatInr(687.5)).toBe('₹687.50');
 
     const rateCards = Array.from(panel.querySelectorAll<HTMLButtonElement>('.rate-card'));
     expect(rateCards.length).toBe(5);
@@ -120,23 +127,31 @@ describe('Rent this model', () => {
     expect(custom.textContent).toContain('On request');
     expect(custom.classList.contains('is-custom')).toBe(true);
 
-    // The minimum package is selected by default and drives the total.
-    expect(panel.querySelector('.booking-total')?.textContent).toContain(
-      `₹${(10 * NOURHAN.photoRate).toLocaleString('en-IN')}`,
-    );
+    // The 25-photo editorial package is selected by default, with 5% service tax in the total.
+    expect(rateCards[1].classList.contains('is-active')).toBe(true);
+    const defaultSubtotal = 25 * NOURHAN.photoRate;
+    const defaultTax = serviceTaxFor(defaultSubtotal);
+    const priceSummary = panel.querySelector('.booking-pricing')?.textContent ?? '';
+    expect(priceSummary).toContain('Subtotal · 25 photographs');
+    expect(priceSummary).toContain(formatInr(defaultSubtotal));
+    expect(priceSummary).toContain('Service tax (5%)');
+    expect(priceSummary).toContain(formatInr(defaultTax));
+    expect(priceSummary).toContain(formatInr(defaultSubtotal + defaultTax));
 
-    // Choosing a larger package updates the selection and the total.
+    // Choosing a larger package updates the subtotal and tax-inclusive final total.
     rateCards[2].click();
     tick(harness);
     expect(rateCards[2].classList.contains('is-active')).toBe(true);
-    expect(panel.querySelector('.booking-total')?.textContent).toContain(
-      `₹${(50 * NOURHAN.photoRate).toLocaleString('en-IN')}`,
+    const largerSubtotal = 50 * NOURHAN.photoRate;
+    expect(panel.querySelector('.booking-pricing')?.textContent).toContain(
+      formatInr(largerSubtotal + serviceTaxFor(largerSubtotal)),
     );
 
-    // The customized order asks for a quote instead of showing a price.
+    // The customized order asks for a quote and disables coupons until a priced package is selected.
     rateCards[4].click();
     tick(harness);
-    expect(panel.querySelector('.booking-total')?.textContent).toContain('Selective charge');
+    expect(panel.querySelector('.booking-pricing')?.textContent).toContain('Selective charge');
+    expect(panel.querySelector<HTMLInputElement>('#booking-coupon-code')?.disabled).toBe(true);
   });
 
   it('renders a delivery-date calendar that blocks past dates and records the choice', async () => {
@@ -214,6 +229,10 @@ describe('Rent this model', () => {
     setInput('location', 'Kuala Lumpur');
     setInput('usage', 'Digital, 12 months');
     setInput('notes', 'Morning light please.');
+    const couponInput = panel.querySelector<HTMLInputElement>('#booking-coupon-code')!;
+    couponInput.value = 'SPECIALREQUEST';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
     tick(harness);
 
     panel.querySelector<HTMLButtonElement>('.booking-submit')!.click();
@@ -228,10 +247,14 @@ describe('Rent this model', () => {
     expect(message).toContain('Nourhan Durrani (@nourhan.durrani)');
     expect(message).toContain('Portfolio: /ai-models/nourhan-durrani');
     expect(message).toContain('50 photographs — Campaign set');
-    expect(message).toContain(`Rate: ₹${NOURHAN.photoRate.toLocaleString('en-IN')} per photograph`);
-    expect(message).toContain(
-      `Estimated total: ₹${(50 * NOURHAN.photoRate).toLocaleString('en-IN')} INR`,
-    );
+    expect(message).toContain(`Rate: ${formatInr(NOURHAN.photoRate)} per photograph`);
+    const subtotal = 50 * NOURHAN.photoRate;
+    const serviceTax = serviceTaxFor(subtotal);
+    expect(message).toContain(`Subtotal: ${formatInr(subtotal)} INR`);
+    expect(message).toContain(`Service tax (5%): ${formatInr(serviceTax)} INR`);
+    expect(message).toContain('Coupon: SPECIALREQUEST');
+    expect(message).toContain('Discount: -₹2,000 INR');
+    expect(message).toContain(`Final total: ${formatInr(subtotal + serviceTax - 2000)} INR`);
     expect(message).toContain(
       new Intl.DateTimeFormat('en-GB', {
         weekday: 'short',
@@ -267,6 +290,75 @@ describe('Rent this model', () => {
     expect(opened).toEqual([]);
     expect(panel.querySelector('.booking-error')?.textContent).toContain('missing');
     expect(element.querySelector('.booking-done')).toBeNull();
+  });
+
+  it('loads the coupon codes from JSON and treats the expiry date as inclusive in IST', () => {
+    expect(
+      validateBookingCoupon(' newtoneverbeen ', new Date('2027-12-31T18:29:59.999Z')),
+    ).toMatchObject({
+      status: 'valid',
+      coupon: { code: 'NEWTONEVERBEEN', discountInr: 1500, expiresOn: '2027-12-31' },
+    });
+    expect(
+      validateBookingCoupon('NEWTONEVERBEEN', new Date('2027-12-31T18:30:00.000Z')).status,
+    ).toBe('expired');
+    expect(validateBookingCoupon('FIRST', new Date('2026-10-07T12:00:00.000Z')).status).toBe(
+      'valid',
+    );
+    expect(validateBookingCoupon('NOT-A-COUPON').status).toBe('unavailable');
+  });
+
+  it('applies the fixed discount after tax and shows the configured success message', async () => {
+    const { harness, element } = await openDialog();
+    const panel = dialog(element);
+    const couponInput = panel.querySelector<HTMLInputElement>('#booking-coupon-code')!;
+    couponInput.value = ' first ';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
+    tick(harness);
+
+    expect(panel.querySelector('.coupon-message')?.textContent?.trim()).toBe(
+      'Congratulations! Coupon Applied Successfully!',
+    );
+    expect(panel.querySelector('.coupon-message')?.classList.contains('is-success')).toBe(true);
+
+    const subtotal = 25 * NOURHAN.photoRate;
+    const tax = serviceTaxFor(subtotal);
+    const discount = Math.min(500, subtotal + tax);
+    expect(panel.querySelector('.price-discount')?.textContent).toContain(
+      `−${formatInr(discount)}`,
+    );
+    expect(panel.querySelector('.booking-pricing')?.textContent).toContain(
+      formatInr(subtotal + tax - discount),
+    );
+
+    couponInput.value = 'NOT-A-COUPON';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
+    tick(harness);
+    expect(panel.querySelector('.coupon-message')?.textContent?.trim()).toBe(
+      'Coupon not available!',
+    );
+    expect(panel.querySelector('.price-discount')).toBeNull();
+  });
+
+  it('shows the requested expired-coupon message', async () => {
+    const { harness, element } = await openDialog();
+    const panel = dialog(element);
+    const bookingService = TestBed.inject(ModelBookingService);
+    vi.spyOn(bookingService, 'validateCoupon').mockReturnValue({
+      status: 'expired',
+      coupon: null,
+    });
+
+    const couponInput = panel.querySelector<HTMLInputElement>('#booking-coupon-code')!;
+    couponInput.value = 'FIRST';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
+    tick(harness);
+
+    expect(panel.querySelector('.coupon-message')?.textContent?.trim()).toBe('Coupon Expired!');
+    expect(panel.querySelector('.price-discount')).toBeNull();
   });
 
   it('offers a retry button and direct WhatsApp link if the new tab is blocked', async () => {

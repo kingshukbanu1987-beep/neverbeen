@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import couponConfiguration from '../pages/ai-models/booking/coupons.json';
 import { founderWhatsAppLink } from './whatsapp-link';
 
 /**
@@ -25,6 +26,45 @@ export const BOOKING_PACKAGES: readonly { photos: number; label: string; detail:
 export const CUSTOM_ORDER_LABEL = 'Customized order';
 export const CUSTOM_ORDER_DETAIL = 'Selective charge, quoted after we read your brief';
 
+export const BOOKING_SERVICE_TAX_PERCENT = 5;
+export const BOOKING_SERVICE_TAX_RATE = BOOKING_SERVICE_TAX_PERCENT / 100;
+
+export interface BookingCoupon {
+  code: string;
+  discountInr: number;
+  /** Inclusive expiry date in India Standard Time (YYYY-MM-DD). */
+  expiresOn: string;
+}
+
+export type BookingCouponValidation =
+  | { status: 'valid'; coupon: BookingCoupon }
+  | { status: 'expired' | 'unavailable' | 'empty'; coupon: null };
+
+export interface BookingPricing {
+  subtotal: number;
+  serviceTax: number;
+  couponCode: string;
+  discount: number;
+  total: number;
+}
+
+export const BOOKING_COUPONS: readonly BookingCoupon[] = couponConfiguration.coupons;
+
+/** Validates coupon availability; configured expiry dates remain valid through the full IST date. */
+export function validateBookingCoupon(code: string, now = new Date()): BookingCouponValidation {
+  const normalizedCode = code.trim().toUpperCase();
+  if (!normalizedCode) return { status: 'empty', coupon: null };
+
+  const coupon = BOOKING_COUPONS.find((entry) => entry.code.toUpperCase() === normalizedCode);
+  if (!coupon) return { status: 'unavailable', coupon: null };
+
+  const expiresAt = Date.parse(`${coupon.expiresOn}T23:59:59.999+05:30`);
+  if (!Number.isFinite(expiresAt) || now.getTime() > expiresAt)
+    return { status: 'expired', coupon: null };
+
+  return { status: 'valid', coupon };
+}
+
 /** Builds the selectable orders for a model: her packages plus the customized order. */
 export function photoOrdersFor(ratePerPhoto: number): BookingPhotoOrder[] {
   const orders: BookingPhotoOrder[] = BOOKING_PACKAGES.map((pack) => ({
@@ -50,7 +90,16 @@ export function photoOrdersFor(ratePerPhoto: number): BookingPhotoOrder[] {
 
 /** Indian rupee amount, e.g. "₹5,500". */
 export function formatInr(amount: number): string {
-  return `₹${amount.toLocaleString('en-IN')}`;
+  const decimalPlaces = Number.isInteger(amount) ? 0 : 2;
+  return `₹${amount.toLocaleString('en-IN', {
+    minimumFractionDigits: decimalPlaces,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+/** Calculates the 5% service tax, rounded to the nearest paise. */
+export function serviceTaxFor(subtotal: number): number {
+  return Math.round((subtotal * BOOKING_SERVICE_TAX_RATE + Number.EPSILON) * 100) / 100;
 }
 
 function formatBookingDate(iso: string): string {
@@ -69,6 +118,10 @@ function formatBookingDate(iso: string): string {
 /** Formats the booking details into the prefilled WhatsApp message addressed to the founder. */
 export function buildModelBookingMessage(request: BookingRequest): string {
   const { model, order, booking, client } = request;
+  const subtotal = request.pricing?.subtotal ?? order.amount;
+  const serviceTax = request.pricing?.serviceTax ?? serviceTaxFor(subtotal);
+  const discount = request.pricing?.discount ?? 0;
+  const total = request.pricing?.total ?? Math.max(0, subtotal + serviceTax - discount);
   const lines = [
     '*New booking request — NeverBeen AI Models*',
     '',
@@ -84,7 +137,13 @@ export function buildModelBookingMessage(request: BookingRequest): string {
     order.custom
       ? 'Price: quoted by the studio after reviewing the brief'
       : `Rate: ${formatInr(order.ratePerPhoto)} per photograph`,
-    order.custom ? '' : `Estimated total: ${formatInr(order.amount)} INR`,
+    order.custom ? '' : `Subtotal: ${formatInr(subtotal)} INR`,
+    order.custom
+      ? ''
+      : `Service tax (${BOOKING_SERVICE_TAX_PERCENT}%): ${formatInr(serviceTax)} INR`,
+    order.custom || !request.pricing?.couponCode ? '' : `Coupon: ${request.pricing.couponCode}`,
+    order.custom || discount <= 0 ? '' : `Discount: -${formatInr(discount)} INR`,
+    order.custom ? '' : `Final total: ${formatInr(total)} INR`,
     '',
     '*Delivery date*',
     formatBookingDate(booking.date),
@@ -122,6 +181,7 @@ export interface BookingModelSummary {
 export interface BookingRequest {
   model: BookingModelSummary;
   order: BookingPhotoOrder;
+  pricing?: BookingPricing;
   booking: {
     date: string;
     project: string;
@@ -160,6 +220,10 @@ const BOOKING_ENDPOINT = '/api/model-booking';
  */
 @Injectable({ providedIn: 'root' })
 export class ModelBookingService {
+  validateCoupon(code: string, now?: Date): BookingCouponValidation {
+    return validateBookingCoupon(code, now);
+  }
+
   /** Opens the same prefilled founder WhatsApp chat as the website's other request forms. */
   createWhatsAppLink(request: BookingRequest): string {
     return founderWhatsAppLink(buildModelBookingMessage(request));

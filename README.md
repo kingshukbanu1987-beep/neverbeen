@@ -139,6 +139,12 @@ that model's per-photo rate (10 photographs at ₹550 is ₹5,500, 100 at ₹550
 **Customized order** for anything else. A customized order is a selective charge: it carries no price
 and the studio quotes it after reading the brief.
 
+The form selects **25 photographs** by default. Priced orders show a **5% service tax** and final
+payable total. Coupon discounts are deducted from that tax-inclusive total (the payable amount never
+goes below zero). Add or update codes in `src/app/pages/ai-models/booking/coupons.json`; each entry
+has a `code`, flat `discountInr`, and inclusive `expiresOn` date (`YYYY-MM-DD`, through the end of that
+date in India Standard Time).
+
 Submitting a valid form builds a WhatsApp message with the model, order, delivery date and client
 information, then opens a prefilled chat to the Founder — the same direct `wa.me` flow used by the
 Feedback and homepage request forms. The visitor reviews the message and presses **Send** in WhatsApp

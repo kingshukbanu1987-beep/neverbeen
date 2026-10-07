@@ -14,11 +14,14 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AiModelProfile } from '../ai-model-data';
 import {
+  BOOKING_SERVICE_TAX_PERCENT,
+  BookingCoupon,
   BookingPhotoOrder,
   BookingRequest,
   ModelBookingService,
   formatInr,
   photoOrdersFor,
+  serviceTaxFor,
 } from '../../../services/model-booking.service';
 import { FOUNDER_WHATSAPP_DISPLAY } from '../../../services/whatsapp-link';
 
@@ -90,6 +93,30 @@ export class AiModelBookingDialog implements OnDestroy {
   protected readonly status = signal<'idle' | 'ready' | 'error'>('idle');
   protected readonly resultMessage = signal('');
   protected readonly whatsappLink = signal('');
+  protected readonly couponCode = signal('');
+  protected readonly couponStatus = signal<'idle' | 'valid' | 'expired' | 'unavailable' | 'empty'>(
+    'idle',
+  );
+  protected readonly appliedCoupon = signal<BookingCoupon | null>(null);
+  protected readonly couponEligible = computed(() => {
+    const order = this.selectedOrder();
+    return Boolean(order && !order.custom);
+  });
+  protected readonly couponMessage = computed(() => {
+    switch (this.couponStatus()) {
+      case 'valid':
+        return 'Congratulations! Coupon Applied Successfully!';
+      case 'expired':
+        return 'Coupon Expired!';
+      case 'unavailable':
+        return 'Coupon not available!';
+      case 'empty':
+        return 'Enter a coupon code.';
+      default:
+        return '';
+    }
+  });
+  protected readonly serviceTaxPercent = BOOKING_SERVICE_TAX_PERCENT;
 
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],
@@ -157,10 +184,29 @@ export class AiModelBookingDialog implements OnDestroy {
     return weeks;
   });
 
+  protected readonly subtotal = computed(() => {
+    const order = this.selectedOrder();
+    return order && !order.custom ? order.amount : 0;
+  });
+  protected readonly serviceTax = computed(() =>
+    this.couponEligible() ? serviceTaxFor(this.subtotal()) : 0,
+  );
+  protected readonly totalBeforeDiscount = computed(() => this.subtotal() + this.serviceTax());
+  protected readonly discountAmount = computed(() => {
+    const coupon = this.appliedCoupon();
+    if (!coupon || !this.couponEligible()) return 0;
+    return Math.min(coupon.discountInr, this.totalBeforeDiscount());
+  });
+  protected readonly finalTotal = computed(() =>
+    Math.max(
+      0,
+      Math.round((this.totalBeforeDiscount() - this.discountAmount() + Number.EPSILON) * 100) / 100,
+    ),
+  );
   protected readonly total = computed(() => {
     const order = this.selectedOrder();
     if (!order) return '';
-    return order.custom ? '' : formatInr(order.amount);
+    return order.custom ? '' : formatInr(this.finalTotal());
   });
 
   protected readonly showFieldErrors = signal(false);
@@ -169,10 +215,12 @@ export class AiModelBookingDialog implements OnDestroy {
   private lastFocused: HTMLElement | null = null;
 
   constructor() {
-    // The smallest package is the default selection, matching the highlighted card.
+    // Start with the 25-photo editorial package, falling back if a model has a different catalogue.
     effect(() => {
-      const first = this.orders()[0] ?? null;
-      if (this.selectedOrder() === null && first) this.selectedOrder.set(first);
+      const availableOrders = this.orders();
+      const defaultOrder =
+        availableOrders.find((order) => order.photos === 25) ?? availableOrders[0] ?? null;
+      if (this.selectedOrder() === null && defaultOrder) this.selectedOrder.set(defaultOrder);
     });
 
     effect((onCleanup) => {
@@ -196,11 +244,27 @@ export class AiModelBookingDialog implements OnDestroy {
 
   protected selectOrder(order: BookingPhotoOrder): void {
     this.selectedOrder.set(order);
+    if (order.custom) {
+      this.appliedCoupon.set(null);
+      this.couponStatus.set('idle');
+    }
   }
 
-  /** Total of the selected order, in the wording the order deserves. */
-  protected totalLabel(): string {
-    return this.selectedOrder()?.custom ? 'Quoted after review' : 'Selected total';
+  protected onCouponInput(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    this.couponCode.set(input?.value ?? '');
+    this.appliedCoupon.set(null);
+    this.couponStatus.set('idle');
+  }
+
+  protected validateCoupon(): void {
+    if (!this.couponEligible()) return;
+
+    const code = this.couponCode().trim().toUpperCase();
+    this.couponCode.set(code);
+    const result = this.bookings.validateCoupon(code);
+    this.couponStatus.set(result.status);
+    this.appliedCoupon.set(result.status === 'valid' ? result.coupon : null);
   }
 
   protected selectDate(day: CalendarDay): void {
@@ -255,6 +319,13 @@ export class AiModelBookingDialog implements OnDestroy {
         location: profile.location,
       },
       order,
+      pricing: {
+        subtotal: this.subtotal(),
+        serviceTax: this.serviceTax(),
+        couponCode: this.appliedCoupon()?.code ?? '',
+        discount: this.discountAmount(),
+        total: this.finalTotal(),
+      },
       booking: {
         date,
         project: value.project,
