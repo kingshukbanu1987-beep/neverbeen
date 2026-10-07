@@ -42,11 +42,13 @@
               <h1 id="portfolio-title">{{ profile.name }}</h1>
               <p class="handle-line">
                 <span class="handle">{{ profile.handle }}</span>
-                @if (profile.availability) {
-                  <span class="availability"
-                    ><i aria-hidden="true"></i>{{ profile.availability }}</span
-                  >
-                }
+                <span
+                  class="availability"
+                  [class.is-available]="availabilityState() === 'available'"
+                  [class.is-unavailable]="availabilityState() === 'unavailable'"
+                  [class.is-future]="availabilityState() === 'future'"
+                  ><i aria-hidden="true"></i>{{ availabilityLabel() }}</span
+                >
               </p>
 
               <p class="profile-bio">
@@ -66,9 +68,17 @@
                   #rentButton
                   type="button"
                   class="action-button action-primary action-rent"
+                  [class.is-unavailable]="!bookable()"
+                  [disabled]="!bookable()"
+                  [attr.aria-disabled]="!bookable()"
+                  [attr.title]="bookable() ? null : profile.name + ' is currently unavailable'"
                   (click)="openBooking()"
                 >
-                  <span aria-hidden="true">✦</span> Rent this model
+                  @if (bookable()) {
+                    <span aria-hidden="true">✦</span> Rent Me
+                  } @else {
+                    <span aria-hidden="true">⦸</span> Sorry, I'm Not Available
+                  }
                 </button>
                 <button type="button" class="action-button" (click)="shareProfile(profile)">
                   <span aria-hidden="true">↗</span> {{ shareLabel() }}

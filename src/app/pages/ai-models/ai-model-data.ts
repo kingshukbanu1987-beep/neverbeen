@@ -368,7 +368,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     hip: '91 cm',
     handle: '@nazanin.maeve.al.farsi',
     tags: [],
-    availability: '',
+    availability: 'Looking for Future Contract',
     order: 3,
     photoRate: 595,
     photoNote:
@@ -617,7 +617,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     hip: '92 cm',
     handle: '@rozalin.el.masry',
     tags: [],
-    availability: '',
+    availability: 'Looking for Future Contract',
     order: 7,
     photoRate: 580,
     photoNote:
@@ -893,7 +893,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     hip: '91 cm',
     handle: '@nermin.akhundzada',
     tags: [],
-    availability: '',
+    availability: 'Looking for Future Contract',
     order: 17,
     photoRate: 520,
     photoNote:
@@ -1141,7 +1141,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     hip: '89 cm',
     handle: '@shirina.o.brien',
     tags: [],
-    availability: '',
+    availability: 'Currently Unavailable',
     order: 26,
     photoRate: 540,
     photoNote:
@@ -1221,7 +1221,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     hip: '89 cm',
     handle: '@soha.haddad',
     tags: [],
-    availability: '',
+    availability: 'Currently Unavailable',
     order: 29,
     photoRate: 535,
     photoNote:

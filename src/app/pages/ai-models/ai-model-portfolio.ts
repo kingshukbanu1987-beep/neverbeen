@@ -17,6 +17,7 @@ import { AiModelBookingDialog } from './booking/ai-model-booking';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
 
 type PortfolioView = 'grid' | 'feed';
+type AvailabilityState = 'available' | 'unavailable' | 'future';
 type ShareState = 'idle' | 'shared' | 'copied' | 'unsupported';
 
 /** Fisher-Yates draw: which photograph lands in position 1, 2, 3 … of the album. */
@@ -92,6 +93,31 @@ export class AiModelPortfolioPage implements OnDestroy {
 
   /** The Rent form pop-up. */
   protected readonly bookingOpen = signal(false);
+
+  /**
+   * Normalised availability for this model — kept in step with the directory listing so a
+   * profile reads the same in both places.
+   */
+  protected readonly availabilityState = computed<AvailabilityState>(() => {
+    const availability = (this.model()?.availability ?? '').trim().toLocaleLowerCase();
+    if (/unavailable|fully booked|not accepting/.test(availability)) return 'unavailable';
+    if (/future|looking for|coming soon/.test(availability)) return 'future';
+    return 'available';
+  });
+
+  protected readonly availabilityLabel = computed(() => {
+    switch (this.availabilityState()) {
+      case 'unavailable':
+        return 'Currently Unavailable';
+      case 'future':
+        return 'Looking for Future Contract';
+      default:
+        return 'Available for Contract';
+    }
+  });
+
+  /** Unavailable models cannot be booked — the Rent button turns into a disabled notice. */
+  protected readonly bookable = computed(() => this.availabilityState() !== 'unavailable');
 
   /** The model's own rate for one photograph, shown next to the Rent button. */
   protected readonly ratePerPhoto = computed(() => this.model()?.photoRate ?? 0);
@@ -218,6 +244,7 @@ export class AiModelPortfolioPage implements OnDestroy {
   }
 
   protected openBooking(): void {
+    if (!this.bookable()) return;
     this.bookingOpen.set(true);
   }
 

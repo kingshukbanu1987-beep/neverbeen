@@ -57,7 +57,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "87 cm",
     "waist": "70 cm",
-    "hip": "92 cm"
+    "hip": "92 cm",
+    "availability": "Looking for Future Contract"
   },
   "Fatima Sana Hussaini.png": {
     "location": "Kuala Lumpur, Malaysia",
@@ -132,7 +133,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "85 cm",
     "waist": "65 cm",
-    "hip": "91 cm"
+    "hip": "91 cm",
+    "availability": "Looking for Future Contract"
   },
   "Rasha Fakhoury.png": {
     "location": "Amman, Jordan",
@@ -259,7 +261,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "85 cm",
     "waist": "67 cm",
-    "hip": "91 cm"
+    "hip": "91 cm",
+    "availability": "Looking for Future Contract"
   },
   "Sorcha Golsa MacCarthy.png": {
     "name": "Sorcha Golsa MacCarthy",
@@ -403,7 +406,8 @@
     "illustrative": true,
     "order": 26,
     "photoRate": 540,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "availability": "Currently Unavailable"
   },
   "Tasneem Al-Rifai": {
     "name": "Tasneem Al-Rifai",
@@ -451,7 +455,8 @@
     "illustrative": true,
     "order": 29,
     "photoRate": 535,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "availability": "Currently Unavailable"
   },
   "Ameera Lone": {
     "name": "Ameera Lone",
