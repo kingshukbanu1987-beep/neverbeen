@@ -616,7 +616,10 @@ describe('AiModelPortfolioPage video reel', () => {
 
       const tiles = element.querySelectorAll('.video-tile');
       expect(tiles.length).toBe(3);
-      expect(tiles[0].querySelector('video')?.getAttribute('src')).toBe(profile.videos[0].src);
+      const preview = tiles[0].querySelector('video');
+      expect(preview?.getAttribute('src')).toContain(profile.videos[0].src);
+      expect(preview?.hasAttribute('autoplay')).toBe(false);
+      expect(preview?.hasAttribute('loop')).toBe(false);
       expect(tiles[0].getAttribute('aria-label')).toContain('Play');
       expect(element.textContent).toContain('Studio reel');
 
