@@ -249,12 +249,14 @@ describe('Rent this model', () => {
     expect(message).toContain('50 photographs — Campaign set');
     expect(message).toContain(`Rate: ${formatInr(NOURHAN.photoRate)} per photograph`);
     const subtotal = 50 * NOURHAN.photoRate;
-    const serviceTax = serviceTaxFor(subtotal);
-    expect(message).toContain(`Subtotal: ${formatInr(subtotal)} INR`);
-    expect(message).toContain(`Service tax (5%): ${formatInr(serviceTax)} INR`);
+    const discountedSubtotal = subtotal - 2000;
+    const serviceTax = serviceTaxFor(discountedSubtotal);
+    expect(message).toContain(`Subtotal before coupon: ${formatInr(subtotal)} INR`);
     expect(message).toContain('Coupon: SPECIALREQUEST');
     expect(message).toContain('Discount: -₹2,000 INR');
-    expect(message).toContain(`Final total: ${formatInr(subtotal + serviceTax - 2000)} INR`);
+    expect(message).toContain(`Subtotal: ${formatInr(discountedSubtotal)} INR`);
+    expect(message).toContain(`Service tax (5%): ${formatInr(serviceTax)} INR`);
+    expect(message).toContain(`Final total: ${formatInr(discountedSubtotal + serviceTax)} INR`);
     expect(message).toContain(
       new Intl.DateTimeFormat('en-GB', {
         weekday: 'short',
@@ -308,7 +310,7 @@ describe('Rent this model', () => {
     expect(validateBookingCoupon('NOT-A-COUPON').status).toBe('unavailable');
   });
 
-  it('applies the fixed discount after tax and shows the configured success message', async () => {
+  it('applies the fixed discount to the subtotal before tax and shows the success message', async () => {
     const { harness, element } = await openDialog();
     const panel = dialog(element);
     const couponInput = panel.querySelector<HTMLInputElement>('#booking-coupon-code')!;
@@ -323,13 +325,17 @@ describe('Rent this model', () => {
     expect(panel.querySelector('.coupon-message')?.classList.contains('is-success')).toBe(true);
 
     const subtotal = 25 * NOURHAN.photoRate;
-    const tax = serviceTaxFor(subtotal);
-    const discount = Math.min(500, subtotal + tax);
+    const discount = Math.min(500, subtotal);
+    const discountedSubtotal = subtotal - discount;
+    const tax = serviceTaxFor(discountedSubtotal);
     expect(panel.querySelector('.price-discount')?.textContent).toContain(
       `−${formatInr(discount)}`,
     );
+    expect(panel.querySelector('.price-net-subtotal')?.textContent).toContain(
+      formatInr(discountedSubtotal),
+    );
     expect(panel.querySelector('.booking-pricing')?.textContent).toContain(
-      formatInr(subtotal + tax - discount),
+      formatInr(discountedSubtotal + tax),
     );
 
     couponInput.value = 'NOT-A-COUPON';

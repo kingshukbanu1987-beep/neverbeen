@@ -41,7 +41,10 @@ export type BookingCouponValidation =
   | { status: 'expired' | 'unavailable' | 'empty'; coupon: null };
 
 export interface BookingPricing {
+  /** Selected package price before applying a coupon. */
   subtotal: number;
+  /** Subtotal after the flat coupon discount, used as the tax base. */
+  discountedSubtotal: number;
   serviceTax: number;
   couponCode: string;
   discount: number;
@@ -119,9 +122,11 @@ function formatBookingDate(iso: string): string {
 export function buildModelBookingMessage(request: BookingRequest): string {
   const { model, order, booking, client } = request;
   const subtotal = request.pricing?.subtotal ?? order.amount;
-  const serviceTax = request.pricing?.serviceTax ?? serviceTaxFor(subtotal);
   const discount = request.pricing?.discount ?? 0;
-  const total = request.pricing?.total ?? Math.max(0, subtotal + serviceTax - discount);
+  const discountedSubtotal =
+    request.pricing?.discountedSubtotal ?? Math.max(0, subtotal - discount);
+  const serviceTax = request.pricing?.serviceTax ?? serviceTaxFor(discountedSubtotal);
+  const total = request.pricing?.total ?? discountedSubtotal + serviceTax;
   const lines = [
     '*New booking request — NeverBeen AI Models*',
     '',
@@ -137,12 +142,17 @@ export function buildModelBookingMessage(request: BookingRequest): string {
     order.custom
       ? 'Price: quoted by the studio after reviewing the brief'
       : `Rate: ${formatInr(order.ratePerPhoto)} per photograph`,
-    order.custom ? '' : `Subtotal: ${formatInr(subtotal)} INR`,
+    order.custom
+      ? ''
+      : `${request.pricing?.couponCode ? 'Subtotal before coupon' : 'Subtotal'}: ${formatInr(subtotal)} INR`,
+    order.custom || !request.pricing?.couponCode ? '' : `Coupon: ${request.pricing.couponCode}`,
+    order.custom || discount <= 0 ? '' : `Discount: -${formatInr(discount)} INR`,
+    order.custom || !request.pricing?.couponCode
+      ? ''
+      : `Subtotal: ${formatInr(discountedSubtotal)} INR`,
     order.custom
       ? ''
       : `Service tax (${BOOKING_SERVICE_TAX_PERCENT}%): ${formatInr(serviceTax)} INR`,
-    order.custom || !request.pricing?.couponCode ? '' : `Coupon: ${request.pricing.couponCode}`,
-    order.custom || discount <= 0 ? '' : `Discount: -${formatInr(discount)} INR`,
     order.custom ? '' : `Final total: ${formatInr(total)} INR`,
     '',
     '*Delivery date*',

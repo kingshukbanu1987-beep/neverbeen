@@ -140,8 +140,9 @@ that model's per-photo rate (10 photographs at ₹550 is ₹5,500, 100 at ₹550
 and the studio quotes it after reading the brief.
 
 The form selects **25 photographs** by default. Priced orders show a **5% service tax** and final
-payable total. Coupon discounts are deducted from that tax-inclusive total (the payable amount never
-goes below zero). Add or update codes in `src/app/pages/ai-models/booking/coupons.json`; each entry
+payable total. A validated flat coupon reduces the subtotal before the 5% service tax is calculated;
+the payable amount never goes below zero. Add or update codes in
+`src/app/pages/ai-models/booking/coupons.json`; each entry
 has a `code`, flat `discountInr`, and inclusive `expiresOn` date (`YYYY-MM-DD`, through the end of that
 date in India Standard Time).
 

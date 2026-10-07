@@ -326,20 +326,29 @@
                   <b class="is-quote">Selective charge</b>
                 </div>
               } @else {
-                <div class="price-line">
-                  <span>Subtotal · {{ order.photos }} photographs</span>
-                  <b>{{ formatInr(subtotal()) }}</b>
-                </div>
-                <div class="price-line">
-                  <span>Service tax ({{ serviceTaxPercent }}%)</span>
-                  <b>{{ formatInr(serviceTax()) }}</b>
-                </div>
                 @if (appliedCoupon(); as coupon) {
+                  <div class="price-line">
+                    <span>Subtotal before coupon · {{ order.photos }} photographs</span>
+                    <b>{{ formatInr(subtotal()) }}</b>
+                  </div>
                   <div class="price-line price-discount">
                     <span>Discount · {{ coupon.code }}</span>
                     <b>−{{ formatInr(discountAmount()) }}</b>
                   </div>
+                  <div class="price-line price-net-subtotal">
+                    <span>Subtotal</span>
+                    <b>{{ formatInr(discountedSubtotal()) }}</b>
+                  </div>
+                } @else {
+                  <div class="price-line">
+                    <span>Subtotal · {{ order.photos }} photographs</span>
+                    <b>{{ formatInr(subtotal()) }}</b>
+                  </div>
                 }
+                <div class="price-line">
+                  <span>Service tax ({{ serviceTaxPercent }}%)</span>
+                  <b>{{ formatInr(serviceTax()) }}</b>
+                </div>
                 <div class="booking-total">
                   <span>Final total</span>
                   <b>{{ formatInr(finalTotal()) }}<i>INR</i></b>

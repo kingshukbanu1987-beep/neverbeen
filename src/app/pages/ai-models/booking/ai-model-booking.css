@@ -623,9 +623,11 @@
 .booking-pricing {
   position: relative;
   display: grid;
-  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+  gap: 0.55rem;
   overflow: hidden;
-  padding: 0.9rem 1rem;
+  padding: 1.05rem 1.1rem;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 16px;
   background:
@@ -638,15 +640,18 @@
 
 .price-line,
 .booking-total {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+  column-gap: 1rem;
+  min-width: 0;
 }
 
 .price-line span {
+  min-width: 0;
   color: var(--booking-muted);
   font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .price-line b {
@@ -655,6 +660,24 @@
   font-size: 0.9rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.price-line.price-net-subtotal {
+  margin-top: 0.05rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+
+.price-line.price-net-subtotal span {
+  color: var(--booking-text);
+  font-weight: 750;
+}
+
+.price-line.price-net-subtotal b {
+  color: #fff;
+  font-size: 0.96rem;
 }
 
 .price-line.price-discount {

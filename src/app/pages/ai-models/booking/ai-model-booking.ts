@@ -188,20 +188,19 @@ export class AiModelBookingDialog implements OnDestroy {
     const order = this.selectedOrder();
     return order && !order.custom ? order.amount : 0;
   });
-  protected readonly serviceTax = computed(() =>
-    this.couponEligible() ? serviceTaxFor(this.subtotal()) : 0,
-  );
-  protected readonly totalBeforeDiscount = computed(() => this.subtotal() + this.serviceTax());
   protected readonly discountAmount = computed(() => {
     const coupon = this.appliedCoupon();
     if (!coupon || !this.couponEligible()) return 0;
-    return Math.min(coupon.discountInr, this.totalBeforeDiscount());
+    return Math.min(coupon.discountInr, this.subtotal());
   });
-  protected readonly finalTotal = computed(() =>
-    Math.max(
-      0,
-      Math.round((this.totalBeforeDiscount() - this.discountAmount() + Number.EPSILON) * 100) / 100,
-    ),
+  protected readonly discountedSubtotal = computed(() =>
+    Math.max(0, this.subtotal() - this.discountAmount()),
+  );
+  protected readonly serviceTax = computed(() =>
+    this.couponEligible() ? serviceTaxFor(this.discountedSubtotal()) : 0,
+  );
+  protected readonly finalTotal = computed(
+    () => Math.round((this.discountedSubtotal() + this.serviceTax() + Number.EPSILON) * 100) / 100,
   );
   protected readonly total = computed(() => {
     const order = this.selectedOrder();
@@ -321,6 +320,7 @@ export class AiModelBookingDialog implements OnDestroy {
       order,
       pricing: {
         subtotal: this.subtotal(),
+        discountedSubtotal: this.discountedSubtotal(),
         serviceTax: this.serviceTax(),
         couponCode: this.appliedCoupon()?.code ?? '',
         discount: this.discountAmount(),
