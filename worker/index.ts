@@ -35,7 +35,8 @@ interface Env {
 /** Same-origin path the Angular app uses for the NeverBeen Web API. */
 const API_PROXY_PREFIX = '/neverbeen-api';
 /** Deployed NeverBeen Web API — override with the NEVERBEEN_API_URL variable. */
-const DEFAULT_API_ORIGIN = 'https://neverbeen-api-kingshuk.azurewebsites.net';
+const DEFAULT_API_ORIGIN =
+  'https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net';
 
 /** The booking core only ever reads the three WhatsApp values, so hand it exactly those. */
 function bookingEnv(env: Env): Record<string, string | undefined> {

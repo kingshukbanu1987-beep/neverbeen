@@ -41,7 +41,7 @@ describe('Worker — NeverBeen Web API proxy', () => {
       }),
     );
 
-    expect(calls).toEqual(['https://neverbeen-api-kingshuk.azurewebsites.net/api/registration']);
+    expect(calls).toEqual(['https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net/api/registration']);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ id: 7, fullName: 'Elena Rostova' });
   });

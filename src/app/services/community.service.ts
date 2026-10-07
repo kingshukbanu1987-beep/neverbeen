@@ -1,6 +1,12 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import {
+  Observable,
+  TimeoutError as RxjsTimeoutError,
+  firstValueFrom,
+  throwError,
+  timeout,
+} from 'rxjs';
 import { environment } from '../../environments/environment';
 import { CommunityBadgeService } from './community-badge.service';
 import {
@@ -333,6 +339,24 @@ function loadJsonValue(key: string): unknown {
   }
 }
 
+/** How long a small API call (health, lookups, profile) may take before it is given up on. */
+const API_TIMEOUT_MS = 20_000;
+/** Registrations upload the profile photograph, so they may take a little longer. */
+const REGISTRATION_TIMEOUT_MS = 45_000;
+
+/** Raised when the Web API does not answer within its time budget. */
+class ApiTimeoutError extends Error {
+  constructor(readonly url: string) {
+    super(`The NeverBeen Web API at ${url} did not answer in time.`);
+    this.name = 'ApiTimeoutError';
+  }
+}
+
+/** Applies the API time budget to a request and reports the offending URL when it expires. */
+function withApiTimeout<T>(source: Observable<T>, url: string, ms = API_TIMEOUT_MS): Observable<T> {
+  return source.pipe(timeout({ each: ms, with: () => throwError(() => new ApiTimeoutError(url)) }));
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -360,6 +384,8 @@ export class CommunityService {
   readonly accountSaveTarget = signal<'database' | 'local' | null>(null);
   /** Human-readable reason why a registration could not be stored in the database. */
   readonly accountSaveNotice = signal<string | null>(null);
+  /** Why the last `GET /health` probe failed (wrong address, timeout, CORS, …). */
+  readonly apiProbeDetail = signal<string | null>(null);
 
   /** Clears the registration notice shown across the community pages. */
   dismissAccountSaveNotice(): void {
@@ -605,20 +631,63 @@ export class CommunityService {
   /**
    * Checks `GET /health` on the Web API and remembers the answer, so every API-backed
    * feature can fall back to the browser-only demo data when the API is unreachable.
+   *
+   * Only the `connect` page uses this to pick an OAuth flow — account creation posts
+   * straight to `/api/registration` (see `createNeverbeenAccount`), so a health-probe
+   * hiccup can never block a sign-up from reaching the database.
    */
   async checkApiOnline(force = false): Promise<boolean> {
     if (!this.http) {
       this.apiOnline.set(false);
+      this.apiProbeDetail.set('This browser build has no HTTP client configured.');
       return false;
     }
     if (!force && this.apiOnline() !== null) return this.apiOnline()!;
+
+    const url = this.apiEndpoint('/health');
     try {
-      await firstValueFrom(this.http.get(this.apiEndpoint('/health'), { responseType: 'text' }));
-      this.apiOnline.set(true);
-    } catch {
+      const body = await firstValueFrom(withApiTimeout(this.http.get(url, { responseType: 'text' }), url));
+      // The NeverBeen API answers its health check with "Healthy" / "Unhealthy".
+      // Anything else (an HTML page from a static host or an SPA fallback) means the
+      // configured address is not the API.
+      if (/healthy|unhealthy|degraded/i.test(body ?? '')) {
+        this.apiOnline.set(true);
+        this.apiProbeDetail.set(null);
+      } else {
+        this.apiOnline.set(false);
+        this.apiProbeDetail.set(
+          `${url} answered with something that is not the NeverBeen API. ` +
+            'Check that apiBaseUrl in src/environments/environment*.ts points at the API (not at the website).',
+        );
+      }
+    } catch (error) {
       this.apiOnline.set(false);
+      this.apiProbeDetail.set(this.unreachableDetail(url, error));
     }
     return this.apiOnline()!;
+  }
+
+  /**
+   * Explains why a request to the Web API failed, in terms the member (or the developer
+   * looking at the browser console) can act on: a timeout, a wrong address, or the
+   * API's CORS allow-list not covering this page's origin.
+   */
+  private unreachableDetail(url: string, error?: unknown): string {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'this page';
+    const reason =
+      error instanceof ApiTimeoutError
+        ? `did not answer within ${Math.round(API_TIMEOUT_MS / 1000)} seconds`
+        : 'could not be reached from this page';
+    return (
+      `The NeverBeen Web API (${url}) ${reason}. Check that the address opens in a browser tab, ` +
+      `and that this site's origin (${origin}) is listed in the API's Cors:AllowedOrigins setting.`
+    );
+  }
+
+  /** Logs the technical error behind an API failure for the browser console. */
+  private logApiFailure(action: string, url: string, error: unknown): void {
+    const status = error instanceof HttpErrorResponse ? `HTTP ${error.status}` : (error as Error)?.name;
+    console.warn(`[neverbeen] ${action} failed at ${url} (${status ?? 'unknown error'})`, error);
   }
 
   /** Message from an API error body (`{ "error": "…" }`) or a helpful fallback. */
@@ -646,6 +715,7 @@ export class CommunityService {
   /** True when the failure means “the API is unreachable”, not “the API rejected this”. */
   private isNetworkError(error: unknown): boolean {
     if (error instanceof HttpErrorResponse) return error.status === 0;
+    if (error instanceof ApiTimeoutError || error instanceof RxjsTimeoutError) return true;
     return error instanceof TypeError || (error instanceof Error && /fetch|network/i.test(error.message));
   }
 
@@ -709,9 +779,8 @@ export class CommunityService {
   async loadCountries(): Promise<Country[]> {
     if (this.http) {
       try {
-        const countries = await firstValueFrom(
-          this.http.get<Country[]>(this.apiEndpoint('/api/lookup/countries')),
-        );
+        const url = this.apiEndpoint('/api/lookup/countries');
+        const countries = await firstValueFrom(withApiTimeout(this.http.get<Country[]>(url), url));
         if (countries?.length) {
           this.apiOnline.set(true);
           this.countries.set(
@@ -734,9 +803,8 @@ export class CommunityService {
   async loadProfessions(): Promise<string[]> {
     if (this.http) {
       try {
-        const professions = await firstValueFrom(
-          this.http.get<string[]>(this.apiEndpoint('/api/lookup/professions')),
-        );
+        const url = this.apiEndpoint('/api/lookup/professions');
+        const professions = await firstValueFrom(withApiTimeout(this.http.get<string[]>(url), url));
         if (professions?.length) {
           this.apiOnline.set(true);
           this.professions.set(professions);
@@ -752,9 +820,8 @@ export class CommunityService {
   async loadGenders(): Promise<string[]> {
     if (this.http) {
       try {
-        const genders = await firstValueFrom(
-          this.http.get<string[]>(this.apiEndpoint('/api/lookup/genders')),
-        );
+        const url = this.apiEndpoint('/api/lookup/genders');
+        const genders = await firstValueFrom(withApiTimeout(this.http.get<string[]>(url), url));
         if (genders?.length) {
           this.apiOnline.set(true);
           this.genders.set(genders);
@@ -770,9 +837,8 @@ export class CommunityService {
   async loadCitiesForCountry(countryId: number): Promise<City[]> {
     if (this.http) {
       try {
-        const cities = await firstValueFrom(
-          this.http.get<City[]>(this.apiEndpoint(`/api/lookup/countries/${countryId}/cities`)),
-        );
+        const url = this.apiEndpoint(`/api/lookup/countries/${countryId}/cities`);
+        const cities = await firstValueFrom(withApiTimeout(this.http.get<City[]>(url), url));
         if (cities) {
           this.apiOnline.set(true);
           return cities;
@@ -853,17 +919,17 @@ export class CommunityService {
   private async tryApiOauthLogin(provider: string, code: string): Promise<AuthResult | null> {
     if (!this.http) return null;
     if (!(await this.checkApiOnline(true))) return null;
+    const url = this.apiEndpoint('/api/auth/oauth/login');
     try {
       const dto = await firstValueFrom(
-        this.http.post<ApiAuthResult>(this.apiEndpoint('/api/auth/oauth/login'), {
-          provider,
-          code,
-        }),
+        withApiTimeout(this.http.post<ApiAuthResult>(url, { provider, code }), url),
       );
       return await this.applyApiSession(dto, provider);
     } catch (error) {
       if (this.isNetworkError(error)) {
+        this.logApiFailure('POST /api/auth/oauth/login', url, error);
         this.apiOnline.set(false);
+        this.apiProbeDetail.set(this.unreachableDetail(url, error));
         return null;
       }
       throw new Error(this.apiErrorMessage(error, `Sign-in with ${provider} failed`));
@@ -910,10 +976,9 @@ export class CommunityService {
   async refreshProfileFromApi(): Promise<Profile | null> {
     if (!this.http || !this.token()) return null;
     try {
+      const url = this.apiEndpoint('/api/profile/me');
       const dto = await firstValueFrom(
-        this.http.get<ApiProfileDto>(this.apiEndpoint('/api/profile/me'), {
-          headers: this.authHeaders(),
-        }),
+        withApiTimeout(this.http.get<ApiProfileDto>(url, { headers: this.authHeaders() }), url),
       );
       const profile = this.profileFromApi(dto, this.profile() ?? undefined);
       this.profile.set(profile);
@@ -1702,12 +1767,9 @@ export class CommunityService {
    * browser-only fallback should run, and throws when the API rejected the details.
    */
   private async tryApiRegister(data: CreateAccountData): Promise<Profile | null> {
-    if (!(await this.checkApiOnline(true))) {
-      this.accountSaveNotice.set(
-        'The NeverBeen Web API could not be reached, so this account was saved in this browser only.',
-      );
-      return null;
-    }
+    // The registration POST is attempted straight away — no health probe in front of it, so
+    // a slow/cold API or a failing probe can never stop the member from being stored.
+    const url = this.apiEndpoint('/api/registration');
 
     const countryId = await this.resolveCountryId(data.country);
     const cityId = countryId == null ? null : await this.resolveCityId(countryId, data.city);
@@ -1731,9 +1793,11 @@ export class CommunityService {
 
     try {
       const dto = await firstValueFrom(
-        this.http!.post<ApiProfileDto>(this.apiEndpoint('/api/registration'), form, {
-          headers: this.authHeaders(),
-        }),
+        withApiTimeout(
+          this.http!.post<ApiProfileDto>(url, form, { headers: this.authHeaders() }),
+          url,
+          REGISTRATION_TIMEOUT_MS,
+        ),
       );
 
       const profile = this.profileFromApi(dto, { state: data.state });
@@ -1757,10 +1821,12 @@ export class CommunityService {
       this.apiOnline.set(true);
       return profile;
     } catch (error) {
+      this.logApiFailure('POST /api/registration', url, error);
       if (this.isNetworkError(error)) {
         this.apiOnline.set(false);
+        this.apiProbeDetail.set(this.unreachableDetail(url, error));
         this.accountSaveNotice.set(
-          'The NeverBeen Web API could not be reached, so this account was saved in this browser only.',
+          `${this.unreachableDetail(url, error)} This account was saved in this browser only.`,
         );
         return null;
       }

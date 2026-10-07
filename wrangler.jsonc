@@ -8,7 +8,7 @@
   "compatibility_date": "2026-09-15",
   "vars": {
     // Base URL of the NeverBeen Web API. Change it when the API moves to another host.
-    "NEVERBEEN_API_URL": "https://neverbeen-api-kingshuk.azurewebsites.net",
+    "NEVERBEEN_API_URL": "https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net",
   },
   "assets": {
     "directory": "./dist/neverbeen/browser",

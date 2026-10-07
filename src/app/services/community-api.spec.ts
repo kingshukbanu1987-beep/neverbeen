@@ -10,13 +10,14 @@ import {
   setCookie,
   TOKEN_KEY,
 } from './community.service';
+import { environment } from '../../environments/environment';
 
 /**
  * The sign-up path must reach the NeverBeen Web API (the ASP.NET Core `neverbeen-api`
  * service backed by the PostgreSQL / Supabase database) — these tests pin the exact
  * requests the browser sends.
  */
-const API = '/neverbeen-api';
+const API = environment.apiBaseUrl;
 
 /** Lets the awaited HTTP chain issue its next request before we assert on it. */
 function tick(): Promise<void> {
@@ -70,8 +71,6 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     });
 
     const pending = service.createNeverbeenAccount(account);
-
-    httpMock.expectOne(`${API}/health`).flush('Healthy');
     await tick();
 
     const registration = httpMock.expectOne(`${API}/api/registration`);
@@ -165,6 +164,28 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     expect(service.currentUser()?.status).toBe('Pending');
   });
 
+  it('accepts /health only when the answer really comes from the NeverBeen API', async () => {
+    const pending = service.checkApiOnline(true);
+
+    httpMock
+      .expectOne(`${API}/health`)
+      .flush('<html><body>Some other site</body></html>', { status: 200, statusText: 'OK' });
+
+    await expect(pending).resolves.toBe(false);
+    expect(service.apiProbeDetail()).toContain('not the NeverBeen API');
+  });
+
+  it('names the API address and the CORS setting when the browser cannot call the API', async () => {
+    const pending = service.checkApiOnline(true);
+
+    httpMock.expectOne(`${API}/health`).error(new ProgressEvent('error'));
+
+    await expect(pending).resolves.toBe(false);
+    expect(service.apiProbeDetail()).toContain(API);
+    expect(service.apiProbeDetail()).toContain('Cors:AllowedOrigins');
+    expect(service.apiOnline()).toBe(false);
+  });
+
   it('reloads the signed-in member from GET /api/profile/me with the Bearer token', async () => {
     setCookie(TOKEN_KEY, 'jwt.existing.member', 30);
     service.token.set('jwt.existing.member');
@@ -206,23 +227,24 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     expect(service.profile()?.settings.theme).toBe('dark');
   });
 
-  it('keeps the account in this browser and says so when the Web API is unreachable', async () => {
+  it('keeps the account in this browser and names the API address when it is unreachable', async () => {
     const pending = service.createNeverbeenAccount(account);
+    await tick();
 
-    httpMock.expectOne(`${API}/health`).error(new ProgressEvent('error'));
+    // The registration POST itself fails — no health probe stands in front of it.
+    httpMock.expectOne(`${API}/api/registration`).error(new ProgressEvent('error'));
 
     const profile = await pending;
 
     expect(profile.fullName).toBe('Elena Rostova');
     expect(service.accountSaveTarget()).toBe('local');
-    expect(service.accountSaveNotice()).toContain('could not be reached');
+    expect(service.accountSaveNotice()).toContain(API);
+    expect(service.accountSaveNotice()).toContain('Cors:AllowedOrigins');
     expect(service.apiOnline()).toBe(false);
   });
 
   it('keeps the account local and asks for a sign-in when the API has no OAuth session (401)', async () => {
     const pending = service.createNeverbeenAccount(account);
-
-    httpMock.expectOne(`${API}/health`).flush('Healthy');
     await tick();
     httpMock
       .expectOne(`${API}/api/registration`)
@@ -239,8 +261,6 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     service.token.set('jwt.token.value');
 
     const pending = service.createNeverbeenAccount(account);
-
-    httpMock.expectOne(`${API}/health`).flush('Healthy');
     await tick();
     httpMock
       .expectOne(`${API}/api/registration`)

@@ -260,21 +260,36 @@ PostgreSQL on Supabase (deployed to the Azure App Service `neverbeen-api-kingshu
 
 ### How the website reaches the API
 
-`src/environments/environment.ts` holds the API base URL. The default `/neverbeen-api` path is
-same-origin, and both the dev server and the Cloudflare Worker forward it to the deployed API:
+**`apiBaseUrl` in `src/environments/environment.ts` (development) and
+`src/environments/environment.prod.ts` (production build) is the API address — change it there and
+rebuild.** Both files default to the deployed API:
 
-| Where           | Forwarded by                                               | Target                                                                         |
-| --------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `npm start`     | `proxy.conf.json` (`/neverbeen-api`)                       | `https://neverbeen-api-kingshuk.azurewebsites.net`                             |
-| Deployed Worker | `worker/index.ts` (`/neverbeen-api/*`, `run_worker_first`) | `NEVERBEEN_API_URL` (defaults to the same Azure host, set in `wrangler.jsonc`) |
+```
+https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net
+```
 
-Point `apiBaseUrl` (or the Worker's `NEVERBEEN_API_URL`) at another host when the API moves; the
-site never needs CORS changes because the browser only ever calls its own origin.
+In this mode the browser calls the API directly, so the API must allow this site's origin in
+`Cors:AllowedOrigins` (`appsettings.json`):
 
-To develop against a neverbeen-api instance running on your own machine
-(`dotnet run --project NeverBeen.API.csproj --launch-profile http` → `http://localhost:5080`),
-change the `/neverbeen-api` target in `proxy.conf.json` to `http://localhost:5080` and keep the
-`pathRewrite` entry.
+- deployed site — `https://youneverbeen.kingshukbanu1987.workers.dev` (already listed)
+- local development — `http://localhost:4200` (already listed)
+- sandbox preview — the preview's own origin, e.g. `https://4200-<sandbox>.e2b.app`
+
+A blocked origin shows up as a failed request with **no** HTTP status in the browser console
+(`Access to XMLHttpRequest … has been blocked by CORS policy`); the registration page then reports
+the API address and the origin that has to be allowed.
+
+**Alternative — CORS-free same-origin mode.** Set `apiBaseUrl: '/neverbeen-api'` in both environment
+files and let a proxy forward the path to the API server-side (no CORS entry needed at all):
+
+| Where           | Forwarded by                                               | Target                                                                                        |
+| --------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `npm start`     | `proxy.conf.json` (`/neverbeen-api`)                       | the Azure host above (change it for a local API: `http://localhost:5080`, keep `pathRewrite`) |
+| Deployed Worker | `worker/index.ts` (`/neverbeen-api/*`, `run_worker_first`) | `NEVERBEEN_API_URL` in `wrangler.jsonc` (same Azure host by default)                          |
+
+Every API failure is reported with the URL that was called, the reason (timeout / unreachable /
+wrong address) and the origin that must be in `Cors:AllowedOrigins`, both in the UI and — with the
+technical detail — in the browser console (`[neverbeen] … failed at <url>`).
 
 ### Member sign-up (Create Neverbeen Account)
 
