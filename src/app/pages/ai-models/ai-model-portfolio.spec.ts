@@ -90,7 +90,8 @@ describe('AiModelPortfolioPage', () => {
     try {
       expect(element.querySelector('h1')?.textContent?.trim()).toBe('Test Studio Model');
       expect(element.textContent).toContain('@test.studio.model');
-      expect(element.textContent).toContain('Open for bookings');
+      // Legacy/open booking notes normalise to the standard directory label.
+      expect(element.textContent).toContain('Available for Contract');
       expect(element.textContent).toContain('170 cm');
 
       const tiles = element.querySelectorAll('.grid-tile');
@@ -616,7 +617,10 @@ describe('AiModelPortfolioPage video reel', () => {
 
       const tiles = element.querySelectorAll('.video-tile');
       expect(tiles.length).toBe(3);
-      expect(tiles[0].querySelector('video')?.getAttribute('src')).toBe(profile.videos[0].src);
+      // Poster-less previews carry a media fragment so mobile browsers paint a first frame.
+      expect(tiles[0].querySelector('video')?.getAttribute('src')).toBe(
+        `${profile.videos[0].src}#t=0.1`,
+      );
       expect(tiles[0].getAttribute('aria-label')).toContain('Play');
       expect(element.textContent).toContain('Studio reel');
 

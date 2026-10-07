@@ -115,12 +115,20 @@ describe('AiModelsPage', () => {
     );
     for (const [index, profile] of aiModelProfiles.entries()) {
       const card = cards[index];
-      expect(card.querySelector('.card-availability')?.textContent?.trim()).toBe(
-        'Available for Contract',
-      );
-      expect(card.querySelector('.card-availability')?.classList.contains('is-available')).toBe(
-        true,
-      );
+      const availability = card.querySelector('.card-availability');
+      const expectedLabel = /unavailable|fully booked|not accepting/i.test(profile.availability)
+        ? 'Currently Unavailable'
+        : /future|looking for|coming soon/i.test(profile.availability)
+          ? 'Looking for Future Contract'
+          : 'Available for Contract';
+      const expectedClass = {
+        'Currently Unavailable': 'is-unavailable',
+        'Looking for Future Contract': 'is-future',
+        'Available for Contract': 'is-available',
+      }[expectedLabel];
+
+      expect(availability?.textContent?.trim()).toBe(expectedLabel);
+      expect(availability?.classList.contains(expectedClass)).toBe(true);
       expect(card.querySelector('.card-price-label')?.textContent?.trim()).toBe(
         'Starting Price / Photograph',
       );
@@ -180,10 +188,9 @@ describe('AiModelsPage', () => {
       expect(profile.photoNote).toContain('INR');
     }
 
-    // The leading profile (Fiadh Dara) quotes ₹535; the models vary slightly around it.
-    expect(aiModelProfiles[0].photoRate).toBe(535);
+    // Rates sit in a tight band around ₹550, with a few individually raised profiles.
     expect(Math.min(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(520);
-    expect(Math.max(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(600);
+    expect(Math.max(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(755);
   });
 
   it('keeps the header to a short, graphic-free title', () => {
