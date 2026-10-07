@@ -15,6 +15,9 @@ describe('CommunitySearchBox (community header search)', () => {
     }).compileComponents();
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    // The travelers and circles this header search finds are the “Explore as Guest” tour
+    // data; a signed-out visitor starts with none of it (see the last test).
+    TestBed.inject(CommunityService).exploreAsGuest();
     const fixture = TestBed.createComponent(CommunitySearchBox);
     fixture.detectChanges();
     el = fixture.nativeElement as HTMLElement;
@@ -81,6 +84,20 @@ describe('CommunitySearchBox (community header search)', () => {
     const item = items().find((i) => i.textContent?.includes(stranger.fullName))!;
     (item.querySelector('.csb-connect') as HTMLButtonElement).click();
     expect(service.companions().find((c) => c.id === stranger.id)!.status).toBe('pending_outgoing');
+  });
+
+  it('finds nothing for a signed-out visitor who has not opened the guest tour', () => {
+    const service = TestBed.inject(CommunityService);
+    // Leaving the tour (or never opening it) leaves the community empty: no demo travelers
+    // and no demo circles are searchable, only the real member data would be.
+    service.logout();
+    detect();
+
+    type('Elena');
+    expect(items().length).toBe(0);
+    expect(el.querySelector('.csb-empty')).toBeTruthy();
+    expect(service.companions().length).toBe(0);
+    expect(service.circles().length).toBe(0);
   });
 
   it('clears the search and shows an empty state for no match', () => {

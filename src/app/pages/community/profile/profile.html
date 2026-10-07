@@ -209,7 +209,7 @@
           </div>
 
           <h2 class="profile-full-name">
-            {{ service.profile()?.fullName || ((service.profile()?.firstName || '') + ' ' + (service.profile()?.lastName || '')).trim() || 'Kingshuk' }}
+            {{ service.profile()?.fullName || ((service.profile()?.firstName || '') + ' ' + (service.profile()?.lastName || '')).trim() || 'Your profile' }}
             @if (isUserVerified()) {
               <span class="blue-verified-badge" title="Verified Account">
                 <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
@@ -778,7 +778,7 @@
                 />
                 <div class="composer-author-info">
                   <span class="composer-user-name clickable-user" [nbUserPreview]="service.profile()" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
-                    {{ service.profile()?.fullName || 'Kingshuk' }}
+                    {{ service.profile()?.fullName || 'You' }}
                   </span>
                   <span class="composer-audience-badge">{{ composerAudienceLabel() }}</span>
                 </div>
@@ -1232,6 +1232,12 @@
                     </div>
                   }
                 </article>
+              } @empty {
+                <!-- Nothing in the member's own timeline yet (the demo feed is the guest tour's). -->
+                <div class="journey-feed-empty">
+                  <span class="journey-empty-glyph" aria-hidden="true">🌍</span>
+                  <p><strong>Nothing here yet.</strong> Your travel stories will appear in this timeline — use the composer above to share the first one.</p>
+                </div>
               }
 
               <!-- Requirement F: Infinite scroll / load more sentinel -->
@@ -1890,7 +1896,7 @@
                 <!-- 8. About the Person -->
                 <div class="about-card-section person-narrative-card">
                   <h3 class="card-section-title"><span class="title-glyph">📖</span> 8. About the Person</h3>
-                  @let personNarrative = aboutThePersonText || 'Kingshuk is a Senior Software Engineer and the founder of NeverBeen, specializing in software development, application architecture design, requirements modelling, generative AI, and travel storytelling.';
+                  @let personNarrative = aboutThePersonText || 'Nothing here yet — tell the community who you are and what you love about travelling.';
                   <p class="person-narrative-content" [nbTranslatable]="personNarrative">
                     {{ personNarrative }}
                   </p>
@@ -2346,6 +2352,12 @@
                     </div>
                   }
                 </article>
+              } @empty {
+                <!-- No conversations of the member's own yet (the seeded Message Book is demo data). -->
+                <div class="messagebook-feed-empty">
+                  <span class="journey-empty-glyph" aria-hidden="true">✉️</span>
+                  <p><strong>Nothing here yet.</strong> Messages you and your companions write to each other will show up here.</p>
+                </div>
               }
             </div>
           </section>
@@ -2372,6 +2384,14 @@
             </div>
             @if (showSearchDropdown() && searchQuery().trim() && (searchResults().travelers.length || searchResults().circles.length)) {
               <div class="companion-search-hint">Showing {{ searchResults().travelers.length }} travelers and {{ searchResults().circles.length }} circles from all categories above.</div>
+            }
+
+            <!-- Empty directory: nothing is hidden, the groups below simply have no members yet. -->
+            @if (companionsDirectoryEmpty()) {
+              <div class="companion-empty-box companions-directory-empty">
+                <span class="journey-empty-glyph" aria-hidden="true">🤝</span>
+                <p><strong>Nothing here yet.</strong> Requests, companions and suggestions will appear in the groups below as you connect with travelers.</p>
+              </div>
             }
 
             <!-- Option to cancel companion request once sent (Requirement C: Anywhere) -->
@@ -3912,7 +3932,7 @@
           <div class="share-user-line">
             <img [src]="service.profile()?.profilePhotoUrl || defaultAvatar" alt="Me" class="share-my-avatar" />
             <div>
-              <strong>{{ service.profile()?.fullName || 'Kingshuk' }}</strong>
+              <strong>{{ service.profile()?.fullName || 'You' }}</strong>
               <span class="share-scope">Choose who can see this share</span>
             </div>
           </div>

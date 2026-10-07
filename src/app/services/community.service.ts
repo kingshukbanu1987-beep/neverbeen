@@ -84,6 +84,36 @@ export const PENDING_CHATS_SEED_VERSION_KEY = 'neverbeen_pending_chats_seed';
 export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
 export const HIDDEN_POSTS_KEY = 'neverbeen_hidden_post_ids';
+/**
+ * Marker written while this browser holds the seeded "Explore as Guest" demo community
+ * (demo members, circles, journey feed, message book, chats). It lets the app drop every
+ * seeded dataset the moment a real Google / Facebook session starts, so a signed-in
+ * member can never be shown demo people, demo circles or demo posts.
+ */
+export const DEMO_COMMUNITY_KEY = 'neverbeen_demo_community';
+
+/**
+ * Every localStorage key the "Explore as Guest" demo tour writes. A signed-in member's
+ * browser is wiped of these datasets before their own (Web-API backed) data is loaded.
+ */
+const DEMO_COMMUNITY_STORAGE_KEYS: readonly string[] = [
+  DEMO_COMMUNITY_KEY,
+  COMMENTS_KEY,
+  JOURNEY_KEY,
+  COMPANIONS_KEY,
+  FOLLOWS_KEY,
+  FOLLOWS_SEED_VERSION_KEY,
+  CIRCLES_KEY,
+  CIRCLES_SEED_VERSION_KEY,
+  CIRCLE_READS_KEY,
+  DEVICES_KEY,
+  NOTIFS_KEY,
+  PENDING_CHATS_KEY,
+  PENDING_CHATS_SEED_VERSION_KEY,
+  BLOCKED_USERS_KEY,
+  ABUSE_REPORTS_KEY,
+  HIDDEN_POSTS_KEY,
+];
 
 /**
  * Public Google OAuth Web Client ID — safe (and required) in browser code.
@@ -250,6 +280,41 @@ export function generateUniqueId(): number {
   return Date.now() * 1000 + (++autoIdCounter);
 }
 
+/**
+ * First and last name derived from a typed full name ("Kingshuk Banu" → `Kingshuk` / `Banu`).
+ * The registration form and the profile editor collect separate first/last names, so this is
+ * only the fallback for a member who typed one line (the same rule the Web API applies).
+ */
+export function splitFullName(fullName?: string | null): { firstName: string; lastName: string } {
+  const words = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
+  return { firstName: words[0] ?? '', lastName: words.slice(1).join(' ') };
+}
+
+/**
+ * Token of the make-believe “active member” account of the seeded demo community (the one
+ * the specs open through `community-demo.testing.ts`). It is not a JWT and never belongs to
+ * a real member: when the app is opened with it, the demo community is *not* restored — the
+ * cookie is dropped and the visitor is treated like anybody else.
+ */
+export const DEMO_SESSION_TOKEN = 'jwt_default_active_token';
+
+/** True when an auth cookie holds the demo marker rather than a real member's JWT. */
+export function isDemoSessionToken(token: string | null | undefined): boolean {
+  return token === DEMO_SESSION_TOKEN;
+}
+
+/**
+ * True for the profile the demo/guest tour seeds into this browser (the founder's sample
+ * member), and for any other make-believe account the preview flows created. Real members
+ * always sign in with their own Google / Facebook address, so a `@neverbeen.example`
+ * address or the bundled founder photo can only be demo data.
+ */
+export function isSeedProfile(profile: { email?: string | null; profilePhotoUrl?: string | null } | null | undefined): boolean {
+  if (!profile) return false;
+  const email = (profile.email ?? '').toLowerCase();
+  return email.endsWith('@neverbeen.example') || profile.profilePhotoUrl === '/author.jpeg';
+}
+
 export interface CreateAccountData {
   name: string;
   surname: string;
@@ -293,6 +358,10 @@ export interface ApiAuthResult {
 export interface ApiProfileDto {
   id: number;
   fullName?: string | null;
+  /** Own column on the member row (`Users.FirstName`); sent by the registration page. */
+  firstName?: string | null;
+  /** Own column on the member row (`Users.LastName`); sent by the registration page. */
+  lastName?: string | null;
   email: string;
   gender?: string | null;
   dateOfBirth?: string | null;
@@ -301,6 +370,8 @@ export interface ApiProfileDto {
   countryName?: string | null;
   cityId?: number | null;
   cityName?: string | null;
+  /** State / province typed on the registration page (`Users.State`). */
+  state?: string | null;
   pincode?: string | null;
   contactNumber?: string | null;
   postalAddress?: string | null;
@@ -364,6 +435,16 @@ export class CommunityService {
   private readonly http = inject(HttpClient, { optional: true });
   /** Admin Console moderation — accounts disabled by an admin are hidden from the community. */
   private readonly moderation = inject(AdminModerationService);
+  /**
+   * True **only** while the seeded demo community is open — the “Explore as Guest” tour.
+   * Nothing else turns it on: a signed-out visitor, a member who signed in with Google /
+   * Facebook and a member restored from an auth cookie all get real (empty or Web-API
+   * backed) data, and every dataset below stays empty until the Web API or the member
+   * themselves fills it. `enterMemberSession()` clears the demo datasets the moment a real
+   * session begins, so the seeded founder profile, demo travellers, circles, Journey feed,
+   * Message Book, chats and notifications can never leak into a member's session.
+   */
+  private demoSession = false;
   /**
    * Base URL of the NeverBeen Web API (see `src/environments/environment.ts`).
    * The default `/neverbeen-api` path is proxied to the deployed ASP.NET Core API by
@@ -526,48 +607,25 @@ export class CommunityService {
 
   constructor() {
     const existingCookieToken = getCookie(TOKEN_KEY);
+    if (existingCookieToken && !isDemoSessionToken(existingCookieToken)) {
+      // A real member session always supersedes guest browsing: the seeded demo community
+      // is dropped before anything is read, and the member's own profile is restored from
+      // their saved session or reloaded from the Web API — never from the demo seed.
+      this.startMemberSession(existingCookieToken);
+      return;
+    }
     if (existingCookieToken) {
-      // A real member session always supersedes guest browsing.
-      this.exitGuestBrowsing();
-      const storedUser = this.loadJson<CurrentUser>(USER_KEY);
-      const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
-      if (storedUser && storedProfile) {
-        // Requirement B: Migrate old profile to Founder Profile (Kingshuk)
-        if (
-          storedProfile.fullName === 'Sophia Laurent' ||
-          storedUser.fullName === 'Sophia Laurent' ||
-          !storedProfile.fullName?.includes('Kingshuk')
-        ) {
-          this.initDefaultMember();
-        } else {
-          if (!storedProfile.aboutMeDetails?.intro || storedProfile.aboutMeDetails.intro.length < 150) {
-            const richIntro = this.getRichIntroForUser();
-            storedProfile.aboutMeDetails = {
-              ...(storedProfile.aboutMeDetails || {}),
-              intro: richIntro,
-            };
-            storedUser.aboutMeDetails = {
-              ...(storedUser.aboutMeDetails || {}),
-              intro: richIntro,
-            };
-            this.saveJson(USER_KEY, storedUser);
-            this.saveJson(PROFILE_KEY, storedProfile);
-          }
-          this.token.set(existingCookieToken);
-          this.currentUser.set(storedUser);
-          this.profile.set(storedProfile);
-        }
-      } else {
-        this.initDefaultMember();
-      }
-    } else {
-      // Not signed in — unless the visitor chose "Explore as Guest" earlier.
-      this.token.set(null);
-      this.currentUser.set(null);
-      this.profile.set(null);
-      if (typeof localStorage !== 'undefined' && localStorage.getItem(GUEST_KEY) === '1') {
-        this.exploreAsGuest();
-      }
+      // A cookie left by an older build's preview toggle (`DEMO_SESSION_TOKEN`) is not an
+      // account session: it is dropped, and the visitor is treated like anybody else.
+      deleteCookie(TOKEN_KEY);
+    }
+    // No account session: nothing is seeded. The visitor gets the whole “Explore as Guest”
+    // tour only after choosing it on /community (or coming back to it).
+    this.token.set(null);
+    this.currentUser.set(null);
+    this.profile.set(null);
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(GUEST_KEY) === '1') {
+      this.exploreAsGuest();
     }
   }
 
@@ -576,21 +634,162 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   /**
-   * "Explore as Guest" — opens the whole Community default profile (the founder's
+   * “Explore as Guest” — opens the whole Community default profile (the founder's
    * seeded member: journey, gallery, companions, circles, message book) without
    * creating an account session: no auth cookie or token is set, so
    * `isAuthenticated()` stays false and signing in remains possible at any time.
+   *
+   * This is the **only** member-facing entry into the seeded demo community (the Admin
+   * Console opens it for its own preview pages): signing in with Google or Facebook always
+   * starts a real session and clears the demo datasets.
    */
   exploreAsGuest(): void {
+    this.demoSession = true;
     this.initDefaultMember({ asGuest: true });
+    this.reloadCommunityData();
     this.guestBrowsing.set(true);
-    if (typeof localStorage !== 'undefined') localStorage.setItem(GUEST_KEY, '1');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(GUEST_KEY, '1');
+      localStorage.setItem(DEMO_COMMUNITY_KEY, '1');
+    }
   }
 
   /** Guest browsing ends the moment a real account session starts or the visitor logs out. */
   private exitGuestBrowsing(): void {
     this.guestBrowsing.set(false);
     if (typeof localStorage !== 'undefined') localStorage.removeItem(GUEST_KEY);
+  }
+
+  /**
+   * Opens the seeded community for the **Admin Console**.
+   *
+   * The console is a site-owner preview of the community: it manages the seeded members,
+   * posts, circles and notifications because `neverbeen-api` has no admin endpoints yet, so
+   * it is the one surface besides “Explore as Guest” that reads that data. It never signs
+   * anybody in and never puts a real member session aside — `AdminInsightsService` calls
+   * this when an admin page is opened.
+   */
+  openAdminConsolePreview(): void {
+    const token = this.token();
+    // A real member is signed in: their own (Web-API backed) data is what the console
+    // shows, exactly as it would for any other page.
+    if (token && !isDemoSessionToken(token)) return;
+    if (this.demoSession) return;
+    this.demoSession = true;
+    this.reloadCommunityData();
+  }
+
+  /**
+   * Enters a real (Web-API backed) member session in this page: guest browsing ends and
+   * every demo dataset — the seeded founder profile, demo companions, circles, journey
+   * feed, chats and notifications — is dropped from the page and from this browser.
+   */
+  private enterMemberSession(): void {
+    this.exitGuestBrowsing();
+    this.demoSession = false;
+    this.dropStoredDemoCommunity();
+    this.resetSessionCommunityData();
+  }
+
+  /**
+   * Restores the signed-in member when the page is opened with an auth cookie: the demo
+   * datasets are cleared, the saved session (when it belongs to a real member) is used and
+   * the profile is otherwise reloaded from `GET /api/profile/me`.
+   */
+  private startMemberSession(token: string): void {
+    this.enterMemberSession();
+    this.token.set(token);
+
+    const storedUser = this.loadJson<CurrentUser>(USER_KEY);
+    const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
+    // A profile left behind by the demo tour (or by an older build that seeded the
+    // founder profile for everybody) is never shown to a signed-in member.
+    const usableProfile = isSeedProfile(storedProfile) ? null : storedProfile;
+    const usableUser = isSeedProfile(storedUser) ? null : storedUser;
+
+    this.currentUser.set(usableUser ?? (usableProfile ? this.currentUserFromProfile(usableProfile) : null));
+    this.profile.set(usableProfile);
+    if (usableProfile) {
+      this.saveJson(PROFILE_KEY, usableProfile);
+    } else if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(PROFILE_KEY);
+    }
+    // No local record of this member: the database is the only source of their profile.
+    if (!usableProfile) void this.refreshProfileFromApi();
+  }
+
+  /** `CurrentUser` view of a stored profile (used when only the profile survived). */
+  private currentUserFromProfile(p: Profile): CurrentUser {
+    return {
+      id: p.id,
+      uniqueId: p.uniqueId,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      fullName: p.fullName,
+      email: p.email,
+      status: p.status ?? 'Active',
+      profileComplete: true,
+      profilePhotoUrl: p.profilePhotoUrl,
+      coverPhotoUrl: p.coverPhotoUrl,
+      activeStatus: p.activeStatus,
+      customStatusText: p.customStatusText,
+      isProfileLocked: p.isProfileLocked,
+      isVerified: p.isVerified,
+      verifiedEmail: p.verifiedEmail,
+      verificationType: p.verificationType,
+    };
+  }
+
+  /**
+   * (Re)reads every community dataset for the current session. The loaders decide what
+   * that is: the seeded guest-tour data while `demoSession` is set, and otherwise only
+   * what this browser holds for the signed-in member (usually nothing — the Web API is
+   * the source of truth for a real member).
+   */
+  private reloadCommunityData(): void {
+    this.comments.set(this.loadComments());
+    this.journeyPosts.set(this.loadJourneyPosts());
+    this.companions.set(this.loadCompanions());
+    this.follows.set(this.loadFollows());
+    this.circles.set(this.loadCircles());
+    this.circleReads.set(this.loadCircleReads());
+    this.devices.set(this.loadDevices());
+    this.notifications.set(this.loadNotifications());
+    this.pendingChats.set(this.loadPendingChats());
+    this.blockedUserIds.set(this.loadBlockedUsers());
+    this.abuseReports.set(this.loadAbuseReports());
+    this.hiddenPostIds.set(this.loadHiddenPostIds());
+  }
+
+  /**
+   * Re-reads every community dataset for the session that is now open and drops the
+   * transient chat state of the previous one. With `demoSession` cleared the seed loaders
+   * return nothing but what this browser holds for the signed-in member, so nothing that
+   * came from the guest tour can survive a sign-in — or a sign-out.
+   */
+  private resetSessionCommunityData(): void {
+    this.reloadCommunityData();
+    this.activeChatBoxes.set([]);
+    this.circleActionError.set(null);
+    this.pendingCircleChatId.set(null);
+  }
+
+  /** Removes the demo community from this browser once a real member is signed in. */
+  private dropStoredDemoCommunity(): void {
+    if (typeof localStorage === 'undefined') return;
+    if (!CommunityService.demoCommunityStored()) return;
+    for (const key of DEMO_COMMUNITY_STORAGE_KEYS) localStorage.removeItem(key);
+  }
+
+  /** True when this browser still holds the seeded guest/demo community datasets. */
+  private static demoCommunityStored(): boolean {
+    if (typeof localStorage === 'undefined') return false;
+    return (
+      localStorage.getItem(DEMO_COMMUNITY_KEY) === '1' ||
+      localStorage.getItem(CIRCLES_SEED_VERSION_KEY) === CIRCLES_SEED_VERSION ||
+      localStorage.getItem(FOLLOWS_SEED_VERSION_KEY) === FOLLOWS_SEED_VERSION ||
+      localStorage.getItem(PENDING_CHATS_SEED_VERSION_KEY) === PENDING_CHATS_SEED_VERSION
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -744,8 +943,10 @@ export class CommunityService {
     return {
       ...(fallback ?? {}),
       id: dto.id,
-      firstName: words[0] || fallback?.firstName,
-      lastName: words.slice(1).join(' ') || fallback?.lastName,
+      // The stored FirstName / LastName columns win; splitting the full name is only the
+      // fallback for an API build that does not answer them yet.
+      firstName: dto.firstName?.trim() || words[0] || fallback?.firstName,
+      lastName: dto.lastName?.trim() || words.slice(1).join(' ') || fallback?.lastName,
       fullName: dto.fullName ?? fallback?.fullName ?? '',
       email: dto.email ?? fallback?.email ?? '',
       gender: dto.gender ?? fallback?.gender,
@@ -757,6 +958,8 @@ export class CommunityService {
       cityId: dto.cityId ?? fallback?.cityId,
       cityName: dto.cityName ?? fallback?.cityName,
       city: dto.cityName ?? fallback?.city,
+      // State / province — its own column on the member row.
+      state: dto.state?.trim() || fallback?.state,
       pincode: dto.pincode ?? fallback?.pincode,
       contactNumber: dto.contactNumber ?? fallback?.contactNumber,
       postalAddress: dto.postalAddress ?? fallback?.postalAddress,
@@ -996,6 +1199,8 @@ export class CommunityService {
 
   /** Stores the JWT + member returned by the Web API and loads the profile when it exists. */
   private async applyApiSession(dto: ApiAuthResult, provider: string): Promise<AuthResult> {
+    // A real NeverBeen account: the guest/demo community ends here.
+    this.enterMemberSession();
     setCookie(TOKEN_KEY, dto.token, 30);
     this.token.set(dto.token);
 
@@ -1049,161 +1254,54 @@ export class CommunityService {
     }
   }
 
-  async loginWithOAuth(
-    provider: 'google' | 'facebook' | string,
-    isExistingUserOrCode: boolean | string = false,
-  ): Promise<AuthResult> {
-    this.exitGuestBrowsing();
+  /**
+   * Signs a member in with one of the OAuth providers.
+   *
+   * With a real authorization `code` the Web API performs the exchange, creates / loads the
+   * member row and mints the JWT; without one (the sandbox preview, where the provider SDK
+   * cannot hand a code over) the app can only prepare the registration form — it never
+   * invents an account, so no demo profile or demo community data is ever shown here.
+   */
+  async loginWithOAuth(provider: 'google' | 'facebook' | string, code = ''): Promise<AuthResult> {
+    // Every sign-in leaves guest browsing behind: the demo community is dropped before the
+    // member's own profile (from the API, or from this browser's saved session) is put in
+    // place.
+    this.enterMemberSession();
 
-    // A string second argument is the OAuth **authorization code** the provider appended to
-    // `/auth/callback?code=…`. A real code is exchanged for a JWT by the Web API, which also
-    // creates the "Pending" member row that the registration page later completes. Only the
-    // sandbox preview's `mock_code_…` placeholders (and the demo buttons) take the local route.
-    if (
-      typeof isExistingUserOrCode === 'string' &&
-      isExistingUserOrCode.length > 0 &&
-      !isExistingUserOrCode.startsWith('mock_code_')
-    ) {
-      const apiResult = await this.tryApiOauthLogin(provider, isExistingUserOrCode);
+    // A real code is exchanged for a JWT by the Web API, which also creates the "Pending"
+    // member row that the registration page later completes. Only the sandbox preview's
+    // `mock_code_…` placeholders take the local route below.
+    if (code.length > 0 && !code.startsWith('mock_code_')) {
+      const apiResult = await this.tryApiOauthLogin(provider, code);
       if (apiResult) return apiResult;
     }
 
-    const isExistingUser =
-      typeof isExistingUserOrCode === 'boolean' ? isExistingUserOrCode : false;
-    const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
+    // No identity could be verified (no API, no code): the member types their own details on
+    // the registration form. Nothing about them is guessed or seeded.
+    const pendingUser: CurrentUser = {
+      id: generateUniqueId(),
+      firstName: '',
+      lastName: '',
+      fullName: '',
+      email: '',
+      status: 'Pending',
+      profileComplete: false,
+      profilePhotoUrl: '',
+    };
+    this.token.set(null);
+    this.currentUser.set(pendingUser);
+    this.profile.set(null);
+    this.saveJson(USER_KEY, pendingUser);
 
-    if (isExistingUser) {
-      setCookie(TOKEN_KEY, token, 30);
-      const existingUser: CurrentUser = {
-        id: 1,
-        firstName: 'Kingshuk',
-        lastName: '',
-        fullName: 'Kingshuk',
-        email: `kingshuk.${provider.toLowerCase()}@neverbeen.example`,
-        status: 'Active',
-        profileComplete: true,
-        profilePhotoUrl: '/author.jpeg',
-        activeStatus: 'Active',
-        customStatusText: '',
-        isProfileLocked: false,
-        isVerified: false,
-        verificationType: null,
-        verifiedEmail: undefined,
-      };
-
-      const existingProfile: Profile = {
-        id: 1,
-        firstName: 'Kingshuk',
-        lastName: '',
-        fullName: 'Kingshuk',
-        email: `kingshuk.${provider.toLowerCase()}@neverbeen.example`,
-        gender: 'Male',
-        dateOfBirth: '1987-07-02',
-        age: 39,
-        country: 'India',
-        countryId: 101,
-        countryName: 'India',
-        state: 'West Bengal',
-        city: 'Kolkata',
-        cityId: 700001,
-        cityName: 'Kolkata',
-        pincode: '700107',
-        contactNumber: '+91 98300 12345',
-        postalAddress: 'Salt Lake City, Kolkata, West Bengal, 700107',
-        aboutMe:
-          'Senior Software Engineer and founder of NeverBeen. I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.',
-        profession: 'Senior Software Engineer and founder of NeverBeen',
-        status: 'Active',
-        profilePhotoUrl: '/author.jpeg',
-        coverPhotoUrl:
-          'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80&uid=founder',
-        createdAtUtc: '2026-01-01T00:00:00Z',
-        activeStatus: 'Active',
-        customStatusText: '',
-        isProfileLocked: false,
-        isVerified: false,
-        verificationType: null,
-        verifiedEmail: undefined,
-        gallery: [
-          {
-            id: 101,
-            url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80',
-            caption: 'Morning light on Parisian balconies',
-            createdAtUtc: '2026-08-15T09:00:00Z',
-          },
-          {
-            id: 102,
-            url: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80',
-            caption: 'Courtyard architecture at dusk',
-            createdAtUtc: '2026-08-22T18:30:00Z',
-          },
-          {
-            id: 103,
-            url: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=800&q=80',
-            caption: 'Sunset over Champ de Mars',
-            createdAtUtc: '2026-09-02T19:15:00Z',
-          },
-        ],
-        commentCount: 3,
-        settings: {
-          emailNotificationsEnabled: true,
-          phoneNotificationsEnabled: false,
-          publicProfileEnabled: true,
-          theme: 'light',
-          timezone: 'Asia/Kolkata',
-          isProfileLocked: false,
-          whoCanMessage: 'everyone',
-          searchVisibility: true,
-          journeyVisibility: 'public',
-          soundNotificationsEnabled: true,
-          twoFactorEnabled: false,
-          travelStyles: ['Generative AI', 'Architecture & Heritage', 'Solo Exploration'],
-          preferredSeason: 'Winter & Autumn',
-        },
-      };
-
-      this.token.set(token);
-      this.currentUser.set(existingUser);
-      this.profile.set(existingProfile);
-      this.saveJson(USER_KEY, existingUser);
-      this.saveJson(PROFILE_KEY, existingProfile);
-
-      return {
-        token,
-        tokenType: 'Bearer',
-        expiresIn: 2592000,
-        isNewUser: false,
-        profileComplete: true,
-        message: `Signed in successfully via ${provider}.`,
-        user: existingUser,
-      };
-    } else {
-      // New member: not registered yet
-      const newUser: CurrentUser = {
-        id: generateUniqueId(),
-        firstName: '',
-        lastName: '',
-        fullName: '',
-        email: `traveler.${provider.toLowerCase()}@neverbeen.example`,
-        status: 'Pending',
-        profileComplete: false,
-        profilePhotoUrl: '',
-      };
-      this.token.set(null);
-      this.currentUser.set(newUser);
-      this.profile.set(null);
-      this.saveJson(USER_KEY, newUser);
-
-      return {
-        token: '',
-        tokenType: 'Bearer',
-        expiresIn: 0,
-        isNewUser: true,
-        profileComplete: false,
-        message: 'New member detected, registration required.',
-        user: newUser,
-      };
-    }
+    return {
+      token: '',
+      tokenType: 'Bearer',
+      expiresIn: 0,
+      isNewUser: true,
+      profileComplete: false,
+      message: 'New member detected, registration required.',
+      user: pendingUser,
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -1416,6 +1514,9 @@ export class CommunityService {
    *    email, photo from the provider) and the registration form.
    */
   private completeSocialSignIn(p: SocialSignInParams): AuthResult {
+    // The Google / Facebook account is real: drop the demo community before the member's
+    // own profile (when this browser already knows it) is restored.
+    this.enterMemberSession();
     this.saveJson(p.storageKey, {
       ref: p.accountRef,
       email: p.email,
@@ -1424,8 +1525,10 @@ export class CommunityService {
       signedInAtUtc: new Date().toISOString(),
     });
 
+    // A profile seeded by the demo tour never counts as this member's own profile.
     const storedProfile = this.loadJson<Profile>(PROFILE_KEY);
     const sameEmail =
+      !isSeedProfile(storedProfile) &&
       !!storedProfile?.email &&
       storedProfile.email.toLowerCase() === p.email.toLowerCase();
 
@@ -1686,9 +1789,17 @@ export class CommunityService {
     }
   }
 
-  loginAsDemoUser(mode: 'new_pending' | 'active_member'): void {
+  /**
+   * Test-only: opens one of the two make-believe accounts of the seeded demo community
+   * (an active “founder” member or a brand-new pending one). It is **not reachable from the
+   * application** — the product's only entry into the demo data is `exploreAsGuest()`; the
+   * specs reach this method through `community-demo.testing.ts`.
+   */
+  private openDemoAccount(mode: 'new_pending' | 'active_member'): void {
     this.exitGuestBrowsing();
+    this.demoSession = true;
     if (mode === 'new_pending') {
+      this.reloadCommunityData();
       const pendingUser: CurrentUser = {
         id: 99,
         firstName: 'Alex',
@@ -1710,8 +1821,9 @@ export class CommunityService {
         localStorage.removeItem(PROFILE_KEY);
       }
     } else {
-      setCookie(TOKEN_KEY, 'jwt_default_active_token', 30);
+      setCookie(TOKEN_KEY, DEMO_SESSION_TOKEN, 30);
       this.initDefaultMember();
+      this.reloadCommunityData();
     }
   }
 
@@ -1730,15 +1842,12 @@ export class CommunityService {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(PROFILE_KEY);
-      localStorage.removeItem(COMMENTS_KEY);
-      localStorage.removeItem(JOURNEY_KEY);
-      localStorage.removeItem(COMPANIONS_KEY);
-      localStorage.removeItem(CIRCLES_KEY);
-      localStorage.removeItem(NOTIFS_KEY);
-      localStorage.removeItem(PENDING_CHATS_KEY);
-      localStorage.removeItem(PENDING_CHATS_SEED_VERSION_KEY);
+      for (const key of DEMO_COMMUNITY_STORAGE_KEYS) localStorage.removeItem(key);
     }
-    this.pendingChats.set([]);
+    // Signed out again: the community is empty until somebody signs in or takes the
+    // “Explore as Guest” tour — no dataset of the session that just ended is left behind.
+    this.demoSession = false;
+    this.resetSessionCommunityData();
   }
 
   // ---------------------------------------------------------------------------
@@ -1845,6 +1954,12 @@ export class CommunityService {
 
     const form = new FormData();
     form.append('fullName', `${data.name} ${data.surname}`.trim());
+    // First name, last name and state are stored as their own columns on the member row
+    // (Users.FirstName / LastName / State), so they are posted next to the full name
+    // instead of only being folded into it. Form binding is case-insensitive.
+    form.append('firstName', data.name.trim());
+    form.append('lastName', data.surname.trim());
+    form.append('state', data.state.trim());
     form.append('gender', data.gender);
     form.append('dateOfBirth', data.dateOfBirth);
     form.append('countryId', String(countryId));
@@ -1863,7 +1978,14 @@ export class CommunityService {
         ),
       );
 
-      const profile = this.profileFromApi(dto, { state: data.state });
+      // The profile the API stored is the one shown: it carries the names and the state
+      // the member typed (the fallback only covers an API build that does not answer
+      // them yet — see docs/patches/neverbeen-api-registration-names-state.patch).
+      const profile = this.profileFromApi(dto, {
+        firstName: data.name,
+        lastName: data.surname,
+        state: data.state,
+      });
       this.profile.set(profile);
       this.saveJson(PROFILE_KEY, profile);
 
@@ -1909,6 +2031,7 @@ export class CommunityService {
   /** Browser-only account creation used while the Web API cannot be reached. */
   private createLocalAccount(data: CreateAccountData): Profile {
     const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
+    this.enterMemberSession();
     setCookie(TOKEN_KEY, token, 30);
 
     const countryObj = this.countries().find(
@@ -1967,32 +2090,6 @@ export class CommunityService {
     return newProfile;
   }
 
-  async registerUser(formData: FormData): Promise<Profile> {
-    const name = (formData.get('name') as string) || (formData.get('fullName') as string) || 'Alex';
-    const surname = (formData.get('surname') as string) || 'Vance';
-    const email = (formData.get('email') as string) || 'alex.vance@example.com';
-    const country = (formData.get('country') as string) || 'France';
-    const state = (formData.get('state') as string) || 'Île-de-France';
-    const city = (formData.get('city') as string) || 'Paris';
-    const gender = (formData.get('gender') as string) || 'Other';
-    const dateOfBirth = (formData.get('dateOfBirth') as string) || '1995-05-15';
-    const photoUrl =
-      (formData.get('photoUrl') as string) ||
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
-
-    return this.createNeverbeenAccount({
-      name,
-      surname,
-      email,
-      country,
-      state,
-      city,
-      gender,
-      dateOfBirth,
-      photoUrl,
-    });
-  }
-
   // ---------------------------------------------------------------------------
   // Profile
   // ---------------------------------------------------------------------------
@@ -2008,6 +2105,12 @@ export class CommunityService {
     const updated: Profile = {
       ...current,
       fullName: req.fullName ?? current.fullName,
+      // First name, last name and state are the member's own columns on the row — an edit
+      // that carries them is stored as it was typed, and only then is the full name used to
+      // derive what the caller left out.
+      firstName: req.firstName?.trim() || splitFullName(req.fullName).firstName || current.firstName,
+      lastName: req.lastName?.trim() || splitFullName(req.fullName).lastName || current.lastName,
+      state: req.state?.trim() ?? current.state,
       gender: req.gender ?? current.gender,
       dateOfBirth: req.dateOfBirth ?? current.dateOfBirth,
       countryId: req.countryId ?? current.countryId,
@@ -2026,6 +2129,18 @@ export class CommunityService {
 
     this.profile.set(updated);
     this.saveJson(PROFILE_KEY, updated);
+    // The header / sidebar greet the member by the same names the profile now carries.
+    this.currentUser.update((u) =>
+      u
+        ? {
+            ...u,
+            fullName: updated.fullName,
+            firstName: updated.firstName,
+            lastName: updated.lastName,
+          }
+        : null,
+    );
+    this.saveJson(USER_KEY, this.currentUser());
     return updated;
   }
 
@@ -4109,7 +4224,7 @@ export class CommunityService {
     };
 
     // Guests get the same whole default profile, but never an account session.
-    this.token.set(options.asGuest ? null : 'jwt_default_active_token');
+    this.token.set(options.asGuest ? null : DEMO_SESSION_TOKEN);
     this.currentUser.set(defaultUser);
     this.profile.set(defaultProfile);
     if (!options.asGuest) {
@@ -4121,6 +4236,9 @@ export class CommunityService {
   private loadComments(): CommunityComment[] {
     const saved = this.loadJson<CommunityComment[]>(COMMENTS_KEY);
     if (saved && saved.length > 0) return saved;
+    // The seeded Message Book belongs to the guest tour only — a signed-in member starts
+    // with an empty one until the Web API returns their own conversations.
+    if (!this.demoSession) return [];
 
     const marcoAuthor: AuthorInfo = {
       id: 12,
@@ -4184,6 +4302,8 @@ export class CommunityService {
 
   private loadJourneyPosts(): JourneyPost[] {
     const saved = this.loadJson<JourneyPost[]>(JOURNEY_KEY);
+    // A signed-in member sees their own posts only (no seeded travellers in the feed).
+    if (!this.demoSession) return saved ?? [];
     const baseList: JourneyPost[] = this.getBaseSeedJourneyPosts();
 
     let merged: JourneyPost[] = [];
@@ -4519,9 +4639,12 @@ export class CommunityService {
   }
 
   private loadFollows(): Record<string, number[]> {
+    const saved = this.loadJson<Record<string, number[]>>(FOLLOWS_KEY);
+    if (!this.demoSession) {
+      return saved && typeof saved === 'object' ? saved : {};
+    }
     if (typeof localStorage !== 'undefined') {
       const version = localStorage.getItem(FOLLOWS_SEED_VERSION_KEY);
-      const saved = this.loadJson<Record<string, number[]>>(FOLLOWS_KEY);
       if (version === FOLLOWS_SEED_VERSION && saved && typeof saved === 'object') {
         return saved;
       }
@@ -4648,6 +4771,14 @@ export class CommunityService {
 
   private loadCompanions(): Companion[] {
     const saved = this.loadJson<Companion[]>(COMPANIONS_KEY);
+    // Signed-in members get their real companions from the Web API — never the seeded
+    // directory of demo travellers.
+    if (!this.demoSession) {
+      return (saved ?? []).map((c) => ({
+        ...c,
+        uniqueId: c.uniqueId || generate20DigitUid(c.id),
+      }));
+    }
     const baseList: Companion[] = this.getDefaultSeedCompanions();
 
     let merged: Companion[] = [];
@@ -5095,9 +5226,14 @@ export class CommunityService {
   }
 
   private loadCircles(): Circle[] {
+    const saved = this.loadJson<Circle[]>(CIRCLES_KEY);
+    // A signed-in member sees only circles they really own or belong to — the seeded
+    // travel circles stay in the guest tour.
+    if (!this.demoSession) {
+      return (saved ?? []).map((c) => normalizeCircle(c));
+    }
     const version =
       typeof localStorage !== 'undefined' ? localStorage.getItem(CIRCLES_SEED_VERSION_KEY) : null;
-    const saved = this.loadJson<Circle[]>(CIRCLES_KEY);
     if (version === CIRCLES_SEED_VERSION && saved && saved.length > 0) {
       return saved.map((c) => normalizeCircle(c));
     }
@@ -5110,8 +5246,10 @@ export class CommunityService {
   }
 
   private loadPendingChats(): PendingChat[] {
-    const version = typeof localStorage !== 'undefined' ? localStorage.getItem(PENDING_CHATS_SEED_VERSION_KEY) : null;
     const saved = this.loadJson<PendingChat[]>(PENDING_CHATS_KEY);
+    // No dummy conversations for a signed-in member — their own threads come from the API.
+    if (!this.demoSession) return saved ?? [];
+    const version = typeof localStorage !== 'undefined' ? localStorage.getItem(PENDING_CHATS_SEED_VERSION_KEY) : null;
     if (version === PENDING_CHATS_SEED_VERSION && saved) return saved;
     const seed = this.buildPendingChatSeed();
     this.saveJson(PENDING_CHATS_KEY, seed);
@@ -5147,6 +5285,9 @@ export class CommunityService {
   private loadNotifications(): NotificationItem[] {
     const saved = this.loadJson<NotificationItem[]>(NOTIFS_KEY);
     if (saved && saved.length > 0) return saved;
+    // The three seeded notices (Maya's request, Marco's like, Elena's comment) are part of
+    // the guest tour; a signed-in member's notifications come from the community itself.
+    if (!this.demoSession) return [];
 
     return [
       {
@@ -5298,9 +5439,17 @@ export class CommunityService {
       );
       return hasCurrent ? next : [detected, ...next].slice(0, 16);
     }
+    // A signed-in member sees only the device they are really using: the previous
+    // sessions in the seed (other phones, tablets, IP addresses) are demo data.
+    if (!this.demoSession) return [this.anonymisedDevice(detected)];
     const seed = this.seedDevices(detected);
     this.saveJson(DEVICES_KEY, seed);
     return seed;
+  }
+
+  /** The member's own device, without the invented IP address / MAC / location. */
+  private anonymisedDevice(device: LoginDevice): LoginDevice {
+    return { ...device, ipAddress: '', macAddress: '', location: '' };
   }
 
   private detectCurrentDevice(): LoginDevice {

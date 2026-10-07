@@ -15,6 +15,7 @@ import { AnnouncementInboxService, ANNOUNCEMENT_INBOX_KEY, viewerProfile } from 
 import { CommunityProfile } from '../community/profile/profile';
 import { AdminAnnouncementComposer } from './announcements/announcement-composer';
 import { CommunityService, TOKEN_KEY, deleteCookie } from '../../services/community.service';
+import { openDemoAccount } from '../../services/community-demo.testing';
 
 @Component({ template: '' })
 class Blank {}
@@ -405,7 +406,7 @@ describe('Admin › User Management insights (A–E) and announcements in Notifi
     await TestBed.configureTestingModule({ imports: [CommunityProfile], providers: [provideRouter([])] }).compileComponents();
     await TestBed.inject(AnnouncementsService).ready;
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    TestBed.inject(CommunityService).loginAsDemoUser('active_member');
+    openDemoAccount(TestBed.inject(CommunityService), 'active_member');
     const fixture = TestBed.createComponent(CommunityProfile);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
@@ -422,7 +423,7 @@ describe('Admin › User Management insights (A–E) and announcements in Notifi
     await ann.ready;
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     const community = TestBed.inject(CommunityService);
-    community.loginAsDemoUser('active_member');
+    openDemoAccount(community, 'active_member');
     const inbox = TestBed.inject(AnnouncementInboxService);
     const viewer = viewerProfile(community.currentUser(), community.profile() as never)!;
     const expected = inbox.noticesFor(viewer);

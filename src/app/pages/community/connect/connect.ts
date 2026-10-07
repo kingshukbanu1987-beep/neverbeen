@@ -32,7 +32,6 @@ export class CommunityConnect implements OnInit {
     return this.cms.flag('community.connect', field);
   }
 
-  protected readonly simulateExisting = signal(false);
   protected readonly loadingProvider = signal<string | null>(null);
   /** Set when Google skipped One-Tap and the official button panel must show. */
   protected readonly googleManualStep = signal<GoogleButtonStep | null>(null);
@@ -44,10 +43,6 @@ export class CommunityConnect implements OnInit {
     if (this.service.isAuthenticated() && this.service.profile()) {
       this.router.navigate(['/community/profile']);
     }
-  }
-
-  setSimulationMode(isExisting: boolean): void {
-    this.simulateExisting.set(isExisting);
   }
 
   /** Enter the whole Community default profile without creating an account. */
@@ -131,7 +126,9 @@ export class CommunityConnect implements OnInit {
         // step === 'unavailable' → SDK blocked/unreachable: preview fallback below.
       }
 
-      const res = await this.service.loginWithOAuth(provider, this.simulateExisting());
+      // No verified provider identity (preview / SDK unreachable): the app only opens the
+      // registration form — it never fabricates an account or demo data.
+      const res = await this.service.loginWithOAuth(provider);
       if (res.profileComplete) {
         this.router.navigate(['/community/profile']);
       } else {

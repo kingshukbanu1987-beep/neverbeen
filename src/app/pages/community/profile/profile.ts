@@ -34,7 +34,7 @@ import {
   UserReaction,
   WorkExperience,
 } from '../../../models/community';
-import { CommunityService, PendingChat } from '../../../services/community.service';
+import { CommunityService, PendingChat, splitFullName } from '../../../services/community.service';
 import { SiteConfigService } from '../../../services/site-config.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
 import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
@@ -772,29 +772,40 @@ export class CommunityProfile implements OnInit {
 
   readonly suggestedCompanions = computed(() => {
     const myProfile = this.service.profile();
-    const myCity = (myProfile?.city || 'Kolkata').toLowerCase();
-    const myCountry = (myProfile?.country || 'India').toLowerCase();
+    // The member's own city / country decide the suggestions — nothing is assumed about
+    // them, and a member whose profile is still loading matches on mutual companions only.
+    const myCity = (myProfile?.city || '').toLowerCase();
+    const myCountry = (myProfile?.country || '').toLowerCase();
 
     return this.service
       .visibleCompanions()
       .filter((c) => {
-        if (c.id === (myProfile?.id || 1)) return false;
+        if (myProfile && c.id === myProfile.id) return false;
         if (c.status === 'connected' || c.status === 'pending_incoming') return false;
 
         const city = (c.city || '').toLowerCase();
         const country = (c.country || '').toLowerCase();
 
         const inMyArea =
-          city.includes(myCity) ||
-          city.includes('kolkata') ||
-          city.includes('west bengal') ||
-          (city.length > 0 && country === myCountry);
+          (!!myCity && city.includes(myCity)) || (!!myCountry && country === myCountry);
 
         const hasMutual = this.getMutualCompanionsCount(c.id) > 0;
         return inMyArea || hasMutual;
       })
       .slice(0, 48);
   });
+
+  /**
+   * No companions in any group — requests, companions, suggestions or pending requests.
+   * The Companion section then shows a “Nothing here yet” card instead of empty groups.
+   */
+  readonly companionsDirectoryEmpty = computed(
+    () =>
+      this.incomingRequests().length === 0 &&
+      this.connectedCompanions().length === 0 &&
+      this.suggestedCompanions().length === 0 &&
+      this.pendingOutgoingCompanions().length === 0,
+  );
 
   readonly totalCompanionsCount = computed(() => this.connectedCompanions().length);
 
@@ -2994,8 +3005,15 @@ export class CommunityProfile implements OnInit {
   async saveDetails(): Promise<void> {
     if (this.editForm.invalid) return;
     const v = this.editForm.getRawValue();
+    // The form collects one full name plus the location cascade: the first / last name are
+    // derived from it (the same rule the API applies) and the typed state is stored on the
+    // member's row instead of being dropped.
+    const names = splitFullName(v.fullName);
     await this.service.updateProfile({
       fullName: v.fullName ?? undefined,
+      firstName: names.firstName || undefined,
+      lastName: names.lastName || undefined,
+      state: v.state ?? undefined,
       gender: v.gender ?? undefined,
       dateOfBirth: v.dateOfBirth ?? undefined,
       aboutMe: v.aboutMe ?? undefined,

@@ -4,6 +4,7 @@ import { Router, provideRouter } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { COMMUNITY_THEMES, COMMUNITY_THEME_KEY, CommunityThemeService, communityTheme, communityThemeArtwork } from './community-themes';
 import { CommunityService, TOKEN_KEY, deleteCookie } from '../../services/community.service';
+import { openDemoAccount } from '../../services/community-demo.testing';
 
 @Component({ template: '' })
 class Blank {}
@@ -268,7 +269,7 @@ describe('Community theme dropdown', () => {
     const { el, fixture } = await navbarAt('/community/profile');
     const community = TestBed.inject(CommunityService);
     const themes = TestBed.inject(CommunityThemeService);
-    community.loginAsDemoUser('active_member');
+    openDemoAccount(community, 'active_member');
     const id = String(community.currentUser()!.id);
     fixture.detectChanges();
 
@@ -286,7 +287,7 @@ describe('Community theme dropdown', () => {
     expect(root().hasAttribute('data-ctheme')).toBe(false);
     expect(text(el.querySelector('.ctp-trigger'))).toContain('Default');
 
-    community.loginAsDemoUser('active_member');
+    openDemoAccount(community, 'active_member');
     fixture.detectChanges();
     expect(root().getAttribute('data-ctheme')).toBe('cherry-blossom');
   });

@@ -7,6 +7,7 @@ import { AnnouncementsService, ANNOUNCEMENTS_KEY, emptyAudience, matchesAudience
 import { viewerProfile } from '../../services/announcement-inbox.service';
 import { CommunityProfile } from '../community/profile/profile';
 import { CommunityService, TOKEN_KEY, deleteCookie } from '../../services/community.service';
+import { openDemoAccount } from '../../services/community-demo.testing';
 
 const $ = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => Array.from(root.querySelectorAll<T>(sel));
@@ -110,7 +111,7 @@ describe('Admin › Find a user rows (A) and announcements reaching Notification
     const community = TestBed.inject(CommunityService);
     const insights = TestBed.inject(AdminInsightsService);
     const before = insights.members().length;
-    community.loginAsDemoUser('active_member');
+    openDemoAccount(community, 'active_member');
     const me = community.currentUser()!;
     const member = insights.member(me.id);
     expect(member).toBeTruthy();
@@ -134,7 +135,7 @@ describe('Admin › Find a user rows (A) and announcements reaching Notification
     const svc = TestBed.inject(AnnouncementsService);
     await svc.ready;
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    TestBed.inject(CommunityService).loginAsDemoUser('active_member');
+    openDemoAccount(TestBed.inject(CommunityService), 'active_member');
     const fixture = TestBed.createComponent(CommunityProfile);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
