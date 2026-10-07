@@ -271,6 +271,11 @@ same-origin, and both the dev server and the Cloudflare Worker forward it to the
 Point `apiBaseUrl` (or the Worker's `NEVERBEEN_API_URL`) at another host when the API moves; the
 site never needs CORS changes because the browser only ever calls its own origin.
 
+To develop against a neverbeen-api instance running on your own machine
+(`dotnet run --project NeverBeen.API.csproj --launch-profile http` → `http://localhost:5080`),
+change the `/neverbeen-api` target in `proxy.conf.json` to `http://localhost:5080` and keep the
+`pathRewrite` entry.
+
 ### Member sign-up (Create Neverbeen Account)
 
 Signing up a new member is a two-step round trip to the Web API, and the browser only shows the
