@@ -3,6 +3,12 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { AiModelPortfolioPage } from '../ai-model-portfolio';
+import {
+  ModelBookingService,
+  formatInr,
+  serviceTaxFor,
+  validateBookingCoupon,
+} from '../../../services/model-booking.service';
 
 const testRoutes = [{ path: 'ai-models/:slug', component: AiModelPortfolioPage }];
 
@@ -42,7 +48,15 @@ function futureIsoDate(offsetDays: number): string {
 }
 
 describe('Rent this model', () => {
+  let opened: string[];
+
   beforeEach(async () => {
+    opened = [];
+    vi.spyOn(window, 'open').mockImplementation((url?: string | URL | null) => {
+      opened.push(String(url));
+      return null;
+    });
+
     await TestBed.configureTestingModule({
       imports: [AiModelPortfolioPage],
       providers: [provideRouter(testRoutes)],
@@ -50,6 +64,7 @@ describe('Rent this model', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     document.body.style.overflow = '';
   });
@@ -66,6 +81,7 @@ describe('Rent this model', () => {
     expect(panel.textContent).toContain('Rate per Photo');
     expect(panel.querySelector('.calendar')?.textContent).toBeTruthy();
     expect(panel.querySelectorAll('.rate-card').length).toBeGreaterThan(0);
+    expect(panel.querySelector('.booking-submit')?.textContent).toContain('Submit Order');
     expect(document.body.style.overflow).toBe('hidden');
   });
 
@@ -94,6 +110,7 @@ describe('Rent this model', () => {
     expect(panel.querySelector('.rate-per-photo')?.textContent).toContain(
       `₹${NOURHAN.photoRate.toLocaleString('en-IN')}`,
     );
+    expect(formatInr(687.5)).toBe('₹687.50');
 
     const rateCards = Array.from(panel.querySelectorAll<HTMLButtonElement>('.rate-card'));
     expect(rateCards.length).toBe(5);
@@ -111,23 +128,31 @@ describe('Rent this model', () => {
     expect(custom.textContent).toContain('On request');
     expect(custom.classList.contains('is-custom')).toBe(true);
 
-    // The minimum package is selected by default and drives the total.
-    expect(panel.querySelector('.booking-total')?.textContent).toContain(
-      `₹${(10 * NOURHAN.photoRate).toLocaleString('en-IN')}`,
-    );
+    // The 25-photo editorial package is selected by default, with 5% service tax in the total.
+    expect(rateCards[1].classList.contains('is-active')).toBe(true);
+    const defaultSubtotal = 25 * NOURHAN.photoRate;
+    const defaultTax = serviceTaxFor(defaultSubtotal);
+    const priceSummary = panel.querySelector('.booking-pricing')?.textContent ?? '';
+    expect(priceSummary).toContain('Subtotal · 25 photographs');
+    expect(priceSummary).toContain(formatInr(defaultSubtotal));
+    expect(priceSummary).toContain('Service tax (5%)');
+    expect(priceSummary).toContain(formatInr(defaultTax));
+    expect(priceSummary).toContain(formatInr(defaultSubtotal + defaultTax));
 
-    // Choosing a larger package updates the selection and the total.
+    // Choosing a larger package updates the subtotal and tax-inclusive final total.
     rateCards[2].click();
     tick(harness);
     expect(rateCards[2].classList.contains('is-active')).toBe(true);
-    expect(panel.querySelector('.booking-total')?.textContent).toContain(
-      `₹${(50 * NOURHAN.photoRate).toLocaleString('en-IN')}`,
+    const largerSubtotal = 50 * NOURHAN.photoRate;
+    expect(panel.querySelector('.booking-pricing')?.textContent).toContain(
+      formatInr(largerSubtotal + serviceTaxFor(largerSubtotal)),
     );
 
-    // The customized order asks for a quote instead of showing a price.
+    // The customized order asks for a quote and disables coupons until a priced package is selected.
     rateCards[4].click();
     tick(harness);
-    expect(panel.querySelector('.booking-total')?.textContent).toContain('Selective charge');
+    expect(panel.querySelector('.booking-pricing')?.textContent).toContain('Selective charge');
+    expect(panel.querySelector<HTMLInputElement>('#booking-coupon-code')?.disabled).toBe(true);
   });
 
   it('renders a delivery-date calendar that blocks past dates and records the choice', async () => {
@@ -180,44 +205,22 @@ describe('Rent this model', () => {
     expect(panel.querySelector('.calendar-month')?.textContent?.trim()).toBe(before);
   });
 
-  it('sends the model details and the booking information to the studio endpoint', async () => {
-    const calls: { url: string; body: any }[] = [];
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (url: string, init: any) => {
-        calls.push({ url: String(url), body: JSON.parse(init.body) });
-        return new Response(
-          JSON.stringify({
-            ok: true,
-            delivered: true,
-            channel: 'whatsapp',
-            reference: 'NB-T3ST99',
-            message: 'Your request is on its way to the studio.',
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        );
-      }),
-    );
-
+  it('opens a prefilled WhatsApp booking addressed to the founder', async () => {
     const { harness, element } = await openDialog();
     const panel = dialog(element);
     const target = futureIsoDate(5);
 
-    // Package, delivery date and contact details.
     panel.querySelectorAll<HTMLButtonElement>('.rate-card')[2].click();
     panel.querySelector<HTMLButtonElement>(`.calendar-day[data-date="${target}"]`)!.click();
     tick(harness);
 
-    const inputs = panel.querySelectorAll<HTMLInputElement>('.field input');
     const setInput = (controlName: string, value: string) => {
-      const input =
-        Array.from(inputs).find((field) => field.getAttribute('formcontrolname') === controlName) ??
-        Array.from(
-          panel.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea'),
-        ).find((field) => field.getAttribute('formcontrolname') === controlName);
-      expect(input, `field ${controlName}`).toBeTruthy();
-      input!.value = value;
-      input!.dispatchEvent(new Event('input'));
+      const field = Array.from(
+        panel.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea'),
+      ).find((input) => input.getAttribute('formcontrolname') === controlName);
+      expect(field, `field ${controlName}`).toBeTruthy();
+      field!.value = value;
+      field!.dispatchEvent(new Event('input'));
     };
 
     setInput('name', 'Ada Lovelace');
@@ -227,108 +230,185 @@ describe('Rent this model', () => {
     setInput('location', 'Kuala Lumpur');
     setInput('usage', 'Digital, 12 months');
     setInput('notes', 'Morning light please.');
+    const couponInput = panel.querySelector<HTMLInputElement>('#booking-coupon-code')!;
+    couponInput.value = 'SPECIALREQUEST';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
     tick(harness);
 
     panel.querySelector<HTMLButtonElement>('.booking-submit')!.click();
-    await harness.fixture.whenStable();
     tick(harness);
 
-    expect(calls.length).toBe(1);
-    expect(calls[0].url).toBe('/api/model-booking');
+    expect(opened).toHaveLength(1);
+    const url = new URL(opened[0]);
+    expect(url.origin + url.pathname).toBe('https://wa.me/919051888116');
 
-    const body = calls[0].body;
-    expect(body.model.name).toBe('Nourhan Durrani');
-    expect(body.model.slug).toBe('nourhan-durrani');
-    expect(body.order.label).toBe('50 photographs');
-    expect(body.order.photos).toBe(50);
-    expect(body.order.ratePerPhoto).toBe(NOURHAN.photoRate);
-    expect(body.order.amount).toBe(50 * NOURHAN.photoRate);
-    expect(body.order.custom).toBe(false);
-    expect(body.booking.date).toBe(target);
-    expect(body.booking.project).toBeTruthy();
-    expect(body.booking.location).toBe('Kuala Lumpur');
-    expect(body.booking.usage).toBe('Digital, 12 months');
-    expect(body.booking.notes).toBe('Morning light please.');
-    expect(body.client).toEqual({
-      name: 'Ada Lovelace',
-      email: 'ada@studio.example',
-      phone: '+60 12 345 6789',
-      company: 'Studio X',
-    });
+    const message = url.searchParams.get('text') ?? '';
+    expect(message).toContain('New booking request — NeverBeen AI Models');
+    expect(message).toContain('Nourhan Durrani (@nourhan.durrani)');
+    expect(message).toContain('Portfolio: /ai-models/nourhan-durrani');
+    expect(message).toContain('50 photographs — Campaign set');
+    expect(message).toContain(`Rate: ${formatInr(NOURHAN.photoRate)} per photograph`);
+    const subtotal = 50 * NOURHAN.photoRate;
+    const discountedSubtotal = subtotal - 2000;
+    const serviceTax = serviceTaxFor(discountedSubtotal);
+    expect(message).toContain(`Subtotal before coupon: ${formatInr(subtotal)} INR`);
+    expect(message).toContain('Coupon: SPECIALREQUEST');
+    expect(message).toContain('Discount: -₹2,000 INR');
+    expect(message).toContain(`Subtotal: ${formatInr(discountedSubtotal)} INR`);
+    expect(message).toContain(`Service tax (5%): ${formatInr(serviceTax)} INR`);
+    expect(message).toContain(`Final total: ${formatInr(discountedSubtotal + serviceTax)} INR`);
+    expect(message).toContain(
+      new Intl.DateTimeFormat('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      }).format(new Date(`${target}T00:00:00Z`)),
+    );
+    expect(message).toContain('Ada Lovelace');
+    expect(message).toContain('ada@studio.example');
+    expect(message).toContain('+60 12 345 6789');
+    expect(message).toContain('Company: Studio X');
+    expect(message).toContain('Project: Editorial shoot');
+    expect(message).toContain('Shoot location: Kuala Lumpur');
+    expect(message).toContain('Usage / territory: Digital, 12 months');
+    expect(message).toContain('Notes: Morning light please.');
 
-    // Confirmation, with the reference the studio will quote.
     const done = element.querySelector('.booking-done');
-    expect(done?.textContent).toContain('Request sent to the studio');
-    expect(done?.textContent).toContain('NB-T3ST99');
+    expect(done?.textContent).toContain('Your booking message is ready in WhatsApp');
+    expect(done?.textContent).toContain('press Send in WhatsApp to submit it');
+    expect(done?.textContent).toContain('+91 90518 88116');
+    expect(done?.querySelector<HTMLAnchorElement>('a')?.href).toBe(opened[0]);
   });
 
-  it('blocks an incomplete submission before anything is sent', async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
-
+  it('blocks an incomplete submission before opening WhatsApp', async () => {
     const { harness, element } = await openDialog();
     const panel = dialog(element);
 
     panel.querySelector<HTMLButtonElement>('.booking-submit')!.click();
-    await harness.fixture.whenStable();
     tick(harness);
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(opened).toEqual([]);
     expect(panel.querySelector('.booking-error')?.textContent).toContain('missing');
     expect(element.querySelector('.booking-done')).toBeNull();
   });
 
-  it('explains when the studio has not connected WhatsApp yet', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(
-        async () =>
-          new Response(
-            JSON.stringify({
-              ok: false,
-              error: 'not-configured',
-              message: 'The studio booking channel is not connected yet.',
-            }),
-            { status: 503, headers: { 'content-type': 'application/json' } },
-          ),
-      ),
+  it('loads the coupon codes from JSON and treats the expiry date as inclusive in IST', () => {
+    expect(
+      validateBookingCoupon(' newtoneverbeen ', new Date('2027-12-31T18:29:59.999Z')),
+    ).toMatchObject({
+      status: 'valid',
+      coupon: { code: 'NEWTONEVERBEEN', discountInr: 1500, expiresOn: '2027-12-31' },
+    });
+    expect(
+      validateBookingCoupon('NEWTONEVERBEEN', new Date('2027-12-31T18:30:00.000Z')).status,
+    ).toBe('expired');
+    expect(validateBookingCoupon('FIRST', new Date('2026-10-07T12:00:00.000Z')).status).toBe(
+      'valid',
     );
+    expect(validateBookingCoupon('NOT-A-COUPON').status).toBe('unavailable');
+  });
 
+  it('applies the fixed discount to the subtotal before tax and shows the success message', async () => {
     const { harness, element } = await openDialog();
     const panel = dialog(element);
-    const setInput = (controlName: string, value: string) => {
-      const field = Array.from(panel.querySelectorAll<HTMLInputElement>('input')).find(
-        (input) => input.getAttribute('formcontrolname') === controlName,
-      );
-      field!.value = value;
-      field!.dispatchEvent(new Event('input'));
-    };
+    const couponInput = panel.querySelector<HTMLInputElement>('#booking-coupon-code')!;
+    couponInput.value = ' first ';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
+    tick(harness);
+
+    expect(panel.querySelector('.coupon-message')?.textContent?.trim()).toBe(
+      'Congratulations! Coupon Applied Successfully!',
+    );
+    expect(panel.querySelector('.coupon-message')?.classList.contains('is-success')).toBe(true);
+
+    const subtotal = 25 * NOURHAN.photoRate;
+    const discount = Math.min(500, subtotal);
+    const discountedSubtotal = subtotal - discount;
+    const tax = serviceTaxFor(discountedSubtotal);
+    const priceSummary = panel.querySelector<HTMLElement>('.booking-pricing');
+    expect(priceSummary).toBeTruthy();
+    const summary = priceSummary!;
+    const priceLines = Array.from(summary.querySelectorAll('.price-line'));
+    expect(priceLines).toHaveLength(4);
+    expect(priceLines[0].textContent).toContain('Subtotal before coupon · 25 photographs');
+    expect(priceLines[0].textContent).toContain(formatInr(subtotal));
+    expect(priceLines[1].textContent).toContain(`−${formatInr(discount)}`);
+    expect(priceLines[2].textContent).toContain(formatInr(discountedSubtotal));
+    expect(priceLines[3].textContent).toContain('Service tax (5%)');
+    expect(priceLines[3].textContent).toContain(formatInr(tax));
+    expect(summary.textContent).toContain(formatInr(discountedSubtotal + tax));
+
+    couponInput.value = 'NOT-A-COUPON';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
+    tick(harness);
+    expect(panel.querySelector('.coupon-message')?.textContent?.trim()).toBe(
+      'Coupon not available!',
+    );
+    expect(panel.querySelector('.price-discount')).toBeNull();
+  });
+
+  it('shows the requested expired-coupon message', async () => {
+    const { harness, element } = await openDialog();
+    const panel = dialog(element);
+    const bookingService = TestBed.inject(ModelBookingService);
+    vi.spyOn(bookingService, 'validateCoupon').mockReturnValue({
+      status: 'expired',
+      coupon: null,
+    });
+
+    const couponInput = panel.querySelector<HTMLInputElement>('#booking-coupon-code')!;
+    couponInput.value = 'FIRST';
+    couponInput.dispatchEvent(new Event('input'));
+    panel.querySelector<HTMLButtonElement>('.coupon-validate')!.click();
+    tick(harness);
+
+    expect(panel.querySelector('.coupon-message')?.textContent?.trim()).toBe('Coupon Expired!');
+    expect(panel.querySelector('.price-discount')).toBeNull();
+  });
+
+  it('offers a retry button and direct WhatsApp link if the new tab is blocked', async () => {
+    const { harness, element } = await openDialog();
+    const panel = dialog(element);
 
     panel
       .querySelector<HTMLButtonElement>(`.calendar-day[data-date="${futureIsoDate(2)}"]`)!
       .click();
+    const setInput = (controlName: string, value: string) => {
+      const field = Array.from(panel.querySelectorAll<HTMLInputElement>('input')).find(
+        (input) => input.getAttribute('formcontrolname') === controlName,
+      );
+      expect(field, `field ${controlName}`).toBeTruthy();
+      field!.value = value;
+      field!.dispatchEvent(new Event('input'));
+    };
     setInput('name', 'Ada Lovelace');
     setInput('email', 'ada@studio.example');
     setInput('phone', '+60 12 345 6789');
     tick(harness);
 
     panel.querySelector<HTMLButtonElement>('.booking-submit')!.click();
-    await harness.fixture.whenStable();
     tick(harness);
 
-    expect(panel.querySelector('.booking-error')?.textContent).toContain('not connected yet');
-    expect(element.querySelector('.booking-done')).toBeNull();
+    const done = element.querySelector('.booking-done')!;
+    const directLink = done.querySelector<HTMLAnchorElement>('a')!;
+    expect(directLink.href).toBe(opened[0]);
+    expect(done.querySelector('.booking-done-close')?.textContent).toContain('Done');
+
+    done.querySelector<HTMLButtonElement>('.booking-submit')!.click();
+    expect(opened).toHaveLength(2);
+    expect(opened[1]).toBe(opened[0]);
+
+    done.querySelector<HTMLButtonElement>('.booking-done-close')!.click();
+    tick(harness);
+    expect(element.querySelector('.booking-panel')).toBeNull();
   });
 
-  it('never prints the founder’s WhatsApp number in the dialog', async () => {
-    const { element } = await openDialog();
-    const text = element.textContent ?? '';
-
-    expect(text.toLowerCase()).not.toContain('wa.me');
-    expect(text).not.toMatch(/\b\d{10,15}\b/);
-  });
-
-  it('closes on Escape, on the backdrop and on Done after sending', async () => {
+  it('closes on Escape and restores body scrolling', async () => {
     const { harness, element } = await openDialog();
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

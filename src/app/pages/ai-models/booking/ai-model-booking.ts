@@ -14,11 +14,16 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AiModelProfile } from '../ai-model-data';
 import {
+  BOOKING_SERVICE_TAX_PERCENT,
+  BookingCoupon,
   BookingPhotoOrder,
+  BookingRequest,
   ModelBookingService,
   formatInr,
   photoOrdersFor,
+  serviceTaxFor,
 } from '../../../services/model-booking.service';
+import { FOUNDER_WHATSAPP_DISPLAY } from '../../../services/whatsapp-link';
 
 interface CalendarDay {
   iso: string;
@@ -72,6 +77,7 @@ export class AiModelBookingDialog implements OnDestroy {
 
   protected readonly projectTypes = PROJECT_TYPES;
   protected readonly weekdayLabels = WEEKDAY_LABELS;
+  protected readonly founderWhatsAppDisplay = FOUNDER_WHATSAPP_DISPLAY;
 
   /** Packages sized at the model's own per-photo rate, plus the customized order. */
   protected readonly orders = computed<BookingPhotoOrder[]>(() => {
@@ -84,10 +90,33 @@ export class AiModelBookingDialog implements OnDestroy {
   protected readonly today = startOfToday();
   protected readonly viewMonth = signal<Date>(startOfMonth(startOfToday()));
   protected readonly selectedDate = signal<string | null>(null);
-  protected readonly status = signal<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  protected readonly status = signal<'idle' | 'ready' | 'error'>('idle');
   protected readonly resultMessage = signal('');
-  protected readonly resultReference = signal('');
-  protected readonly serverFields = signal<string[]>([]);
+  protected readonly whatsappLink = signal('');
+  protected readonly couponCode = signal('');
+  protected readonly couponStatus = signal<'idle' | 'valid' | 'expired' | 'unavailable' | 'empty'>(
+    'idle',
+  );
+  protected readonly appliedCoupon = signal<BookingCoupon | null>(null);
+  protected readonly couponEligible = computed(() => {
+    const order = this.selectedOrder();
+    return Boolean(order && !order.custom);
+  });
+  protected readonly couponMessage = computed(() => {
+    switch (this.couponStatus()) {
+      case 'valid':
+        return 'Congratulations! Coupon Applied Successfully!';
+      case 'expired':
+        return 'Coupon Expired!';
+      case 'unavailable':
+        return 'Coupon not available!';
+      case 'empty':
+        return 'Enter a coupon code.';
+      default:
+        return '';
+    }
+  });
+  protected readonly serviceTaxPercent = BOOKING_SERVICE_TAX_PERCENT;
 
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],
@@ -155,10 +184,28 @@ export class AiModelBookingDialog implements OnDestroy {
     return weeks;
   });
 
+  protected readonly subtotal = computed(() => {
+    const order = this.selectedOrder();
+    return order && !order.custom ? order.amount : 0;
+  });
+  protected readonly discountAmount = computed(() => {
+    const coupon = this.appliedCoupon();
+    if (!coupon || !this.couponEligible()) return 0;
+    return Math.min(coupon.discountInr, this.subtotal());
+  });
+  protected readonly discountedSubtotal = computed(() =>
+    Math.max(0, this.subtotal() - this.discountAmount()),
+  );
+  protected readonly serviceTax = computed(() =>
+    this.couponEligible() ? serviceTaxFor(this.discountedSubtotal()) : 0,
+  );
+  protected readonly finalTotal = computed(
+    () => Math.round((this.discountedSubtotal() + this.serviceTax() + Number.EPSILON) * 100) / 100,
+  );
   protected readonly total = computed(() => {
     const order = this.selectedOrder();
     if (!order) return '';
-    return order.custom ? '' : formatInr(order.amount);
+    return order.custom ? '' : formatInr(this.finalTotal());
   });
 
   protected readonly showFieldErrors = signal(false);
@@ -167,10 +214,12 @@ export class AiModelBookingDialog implements OnDestroy {
   private lastFocused: HTMLElement | null = null;
 
   constructor() {
-    // The smallest package is the default selection, matching the highlighted card.
+    // Start with the 25-photo editorial package, falling back if a model has a different catalogue.
     effect(() => {
-      const first = this.orders()[0] ?? null;
-      if (this.selectedOrder() === null && first) this.selectedOrder.set(first);
+      const availableOrders = this.orders();
+      const defaultOrder =
+        availableOrders.find((order) => order.photos === 25) ?? availableOrders[0] ?? null;
+      if (this.selectedOrder() === null && defaultOrder) this.selectedOrder.set(defaultOrder);
     });
 
     effect((onCleanup) => {
@@ -194,17 +243,32 @@ export class AiModelBookingDialog implements OnDestroy {
 
   protected selectOrder(order: BookingPhotoOrder): void {
     this.selectedOrder.set(order);
+    if (order.custom) {
+      this.appliedCoupon.set(null);
+      this.couponStatus.set('idle');
+    }
   }
 
-  /** Total of the selected order, in the wording the order deserves. */
-  protected totalLabel(): string {
-    return this.selectedOrder()?.custom ? 'Quoted after review' : 'Selected total';
+  protected onCouponInput(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    this.couponCode.set(input?.value ?? '');
+    this.appliedCoupon.set(null);
+    this.couponStatus.set('idle');
+  }
+
+  protected validateCoupon(): void {
+    if (!this.couponEligible()) return;
+
+    const code = this.couponCode().trim().toUpperCase();
+    this.couponCode.set(code);
+    const result = this.bookings.validateCoupon(code);
+    this.couponStatus.set(result.status);
+    this.appliedCoupon.set(result.status === 'valid' ? result.coupon : null);
   }
 
   protected selectDate(day: CalendarDay): void {
     if (!day.selectable) return;
     this.selectedDate.set(day.iso);
-    this.serverFields.set([]);
   }
 
   protected previousMonth(): void {
@@ -230,8 +294,8 @@ export class AiModelBookingDialog implements OnDestroy {
     return this.showFieldErrors() && !this.selectedDate();
   }
 
-  protected async submit(): Promise<void> {
-    if (this.status() === 'sending') return;
+  protected submit(): void {
+    if (this.status() === 'ready') return;
 
     this.showFieldErrors.set(true);
     const order = this.selectedOrder();
@@ -241,22 +305,12 @@ export class AiModelBookingDialog implements OnDestroy {
       this.form.markAllAsTouched();
       this.status.set('error');
       this.resultMessage.set('Add the missing details so the studio can reply.');
-      this.serverFields.set([
-        ...Object.entries(this.form.controls)
-          .filter(([, control]) => control.invalid)
-          .map(([key]) => key),
-        ...(order ? [] : ['order']),
-        ...(date ? [] : ['date']),
-      ]);
       return;
     }
 
-    this.status.set('sending');
-    this.serverFields.set([]);
-
     const profile = this.model();
     const value = this.form.getRawValue();
-    const response = await this.bookings.send({
+    const request: BookingRequest = {
       model: {
         name: profile.name,
         handle: profile.handle,
@@ -264,6 +318,14 @@ export class AiModelBookingDialog implements OnDestroy {
         location: profile.location,
       },
       order,
+      pricing: {
+        subtotal: this.subtotal(),
+        discountedSubtotal: this.discountedSubtotal(),
+        serviceTax: this.serviceTax(),
+        couponCode: this.appliedCoupon()?.code ?? '',
+        discount: this.discountAmount(),
+        total: this.finalTotal(),
+      },
       booking: {
         date,
         project: value.project,
@@ -277,24 +339,19 @@ export class AiModelBookingDialog implements OnDestroy {
         phone: value.phone,
         company: value.company,
       },
-      page: typeof location !== 'undefined' ? location.href : '',
-    });
+      page: typeof window !== 'undefined' ? window.location.href : '',
+    };
+    const url = this.bookings.createWhatsAppLink(request);
 
-    if (response.ok) {
-      this.status.set('sent');
-      this.resultMessage.set(response.message);
-      this.resultReference.set(response.reference);
-      return;
-    }
+    this.whatsappLink.set(url);
+    this.resultMessage.set('Your booking details are ready to send in WhatsApp.');
+    this.status.set('ready');
+    window.open(url, '_blank', 'noopener');
+  }
 
-    this.status.set('error');
-    this.resultMessage.set(response.message);
-    this.resultReference.set(response.reference);
-    this.serverFields.set(
-      response.error === 'validation'
-        ? Object.keys(this.form.controls).filter((key) => response.error)
-        : [],
-    );
+  protected openWhatsApp(): void {
+    const url = this.whatsappLink();
+    if (url) window.open(url, '_blank', 'noopener');
   }
 
   protected close(): void {

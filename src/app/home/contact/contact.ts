@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { SectionHeading } from '../../shared/section-heading/section-heading';
 import { contactDestinations } from '../../models/site-content';
 import { PackageSelectionService } from '../../services/package-selection.service';
+import { founderWhatsAppLink } from '../../services/whatsapp-link';
 
 interface CountryPhoneOption {
   isoCode: string;
@@ -127,6 +128,6 @@ export class Contact {
       `A note for the Request: ${details.note || 'None'}`,
     ].join('\n');
     this.sent.set(true);
-    window.location.href = `https://wa.me/919051888116?text=${encodeURIComponent(message)}`;
+    window.location.href = founderWhatsAppLink(message);
   }
 }

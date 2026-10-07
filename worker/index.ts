@@ -1,8 +1,8 @@
 /**
  * Cloudflare Worker entry point for the NeverBeen site.
  *
- * Static files are served from the built Angular app; `/api/*` is handled here so the model booking
- * form can reach the founder's WhatsApp without the number ever being shipped to the browser.
+ * Static files are served from the built Angular app; `/api/*` is handled here for server-side
+ * model-booking integrations that deliver through the WhatsApp Cloud API.
  *
  * The WhatsApp credentials are Worker secrets:
  *
@@ -10,8 +10,8 @@
  *   npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID   # sender phone number id
  *   npx wrangler secret put FOUNDER_WHATSAPP_NUMBER    # where the bookings go
  *
- * Until they are set the endpoint answers 503 and the form tells the visitor the booking channel is
- * not connected yet — nothing is sent and no number is exposed.
+ * Until they are set the endpoint answers 503 and no message is sent. The optional endpoint never
+ * returns the founder's number to its caller.
  */
 import { BOOKING_ENDPOINT, handleModelBookingRequest } from './model-booking-core.mjs';
 

@@ -1,0 +1,19 @@
+{
+  "coupons": [
+    {
+      "code": "NEWTONEVERBEEN",
+      "discountInr": 1500,
+      "expiresOn": "2027-12-31"
+    },
+    {
+      "code": "FIRST",
+      "discountInr": 500,
+      "expiresOn": "2030-12-31"
+    },
+    {
+      "code": "SPECIALREQUEST",
+      "discountInr": 2000,
+      "expiresOn": "2040-12-31"
+    }
+  ]
+}

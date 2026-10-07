@@ -8,6 +8,11 @@ import {
   Validators,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import {
+  FOUNDER_WHATSAPP_DIAL,
+  FOUNDER_WHATSAPP_DISPLAY,
+  founderWhatsAppLink,
+} from '../../services/whatsapp-link';
 
 /** The kinds of feedback a visitor can choose from. */
 export const feedbackTypes = [
@@ -22,9 +27,9 @@ export const feedbackTypes = [
 
 export type FeedbackType = (typeof feedbackTypes)[number];
 
-/** Where feedback is delivered: the NeverBeen studio WhatsApp. */
-export const feedbackWhatsAppDisplay = '+91 90518 88116';
-export const feedbackWhatsAppDial = '919051888116';
+/** Backwards-compatible names for the shared studio WhatsApp destination. */
+export const feedbackWhatsAppDisplay = FOUNDER_WHATSAPP_DISPLAY;
+export const feedbackWhatsAppDial = FOUNDER_WHATSAPP_DIAL;
 
 /** Longest feedback note we accept. */
 export const feedbackNotesLimit = 2500;
@@ -112,7 +117,7 @@ export class Feedback {
       '— sent from the NeverBeen website feedback page',
     ].join('\n');
 
-    const url = `https://wa.me/${feedbackWhatsAppDial}?text=${encodeURIComponent(message)}`;
+    const url = founderWhatsAppLink(message);
     this.whatsappLink.set(url);
     this.sent.set(true);
     window.open(url, '_blank', 'noopener');
