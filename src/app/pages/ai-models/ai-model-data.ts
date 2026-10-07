@@ -89,7 +89,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 1,
-    photoRate: 535,
+    photoRate: 735,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: "A fresh, spirited portfolio presence inspired by Shiraz's poetry, rose gardens and golden afternoon light.",
@@ -115,7 +115,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: ['Editorial', 'Portrait', 'Campaign', 'Travel', 'Studio'],
     availability: 'Open for editorial and campaign bookings',
     order: 2,
-    photoRate: 550,
+    photoRate: 755,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets. Nourhan moves easily between quiet editorial portraits and bold campaign frames, and she is at her best in natural light.',
@@ -593,7 +593,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 6,
-    photoRate: 550,
+    photoRate: 715,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: 'A luminous, contemporary muse with an imagined love of desert architecture, handwoven textures and quiet portraiture.',

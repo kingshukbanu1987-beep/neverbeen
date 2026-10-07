@@ -62,6 +62,48 @@
         <p class="legal-footer">NeverBeen reserves all legal rights and remedies.</p>
       </aside>
     </div>
+
+    <aside class="legal-notice" aria-labelledby="legal-notice-title">
+        <span class="legal-glow" aria-hidden="true"></span>
+        <header class="legal-head">
+          <span class="legal-badge" aria-hidden="true">§</span>
+          <div>
+            <p class="legal-eyebrow">Protected Works</p>
+            <h2 id="legal-notice-title">Copyright &amp; Legal Notice</h2>
+          </div>
+        </header>
+
+        <ul class="legal-list">
+          <li>
+            Unauthorized copying, downloading, reproduction, modification, distribution, or use of
+            any NeverBeen model photographs or videos, for
+            <strong>personal or commercial purposes</strong>, is strictly prohibited.
+          </li>
+          <li>
+            Violations may result in <strong>immediate legal action</strong> under applicable laws,
+            including the <strong>Copyright Act, 1957</strong> and
+            <strong>Information Technology Act, 2000</strong>, as applicable.
+          </li>
+          <li>
+            A
+            <strong
+              >one-time penalty of <span class="num">&#8377;25,00,000</span> (Rupees Twenty-Five
+              Lakhs in Indian Currency)</strong
+            >
+            may also be claimed, subject to applicable law and contractual terms, payable within
+            maximum <strong>14 working days</strong>.
+          </li>
+          <li>
+            All NeverBeen models are
+            <strong
+              >AI-generated and exclusively created for authorized use within NeverBeen or under a
+              valid agreement signed by the Founder/authorized representative</strong
+            >. Any unauthorized use is strictly prohibited.
+          </li>
+        </ul>
+
+      <p class="legal-footer">NeverBeen reserves all legal rights and remedies.</p>
+    </aside>
   </section>
 
   <section class="directory-section" id="model-directory" aria-labelledby="directory-title">
@@ -120,6 +162,27 @@
         }
       </header>
 
+      @if (models.length > 0) {
+        <fieldset class="availability-filter">
+          <legend class="visually-hidden">Filter models by availability</legend>
+          @for (option of availabilityFilters; track option.value) {
+            <button
+              type="button"
+              class="availability-chip"
+              [class.is-active]="availabilityFilter() === option.value"
+              [class.dot-available]="option.value === 'available'"
+              [class.dot-unavailable]="option.value === 'unavailable'"
+              [class.dot-future]="option.value === 'future'"
+              [attr.aria-pressed]="availabilityFilter() === option.value"
+              (click)="setAvailabilityFilter(option.value)"
+            >
+              <i aria-hidden="true"></i>{{ option.label }}
+              <b>{{ availabilityCount(option.value) }}</b>
+            </button>
+          }
+        </fieldset>
+      }
+
       @if (hasIllustrativeProfiles()) {
         <p class="profile-data-note" role="note">
           <span aria-hidden="true">!</span>
@@ -154,9 +217,9 @@
       } @else if (filteredModels().length === 0) {
         <div class="no-results" role="status">
           <span class="no-results-mark" aria-hidden="true">⌕</span>
-          <p>No model profiles match “{{ search() }}”.</p>
-          <button type="button" class="text-link" (click)="clearSearch()">
-            Clear search <span aria-hidden="true">↗</span>
+          <p>No model profiles match the current search and filters.</p>
+          <button type="button" class="text-link" (click)="resetFilters()">
+            Clear search &amp; filters <span aria-hidden="true">↗</span>
           </button>
         </div>
       } @else {
