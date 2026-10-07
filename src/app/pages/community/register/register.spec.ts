@@ -104,6 +104,61 @@ describe('CommunityRegister', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
   });
 
+  it('offers only the cities the Web API stores for the selected country', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    component['form'].patchValue({ country: 'India', state: 'West Bengal' });
+
+    // The API answered for India: only its cities may be offered (Kolkata is in the DB).
+    component['apiCities'].set([
+      { id: 1, name: 'Kolkata' },
+      { id: 2, name: 'Mumbai' },
+    ]);
+    component['rebuildCities']();
+    expect(component['citiesList']()).toEqual(['Kolkata']);
+
+    // Kolkata is not stored for India any more — the curated cascade list must not offer it.
+    component['apiCities'].set([{ id: 2, name: 'Mumbai' }]);
+    component['rebuildCities']();
+    expect(component['citiesList']()).toEqual(['Mumbai']);
+
+    // The country has no city in the database at all: nothing may be offered (and the page
+    // says so instead of letting the API reject the country/city pair).
+    component['apiCities'].set([]);
+    component['rebuildCities']();
+    expect(component['citiesList']()).toEqual([]);
+    expect(component['countryHasNoCities']()).toBe(true);
+  });
+
+  it('swaps a picked city for the API list as soon as the API answers', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const getCities = vi
+      .spyOn(service, 'loadCitiesForCountry')
+      .mockResolvedValue([{ id: 1, name: 'Kolkata' }]);
+    vi.spyOn(service, 'resolveCountryId').mockResolvedValue(81);
+
+    component['form'].patchValue({ country: 'India', state: 'West Bengal' });
+    component['rebuildCities']();
+    // While the answer is in flight the curated cascade list is shown…
+    expect(component['citiesList']()).toEqual([
+      'Kolkata',
+      'Howrah',
+      'Darjeeling',
+      'Siliguri',
+      'Shantiniketan',
+    ]);
+
+    component['form'].patchValue({ city: 'Howrah' });
+    await component['loadApiCities']('India');
+
+    // …and the moment it arrives the dropdown is narrowed to what the database stores.
+    expect(component['apiCities']()).toEqual([{ id: 1, name: 'Kolkata' }]);
+    expect(component['citiesList']()).toEqual(['Kolkata']);
+    expect(component['form'].get('city')?.value).toBe(''); // Howrah is gone — pick again
+    expect(getCities).toHaveBeenCalledWith(81);
+  });
+
   it('blocks submission until the mandatory profession is chosen', async () => {
     const fixture = create();
     const component = fixture.componentInstance;
