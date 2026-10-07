@@ -38,6 +38,18 @@ describe('CommunityRegister', () => {
     expect(element.querySelector('#state')).toBeTruthy();
     expect(element.querySelector('#city')).toBeTruthy();
     expect(element.querySelector('#gender')).toBeTruthy();
+    // The Web API requires a profession (POST /api/registration) — its own option list is used.
+    expect(element.querySelector('#profession')).toBeTruthy();
+    const professions = Array.from(
+      element.querySelectorAll<HTMLOptionElement>('#profession option'),
+    ).map((option) => option.value);
+    expect(professions).toContain('Student');
+    expect(professions).toContain('Others');
+    // Gender options must match the API's list (Male / Female / Other), not free-form values.
+    const genders = Array.from(
+      element.querySelectorAll<HTMLOptionElement>('#gender option'),
+    ).map((option) => option.value);
+    expect(genders).toEqual(['', 'Male', 'Female', 'Other']);
     expect(element.querySelector('#dateOfBirth')).toBeTruthy();
     expect(element.querySelector('#photoInput')).toBeTruthy();
     expect(element.querySelector('.btn-create-account')?.textContent?.trim()).toContain('Create Neverbeen Account');
@@ -79,6 +91,7 @@ describe('CommunityRegister', () => {
       city: 'Paris',
       gender: 'Female',
       dateOfBirth: '1995-06-12',
+      profession: 'Freelancer',
     });
     component['photoPreview'].set('data:image/jpeg;base64,sampleportrait');
 
@@ -89,5 +102,30 @@ describe('CommunityRegister', () => {
     expect(service.profile()?.cityName).toBe('Paris');
     expect(getCookie(TOKEN_KEY)).toBeTruthy();
     expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
+  });
+
+  it('blocks submission until the mandatory profession is chosen', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const createAccountSpy = vi.spyOn(service, 'createNeverbeenAccount');
+
+    component['form'].patchValue({
+      name: 'Elena',
+      surname: 'Rostova',
+      email: 'elena.rostova@example.com',
+      country: 'France',
+      state: 'Île-de-France',
+      city: 'Paris',
+      gender: 'Female',
+      dateOfBirth: '1995-06-12',
+      profession: '',
+    });
+    component['photoPreview'].set('data:image/jpeg;base64,sampleportrait');
+
+    await component.submit();
+
+    expect(component['form'].invalid).toBe(true);
+    expect(createAccountSpy).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });

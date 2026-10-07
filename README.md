@@ -247,7 +247,9 @@ replace the placeholder email, WhatsApp number and domain with the live studio d
 
 ## Community Backend API
 
-The NeverBeen Community backend is an ASP.NET Core (.NET 7) Web API located in [`NeverBeen.API/`](./NeverBeen.API/README.md). It powers:
+The NeverBeen Community backend is the ASP.NET Core Web API in the separate
+[`neverbeen-api`](https://github.com/kingshukbanu1987-beep/neverbeen-api) repository, backed by
+PostgreSQL on Supabase (deployed to the Azure App Service `neverbeen-api-kingshuk`). It powers:
 
 - **OAuth (SSO) authentication** with Google, Facebook, and Microsoft Outlook accounts
 - **New member registration**
@@ -256,7 +258,41 @@ The NeverBeen Community backend is an ASP.NET Core (.NET 7) Web API located in [
 - **Community Message Book** (posts, nested replies, like/dislike reactions)
 - **Geographic and profession lookup data**
 
-See the [NeverBeen.API README](./NeverBeen.API/README.md) for architecture, configuration, database options (Azure SQL and SQLite), and API endpoints.
+### How the website reaches the API
+
+`src/environments/environment.ts` holds the API base URL. The default `/neverbeen-api` path is
+same-origin, and both the dev server and the Cloudflare Worker forward it to the deployed API:
+
+| Where           | Forwarded by                                               | Target                                                                         |
+| --------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `npm start`     | `proxy.conf.json` (`/neverbeen-api`)                       | `https://neverbeen-api-kingshuk.azurewebsites.net`                             |
+| Deployed Worker | `worker/index.ts` (`/neverbeen-api/*`, `run_worker_first`) | `NEVERBEEN_API_URL` (defaults to the same Azure host, set in `wrangler.jsonc`) |
+
+Point `apiBaseUrl` (or the Worker's `NEVERBEEN_API_URL`) at another host when the API moves; the
+site never needs CORS changes because the browser only ever calls its own origin.
+
+### Member sign-up (Create Neverbeen Account)
+
+Signing up a new member is a two-step round trip to the Web API, and the browser only shows the
+community profile once the database has answered:
+
+1. **Sign in with Google / Facebook** on `/community` → the browser is sent to the provider with
+   the authorization-code flow (`redirect_uri = <site origin>/auth/callback`). The provider returns
+   to `/auth/callback`, and the app calls `POST /api/auth/oauth/login` with `{ provider, code }`.
+   The API exchanges the code (its client secret stays server-side) and answers with a JWT — a
+   brand-new account is created with the `Pending` status and the page continues to `/community/register`.
+2. **Create Neverbeen Account** (`/community/register`) posts the form to `POST /api/registration` as
+   `multipart/form-data` with `Authorization: Bearer <jwt>` — full name, gender, date of birth,
+   country/city ids, email, profession and the profile photograph. The API stores the row in
+   PostgreSQL, flips the member to `Active` and returns the stored profile, which the page shows.
+
+The Country / State / City cascade, gender and profession lists are filled from
+`GET /api/lookup/...` (with the generated seed data as the offline fallback), so every value the
+form offers is one the API accepts.
+
+When the API cannot be reached — offline development, the sandbox preview, or a visitor who never
+signed in with Google/Facebook — the account is created in the browser only and the header/notice
+says so (`service.accountSaveNotice()`); nothing is ever reported as saved to the database unless it was.
 
 ## Deploying to Cloudflare Pages
 

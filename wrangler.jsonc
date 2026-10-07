@@ -1,13 +1,19 @@
 {
   "name": "neverbeen",
   // Worker entry: serves the static app and handles /api/* (the model booking endpoint) so the
-  // founder's WhatsApp number stays a server-side secret.
+  // founder's WhatsApp number stays a server-side secret. It also proxies /neverbeen-api/* to the
+  // NeverBeen Web API (member sign-up, sign-in and every other community call) so the Angular app
+  // can use a same-origin API path with no CORS or mixed-content problems.
   "main": "worker/index.ts",
   "compatibility_date": "2026-09-15",
+  "vars": {
+    // Base URL of the NeverBeen Web API. Change it when the API moves to another host.
+    "NEVERBEEN_API_URL": "https://neverbeen-api-kingshuk.azurewebsites.net",
+  },
   "assets": {
     "directory": "./dist/neverbeen/browser",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"],
+    "run_worker_first": ["/api/*", "/neverbeen-api/*"],
     // Single-page-app mode: any URL that does not match a static file (deep links like
     // /community, /profile?id=…, /admin/… or any redirect target) serves index.html with
     // a 200, so refreshing the browser on any route loads the app instead of a 404.

@@ -6,6 +6,22 @@
     </div>
   }
 
+  <!-- Follows the member after a sign-up that could not be written to the NeverBeen
+       database (Web API unreachable, or no Google / Facebook session yet). -->
+  @if (service.accountSaveNotice(); as notice) {
+    <div class="community-data-notice" role="status">
+      <span class="notice-text">{{ notice }}</span>
+      <button
+        type="button"
+        class="notice-dismiss"
+        (click)="service.dismissAccountSaveNotice()"
+        aria-label="Dismiss this notice"
+      >
+        ✕
+      </button>
+    </div>
+  }
+
   <div class="community-content-area">
     <router-outlet></router-outlet>
   </div>

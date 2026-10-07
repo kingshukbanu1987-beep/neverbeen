@@ -147,9 +147,9 @@ export class AdminRepositories implements OnInit {
   protected readonly apiLive = signal(false);
 
   protected readonly integrations: IntegrationRow[] = [
-    { icon: '🔌', name: 'NeverBeen.API (ASP.NET Core)', detail: `Companion & notification API at ${'http://localhost:5080'}`, ok: false },
+    { icon: '🔌', name: 'NeverBeen.API (ASP.NET Core)', detail: `Member, profile & community database API at ${this.apiUrl}`, ok: false },
     { icon: '🗺️', name: 'Google Maps Platform', detail: 'Place picker & maps for journey post locations', ok: true },
-    { icon: '🔐', name: 'OAuth — Google & Facebook', detail: 'Client-side demo sign-in for community members', ok: true },
+    { icon: '🔐', name: 'OAuth — Google & Facebook', detail: 'Member sign-in exchanged for a JWT by NeverBeen.API', ok: true },
     { icon: '🖼️', name: 'Image CDN', detail: 'Unsplash & DiceBear images for profiles and journey posts', ok: true },
     { icon: '🐙', name: 'GitHub', detail: 'kingshukbanu1987-beep/neverbeen — website source + API scaffold', ok: true },
   ];
@@ -209,7 +209,8 @@ export class AdminRepositories implements OnInit {
   private async probeApi(): Promise<void> {
     if (!this.http) return;
     try {
-      await this.http.get(`${this.community.apiUrl}/api/health`).toPromise();
+      // The NeverBeen Web API exposes its database health check at GET /health.
+      await this.http.get(`${this.community.apiUrl}/health`, { responseType: 'text' }).toPromise();
       this.apiLive.set(true);
     } catch {
       this.apiLive.set(false);

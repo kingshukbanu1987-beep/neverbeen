@@ -1,6 +1,7 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { CommunityBadgeService } from './community-badge.service';
 import {
   AboutMeDetails,
@@ -255,6 +256,57 @@ export interface CreateAccountData {
   photoUrl: string;
   aboutMe?: string;
   profession?: string;
+  /** The chosen profile photograph — uploaded to the Web API as a multipart file. */
+  photo?: File | null;
+}
+
+/**
+ * Response of `POST /api/auth/oauth/login` (the API's `AuthResultDto`).
+ * The Web API exchanges the OAuth authorization code with the provider (the client
+ * secret stays on the server) and answers with the JWT plus the flags that decide
+ * where the member goes next: `profileComplete === false` → registration page.
+ */
+export interface ApiAuthResult {
+  token: string;
+  tokenType: string;
+  expiresIn: number;
+  isNewUser: boolean;
+  profileComplete: boolean;
+  message: string;
+  user: {
+    id: number;
+    fullName?: string | null;
+    email: string;
+    status: string;
+    profileComplete: boolean;
+    profilePhotoUrl?: string | null;
+  };
+}
+
+/** Response of `POST /api/registration` and `GET /api/profile/me` (the API's `ProfileDto`). */
+export interface ApiProfileDto {
+  id: number;
+  fullName?: string | null;
+  email: string;
+  gender?: string | null;
+  dateOfBirth?: string | null;
+  age?: number | null;
+  countryId?: number | null;
+  countryName?: string | null;
+  cityId?: number | null;
+  cityName?: string | null;
+  pincode?: string | null;
+  contactNumber?: string | null;
+  postalAddress?: string | null;
+  aboutMe?: string | null;
+  profession?: string | null;
+  status: string;
+  profilePhotoUrl?: string | null;
+  externalProfilePictureUrl?: string | null;
+  createdAtUtc: string;
+  settings?: Partial<UserSettings>;
+  gallery?: GalleryPhoto[];
+  commentCount: number;
 }
 
 /** A companion conversation waiting to be read. Counted by the header Chats badge. */
@@ -288,7 +340,31 @@ export class CommunityService {
   private readonly http = inject(HttpClient, { optional: true });
   /** Admin Console moderation — accounts disabled by an admin are hidden from the community. */
   private readonly moderation = inject(AdminModerationService);
-  readonly apiUrl = 'https://localhost:7080';
+  /**
+   * Base URL of the NeverBeen Web API (see `src/environments/environment.ts`).
+   * The default `/neverbeen-api` path is proxied to the deployed ASP.NET Core API by
+   * the dev server and by the Cloudflare Worker, so the browser stays same-origin.
+   */
+  readonly apiUrl = environment.apiBaseUrl.replace(/\/+$/, '');
+  /**
+   * Whether the Web API answered the last request: `true` = the community is backed by the
+   * database, `false` = the API is unreachable and the browser-only fallback is in use,
+   * `null` = nothing has been called yet.
+   */
+  readonly apiOnline = signal<boolean | null>(null);
+  /**
+   * Where the most recent account creation was stored: `'database'` when the Web API
+   * accepted the registration, `'local'` when only this browser could be written
+   * (API unreachable or no signed-in OAuth session yet).
+   */
+  readonly accountSaveTarget = signal<'database' | 'local' | null>(null);
+  /** Human-readable reason why a registration could not be stored in the database. */
+  readonly accountSaveNotice = signal<string | null>(null);
+
+  /** Clears the registration notice shown across the community pages. */
+  dismissAccountSaveNotice(): void {
+    this.accountSaveNotice.set(null);
+  }
 
   readonly token = signal<string | null>(getCookie(TOKEN_KEY));
   readonly currentUser = signal<CurrentUser | null>(null);
@@ -485,11 +561,390 @@ export class CommunityService {
     if (typeof localStorage !== 'undefined') localStorage.removeItem(GUEST_KEY);
   }
 
+  // ---------------------------------------------------------------------------
+  // NeverBeen Web API (neverbeen-api — ASP.NET Core + PostgreSQL / Supabase)
+  //
+  // Every community call that must reach the database goes through these helpers:
+  //   POST /api/auth/oauth/login   exchange the OAuth code for a JWT
+  //   POST /api/registration       store a new member's profile (new member sign-up)
+  //   GET  /api/profile/me         reload the signed-in member's profile
+  //   GET  /api/lookup/...         countries, cities, professions, genders
+  //   GET  /health                 is the API (and its database) reachable?
+  //
+  // When the API cannot be reached the pages keep working against the seeded demo
+  // data in this browser, and the UI says so — nothing is silently "saved".
+  // ---------------------------------------------------------------------------
+
+  /** Absolute URL for an API path, e.g. `/api/registration`. */
+  private apiEndpoint(path: string): string {
+    return `${this.apiUrl}${path.startsWith('/') ? path : `/${path}`}`;
+  }
+
+  /** `Authorization: Bearer <jwt>` for the endpoints that require a signed-in member. */
+  private authHeaders(): HttpHeaders {
+    const token = this.token();
+    return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
+  }
+
+  /** Turns an API-relative photo URL (`/api/profile/7/photo`) into one the browser can load. */
+  private absoluteApiUrl(url?: string | null): string | undefined {
+    if (!url) return undefined;
+    return url.startsWith('/') ? `${this.apiUrl}${url}` : url;
+  }
+
+  /** Case- and diacritic-insensitive key used to match city/country names between datasets. */
+  private static nameKey(name: string): string {
+    return name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Checks `GET /health` on the Web API and remembers the answer, so every API-backed
+   * feature can fall back to the browser-only demo data when the API is unreachable.
+   */
+  async checkApiOnline(force = false): Promise<boolean> {
+    if (!this.http) {
+      this.apiOnline.set(false);
+      return false;
+    }
+    if (!force && this.apiOnline() !== null) return this.apiOnline()!;
+    try {
+      await firstValueFrom(this.http.get(this.apiEndpoint('/health'), { responseType: 'text' }));
+      this.apiOnline.set(true);
+    } catch {
+      this.apiOnline.set(false);
+    }
+    return this.apiOnline()!;
+  }
+
+  /** Message from an API error body (`{ "error": "…" }`) or a helpful fallback. */
+  private apiErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse) {
+      const body = error.error;
+      if (typeof body === 'string' && body.trim() && !body.trim().startsWith('<')) {
+        const match = body.match(/"error"\s*:\s*"([^"]+)"/);
+        return match ? match[1] : body.trim().slice(0, 300);
+      }
+      if (body && typeof body === 'object' && 'error' in body) {
+        const message = (body as { error?: unknown }).error;
+        if (typeof message === 'string' && message.trim()) return message;
+      }
+      if (error.status === 0) {
+        return 'The NeverBeen Web API could not be reached. Check your connection and try again.';
+      }
+      if (error.status === 401) return 'Your sign-in session has expired. Please sign in again.';
+      if (error.status === 409) return 'That email address is already registered to another member.';
+      return `${fallback} (HTTP ${error.status})`;
+    }
+    return error instanceof Error && error.message ? error.message : fallback;
+  }
+
+  /** True when the failure means “the API is unreachable”, not “the API rejected this”. */
+  private isNetworkError(error: unknown): boolean {
+    if (error instanceof HttpErrorResponse) return error.status === 0;
+    return error instanceof TypeError || (error instanceof Error && /fetch|network/i.test(error.message));
+  }
+
+  /** The map of default community settings used when the API did not send any. */
+  private static defaultSettings(overrides?: Partial<UserSettings>): UserSettings {
+    return {
+      emailNotificationsEnabled: true,
+      phoneNotificationsEnabled: false,
+      publicProfileEnabled: true,
+      theme: 'light',
+      timezone: 'UTC',
+      ...overrides,
+    };
+  }
+
+  /** Maps a Web API `ProfileDto` onto the app's `Profile` shape. */
+  private profileFromApi(dto: ApiProfileDto, fallback?: Partial<Profile>): Profile {
+    const words = (dto.fullName ?? '').trim().split(/\s+/).filter(Boolean);
+    const theme = dto.settings?.theme;
+    return {
+      ...(fallback ?? {}),
+      id: dto.id,
+      firstName: words[0] || fallback?.firstName,
+      lastName: words.slice(1).join(' ') || fallback?.lastName,
+      fullName: dto.fullName ?? fallback?.fullName ?? '',
+      email: dto.email ?? fallback?.email ?? '',
+      gender: dto.gender ?? fallback?.gender,
+      dateOfBirth: dto.dateOfBirth ? String(dto.dateOfBirth).slice(0, 10) : fallback?.dateOfBirth,
+      age: dto.age ?? fallback?.age,
+      countryId: dto.countryId ?? fallback?.countryId,
+      countryName: dto.countryName ?? fallback?.countryName,
+      country: dto.countryName ?? fallback?.country,
+      cityId: dto.cityId ?? fallback?.cityId,
+      cityName: dto.cityName ?? fallback?.cityName,
+      city: dto.cityName ?? fallback?.city,
+      pincode: dto.pincode ?? fallback?.pincode,
+      contactNumber: dto.contactNumber ?? fallback?.contactNumber,
+      postalAddress: dto.postalAddress ?? fallback?.postalAddress,
+      aboutMe: dto.aboutMe ?? fallback?.aboutMe,
+      profession: dto.profession ?? fallback?.profession ?? 'Traveler',
+      status: dto.status || 'Active',
+      profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? fallback?.profilePhotoUrl,
+      externalProfilePictureUrl:
+        dto.externalProfilePictureUrl ?? fallback?.externalProfilePictureUrl,
+      createdAtUtc: dto.createdAtUtc || fallback?.createdAtUtc || new Date().toISOString(),
+      settings: CommunityService.defaultSettings({
+        ...(fallback?.settings ?? {}),
+        ...(dto.settings ?? {}),
+        theme:
+          theme === 'dark' || theme === 'system' || theme === 'light'
+            ? theme
+            : (fallback?.settings?.theme ?? 'light'),
+      }),
+      gallery: dto.gallery ?? fallback?.gallery ?? [],
+      commentCount: dto.commentCount ?? fallback?.commentCount ?? 0,
+      activeStatus: fallback?.activeStatus,
+    };
+  }
+
+  /** Countries from the Web API, falling back to the generated seed list. */
+  async loadCountries(): Promise<Country[]> {
+    if (this.http) {
+      try {
+        const countries = await firstValueFrom(
+          this.http.get<Country[]>(this.apiEndpoint('/api/lookup/countries')),
+        );
+        if (countries?.length) {
+          this.apiOnline.set(true);
+          this.countries.set(
+            countries.map((c) => ({
+              id: c.id,
+              isoCode2: c.isoCode2,
+              name: c.name,
+              phoneCode: c.phoneCode,
+            })),
+          );
+        }
+      } catch {
+        /* keep the generated seed list */
+      }
+    }
+    return this.countries();
+  }
+
+  /** Profession options from the Web API, falling back to the generated seed list. */
+  async loadProfessions(): Promise<string[]> {
+    if (this.http) {
+      try {
+        const professions = await firstValueFrom(
+          this.http.get<string[]>(this.apiEndpoint('/api/lookup/professions')),
+        );
+        if (professions?.length) {
+          this.apiOnline.set(true);
+          this.professions.set(professions);
+        }
+      } catch {
+        /* keep the generated seed list */
+      }
+    }
+    return this.professions();
+  }
+
+  /** Gender options from the Web API, falling back to the generated seed list. */
+  async loadGenders(): Promise<string[]> {
+    if (this.http) {
+      try {
+        const genders = await firstValueFrom(
+          this.http.get<string[]>(this.apiEndpoint('/api/lookup/genders')),
+        );
+        if (genders?.length) {
+          this.apiOnline.set(true);
+          this.genders.set(genders);
+        }
+      } catch {
+        /* keep the generated seed list */
+      }
+    }
+    return this.genders();
+  }
+
+  /** City options for a country from the Web API, falling back to the generated seed list. */
+  async loadCitiesForCountry(countryId: number): Promise<City[]> {
+    if (this.http) {
+      try {
+        const cities = await firstValueFrom(
+          this.http.get<City[]>(this.apiEndpoint(`/api/lookup/countries/${countryId}/cities`)),
+        );
+        if (cities) {
+          this.apiOnline.set(true);
+          return cities;
+        }
+      } catch {
+        /* fall through to the seed list */
+      }
+    }
+    const seed = SEED_COUNTRIES.find((c) => c.id === countryId);
+    return seed ? seed.cities : [];
+  }
+
+  /** Country id the Web API uses for a country name (seed ids match the API's own seed). */
+  async resolveCountryId(countryName: string): Promise<number | null> {
+    const key = CommunityService.nameKey(countryName);
+    const seed = SEED_COUNTRIES.find((c) => CommunityService.nameKey(c.name) === key);
+    if (seed) return seed.id;
+    const countries = await this.loadCountries();
+    return countries.find((c) => CommunityService.nameKey(c.name) === key)?.id ?? null;
+  }
+
+  /** City id the Web API uses for a city name inside a country. */
+  async resolveCityId(countryId: number, cityName: string): Promise<number | null> {
+    const key = CommunityService.nameKey(cityName);
+    const seed = SEED_COUNTRIES.find((c) => c.id === countryId);
+    const seedMatch = seed?.cities.find((c) => CommunityService.nameKey(c.name) === key);
+    if (seedMatch) return seedMatch.id;
+
+    const cities = await this.loadCitiesForCountry(countryId);
+    const exact = cities.find((c) => CommunityService.nameKey(c.name) === key);
+    if (exact) return exact.id;
+    const partial = cities.find((c) => {
+      const candidate = CommunityService.nameKey(c.name);
+      return candidate.startsWith(key) || key.startsWith(candidate);
+    });
+    return partial?.id ?? null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // OAuth against the Web API
+  // ---------------------------------------------------------------------------
+
+  /** Where the OAuth providers send the browser back to (registered in each provider console). */
+  readonly oauthRedirectUri =
+    typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '';
+
+  /**
+   * Starts the OAuth **authorization-code** flow with the provider: the Web API needs the
+   * code (not a browser identity token) to sign the member in and to mint the JWT that
+   * `POST /api/registration` requires. The provider redirects back to `/auth/callback`.
+   */
+  startOAuthRedirect(provider: 'google' | 'facebook' | 'microsoft' | string): boolean {
+    if (typeof window === 'undefined') return false;
+    const redirect = encodeURIComponent(this.oauthRedirectUri);
+    const state = encodeURIComponent(provider.toLowerCase());
+    let url: string;
+    switch (provider.toLowerCase()) {
+      case 'google':
+        url =
+          `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
+          `&redirect_uri=${redirect}&response_type=code&scope=${encodeURIComponent('openid email profile')}` +
+          `&state=${state}&prompt=select_account`;
+        break;
+      case 'facebook':
+        url =
+          `https://www.facebook.com/v19.0/dialog/oauth?client_id=${encodeURIComponent(FACEBOOK_APP_ID)}` +
+          `&redirect_uri=${redirect}&response_type=code&scope=${encodeURIComponent('email,public_profile')}` +
+          `&state=${state}`;
+        break;
+      default:
+        return false;
+    }
+    window.location.assign(url);
+    return true;
+  }
+
+  /** Exchanges an OAuth authorization code for a JWT through the Web API. */
+  private async tryApiOauthLogin(provider: string, code: string): Promise<AuthResult | null> {
+    if (!this.http) return null;
+    if (!(await this.checkApiOnline(true))) return null;
+    try {
+      const dto = await firstValueFrom(
+        this.http.post<ApiAuthResult>(this.apiEndpoint('/api/auth/oauth/login'), {
+          provider,
+          code,
+        }),
+      );
+      return await this.applyApiSession(dto, provider);
+    } catch (error) {
+      if (this.isNetworkError(error)) {
+        this.apiOnline.set(false);
+        return null;
+      }
+      throw new Error(this.apiErrorMessage(error, `Sign-in with ${provider} failed`));
+    }
+  }
+
+  /** Stores the JWT + member returned by the Web API and loads the profile when it exists. */
+  private async applyApiSession(dto: ApiAuthResult, provider: string): Promise<AuthResult> {
+    setCookie(TOKEN_KEY, dto.token, 30);
+    this.token.set(dto.token);
+
+    const words = (dto.user?.fullName ?? '').trim().split(/\s+/).filter(Boolean);
+    const user: CurrentUser = {
+      id: dto.user?.id ?? 0,
+      firstName: words[0] ?? '',
+      lastName: words.slice(1).join(' '),
+      fullName: dto.user?.fullName ?? '',
+      email: dto.user?.email ?? '',
+      status: dto.user?.status ?? 'Pending',
+      profileComplete: dto.user?.profileComplete ?? false,
+      profilePhotoUrl: this.absoluteApiUrl(dto.user?.profilePhotoUrl),
+    };
+    this.currentUser.set(user);
+    this.saveJson(USER_KEY, user);
+
+    if (dto.profileComplete) {
+      await this.refreshProfileFromApi();
+    } else {
+      this.profile.set(null);
+    }
+
+    return {
+      token: dto.token,
+      tokenType: dto.tokenType || 'Bearer',
+      expiresIn: dto.expiresIn,
+      isNewUser: dto.isNewUser,
+      profileComplete: dto.profileComplete,
+      message: dto.message || `Signed in successfully via ${provider}.`,
+      user,
+    };
+  }
+
+  /** Reloads the signed-in member's profile from `GET /api/profile/me`. */
+  async refreshProfileFromApi(): Promise<Profile | null> {
+    if (!this.http || !this.token()) return null;
+    try {
+      const dto = await firstValueFrom(
+        this.http.get<ApiProfileDto>(this.apiEndpoint('/api/profile/me'), {
+          headers: this.authHeaders(),
+        }),
+      );
+      const profile = this.profileFromApi(dto, this.profile() ?? undefined);
+      this.profile.set(profile);
+      this.saveJson(PROFILE_KEY, profile);
+      this.apiOnline.set(true);
+      return profile;
+    } catch (error) {
+      if (this.isNetworkError(error)) this.apiOnline.set(false);
+      return null;
+    }
+  }
+
   async loginWithOAuth(
     provider: 'google' | 'facebook' | string,
     isExistingUserOrCode: boolean | string = false,
   ): Promise<AuthResult> {
     this.exitGuestBrowsing();
+
+    // A string second argument is the OAuth **authorization code** the provider appended to
+    // `/auth/callback?code=…`. A real code is exchanged for a JWT by the Web API, which also
+    // creates the "Pending" member row that the registration page later completes. Only the
+    // sandbox preview's `mock_code_…` placeholders (and the demo buttons) take the local route.
+    if (
+      typeof isExistingUserOrCode === 'string' &&
+      isExistingUserOrCode.length > 0 &&
+      !isExistingUserOrCode.startsWith('mock_code_')
+    ) {
+      const apiResult = await this.tryApiOauthLogin(provider, isExistingUserOrCode);
+      if (apiResult) return apiResult;
+    }
+
     const isExistingUser =
       typeof isExistingUserOrCode === 'boolean' ? isExistingUserOrCode : false;
     const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
@@ -1206,24 +1661,124 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   async getCitiesForCountry(countryId: number): Promise<City[]> {
-    if (this.http) {
-      try {
-        return await firstValueFrom(
-          this.http.get<City[]>(`${this.apiUrl}/api/lookup/countries/${countryId}/cities`),
-        );
-      } catch {
-        // Fall through
-      }
-    }
-    const seed = SEED_COUNTRIES.find((c) => c.id === countryId);
-    return seed ? seed.cities : [];
+    return this.loadCitiesForCountry(countryId);
   }
 
   // ---------------------------------------------------------------------------
   // Registration / Account Creation
   // ---------------------------------------------------------------------------
 
+  /**
+   * Creates the new member's account.
+   *
+   * The registration is **sent to the NeverBeen Web API** (`POST /api/registration`,
+   * multipart/form-data with the profile photograph and the signed-in member's JWT), which
+   * stores the member in the PostgreSQL / Supabase database and flips the account from
+   * "Pending" to "Active". The returned profile is what the app then shows.
+   *
+   * When the API is unreachable — or when the visitor is not signed in through OAuth, so the
+   * API has no "Pending" member to complete — the account is created in this browser only and
+   * `accountSaveNotice()` explains that it never reached the database.
+   */
   async createNeverbeenAccount(data: CreateAccountData): Promise<Profile> {
+    this.accountSaveNotice.set(null);
+    this.accountSaveTarget.set(null);
+
+    if (this.http) {
+      const stored = await this.tryApiRegister(data);
+      if (stored) {
+        this.accountSaveTarget.set('database');
+        return stored;
+      }
+    }
+
+    const profile = this.createLocalAccount(data);
+    this.accountSaveTarget.set('local');
+    return profile;
+  }
+
+  /**
+   * Sends the registration to the Web API. Returns the stored profile, `null` when the
+   * browser-only fallback should run, and throws when the API rejected the details.
+   */
+  private async tryApiRegister(data: CreateAccountData): Promise<Profile | null> {
+    if (!(await this.checkApiOnline(true))) {
+      this.accountSaveNotice.set(
+        'The NeverBeen Web API could not be reached, so this account was saved in this browser only.',
+      );
+      return null;
+    }
+
+    const countryId = await this.resolveCountryId(data.country);
+    const cityId = countryId == null ? null : await this.resolveCityId(countryId, data.city);
+    if (countryId == null || cityId == null) {
+      throw new Error(
+        `We could not match ${data.city}, ${data.country} to the NeverBeen city list. ` +
+          'Please choose another city (and country) and try again.',
+      );
+    }
+
+    const form = new FormData();
+    form.append('fullName', `${data.name} ${data.surname}`.trim());
+    form.append('gender', data.gender);
+    form.append('dateOfBirth', data.dateOfBirth);
+    form.append('countryId', String(countryId));
+    form.append('cityId', String(cityId));
+    form.append('email', data.email);
+    form.append('profession', data.profession ?? 'Others');
+    if (data.aboutMe) form.append('aboutMe', data.aboutMe);
+    if (data.photo) form.append('photo', data.photo, data.photo.name || 'profile-photo.jpg');
+
+    try {
+      const dto = await firstValueFrom(
+        this.http!.post<ApiProfileDto>(this.apiEndpoint('/api/registration'), form, {
+          headers: this.authHeaders(),
+        }),
+      );
+
+      const profile = this.profileFromApi(dto, { state: data.state });
+      this.profile.set(profile);
+      this.saveJson(PROFILE_KEY, profile);
+
+      const user = this.currentUser();
+      if (user) {
+        const updated: CurrentUser = {
+          ...user,
+          id: profile.id,
+          fullName: profile.fullName,
+          email: profile.email,
+          status: 'Active',
+          profileComplete: true,
+          profilePhotoUrl: profile.profilePhotoUrl,
+        };
+        this.currentUser.set(updated);
+        this.saveJson(USER_KEY, updated);
+      }
+      this.apiOnline.set(true);
+      return profile;
+    } catch (error) {
+      if (this.isNetworkError(error)) {
+        this.apiOnline.set(false);
+        this.accountSaveNotice.set(
+          'The NeverBeen Web API could not be reached, so this account was saved in this browser only.',
+        );
+        return null;
+      }
+      if (error instanceof HttpErrorResponse && error.status === 401) {
+        // No (or expired) OAuth session: the API only completes profiles for members who
+        // signed in with Google / Facebook first. Keep the page usable, but say so.
+        this.accountSaveNotice.set(
+          'Sign in with Google or Facebook first — the NeverBeen database stores each member ' +
+            'against their sign-in account. This account was saved in this browser only.',
+        );
+        return null;
+      }
+      throw new Error(this.apiErrorMessage(error, 'The NeverBeen Web API rejected the registration'));
+    }
+  }
+
+  /** Browser-only account creation used while the Web API cannot be reached. */
+  private createLocalAccount(data: CreateAccountData): Profile {
     const token = 'nb_auth_key_' + Math.random().toString(36).substring(2) + '_' + Date.now();
     setCookie(TOKEN_KEY, token, 30);
 

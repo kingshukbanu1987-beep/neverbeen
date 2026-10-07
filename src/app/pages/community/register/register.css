@@ -431,6 +431,28 @@
   letter-spacing: 0.02em;
 }
 
+/* Registration answers from the NeverBeen Web API (validation errors, unreachable API). */
+.reg-submit-error,
+.reg-save-notice {
+  margin: 1rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.reg-submit-error {
+  border: 1px solid rgba(200, 54, 54, 0.35);
+  background: rgba(200, 54, 54, 0.08);
+  color: #9d2b2b;
+}
+
+.reg-save-notice {
+  border: 1px solid rgba(191, 140, 43, 0.35);
+  background: rgba(191, 140, 43, 0.1);
+  color: #7d5a12;
+}
+
 @media (max-width: 720px) {
   .register-card {
     padding: 2.1rem 1.4rem;

@@ -167,18 +167,31 @@
           }
         </div>
 
-        <!-- Gender -->
+        <!-- Gender (options come from the Web API: GET /api/lookup/genders) -->
         <div class="field-box">
           <label for="gender">Gender <span class="req">*</span></label>
           <select id="gender" formControlName="gender" [class.invalid]="isInvalid('gender')">
             <option value="" disabled>Select Gender</option>
-            <option value="Female">Female</option>
-            <option value="Male">Male</option>
-            <option value="Non-Binary">Non-Binary</option>
-            <option value="Prefer not to say">Prefer not to say</option>
+            @for (g of service.genders(); track g) {
+              <option [value]="g">{{ g }}</option>
+            }
           </select>
           @if (isInvalid('gender')) {
             <span class="field-error-msg">Gender is mandatory. Please select an option.</span>
+          }
+        </div>
+
+        <!-- Profession (options come from the Web API: GET /api/lookup/professions) -->
+        <div class="field-box">
+          <label for="profession">Profession <span class="req">*</span></label>
+          <select id="profession" formControlName="profession" [class.invalid]="isInvalid('profession')">
+            <option value="" disabled>Select Profession</option>
+            @for (p of service.professions(); track p) {
+              <option [value]="p">{{ p }}</option>
+            }
+          </select>
+          @if (isInvalid('profession')) {
+            <span class="field-error-msg">Profession is mandatory. Please select an option.</span>
           }
         </div>
 
@@ -196,6 +209,13 @@
           }
         </div>
       </div>
+
+      @if (submitError()) {
+        <p class="reg-submit-error" role="alert">{{ submitError() }}</p>
+      }
+      @if (service.accountSaveNotice()) {
+        <p class="reg-save-notice" role="status">{{ service.accountSaveNotice() }}</p>
+      }
 
       <!-- Action Button -->
       <div class="submit-action-row">
