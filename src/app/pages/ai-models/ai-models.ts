@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
+type SortMode = 'default' | 'price-asc' | 'price-desc';
 
 @Component({
   selector: 'app-ai-models-page',
@@ -14,18 +15,36 @@ type AvailabilityState = 'available' | 'unavailable' | 'future';
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   protected readonly search = signal('');
+  protected readonly sort = signal<SortMode>('default');
   protected readonly totalCount = computed(() => String(this.models.length).padStart(2, '0'));
   protected readonly hasIllustrativeProfiles = computed(() =>
     this.models.some((model) => model.illustrative),
   );
   protected readonly filteredModels = computed(() => {
     const query = this.search().trim().toLocaleLowerCase();
-    if (!query) return this.models;
+    const matches = query
+      ? this.models.filter((model) =>
+          `${model.name} ${model.location}`.toLocaleLowerCase().includes(query),
+        )
+      : this.models;
 
-    return this.models.filter((model) =>
-      `${model.name} ${model.location}`.toLocaleLowerCase().includes(query),
-    );
+    const mode = this.sort();
+    if (mode === 'default') return matches;
+
+    const direction = mode === 'price-asc' ? 1 : -1;
+    return [...matches].sort((a, b) => {
+      const rateA = a.photoRate > 0 ? a.photoRate : Number.POSITIVE_INFINITY;
+      const rateB = b.photoRate > 0 ? b.photoRate : Number.POSITIVE_INFINITY;
+      if (rateA === rateB) return a.name.localeCompare(b.name);
+      if (!Number.isFinite(rateA)) return 1;
+      if (!Number.isFinite(rateB)) return -1;
+      return (rateA - rateB) * direction;
+    });
   });
+
+  protected updateSort(event: Event): void {
+    this.sort.set((event.target as HTMLSelectElement).value as SortMode);
+  }
 
   protected updateSearch(event: Event): void {
     this.search.set((event.target as HTMLInputElement).value);
