@@ -302,9 +302,10 @@ community profile once the database has answered:
    The API exchanges the code (its client secret stays server-side) and answers with a JWT — a
    brand-new account is created with the `Pending` status and the page continues to `/community/register`.
 2. **Create Neverbeen Account** (`/community/register`) posts the form to `POST /api/registration` as
-   `multipart/form-data` with `Authorization: Bearer <jwt>` — full name, gender, date of birth,
-   country/city ids, email, profession and the profile photograph. The API stores the row in
-   PostgreSQL, flips the member to `Active` and returns the stored profile, which the page shows.
+   `multipart/form-data` with `Authorization: Bearer <jwt>` — full name, **first name, last name and
+   state**, gender, date of birth, country/city ids, email, profession and the profile photograph.
+   The API stores the row in PostgreSQL, flips the member to `Active` and returns the stored
+   profile, which the page shows.
 
 The Country / State / City cascade, gender and profession lists are filled from
 `GET /api/lookup/...` (with the generated seed data as the offline fallback), so every value the
@@ -313,6 +314,73 @@ form offers is one the API accepts.
 When the API cannot be reached — offline development, the sandbox preview, or a visitor who never
 signed in with Google/Facebook — the account is created in the browser only and the header/notice
 says so (`service.accountSaveNotice()`); nothing is ever reported as saved to the database unless it was.
+
+### First name, last name and state on the member row
+
+The registration page collects First name, Last name and State, and the member row keeps them in
+dedicated columns (`Users.FirstName`, `Users.LastName`, `Users.State`). The page posts them as the
+extra multipart fields `firstName`, `lastName` and `state` next to `fullName`, and reads the stored
+values back out of the profile DTO (`GET /api/profile/me`, `GET /api/profile/{id}`).
+
+The API half of that change ships as
+[`docs/patches/neverbeen-api-registration-names-state.patch`](docs/patches/neverbeen-api-registration-names-state.patch):
+apply it to the `neverbeen-api` checkout and redeploy —
+
+```bash
+cd neverbeen-api
+git am /path/to/neverbeen/docs/patches/neverbeen-api-registration-names-state.patch
+```
+
+It adds the three fields to `RegistrationRequest`, writes them on the member row, answers them in
+the `ProfileDto`, accepts them in `PUT /api/profile`, fills the name columns of the `Pending` row
+from the provider's `given_name` / `family_name`, and splits them out of `fullName`
+("Kingshuk Banu" → `Kingshuk` / `Banu`) for clients that only post the full name.
+[`docs/patches/neverbeen-api-registration-names-state-verification.py`](docs/patches/neverbeen-api-registration-names-state-verification.py)
+checks the patched sources and those split rules (there is no .NET SDK in the build sandbox):
+
+```bash
+python3 docs/patches/neverbeen-api-registration-names-state-verification.py /path/to/neverbeen-api
+```
+
+Until the API is patched it silently ignores the three extra form fields, so the columns stay empty —
+the page still shows the submitted names and state from its own copy of the profile, but nothing is
+stored in the database.
+
+### Real member vs “Explore as Guest” — where the demo data lives
+
+Everything the seeded community holds — the founder's sample profile, the demo travellers, the
+travel circles, the Journey feed, the Message Book, the seeded chats, notifications and login
+devices — is **demo data for the guest tour**. It is never shown to a member who signed in:
+
+| Session                                            | What the community shows                                                                       |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| “Explore as Guest” — the button on `/community`     | the complete seeded demo community (profile, travellers, circles, feed, message book, chats)    |
+| Signed out, before choosing the tour                | **no demo data** — the sign-in page, or empty states in the areas a member would fill           |
+| Signed in with Google / Facebook (or restored from the auth cookie) | **no demo data** — the Web API's own data, or an empty state while a feature has no API call yet |
+| The Admin Console (`/admin/**`, a site-owner preview)                 | the seeded community — it manages the seeded members, posts, circles and notifications (`openAdminConsolePreview()`, refused while a real member session is open) |
+
+The gate lives in `src/app/services/community.service.ts`:
+
+- `demoSession` is **only** turned on by `exploreAsGuest()` (plus the specs' test-only
+  `community-demo.testing.ts` helper), and the seed loaders (`loadComments`, `loadJourneyPosts`,
+  `loadCompanions`, `loadFollows`, `loadCircles`, `loadPendingChats`, `loadNotifications`,
+  `loadDevices`) return their seed only when it is set. A signed-out visitor who has not taken the
+  tour sees the same empty community a member sees.
+- `enterMemberSession()` runs the moment a Google / Facebook / Web-API session starts — and
+  `startMemberSession()` when the app is opened with an auth cookie. Guest browsing ends, the demo
+  datasets are removed from this browser (`neverbeen_demo_community` marks them) and the in-memory
+  lists are re-read, so nothing from the tour can appear beside the member's own data. Signing out
+  clears them again.
+- Nothing is invented for a member: the sign-in page has no “Account status” preview toggle any
+  more, and when the provider cannot hand over an identity the app opens the (empty) registration
+  form instead of a demo account.
+- A member's own profile is never replaced by the seeded founder profile: a stored profile that came
+  from the demo (`isSeedProfile()` — a `@neverbeen.example` address or the bundled founder photo) is
+  dropped and the profile is reloaded from `GET /api/profile/me` instead.
+- The areas the Web API does not answer yet (Journey feed, Message Book, Companion directory …)
+  render an empty state — “Nothing here yet” — instead of being hidden or filled with demo data.
+
+The website, brochure, AI model studio, live travel feeds and the Admin Console are unaffected.
 
 ## Deploying to Cloudflare Pages
 

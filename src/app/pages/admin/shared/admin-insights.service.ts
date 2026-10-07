@@ -320,6 +320,13 @@ export class AdminInsightsService {
   private readonly community = inject(CommunityService);
   private readonly moderation = inject(AdminModerationService);
 
+  constructor() {
+    // The Admin Console works on the seeded community data (a site-owner preview — there
+    // are no admin endpoints in neverbeen-api yet). Opening it here means every admin page
+    // that reads those datasets gets them, and a signed-in member never does.
+    this.community.openAdminConsolePreview();
+  }
+
   /** Toast message shown by the admin shell. */
   readonly toast = signal<string | null>(null);
   private toastTimer: ReturnType<typeof setTimeout> | null = null;

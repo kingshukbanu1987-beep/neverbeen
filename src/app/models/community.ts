@@ -346,6 +346,12 @@ export interface Profile {
 
 export interface UpdateProfileRequest {
   fullName?: string;
+  /** Own column on the member row (`Users.FirstName`). */
+  firstName?: string;
+  /** Own column on the member row (`Users.LastName`). */
+  lastName?: string;
+  /** State / province (`Users.State`). */
+  state?: string;
   gender?: string;
   dateOfBirth?: string;
   countryId?: number;

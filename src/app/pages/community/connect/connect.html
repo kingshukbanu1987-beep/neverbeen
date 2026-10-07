@@ -42,33 +42,6 @@
       <p class="card-subtitle">{{ cmsText('subtitle') }}</p>
     </header>
 
-    <!-- Simulation mode selector for easy testing of both paths -->
-    @if (cmsFlag('showSimulation')) {
-    <div class="sim-mode-toggle" role="group" aria-label="Account status simulation">
-      <span class="sim-label">Account status:</span>
-      <div class="toggle-buttons">
-        <button
-          type="button"
-          class="sim-btn"
-          [class.active]="!simulateExisting()"
-          (click)="setSimulationMode(false)"
-          title="Will open the Registration Form"
-        >
-          New Member
-        </button>
-        <button
-          type="button"
-          class="sim-btn"
-          [class.active]="simulateExisting()"
-          (click)="setSimulationMode(true)"
-          title="Will redirect straight to User Profile"
-        >
-          Existing Member
-        </button>
-      </div>
-    </div>
-    }
-
     <!-- OAuth Login Options in Card Box Design -->
     <div class="oauth-buttons-list">
       <!-- Providers (order, labels, visibility) are managed in Admin Console → Website Management. -->

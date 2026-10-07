@@ -248,11 +248,14 @@ describe('Navbar', () => {
     expect(element.querySelector('.ch-brand')).toBeNull();
   });
 
-  it('shows seeded pending chats on the messenger icon', () => {
+  it('shows the waiting chats of the guest tour on the messenger icon', () => {
+    // The waiting conversations belong to the “Explore as Guest” tour; a signed-out visitor
+    // who has not opened it has none (the community starts empty — see community-demo-data).
+    const community = TestBed.inject(CommunityService);
+    community.exploreAsGuest();
     const fixture = create();
     const component = fixture.componentInstance;
     const element: HTMLElement = fixture.nativeElement;
-    const community = TestBed.inject(CommunityService);
     component['currentUrl'].set('/community/profile');
     TestBed.flushEffects();
     fixture.detectChanges();

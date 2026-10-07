@@ -7,6 +7,7 @@ import {
   CreateAccountData,
   deleteCookie,
   getCookie,
+  PROFILE_KEY,
   setCookie,
   TOKEN_KEY,
 } from './community.service';
@@ -109,6 +110,10 @@ describe('CommunityService — NeverBeen Web API integration', () => {
 
     const body = registration.request.body as FormData;
     expect(body.get('fullName')).toBe('Elena Rostova');
+    // First name, last name and state are stored in their own columns on the member row.
+    expect(body.get('firstName')).toBe('Elena');
+    expect(body.get('lastName')).toBe('Rostova');
+    expect(body.get('state')).toBe('Île-de-France');
     expect(body.get('gender')).toBe('Female');
     expect(body.get('dateOfBirth')).toBe('1995-06-12');
     expect(body.get('email')).toBe('elena.rostova@example.com');
@@ -121,6 +126,10 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     registration.flush({
       id: 7,
       fullName: 'Elena Rostova',
+      // A patched API answers the member's own columns back.
+      firstName: 'Elena',
+      lastName: 'Rostova',
+      state: 'Île-de-France',
       email: 'elena.rostova@example.com',
       gender: 'Female',
       dateOfBirth: '1995-06-12T00:00:00',
@@ -149,6 +158,13 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     expect(service.accountSaveNotice()).toBeNull();
     expect(profile.id).toBe(7);
     expect(profile.fullName).toBe('Elena Rostova');
+    // The stored name columns win over the split of the full name.
+    expect(profile.firstName).toBe('Elena');
+    expect(profile.lastName).toBe('Rostova');
+    expect(profile.state).toBe('Île-de-France');
+    // The member row keeps the submitted names / state in this browser too, so a reload
+    // shows exactly what was stored.
+    expect(JSON.parse(localStorage.getItem(PROFILE_KEY)!).state).toBe('Île-de-France');
     expect(profile.cityName).toBe('Paris');
     expect(profile.status).toBe('Active');
     expect(profile.profilePhotoUrl).toBe(`${API}/api/profile/7/photo`);

@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { CommunityMessageBook } from './message-book';
 import { CommunityService } from '../../../services/community.service';
+import { openDemoAccount } from '../../../services/community-demo.testing';
 
 describe('CommunityMessageBook', () => {
   let service: CommunityService;
@@ -13,7 +14,7 @@ describe('CommunityMessageBook', () => {
     }).compileComponents();
 
     service = TestBed.inject(CommunityService);
-    service.loginAsDemoUser('active_member');
+    openDemoAccount(service, 'active_member');
   });
 
   function create() {

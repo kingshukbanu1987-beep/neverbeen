@@ -7410,6 +7410,45 @@
   text-align: center;
 }
 
+/* “Nothing here yet” cards for a signed-in member with no data of their own.
+   The seeded Journey feed, Message Book and companion directory belong to the guest tour,
+   so those areas are empty states — never hidden and never filled with demo people. */
+.journey-feed-empty,
+.messagebook-feed-empty,
+.companions-directory-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.9rem 0;
+  padding: 2.1rem 1.25rem;
+  background: var(--ct-sf2, #f8fafc);
+  border: 1px dashed var(--ct-ln2, #cbd5e1);
+  border-radius: 14px;
+  color: var(--ct-mu, #64748b);
+  text-align: center;
+}
+
+.journey-feed-empty p,
+.messagebook-feed-empty p,
+.companions-directory-empty p {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.journey-feed-empty strong,
+.messagebook-feed-empty strong,
+.companions-directory-empty strong {
+  color: var(--ct-ink, #0f172a);
+}
+
+.journey-empty-glyph {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
 
 
 /* Presence, circles, devices, audience, visit gate */

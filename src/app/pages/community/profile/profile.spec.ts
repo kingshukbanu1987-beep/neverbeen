@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { CommunityProfile } from './profile';
 import { TRAVEL_MOOD_GROUPS } from './travel-moods';
 import { CommunityService, getCookie, TOKEN_KEY, deleteCookie } from '../../../services/community.service';
+import { openDemoAccount } from '../../../services/community-demo.testing';
 import { GoogleMapsService, VERIFIED_GOOGLE_MAP_LOCATIONS } from '../../../services/google-maps.service';
 
 describe('CommunityProfile', () => {
@@ -28,7 +29,7 @@ describe('CommunityProfile', () => {
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     // Set up active user
-    service.loginAsDemoUser('active_member');
+    openDemoAccount(service, 'active_member');
   });
 
   function create() {

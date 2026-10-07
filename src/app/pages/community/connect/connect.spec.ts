@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityConnect } from './connect';
 import { CommunityService, setCookie, deleteCookie, TOKEN_KEY, PROFILE_KEY, GUEST_KEY } from '../../../services/community.service';
+import { openDemoAccount } from '../../../services/community-demo.testing';
 
 describe('CommunityConnect', () => {
   let router: Router;
@@ -70,7 +71,7 @@ describe('CommunityConnect', () => {
   });
 
   it('redirects to user profile page if already authenticated on open', () => {
-    service.loginAsDemoUser('active_member');
+    openDemoAccount(service, 'active_member');
     expect(service.isAuthenticated()).toBe(true);
 
     const fixture = TestBed.createComponent(CommunityConnect);
@@ -82,19 +83,25 @@ describe('CommunityConnect', () => {
   it('redirects new users to the registration form after OAuth', async () => {
     const fixture = TestBed.createComponent(CommunityConnect);
     const component = fixture.componentInstance;
-    component.setSimulationMode(false); // New member mode
 
     await component.signInWith('google');
     expect(router.navigate).toHaveBeenCalledWith(['/community/register']);
   });
 
-  it('redirects existing users to user profile page after OAuth', async () => {
+  it('never invents an account when the provider SDK cannot hand over an identity', async () => {
     const fixture = TestBed.createComponent(CommunityConnect);
     const component = fixture.componentInstance;
-    component.setSimulationMode(true); // Existing member mode
 
     await component.signInWith('google');
-    expect(router.navigate).toHaveBeenCalledWith(['/community/profile']);
+
+    // No verified identity and no Web API session: the app only opens the empty
+    // registration form — no demo profile, no seeded community, no account.
+    expect(service.currentUser()?.email).toBe('');
+    expect(service.currentUser()?.profileComplete).toBe(false);
+    expect(service.profile()).toBeNull();
+    expect(service.companions().length).toBe(0);
+    expect(service.journeyPosts().length).toBe(0);
+    expect(router.navigate).toHaveBeenCalledWith(['/community/register']);
   });
 
   it('signs in with a real Google identity and routes a brand-new account to registration', async () => {

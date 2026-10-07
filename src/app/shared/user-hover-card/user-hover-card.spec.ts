@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { CommunityService } from '../../services/community.service';
+import { openDemoAccount } from '../../services/community-demo.testing';
 import { PreviewableUser, UserHoverCard, UserPreviewDirective, UserPreviewOverlayService } from './index';
 
 @Component({
@@ -47,7 +48,7 @@ describe('User hover preview card', () => {
 
     service = TestBed.inject(CommunityService);
     overlay = TestBed.inject(UserPreviewOverlayService);
-    service.loginAsDemoUser('active_member');
+    openDemoAccount(service, 'active_member');
   });
 
   afterEach(() => {

@@ -414,7 +414,6 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         maxLength: 120,
       },
       { key: 'showLanguage', label: 'Show the language switcher', type: 'toggle', default: true },
-      { key: 'showSimulation', label: 'Show the “Account status” demo toggle', type: 'toggle', default: true },
       { key: 'secureNote', label: 'Security footnote', type: 'text', default: 'Authentication is encrypted and secure.', maxLength: 90 },
       { key: 'showLegal', label: 'Show Privacy · Terms · Help links', type: 'toggle', default: true },
     ],
