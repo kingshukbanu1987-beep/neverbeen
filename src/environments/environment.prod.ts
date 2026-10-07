@@ -12,5 +12,5 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: '/neverbeen-api',
+   apiBaseUrl: 'https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net',
 };
