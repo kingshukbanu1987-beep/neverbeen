@@ -175,7 +175,7 @@
 .avatar-ring {
   position: relative;
   display: grid;
-  width: clamp(158px, 19vw, 218px);
+  width: clamp(221.2px, 26.6vw, 305.2px);
   aspect-ratio: 1;
   place-items: center;
   border-radius: 50%;
@@ -1283,7 +1283,7 @@
   }
 
   .avatar-ring {
-    width: clamp(140px, 34vw, 190px);
+    width: clamp(196px, 47.6vw, 266px);
   }
 
   .video-grid {

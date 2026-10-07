@@ -5,7 +5,9 @@
         <a class="back-link" routerLink="/" aria-label="Back to NeverBeen homepage">
           <span aria-hidden="true">←</span> NeverBeen
         </a>
-        <p class="studio-label"><span class="num">{{ totalCount() }}</span> model profiles</p>
+        <p class="studio-label">
+          <span class="num">{{ totalCount() }}</span> model profiles
+        </p>
       </div>
 
       <h1 id="ai-models-title">NeverBeen <em>AI Models</em></h1>
@@ -14,8 +16,8 @@
       </p>
       <p class="hero-notice" role="note">
         <span aria-hidden="true">!</span>
-        None of the models below exists in reality — all of them were created using
-        artificial intelligence.
+        None of the models below exists in reality — all of them were created using artificial
+        intelligence.
       </p>
     </div>
   </section>
@@ -24,9 +26,9 @@
     <div class="container directory-shell">
       <header class="directory-header">
         <div class="directory-heading">
-            <p class="eyebrow"
-              >Portfolio index <span aria-hidden="true">/</span> <span class="num">2026</span></p
-            >
+          <p class="eyebrow">
+            Portfolio index <span aria-hidden="true">/</span> <span class="num">2026</span>
+          </p>
           <h2 id="directory-title">The models</h2>
           <p class="directory-intro">
             A closer look at the people who give our ideas a point of view.
@@ -126,22 +128,49 @@
                   </div>
                 }
                 <span class="card-image-tint" aria-hidden="true"></span>
-                <span class="card-index">NB / <span class="num">{{ indexLabel(index) }}</span></span>
+                <span class="card-index"
+                  >NB / <span class="num">{{ indexLabel(index) }}</span></span
+                >
                 <span class="card-open" aria-hidden="true">↗</span>
                 <div class="card-copy">
                   <p class="card-location">{{ model.location || 'Location to be announced' }}</p>
                   <h3>{{ model.name }}</h3>
+                  <p
+                    class="card-availability"
+                    [class.is-available]="availabilityState(model) === 'available'"
+                    [class.is-unavailable]="availabilityState(model) === 'unavailable'"
+                    [class.is-future]="availabilityState(model) === 'future'"
+                  >
+                    <i aria-hidden="true"></i>{{ availabilityLabel(model) }}
+                  </p>
+
+                  <div class="card-price-row">
+                    <span class="card-price-label">Starting Price / Photograph</span>
+                    <b class="card-price-value">{{ startingPrice(model) }}</b>
+                  </div>
+
                   <div class="card-meta">
+                    <div class="card-media-counts">
+                      <span
+                        class="card-photo-count"
+                        [attr.aria-label]="
+                          photoCount(model) + ' ' + photoLabel(model) + ' in this portfolio'
+                        "
+                      >
+                        <b>{{ photoCount(model) }}</b>
+                        <i aria-hidden="true">{{ photoLabel(model) }}</i>
+                      </span>
+                      <span
+                        class="card-video-count"
+                        [attr.aria-label]="
+                          videoCount(model) + ' ' + videoLabel(model) + ' in this portfolio'
+                        "
+                      >
+                        <b>{{ videoCount(model) }}</b>
+                        <i aria-hidden="true">{{ videoLabel(model) }}</i>
+                      </span>
+                    </div>
                     <span class="card-action">View portfolio <i aria-hidden="true">↗</i></span>
-                    <span
-                      class="card-photo-count"
-                      [attr.aria-label]="
-                        photoCount(model) + ' ' + photoLabel(model) + ' in this portfolio'
-                      "
-                    >
-                      <b>{{ photoCount(model) }}</b>
-                      <i aria-hidden="true">{{ photoLabel(model) }}</i>
-                    </span>
                   </div>
                 </div>
               </div>
