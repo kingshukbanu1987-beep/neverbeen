@@ -19,7 +19,7 @@ async function openDialog(): Promise<{ harness: RouterTestingHarness; element: H
 
   const rent = Array.from(
     element.querySelectorAll<HTMLButtonElement>('.profile-actions button'),
-  ).find((button) => button.textContent?.includes('Rent this model'));
+  ).find((button) => button.textContent?.includes('Rent Me'));
   expect(rent, 'Rent button').toBeTruthy();
   rent!.click();
   tick(harness);
@@ -348,7 +348,7 @@ describe('Rent this model', () => {
 
       expect(element.querySelector('.rate-hint')).toBeNull();
       Array.from(element.querySelectorAll<HTMLButtonElement>('.profile-actions button'))
-        .find((button) => button.textContent?.includes('Rent this model'))!
+        .find((button) => button.textContent?.includes('Rent Me'))!
         .click();
       tick(harness);
 

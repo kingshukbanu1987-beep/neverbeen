@@ -8,7 +8,7 @@
     "bio": "A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets.",
     "illustrative": true,
     "order": 2,
-    "photoRate": 550,
+    "photoRate": 755,
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "88 cm",
     "waist": "68 cm",
@@ -57,7 +57,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "87 cm",
     "waist": "70 cm",
-    "hip": "92 cm"
+    "hip": "92 cm",
+    "availability": "Looking for Future Contract"
   },
   "Fatima Sana Hussaini.png": {
     "location": "Kuala Lumpur, Malaysia",
@@ -132,7 +133,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "85 cm",
     "waist": "65 cm",
-    "hip": "91 cm"
+    "hip": "91 cm",
+    "availability": "Looking for Future Contract"
   },
   "Rasha Fakhoury.png": {
     "location": "Amman, Jordan",
@@ -207,7 +209,7 @@
     "bio": "A fresh, spirited portfolio presence inspired by Shiraz's poetry, rose gardens and golden afternoon light.",
     "illustrative": true,
     "order": 1,
-    "photoRate": 535,
+    "photoRate": 735,
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "82 cm",
     "waist": "61 cm",
@@ -239,7 +241,7 @@
     "bio": "A luminous, contemporary muse with an imagined love of desert architecture, handwoven textures and quiet portraiture.",
     "illustrative": true,
     "order": 6,
-    "photoRate": 550,
+    "photoRate": 715,
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "84 cm",
     "waist": "63 cm",
@@ -259,7 +261,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "85 cm",
     "waist": "67 cm",
-    "hip": "91 cm"
+    "hip": "91 cm",
+    "availability": "Looking for Future Contract"
   },
   "Sorcha Golsa MacCarthy.png": {
     "name": "Sorcha Golsa MacCarthy",
@@ -403,7 +406,8 @@
     "illustrative": true,
     "order": 26,
     "photoRate": 540,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "availability": "Currently Unavailable"
   },
   "Tasneem Al-Rifai": {
     "name": "Tasneem Al-Rifai",
@@ -451,7 +455,8 @@
     "illustrative": true,
     "order": 29,
     "photoRate": 535,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "availability": "Currently Unavailable"
   },
   "Ameera Lone": {
     "name": "Ameera Lone",

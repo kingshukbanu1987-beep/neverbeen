@@ -1413,3 +1413,57 @@
 .profile-stats dd.num {
   font-family: var(--numeric-font);
 }
+
+/* ------------------------------------------------- availability states */
+.availability.is-available {
+  border-color: rgb(79 211 138 / 38%);
+  background: rgb(79 211 138 / 10%);
+  color: #bdf0d3;
+}
+
+.availability.is-available i {
+  background: #3ddc97;
+  box-shadow: 0 0 10px rgb(61 220 151 / 80%);
+}
+
+.availability.is-unavailable {
+  border-color: rgb(239 90 106 / 42%);
+  background: rgb(239 90 106 / 12%);
+  color: #ffc8cd;
+}
+
+.availability.is-unavailable i {
+  background: #ef5a6a;
+  box-shadow: 0 0 10px rgb(239 90 106 / 75%);
+}
+
+.availability.is-future {
+  border-color: rgb(242 184 75 / 40%);
+  background: rgb(242 184 75 / 10%);
+  color: #ffe4b4;
+}
+
+.availability.is-future i {
+  background: #f2b84b;
+  box-shadow: 0 0 10px rgb(242 184 75 / 70%);
+}
+
+/* The Rent action turns into a disabled notice for unavailable models. */
+.action-rent.is-unavailable,
+.action-rent:disabled {
+  border-color: rgb(239 90 106 / 35%);
+  background: rgb(239 90 106 / 10%);
+  box-shadow: none;
+  color: #f0b6bd;
+  cursor: not-allowed;
+  opacity: 0.85;
+  filter: grayscale(0.25);
+}
+
+.action-rent.is-unavailable:hover,
+.action-rent:disabled:hover {
+  border-color: rgb(239 90 106 / 35%);
+  background: rgb(239 90 106 / 10%);
+  color: #f0b6bd;
+  transform: none;
+}

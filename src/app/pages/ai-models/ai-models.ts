@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
+type SortMode = 'default' | 'price-asc' | 'price-desc';
+type AvailabilityFilter = 'all' | AvailabilityState;
 
 @Component({
   selector: 'app-ai-models-page',
@@ -14,18 +16,62 @@ type AvailabilityState = 'available' | 'unavailable' | 'future';
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   protected readonly search = signal('');
+  protected readonly sort = signal<SortMode>('default');
+  protected readonly availabilityFilter = signal<AvailabilityFilter>('all');
+  protected readonly availabilityFilters: ReadonlyArray<{
+    value: AvailabilityFilter;
+    label: string;
+  }> = [
+    { value: 'all', label: 'All models' },
+    { value: 'available', label: 'Available for Contract' },
+    { value: 'unavailable', label: 'Currently Unavailable' },
+    { value: 'future', label: 'Looking for Future Contract' },
+  ];
   protected readonly totalCount = computed(() => String(this.models.length).padStart(2, '0'));
   protected readonly hasIllustrativeProfiles = computed(() =>
     this.models.some((model) => model.illustrative),
   );
   protected readonly filteredModels = computed(() => {
     const query = this.search().trim().toLocaleLowerCase();
-    if (!query) return this.models;
+    const availability = this.availabilityFilter();
+    const matches = this.models.filter((model) => {
+      if (availability !== 'all' && this.availabilityState(model) !== availability) return false;
+      if (!query) return true;
+      return `${model.name} ${model.location}`.toLocaleLowerCase().includes(query);
+    });
 
-    return this.models.filter((model) =>
-      `${model.name} ${model.location}`.toLocaleLowerCase().includes(query),
-    );
+    const mode = this.sort();
+    if (mode === 'default') return matches;
+
+    const direction = mode === 'price-asc' ? 1 : -1;
+    return [...matches].sort((a, b) => {
+      const rateA = a.photoRate > 0 ? a.photoRate : Number.POSITIVE_INFINITY;
+      const rateB = b.photoRate > 0 ? b.photoRate : Number.POSITIVE_INFINITY;
+      if (rateA === rateB) return a.name.localeCompare(b.name);
+      if (!Number.isFinite(rateA)) return 1;
+      if (!Number.isFinite(rateB)) return -1;
+      return (rateA - rateB) * direction;
+    });
   });
+
+  protected setAvailabilityFilter(value: AvailabilityFilter): void {
+    this.availabilityFilter.set(value);
+  }
+
+  /** Chip badge counts — how many profiles sit in each availability state. */
+  protected availabilityCount(value: AvailabilityFilter): number {
+    if (value === 'all') return this.models.length;
+    return this.models.filter((model) => this.availabilityState(model) === value).length;
+  }
+
+  protected resetFilters(): void {
+    this.search.set('');
+    this.availabilityFilter.set('all');
+  }
+
+  protected updateSort(event: Event): void {
+    this.sort.set((event.target as HTMLSelectElement).value as SortMode);
+  }
 
   protected updateSearch(event: Event): void {
     this.search.set((event.target as HTMLInputElement).value);
