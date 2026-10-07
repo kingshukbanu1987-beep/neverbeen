@@ -242,82 +242,143 @@
         </div>
 
         <aside class="booking-side" aria-labelledby="booking-rates">
-          <h3 id="booking-rates" class="booking-side-title">Booking information</h3>
+          <div class="booking-side-content">
+            <h3 id="booking-rates" class="booking-side-title">Booking information</h3>
 
-          <dl class="booking-facts">
-            @if (model().availability) {
-              <div class="booking-fact booking-fact-wide">
-                <dt>Availability</dt>
-                <dd>{{ model().availability }}</dd>
-              </div>
-            }
-            <div class="booking-fact">
-              <dt>Based in</dt>
-              <dd>{{ model().location || 'To be announced' }}</dd>
-            </div>
-            @if (model().height) {
-              <div class="booking-fact">
-                <dt>Height</dt>
-                <dd class="num">{{ model().height }}</dd>
-              </div>
-            }
-            @if (model().age) {
-              <div class="booking-fact">
-                <dt>Age</dt>
-                <dd class="num">{{ model().age }}</dd>
-              </div>
-            }
-            @if (model().bodyShape) {
-              <div class="booking-fact">
-                <dt>Body shape</dt>
-                <dd>{{ model().bodyShape }}</dd>
-              </div>
-            }
-          </dl>
-
-          @if (model().tags.length) {
-            <ul class="booking-tags" aria-label="Portfolio tags">
-              @for (tag of model().tags; track tag) {
-                <li>{{ tag }}</li>
+            <dl class="booking-facts">
+              @if (model().availability) {
+                <div class="booking-fact booking-fact-wide">
+                  <dt>Availability</dt>
+                  <dd>{{ model().availability }}</dd>
+                </div>
               }
-            </ul>
-          }
+              <div class="booking-fact">
+                <dt>Based in</dt>
+                <dd>{{ model().location || 'To be announced' }}</dd>
+              </div>
+              @if (model().height) {
+                <div class="booking-fact">
+                  <dt>Height</dt>
+                  <dd class="num">{{ model().height }}</dd>
+                </div>
+              }
+              @if (model().age) {
+                <div class="booking-fact">
+                  <dt>Age</dt>
+                  <dd class="num">{{ model().age }}</dd>
+                </div>
+              }
+              @if (model().bodyShape) {
+                <div class="booking-fact">
+                  <dt>Body shape</dt>
+                  <dd>{{ model().bodyShape }}</dd>
+                </div>
+              }
+            </dl>
 
-          <h3 class="booking-side-title booking-rates-title">Rate per Photo</h3>
+            @if (model().tags.length) {
+              <ul class="booking-tags" aria-label="Portfolio tags">
+                @for (tag of model().tags; track tag) {
+                  <li>{{ tag }}</li>
+                }
+              </ul>
+            }
 
-          @if (ratePerPhoto() > 0) {
-            <p class="rate-per-photo">
-              <b>{{ formatInr(ratePerPhoto()) }}</b>
-              <i>per photograph · INR</i>
-            </p>
-          }
+            <h3 class="booking-side-title booking-rates-title">Rate per Photo</h3>
 
-          <div class="rate-list" role="radiogroup" aria-label="Photo order">
-            @for (order of orders(); track order.label) {
-              <button
-                type="button"
-                class="rate-card"
-                role="radio"
-                [class.is-active]="selectedOrder()?.label === order.label"
-                [class.is-custom]="order.custom"
-                [attr.aria-checked]="selectedOrder()?.label === order.label"
-                (click)="selectOrder(order)"
-              >
-                <span class="rate-copy">
-                  <b>{{ order.label }}</b>
-                  <i>{{ order.detail }}</i>
-                </span>
-                <span class="rate-price">
-                  {{ order.custom ? 'On request' : formatInr(order.amount) }}
-                </span>
-              </button>
-            } @empty {
-              <p class="rate-empty">
-                Rates for this model are being finalised — send an enquiry below.
+            @if (ratePerPhoto() > 0) {
+              <p class="rate-per-photo">
+                <b>{{ formatInr(ratePerPhoto()) }}</b>
+                <i>per photograph · INR</i>
               </p>
             }
-          </div>
 
+            <div class="rate-list" role="radiogroup" aria-label="Photo order">
+              @for (order of orders(); track order.label) {
+                <button
+                  type="button"
+                  class="rate-card"
+                  role="radio"
+                  [class.is-active]="selectedOrder()?.label === order.label"
+                  [class.is-custom]="order.custom"
+                  [attr.aria-checked]="selectedOrder()?.label === order.label"
+                  (click)="selectOrder(order)"
+                >
+                  <span class="rate-copy">
+                    <b>{{ order.label }}</b>
+                    <i>{{ order.detail }}</i>
+                  </span>
+                  <span class="rate-price">
+                    {{ order.custom ? 'On request' : formatInr(order.amount) }}
+                  </span>
+                </button>
+              } @empty {
+                <p class="rate-empty">
+                  Rates for this model are being finalised — send an enquiry below.
+                </p>
+              }
+            </div>
+
+            <section class="coupon-box" aria-label="Coupon code">
+              <label class="coupon-label" for="booking-coupon-code">Coupon code</label>
+              <div class="coupon-entry">
+                <input
+                  id="booking-coupon-code"
+                  type="text"
+                  [value]="couponCode()"
+                  (input)="onCouponInput($event)"
+                  [disabled]="!couponEligible()"
+                  placeholder="Enter coupon code"
+                  autocomplete="off"
+                  autocapitalize="characters"
+                />
+                <button
+                  type="button"
+                  class="coupon-validate"
+                  (click)="validateCoupon()"
+                  [disabled]="!couponEligible()"
+                >
+                  Validate
+                </button>
+              </div>
+              @if (couponMessage()) {
+                <p
+                  class="coupon-message"
+                  [class.is-success]="couponStatus() === 'valid'"
+                  [class.is-error]="
+                    couponStatus() === 'expired' ||
+                    couponStatus() === 'unavailable' ||
+                    couponStatus() === 'empty'
+                  "
+                  role="status"
+                  aria-live="polite"
+                >
+                  {{ couponMessage() }}
+                </p>
+              }
+              @if (!couponEligible()) {
+                <p class="coupon-hint">Coupons apply to priced photograph packages.</p>
+              }
+            </section>
+
+            @if (model().photoNote) {
+              <p class="booking-note">{{ model().photoNote }}</p>
+            }
+
+            <button type="submit" class="booking-submit">
+              <span aria-hidden="true">➤</span> Continue in WhatsApp
+            </button>
+
+            <p class="booking-privacy">
+              <span aria-hidden="true">✳</span>
+              Your details open as a prefilled WhatsApp message to the Founder. Review it and press
+              Send to submit your request; nothing is posted publicly.
+            </p>
+
+            @if (status() === 'error' && resultMessage()) {
+              <p class="booking-error" role="alert">{{ resultMessage() }}</p>
+            }
+          </div>
           <div class="booking-pricing" aria-label="Price summary">
             @if (selectedOrder(); as order) {
               @if (order.custom) {
@@ -361,66 +422,6 @@
               </div>
             }
           </div>
-
-          <section class="coupon-box" aria-label="Coupon code">
-            <label class="coupon-label" for="booking-coupon-code">Coupon code</label>
-            <div class="coupon-entry">
-              <input
-                id="booking-coupon-code"
-                type="text"
-                [value]="couponCode()"
-                (input)="onCouponInput($event)"
-                [disabled]="!couponEligible()"
-                placeholder="Enter coupon code"
-                autocomplete="off"
-                autocapitalize="characters"
-              />
-              <button
-                type="button"
-                class="coupon-validate"
-                (click)="validateCoupon()"
-                [disabled]="!couponEligible()"
-              >
-                Validate
-              </button>
-            </div>
-            @if (couponMessage()) {
-              <p
-                class="coupon-message"
-                [class.is-success]="couponStatus() === 'valid'"
-                [class.is-error]="
-                  couponStatus() === 'expired' ||
-                  couponStatus() === 'unavailable' ||
-                  couponStatus() === 'empty'
-                "
-                role="status"
-                aria-live="polite"
-              >
-                {{ couponMessage() }}
-              </p>
-            }
-            @if (!couponEligible()) {
-              <p class="coupon-hint">Coupons apply to priced photograph packages.</p>
-            }
-          </section>
-
-          @if (model().photoNote) {
-            <p class="booking-note">{{ model().photoNote }}</p>
-          }
-
-          <button type="submit" class="booking-submit">
-            <span aria-hidden="true">➤</span> Continue in WhatsApp
-          </button>
-
-          <p class="booking-privacy">
-            <span aria-hidden="true">✳</span>
-            Your details open as a prefilled WhatsApp message to the Founder. Review it and press
-            Send to submit your request; nothing is posted publicly.
-          </p>
-
-          @if (status() === 'error' && resultMessage()) {
-            <p class="booking-error" role="alert">{{ resultMessage() }}</p>
-          }
         </aside>
       </form>
     }

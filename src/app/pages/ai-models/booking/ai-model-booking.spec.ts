@@ -328,15 +328,18 @@ describe('Rent this model', () => {
     const discount = Math.min(500, subtotal);
     const discountedSubtotal = subtotal - discount;
     const tax = serviceTaxFor(discountedSubtotal);
-    expect(panel.querySelector('.price-discount')?.textContent).toContain(
-      `−${formatInr(discount)}`,
-    );
-    expect(panel.querySelector('.price-net-subtotal')?.textContent).toContain(
-      formatInr(discountedSubtotal),
-    );
-    expect(panel.querySelector('.booking-pricing')?.textContent).toContain(
-      formatInr(discountedSubtotal + tax),
-    );
+    const priceSummary = panel.querySelector<HTMLElement>('.booking-pricing');
+    expect(priceSummary).toBeTruthy();
+    const summary = priceSummary!;
+    const priceLines = Array.from(summary.querySelectorAll('.price-line'));
+    expect(priceLines).toHaveLength(4);
+    expect(priceLines[0].textContent).toContain('Subtotal before coupon · 25 photographs');
+    expect(priceLines[0].textContent).toContain(formatInr(subtotal));
+    expect(priceLines[1].textContent).toContain(`−${formatInr(discount)}`);
+    expect(priceLines[2].textContent).toContain(formatInr(discountedSubtotal));
+    expect(priceLines[3].textContent).toContain('Service tax (5%)');
+    expect(priceLines[3].textContent).toContain(formatInr(tax));
+    expect(summary.textContent).toContain(formatInr(discountedSubtotal + tax));
 
     couponInput.value = 'NOT-A-COUPON';
     couponInput.dispatchEvent(new Event('input'));
