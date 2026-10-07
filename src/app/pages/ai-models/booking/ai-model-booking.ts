@@ -15,10 +15,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AiModelProfile } from '../ai-model-data';
 import {
   BookingPhotoOrder,
+  BookingRequest,
   ModelBookingService,
   formatInr,
   photoOrdersFor,
 } from '../../../services/model-booking.service';
+import { FOUNDER_WHATSAPP_DISPLAY } from '../../../services/whatsapp-link';
 
 interface CalendarDay {
   iso: string;
@@ -72,6 +74,7 @@ export class AiModelBookingDialog implements OnDestroy {
 
   protected readonly projectTypes = PROJECT_TYPES;
   protected readonly weekdayLabels = WEEKDAY_LABELS;
+  protected readonly founderWhatsAppDisplay = FOUNDER_WHATSAPP_DISPLAY;
 
   /** Packages sized at the model's own per-photo rate, plus the customized order. */
   protected readonly orders = computed<BookingPhotoOrder[]>(() => {
@@ -84,10 +87,9 @@ export class AiModelBookingDialog implements OnDestroy {
   protected readonly today = startOfToday();
   protected readonly viewMonth = signal<Date>(startOfMonth(startOfToday()));
   protected readonly selectedDate = signal<string | null>(null);
-  protected readonly status = signal<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  protected readonly status = signal<'idle' | 'ready' | 'error'>('idle');
   protected readonly resultMessage = signal('');
-  protected readonly resultReference = signal('');
-  protected readonly serverFields = signal<string[]>([]);
+  protected readonly whatsappLink = signal('');
 
   protected readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],
@@ -204,7 +206,6 @@ export class AiModelBookingDialog implements OnDestroy {
   protected selectDate(day: CalendarDay): void {
     if (!day.selectable) return;
     this.selectedDate.set(day.iso);
-    this.serverFields.set([]);
   }
 
   protected previousMonth(): void {
@@ -230,8 +231,8 @@ export class AiModelBookingDialog implements OnDestroy {
     return this.showFieldErrors() && !this.selectedDate();
   }
 
-  protected async submit(): Promise<void> {
-    if (this.status() === 'sending') return;
+  protected submit(): void {
+    if (this.status() === 'ready') return;
 
     this.showFieldErrors.set(true);
     const order = this.selectedOrder();
@@ -241,22 +242,12 @@ export class AiModelBookingDialog implements OnDestroy {
       this.form.markAllAsTouched();
       this.status.set('error');
       this.resultMessage.set('Add the missing details so the studio can reply.');
-      this.serverFields.set([
-        ...Object.entries(this.form.controls)
-          .filter(([, control]) => control.invalid)
-          .map(([key]) => key),
-        ...(order ? [] : ['order']),
-        ...(date ? [] : ['date']),
-      ]);
       return;
     }
 
-    this.status.set('sending');
-    this.serverFields.set([]);
-
     const profile = this.model();
     const value = this.form.getRawValue();
-    const response = await this.bookings.send({
+    const request: BookingRequest = {
       model: {
         name: profile.name,
         handle: profile.handle,
@@ -277,24 +268,19 @@ export class AiModelBookingDialog implements OnDestroy {
         phone: value.phone,
         company: value.company,
       },
-      page: typeof location !== 'undefined' ? location.href : '',
-    });
+      page: typeof window !== 'undefined' ? window.location.href : '',
+    };
+    const url = this.bookings.createWhatsAppLink(request);
 
-    if (response.ok) {
-      this.status.set('sent');
-      this.resultMessage.set(response.message);
-      this.resultReference.set(response.reference);
-      return;
-    }
+    this.whatsappLink.set(url);
+    this.resultMessage.set('Your booking details are ready to send in WhatsApp.');
+    this.status.set('ready');
+    window.open(url, '_blank', 'noopener');
+  }
 
-    this.status.set('error');
-    this.resultMessage.set(response.message);
-    this.resultReference.set(response.reference);
-    this.serverFields.set(
-      response.error === 'validation'
-        ? Object.keys(this.form.controls).filter((key) => response.error)
-        : [],
-    );
+  protected openWhatsApp(): void {
+    const url = this.whatsappLink();
+    if (url) window.open(url, '_blank', 'noopener');
   }
 
   protected close(): void {

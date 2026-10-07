@@ -34,18 +34,12 @@
       </button>
     </header>
 
-    @if (status() === 'sent') {
-      <div class="booking-done" role="status">
+    @if (status() === 'ready') {
+      <div class="booking-done" role="status" aria-live="polite">
         <span class="booking-done-mark" aria-hidden="true">✳</span>
-        <h3>Request sent to the studio</h3>
+        <h3>Your booking message is ready in WhatsApp</h3>
         <p>{{ resultMessage() }}</p>
         <dl class="booking-done-facts">
-          @if (resultReference()) {
-            <div>
-              <dt>Reference</dt>
-              <dd class="num">{{ resultReference() }}</dd>
-            </div>
-          }
           <div>
             <dt>Model</dt>
             <dd>{{ model().name }}</dd>
@@ -66,15 +60,28 @@
           }
         </dl>
         <p class="booking-done-note">
-          The studio replies on WhatsApp to the number you gave — keep an eye on that chat.
+          A new tab should have opened with your request addressed to the Founder at
+          <strong>{{ founderWhatsAppDisplay }}</strong
+          >. Review the message and press <strong>Send</strong> in WhatsApp to submit it.
         </p>
-        <button type="button" class="booking-submit" (click)="close()">Done</button>
+        <div class="booking-done-actions">
+          <button type="button" class="booking-submit" (click)="openWhatsApp()">
+            Open WhatsApp again
+          </button>
+          <button type="button" class="booking-done-close" (click)="close()">Done</button>
+        </div>
+        <p class="booking-done-note">
+          If WhatsApp did not open,
+          <a [href]="whatsappLink()" target="_blank" rel="noopener">open your request directly</a>.
+        </p>
       </div>
     } @else {
       <form class="booking-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="booking-main">
           <section class="booking-block" aria-labelledby="booking-when">
-            <h3 id="booking-when"><span class="num" aria-hidden="true">01</span> Select a Delivery Date?</h3>
+            <h3 id="booking-when">
+              <span class="num" aria-hidden="true">01</span> Select a Delivery Date?
+            </h3>
 
             <div class="calendar">
               <div class="calendar-head">
@@ -141,7 +148,9 @@
           </section>
 
           <section class="booking-block" aria-labelledby="booking-info">
-            <h3 id="booking-info"><span class="num" aria-hidden="true">02</span> Booking information</h3>
+            <h3 id="booking-info">
+              <span class="num" aria-hidden="true">02</span> Booking information
+            </h3>
 
             <div class="booking-grid">
               <label class="field">
@@ -179,7 +188,9 @@
           </section>
 
           <section class="booking-block" aria-labelledby="booking-you">
-            <h3 id="booking-you"><span class="num" aria-hidden="true">03</span> Where do we reach you?</h3>
+            <h3 id="booking-you">
+              <span class="num" aria-hidden="true">03</span> Where do we reach you?
+            </h3>
 
             <div class="booking-grid">
               <label class="field">
@@ -320,23 +331,14 @@
             <p class="booking-note">{{ model().photoNote }}</p>
           }
 
-          <button
-            type="button"
-            class="booking-submit"
-            (click)="submit()"
-            [disabled]="status() === 'sending'"
-          >
-            @if (status() === 'sending') {
-              Sending…
-            } @else {
-              <span aria-hidden="true">➤</span> Send booking request
-            }
+          <button type="submit" class="booking-submit">
+            <span aria-hidden="true">➤</span> Continue in WhatsApp
           </button>
 
           <p class="booking-privacy">
             <span aria-hidden="true">✳</span>
-            Your request goes straight to the NeverBeen studio on WhatsApp. Nothing is posted
-            publicly.
+            Your details open as a prefilled WhatsApp message to the Founder. Review it and press
+            Send to submit your request; nothing is posted publicly.
           </p>
 
           @if (status() === 'error' && resultMessage()) {

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { founderWhatsAppLink } from './whatsapp-link';
 
 /**
  * One photo order: a package of photographs priced at the model's per-photo rate, or a customized
@@ -52,6 +53,64 @@ export function formatInr(amount: number): string {
   return `₹${amount.toLocaleString('en-IN')}`;
 }
 
+function formatBookingDate(iso: string): string {
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== iso) return iso;
+
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
+/** Formats the booking details into the prefilled WhatsApp message addressed to the founder. */
+export function buildModelBookingMessage(request: BookingRequest): string {
+  const { model, order, booking, client } = request;
+  const lines = [
+    '*New booking request — NeverBeen AI Models*',
+    '',
+    '*Model*',
+    `${model.name}${model.handle ? ` (${model.handle})` : ''}`,
+    model.location ? `Based in: ${model.location}` : '',
+    model.slug ? `Portfolio: /ai-models/${model.slug}` : '',
+    '',
+    '*Order*',
+    order.custom
+      ? `${order.label} — selective charge`
+      : `${order.label}${order.detail ? ` — ${order.detail}` : ''}`,
+    order.custom
+      ? 'Price: quoted by the studio after reviewing the brief'
+      : `Rate: ${formatInr(order.ratePerPhoto)} per photograph`,
+    order.custom ? '' : `Estimated total: ${formatInr(order.amount)} INR`,
+    '',
+    '*Delivery date*',
+    formatBookingDate(booking.date),
+    '',
+    '*Client*',
+    `Name: ${client.name}`,
+    `Email: ${client.email}`,
+    `WhatsApp: ${client.phone}`,
+    client.company ? `Company: ${client.company}` : '',
+    '',
+    '*Booking information*',
+    `Project: ${booking.project || 'Not specified'}`,
+    `Shoot location: ${booking.location || 'Not specified'}`,
+    `Usage / territory: ${booking.usage || 'Not specified'}`,
+    `Notes: ${booking.notes || 'None'}`,
+    '',
+    request.page ? `Sent from: ${request.page}` : '',
+    '— sent from the NeverBeen model portfolio',
+  ];
+
+  return lines
+    .filter((line, index, all) => !(line === '' && all[index - 1] === ''))
+    .join('\n')
+    .trim();
+}
+
 /** Where the request should be filed. */
 export interface BookingModelSummary {
   name: string;
@@ -94,13 +153,18 @@ export interface BookingResponse {
 const BOOKING_ENDPOINT = '/api/model-booking';
 
 /**
- * Sends a booking request to the NeverBeen studio.
+ * Booking message helpers for the AI model portfolio flow.
  *
- * The request goes to the deployment's own `/api/model-booking` endpoint; that server-side handler is
- * the only place that knows the founder's WhatsApp number, so it is never exposed to the browser.
+ * The current browser flow opens a prefilled WhatsApp chat. `send()` remains available for callers
+ * that want to use the deployment's optional server-side `/api/model-booking` endpoint instead.
  */
 @Injectable({ providedIn: 'root' })
 export class ModelBookingService {
+  /** Opens the same prefilled founder WhatsApp chat as the website's other request forms. */
+  createWhatsAppLink(request: BookingRequest): string {
+    return founderWhatsAppLink(buildModelBookingMessage(request));
+  }
+
   async send(request: BookingRequest): Promise<BookingResponse> {
     let response: Response;
     try {

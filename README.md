@@ -139,23 +139,16 @@ that model's per-photo rate (10 photographs at ₹550 is ₹5,500, 100 at ₹550
 **Customized order** for anything else. A customized order is a selective charge: it carries no price
 and the studio quotes it after reading the brief.
 
-Submitting the form posts the model, the order and the client's booking information to
-`POST /api/model-booking`. The Worker (`worker/index.ts`, logic in `worker/model-booking-core.mjs`)
-validates the request and sends a formatted WhatsApp message to the founder through the WhatsApp Cloud
-API. The founder's number is a Worker secret — it is never sent to the browser, never embedded in the
-page and never echoed back in the response; when the channel is not configured the endpoint answers
-`503` and the form says the booking channel is not connected yet.
+Submitting a valid form builds a WhatsApp message with the model, order, delivery date and client
+information, then opens a prefilled chat to the Founder — the same direct `wa.me` flow used by the
+Feedback and homepage request forms. The visitor reviews the message and presses **Send** in WhatsApp
+to submit it; if a browser blocks the new tab, the booking confirmation includes a retry button and a
+direct link. No WhatsApp Cloud API credentials are needed for this browser flow.
 
-```bash
-npx wrangler secret put WHATSAPP_TOKEN             # WhatsApp Cloud API token
-npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID   # sender phone number id
-npx wrangler secret put FOUNDER_WHATSAPP_NUMBER    # where the bookings go
-```
-
-`npm start` runs a local stand-in for the endpoint (`scripts/dev-booking-api.mjs`, port 8787, proxied
-by `proxy.conf.json`) over the same shared logic, so the form works end-to-end in development. Without
-the three variables above it appends the message to the gitignored `booking-outbox.log` instead of
-sending it.
+The Worker also retains `POST /api/model-booking` for server-side integrations. That endpoint uses
+the WhatsApp Cloud API when configured, and the local development stand-in
+(`scripts/dev-booking-api.mjs`) writes to the gitignored `booking-outbox.log` when those credentials
+are absent. These endpoints are separate from the portfolio form's direct WhatsApp handoff.
 
 ## The Collection page
 

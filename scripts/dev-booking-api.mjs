@@ -2,14 +2,15 @@
 /**
  * Local stand-in for the production Worker's booking endpoint.
  *
- * The Angular dev server proxies `/api/*` here (see `proxy.conf.json`), so the Rent form can be
- * submitted end-to-end while developing. The same shared logic as production runs
- * (`worker/model-booking-core.mjs`); the only difference is delivery:
+ * The Angular dev server proxies `/api/*` here (see `proxy.conf.json`) for exercising the optional
+ * model-booking API locally. The portfolio form itself hands off directly to WhatsApp. This server
+ * uses the same shared logic as production (`worker/model-booking-core.mjs`); the only difference is
+ * delivery:
  *
  *   - with WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID and FOUNDER_WHATSAPP_NUMBER set in the
  *     environment, the message is sent to the founder's WhatsApp exactly as in production;
  *   - otherwise the message is appended to `booking-outbox.log` and the response reports
- *     `channel: "outbox"`, so the form still works and nothing is silently lost.
+ *     `channel: "outbox"`, so the API caller can retrieve the request for local review.
  *
  * The founder's number is read from the environment only — it is never returned to the browser.
  */

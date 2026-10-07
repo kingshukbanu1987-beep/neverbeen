@@ -807,10 +807,43 @@
   font-size: 0.74rem !important;
 }
 
+.booking-done-note a {
+  color: #f49ac0;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.booking-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.4rem;
+}
+
 .booking-done .booking-submit {
   width: auto;
   min-width: 180px;
-  margin-top: 0.4rem;
+  margin-top: 0;
+}
+
+.booking-done-close {
+  min-width: 110px;
+  padding: 0.8rem 1.2rem;
+  border: 1px solid var(--booking-line);
+  border-radius: 999px;
+  background: transparent;
+  color: #f9eff5;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.booking-done-close:hover,
+.booking-done-close:focus-visible {
+  border-color: rgb(240 112 168 / 55%);
+  color: #fff;
 }
 
 @keyframes booking-in {
