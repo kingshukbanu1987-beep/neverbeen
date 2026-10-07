@@ -102,7 +102,7 @@ export class AiModelVideoPlayer {
   protected readonly caption = computed(() => {
     const clip = this.clip();
     if (!clip) return '';
-    return clip.caption || `${this.modelName()} · ${clip.fileName}`;
+    return clip.caption || `${this.modelName()} · Clip ${this.clipNumber()}`;
   });
 
   /** Whether the visitor wants the clip running — playback follows it across clip changes. */

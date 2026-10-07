@@ -187,10 +187,13 @@
                 } @else {
                   <video
                     class="video-preview"
-                    [src]="clip.src"
+                    [src]="previewSrc(clip)"
                     preload="metadata"
                     muted
+                    autoplay
+                    loop
                     playsinline
+                    disablepictureinpicture
                     aria-hidden="true"
                     tabindex="-1"
                   ></video>
@@ -202,7 +205,7 @@
                   <span class="video-tile-index"
                     >CLIP / <span class="num">{{ frameLabel(index) }}</span></span
                   >
-                  <span class="video-tile-name">{{ clip.caption || clip.fileName }}</span>
+                  <span class="video-tile-name">{{ videoTitle(index) }}</span>
                 </span>
               </button>
             }

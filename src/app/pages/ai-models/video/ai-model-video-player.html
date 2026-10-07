@@ -257,7 +257,7 @@
           [attr.download]="video.fileName"
           [attr.type]="video.type || null"
           rel="noopener"
-          [attr.aria-label]="'Download ' + video.fileName"
+          [attr.aria-label]="'Download this clip'"
           title="Download this clip"
         >
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -287,12 +287,12 @@
               [class.is-active]="position === index()"
               [attr.aria-current]="position === index() ? 'true' : null"
               (click)="selectClip(position)"
-              [attr.aria-label]="'Play clip ' + (position + 1) + ': ' + video.fileName"
+              [attr.aria-label]="'Play clip ' + (position + 1)"
             >
               @if (video.poster) {
                 <img [src]="video.poster" alt="" loading="lazy" decoding="async" />
               } @else {
-                <span class="thumb-file">{{ video.fileName }}</span>
+                <span class="thumb-file num">{{ position + 1 }}</span>
               }
             </button>
           }

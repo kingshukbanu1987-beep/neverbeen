@@ -12,7 +12,7 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { AiModelPhoto, AiModelProfile, aiModelProfiles } from './ai-model-data';
+import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
 
@@ -182,6 +182,15 @@ export class AiModelPortfolioPage implements OnDestroy {
     const clip = this.videos()[index];
     if (!clip) return '';
     return clip.caption || `${this.model()?.name ?? 'Portfolio'} · clip ${this.frameLabel(index)}`;
+  }
+
+  /**
+   * Mobile browsers (iOS Safari, several Android browsers) do not paint a frame for a
+   * poster-less `preload="metadata"` video, leaving the tile black. Asking for a media
+   * fragment makes them decode and show the first frame.
+   */
+  protected previewSrc(clip: AiModelVideo): string {
+    return clip.src.includes('#') ? clip.src : `${clip.src}#t=0.1`;
   }
 
   /** Staggered reveal for the grid, capped so long albums do not wait on the animation. */
