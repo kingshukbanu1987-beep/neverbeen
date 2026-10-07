@@ -257,6 +257,10 @@ PostgreSQL on Supabase (deployed to the Azure App Service `neverbeen-api-kingshu
 - **Photo storage** for avatars and galleries
 - **Community Message Book** (posts, nested replies, like/dislike reactions)
 - **Geographic and profession lookup data**
+- **The complete community**: companions, circles, the Journey feed (posts, comments,
+  reactions, shares, tags, hides), 1:1 and circle chats, notifications, the gallery
+  (photos and albums), followers/following, login devices, moderation state and the
+  Settings section — signed-in members read and write all of it through the API
 
 ### How the website reaches the API
 
@@ -345,6 +349,56 @@ python3 docs/patches/neverbeen-api-registration-names-state-verification.py /pat
 Until the API is patched it silently ignores the three extra form fields, so the columns stay empty —
 the page still shows the submitted names and state from its own copy of the profile, but nothing is
 stored in the database.
+
+### Complete community ↔ API integration
+
+Every community dataset of a signed-in member is loaded from the Web API and every change is
+written straight back to it (`CommunityService` → `ensureCommunityLoaded()` / `refreshCommunityFromApi()`
+plus the write-through calls in each mutating method). The mapping:
+
+| Community area        | Reads from                                                                                      | Writes to                                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Companions            | `GET /api/companions`                                                                            | `POST /api/companions/{id}/request`, `…/accept`, `…/reject`, `DELETE /api/companions/{id}` + `…/request`                                |
+| Circles               | `GET /api/circles`, `GET /api/circles/{id}/messages`                                             | `POST/PUT/DELETE /api/circles…`, members, admins, `POST /api/circles/{id}/messages`                                                     |
+| Journey feed          | `GET /api/journey?pageSize=…`                                                                    | `POST/PUT/DELETE /api/journey…`, reactions, comments, hide, tags (`taggedCompanionIds`)                                                 |
+| Message Book          | `GET /api/messagebook?…&includeReplies=true`                                                     | `POST /api/messagebook`, `POST /api/messagebook/{id}/reactions`, `DELETE /api/messagebook/{id}`                                          |
+| Chats                 | `GET /api/messages/conversations`, `GET /api/messages/conversations/{id}`                        | `POST /api/messages/conversations`, `…/messages`, `…/read`, `POST /api/messages/{id}/reactions`                                          |
+| Notifications         | `GET /api/notifications`                                                                         | `POST /api/notifications/read-all`, `POST /api/notifications/{id}/read`                                                                  |
+| Gallery               | `GET /api/gallery`, `GET /api/gallery/albums`                                                    | `POST /api/gallery` (multipart), `DELETE /api/gallery/{id}`, `POST/PUT/DELETE /api/gallery/albums…`, `PUT /api/gallery/albums/{id}/photos/{photoId}` |
+| Followers / Following | `GET /api/follows/counts/{id}`, `/api/follows/followers`, `/api/follows/following`               | `POST /api/follows/{id}`, `DELETE /api/follows/{id}`                                                                                     |
+| Devices               | `GET /api/devices`                                                                               | `POST /api/devices/{id}/block?blocked=…`                                                                                                 |
+| Moderation            | `GET /api/moderation/blocks`, `/hidden-posts`, `/reports`                                        | `POST /api/moderation/reports`, `POST/DELETE /api/moderation/blocks/{id}`, `POST/DELETE /api/journey/{id}/hide`                           |
+| About me & profile    | `GET /api/profile/me`, `GET /api/profile/{id}`                                                   | `PUT /api/profile` (details + structured About-me JSON + presence + lock), `PUT/DELETE /api/profile/photo`, `PUT/DELETE /api/profile/cover` |
+| Settings              | `settings` section of the profile DTO                                                            | `PUT /api/profile/settings` (including the blue-tick verification)                                                                        |
+
+The guest tour keeps its seeded demo community in this browser; nothing above runs for it
+(`apiLive` is false without a real member session), and when the API cannot be reached the
+pages degrade to their local behaviour instead of losing data.
+
+Five pieces of that table ship as the API patch
+[`docs/patches/neverbeen-api-community-complete.patch`](docs/patches/neverbeen-api-community-complete.patch)
+— apply it to the `neverbeen-api` checkout and redeploy:
+
+```bash
+cd neverbeen-api
+git am /path/to/neverbeen/docs/patches/neverbeen-api-community-complete.patch
+```
+
+It adds the cover-photo endpoints (`PUT/DELETE /api/profile/cover`, `GET /api/profile/{id}/cover`),
+accepts the structured About-me JSON and the presence columns in `PUT /api/profile`, persists the
+work/university verification in `PUT /api/profile/settings`, takes `taggedCompanionIds` on Journey
+create/update, and stores the attached photograph of a message book entry.
+[`docs/patches/neverbeen-api-community-complete-verification.py`](docs/patches/neverbeen-api-community-complete-verification.py)
+checks the patched sources and ports the new request-handling rules (there is no .NET SDK in the
+build sandbox):
+
+```bash
+python3 docs/patches/neverbeen-api-community-complete-verification.py /path/to/neverbeen-api
+```
+
+Until the API is patched the affected features fall back gracefully: the cover photo and the
+presence change stay on the member's own browser, tagged companions are applied one tag request at
+a time by the older endpoint, and message book entries with a picture keep their picture locally.
 
 ### Real member vs “Explore as Guest” — where the demo data lives
 

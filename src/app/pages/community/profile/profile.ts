@@ -332,11 +332,13 @@ export class CommunityProfile implements OnInit {
   readonly availableHobbies = AVAILABLE_HOBBIES;
   readonly availableInterests = AVAILABLE_INTERESTS;
   protected aboutIntro = '';
-  protected aboutGender = 'Female';
-  protected aboutDob = '1996-04-18';
-  protected aboutLocation = 'Paris, France';
-  protected aboutHometown = 'Lyon, France';
-  protected aboutRelationshipStatus = 'Exploring solo';
+  // The About me fields start empty: they are filled from the member's own stored
+  // profile (the Web API's AboutMe + AboutMeDetailsJson) — never from sample data.
+  protected aboutGender = '';
+  protected aboutDob = '';
+  protected aboutLocation = '';
+  protected aboutHometown = '';
+  protected aboutRelationshipStatus = '';
   protected aboutVisibility: AboutVisibilityMap = {};
   protected readonly aboutLanguages = signal<string[]>([]);
   protected newLanguageInput = '';
@@ -709,9 +711,11 @@ export class CommunityProfile implements OnInit {
     phoneNotificationsEnabled: [false],
     soundNotificationsEnabled: [true],
     twoFactorEnabled: [false],
-    preferredSeason: ['Autumn & Spring'],
+    // No invented preferences: preferred season and timezone start empty and are only
+    // filled from the member's own saved settings (the Web API's SettingsDto).
+    preferredSeason: [''],
     theme: ['light'],
-    timezone: ['UTC'],
+    timezone: [''],
     whoCanConnect: ['everyone'],
     whoCanVisitProfile: ['everyone'],
     showActiveStatusTo: ['everyone'],
@@ -1987,103 +1991,36 @@ export class CommunityProfile implements OnInit {
 
   initAboutMeData(): void {
     const details = this.service.profile()?.aboutMeDetails;
+    // The About me editor starts from what this member really stored (their profile on
+    // the Web API, structured About me included). Nothing is invented: an empty field
+    // stays empty until the member fills it in.
     const introVal = details?.intro || this.service.profile()?.aboutMe || '';
-    if (!introVal || introVal.trim().length < 150) {
-      this.aboutIntro = this.service.getRichIntroForUser();
-    } else {
-      this.aboutIntro = introVal;
-    }
-    this.aboutGender = details?.gender || this.service.profile()?.gender || 'Female';
-    this.aboutDob = details?.dateOfBirth || this.service.profile()?.dateOfBirth || '1996-04-18';
+    this.aboutIntro = introVal;
+    this.aboutGender = details?.gender || this.service.profile()?.gender || '';
+    this.aboutDob = details?.dateOfBirth || this.service.profile()?.dateOfBirth || '';
     this.aboutLocation =
       details?.location ||
       (this.service.profile()?.cityName
         ? `${this.service.profile()!.cityName}, ${this.service.profile()!.countryName || ''}`
-        : 'Paris, France');
-    this.aboutHometown = details?.hometown || 'Lyon, France';
-    this.aboutRelationshipStatus = details?.relationshipStatus || 'Exploring solo';
+        : '');
+    this.aboutHometown = details?.hometown || '';
+    this.aboutRelationshipStatus = details?.relationshipStatus || '';
     this.aboutVisibility = { ...(details?.visibility ?? {}) };
-    this.aboutLanguages.set(
-      details?.languagesKnown && details.languagesKnown.length > 0
-        ? [...details.languagesKnown]
-        : ['English', 'French', 'Italian', 'Spanish'],
-    );
+    this.aboutLanguages.set(details?.languagesKnown ? [...details.languagesKnown] : []);
     this.aboutWorkExperiences.set(
-      details?.workExperience && details.workExperience.length > 0
-        ? JSON.parse(JSON.stringify(details.workExperience))
-        : [
-            {
-              id: 1,
-              company: 'WanderLust Media Studio',
-              yearFrom: '2022',
-              yearTo: '',
-              currentlyWorkHere: true,
-              country: 'France',
-              city: 'Paris',
-              town: '1st Arrondissement',
-              description: 'Lead visual director producing AI-enhanced travel memoirs.',
-            },
-          ],
+      details?.workExperience ? JSON.parse(JSON.stringify(details.workExperience)) : [],
     );
     this.aboutEducation.set(
-      details?.education && details.education.length > 0
-        ? JSON.parse(JSON.stringify(details.education))
-        : [
-            {
-              id: 1,
-              institutionName: 'Sorbonne University',
-              level: 'University',
-              courseOrDegree: 'Master of Fine Arts in Cinematography',
-              yearFrom: '2017',
-              yearTo: '2019',
-              currentlyStudying: false,
-            },
-            {
-              id: 2,
-              institutionName: 'Lycée Condorcet',
-              level: 'High School',
-              courseOrDegree: 'Literature & Visual Arts Diploma',
-              yearFrom: '2014',
-              yearTo: '2017',
-              currentlyStudying: false,
-            },
-            {
-              id: 3,
-              institutionName: 'École Primaire Victor Hugo',
-              level: 'Primary School',
-              courseOrDegree: 'Primary Education Certificate',
-              yearFrom: '2008',
-              yearTo: '2014',
-              currentlyStudying: false,
-            },
-          ],
+      details?.education ? JSON.parse(JSON.stringify(details.education)) : [],
     );
-    this.aboutHobbies.set(
-      details?.hobbies && details.hobbies.length > 0
-        ? [...details.hobbies]
-        : ['Photography', 'Alpine Hiking', 'Coffee Brewing', 'Scuba Diving', 'Journaling'],
-    );
-    this.aboutInterests.set(
-      details?.interests && details.interests.length > 0
-        ? [...details.interests]
-        : ['Architecture', 'Historical Heritage', 'Sunset Chasing', 'Train Journeys', 'Street Food'],
-    );
-    this.aboutContactEmail =
-      details?.contactEmail || this.service.profile()?.email || 'sophia.laurent@neverbeen.example';
-    this.aboutContactPhone =
-      details?.contactPhone || this.service.profile()?.contactNumber || '+33 6 88 41 92 01';
+    this.aboutHobbies.set(details?.hobbies ? [...details.hobbies] : []);
+    this.aboutInterests.set(details?.interests ? [...details.interests] : []);
+    this.aboutContactEmail = details?.contactEmail || this.service.profile()?.email || '';
+    this.aboutContactPhone = details?.contactPhone || this.service.profile()?.contactNumber || '';
     this.aboutSocialLinks.set(
-      details?.socialLinks && details.socialLinks.length > 0
-        ? JSON.parse(JSON.stringify(details.socialLinks))
-        : [
-            { platform: 'Instagram', urlOrHandle: '@sophia.in.the.wild' },
-            { platform: 'Facebook', urlOrHandle: 'facebook.com/sophialaurent.travel' },
-            { platform: 'X', urlOrHandle: '@sophia_visuals' },
-          ],
+      details?.socialLinks ? JSON.parse(JSON.stringify(details.socialLinks)) : [],
     );
-    this.aboutThePersonText =
-      details?.aboutThePerson ||
-      'I fell in love with storytelling while crossing the Swiss viaducts as a teenager. Today, I travel with a lightweight camera kit and an open heart, seeking authentic human connections across Europe and beyond.';
+    this.aboutThePersonText = details?.aboutThePerson || '';
   }
 
   toggleEditAboutMe(): void {
@@ -2246,7 +2183,10 @@ export class CommunityProfile implements OnInit {
     if (rawIntro && rawIntro.trim().length > 150 && rawIntro.includes('\n')) {
       return rawIntro;
     }
-    return this.service.getRichIntroForCompanion(visitor);
+    // Companions only ever show what they actually wrote on their profile; when a
+    // traveler has not written an intro yet the section stays empty (no invented
+    // story). The seeded guest-tour people keep their authored intros.
+    return visitor.aboutMe || visitor.bio || '';
   }
 
   // ---------------------------------------------------------------------------
@@ -2987,9 +2927,9 @@ export class CommunityProfile implements OnInit {
       phoneNotificationsEnabled: s.phoneNotificationsEnabled,
       soundNotificationsEnabled: s.soundNotificationsEnabled ?? true,
       twoFactorEnabled: s.twoFactorEnabled ?? false,
-      preferredSeason: s.preferredSeason ?? 'Autumn & Spring',
+      preferredSeason: s.preferredSeason ?? '',
       theme: s.theme,
-      timezone: s.timezone || 'UTC',
+      timezone: s.timezone || '',
       whoCanConnect: s.whoCanConnect ?? 'everyone',
       whoCanVisitProfile: s.whoCanVisitProfile ?? 'everyone',
       showActiveStatusTo: s.showActiveStatusTo ?? 'everyone',
@@ -3466,40 +3406,14 @@ export class CommunityProfile implements OnInit {
     );
   }
 
-  // Requirement B: Work Experience and Education for visitor profile
+  // Requirement B: Work Experience and Education for visitor profile.
+  // Only what the traveler actually stored is shown — an empty history stays empty.
   getVisitorWorkExperiences(visitor: Companion): WorkExperience[] {
-    if (visitor.aboutMeDetails?.workExperience && visitor.aboutMeDetails.workExperience.length > 0) {
-      return visitor.aboutMeDetails.workExperience;
-    }
-    return [
-      {
-        id: 1,
-        company: `${visitor.profession || 'Creative'} Studio & Expeditions`,
-        country: visitor.country || 'India',
-        city: visitor.city || 'Kolkata',
-        yearFrom: '2022',
-        yearTo: 'Present',
-        currentlyWorkHere: true,
-        description: `Working as ${visitor.profession || 'Creative Specialist'} focusing on cultural heritage documentation and scenic travel adventures.`,
-      },
-    ];
+    return visitor.aboutMeDetails?.workExperience ?? [];
   }
 
   getVisitorEducationHistory(visitor: Companion): EducationInfo[] {
-    if (visitor.aboutMeDetails?.education && visitor.aboutMeDetails.education.length > 0) {
-      return visitor.aboutMeDetails.education;
-    }
-    return [
-      {
-        id: 1,
-        institutionName: `${visitor.city || 'Regional'} University of Arts & Sciences`,
-        level: 'University',
-        courseOrDegree: 'Bachelor of Visual Arts & Travel Communications',
-        yearFrom: '2017',
-        yearTo: '2021',
-        currentlyStudying: false,
-      },
-    ];
+    return visitor.aboutMeDetails?.education ?? [];
   }
 
   // Requirement C: Verification through Work or University Email
@@ -3663,9 +3577,9 @@ export class CommunityProfile implements OnInit {
         soundNotificationsEnabled: v.soundNotificationsEnabled ?? true,
         twoFactorEnabled: v.twoFactorEnabled ?? false,
         travelStyles: this.selectedTravelStyles(),
-        preferredSeason: v.preferredSeason ?? 'Autumn & Spring',
+        preferredSeason: v.preferredSeason ?? '',
         theme: (v.theme as 'light' | 'dark' | 'system') ?? 'light',
-        timezone: v.timezone ?? 'UTC',
+        timezone: v.timezone ?? '',
         whoCanConnect: (v.whoCanConnect as 'everyone' | 'companions-of-companions' | 'none') ?? 'everyone',
         whoCanVisitProfile: (v.whoCanVisitProfile as 'everyone' | 'companions' | 'none') ?? 'everyone',
         showActiveStatusTo: (v.showActiveStatusTo as 'everyone' | 'companions' | 'only-me') ?? 'everyone',

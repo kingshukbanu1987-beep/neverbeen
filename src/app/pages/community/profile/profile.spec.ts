@@ -54,25 +54,26 @@ describe('CommunityProfile', () => {
     const menuButtons = Array.from(leftPanel!.querySelectorAll<HTMLButtonElement>('.menu-btn'));
     const menuLabels = menuButtons.map((b) => b.textContent?.trim());
 
-    // Verify order: About me, Journey, Gallery, MessageBook, Companions, Followers, Following, Circles, Messenger, Birthdays, Notifications, Storage, Settings, Log Out
+    // Verify order: About me, Journey, Gallery, Games, MessageBook, Companions, Followers, Following, Circles, Messenger, Birthdays, Notifications, Storage, Settings, Log Out
     expect(menuLabels[0]).toContain('About me');
     expect(menuLabels[1]).toContain('Journey');
     expect(menuLabels[2]).toContain('Gallery');
-    expect(menuLabels[3]).toContain('MessageBook');
-    expect(menuLabels[4]).toContain('Companions');
-    expect(menuLabels[5]).toContain('Followers');
-    expect(menuLabels[6]).toContain('Following');
-    expect(menuLabels[7]).toContain('Circles');
-    expect(menuLabels[8]).toContain('Messenger');
-    expect(menuLabels[9]).toContain('Birthdays');
-    expect(menuLabels[10]).toContain('Notifications');
-    expect(menuLabels[11]).toContain('Storage');
-    expect(menuLabels[12]).toContain('Settings');
-    expect(menuLabels[13]).toContain('Log Out');
+    expect(menuLabels[3]).toContain('Games');
+    expect(menuLabels[4]).toContain('MessageBook');
+    expect(menuLabels[5]).toContain('Companions');
+    expect(menuLabels[6]).toContain('Followers');
+    expect(menuLabels[7]).toContain('Following');
+    expect(menuLabels[8]).toContain('Circles');
+    expect(menuLabels[9]).toContain('Messenger');
+    expect(menuLabels[10]).toContain('Birthdays');
+    expect(menuLabels[11]).toContain('Notifications');
+    expect(menuLabels[12]).toContain('Storage');
+    expect(menuLabels[13]).toContain('Settings');
+    expect(menuLabels[14]).toContain('Log Out');
 
     // Verify colorful icon badges
     const iconPills = Array.from(leftPanel!.querySelectorAll('.icon-pill'));
-    expect(iconPills.length).toBe(14);
+    expect(iconPills.length).toBe(15);
     expect(leftPanel!.querySelector('.pill-violet')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-emerald')).toBeTruthy();
     expect(leftPanel!.querySelector('.pill-amber')).toBeTruthy();
@@ -856,7 +857,7 @@ describe('CommunityProfile', () => {
     const element: HTMLElement = fixture.nativeElement;
 
     const navButtons = element.querySelectorAll<HTMLButtonElement>('.side-menu-nav .menu-btn');
-    expect(navButtons.length).toBe(14);
+    expect(navButtons.length).toBe(15);
 
     navButtons.forEach((btn) => {
       const pill = btn.querySelector('.icon-pill');
