@@ -86,49 +86,72 @@ export class CommunityRegister implements OnInit {
     const country = this.form.get('country')?.value ?? '';
     this.statesList.set(country ? getStatesForCountry(country) : []);
     this.form.get('state')?.setValue('');
-    this.citiesList.set([]);
-    this.form.get('city')?.setValue('');
+    this.rebuildCities();
     void this.loadApiCities(country);
   }
 
   /**
    * State changed: rebuild the City options for that country/state pair and clear
-   * the City selection so the member picks again.
+   * the City selection when the previously picked city is no longer offered.
    */
   onStateChange(): void {
-    const country = this.form.get('country')?.value ?? '';
-    const state = this.form.get('state')?.value ?? '';
-    this.citiesList.set(country && state ? this.cityOptions(country, state) : []);
-    this.form.get('city')?.setValue('');
+    this.rebuildCities();
   }
 
-  /** Fetches the API city list for a country (used to validate the cascade's cities). */
+  /** Rebuilds the City dropdown for the current country/state pair. */
+  private rebuildCities(): void {
+    const country = this.form.get('country')?.value ?? '';
+    const state = this.form.get('state')?.value ?? '';
+    const previous = this.form.get('city')?.value ?? '';
+    const options = country && state ? this.cityOptions(country, state) : [];
+    this.citiesList.set(options);
+    // A pick that is not offered any more must be re-selected (the API validates the pair).
+    if (previous && !options.includes(previous)) this.form.get('city')?.setValue('');
+  }
+
+  /**
+   * Fetches the API city list for a country (used to validate the cascade's cities) and
+   * rebuilds the City dropdown with it: while the answer is in flight — or when the API is
+   * unreachable — the dropdown falls back to the curated cascade list, and the moment the API
+   * answers it is narrowed to the cities the database really stores for that country.
+   */
   private async loadApiCities(countryName: string): Promise<void> {
     this.apiCities.set(null);
     if (!countryName) return;
-    const countries = this.service.countries();
-    const countryId = countries.find((c) => c.name === countryName)?.id;
+    const countryId = await this.service.resolveCountryId(countryName);
     if (!countryId) return;
     const cities = await this.service.loadCitiesForCountry(countryId);
     // Ignore stale answers when the member already picked another country.
     if (this.form.get('country')?.value === countryName) {
       this.apiCities.set(cities);
+      this.rebuildCities();
     }
   }
 
+  /** True when the API answered for the selected country but stores no city in it yet. */
+  protected countryHasNoCities(): boolean {
+    return !!this.form.get('country')?.value && this.apiCities()?.length === 0;
+  }
+
   /**
-   * City options for a State: the curated cascade list where the Web API knows those
-   * cities, otherwise every city the API accepts for that country — so a member can
-   * always pick a city the database will store.
+   * City options for a State.
+   *
+   * Once the Web API has answered with the cities it stores for the country, only those are
+   * offered (an empty answer means the database has no city in that country yet) — that way a
+   * member always picks a city the registration endpoint can store. Until then (the request is
+   * still running, or the API is unreachable and the browser-only flow is used) the curated
+   * cascade list is offered.
    */
   private cityOptions(country: string, state: string): string[] {
-    const curated = getCitiesForState(country, state);
     const apiCities = this.apiCities();
-    if (!apiCities || apiCities.length === 0) return curated;
-
-    const apiKeys = new Set(apiCities.map((c) => nameKey(c.name)));
-    const accepted = curated.filter((city) => apiKeys.has(nameKey(city)));
-    return accepted.length > 0 ? accepted : apiCities.map((c) => c.name).sort();
+    if (apiCities) {
+      const apiKeys = new Set(apiCities.map((c) => nameKey(c.name)));
+      const accepted = getCitiesForState(country, state).filter((city) =>
+        apiKeys.has(nameKey(city)),
+      );
+      return accepted.length > 0 ? accepted : apiCities.map((c) => c.name).sort();
+    }
+    return getCitiesForState(country, state);
   }
 
   onPhotoSelected(event: Event): void {

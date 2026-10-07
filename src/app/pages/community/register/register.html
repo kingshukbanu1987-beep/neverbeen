@@ -162,6 +162,10 @@
           </select>
           @if (isInvalid('city')) {
             <span class="field-error-msg">City is mandatory. Please select your city.</span>
+          } @else if (countryHasNoCities()) {
+            <span class="field-hint-msg">
+              The NeverBeen database has no city in this country yet. Please choose another country.
+            </span>
           } @else if (citiesList().length === 0) {
             <span class="field-hint-msg">Choose a state first.</span>
           }

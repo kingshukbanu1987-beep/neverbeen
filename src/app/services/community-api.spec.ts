@@ -11,6 +11,7 @@ import {
   TOKEN_KEY,
 } from './community.service';
 import { environment } from '../../environments/environment';
+import { SEED_COUNTRIES } from '../models/community-seed';
 
 /**
  * The sign-up path must reach the NeverBeen Web API (the ASP.NET Core `neverbeen-api`
@@ -41,6 +42,32 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     photoUrl: 'data:image/jpeg;base64,c2FtcGxl',
     photo: new File([new Uint8Array([1, 2, 3])], 'elena.jpg', { type: 'image/jpeg' }),
   };
+
+  /** Answer of `GET /api/lookup/countries` (France). */
+  const apiFrance = { id: 60, isoCode2: 'FR', name: 'France', phoneCode: '+33' };
+  /** Answer of `GET /api/lookup/countries/60/cities` (Paris). */
+  const apiParis = { id: 321, name: 'Paris' };
+
+  /**
+   * Answers the two lookup calls the sign-up path makes before it posts the member:
+   * the country id and the country's city ids always come from the API's own lists.
+   */
+  async function flushLocationLookups(country = apiFrance, cities = [apiParis]): Promise<void> {
+    httpMock.expectOne(`${API}/api/lookup/countries`).flush([country]);
+    await tick();
+    httpMock.expectOne(`${API}/api/lookup/countries/${country.id}/cities`).flush(cities);
+    await tick();
+  }
+
+  /** Fails both lookup calls, as when the API cannot be reached from this browser. */
+  async function failLocationLookups(countryId = apiFrance.id): Promise<void> {
+    httpMock.expectOne(`${API}/api/lookup/countries`).error(new ProgressEvent('error'));
+    await tick();
+    httpMock
+      .expectOne(`${API}/api/lookup/countries/${countryId}/cities`)
+      .error(new ProgressEvent('error'));
+    await tick();
+  }
 
   beforeEach(() => {
     localStorage.clear();
@@ -73,6 +100,9 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     const pending = service.createNeverbeenAccount(account);
     await tick();
 
+    // The ids sent with the registration are the ones the API's own lookup lists answer.
+    await flushLocationLookups();
+
     const registration = httpMock.expectOne(`${API}/api/registration`);
     expect(registration.request.method).toBe('POST');
     expect(registration.request.headers.get('Authorization')).toBe('Bearer jwt.token.value');
@@ -83,7 +113,7 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     expect(body.get('dateOfBirth')).toBe('1995-06-12');
     expect(body.get('email')).toBe('elena.rostova@example.com');
     expect(body.get('profession')).toBe('Freelancer');
-    // Country / city ids must be the API's own seed ids (France = 60, Paris = 321).
+    // Country / city ids come from those lists (France = 60, Paris = 321).
     expect(body.get('countryId')).toBe('60');
     expect(body.get('cityId')).toBe('321');
     expect((body.get('photo') as File).name).toBe('elena.jpg');
@@ -231,7 +261,9 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     const pending = service.createNeverbeenAccount(account);
     await tick();
 
-    // The registration POST itself fails — no health probe stands in front of it.
+    // While the API is offline the ids come from the generated seed list — the browser-only
+    // flow — and the registration POST itself fails: no health probe stands in front of it.
+    await failLocationLookups();
     httpMock.expectOne(`${API}/api/registration`).error(new ProgressEvent('error'));
 
     const profile = await pending;
@@ -246,6 +278,7 @@ describe('CommunityService — NeverBeen Web API integration', () => {
   it('keeps the account local and asks for a sign-in when the API has no OAuth session (401)', async () => {
     const pending = service.createNeverbeenAccount(account);
     await tick();
+    await flushLocationLookups();
     httpMock
       .expectOne(`${API}/api/registration`)
       .flush({ error: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
@@ -262,6 +295,7 @@ describe('CommunityService — NeverBeen Web API integration', () => {
 
     const pending = service.createNeverbeenAccount(account);
     await tick();
+    await flushLocationLookups();
     httpMock
       .expectOne(`${API}/api/registration`)
       .flush(
@@ -272,5 +306,92 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     await expect(pending).rejects.toThrow(/already registered/);
     expect(service.accountSaveTarget()).toBeNull();
     expect(service.profile()).toBeNull();
+  });
+
+  it('sends the database’s country/city ids, never the generated seed ids', async () => {
+    // The live database was seeded from neverbeen-database/seed.sql, which numbers its
+    // countries India = 1 … Malaysia = 10, while the generated community-seed.ts list
+    // numbers India = 81 and Kolkata = 443. The seed ids do not exist in that database, so
+    // the API answered "The selected city does not belong to the selected country."
+    const seedIndia = SEED_COUNTRIES.find((c) => c.name === 'India')!;
+    const seedKolkata = seedIndia.cities.find((c) => c.name === 'Kolkata')!;
+    expect(seedIndia.id).not.toBe(1);
+    expect(seedKolkata.id).not.toBe(1);
+
+    service.token.set('jwt.india.member');
+    const pending = service.createNeverbeenAccount({
+      ...account,
+      country: 'India',
+      state: 'West Bengal',
+      city: 'Kolkata',
+    });
+    await tick();
+
+    await flushLocationLookups({ id: 1, isoCode2: 'IN', name: 'India', phoneCode: '+91' }, [
+      { id: 1, name: 'Kolkata' },
+      { id: 2, name: 'Mumbai' },
+      { id: 3, name: 'Delhi' },
+    ]);
+
+    const registration = httpMock.expectOne(`${API}/api/registration`);
+    const body = registration.request.body as FormData;
+    // Kolkata = city 1 of country 1 — the pair the API can verify.
+    expect(body.get('countryId')).toBe('1');
+    expect(body.get('cityId')).toBe('1');
+    expect(body.get('countryId')).not.toBe(String(seedIndia.id));
+    expect(body.get('cityId')).not.toBe(String(seedKolkata.id));
+
+    registration.flush({
+      id: 8,
+      fullName: 'Elena Rostova',
+      email: 'elena.rostova@example.com',
+      gender: 'Female',
+      dateOfBirth: '1995-06-12T00:00:00',
+      age: 31,
+      countryId: 1,
+      countryName: 'India',
+      cityId: 1,
+      cityName: 'Kolkata',
+      pincode: null,
+      contactNumber: null,
+      postalAddress: null,
+      aboutMe: null,
+      profession: 'Freelancer',
+      status: 'Active',
+      profilePhotoUrl: '/api/profile/8/photo',
+      externalProfilePictureUrl: null,
+      createdAtUtc: '2026-10-07T00:00:00Z',
+      settings: {},
+      gallery: [],
+      commentCount: 0,
+    });
+
+    const profile = await pending;
+    expect(service.accountSaveTarget()).toBe('database');
+    expect(profile.cityName).toBe('Kolkata');
+  });
+
+  it('refuses to post a city the database does not store for that country', async () => {
+    service.token.set('jwt.token.value');
+
+    // The database knows India, but not Kolkata — posting either id would make the API
+    // answer "The selected city does not belong to the selected country."
+    const pending = service.createNeverbeenAccount({
+      ...account,
+      country: 'India',
+      state: 'West Bengal',
+      city: 'Kolkata',
+    });
+    // Watch the rejection from the start so the failing promise is never left unhandled.
+    const rejection = expect(pending).rejects.toThrow(/does not know Kolkata in India/);
+
+    await tick();
+    await flushLocationLookups({ id: 1, isoCode2: 'IN', name: 'India', phoneCode: '+91' }, [
+      { id: 3, name: 'Delhi' },
+    ]);
+
+    // No POST is sent at all (httpMock.verify() in afterEach proves nothing is left over).
+    await rejection;
+    expect(service.accountSaveTarget()).toBeNull();
   });
 });

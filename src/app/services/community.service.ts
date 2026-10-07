@@ -417,6 +417,12 @@ export class CommunityService {
   readonly abuseReports = signal<AbuseReport[]>(this.loadAbuseReports());
   readonly hiddenPostIds = signal<number[]>(this.loadHiddenPostIds());
 
+  /**
+   * True once `countries()` holds the Web API's own list rather than the generated seed list.
+   * The ids in that list are the ones the API validates registrations against, so they must
+   * not be replaced by the seed ids while the session lasts.
+   */
+  private countriesAreFromApi = false;
   readonly countries = signal<Country[]>(
     SEED_COUNTRIES.map((c) => ({
       id: c.id,
@@ -783,6 +789,7 @@ export class CommunityService {
         const countries = await firstValueFrom(withApiTimeout(this.http.get<Country[]>(url), url));
         if (countries?.length) {
           this.apiOnline.set(true);
+          this.countriesAreFromApi = true;
           this.countries.set(
             countries.map((c) => ({
               id: c.id,
@@ -833,48 +840,99 @@ export class CommunityService {
     return this.genders();
   }
 
+  /**
+   * Cities the Web API stores for a country, or `null` when the API could not be asked
+   * (unreachable, timed out, or no HTTP client in this build).
+   *
+   * This list is the **only** authority on the ids the API accepts: `POST /api/registration`
+   * and `PUT /api/profile` look the city row up and answer
+   * "The selected city does not belong to the selected country." whenever
+   * `city.CountryId != countryId`, so a city id may never be taken from the local seed when
+   * the API is reachable. An empty array is a real answer ("this country has no cities yet")
+   * and must not be replaced by the seed either.
+   */
+  private async apiCitiesForCountry(countryId: number): Promise<City[] | null> {
+    if (!this.http) return null;
+    try {
+      const url = this.apiEndpoint(`/api/lookup/countries/${countryId}/cities`);
+      const cities = await firstValueFrom(withApiTimeout(this.http.get<City[]>(url), url));
+      if (Array.isArray(cities)) {
+        this.apiOnline.set(true);
+        return cities;
+      }
+    } catch {
+      /* the API could not answer — the caller falls back to the seed list */
+    }
+    return null;
+  }
+
   /** City options for a country from the Web API, falling back to the generated seed list. */
   async loadCitiesForCountry(countryId: number): Promise<City[]> {
-    if (this.http) {
-      try {
-        const url = this.apiEndpoint(`/api/lookup/countries/${countryId}/cities`);
-        const cities = await firstValueFrom(withApiTimeout(this.http.get<City[]>(url), url));
-        if (cities) {
-          this.apiOnline.set(true);
-          return cities;
-        }
-      } catch {
-        /* fall through to the seed list */
-      }
-    }
+    const apiCities = await this.apiCitiesForCountry(countryId);
+    if (apiCities) return apiCities;
     const seed = SEED_COUNTRIES.find((c) => c.id === countryId);
     return seed ? seed.cities : [];
   }
 
-  /** Country id the Web API uses for a country name (seed ids match the API's own seed). */
+  /**
+   * Country id the Web API uses for a country name.
+   *
+   * The API's own `GET /api/lookup/countries` list is asked first: those ids are the ones the
+   * registration endpoint validates the city against, so a city id must never be derived from
+   * another id space. Only when the API cannot be reached (or does not list the country) do we
+   * fall back to the generated seed ids — which is also what the browser-only flow uses.
+   */
   async resolveCountryId(countryName: string): Promise<number | null> {
     const key = CommunityService.nameKey(countryName);
+    // Once the API has answered with its country list there is no reason to ask again: that
+    // list stays the authority for the ids this session sends. A database seeded from
+    // neverbeen-database/seed.sql numbers its countries differently from community-seed.ts,
+    // and sending the seed ids is what made the API answer "The selected city does not belong
+    // to the selected country."
+    const countries = this.countriesAreFromApi ? this.countries() : await this.loadCountries();
+    const apiMatch = countries.find((c) => CommunityService.nameKey(c.name) === key);
+    if (apiMatch) return apiMatch.id;
     const seed = SEED_COUNTRIES.find((c) => CommunityService.nameKey(c.name) === key);
-    if (seed) return seed.id;
-    const countries = await this.loadCountries();
-    return countries.find((c) => CommunityService.nameKey(c.name) === key)?.id ?? null;
+    return seed?.id ?? null;
   }
 
-  /** City id the Web API uses for a city name inside a country. */
-  async resolveCityId(countryId: number, cityName: string): Promise<number | null> {
-    const key = CommunityService.nameKey(cityName);
-    const seed = SEED_COUNTRIES.find((c) => c.id === countryId);
-    const seedMatch = seed?.cities.find((c) => CommunityService.nameKey(c.name) === key);
-    if (seedMatch) return seedMatch.id;
+  /**
+   * City id the Web API uses for a city name inside a country.
+   *
+   * The country's city list comes from the API itself (`GET
+   * /api/lookup/countries/{id}/cities`), so the id returned here always belongs to the country
+   * that is sent with it and the API's country/city cross-check can never fail. The generated
+   * seed list is matched only while the API is unreachable (browser-only flow), where
+   * `countryName` lets the seed country be found by name when the id came from the API.
+   */
+  async resolveCityId(
+    countryId: number,
+    cityName: string,
+    countryName?: string,
+  ): Promise<number | null> {
+    const match = (cities: City[]): number | null => {
+      const key = CommunityService.nameKey(cityName);
+      const exact = cities.find((c) => CommunityService.nameKey(c.name) === key);
+      if (exact) return exact.id;
+      const partial = cities.find((c) => {
+        const candidate = CommunityService.nameKey(c.name);
+        return candidate.startsWith(key) || key.startsWith(candidate);
+      });
+      return partial?.id ?? null;
+    };
 
-    const cities = await this.loadCitiesForCountry(countryId);
-    const exact = cities.find((c) => CommunityService.nameKey(c.name) === key);
-    if (exact) return exact.id;
-    const partial = cities.find((c) => {
-      const candidate = CommunityService.nameKey(c.name);
-      return candidate.startsWith(key) || key.startsWith(candidate);
-    });
-    return partial?.id ?? null;
+    const apiCities = await this.apiCitiesForCountry(countryId);
+    if (apiCities) return match(apiCities);
+
+    // The API could not be asked: the generated seed list numbers countries/cities
+    // independently, so look the country up by name as well as by id.
+    const countryKey = countryName ? CommunityService.nameKey(countryName) : '';
+    const seed =
+      SEED_COUNTRIES.find((c) => c.id === countryId) ??
+      (countryKey
+        ? SEED_COUNTRIES.find((c) => CommunityService.nameKey(c.name) === countryKey)
+        : undefined);
+    return seed ? match(seed.cities) : null;
   }
 
   // ---------------------------------------------------------------------------
@@ -1771,12 +1829,17 @@ export class CommunityService {
     // a slow/cold API or a failing probe can never stop the member from being stored.
     const url = this.apiEndpoint('/api/registration');
 
+    // Country and city ids are resolved against the API's own lookup lists: the API stores a
+    // city only for the country it was seeded with and rejects any other pair with
+    // "The selected city does not belong to the selected country."
     const countryId = await this.resolveCountryId(data.country);
-    const cityId = countryId == null ? null : await this.resolveCityId(countryId, data.city);
+    const cityId =
+      countryId == null ? null : await this.resolveCityId(countryId, data.city, data.country);
     if (countryId == null || cityId == null) {
       throw new Error(
-        `We could not match ${data.city}, ${data.country} to the NeverBeen city list. ` +
-          'Please choose another city (and country) and try again.',
+        `The NeverBeen database does not know ${data.city} in ${data.country}. ` +
+          'Please pick another country and city from the lists — they contain every city ' +
+          'registration accepts.',
       );
     }
 
