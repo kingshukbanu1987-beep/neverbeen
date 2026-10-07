@@ -81,6 +81,7 @@ describe('Rent this model', () => {
     expect(panel.textContent).toContain('Rate per Photo');
     expect(panel.querySelector('.calendar')?.textContent).toBeTruthy();
     expect(panel.querySelectorAll('.rate-card').length).toBeGreaterThan(0);
+    expect(panel.querySelector('.booking-submit')?.textContent).toContain('Submit Order');
     expect(document.body.style.overflow).toBe('hidden');
   });
 
