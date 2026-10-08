@@ -875,18 +875,18 @@ export class CommunityService {
 
   /** Circles the signed-in member belongs to (admin or member). */
   readonly myCircles = computed(() => {
-    const me = this.currentUser()?.id ?? 1;
+    const me = this.currentUser()?.id ?? this.profile()?.id ?? 1;
     return this.circles().filter((c) => !c.archivedAtUtc && isCircleParticipant(c, me));
   });
 
   /** Deleted circles are retained locally so members can review their history. */
   readonly archivedCircles = computed(() => {
-    const me = this.currentUser()?.id ?? 1;
+    const me = this.currentUser()?.id ?? this.profile()?.id ?? 1;
     return this.circles().filter((c) => !!c.archivedAtUtc && isCircleParticipant(c, me));
   });
 
-  readonly adminCircleCount = computed(() => this.countAdminCircles(this.currentUser()?.id ?? 1));
-  readonly memberOnlyCircleCount = computed(() => this.countMemberOnlyCircles(this.currentUser()?.id ?? 1));
+  readonly adminCircleCount = computed(() => this.countAdminCircles(this.currentUser()?.id ?? this.profile()?.id ?? 1));
+  readonly memberOnlyCircleCount = computed(() => this.countMemberOnlyCircles(this.currentUser()?.id ?? this.profile()?.id ?? 1));
 
   readonly onlineCompanions = computed(() =>
     this.visibleCompanions().filter((c) => c.status === 'connected' && c.isOnline),
@@ -1006,18 +1006,24 @@ export class CommunityService {
       localStorage.removeItem(PROFILE_KEY);
     }
     // No local record of this member: the database is the only source of their profile.
-    if (!usableProfile) void this.refreshProfileFromApi();
+    if (!usableProfile) {
+      void this.refreshProfileFromApi().then((loaded) => {
+        if (loaded) void this.ensureCommunityLoaded(true);
+      });
+    }
     // The member's own community data (companions, circles, journey feed, message book,
     // chats, notifications, gallery, follows, devices, moderation state) is read from
     // the Web API — never from a demo seed left in this browser.
-    void this.ensureCommunityLoaded(true);
+    if (usableProfile || usableUser) {
+      void this.ensureCommunityLoaded(true);
+    }
   }
 
   /** `CurrentUser` view of a stored profile (used when only the profile survived). */
   private currentUserFromProfile(p: Profile): CurrentUser {
     return {
       id: p.id,
-      uniqueId: p.uniqueId,
+      uniqueId: p.uniqueId || generate20DigitUid(p.id),
       firstName: p.firstName,
       lastName: p.lastName,
       fullName: p.fullName,
@@ -1190,6 +1196,7 @@ export class CommunityService {
 
   /** Logs the technical error behind an API failure for the browser console. */
   private logApiFailure(action: string, url: string, error: unknown): void {
+    if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)) return;
     const status = error instanceof HttpErrorResponse ? `HTTP ${error.status}` : (error as Error)?.name;
     console.warn(`[neverbeen] ${action} failed at ${url} (${status ?? 'unknown error'})`, error);
   }
@@ -1259,18 +1266,30 @@ export class CommunityService {
 
   /** GET against the Web API with the member's Bearer token; null when it fails. */
   private async apiGet<T>(path: string): Promise<T | null> {
-    if (!this.http || !this.apiLive) return null;
+    const res = await this.apiGetWithStatus<T>(path);
+    return res.data;
+  }
+
+  /** GET against the Web API returning both the parsed payload and HTTP status code. */
+  private async apiGetWithStatus<T>(
+    path: string,
+    silent404 = false,
+  ): Promise<{ data: T | null; status: number }> {
+    if (!this.http || !this.apiLive) return { data: null, status: 0 };
     const url = this.apiEndpoint(path);
     try {
       const data = await firstValueFrom(
         withApiTimeout(this.http.get<T>(url, { headers: this.authHeaders() }), url),
       );
       this.apiOnline.set(true);
-      return data;
+      return { data, status: 200 };
     } catch (error) {
       if (this.isNetworkError(error)) this.apiOnline.set(false);
-      this.logApiFailure(`GET ${path}`, url, error);
-      return null;
+      const status = error instanceof HttpErrorResponse ? error.status : 0;
+      if (!(silent404 && status === 404)) {
+        this.logApiFailure(`GET ${path}`, url, error);
+      }
+      return { data: null, status };
     }
   }
 
@@ -1428,8 +1447,10 @@ export class CommunityService {
 
   /** Journey post (with comments) from the API's JourneyPostDto. */
   private journeyPostFromApi(dto: ApiJourneyPostDto): JourneyPost {
+    const mappedComments = (dto.comments ?? []).map((c) => this.journeyCommentFromApi(c));
     return {
       id: dto.id,
+      commentCount: dto.commentCount ?? mappedComments.length,
       author: this.authorFromApi(dto.author),
       text: dto.text ?? '',
       createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
@@ -1444,7 +1465,7 @@ export class CommunityService {
         reactedAtUtc: r.reactedAtUtc ?? undefined,
       })),
       taggedCompanions: (dto.taggedCompanions ?? []).map((a) => this.authorFromApi(a)),
-      comments: (dto.comments ?? []).map((c) => this.journeyCommentFromApi(c)),
+      comments: mappedComments,
       location: dto.location ?? undefined,
       mood: dto.mood ?? undefined,
       placeId: dto.placeId ?? undefined,
@@ -1537,7 +1558,7 @@ export class CommunityService {
    */
   async refreshCommunityFromApi(): Promise<void> {
     if (!this.http || !this.apiLive) return;
-    const me = this.currentUser()?.id;
+    const me = this.currentUser()?.id ?? this.profile()?.id;
     if (!me) return;
 
     const [companions, followsCounts, followers, following, circles, journey, book, conversations, notifications, gallery, albums, devices, blocks, hidden, reports] =
@@ -1612,10 +1633,41 @@ export class CommunityService {
     }
 
     // Journey feed.
+    // GET /api/journey omits the comment list for performance (commentCount > 0 while
+    // comments is []). Preserve any already-hydrated comments for each post and fetch
+    // the full comment thread from GET /api/journey/{id}/comments when needed.
     if (journey) {
-      this.journeyPosts.set(journey.items.map((dto) => this.journeyPostFromApi(dto)));
+      const existingById = new Map(this.journeyPosts().map((p) => [p.id, p]));
+      const postsToHydrateComments: number[] = [];
+      const mapped = journey.items.map((dto) => {
+        const post = this.journeyPostFromApi(dto);
+        const prev = existingById.get(post.id);
+        if (post.comments.length === 0 && prev && prev.comments.length > 0) {
+          post.comments = prev.comments;
+        }
+        if ((dto.commentCount ?? 0) > 0 && (!dto.comments || dto.comments.length === 0)) {
+          postsToHydrateComments.push(post.id);
+        }
+        return post;
+      });
+      this.journeyPosts.set(mapped);
       this.saveJson(JOURNEY_KEY, this.journeyPosts());
+      for (const postId of postsToHydrateComments) {
+        void this.loadJourneyComments(postId);
+      }
     }
+
+    // Harvest authors/users seen across follows, journey posts, message book, chats and
+    // notifications so known community members are immediately searchable locally.
+    this.harvestKnownAuthorsFromApi({
+      me,
+      followers,
+      following,
+      journey: journey?.items ?? null,
+      book: book?.items ?? null,
+      conversations,
+      notifications,
+    });
 
     // Message book.
     if (book) {
@@ -1780,6 +1832,7 @@ export class CommunityService {
     return {
       ...(fallback ?? {}),
       id: dto.id,
+      uniqueId: fallback?.uniqueId || generate20DigitUid(dto.id),
       // The stored FirstName / LastName columns win; splitting the full name is only the
       // fallback for an API build that does not answer them yet.
       firstName: dto.firstName?.trim() || words[0] || fallback?.firstName,
@@ -2050,8 +2103,10 @@ export class CommunityService {
     this.token.set(dto.token);
 
     const words = (dto.user?.fullName ?? '').trim().split(/\s+/).filter(Boolean);
+    const userId = dto.user?.id ?? 0;
     const user: CurrentUser = {
-      id: dto.user?.id ?? 0,
+      id: userId,
+      uniqueId: userId ? generate20DigitUid(userId) : undefined,
       firstName: words[0] ?? '',
       lastName: words.slice(1).join(' '),
       fullName: dto.user?.fullName ?? '',
@@ -2093,6 +2148,9 @@ export class CommunityService {
       const profile = this.profileFromApi(dto, this.profile() ?? undefined);
       this.profile.set(profile);
       this.saveJson(PROFILE_KEY, profile);
+      const syncedUser = this.currentUserFromProfile(profile);
+      this.currentUser.set(syncedUser);
+      this.saveJson(USER_KEY, syncedUser);
       this.apiOnline.set(true);
       return profile;
     } catch (error) {
@@ -2385,6 +2443,7 @@ export class CommunityService {
 
       const existingUser: CurrentUser = {
         id: storedProfile.id,
+        uniqueId: storedProfile.uniqueId || generate20DigitUid(storedProfile.id),
         firstName: storedProfile.firstName || p.firstName,
         lastName: storedProfile.lastName || p.lastName,
         fullName: storedProfile.fullName || p.name,
@@ -2851,6 +2910,7 @@ export class CommunityService {
         const updated: CurrentUser = {
           ...user,
           id: profile.id,
+          uniqueId: profile.uniqueId || generate20DigitUid(profile.id),
           fullName: profile.fullName,
           email: profile.email,
           status: 'Active',
@@ -2895,8 +2955,10 @@ export class CommunityService {
       (c) => c.name.toLowerCase() === data.country.toLowerCase(),
     );
 
+    const newId = this.currentUser()?.id || Date.now();
     const newProfile: Profile = {
-      id: this.currentUser()?.id || Date.now(),
+      id: newId,
+      uniqueId: generate20DigitUid(newId),
       firstName: data.name,
       lastName: data.surname,
       fullName: `${data.name} ${data.surname}`.trim(),
@@ -2929,6 +2991,7 @@ export class CommunityService {
 
     const newUser: CurrentUser = {
       id: newProfile.id,
+      uniqueId: newProfile.uniqueId,
       firstName: newProfile.firstName,
       lastName: newProfile.lastName,
       fullName: newProfile.fullName,
@@ -3655,6 +3718,69 @@ export class CommunityService {
 
   readonly MAX_COMPANIONS = 500;
 
+  /** Tracks in-flight POST /api/journey requests so comments added immediately still reach the server. */
+  private readonly pendingPostCreations = new Map<number, Promise<number | null>>();
+
+  /** Updates a post across both the main Journey feed and any cached visitor wall feeds. */
+  private updatePostEverywhere(
+    matcher: (post: JourneyPost) => boolean,
+    updater: (post: JourneyPost) => JourneyPost,
+  ): void {
+    this.journeyPosts.update((list) => list.map((p) => (matcher(p) ? updater(p) : p)));
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    this.visitorWallPosts.update((map) => {
+      let changed = false;
+      const next: Record<string, JourneyPost[]> = {};
+      for (const [key, posts] of Object.entries(map)) {
+        if (posts.some(matcher)) {
+          changed = true;
+          next[key] = posts.map((p) => (matcher(p) ? updater(p) : p));
+        } else {
+          next[key] = posts;
+        }
+      }
+      return changed ? next : map;
+    });
+  }
+
+  /** Fetches the full comment tree of a Journey post from `GET /api/journey/{id}/comments`. */
+  async loadJourneyComments(postId: number): Promise<JourneyComment[]> {
+    if (!this.apiLive || !(postId > 0) || postId >= 1_000_000_000_000) {
+      const existing = this.journeyPosts().find((p) => p.id === postId || p.clientId === postId);
+      return existing?.comments ?? [];
+    }
+    const dtos = await this.apiGet<ApiJourneyCommentDto[]>(`/api/journey/${postId}/comments`);
+    if (!dtos) {
+      const existing = this.journeyPosts().find((p) => p.id === postId);
+      return existing?.comments ?? [];
+    }
+    const mapped = dtos.map((c) => this.journeyCommentFromApi(c));
+    this.updatePostEverywhere(
+      (p) => p.id === postId,
+      (p) => {
+        // Keep any optimistic local comments not yet in the server response.
+        const serverIds = new Set<number>();
+        const collectIds = (list: JourneyComment[]) => {
+          for (const item of list) {
+            serverIds.add(item.id);
+            if (item.replies?.length) collectIds(item.replies);
+          }
+        };
+        collectIds(mapped);
+        const unsavedLocal = (p.comments ?? []).filter(
+          (c) => c.id >= 1_000_000_000_000 && !serverIds.has(c.id),
+        );
+        const merged = [...mapped, ...unsavedLocal];
+        return {
+          ...p,
+          comments: merged,
+          commentCount: Math.max(p.commentCount ?? 0, merged.length),
+        };
+      },
+    );
+    return mapped;
+  }
+
   createJourneyPost(
     text: string,
     mood?: string,
@@ -3673,13 +3799,16 @@ export class CommunityService {
     const profile = this.profile();
     const allImages = imageUrls && imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : undefined);
     const primaryImage = imageUrl || (imageUrls && imageUrls.length > 0 ? imageUrls[0] : undefined);
+    const selfId = user?.id ?? profile?.id ?? 1;
     const newPost: JourneyPost = {
       id: generateUniqueId(),
+      commentCount: 0,
       author: {
-        id: user?.id ?? 1,
-        fullName: user?.fullName || 'Kingshuk',
+        id: selfId,
+        uniqueId: profile?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
+        fullName: user?.fullName || profile?.fullName || 'Kingshuk',
         profession: profile?.profession || 'Senior Software Engineer and founder of NeverBeen',
-        profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
+        profilePhotoUrl: user?.profilePhotoUrl || profile?.profilePhotoUrl || '/author.jpeg',
         isVerified: !!user?.isVerified || !!profile?.isVerified,
       },
       text: text.trim(),
@@ -3703,10 +3832,20 @@ export class CommunityService {
 
     this.journeyPosts.update((list) => [newPost, ...list]);
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    if (wallOwner?.id) {
+      const key = String(wallOwner.id);
+      this.visitorWallPosts.update((map) =>
+        map[key] ? { ...map, [key]: [newPost, ...map[key]] } : map,
+      );
+    }
     // Signed-in members write the post to the Web API (POST /api/journey); the stored
     // answer (database id, comments, reactions) replaces the optimistic copy.
     if (this.apiLive) {
-      void this.createJourneyPostOnApi(newPost, taggedCompanions ?? [], wallOwner);
+      const creationPromise = this.createJourneyPostOnApi(newPost, taggedCompanions ?? [], wallOwner);
+      this.pendingPostCreations.set(newPost.id, creationPromise);
+      void creationPromise.finally(() => {
+        this.pendingPostCreations.delete(newPost.id);
+      });
     }
     return newPost;
   }
@@ -3716,7 +3855,7 @@ export class CommunityService {
     optimistic: JourneyPost,
     taggedCompanions: AuthorInfo[],
     wallOwner?: { id: number; fullName: string },
-  ): Promise<void> {
+  ): Promise<number | null> {
     const dto = await this.apiSend<ApiJourneyPostDto>('POST', '/api/journey', {
       text: optimistic.text,
       imageUrls: optimistic.imageUrls ?? (optimistic.imageUrl ? [optimistic.imageUrl] : undefined),
@@ -3730,10 +3869,18 @@ export class CommunityService {
       taggedCompanionIds: taggedCompanions.map((a) => a.id).filter((id) => id > 0),
       wallOwnerId: optimistic.wallOwnerId ?? wallOwner?.id ?? undefined,
     });
-    if (!dto) return;
+    if (!dto) return null;
     const stored = this.journeyPostFromApi(dto);
-    this.journeyPosts.update((list) => list.map((p) => (p.id === optimistic.id ? stored : p)));
-    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    this.updatePostEverywhere(
+      (p) => p.id === optimistic.id || p.clientId === optimistic.id,
+      (p) => ({
+        ...stored,
+        clientId: optimistic.id,
+        comments: stored.comments.length > 0 ? stored.comments : p.comments,
+        commentCount: Math.max(stored.commentCount ?? 0, p.comments.length),
+      }),
+    );
+    return stored.id;
   }
 
   shareJourneyPost(originalPostId: number, userThought?: string, audience?: PostAudience): JourneyPost | null {
@@ -3937,45 +4084,45 @@ export class CommunityService {
 
   reactToJourneyPost(postId: number, reaction: ReactionType): void {
     const user = this.currentUser();
+    const prof = this.profile();
+    const selfId = user?.id ?? prof?.id ?? 1;
     const currentAuthor: AuthorInfo = {
-      id: user?.id ?? 1,
-      fullName: user?.fullName || 'Kingshuk',
-      profession: this.profile()?.profession || 'Senior Software Engineer and founder of NeverBeen',
-      profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
+      id: selfId,
+      uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
+      fullName: user?.fullName || prof?.fullName || 'Kingshuk',
+      profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
+      profilePhotoUrl: user?.profilePhotoUrl || prof?.profilePhotoUrl || '/author.jpeg',
     };
 
-    this.journeyPosts.update((list) =>
-      list.map((post) => {
-        if (post.id === postId) {
-          let reactions: UserReaction[] = post.reactions ? [...post.reactions] : [];
-          const existing = reactions.find((r) => r.user.id === currentAuthor.id);
-          let myReaction: ReactionType | null = post.myReaction ?? null;
-          let isLiked = post.isLiked ?? false;
-          let likeCount = post.likeCount || 0;
+    this.updatePostEverywhere(
+      (post) => post.id === postId || post.clientId === postId,
+      (post) => {
+        let reactions: UserReaction[] = post.reactions ? [...post.reactions] : [];
+        const existing = reactions.find((r) => r.user.id === currentAuthor.id);
+        let myReaction: ReactionType | null = post.myReaction ?? null;
+        let isLiked = post.isLiked ?? false;
+        let likeCount = post.likeCount || 0;
 
-          if (existing && existing.type === reaction) {
-            // Toggle off
-            reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
-            myReaction = null;
-            isLiked = false;
-            likeCount = Math.max(0, likeCount - 1);
-          } else {
-            reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
-            reactions.unshift({ user: currentAuthor, type: reaction, reactedAtUtc: new Date().toISOString() });
-            if (!existing) {
-              likeCount++;
-            }
-            myReaction = reaction;
-            isLiked = reaction !== 'Dislike';
+        if (existing && existing.type === reaction) {
+          // Toggle off
+          reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+          myReaction = null;
+          isLiked = false;
+          likeCount = Math.max(0, likeCount - 1);
+        } else {
+          reactions = reactions.filter((r) => r.user.id !== currentAuthor.id);
+          reactions.unshift({ user: currentAuthor, type: reaction, reactedAtUtc: new Date().toISOString() });
+          if (!existing) {
+            likeCount++;
           }
-
-          const likers = reactions.map((r) => r.user);
-          return { ...post, reactions, myReaction, isLiked, likeCount, likers };
+          myReaction = reaction;
+          isLiked = reaction !== 'Dislike';
         }
-        return post;
-      }),
+
+        const likers = reactions.map((r) => r.user);
+        return { ...post, reactions, myReaction, isLiked, likeCount, likers };
+      },
     );
-    this.saveJson(JOURNEY_KEY, this.journeyPosts());
     // Reactions are stored on the Web API (POST /api/journey/{id}/reactions); the
     // counters it answers with are the ones the feed keeps.
     if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
@@ -3985,19 +4132,15 @@ export class CommunityService {
         { reactionType: reaction },
       ).then((result) => {
         if (!result) return;
-        this.journeyPosts.update((list) =>
-          list.map((p) =>
-            p.id === postId
-              ? {
-                  ...p,
-                  likeCount: result.likeCount,
-                  myReaction: (result.myReaction as ReactionType | null) ?? null,
-                  isLiked: !!result.myReaction && result.myReaction !== 'Dislike',
-                }
-              : p,
-          ),
+        this.updatePostEverywhere(
+          (p) => p.id === postId || p.clientId === postId,
+          (p) => ({
+            ...p,
+            likeCount: result.likeCount,
+            myReaction: (result.myReaction as ReactionType | null) ?? null,
+            isLiked: !!result.myReaction && result.myReaction !== 'Dislike',
+          }),
         );
-        this.saveJson(JOURNEY_KEY, this.journeyPosts());
       });
     }
   }
@@ -4011,14 +4154,18 @@ export class CommunityService {
   ): void {
     if (this.blockedByGuard(text) || !this.storageAllows(utf8Bytes(text) + imageBytes(imageUrl))) return;
     const user = this.currentUser();
+    const prof = this.profile();
+    const selfId = user?.id ?? prof?.id ?? 1;
     const newComment: JourneyComment = {
       id: generateUniqueId(),
+      postId,
       author: {
-        id: user?.id ?? 1,
-        fullName: user?.fullName || 'Kingshuk',
-        profession: this.profile()?.profession || 'Senior Software Engineer and founder of NeverBeen',
-        profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
-        isVerified: !!user?.isVerified || !!this.profile()?.isVerified,
+        id: selfId,
+        uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
+        fullName: user?.fullName || prof?.fullName || 'Kingshuk',
+        profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
+        profilePhotoUrl: user?.profilePhotoUrl || prof?.profilePhotoUrl || '/author.jpeg',
+        isVerified: !!user?.isVerified || !!prof?.isVerified,
       },
       text: text.trim(),
       imageUrl: imageUrl || undefined,
@@ -4030,47 +4177,99 @@ export class CommunityService {
       replies: [],
     };
 
-    this.journeyPosts.update((list) =>
-      list.map((post) => {
-        if (post.id === postId) {
-          if (parentCommentId) {
-            return {
-              ...post,
-              comments: this.addNestedJourneyReply(post.comments, parentCommentId, newComment),
-            };
-          }
-          return {
-            ...post,
-            comments: [...post.comments, newComment],
-          };
-        }
-        return post;
-      }),
+    this.updatePostEverywhere(
+      (post) => post.id === postId || post.clientId === postId,
+      (post) => {
+        const nextComments = parentCommentId
+          ? this.addNestedJourneyReply(post.comments, parentCommentId, newComment)
+          : [...post.comments, newComment];
+        return {
+          ...post,
+          comments: nextComments,
+          commentCount: Math.max((post.commentCount ?? post.comments.length) + 1, nextComments.length),
+        };
+      },
     );
-    this.saveJson(JOURNEY_KEY, this.journeyPosts());
+
     // Comments are written to the Web API (POST /api/journey/{id}/comments).
     if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
-      void this.apiSend<ApiJourneyCommentDto>('POST', `/api/journey/${postId}/comments`, {
-        text: newComment.text,
-        parentId: parentCommentId && parentCommentId <= 0x7fffffffffffffff ? parentCommentId : undefined,
-        imageUrl: imageUrl || undefined,
-      }).then((dto) => {
-        if (!dto) return;
-        const stored = this.journeyCommentFromApi(dto);
-        this.journeyPosts.update((list) =>
-          list.map((post) => {
-            if (post.id !== postId) return post;
-            const replace = (comments: JourneyComment[]): JourneyComment[] =>
-              comments.map((c) =>
-                c.id === newComment.id
-                  ? stored
-                  : { ...c, replies: replace(c.replies ?? []) },
-              );
-            return { ...post, comments: replace(post.comments) };
-          }),
-        );
-        this.saveJson(JOURNEY_KEY, this.journeyPosts());
-      });
+      void this.persistJourneyCommentOnApi(postId, newComment, parentCommentId, imageUrl);
+    }
+  }
+
+  /** Persists a Journey comment to `POST /api/journey/{id}/comments`, awaiting in-flight post creation if needed. */
+  private async persistJourneyCommentOnApi(
+    postId: number,
+    newComment: JourneyComment,
+    parentCommentId?: number,
+    imageUrl?: string,
+  ): Promise<void> {
+    let targetPostId = postId;
+    const pendingPost = this.pendingPostCreations.get(postId);
+    if (pendingPost) {
+      const resolvedId = await pendingPost;
+      if (!resolvedId) return;
+      targetPostId = resolvedId;
+    } else {
+      const matched = this.journeyPosts().find((p) => p.clientId === postId);
+      if (matched) targetPostId = matched.id;
+    }
+
+    let apiImageUrl = imageUrl || undefined;
+    if (apiImageUrl && apiImageUrl.startsWith('data:') && apiImageUrl.length > 1024) {
+      const uploaded = await this.uploadDataUrlForComment(apiImageUrl, newComment.text.slice(0, 80));
+      apiImageUrl = uploaded ?? undefined;
+    }
+
+    const validParentId =
+      parentCommentId && parentCommentId > 0 && parentCommentId < 1_000_000_000_000
+        ? parentCommentId
+        : undefined;
+
+    const dto = await this.apiSend<ApiJourneyCommentDto>(
+      'POST',
+      `/api/journey/${targetPostId}/comments`,
+      {
+        text: newComment.text || (imageUrl ? '📷' : ''),
+        parentId: validParentId,
+        imageUrl: apiImageUrl,
+      },
+    );
+    if (!dto) return;
+    const stored = this.journeyCommentFromApi(dto);
+    if (!stored.imageUrl && newComment.imageUrl) {
+      stored.imageUrl = newComment.imageUrl;
+    }
+    this.updatePostEverywhere(
+      (post) => post.id === targetPostId || post.id === postId || post.clientId === postId,
+      (post) => {
+        const replace = (comments: JourneyComment[]): JourneyComment[] =>
+          comments.map((c) =>
+            c.id === newComment.id
+              ? {
+                  ...stored,
+                  replies: stored.replies?.length ? stored.replies : (c.replies ?? []),
+                }
+              : { ...c, replies: replace(c.replies ?? []) },
+          );
+        return { ...post, comments: replace(post.comments) };
+      },
+    );
+  }
+
+  /** Converts a base64 data URL into a short API gallery URL so it fits JourneyComment.ImageUrl (MaxLength 1024). */
+  private async uploadDataUrlForComment(dataUrl: string, caption?: string): Promise<string | null> {
+    try {
+      const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
+      if (!match) return null;
+      const mime = match[1];
+      const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+      const ext = mime.split('/')[1] || 'jpg';
+      const file = new File([bytes], `comment-${Date.now()}.${ext}`, { type: mime });
+      const dto = await this.uploadGalleryPhotoToApi(file, caption);
+      return dto?.url ?? null;
+    } catch {
+      return null;
     }
   }
 
@@ -4102,25 +4301,23 @@ export class CommunityService {
 
   reactToJourneyComment(postId: number, commentId: number, reaction: ReactionType): void {
     const user = this.currentUser();
+    const prof = this.profile();
+    const selfId = user?.id ?? prof?.id ?? 1;
     const currentAuthor: AuthorInfo = {
-      id: user?.id ?? 1,
-      fullName: user?.fullName || 'Kingshuk',
-      profession: this.profile()?.profession || 'Senior Software Engineer and founder of NeverBeen',
-      profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
+      id: selfId,
+      uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
+      fullName: user?.fullName || prof?.fullName || 'Kingshuk',
+      profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
+      profilePhotoUrl: user?.profilePhotoUrl || prof?.profilePhotoUrl || '/author.jpeg',
     };
 
-    this.journeyPosts.update((list) =>
-      list.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: this.applyCommentReactionRecursive(post.comments, commentId, reaction, currentAuthor),
-          };
-        }
-        return post;
+    this.updatePostEverywhere(
+      (post) => post.id === postId || post.clientId === postId,
+      (post) => ({
+        ...post,
+        comments: this.applyCommentReactionRecursive(post.comments, commentId, reaction, currentAuthor),
       }),
     );
-    this.saveJson(JOURNEY_KEY, this.journeyPosts());
     // Comment reactions live on the Web API too (POST /api/journey/comments/{id}/reactions);
     // the counter it answers with replaces the optimistic one.
     if (this.apiLive && commentId > 0 && commentId <= 0x7fffffffffffffff) {
@@ -4130,13 +4327,13 @@ export class CommunityService {
         { reactionType: reaction },
       ).then((result) => {
         if (!result) return;
-        this.journeyPosts.update((list) =>
-          list.map((post) => ({
+        this.updatePostEverywhere(
+          () => true,
+          (post) => ({
             ...post,
             comments: this.applyCommentLikeCount(post.comments, commentId, result.likeCount),
-          })),
+          }),
         );
-        this.saveJson(JOURNEY_KEY, this.journeyPosts());
       });
     }
   }
@@ -4262,18 +4459,173 @@ export class CommunityService {
   searchCompanionsLocally(query: string): Companion[] {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    const matches = (c: Companion): boolean =>
-      c.fullName.toLowerCase().includes(q) ||
-      c.city.toLowerCase().includes(q) ||
-      c.country.toLowerCase().includes(q) ||
-      c.profession.toLowerCase().includes(q);
+    const tokens = q.split(/\s+/).filter(Boolean);
+    const matches = (c: Companion): boolean => {
+      const haystack = [
+        c.fullName,
+        c.city,
+        c.country,
+        c.profession,
+        c.bio,
+        c.aboutMe,
+        c.uniqueId,
+        c.aboutMeDetails?.hometown,
+        c.aboutMeDetails?.location,
+        c.aboutMeDetails?.contactEmail,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      if (haystack.includes(q)) return true;
+      return tokens.length > 1 && tokens.every((token) => haystack.includes(token));
+    };
     const hits = this.visibleCompanions().filter(matches);
-    const me = this.currentUser() ? this.getCurrentUserAsCompanion() : null;
+    const me =
+      this.currentUser() || this.profile() ? this.getCurrentUserAsCompanion() : null;
     if (me && matches(me) && !hits.some((c) => Number(c.id) === Number(me.id))) {
       // Your own card: opens your profile, but is never a Connect / Follow target.
       hits.unshift({ ...me, status: 'none' });
     }
     return hits;
+  }
+
+  /** Set once `GET /api/users/search` answers HTTP 404 (unapplied backend patch). */
+  private usersDirectoryEndpointMissing = false;
+  /** User ids already probed on `GET /api/companions/{id}` when `/api/users/*` is missing. */
+  private readonly probedCompanionDirectoryIds = new Set<number>();
+  private directoryFallbackPromise: Promise<void> | null = null;
+
+  /**
+   * Harvests user / author records already present in API feed, message-book, follow, chat
+   * and notification responses into `companions()` so known community members are
+   * immediately searchable without extra HTTP round-trips.
+   */
+  private harvestKnownAuthorsFromApi(sources: {
+    me: number;
+    followers: ApiFollowDto[] | null;
+    following: ApiFollowDto[] | null;
+    journey: ApiJourneyPostDto[] | null;
+    book: ApiBookCommentDto[] | null;
+    conversations: ApiConversationDto[] | null;
+    notifications: ApiNotificationDto[] | null;
+  }): void {
+    const existingIds = new Set<number>(this.companions().map((c) => Number(c.id)));
+    existingIds.add(Number(sources.me));
+    const discovered = new Map<number, Companion>();
+
+    const addAuthor = (a?: {
+      id?: number | null;
+      uniqueId?: string | null;
+      fullName?: string | null;
+      profilePhotoUrl?: string | null;
+      profession?: string | null;
+      country?: string | null;
+      city?: string | null;
+      isVerified?: boolean | null;
+    } | null) => {
+      const id = Number(a?.id ?? 0);
+      if (!id || id <= 0 || existingIds.has(id) || discovered.has(id)) return;
+      const name = (a?.fullName ?? '').trim();
+      if (!name) return;
+      discovered.set(id, {
+        id,
+        uniqueId: a?.uniqueId ?? generate20DigitUid(id),
+        fullName: name,
+        profilePhotoUrl: this.absoluteApiUrl(a?.profilePhotoUrl) ?? '',
+        country: a?.country ?? '',
+        city: a?.city ?? '',
+        profession: a?.profession ?? '',
+        isOnline: false,
+        mutualCompanionsCount: 0,
+        status: 'none',
+        isVerified: !!a?.isVerified,
+      });
+    };
+
+    for (const f of sources.followers ?? []) addAuthor(f);
+    for (const f of sources.following ?? []) addAuthor(f);
+    for (const post of sources.journey ?? []) {
+      addAuthor(post.author);
+      for (const tagged of post.taggedCompanions ?? []) addAuthor(tagged);
+      for (const r of post.reactions ?? []) addAuthor(r.user);
+    }
+    const harvestBook = (items: ApiBookCommentDto[] | null | undefined) => {
+      for (const item of items ?? []) {
+        addAuthor(item.author);
+        if (item.replies?.length) harvestBook(item.replies);
+      }
+    };
+    harvestBook(sources.book);
+    for (const conv of sources.conversations ?? []) {
+      for (const p of conv.participants ?? []) addAuthor(p);
+    }
+    for (const n of sources.notifications ?? []) {
+      addAuthor(n.fromUser);
+    }
+
+    if (discovered.size > 0) {
+      for (const comp of discovered.values()) {
+        this.upsertCompanion(comp);
+      }
+    }
+  }
+
+  /**
+   * Fallback directory discovery when `GET /api/users/search` returns HTTP 404 on the Web API:
+   * `GET /api/companions/{id}` is live on `CompanionsController` and returns a `CompanionDto`
+   * for any registered user id in `_db.Users`.
+   */
+  private async discoverUsersViaCompanionsEndpoint(): Promise<void> {
+    if (!this.apiLive) return;
+    if (this.directoryFallbackPromise) return this.directoryFallbackPromise;
+
+    const run = async () => {
+      const me = this.myId();
+      const maxExisting = this.companions().reduce(
+        (max, c) => (c.id > 0 && c.id < 10000 ? Math.max(max, Number(c.id)) : max),
+        me > 0 && me < 10000 ? me : 1,
+      );
+      const upperBound = Math.min(Math.max(maxExisting + 15, 25), 60);
+      const candidateIds: number[] = [];
+      for (let id = 1; id <= upperBound; id++) {
+        if (id === me || this.probedCompanionDirectoryIds.has(id)) continue;
+        if (this.companions().some((c) => Number(c.id) === id && c.country && c.city)) {
+          this.probedCompanionDirectoryIds.add(id);
+          continue;
+        }
+        candidateIds.push(id);
+      }
+
+      const batchSize = 5;
+      let consecutiveMisses = 0;
+      for (let i = 0; i < candidateIds.length; i += batchSize) {
+        const batch = candidateIds.slice(i, i + batchSize);
+        for (const id of batch) this.probedCompanionDirectoryIds.add(id);
+        const results = await Promise.all(
+          batch.map((id) => this.apiGetWithStatus<ApiCompanionDto>(`/api/companions/${id}`, true)),
+        );
+        let foundInBatch = 0;
+        for (const res of results) {
+          if (res.data && res.data.id) {
+            foundInBatch++;
+            const comp = this.companionFromApi(res.data);
+            this.upsertCompanion(comp);
+            this.applyApiFollowFlags([comp]);
+          }
+        }
+        if (foundInBatch === 0) {
+          consecutiveMisses += batch.length;
+          if (consecutiveMisses >= 10) break;
+        } else {
+          consecutiveMisses = 0;
+        }
+      }
+    };
+
+    this.directoryFallbackPromise = run().finally(() => {
+      this.directoryFallbackPromise = null;
+    });
+    return this.directoryFallbackPromise;
   }
 
   /**
@@ -4290,18 +4642,34 @@ export class CommunityService {
     if (!q) return [];
 
     if (this.apiLive) {
-      const dtos = await this.apiGet<ApiUserSearchResultDto[]>(
+      if (this.usersDirectoryEndpointMissing) {
+        await this.discoverUsersViaCompanionsEndpoint();
+        return this.searchCompanionsLocally(q);
+      }
+      const { data: dtos, status } = await this.apiGetWithStatus<ApiUserSearchResultDto[]>(
         `/api/users/search?query=${encodeURIComponent(q)}&limit=25`,
       );
       if (dtos) {
         const hits = dtos.map((dto) => this.searchResultFromApi(dto));
         for (const hit of hits) this.upsertCompanion(hit);
         this.applyApiFollowFlags(hits);
-        // Answer with the merged directory entries (ids are now unique there).
+        // Answer with the merged directory entries plus any local matches (including self).
         const byId = new Map(hits.map((h) => [Number(h.id), h]));
-        return this.companions()
+        const remoteMatched = this.companions()
           .filter((c) => byId.has(Number(c.id)))
           .filter((c) => !this.isUserBlocked(c.id));
+        const localMatched = this.searchCompanionsLocally(q);
+        const combined: Companion[] = [...remoteMatched];
+        for (const loc of localMatched) {
+          if (!combined.some((c) => Number(c.id) === Number(loc.id))) {
+            combined.push(loc);
+          }
+        }
+        return combined;
+      }
+      if (status === 404) {
+        this.usersDirectoryEndpointMissing = true;
+        await this.discoverUsersViaCompanionsEndpoint();
       }
       // The API could not be reached — fall through to the local directory.
     }
@@ -4324,6 +4692,20 @@ export class CommunityService {
       return changed ? { ...graph, [key]: Array.from(list) } : graph;
     });
     this.persistFollows();
+  }
+
+  /** Extracts the numeric userId encoded in a 20-digit NeverBeen UID (`8920153401` + 10 digits) or numeric string. */
+  private static numericIdFromUid(uid: string): number | null {
+    const trimmed = uid.trim();
+    if (/^8920153401\d{10}$/.test(trimmed)) {
+      const parsed = Number.parseInt(trimmed.slice(10), 10);
+      return parsed > 0 ? parsed : null;
+    }
+    if (/^\d+$/.test(trimmed) && trimmed.length <= 10) {
+      const parsed = Number.parseInt(trimmed, 10);
+      return parsed > 0 ? parsed : null;
+    }
+    return null;
   }
 
   /**
@@ -4352,7 +4734,22 @@ export class CommunityService {
         : null;
     if (!path) return null;
 
-    const dto = await this.apiGet<ApiCompanionDto>(path);
+    let dto: ApiCompanionDto | null = null;
+    if (!this.usersDirectoryEndpointMissing) {
+      const res = await this.apiGetWithStatus<ApiCompanionDto>(path);
+      dto = res.data;
+      if (!dto && res.status === 404) {
+        const numericId = CommunityService.numericIdFromUid(trimmed);
+        if (numericId && numericId > 0 && numericId <= 0x7fffffff) {
+          dto = await this.apiGet<ApiCompanionDto>(`/api/companions/${numericId}`);
+        }
+      }
+    } else {
+      const numericId = CommunityService.numericIdFromUid(trimmed);
+      if (numericId && numericId > 0 && numericId <= 0x7fffffff) {
+        dto = await this.apiGet<ApiCompanionDto>(`/api/companions/${numericId}`);
+      }
+    }
     if (!dto) return null;
     const companion = this.companionFromApi(dto);
     this.upsertCompanion(companion);
@@ -4369,7 +4766,16 @@ export class CommunityService {
 
     // GET /api/users/{id} answers the same CompanionDto the companions endpoints
     // use — cover photo, About-me JSON, relationship status, follow state included.
-    const dto = await this.apiGet<ApiCompanionDto>(`/api/users/${numId}`);
+    let dto: ApiCompanionDto | null = null;
+    if (!this.usersDirectoryEndpointMissing) {
+      const res = await this.apiGetWithStatus<ApiCompanionDto>(`/api/users/${numId}`);
+      dto = res.data;
+      if (!dto && res.status === 404) {
+        dto = await this.apiGet<ApiCompanionDto>(`/api/companions/${numId}`);
+      }
+    } else {
+      dto = await this.apiGet<ApiCompanionDto>(`/api/companions/${numId}`);
+    }
     if (!dto) return local ?? null;
     const companion = this.companionFromApi(dto);
     this.upsertCompanion(companion);
@@ -4395,10 +4801,29 @@ export class CommunityService {
     ]);
 
     if (wall) {
+      const existingWall = this.visitorWallPosts()[key] ?? [];
+      const existingMain = this.journeyPosts();
+      const postsToHydrateComments: number[] = [];
+      const mapped = wall.items.map((dto) => {
+        const post = this.journeyPostFromApi(dto);
+        const prev =
+          existingWall.find((p) => p.id === post.id) ??
+          existingMain.find((p) => p.id === post.id);
+        if (post.comments.length === 0 && prev && prev.comments.length > 0) {
+          post.comments = prev.comments;
+        }
+        if ((dto.commentCount ?? 0) > 0 && (!dto.comments || dto.comments.length === 0)) {
+          postsToHydrateComments.push(post.id);
+        }
+        return post;
+      });
       this.visitorWallPosts.update((map) => ({
         ...map,
-        [key]: wall.items.map((dto) => this.journeyPostFromApi(dto)),
+        [key]: mapped,
       }));
+      for (const postId of postsToHydrateComments) {
+        void this.loadJourneyComments(postId);
+      }
     }
     if (gallery) {
       const photos = gallery.map((photo) => this.galleryPhotoFromApi(photo));
@@ -4629,9 +5054,10 @@ export class CommunityService {
   getCurrentUserAsCompanion(): Companion {
     const user = this.currentUser();
     const prof = this.profile();
+    const selfId = user?.id || prof?.id || 1;
     return {
-      id: user?.id || 1,
-      uniqueId: user?.uniqueId || prof?.uniqueId || generate20DigitUid(1),
+      id: selfId,
+      uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
       fullName: prof?.fullName || user?.fullName || 'Kingshuk',
       profilePhotoUrl:
         prof?.profilePhotoUrl ||
@@ -4641,15 +5067,18 @@ export class CommunityService {
         prof?.coverPhotoUrl ||
         user?.coverPhotoUrl ||
         'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80&uid=founder',
-      country: prof?.country || 'India',
-      city: prof?.city || 'Kolkata',
+      country: prof?.countryName || prof?.country || 'India',
+      city: prof?.cityName || prof?.city || 'Kolkata',
       profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
       isOnline: true,
-      activeStatus: prof?.activeStatus || 'Active',
+      activeStatus: prof?.activeStatus || user?.activeStatus || 'Active',
       mutualCompanionsCount: 0,
       status: 'connected',
-      isProfileLocked: !!prof?.isProfileLocked,
+      isProfileLocked: !!prof?.isProfileLocked || !!user?.isProfileLocked,
       isVerified: !!user?.isVerified || !!prof?.isVerified,
+      aboutMe: prof?.aboutMe,
+      aboutMeDetails: prof?.aboutMeDetails || user?.aboutMeDetails,
+      gallery: prof?.gallery,
     };
   }
 
@@ -5741,8 +6170,15 @@ export class CommunityService {
   }
 
   deleteJourneyPost(postId: number): void {
-    this.journeyPosts.update((list) => list.filter((p) => p.id !== postId));
+    this.journeyPosts.update((list) => list.filter((p) => p.id !== postId && p.clientId !== postId));
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    this.visitorWallPosts.update((map) => {
+      const next: Record<string, JourneyPost[]> = {};
+      for (const [key, posts] of Object.entries(map)) {
+        next[key] = posts.filter((p) => p.id !== postId && p.clientId !== postId);
+      }
+      return next;
+    });
     if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
       this.apiWrite('DELETE', `/api/journey/${postId}`);
     }
@@ -5784,18 +6220,17 @@ export class CommunityService {
         }));
     };
 
-    this.journeyPosts.update((list) =>
-      list.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: removeCommentRecursive(post.comments || []),
-          };
-        }
-        return post;
-      }),
+    this.updatePostEverywhere(
+      (post) => post.id === postId || post.clientId === postId,
+      (post) => {
+        const nextComments = removeCommentRecursive(post.comments || []);
+        return {
+          ...post,
+          comments: nextComments,
+          commentCount: Math.max(0, (post.commentCount ?? post.comments.length) - 1),
+        };
+      },
     );
-    this.saveJson(JOURNEY_KEY, this.journeyPosts());
     if (this.apiLive && commentId > 0 && commentId <= 0x7fffffffffffffff) {
       this.apiWrite('DELETE', `/api/journey/comments/${commentId}`);
     }
@@ -6455,7 +6890,7 @@ export class CommunityService {
 
   private persistFollows(): void {
     this.saveJson(FOLLOWS_KEY, this.follows());
-    if (typeof localStorage !== 'undefined') {
+    if (this.demoSession && typeof localStorage !== 'undefined') {
       localStorage.setItem(FOLLOWS_SEED_VERSION_KEY, FOLLOWS_SEED_VERSION);
     }
   }
@@ -7341,7 +7776,11 @@ export class CommunityService {
 
   private saveJson<T>(key: string, val: T): void {
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(val));
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch {
+        /* ignore storage quota errors so in-memory state keeps working */
+      }
     }
   }
 }

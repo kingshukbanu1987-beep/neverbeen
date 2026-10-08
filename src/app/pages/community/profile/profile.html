@@ -80,7 +80,9 @@
                   <span><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /> {{ t.city }}, {{ t.country }} • {{ t.profession }}</span>
                 </div>
                 <div class="res-action">
-                  @if (t.status === 'connected') {
+                  @if (isSelfTraveler(t)) {
+                    <span class="status-badge connected">You</span>
+                  } @else if (t.status === 'connected') {
                     <span class="status-badge connected">Connected</span>
                   } @else if (t.status === 'pending_outgoing') {
                     <div class="search-pending-cluster">
@@ -1169,7 +1171,7 @@
                   </div>
 
                   <!-- RECURSIVE ENDLESS COMMENT THREAD (Requirement H & C) -->
-                  @if (activeCommentPostId() === post.id) {
+                  @if (isCommentSectionOpen(post)) {
                     <div class="comments-section-wrap">
                       <!-- Add top-level comment composer (Requirement A: <= 100 KB picture attachment) -->
                       <div class="comment-composer-row">
@@ -5207,7 +5209,7 @@
                 </div>
 
                 <!-- Comments Thread (Requirement H: Visitors can comment) -->
-                @if (activeCommentPostId() === post.id) {
+                @if (isCommentSectionOpen(post)) {
                   <div class="comments-thread-container">
                     <!-- Requirement H: Comment composer for visitor -->
                     <div class="comment-composer-row visitor-comment-composer">

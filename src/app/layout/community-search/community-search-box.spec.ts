@@ -142,10 +142,54 @@ describe('CommunitySearchBox (community header search)', () => {
     expect(item.querySelector('.csb-follow')).toBeNull();
     expect(item.querySelector('.csb-status.you')?.textContent).toContain('You');
 
-    // Clicking it opens your own profile, like any other traveler.
+    // Clicking your own search result redirects straight to your own profile (/profile)
+    // without a visitor ?id= query param that could resolve to a Global Traveler placeholder.
     item.click();
     expect(router.navigate).toHaveBeenCalledWith(['/profile'], {
-      queryParams: { id: me.uniqueId },
+      queryParams: {},
+    });
+  });
+
+  it('redirects a signed-in member (id !== 1) to their own profile when clicking their own search result', () => {
+    const service = TestBed.inject(CommunityService);
+    service.currentUser.set({
+      id: 7,
+      firstName: 'Kingshuk',
+      lastName: 'Banu',
+      fullName: 'Kingshuk Banu',
+      email: 'kingshuk@example.com',
+      status: 'Active',
+      profileComplete: true,
+    });
+    service.profile.set({
+      id: 7,
+      firstName: 'Kingshuk',
+      lastName: 'Banu',
+      fullName: 'Kingshuk Banu',
+      email: 'kingshuk@example.com',
+      country: 'India',
+      city: 'Kolkata',
+      profession: 'Architect',
+      status: 'Active',
+      createdAtUtc: '2026-01-01T00:00:00Z',
+      settings: {
+        emailNotificationsEnabled: true,
+        phoneNotificationsEnabled: false,
+        publicProfileEnabled: true,
+        theme: 'light',
+      },
+      gallery: [],
+      commentCount: 0,
+    });
+
+    type('Kingshuk Banu');
+    const item = items().find((i) => i.textContent?.includes('Kingshuk Banu'))!;
+    expect(item).toBeTruthy();
+    expect(item.querySelector('.csb-status.you')?.textContent).toContain('You');
+
+    item.click();
+    expect(router.navigate).toHaveBeenCalledWith(['/profile'], {
+      queryParams: {},
     });
   });
 

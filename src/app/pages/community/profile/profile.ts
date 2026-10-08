@@ -724,29 +724,37 @@ export class CommunityProfile implements OnInit {
     approveTagsBeforePost: [false],
   });
 
+  private readonly remoteSearchTravelers = signal<Companion[]>([]);
+  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private searchRequestSeq = 0;
+
   // Search results computed
   protected readonly searchResults = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return { travelers: [], circles: [] };
+    if (!q) return { travelers: [] as Companion[], circles: [] as Circle[] };
 
-    const travelers = this.service
-      .companions()
-      .filter(
-        (c) =>
-          !this.service.isUserBlocked(c.id) &&
-          (c.fullName.toLowerCase().includes(q) ||
-            c.city.toLowerCase().includes(q) ||
-            c.country.toLowerCase().includes(q) ||
-            c.profession.toLowerCase().includes(q)),
-      );
+    const local = this.service.searchCompanionsLocally(q);
+    const travelers: Companion[] = [...local];
+    for (const hit of this.remoteSearchTravelers()) {
+      if (
+        !travelers.some((c) => Number(c.id) === Number(hit.id)) &&
+        !this.service.isUserBlocked(hit.id)
+      ) {
+        travelers.push(hit);
+      }
+    }
 
-    const circles = this.service
-      .myCircles()
-      .filter(
-        (cr) =>
-          cr.name.toLowerCase().includes(q) ||
-          cr.description.toLowerCase().includes(q),
-      );
+    const myCircles = this.service.myCircles();
+    const allCircles = this.service.circles().filter((c) => !c.archivedAtUtc);
+    const circlePool: Circle[] = [...myCircles];
+    for (const c of allCircles) {
+      if (!circlePool.some((existing) => existing.id === c.id)) circlePool.push(c);
+    }
+    const circles = circlePool.filter(
+      (cr) =>
+        cr.name.toLowerCase().includes(q) ||
+        (cr.description ?? '').toLowerCase().includes(q),
+    );
 
     return { travelers, circles };
   });
@@ -987,8 +995,21 @@ export class CommunityProfile implements OnInit {
   // VISITOR PROFILE (Open any user's profile on click anywhere - Requirement B & C)
   // ---------------------------------------------------------------------------
 
+  isSelfTraveler(authorOrUser: AuthorInfo | Companion | number): boolean {
+    const me = this.service.currentUser()?.id ?? this.service.profile()?.id ?? 1;
+    const myUid =
+      this.service.profile()?.uniqueId ||
+      this.service.currentUser()?.uniqueId ||
+      generate20DigitUid(me);
+    if (typeof authorOrUser === 'number') {
+      return Number(authorOrUser) === Number(me);
+    }
+    if (Number(authorOrUser.id) === Number(me)) return true;
+    if (authorOrUser.uniqueId && authorOrUser.uniqueId === myUid) return true;
+    return false;
+  }
+
   openVisitorProfile(authorOrUser: AuthorInfo | Companion | number): void {
-    const currentUserId = this.service.currentUser()?.id || 1;
     let targetId: number;
     let targetUid: string | undefined;
 
@@ -1002,9 +1023,12 @@ export class CommunityProfile implements OnInit {
     }
 
     // If clicking own profile, navigate to personal profile page
-    if (targetId === currentUserId) {
+    if (this.isSelfTraveler(authorOrUser)) {
       this.viewingVisitor.set(null);
-      this.router.navigate(['/profile']);
+      this.activeVisitorParam = null;
+      this.showSearchDropdown.set(false);
+      this.closeMobileSidePanel();
+      this.router.navigate(['/profile'], { queryParams: {} });
       return;
     }
 
@@ -1092,13 +1116,22 @@ export class CommunityProfile implements OnInit {
   protected loadProfileByParam(idParam: string): void {
     this.activeVisitorParam = idParam;
     const currentProfile = this.service.profile();
+    const currentUser = this.service.currentUser();
+    const myId = currentUser?.id ?? currentProfile?.id;
+    const myUid =
+      currentProfile?.uniqueId ||
+      currentUser?.uniqueId ||
+      (myId != null ? generate20DigitUid(myId) : undefined);
+
     if (
-      currentProfile &&
-      (currentProfile.uniqueId === idParam ||
-        String(currentProfile.id) === idParam ||
-        generate20DigitUid(currentProfile.id) === idParam)
+      myId != null &&
+      (idParam === myUid ||
+        idParam === String(myId) ||
+        idParam === generate20DigitUid(myId))
     ) {
       this.viewingVisitor.set(null);
+      this.activeVisitorParam = null;
+      this.router.navigate(['/profile'], { queryParams: {} });
       return;
     }
 
@@ -1127,6 +1160,18 @@ export class CommunityProfile implements OnInit {
         this.visitorResolving.set(false);
         // The member may have closed / changed the profile while the API answered.
         if (this.activeVisitorParam !== idParam) return;
+        const latestMyId = this.service.currentUser()?.id ?? this.service.profile()?.id;
+        if (
+          latestMyId != null &&
+          (idParam === String(latestMyId) ||
+            idParam === generate20DigitUid(latestMyId) ||
+            (companion && Number(companion.id) === Number(latestMyId)))
+        ) {
+          this.viewingVisitor.set(null);
+          this.activeVisitorParam = null;
+          this.router.navigate(['/profile'], { queryParams: {} });
+          return;
+        }
         if (companion) {
           this.viewingVisitor.set(companion);
           void this.refreshVisitorFromApi(companion.id);
@@ -1576,7 +1621,20 @@ export class CommunityProfile implements OnInit {
   }
 
   onSearchInput(): void {
-    this.showSearchDropdown.set(this.searchQuery().trim().length > 0);
+    const q = this.searchQuery().trim();
+    this.showSearchDropdown.set(q.length > 0);
+    if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+    if (!q || !this.service.apiLive) {
+      this.remoteSearchTravelers.set([]);
+      return;
+    }
+    const seq = ++this.searchRequestSeq;
+    this.searchDebounceTimer = setTimeout(() => {
+      void this.service.searchUsers(q).then((hits) => {
+        if (seq !== this.searchRequestSeq) return;
+        this.remoteSearchTravelers.set(this.searchQuery().trim() === q ? hits : []);
+      });
+    }, 200);
   }
 
   openTravelerModal(companion: Companion): void {
@@ -1774,12 +1832,27 @@ export class CommunityProfile implements OnInit {
     this.service.toggleJourneyLike(postId);
   }
 
+  isCommentSectionOpen(post: JourneyPost): boolean {
+    const active = this.activeCommentPostId();
+    if (active == null) return false;
+    return active === post.id || (!!post.clientId && active === post.clientId);
+  }
+
   toggleCommentSection(postId: number): void {
-    if (this.activeCommentPostId() === postId) {
+    const post =
+      this.service.journeyPosts().find((p) => p.id === postId || p.clientId === postId) ??
+      Object.values(this.service.visitorWallPosts())
+        .flat()
+        .find((p) => p.id === postId || p.clientId === postId);
+    if (this.activeCommentPostId() === postId || (post && this.isCommentSectionOpen(post))) {
       this.activeCommentPostId.set(null);
     } else {
       this.activeCommentPostId.set(postId);
       this.journeyCommentText = '';
+      const targetServerId = post?.id ?? postId;
+      if (this.service.apiLive && targetServerId > 0 && targetServerId < 1_000_000_000_000) {
+        void this.service.loadJourneyComments(targetServerId);
+      }
     }
   }
 
@@ -3242,6 +3315,13 @@ export class CommunityProfile implements OnInit {
   // Requirement E: Facebook collage open full post detail modal
   openPostDetail(post: JourneyPost): void {
     this.viewingPostDetail.set(post);
+    if (this.service.apiLive && post.id > 0 && post.id < 1_000_000_000_000 && post.comments.length === 0 && (post.commentCount ?? 0) > 0) {
+      void this.service.loadJourneyComments(post.id).then((comments) => {
+        if (this.viewingPostDetail()?.id === post.id) {
+          this.viewingPostDetail.set({ ...post, comments });
+        }
+      });
+    }
   }
 
   closePostDetail(): void {

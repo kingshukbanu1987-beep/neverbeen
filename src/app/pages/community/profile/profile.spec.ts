@@ -2320,4 +2320,69 @@ describe('CommunityProfile', () => {
     expect(card?.querySelector('video')?.getAttribute('src')).toBe(video);
     expect(card?.textContent).toContain(`Allowed: ${allowed.fullName}`);
   });
+
+  it('redirects to own profile (never Global Traveler) when searching and clicking own profile', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    service.currentUser.set({
+      id: 7,
+      firstName: 'Kingshuk',
+      lastName: 'Banu',
+      fullName: 'Kingshuk Banu',
+      email: 'kingshuk@example.com',
+      status: 'Active',
+      profileComplete: true,
+    });
+    service.profile.set({
+      ...service.profile()!,
+      id: 7,
+      uniqueId: undefined,
+      fullName: 'Kingshuk Banu',
+      email: 'kingshuk@example.com',
+    });
+
+    // Searching own name in the profile search bar includes self with "You" status.
+    component['searchQuery'].set('Kingshuk Banu');
+    component.onSearchInput();
+    fixture.detectChanges();
+
+    const results = component['searchResults']();
+    const selfHit = results.travelers.find((t) => t.id === 7);
+    expect(selfHit).toBeTruthy();
+    expect(selfHit?.uniqueId).toBe('89201534010000000007');
+
+    // Clicking own profile from search or resolving ?id=<own-uid> keeps viewingVisitor null.
+    component.openVisitorProfile(selfHit!);
+    expect(component['viewingVisitor']()).toBeNull();
+
+    component['loadProfileByParam']('89201534010000000007');
+    expect(component['viewingVisitor']()).toBeNull();
+  });
+
+  it('saves Journey post comments across both main feed and visitor wall posts', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const visitor = service.companions().find((c) => c.id === 33)!;
+
+    service.visitorWallPosts.set({
+      '33': [
+        {
+          id: 701,
+          author: { id: 33, fullName: visitor.fullName, profilePhotoUrl: visitor.profilePhotoUrl },
+          text: 'Alpine sunrise',
+          createdAtUtc: '2026-10-08T08:00:00Z',
+          likeCount: 0,
+          comments: [],
+        },
+      ],
+    });
+
+    component.toggleCommentSection(701);
+    component['journeyCommentText'] = 'Saved on visitor wall!';
+    component.submitJourneyComment(701);
+
+    const wallPosts = component.getVisitorJourneyPosts(33);
+    expect(wallPosts[0].comments.length).toBe(1);
+    expect(wallPosts[0].comments[0].text).toBe('Saved on visitor wall!');
+  });
 });
