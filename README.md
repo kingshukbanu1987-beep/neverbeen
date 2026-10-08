@@ -370,10 +370,53 @@ plus the write-through calls in each mutating method). The mapping:
 | Moderation            | `GET /api/moderation/blocks`, `/hidden-posts`, `/reports`                                        | `POST /api/moderation/reports`, `POST/DELETE /api/moderation/blocks/{id}`, `POST/DELETE /api/journey/{id}/hide`                           |
 | About me & profile    | `GET /api/profile/me`, `GET /api/profile/{id}`                                                   | `PUT /api/profile` (details + structured About-me JSON + presence + lock), `PUT/DELETE /api/profile/photo`, `PUT/DELETE /api/profile/cover` |
 | Settings              | `settings` section of the profile DTO                                                            | `PUT /api/profile/settings` (including the blue-tick verification)                                                                        |
+| Member directory      | `GET /api/users/search?query=…`, `GET /api/users/{id}`, `GET /api/users/uid/{uniqueId}`, `GET /api/journey?authorId=…`, `GET /api/gallery/users/{id}` | `POST /api/companions/{id}/request` (Companion Request), `POST /api/follows/{id}` (Follow) — straight from the search drop-down            |
 
 The guest tour keeps its seeded demo community in this browser; nothing above runs for it
 (`apiLive` is false without a real member session), and when the API cannot be reached the
 pages degrade to their local behaviour instead of losing data.
+
+### Member directory — search finds every registered traveler
+
+The guest tour can find any traveler because the whole seeded directory lives in the browser.
+A signed-in member holds only their real companions, so the header search box and the
+`/profile?id=<20-digit uid>` route now ask the API's member directory
+(`searchUsers()`, `loadUserByUid()`, `loadUserById()`, `loadVisitorExtras()` in
+`CommunityService`): typing a name finds **any Active member** by first / last / full name (plus
+city, country, profession) with a **+ Follow / ✓ Following** button and a Connect / Request Sent /
+Connected status on every hit; clicking a hit opens `/profile?id=<uid>`, which resolves that
+member on the API (never the fabricated “Global Traveler” card), and the visitor wall, gallery
+and follower counters hydrate from it. Companion requests and follows sent from the drop-down or
+the profile write straight through to the API.
+
+The API half ships as [`docs/patches/neverbeen-api-user-search.patch`](docs/patches/neverbeen-api-user-search.patch)
+and the database half as [`docs/patches/neverbeen-database-user-search.patch`](docs/patches/neverbeen-database-user-search.patch)
+— apply them to the `neverbeen-api` and `neverbeen-database` checkouts:
+
+```bash
+cd neverbeen-api   && git apply /path/to/neverbeen/docs/patches/neverbeen-api-user-search.patch
+cd neverbeen-database && git apply /path/to/neverbeen/docs/patches/neverbeen-database-user-search.patch
+```
+
+The API patch adds `api/users` (`UsersController`): the search endpoint (name hits ranked first;
+hides the member themself, members who switched off `UserSettings.SearchVisibility`, and members
+blocked either way) and `GET /api/users/{id}` / `/uid/{uniqueId}` answering the same
+`CompanionDto` the companions endpoints use, with the profile's own privacy rules applied (a
+non-public profile answers 403; a locked profile hides the About-me from non-companions; a
+Pending account is never answered to other members). The database patch adds `IX_Users_Status`
+and GIN trigram indexes on `Users.FullName` / `FirstName` / `LastName` (`pg_trgm`), all
+idempotent and exception-tolerant. Both verification scripts check the patched sources (there is
+no .NET SDK / PostgreSQL in the build sandbox):
+
+```bash
+python3 docs/patches/neverbeen-api-user-search-verification.py /path/to/neverbeen-api
+python3 docs/patches/neverbeen-database-user-search-verification.py /path/to/neverbeen-database
+```
+
+Until both patches are applied the directory searches degrade to the member's own companions
+(the guest-tour behaviour), and unknown profile ids show the local placeholder instead of a
+fabricated card. The full parity analysis lives in
+[`docs/community-guest-parity-analysis.md`](docs/community-guest-parity-analysis.md).
 
 Five pieces of that table ship as the API patch
 [`docs/patches/neverbeen-api-community-complete.patch`](docs/patches/neverbeen-api-community-complete.patch)

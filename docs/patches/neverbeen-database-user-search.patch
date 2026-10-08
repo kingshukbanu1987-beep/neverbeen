@@ -1,0 +1,86 @@
+From 6bee9874640c9696b1811cb1f0ea85280a764f0e Mon Sep 17 00:00:00 2001
+From: kingshukbanu1987-beep
+ <329612224+kingshukbanu1987-beep@users.noreply.github.com>
+Date: Thu, 8 Oct 2026 02:25:47 +0000
+Subject: [PATCH] Add trigram indexes for the community member search
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The website's community search box finds members by typing a name; the API
+serves it from GET /api/users/search with ILIKE '%query%' over
+Users.FullName / FirstName / LastName (plus city, country, profession).
+Without indexes every keystroke scans the whole Users table.
+
+schema.sql now:
+* creates IX_Users_Status (the search filters Status = 'Active');
+* enables pg_trgm and creates GIN trigram indexes on the three name
+  columns — wrapped in exception-tolerant DO blocks, so an environment
+  where the extension cannot be created still runs the schema cleanly
+  (the search degrades to sequential scans instead of failing);
+* stays fully idempotent (IF NOT EXISTS everywhere).
+
+README documents the indexes and the degraded mode.
+---
+ README.md  |  7 +++++++
+ schema.sql | 26 ++++++++++++++++++++++++++
+ 2 files changed, 33 insertions(+)
+
+diff --git a/README.md b/README.md
+index 8e44e9e..94765c2 100644
+--- a/README.md
++++ b/README.md
+@@ -60,6 +60,13 @@ psql "$SUPABASE_DB_URL" -f seed.sql   # optional
+ - `timestamptz` for all `*Utc` timestamps; `timestamp without time zone` for `DateOfBirth`.
+ - `Users.UniqueId` (the 20-digit public profile id `89201534010000000001`) is derived
+   automatically by the `TR_Users_UniqueId` trigger on insert.
++- **Member search indexes.** The community search box (`GET /api/users/search` of the
++  API) matches member names with `ILIKE '%query%'`. When the `pg_trgm` extension is
++  available, `schema.sql` creates GIN trigram indexes on `Users.FullName` /
++  `FirstName` / `LastName` so those matches are index-backed; without it (the
++  extension cannot be created) the search still works — just as a sequential scan
++  over the Active members — and the schema run continues. Re-running `schema.sql` is
++  safe: everything is `IF NOT EXISTS` / wrapped in exception-tolerant `DO` blocks.
+ - `Companionships` stores one row per pair (`UserId < CompanionId`); the requester
+   column gives the direction, `Status` is `pending` or `connected`.
+ - Complex per-row JSON (About Me details, message reaction maps) is stored as `text`
+diff --git a/schema.sql b/schema.sql
+index af3a6a7..8c6136e 100644
+--- a/schema.sql
++++ b/schema.sql
+@@ -83,6 +83,32 @@ CREATE TABLE IF NOT EXISTS "Users" (
+ CREATE UNIQUE INDEX IF NOT EXISTS "UX_Users_Email"    ON "Users" ("Email");
+ CREATE UNIQUE INDEX IF NOT EXISTS "UX_Users_UniqueId" ON "Users" ("UniqueId");
+ 
++-- Community member search (the website's search box, GET /api/users/search) matches
++-- names with ILIKE '%query%'. With pg_trgm available those matches use the GIN
++-- trigram indexes below; without it the search still works (a sequential scan over
++-- the Active members), so a failure to create the extension or the indexes must
++-- never block the schema run.
++CREATE INDEX IF NOT EXISTS "IX_Users_Status" ON "Users" ("Status");
++
++DO $$
++BEGIN
++    CREATE EXTENSION IF NOT EXISTS pg_trgm;
++EXCEPTION WHEN OTHERS THEN
++    RAISE NOTICE 'pg_trgm could not be created (%). Name search works without the trigram indexes.', SQLERRM;
++END
++$$;
++
++DO $$
++BEGIN
++    CREATE INDEX IF NOT EXISTS "IX_Users_FullName_Trgm"  ON "Users" USING gin ("FullName"  gin_trgm_ops);
++    CREATE INDEX IF NOT EXISTS "IX_Users_FirstName_Trgm" ON "Users" USING gin ("FirstName" gin_trgm_ops);
++    CREATE INDEX IF NOT EXISTS "IX_Users_LastName_Trgm"  ON "Users" USING gin ("LastName"  gin_trgm_ops);
++EXCEPTION WHEN OTHERS THEN
++    -- Most commonly: pg_trgm is not available, so gin_trgm_ops does not exist.
++    RAISE NOTICE 'Trigram name indexes skipped (%). Name search falls back to sequential scans.', SQLERRM;
++END
++$$;
++
+ -- Derive the 20-digit UniqueId automatically ('8920153401' + lpad(Id, 10, '0')).
+ CREATE OR REPLACE FUNCTION neverbeen_set_user_unique_id() RETURNS trigger AS $$
+ BEGIN
+-- 
+2.39.5
+

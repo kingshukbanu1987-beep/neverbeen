@@ -12,6 +12,12 @@ import { CommunityService } from '../../services/community.service';
  *
  *   traveler → /profile?id=<uid>   (opens that member's profile)
  *   circle   → /profile#circles    (the Circles section)
+ *
+ * Typing a name searches the whole member directory — signed-in members ask
+ * the Web API (`GET /api/users/search`), which knows every registered
+ * traveler, while the guest tour searches its seeded directory in this
+ * browser. Each hit can be opened, followed, or sent a companion request
+ * straight from the drop-down.
  */
 @Component({
   selector: 'app-community-search-box',
@@ -70,17 +76,34 @@ import { CommunityService } from '../../services/community.service';
                       <span class="csb-status connected">Connected</span>
                     } @else if (t.status === 'pending_outgoing') {
                       <span class="csb-status pending">Request Sent</span>
+                    } @else if (t.status === 'pending_incoming') {
+                      <span class="csb-status pending">Respond</span>
                     } @else {
                       <button
                         type="button"
                         class="csb-connect"
+                        title="Send a Companion Request"
                         (click)="$event.stopPropagation(); connect(t.id)"
                       >
                         + Connect
                       </button>
                     }
+                    @if (!isSelf(t)) {
+                      <button
+                        type="button"
+                        class="csb-follow"
+                        [class.is-following]="isFollowing(t)"
+                        [title]="isFollowing(t) ? 'Unfollow' : 'Follow this traveler'"
+                        (click)="$event.stopPropagation(); toggleFollow(t)"
+                      >
+                        {{ isFollowing(t) ? '✓ Following' : '+ Follow' }}
+                      </button>
+                    }
                   </div>
                 </div>
+              }
+              @if (searching()) {
+                <div class="csb-searching">Searching travelers…</div>
               }
             </div>
           }
@@ -100,8 +123,10 @@ import { CommunityService } from '../../services/community.service';
             </div>
           }
         </div>
-      } @else if (open() && query().trim().length >= 2 && results().travelers.length === 0 && results().circles.length === 0) {
+      } @else if (open() && query().trim().length >= 2 && !searching() && results().travelers.length === 0 && results().circles.length === 0) {
         <div class="csb-dropdown csb-empty">No travelers or circles match “{{ query() }}”.</div>
+      } @else if (open() && searching()) {
+        <div class="csb-dropdown csb-empty">Searching travelers…</div>
       }
     </div>
   `,
@@ -298,6 +323,10 @@ import { CommunityService } from '../../services/community.service';
 
     .csb-item-action {
       flex: none;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
     }
 
     .csb-status {
@@ -334,6 +363,36 @@ import { CommunityService } from '../../services/community.service';
       border-radius: 999px;
       cursor: pointer;
     }
+
+    .csb-follow {
+      margin-top: 4px;
+      border: 1px solid rgb(var(--ct-ac-rgb, 37 99 235) / 0.4);
+      background: transparent;
+      color: var(--ct-ac, #2563eb);
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .csb-follow.is-following {
+      border-color: rgb(16 185 129 / 0.5);
+      color: #047857;
+      background: rgba(16, 185, 129, 0.1);
+    }
+    html[data-ctheme-mode='dark'] .csb-follow.is-following {
+      color: #6ee7b7;
+    }
+
+    .csb-searching {
+      padding: 0.4rem 0.5rem 0.2rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ct-fa, #94a3b8);
+    }
   `,
 })
 export class CommunitySearchBox implements OnInit {
@@ -344,22 +403,29 @@ export class CommunitySearchBox implements OnInit {
 
   protected readonly query = signal('');
   protected readonly open = signal(false);
+  /** True while the member directory on the Web API is being asked. */
+  protected readonly searching = signal(false);
+  /** Travelers answered by the member directory (signed-in members only). */
+  private readonly apiTravelers = signal<Companion[]>([]);
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private searchSeq = 0;
 
-  /** Same matching rules as the profile page search (name / city / country / profession). */
+  /**
+   * Travelers matching the typed name: the guest tour searches its seeded
+   * directory locally; a signed-in member's local matches are merged with the
+   * Web API's directory answer (`GET /api/users/search`), which knows every
+   * registered traveler — not only this member's companions.
+   */
   protected readonly results = computed(() => {
     const q = this.query().trim().toLowerCase();
     if (!q) return { travelers: [] as Companion[], circles: [] as Circle[] };
 
-    const travelers = this.service
-      .companions()
-      .filter(
-        (c) =>
-          !this.service.isUserBlocked(c.id) &&
-          (c.fullName.toLowerCase().includes(q) ||
-            c.city.toLowerCase().includes(q) ||
-            c.country.toLowerCase().includes(q) ||
-            c.profession.toLowerCase().includes(q)),
-      );
+    const local = this.service.searchCompanionsLocally(q);
+    const merged: Companion[] = [...local];
+    for (const hit of this.apiTravelers()) {
+      if (!merged.some((c) => Number(c.id) === Number(hit.id))) merged.push(hit);
+    }
+    const travelers = merged.slice(0, 30);
 
     const circles = this.service
       .myCircles()
@@ -376,7 +442,10 @@ export class CommunitySearchBox implements OnInit {
       }
     };
     document.addEventListener('click', onDocClick, true);
-    this.destroyRef.onDestroy(() => document.removeEventListener('click', onDocClick, true));
+    this.destroyRef.onDestroy(() => {
+      document.removeEventListener('click', onDocClick, true);
+      if (this.searchTimer) clearTimeout(this.searchTimer);
+    });
   }
 
   protected onFocus(): void {
@@ -386,11 +455,41 @@ export class CommunitySearchBox implements OnInit {
   protected onInput(e: Event): void {
     this.query.set((e.target as HTMLInputElement).value);
     this.open.set(this.query().trim().length > 0);
+    this.scheduleDirectorySearch();
+  }
+
+  /**
+   * Asks the member directory for the typed name (debounced, so a fast typist
+   * does not fire one request per keystroke). The guest tour and signed-out
+   * visitors search the directory held in this browser only.
+   */
+  private scheduleDirectorySearch(): void {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    const q = this.query().trim();
+    if (q.length < 2 || !this.service.apiLive) {
+      this.apiTravelers.set([]);
+      this.searching.set(false);
+      return;
+    }
+    const seq = ++this.searchSeq;
+    this.searching.set(true);
+    this.searchTimer = setTimeout(() => {
+      void this.service.searchUsers(q).then((travelers) => {
+        // A newer keystroke has overtaken this answer — drop the stale one.
+        if (seq !== this.searchSeq) return;
+        this.searching.set(false);
+        this.apiTravelers.set(this.query().trim() === q ? travelers : []);
+      });
+    }, 250);
   }
 
   protected clear(): void {
     this.query.set('');
     this.open.set(false);
+    this.searching.set(false);
+    this.apiTravelers.set([]);
+    this.searchSeq++;
+    if (this.searchTimer) clearTimeout(this.searchTimer);
     const input = this.root().querySelector('.csb-input') as HTMLInputElement | null;
     input?.focus();
   }
@@ -401,6 +500,23 @@ export class CommunitySearchBox implements OnInit {
 
   protected isVerified(t: Companion): boolean {
     return !!t.isVerified;
+  }
+
+  /** The signed-in member never appears in their own directory results. */
+  protected isSelf(t: Companion): boolean {
+    const me = this.service.currentUser()?.id;
+    return me != null && Number(t.id) === Number(me);
+  }
+
+  protected isFollowing(t: Companion): boolean {
+    return this.service.isFollowing(Number(t.id));
+  }
+
+  /** Follows / unfollows the traveler right from the drop-down. */
+  protected toggleFollow(t: Companion): void {
+    const id = Number(t.id);
+    if (this.service.isFollowing(id)) this.service.unfollow(id);
+    else this.service.follow(id);
   }
 
   protected openTraveler(t: Companion): void {

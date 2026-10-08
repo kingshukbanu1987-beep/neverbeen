@@ -411,3 +411,294 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     expect(service.accountSaveTarget()).toBeNull();
   });
 });
+
+/**
+ * Member directory (Requirement A): the community search box must find ANY
+ * registered traveler on the Web API — not only the companions this member
+ * already has — and a profile URL must open that traveler's real profile, so
+ * a companion request can be sent and the traveler followed from there.
+ */
+describe('CommunityService — member directory (search & public profiles)', () => {
+  let service: CommunityService;
+  let httpMock: HttpTestingController;
+
+  function tick(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  /** Signs a make-believe member in (no community hydration is triggered). */
+  function signIn(): void {
+    service.token.set('jwt.member.7');
+    service.currentUser.set({
+      id: 7,
+      firstName: 'Kingshuk',
+      lastName: 'Banu',
+      fullName: 'Kingshuk Banu',
+      email: 'kingshuk@example.com',
+      status: 'Active',
+      profileComplete: true,
+    });
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    deleteCookie(TOKEN_KEY);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(CommunityService);
+    httpMock = TestBed.inject(HttpTestingController);
+    signIn();
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+    deleteCookie(TOKEN_KEY);
+  });
+
+  it('searchUsers asks GET /api/users/search and merges the hits into the directory', async () => {
+    const pending = service.searchUsers('elen');
+
+    const request = httpMock.expectOne(`${API}/api/users/search?query=elen&limit=25`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.headers.get('Authorization')).toBe('Bearer jwt.member.7');
+    request.flush([
+      {
+        id: 21,
+        uniqueId: '89201534010000000021',
+        fullName: 'Elena Rostova',
+        profilePhotoUrl: '/api/profile/21/photo',
+        country: 'France',
+        city: 'Paris',
+        profession: 'Travel Blogger',
+        isOnline: true,
+        activeStatus: 'Active',
+        isVerified: true,
+        isProfileLocked: false,
+        status: 'none',
+        isFollowing: true,
+        mutualCompanionsCount: 2,
+      },
+    ]);
+
+    const hits = await pending;
+
+    expect(hits.length).toBe(1);
+    expect(hits[0].fullName).toBe('Elena Rostova');
+    expect(hits[0].profilePhotoUrl).toBe(`${API}/api/profile/21/photo`);
+    // The hit is now part of the local directory (status buttons + profile URL work).
+    expect(service.companions().some((c) => c.id === 21)).toBe(true);
+    // The directory's follow flag seeds the local follow graph (Follow button state).
+    expect(service.isFollowing(21)).toBe(true);
+  });
+
+  it('searchUsers falls back to the local directory when the API cannot be reached', async () => {
+    service.companions.set([
+      {
+        id: 5,
+        fullName: 'Marco Rossi',
+        profilePhotoUrl: '',
+        country: 'Italy',
+        city: 'Rome',
+        profession: 'Architect',
+        isOnline: false,
+        mutualCompanionsCount: 0,
+        status: 'none',
+      },
+    ]);
+
+    const pending = service.searchUsers('marco');
+    httpMock
+      .expectOne(`${API}/api/users/search?query=marco&limit=25`)
+      .error(new ProgressEvent('error'));
+
+    const hits = await pending;
+    expect(hits.map((h) => h.fullName)).toEqual(['Marco Rossi']);
+    expect(service.apiOnline()).toBe(false);
+  });
+
+  it('loadUserByUid resolves a 20-digit profile URL id on GET /api/users/uid/{uid}', async () => {
+    const uid = '89201534010000000033';
+    const pending = service.loadUserByUid(uid);
+
+    const request = httpMock.expectOne(`${API}/api/users/uid/${uid}`);
+    expect(request.request.headers.get('Authorization')).toBe('Bearer jwt.member.7');
+    request.flush({
+      id: 33,
+      uniqueId: uid,
+      fullName: 'Maya Patel',
+      profilePhotoUrl: '/api/profile/33/photo',
+      coverPhotoUrl: '/api/profile/33/cover',
+      country: 'India',
+      city: 'Mumbai',
+      profession: 'UI/UX Designer',
+      isOnline: true,
+      mutualCompanionsCount: 1,
+      status: 'pending_incoming',
+      bio: 'Minimalist traveler.',
+      aboutMe: 'Minimalist traveler.',
+      aboutMeDetailsJson: '{"intro":"Minimalist traveler."}',
+      isProfileLocked: true,
+      activeStatus: 'Active',
+      isVerified: true,
+      isFollowing: false,
+      connectedCompanionIds: [21],
+    });
+
+    const companion = await pending;
+
+    expect(companion?.id).toBe(33);
+    expect(companion?.uniqueId).toBe(uid);
+    expect(companion?.status).toBe('pending_incoming');
+    expect(companion?.isProfileLocked).toBe(true);
+    expect(companion?.aboutMeDetails?.intro).toBe('Minimalist traveler.');
+    // Upserted, so the profile page resolves /profile?id=<uid> from companions().
+    expect(
+      service.companions().some((c) => c.uniqueId === uid && c.id === 33),
+    ).toBe(true);
+  });
+
+  it('loadUserByUid answers a locally known companion without calling the API', async () => {
+    service.companions.set([
+      {
+        id: 12,
+        uniqueId: '89201534010000000012',
+        fullName: 'Marco Rossi',
+        profilePhotoUrl: '',
+        country: 'Italy',
+        city: 'Rome',
+        profession: 'Architect',
+        isOnline: false,
+        mutualCompanionsCount: 0,
+        status: 'connected',
+      },
+    ]);
+
+    const companion = await service.loadUserByUid('89201534010000000012');
+    expect(companion?.fullName).toBe('Marco Rossi');
+    // httpMock.verify() proves no request went out.
+  });
+
+  it('loadVisitorExtras reads the visitor wall, gallery and follow counters', async () => {
+    service.companions.set([
+      {
+        id: 21,
+        uniqueId: '89201534010000000021',
+        fullName: 'Elena Rostova',
+        profilePhotoUrl: '',
+        country: 'France',
+        city: 'Paris',
+        profession: 'Travel Blogger',
+        isOnline: true,
+        mutualCompanionsCount: 0,
+        status: 'connected',
+      },
+    ]);
+
+    const pending = service.loadVisitorExtras(21);
+
+    httpMock.expectOne(`${API}/api/journey?authorId=21&pageSize=50`).flush({
+      items: [
+        {
+          id: 900,
+          author: { id: 21, fullName: 'Elena Rostova', profilePhotoUrl: null },
+          text: 'Lake Como mornings.',
+          createdAtUtc: '2026-10-01T09:00:00Z',
+          likeCount: 3,
+          comments: [],
+        },
+      ],
+      totalCount: 1,
+      page: 1,
+      pageSize: 50,
+      totalPages: 1,
+    });
+    httpMock.expectOne(`${API}/api/gallery/users/21`).flush([
+      { id: 77, url: '/api/gallery/77', caption: 'Alpine light', createdAtUtc: '2026-09-30T10:00:00Z' },
+    ]);
+    httpMock.expectOne(`${API}/api/follows/counts/21`).flush({
+      followers: 12,
+      following: 4,
+      isFollowing: true,
+    });
+
+    await pending;
+
+    const wall = service.visitorWallPosts()['21'];
+    expect(wall?.length).toBe(1);
+    expect(wall?.[0].text).toBe('Lake Como mornings.');
+
+    // The gallery lands on the companion entry the visitor card renders.
+    const gallery = service.companions().find((c) => c.id === 21)?.gallery;
+    expect(gallery?.[0].url).toBe(`${API}/api/gallery/77`);
+
+    // The profile page's follower / following counters read the API answer.
+    expect(service.followerCount(21)).toBe(12);
+    expect(service.followingCount(21)).toBe(4);
+  });
+
+  it('stores journey comment reactions through POST /api/journey/comments/{id}/reactions', async () => {
+    service.journeyPosts.set([
+      {
+        id: 50,
+        author: { id: 7, fullName: 'Kingshuk Banu', profilePhotoUrl: '' },
+        text: 'Post',
+        createdAtUtc: '2026-10-01T09:00:00Z',
+        likeCount: 0,
+        comments: [
+          {
+            id: 61,
+            author: { id: 21, fullName: 'Elena Rostova', profilePhotoUrl: '' },
+            text: 'Lovely.',
+            createdAtUtc: '2026-10-01T09:05:00Z',
+            likeCount: 0,
+            isLiked: false,
+            reactions: [],
+            replies: [],
+          },
+        ],
+      },
+    ]);
+
+    service.reactToJourneyComment(50, 61, 'Heart');
+
+    const request = httpMock.expectOne(`${API}/api/journey/comments/61/reactions`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ reactionType: 'Heart' });
+    request.flush({ likeCount: 4 });
+    await tick();
+
+    const comment = service.journeyPosts().find((p) => p.id === 50)?.comments[0];
+    expect(comment?.likeCount).toBe(4);
+    expect(comment?.myReaction).toBe('Heart');
+  });
+
+  it('sends a companion request to a directory hit and follows them by default', async () => {
+    // A traveler found through the directory (already upserted by searchUsers).
+    service.companions.set([
+      {
+        id: 21,
+        uniqueId: '89201534010000000021',
+        fullName: 'Elena Rostova',
+        profilePhotoUrl: '',
+        country: 'France',
+        city: 'Paris',
+        profession: 'Travel Blogger',
+        isOnline: true,
+        mutualCompanionsCount: 0,
+        status: 'none',
+      },
+    ]);
+
+    service.sendCompanionshipRequest(21);
+
+    const request = httpMock.expectOne(`${API}/api/companions/21/request`);
+    expect(request.request.method).toBe('POST');
+    expect(service.companions().find((c) => c.id === 21)?.status).toBe('pending_outgoing');
+
+    // Sending a companionship request follows that traveler by default.
+    const follow = httpMock.expectOne(`${API}/api/follows/21`);
+    expect(follow.request.method).toBe('POST');
+    expect(service.isFollowing(21)).toBe(true);
+  });
+});

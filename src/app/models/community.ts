@@ -514,6 +514,8 @@ export interface Companion {
   isVerified?: boolean;
   verifiedEmail?: string;
   relationshipStatus?: string;
+  /** True when the signed-in member already follows this traveler (Web API answer). */
+  isFollowing?: boolean;
   /** Who may send this traveler a companionship request. */
   whoCanConnect?: 'everyone' | 'companions-of-companions' | 'none';
   /** Who may open this traveler's profile. */
