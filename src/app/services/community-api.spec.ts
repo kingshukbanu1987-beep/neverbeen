@@ -517,6 +517,31 @@ describe('CommunityService — member directory (search & public profiles)', () 
     expect(service.apiOnline()).toBe(false);
   });
 
+  it('the local directory search includes the signed-in member themself', () => {
+    // The Web API's directory search never returns the member themself, so the
+    // website's local directory must resolve them: typing your own name finds
+    // your own profile instead of "No travelers or circles match".
+    const hits = service.searchCompanionsLocally('kingshuk');
+    const me = hits.find((h) => Number(h.id) === 7);
+    expect(me).toBeTruthy();
+    expect(me!.fullName).toBe('Kingshuk Banu');
+    // A last-name / city / profession query finds the member as well.
+    expect(service.searchCompanionsLocally('banu').some((h) => Number(h.id) === 7)).toBe(true);
+    expect(service.searchCompanionsLocally('kolkata').some((h) => Number(h.id) === 7)).toBe(true);
+    // …and the member is never duplicated when already in the directory.
+    expect(hits.filter((h) => Number(h.id) === 7).length).toBe(1);
+  });
+
+  it('searchUsers falls back to the local directory — with the member themself — when the API is down', async () => {
+    const pending = service.searchUsers('kingshuk');
+    httpMock
+      .expectOne(`${API}/api/users/search?query=kingshuk&limit=25`)
+      .error(new ProgressEvent('error'));
+
+    const hits = await pending;
+    expect(hits.some((h) => Number(h.id) === 7 && h.fullName === 'Kingshuk Banu')).toBe(true);
+  });
+
   it('loadUserByUid resolves a 20-digit profile URL id on GET /api/users/uid/{uid}', async () => {
     const uid = '89201534010000000033';
     const pending = service.loadUserByUid(uid);

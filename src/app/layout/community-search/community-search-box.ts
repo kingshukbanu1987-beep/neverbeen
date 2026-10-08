@@ -72,23 +72,27 @@ import { CommunityService } from '../../services/community.service';
                     <span>{{ t.city }}, {{ t.country }} • {{ t.profession }}</span>
                   </div>
                   <div class="csb-item-action">
-                    @if (t.status === 'connected') {
-                      <span class="csb-status connected">Connected</span>
-                    } @else if (t.status === 'pending_outgoing') {
-                      <span class="csb-status pending">Request Sent</span>
-                    } @else if (t.status === 'pending_incoming') {
-                      <span class="csb-status pending">Respond</span>
+                    @if (isSelf(t)) {
+                      <!-- Your own hit: opens your profile, but you can neither
+                           send yourself a companion request nor follow yourself. -->
+                      <span class="csb-status you">You</span>
                     } @else {
-                      <button
-                        type="button"
-                        class="csb-connect"
-                        title="Send a Companion Request"
-                        (click)="$event.stopPropagation(); connect(t.id)"
-                      >
-                        + Connect
-                      </button>
-                    }
-                    @if (!isSelf(t)) {
+                      @if (t.status === 'connected') {
+                        <span class="csb-status connected">Connected</span>
+                      } @else if (t.status === 'pending_outgoing') {
+                        <span class="csb-status pending">Request Sent</span>
+                      } @else if (t.status === 'pending_incoming') {
+                        <span class="csb-status pending">Respond</span>
+                      } @else {
+                        <button
+                          type="button"
+                          class="csb-connect"
+                          title="Send a Companion Request"
+                          (click)="$event.stopPropagation(); connect(t.id)"
+                        >
+                          + Connect
+                        </button>
+                      }
                       <button
                         type="button"
                         class="csb-follow"
@@ -343,6 +347,10 @@ import { CommunityService } from '../../services/community.service';
       color: #b45309;
       background: rgba(245, 158, 11, 0.14);
     }
+    .csb-status.you {
+      color: var(--ct-mu, #64748b);
+      background: rgb(var(--ct-ink-rgb, 15 23 42) / 0.07);
+    }
     html[data-ctheme-mode='dark'] .csb-status.connected {
       color: #6ee7b7;
       background: rgba(16, 185, 129, 0.18);
@@ -350,6 +358,10 @@ import { CommunityService } from '../../services/community.service';
     html[data-ctheme-mode='dark'] .csb-status.pending {
       color: #fcd34d;
       background: rgba(245, 158, 11, 0.16);
+    }
+    html[data-ctheme-mode='dark'] .csb-status.you {
+      color: #94a3b8;
+      background: rgba(148, 163, 184, 0.16);
     }
 
     .csb-connect {
@@ -414,7 +426,9 @@ export class CommunitySearchBox implements OnInit {
    * Travelers matching the typed name: the guest tour searches its seeded
    * directory locally; a signed-in member's local matches are merged with the
    * Web API's directory answer (`GET /api/users/search`), which knows every
-   * registered traveler — not only this member's companions.
+   * registered traveler — not only this member's companions. The member
+   * themself is always part of the local directory (the Web API never returns
+   * the member themself), so typing your own name finds your own profile.
    */
   protected readonly results = computed(() => {
     const q = this.query().trim().toLowerCase();
@@ -502,7 +516,7 @@ export class CommunitySearchBox implements OnInit {
     return !!t.isVerified;
   }
 
-  /** The signed-in member never appears in their own directory results. */
+  /** True for the signed-in member's own directory hit (shown with a "You" badge). */
   protected isSelf(t: Companion): boolean {
     const me = this.service.currentUser()?.id;
     return me != null && Number(t.id) === Number(me);
