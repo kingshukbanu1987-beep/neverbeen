@@ -726,4 +726,154 @@ describe('CommunityService — member directory (search & public profiles)', () 
     expect(follow.request.method).toBe('POST');
     expect(service.isFollowing(21)).toBe(true);
   });
+
+  it('getCurrentUserAsCompanion uses the signed-in member’s own id for uniqueId instead of 1', () => {
+    const me = service.getCurrentUserAsCompanion();
+    expect(me.id).toBe(7);
+    expect(me.uniqueId).toBe('89201534010000000007');
+  });
+
+  it('loadUserByUid falls back to GET /api/companions/{id} when GET /api/users/uid/{uid} answers 404', async () => {
+    const uid = '89201534010000000021';
+    const pending = service.loadUserByUid(uid);
+
+    httpMock
+      .expectOne(`${API}/api/users/uid/${uid}`)
+      .flush({ error: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+    await tick();
+
+    const fallback = httpMock.expectOne(`${API}/api/companions/21`);
+    fallback.flush({
+      id: 21,
+      uniqueId: uid,
+      fullName: 'Elena Rostova',
+      profilePhotoUrl: '/api/profile/21/photo',
+      country: 'France',
+      city: 'Paris',
+      profession: 'Travel Blogger',
+      isOnline: true,
+      mutualCompanionsCount: 0,
+      status: 'none',
+    });
+
+    const companion = await pending;
+    expect(companion?.id).toBe(21);
+    expect(companion?.fullName).toBe('Elena Rostova');
+    expect(service.companions().some((c) => c.id === 21)).toBe(true);
+  });
+
+  it('searchUsers falls back to probing GET /api/companions/{id} when GET /api/users/search answers 404', async () => {
+    const pending = service.searchUsers('elena');
+
+    httpMock
+      .expectOne(`${API}/api/users/search?query=elena&limit=25`)
+      .flush({ error: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+    await tick();
+
+    // First batch of 5 companion probes (ids 1..5).
+    for (const id of [1, 2, 3, 4, 5]) {
+      const req = httpMock.expectOne(`${API}/api/companions/${id}`);
+      if (id === 2) {
+        req.flush({
+          id: 2,
+          uniqueId: '89201534010000000002',
+          fullName: 'Elena Rostova',
+          profilePhotoUrl: '/api/profile/2/photo',
+          country: 'France',
+          city: 'Paris',
+          profession: 'Travel Blogger',
+          isOnline: true,
+          mutualCompanionsCount: 0,
+          status: 'none',
+        });
+      } else {
+        req.flush({ error: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+      }
+    }
+    await tick();
+
+    // Next two batches miss (consecutiveMisses reaches 10) and discovery stops.
+    for (const id of [6, 8, 9, 10, 11]) {
+      httpMock
+        .expectOne(`${API}/api/companions/${id}`)
+        .flush({ error: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+    }
+    await tick();
+    for (const id of [12, 13, 14, 15, 16]) {
+      httpMock
+        .expectOne(`${API}/api/companions/${id}`)
+        .flush({ error: 'Not Found' }, { status: 404, statusText: 'Not Found' });
+    }
+
+    const hits = await pending;
+    expect(hits.some((h) => h.id === 2 && h.fullName === 'Elena Rostova')).toBe(true);
+  });
+
+  it('hydrates post comments from GET /api/journey/{id}/comments and preserves comments on newly created posts', async () => {
+    // 1. Creating a post and commenting on it before POST /api/journey resolves:
+    const created = service.createJourneyPost('Evening in Kyoto');
+    expect(created).toBeTruthy();
+
+    service.addJourneyComment(created!.id, 'First comment right away!');
+    expect(service.journeyPosts()[0].comments.length).toBe(1);
+
+    const postReq = httpMock.expectOne(`${API}/api/journey`);
+    postReq.flush({
+      id: 501,
+      author: { id: 7, fullName: 'Kingshuk Banu' },
+      text: 'Evening in Kyoto',
+      createdAtUtc: '2026-10-08T08:00:00Z',
+      likeCount: 0,
+      commentCount: 0,
+      comments: [],
+    });
+    await tick();
+    await tick();
+
+    // Comment is preserved on the stored post and sent to POST /api/journey/501/comments!
+    expect(service.journeyPosts()[0].id).toBe(501);
+    expect(service.journeyPosts()[0].comments.length).toBe(1);
+
+    const commentReq = httpMock.expectOne(`${API}/api/journey/501/comments`);
+    expect(commentReq.request.method).toBe('POST');
+    expect(commentReq.request.body).toEqual({
+      text: 'First comment right away!',
+      parentId: undefined,
+      imageUrl: undefined,
+    });
+    commentReq.flush({
+      id: 901,
+      postId: 501,
+      author: { id: 7, fullName: 'Kingshuk Banu' },
+      text: 'First comment right away!',
+      createdAtUtc: '2026-10-08T08:01:00Z',
+      likeCount: 0,
+      isLiked: false,
+      reactions: [],
+      replies: [],
+    });
+    await tick();
+
+    expect(service.journeyPosts()[0].comments[0].id).toBe(901);
+    expect(service.journeyPosts()[0].comments[0].text).toBe('First comment right away!');
+
+    // 2. Loading comments explicitly from GET /api/journey/{id}/comments:
+    const loadPromise = service.loadJourneyComments(501);
+    httpMock.expectOne(`${API}/api/journey/501/comments`).flush([
+      {
+        id: 901,
+        postId: 501,
+        author: { id: 7, fullName: 'Kingshuk Banu' },
+        text: 'First comment right away!',
+        createdAtUtc: '2026-10-08T08:01:00Z',
+        likeCount: 2,
+        isLiked: true,
+        reactions: [],
+        replies: [],
+      },
+    ]);
+    const loaded = await loadPromise;
+    expect(loaded.length).toBe(1);
+    expect(service.journeyPosts()[0].comments[0].likeCount).toBe(2);
+  });
 });

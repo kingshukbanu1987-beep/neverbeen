@@ -449,6 +449,10 @@ export interface PostAudience {
 
 export interface JourneyPost {
   id: number;
+  /** Optimistic client-side id before the Web API returns the stored post id. */
+  clientId?: number;
+  /** Total comment count reported by the Web API feed before comments are hydrated. */
+  commentCount?: number;
   author: AuthorInfo;
   text: string;
   createdAtUtc: string;

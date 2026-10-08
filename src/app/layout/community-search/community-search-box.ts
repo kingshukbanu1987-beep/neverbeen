@@ -2,7 +2,7 @@ import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal } f
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Circle, Companion } from '../../models/community';
+import { Circle, Companion, generate20DigitUid } from '../../models/community';
 import { CommunityService } from '../../services/community.service';
 
 /**
@@ -441,9 +441,17 @@ export class CommunitySearchBox implements OnInit {
     }
     const travelers = merged.slice(0, 30);
 
-    const circles = this.service
-      .myCircles()
-      .filter((cr) => cr.name.toLowerCase().includes(q) || cr.description.toLowerCase().includes(q));
+    const myCircles = this.service.myCircles();
+    const allCircles = this.service.circles().filter((c) => !c.archivedAtUtc);
+    const circlePool: Circle[] = [...myCircles];
+    for (const c of allCircles) {
+      if (!circlePool.some((existing) => existing.id === c.id)) circlePool.push(c);
+    }
+    const circles = circlePool.filter(
+      (cr) =>
+        cr.name.toLowerCase().includes(q) ||
+        (cr.description ?? '').toLowerCase().includes(q),
+    );
 
     return { travelers, circles };
   });
@@ -480,7 +488,7 @@ export class CommunitySearchBox implements OnInit {
   private scheduleDirectorySearch(): void {
     if (this.searchTimer) clearTimeout(this.searchTimer);
     const q = this.query().trim();
-    if (q.length < 2 || !this.service.apiLive) {
+    if (!q || !this.service.apiLive) {
       this.apiTravelers.set([]);
       this.searching.set(false);
       return;
@@ -518,8 +526,14 @@ export class CommunitySearchBox implements OnInit {
 
   /** True for the signed-in member's own directory hit (shown with a "You" badge). */
   protected isSelf(t: Companion): boolean {
-    const me = this.service.currentUser()?.id;
-    return me != null && Number(t.id) === Number(me);
+    const me = this.service.currentUser()?.id ?? this.service.profile()?.id;
+    if (me != null && Number(t.id) === Number(me)) return true;
+    const myUid =
+      this.service.profile()?.uniqueId ||
+      this.service.currentUser()?.uniqueId ||
+      (me != null ? generate20DigitUid(me) : undefined);
+    if (myUid && t.uniqueId && t.uniqueId === myUid) return true;
+    return false;
   }
 
   protected isFollowing(t: Companion): boolean {
@@ -536,8 +550,13 @@ export class CommunitySearchBox implements OnInit {
   protected openTraveler(t: Companion): void {
     this.open.set(false);
     this.query.set('');
+    this.apiTravelers.set([]);
+    if (this.isSelf(t)) {
+      this.router.navigate(['/profile'], { queryParams: {} });
+      return;
+    }
     this.router.navigate(['/profile'], {
-      queryParams: { id: t.uniqueId ?? String(t.id) },
+      queryParams: { id: t.uniqueId || generate20DigitUid(t.id) },
     });
   }
 
