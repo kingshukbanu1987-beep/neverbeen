@@ -123,6 +123,32 @@ describe('CommunitySearchBox (community header search)', () => {
     if (item) expect(item.querySelector('.csb-follow')).toBeNull();
   });
 
+  it('finds the signed-in member themself by their own name (the founder "Kingshuk")', () => {
+    const service = TestBed.inject(CommunityService);
+    const me = service.currentUser()!;
+    const myName = me.fullName!;
+    // The guest directory does not list the founder as a companion and the Web
+    // API never returns the member themself — the local directory must still
+    // resolve them, or typing your own name answers "No travelers or circles match".
+    expect(service.companions().some((c) => c.fullName === myName)).toBe(false);
+
+    type(myName);
+    expect(el.querySelector('.csb-empty')).toBeNull();
+
+    const item = items().find((i) => i.textContent?.includes(myName))!;
+    expect(item).toBeTruthy();
+    // Your own card offers no companion request and no follow — just a "You" badge.
+    expect(item.querySelector('.csb-connect')).toBeNull();
+    expect(item.querySelector('.csb-follow')).toBeNull();
+    expect(item.querySelector('.csb-status.you')?.textContent).toContain('You');
+
+    // Clicking it opens your own profile, like any other traveler.
+    item.click();
+    expect(router.navigate).toHaveBeenCalledWith(['/profile'], {
+      queryParams: { id: me.uniqueId },
+    });
+  });
+
   it('finds nothing for a signed-out visitor who has not opened the guest tour', () => {
     const service = TestBed.inject(CommunityService);
     // Leaving the tour (or never opening it) leaves the community empty: no demo travelers

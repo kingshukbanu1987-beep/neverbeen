@@ -4251,17 +4251,29 @@ export class CommunityService {
     this.saveJson(COMPANIONS_KEY, this.companions());
   }
 
-  /** Same matching rules the profile page search uses (name / city / country / profession). */
+  /**
+   * Local directory search — the same matching rules the profile page search
+   * uses (name / city / country / profession). The signed-in member is part of
+   * the directory too: the Web API's member search never returns the member
+   * themself, and the seeded guest directory does not list the founder as a
+   * companion — without this, a member typing their own name (e.g. the founder
+   * "Kingshuk") would always get "No travelers or circles match".
+   */
   searchCompanionsLocally(query: string): Companion[] {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return this.visibleCompanions().filter(
-      (c) =>
-        c.fullName.toLowerCase().includes(q) ||
-        c.city.toLowerCase().includes(q) ||
-        c.country.toLowerCase().includes(q) ||
-        c.profession.toLowerCase().includes(q),
-    );
+    const matches = (c: Companion): boolean =>
+      c.fullName.toLowerCase().includes(q) ||
+      c.city.toLowerCase().includes(q) ||
+      c.country.toLowerCase().includes(q) ||
+      c.profession.toLowerCase().includes(q);
+    const hits = this.visibleCompanions().filter(matches);
+    const me = this.currentUser() ? this.getCurrentUserAsCompanion() : null;
+    if (me && matches(me) && !hits.some((c) => Number(c.id) === Number(me.id))) {
+      // Your own card: opens your profile, but is never a Connect / Follow target.
+      hits.unshift({ ...me, status: 'none' });
+    }
+    return hits;
   }
 
   /**
