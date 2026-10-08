@@ -29,6 +29,7 @@ import {
   LoginDevice,
   NotificationItem,
   PostAudience,
+  PagedResult,
   Profile,
   ReactionResult,
   ReactionType,
@@ -256,6 +257,16 @@ export const SEED_COVER_COLLEAGUES = [
   'photo-1519389950473-47ba0277781c',
 ];
 
+/**
+ * The written intro of the **seeded founder sample** (the "Explore as Guest" profile).
+ * It is demo content that belongs to the demo member only — a signed-in member's About
+ * me is always their own stored intro (or nothing at all).
+ */
+export const FOUNDER_RICH_INTRO =
+  "I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.\n\n" +
+  "I am Kingshuk, a Senior Software Engineer with vast IT experience, specializing in software development, requirements modelling, database modelling, application architecture design, and customer-facing delivery within the Manufacturing & Intelligence Services domain. I have worked with world-leading companies like Continental AG, Intel, E&Y, and others.\n\n" +
+  "As the founder and principal architect of NeverBeen, I blend cutting-edge Generative AI technology with high-performance engineering to bring the world's most breathtaking vacation dreams to life—empowering travelers to discover authentic cultural stories, timeless landscapes, and global companionship.";
+
 export function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(
@@ -376,6 +387,14 @@ export interface ApiProfileDto {
   contactNumber?: string | null;
   postalAddress?: string | null;
   aboutMe?: string | null;
+  /** Structured About-me sub-sections (intro, work, education, …) as JSON (patch: community-complete). */
+  aboutMeDetailsJson?: string | null;
+  /** Presence shown to other travelers: Active, Busy, Don't Disturb, Away, Inactive or Custom. */
+  activeStatus?: string | null;
+  /** Custom presence text used when `activeStatus` is "Custom". */
+  customStatusText?: string | null;
+  /** Relative API URL of the uploaded cover photograph (`/api/profile/{id}/cover`). */
+  coverPhotoUrl?: string | null;
   profession?: string | null;
   status: string;
   profilePhotoUrl?: string | null;
@@ -384,6 +403,246 @@ export interface ApiProfileDto {
   settings?: Partial<UserSettings>;
   gallery?: GalleryPhoto[];
   commentCount: number;
+}
+
+/** Web API shapes of the community endpoints (neverbeen-api). Field names follow the C# DTOs. */
+export interface ApiAuthorDto {
+  id: number;
+  uniqueId?: string | null;
+  fullName?: string | null;
+  profilePhotoUrl?: string | null;
+  profession?: string | null;
+  country?: string | null;
+  city?: string | null;
+  isVerified?: boolean;
+}
+
+export interface ApiCompanionDto {
+  id: number;
+  uniqueId?: string | null;
+  fullName?: string | null;
+  profilePhotoUrl?: string | null;
+  coverPhotoUrl?: string | null;
+  country?: string | null;
+  city?: string | null;
+  profession?: string | null;
+  isOnline?: boolean;
+  mutualCompanionsCount?: number;
+  status?: string;
+  bio?: string | null;
+  aboutMe?: string | null;
+  aboutMeDetailsJson?: string | null;
+  isProfileLocked?: boolean;
+  activeStatus?: string | null;
+  customStatusText?: string | null;
+  isVerified?: boolean;
+  relationshipStatus?: string | null;
+  connectedCompanionIds?: number[] | null;
+}
+
+export interface ApiCircleDto {
+  id: number;
+  name?: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  photoUrl?: string | null;
+  memberIds?: number[];
+  adminIds?: number[];
+  ownerId?: number;
+  createdAtUtc?: string;
+  archivedAtUtc?: string | null;
+  unreadCount?: number;
+}
+
+export interface ApiCircleMessageDto {
+  id: number;
+  circleId?: number;
+  senderId?: number;
+  senderName?: string;
+  text?: string;
+  sentAtUtc?: string;
+  replyToMessageId?: number | null;
+  reactions?: { [emoji: string]: number } | null;
+}
+
+export interface ApiReactionDto {
+  user?: ApiAuthorDto | null;
+  type?: string;
+  reactedAtUtc?: string | null;
+}
+
+export interface ApiJourneyCommentDto {
+  id: number;
+  postId?: number;
+  author?: ApiAuthorDto | null;
+  text?: string;
+  createdAtUtc?: string;
+  imageUrl?: string | null;
+  parentId?: number | null;
+  likeCount?: number;
+  isLiked?: boolean;
+  myReaction?: string | null;
+  reactions?: ApiReactionDto[] | null;
+  replies?: ApiJourneyCommentDto[] | null;
+}
+
+export interface ApiPostAudienceDto {
+  mode?: string;
+  allowIds?: number[] | null;
+  denyIds?: number[] | null;
+}
+
+export interface ApiJourneyPostDto {
+  id: number;
+  author?: ApiAuthorDto | null;
+  text?: string;
+  createdAtUtc?: string;
+  imageUrls?: string[] | null;
+  imageUrl?: string | null;
+  likeCount?: number;
+  isLiked?: boolean;
+  myReaction?: string | null;
+  reactions?: ApiReactionDto[] | null;
+  taggedCompanions?: ApiAuthorDto[] | null;
+  comments?: ApiJourneyCommentDto[] | null;
+  commentCount?: number;
+  location?: string | null;
+  mood?: string | null;
+  placeId?: string | null;
+  hashtags?: string[] | null;
+  shareCount?: number;
+  sharesCount?: number;
+  isShared?: boolean;
+  sharedText?: string | null;
+  originalPost?: ApiJourneyPostDto | null;
+  audience?: ApiPostAudienceDto | null;
+  wallOwnerId?: number | null;
+  wallOwnerName?: string | null;
+  editedAtUtc?: string | null;
+}
+
+export interface ApiAuthorInfoDto {
+  id?: number;
+  fullName?: string | null;
+  profilePhotoUrl?: string | null;
+  profession?: string | null;
+}
+
+export interface ApiBookCommentDto {
+  id: number;
+  text?: string;
+  createdAtUtc?: string;
+  likeCount?: number;
+  dislikeCount?: number;
+  author?: ApiAuthorInfoDto | null;
+  imageUrl?: string | null;
+  myReaction?: string | null;
+  replyCount?: number;
+  replies?: ApiBookCommentDto[] | null;
+}
+
+export interface ApiChatMessageDto {
+  id: number;
+  conversationId?: number;
+  senderId?: number;
+  senderName?: string | null;
+  receiverId?: number | null;
+  text?: string;
+  sentAtUtc?: string;
+  replyToMessageId?: number | null;
+  replyTo?: { id: number; senderName?: string | null; text?: string } | null;
+  reactions?: { [emoji: string]: number } | null;
+  myReaction?: string | null;
+}
+
+export interface ApiConversationDto {
+  id: number;
+  isGroup?: boolean;
+  circleId?: number | null;
+  ownerId?: number | null;
+  participants?: ApiAuthorDto[] | null;
+  lastMessage?: ApiChatMessageDto | null;
+  unreadCount?: number;
+  createdAtUtc?: string;
+}
+
+export interface ApiNotificationDto {
+  id: number;
+  type?: string;
+  fromUser?: ApiAuthorDto | null;
+  message?: string;
+  createdAtUtc?: string;
+  isRead?: boolean;
+  requestId?: number | null;
+  status?: string | null;
+}
+
+export interface ApiFollowDto {
+  id: number;
+  uniqueId?: string | null;
+  fullName?: string | null;
+  profilePhotoUrl?: string | null;
+  profession?: string | null;
+  followedAtUtc?: string;
+}
+
+export interface ApiFollowCountsDto {
+  followers?: number;
+  following?: number;
+  isFollowing?: boolean;
+}
+
+export interface ApiDeviceDto {
+  id: string;
+  name?: string;
+  type?: string;
+  os?: string;
+  browser?: string;
+  ipAddress?: string;
+  macAddress?: string;
+  location?: string;
+  lastSeenUtc?: string;
+  isCurrent?: boolean;
+  isActive?: boolean;
+  blocked?: boolean;
+}
+
+export interface ApiGalleryPhotoDto {
+  id: number;
+  url?: string;
+  caption?: string | null;
+  createdAtUtc?: string;
+}
+
+export interface ApiGalleryAlbumDto {
+  id: number;
+  name?: string;
+  photos?: ApiGalleryPhotoDto[] | null;
+  coverPhotoId?: number | null;
+  privacy?: string | null;
+  updatedAtUtc?: string;
+}
+
+export interface ApiBlockedUserDto {
+  id: number;
+  uniqueId?: string | null;
+  fullName?: string | null;
+  profilePhotoUrl?: string | null;
+  blockedAtUtc?: string;
+}
+
+export interface ApiAbuseReportDto {
+  id: number;
+  targetType?: string;
+  targetId?: number;
+  reportedAuthor?: ApiAuthorDto | null;
+  reportedByUserId?: number;
+  reason?: string;
+  details?: string | null;
+  reporterEmail?: string | null;
+  createdAtUtc?: string;
+  status?: string;
 }
 
 /** A companion conversation waiting to be read. Counted by the header Chats badge. */
@@ -497,6 +756,14 @@ export class CommunityService {
   readonly blockedUserIds = signal<number[]>(this.loadBlockedUsers());
   readonly abuseReports = signal<AbuseReport[]>(this.loadAbuseReports());
   readonly hiddenPostIds = signal<number[]>(this.loadHiddenPostIds());
+  /** Follower/following counters as the Web API last answered for the signed-in member. */
+  readonly followCounts = signal<ApiFollowCountsDto | null>(null);
+  /** Followers of the signed-in member as the Web API last answered. */
+  private readonly apiFollowers = signal<ApiFollowDto[]>([]);
+  /** Members the signed-in member follows as the Web API last answered. */
+  private readonly apiFollowing = signal<ApiFollowDto[]>([]);
+  /** When the signed-in member's community data was last read from the Web API. */
+  readonly communityLoadedAt = signal<string | null>(null);
 
   /**
    * True once `countries()` holds the Web API's own list rather than the generated seed list.
@@ -716,6 +983,10 @@ export class CommunityService {
     }
     // No local record of this member: the database is the only source of their profile.
     if (!usableProfile) void this.refreshProfileFromApi();
+    // The member's own community data (companions, circles, journey feed, message book,
+    // chats, notifications, gallery, follows, devices, moderation state) is read from
+    // the Web API — never from a demo seed left in this browser.
+    void this.ensureCommunityLoaded(true);
   }
 
   /** `CurrentUser` view of a stored profile (used when only the profile survived). */
@@ -924,6 +1195,512 @@ export class CommunityService {
     return error instanceof TypeError || (error instanceof Error && /fetch|network/i.test(error.message));
   }
 
+  // ---------------------------------------------------------------------------
+  // COMMUNITY ↔ WEB API INTEGRATION (complete)
+  //
+  // For a signed-in member every community dataset is read from the NeverBeen Web
+  // API and every change is written straight back to it (write-through). The
+  // seeded guest tour keeps its localStorage demo data — `apiLive` is false
+  // there — and an API that cannot be reached degrades to the same local
+  // behaviour, never to silent data loss.
+  //
+  //   GET  /api/companions                    companions + relationship status
+  //   POST/DELETE /api/companions/{id}/…      request / accept / reject / cancel / remove
+  //   GET  /api/circles (+ members/admins/messages)   travel circles
+  //   GET  /api/journey …                     journey feed, posts, comments, reactions
+  //   GET  /api/messagebook …                 message book comments + reactions
+  //   GET  /api/messages/conversations …      1:1 and circle chats
+  //   GET  /api/notifications …               notifications + unread counts
+  //   GET  /api/gallery(+/albums)             gallery photos and albums
+  //   GET  /api/follows/…                     followers / following / counts
+  //   GET  /api/devices …                     signed-in devices
+  //   GET  /api/moderation/…                  blocks, hidden posts, abuse reports
+  //   PUT  /api/profile · /api/profile/settings · /api/profile/photo · cover
+  // ---------------------------------------------------------------------------
+
+  /**
+   * True while a **real member** is signed in with a Web API session: community
+   * reads hydrate from the API and community writes are sent to it. False for
+   * the guest/demo tour, for signed-out visitors and in tests without an
+   * HttpClient.
+   */
+  get apiLive(): boolean {
+    const token = this.token();
+    return !!this.http && !!token && !this.demoSession && !isDemoSessionToken(token);
+  }
+
+  /** GET against the Web API with the member's Bearer token; null when it fails. */
+  private async apiGet<T>(path: string): Promise<T | null> {
+    if (!this.http || !this.apiLive) return null;
+    const url = this.apiEndpoint(path);
+    try {
+      const data = await firstValueFrom(
+        withApiTimeout(this.http.get<T>(url, { headers: this.authHeaders() }), url),
+      );
+      this.apiOnline.set(true);
+      return data;
+    } catch (error) {
+      if (this.isNetworkError(error)) this.apiOnline.set(false);
+      this.logApiFailure(`GET ${path}`, url, error);
+      return null;
+    }
+  }
+
+  /** POST / PUT / DELETE against the Web API; null when it fails. */
+  private async apiSend<T>(
+    method: 'POST' | 'PUT' | 'DELETE',
+    path: string,
+    body?: unknown,
+  ): Promise<T | null> {
+    if (!this.http || !this.apiLive) return null;
+    const url = this.apiEndpoint(path);
+    try {
+      const data = await firstValueFrom(
+        withApiTimeout(
+          this.http.request<T>(method, url, {
+            headers: this.authHeaders(),
+            body: body === undefined ? null : body,
+          }),
+          url,
+        ),
+      );
+      this.apiOnline.set(true);
+      return data;
+    } catch (error) {
+      if (this.isNetworkError(error)) this.apiOnline.set(false);
+      this.logApiFailure(`${method} ${path}`, url, error);
+      return null;
+    }
+  }
+
+  /** Fire-and-forget Web API write (the UI already applied its optimistic update). */
+  private apiWrite(method: 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): void {
+    void this.apiSend<unknown>(method, path, body);
+  }
+
+  /** Parses a structured About-me JSON payload the Web API stores as a string. */
+  private static parseAboutMeDetails(json?: string | null): AboutMeDetails | undefined {
+    if (!json) return undefined;
+    try {
+      const parsed = JSON.parse(json) as AboutMeDetails;
+      return parsed && typeof parsed === 'object' ? parsed : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** AuthorInfo from the API's AuthorDto (photo URLs may be API-relative). */
+  private authorFromApi(dto?: {
+    id?: number | null;
+    uniqueId?: string | null;
+    fullName?: string | null;
+    profilePhotoUrl?: string | null;
+    profession?: string | null;
+    country?: string | null;
+    city?: string | null;
+    isVerified?: boolean | null;
+  } | null): AuthorInfo {
+    return {
+      id: dto?.id ?? 0,
+      uniqueId: dto?.uniqueId ?? undefined,
+      fullName: dto?.fullName ?? '',
+      profilePhotoUrl: this.absoluteApiUrl(dto?.profilePhotoUrl) ?? '',
+      profession: dto?.profession ?? '',
+      country: dto?.country ?? undefined,
+      city: dto?.city ?? undefined,
+      isVerified: !!dto?.isVerified,
+    };
+  }
+
+  /** Companion from the API's CompanionDto. */
+  private companionFromApi(dto: ApiCompanionDto): Companion {
+    return {
+      id: dto.id,
+      uniqueId: dto.uniqueId ?? generate20DigitUid(dto.id),
+      fullName: dto.fullName ?? '',
+      profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? '',
+      coverPhotoUrl: this.absoluteApiUrl(dto.coverPhotoUrl) ?? undefined,
+      country: dto.country ?? '',
+      city: dto.city ?? '',
+      profession: dto.profession ?? '',
+      isOnline: !!dto.isOnline,
+      mutualCompanionsCount: dto.mutualCompanionsCount ?? 0,
+      status: (dto.status as Companion['status']) || 'none',
+      bio: dto.bio ?? undefined,
+      aboutMe: dto.aboutMe ?? undefined,
+      aboutMeDetails: CommunityService.parseAboutMeDetails(dto.aboutMeDetailsJson),
+      isProfileLocked: !!dto.isProfileLocked,
+      activeStatus: (dto.activeStatus as UserActiveStatus) ?? 'Active',
+      customStatusText: dto.customStatusText ?? undefined,
+      isVerified: !!dto.isVerified,
+      connectedCompanionIds: dto.connectedCompanionIds ?? undefined,
+    };
+  }
+
+  /** Circle from the API's CircleDto (chat history loads separately per circle). */
+  private circleFromApi(dto: ApiCircleDto): Circle {
+    return normalizeCircle({
+      id: dto.id,
+      name: dto.name ?? '',
+      description: dto.description ?? '',
+      icon: dto.icon || '🌟',
+      color: dto.color || '#2563eb',
+      photoUrl: this.absoluteApiUrl(dto.photoUrl) ?? undefined,
+      memberIds: dto.memberIds ?? [],
+      adminIds: dto.adminIds ?? [],
+      ownerId: dto.ownerId,
+      createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
+      archivedAtUtc: dto.archivedAtUtc ?? undefined,
+      messages: [],
+    });
+  }
+
+  /** Journey comment (with its nested replies) from the API's JourneyCommentDto. */
+  private journeyCommentFromApi(dto: ApiJourneyCommentDto): JourneyComment {
+    return {
+      id: dto.id,
+      postId: dto.postId ?? undefined,
+      author: this.authorFromApi(dto.author),
+      text: dto.text ?? '',
+      createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
+      imageUrl: this.absoluteApiUrl(dto.imageUrl) ?? undefined,
+      parentId: dto.parentId ?? null,
+      likeCount: dto.likeCount ?? 0,
+      isLiked: !!dto.isLiked,
+      myReaction: (dto.myReaction as ReactionType | null) ?? null,
+      reactions: (dto.reactions ?? []).map((r) => ({
+        user: this.authorFromApi(r.user),
+        type: (r.type as ReactionType) || 'Like',
+        reactedAtUtc: r.reactedAtUtc ?? undefined,
+      })),
+      replies: (dto.replies ?? []).map((reply) => this.journeyCommentFromApi(reply)),
+    };
+  }
+
+  /** Journey post (with comments) from the API's JourneyPostDto. */
+  private journeyPostFromApi(dto: ApiJourneyPostDto): JourneyPost {
+    return {
+      id: dto.id,
+      author: this.authorFromApi(dto.author),
+      text: dto.text ?? '',
+      createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
+      imageUrl: this.absoluteApiUrl(dto.imageUrl ?? dto.imageUrls?.[0]) ?? undefined,
+      imageUrls: (dto.imageUrls ?? []).map((url) => this.absoluteApiUrl(url) ?? url),
+      likeCount: dto.likeCount ?? 0,
+      isLiked: !!dto.isLiked,
+      myReaction: (dto.myReaction as ReactionType | null) ?? null,
+      reactions: (dto.reactions ?? []).map((r) => ({
+        user: this.authorFromApi(r.user),
+        type: (r.type as ReactionType) || 'Like',
+        reactedAtUtc: r.reactedAtUtc ?? undefined,
+      })),
+      taggedCompanions: (dto.taggedCompanions ?? []).map((a) => this.authorFromApi(a)),
+      comments: (dto.comments ?? []).map((c) => this.journeyCommentFromApi(c)),
+      location: dto.location ?? undefined,
+      mood: dto.mood ?? undefined,
+      placeId: dto.placeId ?? undefined,
+      shareCount: dto.sharesCount ?? dto.shareCount ?? 0,
+      isShared: !!dto.isShared,
+      sharedText: dto.sharedText ?? undefined,
+      originalPost: dto.originalPost ? this.journeyPostFromApi(dto.originalPost) : undefined,
+      audience: dto.audience
+        ? {
+            mode: (dto.audience.mode as PostAudience['mode']) || 'public',
+            allowIds: dto.audience.allowIds ?? undefined,
+            denyIds: dto.audience.denyIds ?? undefined,
+          }
+        : undefined,
+      hashtags: dto.hashtags ?? undefined,
+      wallOwnerId: dto.wallOwnerId ?? undefined,
+      wallOwnerName: dto.wallOwnerName ?? undefined,
+      editedAtUtc: dto.editedAtUtc ?? undefined,
+    };
+  }
+
+  /** Message-book comment (with replies) from the API's CommentDto. */
+  private bookCommentFromApi(dto: ApiBookCommentDto): CommunityComment {
+    return {
+      id: dto.id,
+      text: dto.text ?? '',
+      createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
+      likeCount: dto.likeCount ?? 0,
+      dislikeCount: dto.dislikeCount ?? 0,
+      author: this.authorFromApi(dto.author),
+      imageUrl: this.absoluteApiUrl(dto.imageUrl) ?? undefined,
+      myReaction: (dto.myReaction as ReactionType | null) ?? null,
+      replyCount: dto.replyCount ?? dto.replies?.length ?? 0,
+      parentId: null,
+      replies: (dto.replies ?? []).map((reply) => ({
+        ...this.bookCommentFromApi(reply),
+        parentId: dto.id,
+      })),
+    };
+  }
+
+  /** Chat message from the API's ChatMessageDto. */
+  private chatMessageFromApi(dto: ApiChatMessageDto): ChatMessage {
+    return {
+      id: dto.id,
+      senderId: dto.senderId ?? 0,
+      receiverId: dto.receiverId ?? 0,
+      text: dto.text ?? '',
+      sentAtUtc: dto.sentAtUtc || new Date().toISOString(),
+      reactions: dto.reactions ?? undefined,
+      myReaction: dto.myReaction ?? undefined,
+      replyTo: dto.replyTo
+        ? {
+            id: dto.replyTo.id,
+            senderName: dto.replyTo.senderName ?? '',
+            text: dto.replyTo.text ?? '',
+          }
+        : undefined,
+    };
+  }
+
+  /** Notification from the API's NotificationDto. */
+  private notificationFromApi(dto: ApiNotificationDto): NotificationItem {
+    return {
+      id: dto.id,
+      type: (dto.type as NotificationItem['type']) || 'companionship_request',
+      fromUser: this.authorFromApi(dto.fromUser),
+      message: dto.message ?? '',
+      createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
+      isRead: !!dto.isRead,
+      requestId: dto.requestId ?? undefined,
+      status: (dto.status as NotificationItem['status']) ?? undefined,
+    };
+  }
+
+  /** Applies the API's SettingsDto answers onto the signed-in member's profile. */
+  private applyApiSettings(settings: Partial<UserSettings>): void {
+    this.profile.update((p) =>
+      p
+        ? { ...p, settings: CommunityService.defaultSettings({ ...p.settings, ...settings }) }
+        : p,
+    );
+    this.saveJson(PROFILE_KEY, this.profile());
+  }
+
+  /**
+   * (Re)reads every community dataset of the signed-in member from the Web API and
+   * puts the answers into the signals the pages already render. One failure never
+   * blocks the others: each fetch degrades to “keep what this browser has”.
+   */
+  async refreshCommunityFromApi(): Promise<void> {
+    if (!this.http || !this.apiLive) return;
+    const me = this.currentUser()?.id;
+    if (!me) return;
+
+    const [companions, followsCounts, followers, following, circles, journey, book, conversations, notifications, gallery, albums, devices, blocks, hidden, reports] =
+      await Promise.all([
+        this.apiGet<ApiCompanionDto[]>('/api/companions'),
+        me ? this.apiGet<ApiFollowCountsDto>(`/api/follows/counts/${me}`) : Promise.resolve(null),
+        this.apiGet<ApiFollowDto[]>('/api/follows/followers'),
+        this.apiGet<ApiFollowDto[]>('/api/follows/following'),
+        this.apiGet<ApiCircleDto[]>('/api/circles'),
+        this.apiGet<PagedResult<ApiJourneyPostDto>>('/api/journey?pageSize=50'),
+        this.apiGet<PagedResult<ApiBookCommentDto>>('/api/messagebook?pageSize=50&includeReplies=true'),
+        this.apiGet<ApiConversationDto[]>('/api/messages/conversations'),
+        this.apiGet<ApiNotificationDto[]>('/api/notifications'),
+        this.apiGet<ApiGalleryPhotoDto[]>('/api/gallery'),
+        this.apiGet<ApiGalleryAlbumDto[]>('/api/gallery/albums'),
+        this.apiGet<ApiDeviceDto[]>('/api/devices'),
+        this.apiGet<ApiBlockedUserDto[]>('/api/moderation/blocks'),
+        this.apiGet<number[]>('/api/moderation/hidden-posts'),
+        this.apiGet<ApiAbuseReportDto[]>('/api/moderation/reports'),
+      ]);
+
+    // Companions — the real directory of this member's relationships.
+    if (companions) {
+      this.companions.set(companions.map((dto) => this.companionFromApi(dto)));
+      this.saveJson(COMPANIONS_KEY, this.companions());
+    }
+
+    // Followers / following — the API's own graph (see follows section below).
+    if (following || followers) {
+      this.apiFollowers.set(followers ?? []);
+      this.apiFollowing.set(following ?? []);
+      const graph: Record<string, number[]> = { ...this.follows() };
+      if (following) graph[String(me)] = following.map((f) => f.id).filter((id) => id !== me);
+      if (followers) {
+        for (const follower of followers) {
+          if (follower.id === me) continue;
+          const key = String(follower.id);
+          graph[key] = Array.from(new Set([...(graph[key] ?? []), me]));
+        }
+      }
+      // Drop stale entries the API no longer knows about (e.g. an unfollow from
+      // another browser): entries that mention me but are not in either list.
+      const validIds = new Set<number>([
+        ...(following ?? []).map((f) => f.id),
+        ...(followers ?? []).map((f) => f.id),
+        me,
+      ]);
+      for (const key of Object.keys(graph)) {
+        if (Number(key) === me) continue;
+        if (!validIds.has(Number(key))) delete graph[key];
+      }
+      this.follows.set(graph);
+      this.persistFollows();
+    }
+    if (followsCounts) this.followCounts.set(followsCounts);
+
+    // Circles — including archived ones (the Archived tab filters by archivedAtUtc).
+    if (circles) {
+      this.circles.set(circles.map((dto) => this.circleFromApi(dto)));
+      this.saveJson(CIRCLES_KEY, this.circles());
+    }
+
+    // Journey feed.
+    if (journey) {
+      this.journeyPosts.set(journey.items.map((dto) => this.journeyPostFromApi(dto)));
+      this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    }
+
+    // Message book.
+    if (book) {
+      this.comments.set(book.items.map((dto) => this.bookCommentFromApi(dto)));
+      this.saveJson(COMMENTS_KEY, this.comments());
+    }
+
+    // Chats (conversation inbox; boxes hydrate when they are opened).
+    if (conversations) this.pendingChats.set(this.pendingChatsFromApi(conversations));
+
+    // Notifications.
+    if (notifications) {
+      this.notifications.set(notifications.map((dto) => this.notificationFromApi(dto)));
+      this.saveJson(NOTIFS_KEY, this.notifications());
+    }
+
+    // Gallery (own photos + albums; stored on the profile like the settings).
+    if (gallery || albums) {
+      this.profile.update((p) =>
+        p
+          ? {
+              ...p,
+              gallery: gallery
+                ? gallery.map((photo) => this.galleryPhotoFromApi(photo))
+                : p.gallery,
+              galleryAlbums: albums
+                ? albums.map((album) => this.galleryAlbumFromApi(album))
+                : p.galleryAlbums,
+            }
+          : p,
+      );
+      this.saveJson(PROFILE_KEY, this.profile());
+    }
+
+    // Devices, moderation state.
+    if (devices) {
+      this.devices.set(devices.map((dto) => this.deviceFromApi(dto)));
+      this.saveJson(DEVICES_KEY, this.devices());
+    }
+    if (blocks) {
+      this.blockedUserIds.set(blocks.map((b) => b.id));
+      this.saveJson(BLOCKED_USERS_KEY, this.blockedUserIds());
+    }
+    if (hidden) {
+      this.hiddenPostIds.set(hidden);
+      this.saveJson(HIDDEN_POSTS_KEY, hidden);
+    }
+    if (reports) {
+      this.abuseReports.set(reports.map((dto) => this.abuseReportFromApi(dto)));
+      this.saveJson(ABUSE_REPORTS_KEY, this.abuseReports());
+    }
+
+    this.communityLoadedAt.set(new Date().toISOString());
+  }
+
+  /** In-flight hydration (so parallel callers share one fan-out). */
+  private communityHydration: Promise<void> | null = null;
+
+  /**
+   * Loads the signed-in member's community data from the Web API once per session;
+   * `force` re-reads everything (used after sign-in and by the refresh affordances).
+   */
+  async ensureCommunityLoaded(force = false): Promise<void> {
+    if (!this.apiLive) return;
+    if (this.communityHydration && !force) return this.communityHydration;
+    this.communityHydration = this.refreshCommunityFromApi().finally(() => {
+      this.communityHydration = null;
+    });
+    return this.communityHydration;
+  }
+
+  /** Conversation inbox from the API's conversation list. */
+  private pendingChatsFromApi(conversations: ApiConversationDto[]): PendingChat[] {
+    const me = this.myId();
+    return conversations
+      .filter((c) => !c.circleId)
+      .map((c) => {
+        const partner = c.participants?.find((p) => p.id !== me) ?? c.participants?.[0];
+        return {
+          companionId: partner?.id ?? 0,
+          fullName: partner?.fullName ?? 'NeverBeen Traveler',
+          profilePhotoUrl: this.absoluteApiUrl(partner?.profilePhotoUrl) ?? '',
+          profession: partner?.profession ?? '',
+          city: partner?.city ?? '',
+          country: partner?.country ?? '',
+          preview: c.lastMessage?.text ?? '',
+          unreadCount: c.unreadCount ?? 0,
+          sentAtUtc: c.lastMessage?.sentAtUtc ?? c.createdAtUtc ?? new Date().toISOString(),
+        };
+      })
+      .filter((chat) => !!chat.companionId);
+  }
+
+  private galleryPhotoFromApi(dto: ApiGalleryPhotoDto): GalleryPhoto {
+    return {
+      id: dto.id,
+      url: this.absoluteApiUrl(dto.url) ?? dto.url ?? '',
+      caption: dto.caption ?? undefined,
+      createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
+    };
+  }
+
+  private galleryAlbumFromApi(dto: ApiGalleryAlbumDto): GalleryAlbum {
+    return {
+      id: dto.id,
+      name: dto.name ?? 'Album',
+      photos: (dto.photos ?? []).map((photo) => this.galleryPhotoFromApi(photo)),
+      coverPhotoId: dto.coverPhotoId ?? undefined,
+      privacy: (dto.privacy as GalleryAlbum['privacy']) ?? 'public',
+      updatedAtUtc: dto.updatedAtUtc || new Date().toISOString(),
+    };
+  }
+
+  private deviceFromApi(dto: ApiDeviceDto): LoginDevice {
+    return {
+      id: dto.id,
+      name: dto.name ?? 'Device',
+      type: (dto.type as LoginDevice['type']) || 'Desktop',
+      os: dto.os ?? '',
+      browser: dto.browser ?? '',
+      ipAddress: dto.ipAddress ?? '',
+      macAddress: dto.macAddress ?? '',
+      location: dto.location ?? '',
+      lastSeenUtc: dto.lastSeenUtc || new Date().toISOString(),
+      isCurrent: !!dto.isCurrent,
+      isActive: dto.isActive ?? true,
+      blocked: !!dto.blocked,
+    };
+  }
+
+  private abuseReportFromApi(dto: ApiAbuseReportDto): AbuseReport {
+    return {
+      id: dto.id,
+      targetType: (dto.targetType as AbuseReport['targetType']) || 'post',
+      targetId: dto.targetId ?? 0,
+      reportedAuthor: this.authorFromApi(dto.reportedAuthor),
+      reportedByUserId: dto.reportedByUserId ?? 0,
+      reason: dto.reason ?? '',
+      details: dto.details ?? '',
+      reporterEmail: dto.reporterEmail ?? undefined,
+      createdAtUtc: dto.createdAtUtc || new Date().toISOString(),
+      status: (dto.status as AbuseReport['status']) || 'pending',
+    };
+  }
+
   /** The map of default community settings used when the API did not send any. */
   private static defaultSettings(overrides?: Partial<UserSettings>): UserSettings {
     return {
@@ -967,6 +1744,7 @@ export class CommunityService {
       profession: dto.profession ?? fallback?.profession ?? 'Traveler',
       status: dto.status || 'Active',
       profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? fallback?.profilePhotoUrl,
+      coverPhotoUrl: this.absoluteApiUrl(dto.coverPhotoUrl) ?? fallback?.coverPhotoUrl,
       externalProfilePictureUrl:
         dto.externalProfilePictureUrl ?? fallback?.externalProfilePictureUrl,
       createdAtUtc: dto.createdAtUtc || fallback?.createdAtUtc || new Date().toISOString(),
@@ -980,7 +1758,14 @@ export class CommunityService {
       }),
       gallery: dto.gallery ?? fallback?.gallery ?? [],
       commentCount: dto.commentCount ?? fallback?.commentCount ?? 0,
-      activeStatus: fallback?.activeStatus,
+      activeStatus: (dto.activeStatus as UserActiveStatus) ?? fallback?.activeStatus,
+      customStatusText: dto.customStatusText ?? fallback?.customStatusText,
+      isProfileLocked: dto.settings?.isProfileLocked ?? fallback?.isProfileLocked,
+      aboutMeDetails:
+        CommunityService.parseAboutMeDetails(dto.aboutMeDetailsJson) ?? fallback?.aboutMeDetails,
+      isVerified: dto.settings?.isVerified ?? fallback?.isVerified,
+      verifiedEmail: dto.settings?.verificationEmail ?? fallback?.verifiedEmail,
+      verificationType: (dto.settings?.verificationType as Profile['verificationType']) ?? fallback?.verificationType,
     };
   }
 
@@ -1220,6 +2005,8 @@ export class CommunityService {
 
     if (dto.profileComplete) {
       await this.refreshProfileFromApi();
+      // Complete profile: the whole community dataset of this member is read too.
+      void this.ensureCommunityLoaded(true);
     } else {
       this.profile.set(null);
     }
@@ -1863,6 +2650,14 @@ export class CommunityService {
     this.profile.update((p) => (p ? { ...p, activeStatus: status, customStatusText: sanitized } : null));
     this.saveJson(USER_KEY, this.currentUser());
     this.saveJson(PROFILE_KEY, this.profile());
+    // Presence lives in the member row's own columns on the Web API
+    // (PUT /api/profile — ActiveStatus / CustomStatusText, patch: community-complete).
+    if (this.apiLive) {
+      this.apiWrite('PUT', '/api/profile', {
+        activeStatus: status,
+        customStatusText: sanitized || undefined,
+      });
+    }
   }
 
   toggleProfileLock(): boolean {
@@ -1886,6 +2681,8 @@ export class CommunityService {
     this.currentUser.update((u) => (u ? { ...u, isProfileLocked: locked } : null));
     this.saveJson(PROFILE_KEY, this.profile());
     this.saveJson(USER_KEY, this.currentUser());
+    // The lock is part of the member's Settings section on the Web API.
+    if (this.apiLive) this.apiWrite('PUT', '/api/profile/settings', this.profile()!.settings);
   }
 
   // ---------------------------------------------------------------------------
@@ -2125,6 +2922,9 @@ export class CommunityService {
       aboutMe: req.aboutMe ?? current.aboutMe,
       profession: req.profession ?? current.profession,
       aboutMeDetails: req.aboutMeDetails ?? current.aboutMeDetails,
+      activeStatus: req.activeStatus ?? current.activeStatus,
+      customStatusText: req.customStatusText ?? current.customStatusText,
+      isProfileLocked: req.isProfileLocked ?? current.isProfileLocked,
     };
 
     this.profile.set(updated);
@@ -2141,7 +2941,73 @@ export class CommunityService {
         : null,
     );
     this.saveJson(USER_KEY, this.currentUser());
+
+    // Signed-in members persist every detail on the Web API (PUT /api/profile); the
+    // API's answer is the truth and replaces the optimistic profile when it arrives.
+    if (this.apiLive) {
+      const saved = await this.putProfileToApi(req);
+      if (saved) {
+        this.profile.set(saved);
+        this.saveJson(PROFILE_KEY, saved);
+        this.currentUser.update((u) =>
+          u
+            ? {
+                ...u,
+                fullName: saved.fullName,
+                firstName: saved.firstName,
+                lastName: saved.lastName,
+                activeStatus: saved.activeStatus,
+                customStatusText: saved.customStatusText,
+                isProfileLocked: saved.isProfileLocked,
+                aboutMeDetails: saved.aboutMeDetails,
+              }
+            : null,
+        );
+        this.saveJson(USER_KEY, this.currentUser());
+        return saved;
+      }
+    }
     return updated;
+  }
+
+  /**
+   * PUT /api/profile — sends the editable details (including the structured About-me
+   * JSON, the presence and the profile lock, which the API stores in its own columns)
+   * and maps the fresh `ProfileDto` answer onto the app's profile.
+   */
+  private async putProfileToApi(req: UpdateProfileRequest): Promise<Profile | null> {
+    const current = this.profile();
+    if (!current) return null;
+    const body: Record<string, unknown> = {
+      fullName: req.fullName ?? undefined,
+      firstName: req.firstName ?? undefined,
+      lastName: req.lastName ?? undefined,
+      state: req.state ?? undefined,
+      gender: req.gender ?? undefined,
+      dateOfBirth: req.dateOfBirth ?? undefined,
+      countryId: req.countryId ?? undefined,
+      cityId: req.cityId ?? undefined,
+      pincode: req.pincode ?? undefined,
+      contactNumber: req.contactNumber ?? undefined,
+      postalAddress: req.postalAddress ?? undefined,
+      aboutMe: req.aboutMe ?? undefined,
+      profession: req.profession ?? undefined,
+      // Structured About me sub-sections + presence + lock (patch: community-complete).
+      aboutMeDetailsJson: req.aboutMeDetails
+        ? JSON.stringify(req.aboutMeDetails)
+        : req.aboutMeDetails === null
+          ? ''
+          : undefined,
+      activeStatus: req.activeStatus ?? undefined,
+      customStatusText: req.customStatusText ?? undefined,
+      isProfileLocked: req.isProfileLocked ?? undefined,
+    };
+    for (const key of Object.keys(body)) {
+      if (body[key] === undefined) delete body[key];
+    }
+
+    const dto = await this.apiSend<ApiProfileDto>('PUT', '/api/profile', body);
+    return dto ? this.profileFromApi(dto, current) : null;
   }
 
   updateAboutMeDetails(details: AboutMeDetails): boolean {
@@ -2150,6 +3016,17 @@ export class CommunityService {
     this.currentUser.update((u) => (u ? { ...u, aboutMeDetails: details } : null));
     this.saveJson(PROFILE_KEY, this.profile());
     this.saveJson(USER_KEY, this.currentUser());
+    // The structured About me is stored on the member row as JSON (PUT /api/profile).
+    if (this.apiLive) {
+      void this.apiSend<ApiProfileDto>('PUT', '/api/profile', {
+        aboutMeDetailsJson: JSON.stringify(details),
+      }).then((dto) => {
+        if (!dto) return;
+        const saved = this.profileFromApi(dto, this.profile() ?? undefined);
+        this.profile.update((p) => (p ? { ...saved, aboutMeDetails: details } : p));
+        this.saveJson(PROFILE_KEY, this.profile());
+      });
+    }
     return true;
   }
 
@@ -2160,6 +3037,19 @@ export class CommunityService {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
     if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
+    // Signed-in members upload to the Web API (PUT /api/profile/photo, multipart):
+    // the photograph is stored on the member row and served from /api/profile/{id}/photo.
+    if (this.apiLive) {
+      const dto = await this.uploadProfilePhotoToApi('PUT', '/api/profile/photo', file);
+      if (dto) {
+        const saved = this.profileFromApi(dto, this.profile() ?? undefined);
+        this.profile.set(saved);
+        this.currentUser.update((u) => (u ? { ...u, profilePhotoUrl: saved.profilePhotoUrl } : null));
+        this.saveJson(PROFILE_KEY, saved);
+        this.saveJson(USER_KEY, this.currentUser());
+        return saved.profilePhotoUrl ?? '';
+      }
+    }
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -2174,11 +3064,53 @@ export class CommunityService {
     });
   }
 
+  /** Multipart photograph upload against the API; returns the fresh profile. */
+  private async uploadProfilePhotoToApi(
+    method: 'PUT' | 'POST',
+    path: string,
+    file: File,
+    caption?: string,
+  ): Promise<ApiProfileDto | null> {
+    if (!this.http || !this.apiLive) return null;
+    const url = this.apiEndpoint(path);
+    const form = new FormData();
+    form.append('photo', file);
+    if (caption !== undefined) form.append('caption', caption);
+    try {
+      const data = await firstValueFrom(
+        withApiTimeout(
+          this.http.request<ApiProfileDto>(method, url, { headers: this.authHeaders(), body: form, responseType: 'json' }),
+          url,
+          REGISTRATION_TIMEOUT_MS,
+        ),
+      );
+      this.apiOnline.set(true);
+      return data;
+    } catch (error) {
+      if (this.isNetworkError(error)) this.apiOnline.set(false);
+      this.logApiFailure(`${method} ${path}`, url, error);
+      return null;
+    }
+  }
+
   async uploadCoverPhoto(file: File): Promise<string> {
     if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
       throw new Error('Picture size exceeds 100 KB limit.');
     }
     if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
+    // Cover photographs go to the Web API too (PUT /api/profile/cover — patch:
+    // community-complete). Without that endpoint yet, the local copy is kept.
+    if (this.apiLive) {
+      const dto = await this.uploadCoverPhotoToApi(file);
+      if (dto) {
+        const saved = this.profileFromApi(dto, this.profile() ?? undefined);
+        this.profile.set(saved);
+        this.currentUser.update((u) => (u ? { ...u, coverPhotoUrl: saved.coverPhotoUrl } : null));
+        this.saveJson(PROFILE_KEY, saved);
+        this.saveJson(USER_KEY, this.currentUser());
+        return saved.coverPhotoUrl ?? '';
+      }
+    }
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -2193,9 +3125,35 @@ export class CommunityService {
     });
   }
 
+  /** PUT /api/profile/cover (multipart) — answered with the fresh ProfileDto. */
+  private async uploadCoverPhotoToApi(file: File): Promise<ApiProfileDto | null> {
+    if (!this.http || !this.apiLive) return null;
+    const url = this.apiEndpoint('/api/profile/cover');
+    const form = new FormData();
+    form.append('photo', file);
+    try {
+      const data = await firstValueFrom(
+        withApiTimeout(this.http.put<ApiProfileDto>(url, form, { headers: this.authHeaders() }), url, REGISTRATION_TIMEOUT_MS),
+      );
+      this.apiOnline.set(true);
+      return data;
+    } catch (error) {
+      if (this.isNetworkError(error)) this.apiOnline.set(false);
+      this.logApiFailure('PUT /api/profile/cover', url, error);
+      return null;
+    }
+  }
+
   async updateSettings(settings: UserSettings): Promise<UserSettings> {
     this.profile.update((p) => (p ? { ...p, settings } : null));
     this.saveJson(PROFILE_KEY, this.profile());
+    // Signed-in members save the whole Settings section on the Web API
+    // (PUT /api/profile/settings) and adopt the stored answer.
+    if (this.apiLive) {
+      const saved = await this.apiSend<Partial<UserSettings>>('PUT', '/api/profile/settings', settings);
+      if (saved) this.applyApiSettings(saved);
+      return { ...settings, ...(saved ?? {}) } as UserSettings;
+    }
     return settings;
   }
 
@@ -2233,6 +3191,11 @@ export class CommunityService {
     this.saveJson(USER_KEY, this.currentUser());
     this.saveJson(PROFILE_KEY, this.profile());
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    // Verification is part of the member's Settings on the Web API
+    // (PUT /api/profile/settings honours IsVerified / VerificationEmail / VerificationType).
+    if (this.apiLive && this.profile()?.settings) {
+      this.apiWrite('PUT', '/api/profile/settings', this.profile()!.settings);
+    }
   }
 
   removeUserVerification(): void {
@@ -2266,6 +3229,9 @@ export class CommunityService {
     this.saveJson(USER_KEY, this.currentUser());
     this.saveJson(PROFILE_KEY, this.profile());
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    if (this.apiLive && this.profile()?.settings) {
+      this.apiWrite('PUT', '/api/profile/settings', this.profile()!.settings);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -2278,6 +3244,29 @@ export class CommunityService {
     }
     if (!this.storageAllows(file.size)) {
       throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
+    }
+    // Signed-in members upload to the Web API (POST /api/gallery, multipart) and the
+    // stored photograph (served from /api/gallery/{id}) replaces the local preview.
+    if (this.apiLive) {
+      const dto = await this.uploadGalleryPhotoToApi(file, caption);
+      if (dto) {
+        const stored = this.galleryPhotoFromApi(dto);
+        this.profile.update((p) => {
+          if (!p) return null;
+          return {
+            ...p,
+            gallery: [stored, ...p.gallery],
+            galleryAlbums: (p.galleryAlbums ?? []).map((album) =>
+              album.id === albumId
+                ? { ...album, photos: [stored, ...album.photos], coverPhotoId: album.coverPhotoId ?? stored.id, updatedAtUtc: stored.createdAtUtc }
+                : album,
+            ),
+          };
+        });
+        this.saveJson(PROFILE_KEY, this.profile());
+        if (albumId) this.apiWrite('PUT', `/api/gallery/albums/${albumId}/photos/${stored.id}`);
+        return stored;
+      }
     }
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -2305,6 +3294,26 @@ export class CommunityService {
     });
   }
 
+  /** POST /api/gallery (multipart field "photo", optional caption). */
+  private async uploadGalleryPhotoToApi(file: File, caption?: string): Promise<ApiGalleryPhotoDto | null> {
+    if (!this.http || !this.apiLive) return null;
+    const url = this.apiEndpoint('/api/gallery');
+    const form = new FormData();
+    form.append('photo', file);
+    if (caption) form.append('caption', caption);
+    try {
+      const data = await firstValueFrom(
+        withApiTimeout(this.http.post<ApiGalleryPhotoDto>(url, form, { headers: this.authHeaders() }), url, REGISTRATION_TIMEOUT_MS),
+      );
+      this.apiOnline.set(true);
+      return data;
+    } catch (error) {
+      if (this.isNetworkError(error)) this.apiOnline.set(false);
+      this.logApiFailure('POST /api/gallery', url, error);
+      return null;
+    }
+  }
+
   galleryAlbums(): GalleryAlbum[] {
     const profile = this.profile();
     if (!profile) return [];
@@ -2323,18 +3332,37 @@ export class CommunityService {
     const album: GalleryAlbum = { id: generateUniqueId(), name: clean, photos: [], updatedAtUtc: new Date().toISOString() };
     this.profile.update((p) => p ? { ...p, galleryAlbums: [album, ...(p.galleryAlbums ?? [])] } : null);
     this.saveJson(PROFILE_KEY, this.profile());
+    // Stored on the Web API for signed-in members (POST /api/gallery/albums); the
+    // server's album replaces the optimistic one when the answer arrives.
+    if (this.apiLive) {
+      void this.apiSend<ApiGalleryAlbumDto>('POST', '/api/gallery/albums', { name: clean }).then((dto) => {
+        if (!dto) return;
+        const stored = this.galleryAlbumFromApi(dto);
+        this.profile.update((p) =>
+          p
+            ? {
+                ...p,
+                galleryAlbums: (p.galleryAlbums ?? []).map((a) => (a.id === album.id ? stored : a)),
+              }
+            : p,
+        );
+        this.saveJson(PROFILE_KEY, this.profile());
+      });
+    }
     return album;
   }
 
   setGalleryAlbumCover(albumId: number, photoId: number): void {
     this.profile.update((p) => p ? { ...p, galleryAlbums: (p.galleryAlbums ?? []).map((a) => a.id === albumId ? { ...a, coverPhotoId: photoId, updatedAtUtc: new Date().toISOString() } : a) } : null);
     this.saveJson(PROFILE_KEY, this.profile());
+    if (this.apiLive && albumId > 0) this.apiWrite('PUT', `/api/gallery/albums/${albumId}`, { coverPhotoId: photoId });
   }
 
   deleteGalleryAlbum(albumId: number): void {
     if (albumId < 0) return;
     this.profile.update((p) => p ? { ...p, galleryAlbums: (p.galleryAlbums ?? []).filter((a) => a.id !== albumId) } : null);
     this.saveJson(PROFILE_KEY, this.profile());
+    if (this.apiLive && albumId > 0) this.apiWrite('DELETE', `/api/gallery/albums/${albumId}`);
   }
 
   setGalleryAlbumPrivacy(albumId: number, privacy: GalleryAlbum['privacy']): void {
@@ -2347,6 +3375,7 @@ export class CommunityService {
       return { ...p, galleryAlbums: albums.map((a) => a.id === albumId ? { ...a, privacy, updatedAtUtc: new Date().toISOString() } : a) };
     });
     this.saveJson(PROFILE_KEY, this.profile());
+    if (this.apiLive && albumId > 0) this.apiWrite('PUT', `/api/gallery/albums/${albumId}`, { privacy });
   }
 
   async deleteGalleryPhoto(photoId: number): Promise<void> {
@@ -2358,6 +3387,7 @@ export class CommunityService {
       };
     });
     this.saveJson(PROFILE_KEY, this.profile());
+    if (this.apiLive && photoId > 0) await this.apiSend<unknown>('DELETE', `/api/gallery/${photoId}`);
   }
 
   // ---------------------------------------------------------------------------
@@ -2404,6 +3434,30 @@ export class CommunityService {
     }
 
     this.saveJson(COMMENTS_KEY, this.comments());
+
+    // Signed-in members write the entry to the Web API (POST /api/messagebook); the
+    // stored answer (real id, real author, attached photograph) replaces the draft.
+    if (this.apiLive) {
+      const dto = await this.apiSend<ApiBookCommentDto>('POST', '/api/messagebook', {
+        text,
+        parentId: parentId ?? undefined,
+        imageUrl: imageUrl || undefined,
+      });
+      if (dto) {
+        const stored = this.bookCommentFromApi(dto);
+        this.comments.update((list) => {
+          const replace = (entries: CommunityComment[]): CommunityComment[] =>
+            entries.map((entry) =>
+              entry.id === newComment.id
+                ? stored
+                : { ...entry, replies: replace(entry.replies) },
+            );
+          return replace(list);
+        });
+        this.saveJson(COMMENTS_KEY, this.comments());
+        return stored;
+      }
+    }
     return newComment;
   }
 
@@ -2448,6 +3502,32 @@ export class CommunityService {
       }),
     );
     this.saveJson(COMMENTS_KEY, this.comments());
+    // The reaction is stored on the Web API (POST /api/messagebook/{id}/reactions);
+    // the counters it answers with are the ones the page keeps.
+    if (this.apiLive) {
+      const result = await this.apiSend<{ likeCount: number; dislikeCount: number; myReaction?: string | null }>(
+        'POST',
+        `/api/messagebook/${commentId}/reactions`,
+        { type: target },
+      );
+      if (result) {
+        this.comments.update((list) => {
+          const apply = (entries: CommunityComment[]): CommunityComment[] =>
+            entries.map((entry) =>
+              entry.id === commentId
+                ? {
+                    ...entry,
+                    likeCount: result.likeCount,
+                    dislikeCount: result.dislikeCount,
+                    myReaction: (result.myReaction as ReactionType | null) ?? null,
+                  }
+                : { ...entry, replies: apply(entry.replies) },
+            );
+          return apply(list);
+        });
+        this.saveJson(COMMENTS_KEY, this.comments());
+      }
+    }
   }
 
   reactToComment(commentId: number, reaction: ReactionType): void {
@@ -2465,6 +3545,11 @@ export class CommunityService {
         })),
     );
     this.saveJson(COMMENTS_KEY, this.comments());
+    // Server rows carry small int ids; the optimistic drafts of the guest tour use
+    // time-based ids, which are never sent for deletion.
+    if (this.apiLive && commentId > 0 && commentId <= 0x7fffffff) {
+      await this.apiSend<unknown>('DELETE', `/api/messagebook/${commentId}`);
+    }
   }
 
   private computeReaction(
@@ -2558,7 +3643,37 @@ export class CommunityService {
 
     this.journeyPosts.update((list) => [newPost, ...list]);
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    // Signed-in members write the post to the Web API (POST /api/journey); the stored
+    // answer (database id, comments, reactions) replaces the optimistic copy.
+    if (this.apiLive) {
+      void this.createJourneyPostOnApi(newPost, taggedCompanions ?? [], wallOwner);
+    }
     return newPost;
+  }
+
+  /** POST /api/journey (+ the tagged companions), then reconciles the feed. */
+  private async createJourneyPostOnApi(
+    optimistic: JourneyPost,
+    taggedCompanions: AuthorInfo[],
+    wallOwner?: { id: number; fullName: string },
+  ): Promise<void> {
+    const dto = await this.apiSend<ApiJourneyPostDto>('POST', '/api/journey', {
+      text: optimistic.text,
+      imageUrls: optimistic.imageUrls ?? (optimistic.imageUrl ? [optimistic.imageUrl] : undefined),
+      location: optimistic.location ?? undefined,
+      mood: optimistic.mood ?? undefined,
+      placeId: optimistic.placeId ?? undefined,
+      hashtags: optimistic.hashtags ?? undefined,
+      audience: optimistic.audience
+        ? { mode: optimistic.audience.mode, allowIds: optimistic.audience.allowIds ?? [], denyIds: optimistic.audience.denyIds ?? [] }
+        : undefined,
+      taggedCompanionIds: taggedCompanions.map((a) => a.id).filter((id) => id > 0),
+      wallOwnerId: optimistic.wallOwnerId ?? wallOwner?.id ?? undefined,
+    });
+    if (!dto) return;
+    const stored = this.journeyPostFromApi(dto);
+    this.journeyPosts.update((list) => list.map((p) => (p.id === optimistic.id ? stored : p)));
+    this.saveJson(JOURNEY_KEY, this.journeyPosts());
   }
 
   shareJourneyPost(originalPostId: number, userThought?: string, audience?: PostAudience): JourneyPost | null {
@@ -2599,6 +3714,22 @@ export class CommunityService {
 
     this.journeyPosts.update((list) => [sharedPost, ...list]);
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    // Shares are Journey posts with an OriginalPostId on the Web API.
+    if (this.apiLive) {
+      void this.apiSend<ApiJourneyPostDto>('POST', '/api/journey', {
+        text: sharedPost.text,
+        originalPostId: originalPostId > 0 ? originalPostId : undefined,
+        sharedText: sharedPost.text || undefined,
+        audience: audience
+          ? { mode: audience.mode, allowIds: audience.allowIds ?? [], denyIds: audience.denyIds ?? [] }
+          : undefined,
+      }).then((dto) => {
+        if (!dto) return;
+        const stored = this.journeyPostFromApi(dto);
+        this.journeyPosts.update((list) => list.map((p) => (p.id === sharedPost.id ? stored : p)));
+        this.saveJson(JOURNEY_KEY, this.journeyPosts());
+      });
+    }
     return sharedPost;
   }
 
@@ -2668,6 +3799,20 @@ export class CommunityService {
       ),
     );
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    // Wall-post edits are stored on the Web API (PUT /api/journey/{id}).
+    if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
+      this.apiWrite('PUT', `/api/journey/${postId}`, {
+        text: patch.text.trim(),
+        mood: patch.mood ?? undefined,
+        audience: (patch.audience ?? post.audience)
+          ? {
+              mode: (patch.audience ?? post.audience)!.mode,
+              allowIds: (patch.audience ?? post.audience)!.allowIds ?? [],
+              denyIds: (patch.audience ?? post.audience)!.denyIds ?? [],
+            }
+          : undefined,
+      });
+    }
     return true;
   }
 
@@ -2771,6 +3916,30 @@ export class CommunityService {
       }),
     );
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    // Reactions are stored on the Web API (POST /api/journey/{id}/reactions); the
+    // counters it answers with are the ones the feed keeps.
+    if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
+      void this.apiSend<{ likeCount: number; myReaction?: string | null }>(
+        'POST',
+        `/api/journey/${postId}/reactions`,
+        { reactionType: reaction },
+      ).then((result) => {
+        if (!result) return;
+        this.journeyPosts.update((list) =>
+          list.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likeCount: result.likeCount,
+                  myReaction: (result.myReaction as ReactionType | null) ?? null,
+                  isLiked: !!result.myReaction && result.myReaction !== 'Dislike',
+                }
+              : p,
+          ),
+        );
+        this.saveJson(JOURNEY_KEY, this.journeyPosts());
+      });
+    }
   }
 
   addJourneyComment(
@@ -2819,6 +3988,30 @@ export class CommunityService {
       }),
     );
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    // Comments are written to the Web API (POST /api/journey/{id}/comments).
+    if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
+      void this.apiSend<ApiJourneyCommentDto>('POST', `/api/journey/${postId}/comments`, {
+        text: newComment.text,
+        parentId: parentCommentId && parentCommentId <= 0x7fffffffffffffff ? parentCommentId : undefined,
+        imageUrl: imageUrl || undefined,
+      }).then((dto) => {
+        if (!dto) return;
+        const stored = this.journeyCommentFromApi(dto);
+        this.journeyPosts.update((list) =>
+          list.map((post) => {
+            if (post.id !== postId) return post;
+            const replace = (comments: JourneyComment[]): JourneyComment[] =>
+              comments.map((c) =>
+                c.id === newComment.id
+                  ? stored
+                  : { ...c, replies: replace(c.replies ?? []) },
+              );
+            return { ...post, comments: replace(post.comments) };
+          }),
+        );
+        this.saveJson(JOURNEY_KEY, this.journeyPosts());
+      });
+    }
   }
 
   private addNestedJourneyReply(
@@ -2922,6 +4115,8 @@ export class CommunityService {
       list.map((c) => (Number(c.id) === numId ? { ...c, status: 'pending_outgoing' as const } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+    // Stored on the Web API (POST /api/companions/{id}/request) for signed-in members.
+    if (this.apiLive && numId > 0) this.apiWrite('POST', `/api/companions/${numId}/request`);
     // Sending a companionship request follows that traveler by default.
     this.follow(numId);
   }
@@ -2932,6 +4127,7 @@ export class CommunityService {
       list.map((c) => (Number(c.id) === numId ? { ...c, status: 'none' as const } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+    if (this.apiLive && numId > 0) this.apiWrite('DELETE', `/api/companions/${numId}/request`);
   }
 
   approveCompanionshipRequest(notificationId: number, fromUserId: number): boolean {
@@ -2953,6 +4149,15 @@ export class CommunityService {
       ),
     );
     this.saveJson(NOTIFS_KEY, this.notifications());
+    // Accepted on the Web API (POST /api/companions/{id}/accept); the fresh
+    // companions list and notification answer replace the optimistic state.
+    if (this.apiLive && fromUserId > 0) {
+      void this.apiSend<unknown>('POST', `/api/companions/${fromUserId}/accept`).then((result) => {
+        void this.refreshCompanionsAndNotifications();
+        return result;
+      });
+      this.markNotificationReadOnApi(notificationId);
+    }
     return true;
   }
 
@@ -2968,6 +4173,10 @@ export class CommunityService {
       ),
     );
     this.saveJson(NOTIFS_KEY, this.notifications());
+    if (this.apiLive && fromUserId > 0) {
+      this.apiWrite('POST', `/api/companions/${fromUserId}/reject`);
+      this.markNotificationReadOnApi(notificationId);
+    }
   }
 
   removeCompanion(companionId: number): void {
@@ -2975,6 +4184,32 @@ export class CommunityService {
       list.map((c) => (c.id === companionId ? { ...c, status: 'none' } : c)),
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
+    if (this.apiLive && companionId > 0) {
+      this.apiWrite('DELETE', `/api/companions/${companionId}`);
+    }
+  }
+
+  /** Re-reads the companions list and the notifications from the Web API. */
+  private async refreshCompanionsAndNotifications(): Promise<void> {
+    const [companions, notifications] = await Promise.all([
+      this.apiGet<ApiCompanionDto[]>('/api/companions'),
+      this.apiGet<ApiNotificationDto[]>('/api/notifications'),
+    ]);
+    if (companions) {
+      this.companions.set(companions.map((dto) => this.companionFromApi(dto)));
+      this.saveJson(COMPANIONS_KEY, this.companions());
+    }
+    if (notifications) {
+      this.notifications.set(notifications.map((dto) => this.notificationFromApi(dto)));
+      this.saveJson(NOTIFS_KEY, this.notifications());
+    }
+  }
+
+  /** Marks one notification read on the Web API (small int ids only). */
+  private markNotificationReadOnApi(notificationId: number): void {
+    if (this.apiLive && notificationId > 0 && notificationId <= 0x7fffffffffffffff) {
+      this.apiWrite('POST', `/api/notifications/${notificationId}/read`);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -3189,11 +4424,13 @@ export class CommunityService {
   }
 
   getRichIntroForUser(): string {
-    return (
-      "I believe in Creativity, Future Proof Design and Strong Foundation in Programming, rest believe in me, I will deliver above your expectations.\n\n" +
-      "I am Kingshuk, a Senior Software Engineer with vast IT experience, specializing in software development, requirements modelling, database modelling, application architecture design, and customer-facing delivery within the Manufacturing & Intelligence Services domain. I have worked with world-leading companies like Continental AG, Intel, E&Y, and others.\n\n" +
-      "As the founder and principal architect of NeverBeen, I blend cutting-edge Generative AI technology with high-performance engineering to bring the world's most breathtaking vacation dreams to life—empowering travelers to discover authentic cultural stories, timeless landscapes, and global companionship."
-    );
+    // A real member only ever sees the intro they actually stored on their profile
+    // (About me → Intro / About me text). The written founder intro stays available
+    // for the seeded founder sample (the guest tour), which seeds with it.
+    if (!this.profile() || isSeedProfile(this.profile())) {
+      return FOUNDER_RICH_INTRO;
+    }
+    return this.profile()?.aboutMeDetails?.intro || this.profile()?.aboutMe || '';
   }
 
   getRichIntroForCompanion(c: {
@@ -3316,11 +4553,14 @@ export class CommunityService {
 
     // Close any active chat with this user
     this.closeChatBox(userId);
+    // Blocks live on the Web API (POST /api/moderation/blocks/{id}).
+    if (this.apiLive && userId > 0) this.apiWrite('POST', `/api/moderation/blocks/${userId}`);
   }
 
   unblockUser(userId: number): void {
     this.blockedUserIds.update((list) => list.filter((id) => id !== userId));
     this.saveJson(BLOCKED_USERS_KEY, this.blockedUserIds());
+    if (this.apiLive && userId > 0) this.apiWrite('DELETE', `/api/moderation/blocks/${userId}`);
   }
 
   isUserBlocked(userId: number): boolean {
@@ -3360,6 +4600,23 @@ export class CommunityService {
 
     this.abuseReports.update((list) => [newReport, ...list]);
     this.saveJson(ABUSE_REPORTS_KEY, this.abuseReports());
+    // Abuse reports are stored on the Web API (POST /api/moderation/reports) for
+    // signed-in members; the stored report replaces the optimistic copy.
+    if (this.apiLive) {
+      void this.apiSend<ApiAbuseReportDto>('POST', '/api/moderation/reports', {
+        targetType: data.targetType,
+        targetId: data.targetId,
+        reportedAuthorId: data.reportedAuthor.id,
+        reason: data.reason,
+        details: data.details || undefined,
+        reporterEmail: data.reporterEmail || user?.email || undefined,
+      }).then((dto) => {
+        if (!dto) return;
+        const stored = this.abuseReportFromApi(dto);
+        this.abuseReports.update((list) => list.map((r) => (r.id === newReport.id ? stored : r)));
+        this.saveJson(ABUSE_REPORTS_KEY, this.abuseReports());
+      });
+    }
     return newReport;
   }
 
@@ -3445,6 +4702,31 @@ export class CommunityService {
     this.circleActionError.set(null);
     this.circles.update((list) => [...list, newCircle]);
     this.saveJson(CIRCLES_KEY, this.circles());
+    // Circles are stored on the Web API (POST /api/circles) for signed-in members;
+    // the stored circle (database id, members) replaces the optimistic copy.
+    if (this.apiLive) {
+      void this.apiSend<ApiCircleDto>('POST', '/api/circles', {
+        name: newCircle.name,
+        description: newCircle.description,
+        icon: newCircle.icon,
+        color: newCircle.color,
+        photoUrl: newCircle.photoUrl ?? undefined,
+        memberIds: newCircle.memberIds,
+      }).then((dto) => {
+        if (!dto) return;
+        const stored = this.circleFromApi(dto);
+        this.circles.update((list) => list.map((c) => (c.id === newCircle.id ? stored : c)));
+        this.saveJson(CIRCLES_KEY, this.circles());
+        // A chat box that was saved as this Circle follows the stored circle id.
+        this.activeChatBoxes.update((boxes) =>
+          boxes.map((b) =>
+            b.circleId === newCircle.id
+              ? { ...b, circleId: stored.id, companionId: -Math.abs(stored.id) }
+              : b,
+          ),
+        );
+      });
+    }
     return newCircle;
   }
 
@@ -3457,6 +4739,9 @@ export class CommunityService {
     );
     this.saveJson(CIRCLES_KEY, this.circles());
     this.closeChatBox(-Math.abs(circleId));
+    if (this.apiLive && circleId > 0 && circleId <= 0x7fffffff) {
+      this.apiWrite('DELETE', `/api/circles/${circleId}`);
+    }
     return true;
   }
 
@@ -3472,6 +4757,15 @@ export class CommunityService {
     );
     this.saveJson(CIRCLES_KEY, this.circles());
     this.syncOpenCircleChat(circleId);
+    if (this.apiLive && circleId > 0 && circleId <= 0x7fffffff) {
+      this.apiWrite('PUT', `/api/circles/${circleId}`, {
+        name: patch.name ?? circle.name,
+        description: patch.description ?? circle.description,
+        icon: patch.icon ?? circle.icon,
+        color: patch.color ?? circle.color,
+        photoUrl: patch.photoUrl ?? circle.photoUrl ?? undefined,
+      });
+    }
     return true;
   }
 
@@ -3498,6 +4792,11 @@ export class CommunityService {
     this.saveJson(CIRCLES_KEY, this.circles());
     this.syncOpenCircleChat(circleId);
     this.circleActionError.set(null);
+    if (this.apiLive && circleId > 0 && circleId <= 0x7fffffff) {
+      for (const id of userIds) {
+        if (id > 0) this.apiWrite('POST', `/api/circles/${circleId}/members/${id}`);
+      }
+    }
     return null;
   }
 
@@ -3525,6 +4824,9 @@ export class CommunityService {
     );
     this.saveJson(CIRCLES_KEY, this.circles());
     this.circleActionError.set(null);
+    if (this.apiLive && circleId > 0 && circleId <= 0x7fffffff && userId > 0) {
+      this.apiWrite('POST', `/api/circles/${circleId}/admins/${userId}?admin=true`);
+    }
     return null;
   }
 
@@ -3544,6 +4846,9 @@ export class CommunityService {
     );
     this.saveJson(CIRCLES_KEY, this.circles());
     this.syncOpenCircleChat(circleId);
+    if (this.apiLive && circleId > 0 && circleId <= 0x7fffffff && userId > 0) {
+      this.apiWrite('POST', `/api/circles/${circleId}/admins/${userId}?admin=false`);
+    }
     return null;
   }
 
@@ -3567,6 +4872,9 @@ export class CommunityService {
     );
     this.saveJson(CIRCLES_KEY, this.circles());
     this.syncOpenCircleChat(circleId);
+    if (this.apiLive && circleId > 0 && circleId <= 0x7fffffff && userId > 0) {
+      this.apiWrite('DELETE', `/api/circles/${circleId}/members/${userId}`);
+    }
     return null;
   }
 
@@ -3663,6 +4971,8 @@ export class CommunityService {
   markNotificationsRead(): void {
     this.notifications.update((list) => list.map((n) => ({ ...n, isRead: true })));
     this.saveJson(NOTIFS_KEY, this.notifications());
+    // All of the member's notifications are marked read on the Web API too.
+    if (this.apiLive) this.apiWrite('POST', '/api/notifications/read-all');
   }
 
   /** The member is looking at this chat: clear its unread badge. */
@@ -3673,6 +4983,10 @@ export class CommunityService {
     );
     this.markPendingChatRead(companionId);
     if (box?.circleId) this.markCircleRead(box.circleId);
+    // The read receipt reaches the Web API for member chats.
+    if (this.apiLive && box?.conversationId) {
+      this.apiWrite('POST', `/api/messages/conversations/${box.conversationId}/read`);
+    }
   }
 
   markPendingChatRead(companionId: number): void {
@@ -3716,6 +5030,27 @@ export class CommunityService {
     }
     let updated = [...current];
     if (updated.length >= 5) updated.shift();
+    // Signed-in members read the Circle's chat history from the Web API
+    // (GET /api/circles/{id}/messages); the guest tour keeps its seeded greeting.
+    if (this.apiLive && circle.id > 0 && circle.id <= 0x7fffffff) {
+      this.activeChatBoxes.set([
+        ...updated,
+        {
+          companionId: key,
+          companion: this.circleAsCompanion(circle),
+          isMinimized: false,
+          draftText: '',
+          unreadCount: 0,
+          messages: circle.messages ?? [],
+          isGroup: true,
+          circleId: circle.id,
+          participantIds: circle.memberIds,
+          ownerId: circle.ownerId ?? me,
+        },
+      ]);
+      void this.refreshCircleMessages(circle.id);
+      return;
+    }
     const messages = circle.messages?.length
       ? circle.messages
       : [
@@ -3742,6 +5077,18 @@ export class CommunityService {
         ownerId: circle.ownerId ?? me,
       },
     ]);
+  }
+
+  /** Loads a Circle's group-chat history from the Web API into any open box. */
+  private async refreshCircleMessages(circleId: number): Promise<void> {
+    const messages = await this.apiGet<ApiCircleMessageDto[]>(`/api/circles/${circleId}/messages?pageSize=100`);
+    if (!messages) return;
+    const mapped = messages.map((dto) => this.chatMessageFromApi(dto));
+    this.circles.update((list) =>
+      list.map((c) => (c.id === circleId ? { ...c, messages: mapped } : c)),
+    );
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.syncOpenCircleChat(circleId);
   }
 
   addPeopleToChat(chatKey: number, userIds: number[]): string | null {
@@ -3843,6 +5190,24 @@ export class CommunityService {
       updated.shift(); // remove oldest
     }
 
+    // Signed-in members chat through the Web API: the conversation is started /
+    // reused (POST /api/messages/conversations) and its real history is loaded —
+    // no invented greeting is ever placed in a member's chat.
+    if (this.apiLive && companion.id > 0) {
+      const pendingApi = this.pendingChats().find((c) => c.companionId === companion.id);
+      const newBox: ActiveChatBox = {
+        companionId: companion.id,
+        companion,
+        isMinimized: false,
+        draftText: '',
+        unreadCount: pendingApi?.unreadCount ?? 0,
+        messages: [],
+      };
+      this.activeChatBoxes.set([...updated, newBox]);
+      void this.openConversationOnApi(companion, pendingApi);
+      return;
+    }
+
     const pending = this.pendingChats().find((c) => c.companionId === companion.id && c.unreadCount > 0);
     const newBox: ActiveChatBox = {
       companionId: companion.id,
@@ -3863,6 +5228,33 @@ export class CommunityService {
     };
 
     this.activeChatBoxes.set([...updated, newBox]);
+  }
+
+  /** Starts (or reuses) the 1:1 conversation and loads its messages into the open box. */
+  private async openConversationOnApi(companion: Companion, pending?: PendingChat): Promise<void> {
+    const conversation = await this.apiSend<ApiConversationDto>('POST', '/api/messages/conversations', {
+      companionId: companion.id,
+    });
+    if (!conversation) return;
+    const history = await this.apiGet<ApiChatMessageDto[]>(
+      `/api/messages/conversations/${conversation.id}?pageSize=100`,
+    );
+    const messages = (history ?? []).map((dto) => this.chatMessageFromApi(dto));
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((box) =>
+        box.companionId === companion.id
+          ? {
+              ...box,
+              conversationId: conversation.id,
+              messages,
+              unreadCount: conversation.unreadCount ?? pending?.unreadCount ?? 0,
+            }
+          : box,
+      ),
+    );
+    if ((conversation.unreadCount ?? 0) > 0) {
+      this.apiWrite('POST', `/api/messages/conversations/${conversation.id}/read`);
+    }
   }
 
   closeChatBox(companionId: number): void {
@@ -3907,6 +5299,32 @@ export class CommunityService {
       ),
     );
     const box = this.activeChatBoxes().find((b) => b.companionId === companionId);
+
+    // Signed-in members store the message on the Web API — 1:1 chats through
+    // POST /api/messages/conversations/{id}/messages and Circle chats through
+    // POST /api/circles/{id}/messages — and no simulated reply is ever added.
+    if (this.apiLive) {
+      const payload = {
+        text: newMsg.text,
+        replyToMessageId:
+          replyTo?.id && replyTo.id > 0 && replyTo.id <= 0x7fffffffffffffff ? replyTo.id : undefined,
+      };
+      if (box?.circleId && box.circleId > 0 && box.circleId <= 0x7fffffff) {
+        void this.apiSend<ApiCircleMessageDto>(
+          'POST',
+          `/api/circles/${box.circleId}/messages`,
+          payload,
+        ).then((dto) => this.replaceOptimisticChatMessage(companionId, newMsg.id, dto));
+      } else if (box?.conversationId) {
+        void this.apiSend<ApiChatMessageDto>(
+          'POST',
+          `/api/messages/conversations/${box.conversationId}/messages`,
+          payload,
+        ).then((dto) => this.replaceOptimisticChatMessage(companionId, newMsg.id, dto));
+      }
+      return;
+    }
+
     if (box?.circleId) {
       this.circles.update((list) =>
         list.map((c) => (c.id === box.circleId ? { ...c, messages: [...(box.messages ?? [])] } : c)),
@@ -3914,7 +5332,7 @@ export class CommunityService {
       this.saveJson(CIRCLES_KEY, this.circles());
     }
 
-    // Auto simulated friendly reply after a moment (1:1 chats only).
+    // Auto simulated friendly reply after a moment (1:1 chats only, guest tour).
     if (box?.isGroup) return;
     setTimeout(() => {
       const companion = this.companions().find((c) => c.id === companionId);
@@ -3943,6 +5361,23 @@ export class CommunityService {
     }, 1200);
   }
 
+  /** Swaps an optimistic chat message for the one the Web API stored. */
+  private replaceOptimisticChatMessage(
+    companionId: number,
+    optimisticId: number,
+    dto: ApiChatMessageDto | ApiCircleMessageDto | null,
+  ): void {
+    if (!dto) return;
+    const stored = this.chatMessageFromApi(dto as ApiChatMessageDto);
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((box) =>
+        box.companionId === companionId
+          ? { ...box, messages: box.messages.map((m) => (m.id === optimisticId ? stored : m)) }
+          : box,
+      ),
+    );
+  }
+
   reactToChatMessage(companionId: number, messageId: number, emoji: string): void {
     this.activeChatBoxes.update((boxes) =>
       boxes.map((box) => {
@@ -3968,6 +5403,10 @@ export class CommunityService {
         return { ...box, messages };
       }),
     );
+    // Message reactions are tallied on the Web API (POST /api/messages/{id}/reactions).
+    if (this.apiLive && messageId > 0 && messageId <= 0x7fffffffffffffff) {
+      this.apiWrite('POST', `/api/messages/${messageId}/reactions`, { emoji });
+    }
   }
 
   removeChatMessage(companionId: number, messageId: number): void {
@@ -3988,6 +5427,9 @@ export class CommunityService {
   deleteJourneyPost(postId: number): void {
     this.journeyPosts.update((list) => list.filter((p) => p.id !== postId));
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
+      this.apiWrite('DELETE', `/api/journey/${postId}`);
+    }
   }
 
   hideJourneyPost(postId: number): void {
@@ -3995,11 +5437,17 @@ export class CommunityService {
       this.hiddenPostIds.update((list) => [...list, postId]);
       this.saveJson(HIDDEN_POSTS_KEY, this.hiddenPostIds());
     }
+    if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
+      this.apiWrite('POST', `/api/journey/${postId}/hide`);
+    }
   }
 
   unhideJourneyPost(postId: number): void {
     this.hiddenPostIds.update((list) => list.filter((id) => id !== postId));
     this.saveJson(HIDDEN_POSTS_KEY, this.hiddenPostIds());
+    if (this.apiLive && postId > 0 && postId <= 0x7fffffffffffffff) {
+      this.apiWrite('DELETE', `/api/journey/${postId}/hide`);
+    }
   }
 
   isPostHidden(postId: number): boolean {
@@ -4032,6 +5480,9 @@ export class CommunityService {
       }),
     );
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    if (this.apiLive && commentId > 0 && commentId <= 0x7fffffffffffffff) {
+      this.apiWrite('DELETE', `/api/journey/comments/${commentId}`);
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -4705,10 +6156,33 @@ export class CommunityService {
       const person =
         num === me
           ? this.getCurrentUserAsCompanion()
-          : this.companions().find((c) => Number(c.id) === num);
+          : (this.companions().find((c) => Number(c.id) === num) ??
+            // A follower who is not (yet) a companion still resolves from the
+            // Web API's follower/following lists.
+            this.followPersonFromApi(num));
       if (person) people.push(person);
     }
     return people;
+  }
+
+  /** Minimal Companion card for a member known only from the API's follow lists. */
+  private followPersonFromApi(userId: number): Companion | undefined {
+    const dto =
+      this.apiFollowers().find((f) => f.id === userId) ??
+      this.apiFollowing().find((f) => f.id === userId);
+    if (!dto) return undefined;
+    return {
+      id: dto.id,
+      uniqueId: dto.uniqueId ?? generate20DigitUid(dto.id),
+      fullName: dto.fullName ?? 'NeverBeen Traveler',
+      profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? '',
+      country: '',
+      city: '',
+      profession: dto.profession ?? '',
+      isOnline: false,
+      mutualCompanionsCount: 0,
+      status: 'none',
+    };
   }
 
   followingIds(userId: number = this.myId()): number[] {
@@ -4752,6 +6226,10 @@ export class CommunityService {
       return { ...graph, [key]: [...(graph[key] ?? []), target] };
     });
     this.persistFollows();
+    // The follow graph lives on the Web API (POST /api/follows/{id}).
+    if (this.apiLive && target > 0 && actor === this.myId()) {
+      this.apiWrite('POST', `/api/follows/${target}`);
+    }
   }
 
   unfollow(targetUserId: number, actorId: number = this.myId()): void {
@@ -4762,6 +6240,9 @@ export class CommunityService {
       return { ...graph, [key]: (graph[key] ?? []).filter((id) => Number(id) !== target) };
     });
     this.persistFollows();
+    if (this.apiLive && target > 0 && actor === this.myId()) {
+      this.apiWrite('DELETE', `/api/follows/${target}`);
+    }
   }
 
   /** Stop this person from following me (or `ownerId`). */
@@ -5418,6 +6899,8 @@ export class CommunityService {
       ),
     );
     this.saveJson(DEVICES_KEY, this.devices());
+    // Device blocks are stored on the Web API (POST /api/devices/{id}/block?blocked=true).
+    if (this.apiLive) this.apiWrite('POST', `/api/devices/${encodeURIComponent(deviceId)}/block?blocked=true`);
     if (device.isCurrent) return 'self';
     return 'remote';
   }
@@ -5425,6 +6908,7 @@ export class CommunityService {
   unblockDevice(deviceId: string): void {
     this.devices.update((list) => list.map((d) => (d.id === deviceId ? { ...d, blocked: false } : d)));
     this.saveJson(DEVICES_KEY, this.devices());
+    if (this.apiLive) this.apiWrite('POST', `/api/devices/${encodeURIComponent(deviceId)}/block?blocked=false`);
   }
 
   private loadDevices(): LoginDevice[] {

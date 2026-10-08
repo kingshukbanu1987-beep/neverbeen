@@ -598,6 +598,8 @@ export interface ActiveChatBox {
   isGroup?: boolean;
   /** Set when the group has been saved as a Circle. */
   circleId?: number;
+  /** Web API conversation this chat is backed by (1:1 chats, patch integration). */
+  conversationId?: number;
   /** Everyone in the chat, including the companion the chat started with. */
   participantIds?: number[];
   /** Member who started the chat / owns the Circle. */

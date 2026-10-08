@@ -354,7 +354,11 @@
           <!-- 4. Games -->
           @if (profileSectionOn('games')) {
           <button type="button" class="menu-btn" [class.active]="!viewingVisitor() && activeSection() === 'games'" (click)="setSection('games')">
-            <span class="icon-pill pill-violet"><span class="games-menu-icon">🎮</span></span>
+            <span class="icon-pill pill-violet">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM11 13H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+              </svg>
+            </span>
             <span class="menu-label">Games</span>
           </button>
           }
@@ -1717,7 +1721,7 @@
                       </div>
                       <div class="tile-info">
                         <span class="field-label tile-label">Gender</span>
-                        <strong class="field-val tile-val">{{ aboutGender || 'Female' }}</strong>
+                        <strong class="field-val tile-val">{{ aboutGender || 'Not added yet' }}</strong>
                       </div>
                     </div>
 
@@ -1727,7 +1731,7 @@
                       </div>
                       <div class="tile-info">
                         <span class="field-label tile-label">Date of Birth</span>
-                        <strong class="field-val tile-val">{{ aboutDob || '1996-04-18' }}</strong>
+                        <strong class="field-val tile-val">{{ aboutDob || 'Not added yet' }}</strong>
                       </div>
                     </div>
 
@@ -1737,7 +1741,7 @@
                       </div>
                       <div class="tile-info">
                         <span class="field-label tile-label">Current Location</span>
-                        <strong class="field-val tile-val">{{ aboutLocation || 'Paris, France' }}</strong>
+                        <strong class="field-val tile-val">{{ aboutLocation || 'Not added yet' }}</strong>
                       </div>
                     </div>
 
@@ -1747,7 +1751,7 @@
                       </div>
                       <div class="tile-info">
                         <span class="field-label tile-label">Hometown</span>
-                        <strong class="field-val tile-val">{{ aboutHometown || 'Lyon, France' }}</strong>
+                        <strong class="field-val tile-val">{{ aboutHometown || 'Not added yet' }}</strong>
                       </div>
                     </div>
 
@@ -1757,7 +1761,7 @@
                       </div>
                       <div class="tile-info">
                         <span class="field-label tile-label">Relationship Status</span>
-                        <strong class="field-val tile-val">{{ aboutRelationshipStatus || 'Exploring solo' }}</strong>
+                        <strong class="field-val tile-val">{{ aboutRelationshipStatus || 'Not added yet' }}</strong>
                       </div>
                     </div>
 
@@ -1773,7 +1777,7 @@
                               <span class="lang-dot"></span>{{ lang }}
                             </span>
                           } @empty {
-                            <span class="language-pill modern-lang-pill"><span class="lang-dot"></span>English</span>
+                            <span class="empty-section-notice">No languages added yet.</span>
                           }
                         </div>
                       </div>
@@ -1869,11 +1873,11 @@
                     <div class="contact-direct-row">
                       <div class="contact-box">
                         <span class="contact-lbl">✉️ Email Address</span>
-                        <strong class="contact-val">{{ aboutContactEmail || 'sophia.laurent@neverbeen.example' }}</strong>
+                        <strong class="contact-val">{{ aboutContactEmail || 'Not added yet' }}</strong>
                       </div>
                       <div class="contact-box">
                         <span class="contact-lbl">📱 Phone Number</span>
-                        <strong class="contact-val">{{ aboutContactPhone || '+33 6 88 41 92 01' }}</strong>
+                        <strong class="contact-val">{{ aboutContactPhone || 'Not added yet' }}</strong>
                       </div>
                     </div>
 
@@ -4742,7 +4746,7 @@
                   <span class="visitor-intro-badge">Personal Story</span>
                 </div>
                 <div class="visitor-sub-text visitor-intro-story multi-paragraph-story" [nbTranslatable]="getVisitorIntro(viewingVisitor()!)">
-                  {{ getVisitorIntro(viewingVisitor()!) }}
+                  {{ getVisitorIntro(viewingVisitor()!) || 'This traveler has not written an intro yet.' }}
                 </div>
               </div>
               }
@@ -4763,7 +4767,7 @@
                       <div class="tile-icon-box purple-tint"><span class="tile-glyph">⚧</span></div>
                       <div class="tile-info">
                         <span class="meta-label tile-label">Gender</span>
-                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Female' }}</strong>
+                        <strong class="meta-value tile-val">{{ viewingVisitor()!.aboutMeDetails?.gender || 'Not shared' }}</strong>
                       </div>
                     </div>
                   }
@@ -4835,6 +4839,8 @@
                         <p class="visitor-work-desc" [nbTranslatable]="w.description">{{ w.description }}</p>
                       }
                     </div>
+                  } @empty {
+                    <p class="empty-section-notice">No work experience listed yet.</p>
                   }
                 </div>
               </div>
@@ -4854,6 +4860,8 @@
                       </div>
                       <span class="visitor-edu-course">Course: {{ e.courseOrDegree }}</span>
                     </div>
+                  } @empty {
+                    <p class="empty-section-notice">No education history listed yet.</p>
                   }
                 </div>
               </div>
@@ -4864,8 +4872,10 @@
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🎨 Hobbies</h4>
                 <div class="visitor-chips-wrap">
-                  @for (h of (viewingVisitor()!.aboutMeDetails?.hobbies || ['Photography', 'Hiking', 'Cuisine Tasting']); track h) {
+                  @for (h of (viewingVisitor()!.aboutMeDetails?.hobbies || []); track h) {
                     <span class="visitor-chip-badge hobby">🎨 {{ h }}</span>
+                  } @empty {
+                    <p class="empty-section-notice">No hobbies added yet.</p>
                   }
                 </div>
               </div>
@@ -4876,8 +4886,10 @@
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">🧭 Interests</h4>
                 <div class="visitor-chips-wrap">
-                  @for (item of (viewingVisitor()!.aboutMeDetails?.interests || ['Ancient Architecture', 'Mountain Trekking', 'Art Museums']); track item) {
+                  @for (item of (viewingVisitor()!.aboutMeDetails?.interests || []); track item) {
                     <span class="visitor-chip-badge interest">🧭 {{ item }}</span>
+                  } @empty {
+                    <p class="empty-section-notice">No interests added yet.</p>
                   }
                 </div>
               </div>
@@ -4887,7 +4899,7 @@
               @if (visitorCanSee('aboutThePerson')) {
               <div class="visitor-sub-block">
                 <h4 class="visitor-sub-title">📖 About the Person</h4>
-                @let visitorNarrative = viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'An inspired world explorer dedicated to cultural storytelling and discovering off-the-beaten-path vistas.';
+                @let visitorNarrative = viewingVisitor()!.aboutMeDetails?.aboutThePerson || viewingVisitor()!.aboutMe || viewingVisitor()!.bio || 'This traveler has not written this section yet.';
                 <p class="visitor-sub-text" [nbTranslatable]="visitorNarrative">
                   {{ visitorNarrative }}
                 </p>
