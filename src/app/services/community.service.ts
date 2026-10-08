@@ -436,8 +436,32 @@ export interface ApiCompanionDto {
   activeStatus?: string | null;
   customStatusText?: string | null;
   isVerified?: boolean;
+  /** True when the signed-in member already follows this traveler. */
+  isFollowing?: boolean;
   relationshipStatus?: string | null;
   connectedCompanionIds?: number[] | null;
+}
+
+/**
+ * One hit of the member directory search (`GET /api/users/search`): identity cards
+ * plus the signed-in member's relationship to the hit, so the search drop-down can
+ * offer Connect / Request Sent / Connected and Follow / Following directly.
+ */
+export interface ApiUserSearchResultDto {
+  id: number;
+  uniqueId?: string | null;
+  fullName?: string | null;
+  profilePhotoUrl?: string | null;
+  country?: string | null;
+  city?: string | null;
+  profession?: string | null;
+  isOnline?: boolean;
+  activeStatus?: string | null;
+  isVerified?: boolean;
+  isProfileLocked?: boolean;
+  status?: string;
+  isFollowing?: boolean;
+  mutualCompanionsCount?: number;
 }
 
 export interface ApiCircleDto {
@@ -1043,6 +1067,10 @@ export class CommunityService {
     this.activeChatBoxes.set([]);
     this.circleActionError.set(null);
     this.pendingCircleChatId.set(null);
+    // The cached profiles of visited members belong to the previous session.
+    this.visitorWallPosts.set({});
+    this.visitorGalleries.set({});
+    this.visitorFollowCounts.set({});
   }
 
   /** Removes the demo community from this browser once a real member is signed in. */
@@ -1333,7 +1361,28 @@ export class CommunityService {
       activeStatus: (dto.activeStatus as UserActiveStatus) ?? 'Active',
       customStatusText: dto.customStatusText ?? undefined,
       isVerified: !!dto.isVerified,
+      isFollowing: !!dto.isFollowing,
       connectedCompanionIds: dto.connectedCompanionIds ?? undefined,
+    };
+  }
+
+  /** Companion card from one hit of the API's member-directory search. */
+  private searchResultFromApi(dto: ApiUserSearchResultDto): Companion {
+    return {
+      id: dto.id,
+      uniqueId: dto.uniqueId ?? generate20DigitUid(dto.id),
+      fullName: dto.fullName ?? '',
+      profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? '',
+      country: dto.country ?? '',
+      city: dto.city ?? '',
+      profession: dto.profession ?? '',
+      isOnline: !!dto.isOnline,
+      mutualCompanionsCount: dto.mutualCompanionsCount ?? 0,
+      status: (dto.status as Companion['status']) || 'none',
+      isProfileLocked: !!dto.isProfileLocked,
+      activeStatus: (dto.activeStatus as UserActiveStatus) ?? 'Active',
+      isVerified: !!dto.isVerified,
+      isFollowing: !!dto.isFollowing,
     };
   }
 
@@ -1514,6 +1563,8 @@ export class CommunityService {
     if (companions) {
       this.companions.set(companions.map((dto) => this.companionFromApi(dto)));
       this.saveJson(COMPANIONS_KEY, this.companions());
+      // Each companion also answers whether this member follows them.
+      this.applyApiFollowFlags(this.companions());
     }
 
     // Followers / following — the API's own graph (see follows section below).
@@ -1521,7 +1572,16 @@ export class CommunityService {
       this.apiFollowers.set(followers ?? []);
       this.apiFollowing.set(following ?? []);
       const graph: Record<string, number[]> = { ...this.follows() };
-      if (following) graph[String(me)] = following.map((f) => f.id).filter((id) => id !== me);
+      if (following) {
+        // The companions answer also says who this member follows (isFollowing);
+        // union it in so a companion never drops out of the following list.
+        const followedCompanions = (companions ?? [])
+          .filter((c) => c.isFollowing)
+          .map((c) => c.id);
+        graph[String(me)] = Array.from(
+          new Set([...following.map((f) => f.id), ...followedCompanions]),
+        ).filter((id) => id !== me);
+      }
       if (followers) {
         for (const follower of followers) {
           if (follower.id === me) continue;
@@ -4061,6 +4121,39 @@ export class CommunityService {
       }),
     );
     this.saveJson(JOURNEY_KEY, this.journeyPosts());
+    // Comment reactions live on the Web API too (POST /api/journey/comments/{id}/reactions);
+    // the counter it answers with replaces the optimistic one.
+    if (this.apiLive && commentId > 0 && commentId <= 0x7fffffffffffffff) {
+      void this.apiSend<{ likeCount: number }>(
+        'POST',
+        `/api/journey/comments/${commentId}/reactions`,
+        { reactionType: reaction },
+      ).then((result) => {
+        if (!result) return;
+        this.journeyPosts.update((list) =>
+          list.map((post) => ({
+            ...post,
+            comments: this.applyCommentLikeCount(post.comments, commentId, result.likeCount),
+          })),
+        );
+        this.saveJson(JOURNEY_KEY, this.journeyPosts());
+      });
+    }
+  }
+
+  /** Applies the Web API's authoritative like counter to one journey comment. */
+  private applyCommentLikeCount(
+    comments: JourneyComment[],
+    targetId: number,
+    likeCount: number,
+  ): JourneyComment[] {
+    return comments.map((c) => {
+      if (c.id === targetId) return { ...c, likeCount };
+      if (c.replies && c.replies.length > 0) {
+        return { ...c, replies: this.applyCommentLikeCount(c.replies, targetId, likeCount) };
+      }
+      return c;
+    });
   }
 
   private applyCommentReactionRecursive(
@@ -4103,6 +4196,217 @@ export class CommunityService {
       }
       return c;
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // MEMBER DIRECTORY (search any traveler + open any profile — Requirement A)
+  //
+  // Guest mode carries the whole seeded directory in this browser, so a name
+  // typed into the search box always finds somebody. Signed-in members only
+  // hold their real companions locally, so the directory is asked on the Web
+  // API instead:
+  //   GET /api/users/search?query=…        find members by name (Requirement A)
+  //   GET /api/users/{id} · /uid/{uid}     open any member's profile
+  //   GET /api/journey?authorId=…          their wall posts
+  //   GET /api/gallery/users/{id}          their gallery
+  //   GET /api/follows/counts/{id}         their follower / following counts
+  // Every traveler the directory answers is upserted into `companions()`, so
+  // the relationship buttons (companion request, follow) and the profile URL
+  // (?id=<20-digit uid>) keep working with the exact same code paths the
+  // guest tour uses.
+  // ---------------------------------------------------------------------------
+
+  /** Extra profile data of a visited member, fetched from the Web API per visitor. */
+  readonly visitorWallPosts = signal<Record<string, JourneyPost[]>>({});
+  readonly visitorGalleries = signal<Record<string, GalleryPhoto[]>>({});
+  readonly visitorFollowCounts = signal<Record<string, ApiFollowCountsDto>>({});
+
+  /**
+   * Inserts or updates one traveler in the companions list (never duplicates),
+   * so directory hits behave exactly like the seeded directory of the guest
+   * tour: their status, follow state and profile URL resolve everywhere.
+   */
+  upsertCompanion(companion: Companion): void {
+    const numId = Number(companion.id);
+    if (!numId || Number.isNaN(numId)) return;
+    this.companions.update((list) => {
+      const index = list.findIndex((c) => Number(c.id) === numId);
+      if (index === -1) return [...list, companion];
+      const existing = list[index];
+      return list.map((c, i) =>
+        i === index
+          ? {
+              ...companion,
+              // Keep the richer local copy of fields a directory hit does not carry.
+              coverPhotoUrl: companion.coverPhotoUrl ?? existing.coverPhotoUrl,
+              bio: companion.bio ?? existing.bio,
+              aboutMe: companion.aboutMe ?? existing.aboutMe,
+              aboutMeDetails: companion.aboutMeDetails ?? existing.aboutMeDetails,
+              gallery: companion.gallery ?? existing.gallery,
+              connectedCompanionIds: companion.connectedCompanionIds ?? existing.connectedCompanionIds,
+            }
+          : c,
+      );
+    });
+    this.saveJson(COMPANIONS_KEY, this.companions());
+  }
+
+  /** Same matching rules the profile page search uses (name / city / country / profession). */
+  searchCompanionsLocally(query: string): Companion[] {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return this.visibleCompanions().filter(
+      (c) =>
+        c.fullName.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q) ||
+        c.country.toLowerCase().includes(q) ||
+        c.profession.toLowerCase().includes(q),
+    );
+  }
+
+  /**
+   * Finds members by the typed name. Signed-in members ask the Web API's
+   * directory (`GET /api/users/search`) — which knows every registered
+   * traveler, not only this member's companions; the guest tour and any
+   * API hiccup fall back to the directory held in this browser. The hits are
+   * merged into `companions()` (with their follow state into the local
+   * graph), so opening their profile, sending a companion request and
+   * following them all work straight from the drop-down.
+   */
+  async searchUsers(query: string): Promise<Companion[]> {
+    const q = query.trim();
+    if (!q) return [];
+
+    if (this.apiLive) {
+      const dtos = await this.apiGet<ApiUserSearchResultDto[]>(
+        `/api/users/search?query=${encodeURIComponent(q)}&limit=25`,
+      );
+      if (dtos) {
+        const hits = dtos.map((dto) => this.searchResultFromApi(dto));
+        for (const hit of hits) this.upsertCompanion(hit);
+        this.applyApiFollowFlags(hits);
+        // Answer with the merged directory entries (ids are now unique there).
+        const byId = new Map(hits.map((h) => [Number(h.id), h]));
+        return this.companions()
+          .filter((c) => byId.has(Number(c.id)))
+          .filter((c) => !this.isUserBlocked(c.id));
+      }
+      // The API could not be reached — fall through to the local directory.
+    }
+    return this.searchCompanionsLocally(q);
+  }
+
+  /** Merges the directory's follow flags into the local follow graph (additions only). */
+  private applyApiFollowFlags(hits: Companion[]): void {
+    const me = this.myId();
+    this.follows.update((graph) => {
+      const key = String(me);
+      const list = new Set(graph[key] ?? []);
+      let changed = false;
+      for (const hit of hits) {
+        if (hit.isFollowing && Number(hit.id) !== me && !list.has(Number(hit.id))) {
+          list.add(Number(hit.id));
+          changed = true;
+        }
+      }
+      return changed ? { ...graph, [key]: Array.from(list) } : graph;
+    });
+    this.persistFollows();
+  }
+
+  /**
+   * Opens any member by the id used in profile URLs: the numeric member id or
+   * the 20-digit unique id. Local directory first; a signed-in member's
+   * unknown id is resolved on the Web API (`GET /api/users/uid/{uid}` /
+   * `GET /api/users/{id}`) and upserted, exactly like the guest tour resolves
+   * every seeded traveler. `null` = the API said "no such member" (or is
+   * unreachable and the browser directory does not know the id either).
+   */
+  async loadUserByUid(uid: string): Promise<Companion | null> {
+    const local = this.companions().find(
+      (c) =>
+        c.uniqueId === uid ||
+        String(c.id) === uid ||
+        generate20DigitUid(c.id) === uid,
+    );
+    if (local) return local;
+    if (!this.apiLive) return null;
+
+    const trimmed = uid.trim();
+    const path = /^\d{20}$/.test(trimmed)
+      ? `/api/users/uid/${trimmed}`
+      : /^\d+$/.test(trimmed)
+        ? `/api/users/${trimmed}`
+        : null;
+    if (!path) return null;
+
+    const dto = await this.apiGet<ApiCompanionDto>(path);
+    if (!dto) return null;
+    const companion = this.companionFromApi(dto);
+    this.upsertCompanion(companion);
+    this.applyApiFollowFlags([companion]);
+    return this.companions().find((c) => Number(c.id) === Number(companion.id)) ?? companion;
+  }
+
+  /** Opens any member by their numeric id (directory hit, post author, …). */
+  async loadUserById(userId: number, force = false): Promise<Companion | null> {
+    const numId = Number(userId);
+    const local = this.companions().find((c) => Number(c.id) === numId);
+    if (local && !force) return local;
+    if (!this.apiLive || !(numId > 0) || numId > 0x7fffffff) return local ?? null;
+
+    // GET /api/users/{id} answers the same CompanionDto the companions endpoints
+    // use — cover photo, About-me JSON, relationship status, follow state included.
+    const dto = await this.apiGet<ApiCompanionDto>(`/api/users/${numId}`);
+    if (!dto) return local ?? null;
+    const companion = this.companionFromApi(dto);
+    this.upsertCompanion(companion);
+    this.applyApiFollowFlags([companion]);
+    return this.companions().find((c) => Number(c.id) === numId) ?? companion;
+  }
+
+  /**
+   * The extra datasets of a visited profile (their wall posts, gallery and
+   * follower counts), read from the Web API so a signed-in member sees any
+   * traveler's profile as completely as the guest tour does. Each part that
+   * the API cannot answer keeps whatever this browser already holds.
+   */
+  async loadVisitorExtras(visitorId: number): Promise<void> {
+    const numId = Number(visitorId);
+    if (!this.apiLive || !(numId > 0) || numId > 0x7fffffff) return;
+    const key = String(numId);
+
+    const [wall, gallery, counts] = await Promise.all([
+      this.apiGet<PagedResult<ApiJourneyPostDto>>(`/api/journey?authorId=${numId}&pageSize=50`),
+      this.apiGet<ApiGalleryPhotoDto[]>(`/api/gallery/users/${numId}`),
+      this.apiGet<ApiFollowCountsDto>(`/api/follows/counts/${numId}`),
+    ]);
+
+    if (wall) {
+      this.visitorWallPosts.update((map) => ({
+        ...map,
+        [key]: wall.items.map((dto) => this.journeyPostFromApi(dto)),
+      }));
+    }
+    if (gallery) {
+      const photos = gallery.map((photo) => this.galleryPhotoFromApi(photo));
+      this.visitorGalleries.update((map) => ({ ...map, [key]: photos }));
+      // The visitor card renders its gallery from the companions entry.
+      this.companions.update((list) =>
+        list.map((c) => (Number(c.id) === numId ? { ...c, gallery: photos } : c)),
+      );
+      this.saveJson(COMPANIONS_KEY, this.companions());
+    }
+    if (counts) {
+      this.visitorFollowCounts.update((map) => ({ ...map, [key]: counts }));
+    }
+  }
+
+  /** Follow counters the Web API last answered for `userId` (self or a visitor). */
+  private apiFollowCountsFor(userId: number): ApiFollowCountsDto | null {
+    const numId = Number(userId);
+    if (numId === this.myId()) return this.followCounts();
+    return this.visitorFollowCounts()[String(numId)] ?? null;
   }
 
   // ---------------------------------------------------------------------------
@@ -6197,10 +6501,16 @@ export class CommunityService {
   }
 
   followingCount(userId: number = this.myId()): number {
+    // The Web API's own counters win for visitors — their follow graph lives
+    // in the database, not in this browser.
+    const counts = this.apiFollowCountsFor(userId);
+    if (counts && Number(userId) !== this.myId()) return counts.following ?? 0;
     return this.peopleFollowing(userId).length;
   }
 
   followerCount(userId: number = this.myId()): number {
+    const counts = this.apiFollowCountsFor(userId);
+    if (counts && Number(userId) !== this.myId()) return counts.followers ?? 0;
     return this.peopleFollowers(userId).length;
   }
 

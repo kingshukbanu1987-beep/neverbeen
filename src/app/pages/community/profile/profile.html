@@ -4405,6 +4405,14 @@
     </div>
   }
 
+  <!-- The member directory is resolving a profile URL (?id=) on the Web API. -->
+  @if (visitorResolving()) {
+    <div class="visitor-resolving-card" role="status">
+      <span class="visitor-resolving-spinner" aria-hidden="true"></span>
+      <p>Looking up this traveler on the NeverBeen community…</p>
+    </div>
+  }
+
   <!-- ================================================================= -->
   <!-- VISITOR PROFILE FULL NORMAL PAGE (Requirements A, B, C)           -->
   <!-- When visiting a user profile do not open in a modal popup window, -->

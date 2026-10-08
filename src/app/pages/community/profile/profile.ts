@@ -1056,6 +1056,11 @@ export class CommunityProfile implements OnInit {
         },
         gallery: [],
       };
+
+      // Signed-in member: this placeholder is shown instantly; the navigation to
+      // /profile?id=<uid> below resolves the real member on the Web API's
+      // directory (loadProfileByParam → GET /api/users/uid/{uid}) and replaces
+      // it — a traveler who is not yet a companion opens as their real profile.
     }
 
     this.viewingVisitor.set(found);
@@ -1079,7 +1084,13 @@ export class CommunityProfile implements OnInit {
     this.router.navigate(['/profile'], { fragment: this.activeSection() });
   }
 
+  /** True while a profile URL (?id=) is being resolved on the member directory. */
+  protected readonly visitorResolving = signal(false);
+  /** The ?id= parameter currently being shown — stale API answers are dropped. */
+  private activeVisitorParam: string | null = null;
+
   protected loadProfileByParam(idParam: string): void {
+    this.activeVisitorParam = idParam;
     const currentProfile = this.service.profile();
     if (
       currentProfile &&
@@ -1092,7 +1103,7 @@ export class CommunityProfile implements OnInit {
     }
 
     const companions = this.service.companions();
-    let found = companions.find(
+    const found = companions.find(
       (c) =>
         c.uniqueId === idParam ||
         String(c.id) === idParam ||
@@ -1101,43 +1112,96 @@ export class CommunityProfile implements OnInit {
 
     if (found) {
       this.viewingVisitor.set(found);
-    } else {
-      const dynamicCompanion: Companion = {
-        id: Math.abs(this.hashCode(idParam)) || 9999,
-        uniqueId: idParam,
-        fullName: 'Global Traveler',
-        profilePhotoUrl: this.defaultAvatar,
-        coverPhotoUrl: this.defaultCoverPhoto,
-        country: 'Worldwide',
-        city: 'Explorer',
-        profession: 'Travel Nomad',
-        isOnline: true,
-        mutualCompanionsCount: 2,
-        status: 'none',
-        isProfileLocked: false,
-        bio: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
-        aboutMe: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
-        aboutMeDetails: {
-          intro: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
-          gender: 'Explorer',
-          dateOfBirth: '1995-06-20',
-          location: 'Worldwide',
-          hometown: 'Global',
-          relationshipStatus: 'Single',
-          languagesKnown: ['English'],
-          workExperience: [],
-          education: [],
-          hobbies: ['Photography', 'Travel'],
-          interests: ['Architecture', 'Cultures'],
-          contactEmail: 'traveler@neverbeen.example',
-          contactPhone: '+1 555 0199',
-          socialLinks: [],
-          aboutThePerson: 'A world traveler discovering authentic horizons.',
-        },
-        gallery: [],
-      };
-      this.viewingVisitor.set(dynamicCompanion);
+      // A signed-in member's visitor view keeps itself fresh from the database:
+      // relationship status, wall posts, gallery and follow counters.
+      void this.refreshVisitorFromApi(found.id);
+      return;
     }
+
+    if (this.service.apiLive) {
+      // Signed-in member: unknown ids are resolved on the Web API's member
+      // directory (GET /api/users/uid/{uid}) — the guest tour never needs this
+      // because its seeded directory already holds every traveler.
+      this.visitorResolving.set(true);
+      void this.service.loadUserByUid(idParam).then((companion) => {
+        this.visitorResolving.set(false);
+        // The member may have closed / changed the profile while the API answered.
+        if (this.activeVisitorParam !== idParam) return;
+        if (companion) {
+          this.viewingVisitor.set(companion);
+          void this.refreshVisitorFromApi(companion.id);
+        } else {
+          // A parallel lookup (e.g. a post-author click) may have upserted the
+          // member in the meantime — re-check before falling back to the card.
+          const late = this.service
+            .companions()
+            .find((c) => c.uniqueId === idParam || String(c.id) === idParam);
+          this.viewingVisitor.set(late ?? this.unknownTravelerCard(idParam));
+          if (late) void this.refreshVisitorFromApi(late.id);
+        }
+      });
+      return;
+    }
+
+    this.viewingVisitor.set(this.unknownTravelerCard(idParam));
+  }
+
+  /** Placeholder card for a profile URL this browser cannot resolve to a member. */
+  private unknownTravelerCard(idParam: string): Companion {
+    return {
+      id: Math.abs(this.hashCode(idParam)) || 9999,
+      uniqueId: idParam,
+      fullName: 'Global Traveler',
+      profilePhotoUrl: this.defaultAvatar,
+      coverPhotoUrl: this.defaultCoverPhoto,
+      country: 'Worldwide',
+      city: 'Explorer',
+      profession: 'Travel Nomad',
+      isOnline: true,
+      mutualCompanionsCount: 2,
+      status: 'none',
+      isProfileLocked: false,
+      bio: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+      aboutMe: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+      aboutMeDetails: {
+        intro: 'Passionate globetrotter discovering new horizons with NeverBeen AI memories.',
+        gender: 'Explorer',
+        dateOfBirth: '1995-06-20',
+        location: 'Worldwide',
+        hometown: 'Global',
+        relationshipStatus: 'Single',
+        languagesKnown: ['English'],
+        workExperience: [],
+        education: [],
+        hobbies: ['Photography', 'Travel'],
+        interests: ['Architecture', 'Cultures'],
+        contactEmail: 'traveler@neverbeen.example',
+        contactPhone: '+1 555 0199',
+        socialLinks: [],
+        aboutThePerson: 'A world traveler discovering authentic horizons.',
+      },
+      gallery: [],
+    };
+  }
+
+  /**
+   * Refreshes the open visitor profile from the Web API (signed-in members):
+   * their wall posts, gallery and follow counters arrive after the card opens
+   * and the card itself is re-read from the directory entry, so the
+   * relationship status and the gallery always match the database.
+   */
+  private async refreshVisitorFromApi(visitorId: number): Promise<void> {
+    if (!this.service.apiLive) return;
+    // The full directory entry first (cover photo, About-me, relationship status),
+    // then the visitor's wall posts, gallery and follow counters.
+    await Promise.all([
+      this.service.loadUserById(visitorId, true),
+      this.service.loadVisitorExtras(visitorId),
+    ]);
+    const current = this.viewingVisitor();
+    if (!current || Number(current.id) !== Number(visitorId)) return;
+    const fresh = this.service.companions().find((c) => Number(c.id) === Number(visitorId));
+    if (fresh) this.viewingVisitor.set({ ...fresh, gallery: fresh.gallery ?? current.gallery });
   }
 
   private hashCode(str: string): number {
@@ -1157,6 +1221,10 @@ export class CommunityProfile implements OnInit {
   }
 
   getVisitorJourneyPosts(visitorId: number): JourneyPost[] {
+    // A signed-in member sees the visitor's real wall from the Web API
+    // (GET /api/journey?authorId=); the guest tour reads its seeded feed.
+    const fromApi = this.service.visitorWallPosts()[String(visitorId)];
+    if (fromApi) return fromApi;
     return this.service.postsForWall(visitorId);
   }
 

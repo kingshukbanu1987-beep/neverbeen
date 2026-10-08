@@ -86,6 +86,43 @@ describe('CommunitySearchBox (community header search)', () => {
     expect(service.companions().find((c) => c.id === stranger.id)!.status).toBe('pending_outgoing');
   });
 
+  it('offers a + Follow action in the drop-down and follows the traveler', () => {
+    const service = TestBed.inject(CommunityService);
+    const stranger = service.companions().find(
+      (c) => c.status === 'none' && !service.isFollowing(c.id),
+    )!;
+
+    type(stranger.fullName);
+    const item = items().find((i) => i.textContent?.includes(stranger.fullName))!;
+    const followBtn = item.querySelector('.csb-follow') as HTMLButtonElement;
+    expect(followBtn.textContent).toContain('+ Follow');
+
+    followBtn.click();
+    detect();
+
+    expect(service.isFollowing(stranger.id)).toBe(true);
+    const again = items().find((i) => i.textContent?.includes(stranger.fullName))!;
+    expect((again.querySelector('.csb-follow') as HTMLButtonElement).textContent).toContain(
+      '✓ Following',
+    );
+
+    // Clicking again unfollows.
+    (again.querySelector('.csb-follow') as HTMLButtonElement).click();
+    detect();
+    expect(service.isFollowing(stranger.id)).toBe(false);
+  });
+
+  it('does not offer a Follow button on the signed-in member themself', () => {
+    const service = TestBed.inject(CommunityService);
+    const me = service.getCurrentUserAsCompanion();
+    service.companions.update((list) => [...list, { ...me, status: 'none' as const }]);
+
+    type(me.fullName);
+    const item = items().find((i) => i.textContent?.includes(me.fullName));
+    // Either not listed at all, or listed without a follow button.
+    if (item) expect(item.querySelector('.csb-follow')).toBeNull();
+  });
+
   it('finds nothing for a signed-out visitor who has not opened the guest tour', () => {
     const service = TestBed.inject(CommunityService);
     // Leaving the tour (or never opening it) leaves the community empty: no demo travelers
