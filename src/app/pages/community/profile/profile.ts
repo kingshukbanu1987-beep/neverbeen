@@ -106,7 +106,7 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
     PostAudienceControl,
   ],
   templateUrl: './profile.html',
-  styleUrl: './profile.css',
+  styleUrls: ['./profile.css', './profile-journey.css'],
 })
 export class CommunityProfile implements OnInit {
   protected readonly service = inject(CommunityService);
