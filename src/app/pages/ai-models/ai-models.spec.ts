@@ -19,9 +19,9 @@ describe('AiModelsPage', () => {
     const expectedNames = [
       'Fiadh Dara',
       'Nourhan Durrani',
+      'Alisha Bhattacharya',
       'Nazanin Maeve Al-Farsi',
       'Sereenah Noorzai',
-      'Alisha Bhattacharya',
       'Maeve Anahita',
       'Rozalin El Masry',
       'Ava Amira Gallagher',
