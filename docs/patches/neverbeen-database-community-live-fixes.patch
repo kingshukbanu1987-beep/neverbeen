@@ -1,0 +1,54 @@
+From e06b8f2ce69b189004d9bcaa56a8cec3f7cc7715 Mon Sep 17 00:00:00 2001
+From: Arena Agent <agent@arena.ai>
+Date: Fri, 9 Oct 2026 03:07:01 +0000
+Subject: [PATCH] Store circle cover photos as text
+
+Circles.PhotoUrl was varchar(1024), but circle covers are uploaded as
+data URLs of up to 1 MB, so creating a circle with a photo failed and was
+never saved. The column becomes text (idempotent ALTER for existing
+databases), and the request-notification lookup gets an index on
+Notifications (UserId, FromUserId, Type).
+---
+ schema.sql | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/schema.sql b/schema.sql
+index af3a6a7..50e64ff 100644
+--- a/schema.sql
++++ b/schema.sql
+@@ -358,12 +358,16 @@ CREATE TABLE IF NOT EXISTS "Circles" (
+     "Description"   varchar(500),
+     "Icon"          varchar(60),
+     "Color"         varchar(20),
+-    "PhotoUrl"      varchar(1024),
++    "PhotoUrl"      text,                    -- uploaded photo (data URL) or stock image link
+     "OwnerId"       integer      NOT NULL REFERENCES "Users" ("Id") ON DELETE CASCADE,
+     "CreatedAtUtc"  timestamptz  NOT NULL DEFAULT now(),
+     "ArchivedAtUtc" timestamptz
+ );
+ 
++-- Circle cover photos are uploaded as data URLs (up to 1 MB), which never fit varchar(1024).
++-- Idempotent: converting a column that is already text is a no-op.
++ALTER TABLE "Circles" ALTER COLUMN "PhotoUrl" TYPE text;
++
+ CREATE INDEX IF NOT EXISTS "IX_Circles_OwnerId" ON "Circles" ("OwnerId");
+ 
+ CREATE TABLE IF NOT EXISTS "CircleMembers" (
+@@ -440,11 +444,13 @@ CREATE TABLE IF NOT EXISTS "Notifications" (
+     "Message"      varchar(500) NOT NULL,
+     "IsRead"       boolean      NOT NULL DEFAULT false,
+     "RequestId"    bigint,                  -- companionship id / post id the notification refers to
+-    "Status"       varchar(20),             -- pending | approved | rejected
++    "Status"       varchar(20),             -- pending | approved | rejected | cancelled
+     "CreatedAtUtc" timestamptz  NOT NULL DEFAULT now()
+ );
+ 
+ CREATE INDEX IF NOT EXISTS "IX_Notifications_UserId" ON "Notifications" ("UserId", "IsRead", "CreatedAtUtc" DESC);
++-- Looks up the pending companionship request a member sent (answered on accept / reject / cancel).
++CREATE INDEX IF NOT EXISTS "IX_Notifications_User_From_Type" ON "Notifications" ("UserId", "FromUserId", "Type");
+ 
+ -- ---------------------------------------------------------------------------
+ -- Moderation (abuse reports, blocks, hidden posts)
+-- 
+2.39.5
+

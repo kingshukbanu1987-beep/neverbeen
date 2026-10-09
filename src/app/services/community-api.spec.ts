@@ -877,3 +877,226 @@ describe('CommunityService — member directory (search & public profiles)', () 
     expect(service.journeyPosts()[0].comments[0].likeCount).toBe(2);
   });
 });
+
+describe('CommunityService — live requests, notifications, chats, circles and follow cards', () => {
+  let service: CommunityService;
+  let httpMock: HttpTestingController;
+
+  function tick(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  /** Answers the request to `url` once the service has issued it. */
+  async function answer(url: string, body: object | null): Promise<void> {
+    await tick();
+    httpMock.expectOne(url).flush(body);
+    await tick();
+  }
+
+  /** One live round — what the page's timer runs every few seconds. */
+  function poll(): Promise<void> {
+    return (service as unknown as { pollLiveUpdates(): Promise<void> }).pollLiveUpdates();
+  }
+
+  /** Signs a make-believe member (id 7) in without triggering community hydration. */
+  function signIn(): void {
+    service.token.set('jwt.member.7');
+    service.currentUser.set({
+      id: 7,
+      firstName: 'Kingshuk',
+      lastName: 'Banu',
+      fullName: 'Kingshuk Banu',
+      email: 'kingshuk@example.com',
+      status: 'Active',
+      profileComplete: true,
+    });
+  }
+
+  const elenaDto = {
+    id: 21,
+    uniqueId: '89201534010000000021',
+    fullName: 'Elena Rostova',
+    profilePhotoUrl: '',
+    country: 'France',
+    city: 'Paris',
+    profession: 'Travel Blogger',
+    isOnline: true,
+    mutualCompanionsCount: 0,
+    status: 'connected',
+  };
+
+  beforeEach(() => {
+    localStorage.clear();
+    deleteCookie(TOKEN_KEY);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(CommunityService);
+    httpMock = TestBed.inject(HttpTestingController);
+    signIn();
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+    deleteCookie(TOKEN_KEY);
+  });
+
+  it('shows a companionship request another member sent, without a reload', async () => {
+    const round = poll();
+    await tick();
+    httpMock.expectOne(`${API}/api/companions`).flush([
+      { ...elenaDto, status: 'pending_incoming' },
+    ]);
+    httpMock.expectOne(`${API}/api/notifications`).flush([
+      {
+        id: 88,
+        type: 'companionship_request',
+        fromUser: { id: 21, fullName: 'Elena Rostova', profilePhotoUrl: '' },
+        message: 'sent you a companionship request',
+        createdAtUtc: new Date().toISOString(),
+        isRead: false,
+        status: 'pending',
+      },
+    ]);
+    httpMock.expectOne(`${API}/api/messages/conversations`).flush([]);
+    await round;
+
+    expect(service.companions().find((c) => c.id === 21)?.status).toBe('pending_incoming');
+    const notice = service.notifications().find((n) => n.id === 88);
+    expect(notice?.type).toBe('companionship_request');
+    expect(notice?.status).toBe('pending');
+  });
+
+  it('withdraws a companion request the Web API did not store', async () => {
+    service.companions.set([{ ...elenaDto, status: 'none' }] as never);
+
+    service.sendCompanionshipRequest(21);
+    expect(service.companions().find((c) => c.id === 21)?.status).toBe('pending_outgoing');
+
+    httpMock
+      .expectOne(`${API}/api/companions/21/request`)
+      .flush({ error: 'Companion request could not be delivered.' }, { status: 500, statusText: 'Server Error' });
+    httpMock.expectOne(`${API}/api/follows/21`).flush(null);
+    await tick();
+
+    expect(service.companions().find((c) => c.id === 21)?.status).toBe('none');
+  });
+
+  it('does not keep a Circle the Web API refused, and says why', async () => {
+    const created = service.createCircle('Lisbon trip', 'Food and fado', [], '✈️', '#2563eb', 'data:image/svg+xml;base64,AAAA');
+    expect(created).not.toBeNull();
+    const saved = service.circleSaved(created!.id);
+
+    httpMock
+      .expectOne(`${API}/api/circles`)
+      .flush(
+        { error: 'Circle photo must be a PNG, JPEG, GIF or WebP image.' },
+        { status: 400, statusText: 'Bad Request' },
+      );
+
+    expect(await saved).toBeNull();
+    expect(service.circles().some((c) => c.id === created!.id)).toBe(false);
+    expect(service.circleActionError()).toBe('Circle photo must be a PNG, JPEG, GIF or WebP image.');
+  });
+
+  it('keeps a Circle once the Web API has stored it, under the stored id', async () => {
+    const created = service.createCircle('Lisbon trip', 'Food and fado', [], '✈️', '#2563eb', 'data:image/jpeg;base64,AAAA');
+    const saved = service.circleSaved(created!.id);
+
+    httpMock.expectOne(`${API}/api/circles`).flush({
+      id: 4101,
+      name: 'Lisbon trip',
+      description: 'Food and fado',
+      icon: '✈️',
+      color: '#2563eb',
+      memberIds: [7],
+      adminIds: [7],
+      ownerId: 7,
+      createdAtUtc: new Date().toISOString(),
+    });
+
+    const stored = await saved;
+    expect(stored?.id).toBe(4101);
+    expect(service.circles().some((c) => c.id === 4101)).toBe(true);
+    expect(service.circleActionError()).toBeNull();
+  });
+
+  it('sends a chat message as the signed-in member and stores it through the conversation', async () => {
+    service.companions.set([elenaDto] as never);
+    service.openChatBox(elenaDto as never);
+    await answer(`${API}/api/messages/conversations`, { id: 900, unreadCount: 0 });
+    await answer(`${API}/api/messages/conversations/900?pageSize=100`, []);
+
+    service.sendChatMessage(21, 'See you in Lisbon');
+    const before = service.activeChatBoxes().find((b) => b.companionId === 21)!;
+    const bubble = before.messages[before.messages.length - 1];
+    expect(bubble.senderId).toBe(7);
+    expect(bubble.text).toBe('See you in Lisbon');
+
+    const post = httpMock.expectOne(`${API}/api/messages/conversations/900/messages`);
+    expect(post.request.body).toEqual(expect.objectContaining({ text: 'See you in Lisbon' }));
+    post.flush({
+      id: 777,
+      conversationId: 900,
+      senderId: 7,
+      receiverId: 21,
+      text: 'See you in Lisbon',
+      sentAtUtc: new Date().toISOString(),
+    });
+    await tick();
+
+    const after = service.activeChatBoxes().find((b) => b.companionId === 21)!;
+    expect(after.messages.map((m) => m.id)).toContain(777);
+    expect(after.messages.some((m) => m.id === bubble.id)).toBe(false);
+  });
+
+  it('pops the chat open for the recipient when a companion writes, without a reload', async () => {
+    const oldMessage = { id: 500, conversationId: 900, senderId: 21, receiverId: 7, text: 'Hello from last week', sentAtUtc: '2026-10-01T10:00:00Z' };
+    const newMessage = { id: 501, conversationId: 900, senderId: 21, receiverId: 7, text: 'Hi Kingshuk!', sentAtUtc: new Date().toISOString() };
+    const participants = [
+      { id: 7, fullName: 'Kingshuk Banu' },
+      { id: 21, fullName: 'Elena Rostova', profilePhotoUrl: '', city: 'Paris', country: 'France' },
+    ];
+
+    // First round: the inbox already holds an old message. It is recorded, nothing pops up.
+    const first = poll();
+    await tick();
+    httpMock.expectOne(`${API}/api/companions`).flush([elenaDto]);
+    httpMock.expectOne(`${API}/api/notifications`).flush([]);
+    httpMock.expectOne(`${API}/api/messages/conversations`).flush([
+      { id: 900, unreadCount: 0, participants, lastMessage: oldMessage },
+    ]);
+    await first;
+    expect(service.activeChatBoxes().length).toBe(0);
+
+    // Second round: Elena has written. Her chat opens on this member's page.
+    const second = poll();
+    await tick();
+    httpMock.expectOne(`${API}/api/companions`).flush([elenaDto]);
+    httpMock.expectOne(`${API}/api/notifications`).flush([]);
+    httpMock.expectOne(`${API}/api/messages/conversations`).flush([
+      { id: 900, unreadCount: 1, participants, lastMessage: newMessage },
+    ]);
+    await second;
+
+    await answer(`${API}/api/messages/conversations`, { id: 900, unreadCount: 1 });
+    await answer(`${API}/api/messages/conversations/900?pageSize=100`, [newMessage]);
+    await answer(`${API}/api/messages/conversations/900/read`, null);
+
+    const box = service.activeChatBoxes().find((b) => b.companionId === 21);
+    expect(box).toBeDefined();
+    expect(box?.isMinimized).toBe(false);
+    expect(box?.messages.map((m) => m.text)).toEqual(['Hi Kingshuk!']);
+  });
+
+  it('shows a follower’s city and country on their card', () => {
+    (service as unknown as { apiFollowers: { set(list: unknown[]): void } }).apiFollowers.set([
+      { id: 31, fullName: 'Marco Rossi', profession: 'Architect', country: 'Italy', city: 'Milan' },
+    ]);
+    service.follows.set({ '31': [7] });
+
+    const follower = service.peopleFollowers(7).find((p) => p.id === 31);
+    expect(follower?.city).toBe('Milan');
+    expect(follower?.country).toBe('Italy');
+  });
+});

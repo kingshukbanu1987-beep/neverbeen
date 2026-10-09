@@ -2837,7 +2837,7 @@
                 </div>
                 <div class="companion-70-field companion-card-field">
                   <span class="companion-70-field-label">Location:</span>
-                  <span class="companion-70-field-val">{{ person.city }}, {{ person.country }}</span>
+                  <span class="companion-70-field-val">{{ locationLabel(person) }}</span>
                 </div>
               </div>
             </div>
@@ -4097,7 +4097,7 @@
         </div>
         <footer class="modal-footer-bar">
           <button type="button" class="btn-secondary-action" (click)="closeCreateCircleModal()">Cancel</button>
-          <button type="button" class="btn-primary-action" (click)="submitCreateCircle()">Create Circle</button>
+          <button type="button" class="btn-primary-action" [disabled]="circleSaving()" (click)="submitCreateCircle()">{{ circleSaving() ? 'Saving…' : 'Create Circle' }}</button>
         </footer>
       </div>
     </div>
