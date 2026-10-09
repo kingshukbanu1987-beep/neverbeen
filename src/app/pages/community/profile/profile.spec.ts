@@ -582,6 +582,39 @@ describe('CommunityProfile', () => {
     expect(element.querySelector('.right-wide-panel .section-title')?.textContent?.trim()).toBe('Settings');
   });
 
+  it('shows saved sign-in device details without presenting a hardware MAC as browser-readable', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    service.devices.set([
+      {
+        id: 'api-device-iphone',
+        name: 'iPhone · Safari',
+        type: 'Phone',
+        os: 'iOS 18',
+        browser: 'Safari',
+        ipAddress: '203.0.113.24',
+        macAddress: '02:00:00:00:00:01',
+        location: 'Toronto, Canada',
+        lastSeenUtc: '2026-10-08T10:30:00Z',
+        isCurrent: false,
+        isActive: false,
+        blocked: false,
+      },
+    ]);
+    component.setSection('settings');
+    fixture.detectChanges();
+
+    const card = element.querySelector('.devices-card');
+    expect(card?.textContent).toContain('iPhone · Safari');
+    expect(card?.textContent).toContain('iOS 18 · Safari');
+    expect(card?.textContent).toContain('203.0.113.24');
+    expect(card?.textContent).toContain('Toronto, Canada');
+    expect(card?.textContent).toContain('hardware MAC address is not exposed to websites');
+    expect(card?.textContent).not.toContain('02:00:00:00:00:01');
+  });
+
   it('deletes Live Feeds from the Journey page header', () => {
     const fixture = create();
     const component = fixture.componentInstance;
@@ -722,54 +755,49 @@ describe('CommunityProfile', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/community']);
   });
 
-  it('enforces 100 KB limit for pictures in Gallery, Journey composer, MessageBook, comments, and cover photo (Requirement A)', async () => {
+  it('automatically optimizes oversized photos to 100 KB or less across Community upload surfaces', async () => {
     const fixture = create();
     const component = fixture.componentInstance;
+    const oversizedFile = new File(['a'.repeat(105 * 1024)], 'large.jpg', { type: 'image/jpeg' });
+    const optimizedFile = new File(['optimized-photo'], 'large.jpg', { type: 'image/jpeg' });
+    const validFile = new File(['already-small-photo'], 'valid.jpg', { type: 'image/jpeg' });
+    const prepare = vi.spyOn(service, 'prepareCommunityPhoto').mockImplementation(async (file) =>
+      file.size > component.MAX_PICTURE_SIZE ? optimizedFile : file,
+    );
 
-    const oversizedBlob = new Blob(['a'.repeat(105 * 1024)], { type: 'image/jpeg' });
-    const oversizedFile = new File([oversizedBlob], 'huge.jpg', { type: 'image/jpeg' });
+    // Gallery selection previews and uploads the optimized file.
+    await component.onGalleryFileSelected({ target: { files: [oversizedFile], value: '' } } as unknown as Event);
+    expect(component['galleryError']()).toBeNull();
+    expect(component['selectedGalleryFile']()).toBe(optimizedFile);
+    expect(component['selectedGalleryFile']()!.size).toBeLessThanOrEqual(component.MAX_PICTURE_SIZE);
 
-    const validBlob = new Blob(['a'.repeat(20 * 1024)], { type: 'image/jpeg' });
-    const validFile = new File([validBlob], 'valid.jpg', { type: 'image/jpeg' });
-
-    // 1. Gallery upload limit
-    const galleryEvent = { target: { files: [oversizedFile] } } as unknown as Event;
-    component.onGalleryFileSelected(galleryEvent);
-    expect(component['galleryError']()).toContain('100 KB');
-    expect(component['selectedGalleryFile']()).toBeNull();
-
-    // 2. Journey composer photo limit
-    const journeyEvent = { target: { files: [oversizedFile] } } as unknown as Event;
-    component.onJourneyPhotoSelected(journeyEvent);
-    expect(component['journeyPhotoError']()).toContain('100 KB');
-    expect(component['selectedJourneyPhoto']()).toBeNull();
-
-    // Valid file for Journey composer
-    const validJourneyEvent = { target: { files: [validFile] } } as unknown as Event;
-    component.onJourneyPhotoSelected(validJourneyEvent);
+    // Every photo in a multi-photo Journey post is optimized before previewing.
+    await component.onJourneyPhotoSelected({ target: { files: [oversizedFile], value: '' } } as unknown as Event);
+    expect(component['journeyPhotoError']()).toBeNull();
+    expect(component['selectedJourneyPhoto']()).toBe(optimizedFile);
+    expect(component['selectedJourneyPhotos']().every((photo) => photo.size <= component.MAX_PICTURE_SIZE)).toBe(true);
+    component.clearJourneyPhoto();
+    await component.onJourneyPhotoSelected({ target: { files: [validFile], value: '' } } as unknown as Event);
     expect(component['journeyPhotoError']()).toBeNull();
     expect(component['selectedJourneyPhoto']()).toBe(validFile);
 
-    // 3. MessageBook composer photo limit
-    const mbEvent = { target: { files: [oversizedFile] } } as unknown as Event;
-    component.onMessageBookPhotoSelected(mbEvent);
-    expect(component['messageBookPhotoError']()).toContain('100 KB');
-    expect(component['selectedMessageBookPhoto']()).toBeNull();
+    // MessageBook and Journey-comment attachments follow the same compression path.
+    await component.onMessageBookPhotoSelected({ target: { files: [oversizedFile], value: '' } } as unknown as Event);
+    expect(component['messageBookPhotoError']()).toBeNull();
+    expect(component['selectedMessageBookPhoto']()).toBe(optimizedFile);
+    await component.onJourneyCommentPhotoSelected(
+      { target: { files: [oversizedFile], value: '' } } as unknown as Event,
+      101,
+    );
+    expect(component['journeyCommentPhotoError']()).toBeNull();
+    expect(component['journeyCommentPhotoPreview']()?.postId).toBe(101);
 
-    // 4. Journey Comment photo limit
-    const commentEvent = { target: { files: [oversizedFile] } } as unknown as Event;
-    component.onJourneyCommentPhotoSelected(commentEvent, 101);
-    expect(component['journeyCommentPhotoError']()?.message).toContain('100 KB');
-
-    // 5. Cover photo upload limit
-    const coverEvent = { target: { files: [oversizedFile] } } as unknown as Event;
-    await component.onCoverPhotoUpload(coverEvent);
-    expect(component['coverPhotoError']()).toContain('100 KB');
-
-    // 6. Service level rejection for files > 100 KB
-    await expect(service.uploadCoverPhoto(oversizedFile)).rejects.toThrow('100 KB');
-    await expect(service.addGalleryPhoto(oversizedFile)).rejects.toThrow('100 KB');
-    await expect(service.uploadProfilePhoto(oversizedFile)).rejects.toThrow('100 KB');
+    // The profile endpoints also optimize defensively at the service boundary.
+    await component.onCoverPhotoUpload({ target: { files: [oversizedFile], value: '' } } as unknown as Event);
+    await component.onPhotoUpload({ target: { files: [oversizedFile], value: '' } } as unknown as Event);
+    expect(component['coverPhotoError']()).toBeNull();
+    expect(component['profilePhotoError']()).toBeNull();
+    expect(prepare).toHaveBeenCalledWith(oversizedFile);
   });
 
   it('displays destination icon and destination strictly in one line in Journey composer and posts (Requirement B)', () => {
@@ -1283,7 +1311,7 @@ describe('CommunityProfile', () => {
     }
   });
 
-  it('displays Cover Picture at top, compact modern About Me, and visitor companions in side panel with max 9 and See All popup', () => {
+  it('displays Cover Picture at top, compact modern About Me, and visitor companions in side panel with max 9 and See All popup', async () => {
     const fixture = create();
     const component = fixture.componentInstance;
     const element: HTMLElement = fixture.nativeElement;
@@ -1457,7 +1485,7 @@ describe('CommunityProfile', () => {
     const file1 = new File(['mock content 1'], 'photo1.jpg', { type: 'image/jpeg' });
     const file2 = new File(['mock content 2'], 'photo2.jpg', { type: 'image/jpeg' });
     const multiEvent = { target: { files: [file1, file2] } } as unknown as Event;
-    component.onJourneyPhotoSelected(multiEvent);
+    await component.onJourneyPhotoSelected(multiEvent);
 
     // Simulate FileReader data URLs
     component['journeyPhotoPreviews'].set(['data:image/jpeg;base64,img1', 'data:image/jpeg;base64,img2']);

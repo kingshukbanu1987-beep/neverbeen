@@ -4,9 +4,10 @@ import { Router, RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
 import { City } from '../../../models/community';
 import { getStatesForCountry, getCitiesForState } from '../../../models/location-cascade';
+import { MAX_COMMUNITY_IMAGE_BYTES, readImageAsDataUrl } from '../../../shared/community-image-compression';
 
-/** Profile photos are capped at 200 KB (JPEG / PNG / JPG only). */
-export const MAX_PHOTO_BYTES = 200 * 1024;
+/** Registration profile photographs use the same 100 KB upload cap as Community. */
+export const MAX_PHOTO_BYTES = MAX_COMMUNITY_IMAGE_BYTES;
 const PHOTO_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/jpg']);
 const PHOTO_EXTENSIONS = /\.(jpe?g|png)$/i;
 
@@ -38,6 +39,7 @@ export class CommunityRegister implements OnInit {
   protected readonly photoPreview = signal<string | null>(null);
   protected readonly selectedFile = signal<File | null>(null);
   protected readonly photoError = signal<string | null>(null);
+  protected readonly photoProcessing = signal(false);
   /** Registration errors reported by the NeverBeen Web API (validation, duplicate email, …). */
   protected readonly submitError = signal<string | null>(null);
   /** Cities the Web API knows for the selected country (null while loading / unavailable). */
@@ -154,26 +156,34 @@ export class CommunityRegister implements OnInit {
     return getCitiesForState(country, state);
   }
 
-  onPhotoSelected(event: Event): void {
+  async onPhotoSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const looksLikePhoto =
-        PHOTO_MIME_TYPES.has(file.type.toLowerCase()) || PHOTO_EXTENSIONS.test(file.name);
-      if (!looksLikePhoto) {
-        this.photoError.set('Please select a valid image file (JPEG, PNG, or JPG).');
-        return;
-      }
-      if (file.size > MAX_PHOTO_BYTES) {
-        this.photoError.set('Photograph size must not exceed 200 KB.');
-        return;
-      }
-      this.photoError.set(null);
-      this.selectedFile.set(file);
+    const source = input.files?.[0];
+    if (!source) return;
+    input.value = '';
+    const looksLikePhoto =
+      PHOTO_MIME_TYPES.has(source.type.toLowerCase()) || PHOTO_EXTENSIONS.test(source.name);
+    if (!looksLikePhoto) {
+      this.selectedFile.set(null);
+      this.photoPreview.set(null);
+      this.photoError.set('Please select a valid image file (JPEG, PNG, or JPG).');
+      return;
+    }
 
-      const reader = new FileReader();
-      reader.onload = () => this.photoPreview.set(reader.result as string);
-      reader.readAsDataURL(file);
+    this.photoError.set(null);
+    this.photoProcessing.set(true);
+    try {
+      const file = await this.service.prepareCommunityPhoto(source);
+      this.selectedFile.set(file);
+      this.photoPreview.set(await readImageAsDataUrl(file));
+    } catch (error) {
+      this.selectedFile.set(null);
+      this.photoPreview.set(null);
+      this.photoError.set(
+        error instanceof Error ? error.message : 'This photo could not be optimized for upload.',
+      );
+    } finally {
+      this.photoProcessing.set(false);
     }
   }
 
@@ -183,6 +193,7 @@ export class CommunityRegister implements OnInit {
   }
 
   async submit(): Promise<void> {
+    if (this.photoProcessing()) return;
     this.photoError.set(null);
     this.submitError.set(null);
 

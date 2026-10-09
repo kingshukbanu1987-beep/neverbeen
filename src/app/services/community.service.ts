@@ -63,6 +63,11 @@ import { inspectCommunityText } from '../pages/community/profile/content-guard';
 import { extractHashtags } from '../pages/community/profile/hashtags';
 import { StorageReport, StorageSlice, buildStorageReport, imageBytes, utf8Bytes } from '../pages/community/profile/storage-meter';
 import { AdminModerationService } from './admin-moderation.service';
+import {
+  MAX_COMMUNITY_IMAGE_BYTES,
+  compressCommunityImage,
+  readImageAsDataUrl,
+} from '../shared/community-image-compression';
 
 export const TOKEN_KEY = 'neverbeen_auth_token';
 export const USER_KEY = 'neverbeen_current_user';
@@ -78,6 +83,8 @@ export const FOLLOWS_SEED_VERSION_KEY = 'neverbeen_follows_seed';
 export const CIRCLES_KEY = 'neverbeen_circles';
 export const CIRCLE_READS_KEY = 'neverbeen_circle_reads';
 export const DEVICES_KEY = 'neverbeen_devices';
+/** Per-account browser identifier used to store device sign-in history on the API. */
+export const DEVICE_ID_KEY_PREFIX = 'neverbeen_device_id';
 export const NOTIFS_KEY = 'neverbeen_notifications';
 export const PENDING_CHATS_KEY = 'neverbeen_pending_chats';
 export const PENDING_CHATS_SEED_VERSION = 'pending-chats-v1';
@@ -773,6 +780,8 @@ export class CommunityService {
   /** circleId -> ISO time the signed-in member last read that Circle chat. */
   readonly circleReads = signal<Record<string, string>>(this.loadCircleReads());
   readonly devices = signal<LoginDevice[]>(this.loadDevices());
+  private currentDeviceRegistrationKey: string | null = null;
+  private currentDeviceRegistrationInFlight: { key: string; promise: Promise<void> } | null = null;
   /** Circle the header search asked the profile page to open as a group chat. */
   readonly pendingCircleChatId = signal<number | null>(null);
   readonly circleActionError = signal<string | null>(null);
@@ -982,8 +991,13 @@ export class CommunityService {
   private enterMemberSession(): void {
     this.exitGuestBrowsing();
     this.demoSession = false;
+    this.currentDeviceRegistrationKey = null;
     this.dropStoredDemoCommunity();
     this.resetSessionCommunityData();
+    // Device history is account-scoped on the API. Do not carry another member's
+    // cached rows into this session; the API hydrates the correct account's history.
+    this.devices.set([]);
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(DEVICES_KEY);
   }
 
   /**
@@ -1591,6 +1605,9 @@ export class CommunityService {
     if (!this.http || !this.apiLive) return;
     const me = this.currentUser()?.id ?? this.profile()?.id;
     if (!me) return;
+    // The API already has POST /api/devices and the LoginDevices table; this
+    // registration write was missing, leaving signed-in Settings with an empty list.
+    await this.registerCurrentDevice();
     this.startLiveUpdates();
 
     const [companions, followsCounts, followers, following, circles, journey, book, conversations, notifications, gallery, albums, devices, blocks, hidden, reports] =
@@ -1734,9 +1751,18 @@ export class CommunityService {
       this.saveJson(PROFILE_KEY, this.profile());
     }
 
-    // Devices, moderation state.
+    // Devices, moderation state. The current-browser identity is local to this account;
+    // do not trust stale IsCurrent flags left by a sign-in from another browser.
     if (devices) {
-      this.devices.set(devices.map((dto) => this.deviceFromApi(dto)));
+      const currentDeviceId = this.currentDeviceId();
+      const mappedDevices = devices.map((dto) => ({
+        ...this.deviceFromApi(dto),
+        isCurrent: dto.id === currentDeviceId,
+      }));
+      if (!mappedDevices.some((device) => device.id === currentDeviceId)) {
+        mappedDevices.unshift(this.detectCurrentDevice(currentDeviceId));
+      }
+      this.devices.set(mappedDevices);
       this.saveJson(DEVICES_KEY, this.devices());
     }
     if (blocks) {
@@ -2149,6 +2175,8 @@ export class CommunityService {
     };
     this.currentUser.set(user);
     this.saveJson(USER_KEY, user);
+    // Record the sign-in without making authentication wait on device-history I/O.
+    void this.registerCurrentDevice().catch(() => undefined);
 
     if (dto.profileComplete) {
       await this.refreshProfileFromApi();
@@ -2495,6 +2523,7 @@ export class CommunityService {
       this.currentUser.set(existingUser);
       this.profile.set(storedProfile);
       this.saveJson(USER_KEY, existingUser);
+      this.upsertCurrentDevice(this.detectCurrentDevice(this.currentDeviceId()));
 
       return {
         token,
@@ -2865,6 +2894,18 @@ export class CommunityService {
     this.accountSaveNotice.set(null);
     this.accountSaveTarget.set(null);
 
+    // Registration is part of the Community upload flow too. Use the same optimized
+    // bytes for the API multipart upload and the browser-only preview/fallback.
+    if (data.photo) {
+      const source = data.photo;
+      const photo = await this.prepareCommunityPhoto(source);
+      data = {
+        ...data,
+        photo,
+        photoUrl: photo === source ? data.photoUrl : await readImageAsDataUrl(photo),
+      };
+    }
+
     if (this.http) {
       const stored = await this.tryApiRegister(data);
       if (stored) {
@@ -3039,6 +3080,7 @@ export class CommunityService {
     this.profile.set(newProfile);
     this.saveJson(USER_KEY, newUser);
     this.saveJson(PROFILE_KEY, newProfile);
+    this.upsertCurrentDevice(this.detectCurrentDevice(this.currentDeviceId()));
 
     return newProfile;
   }
@@ -3186,12 +3228,15 @@ export class CommunityService {
     return true;
   }
 
-  readonly MAX_IMAGE_SIZE_BYTES = 100 * 1024; // 100 KB limit (Requirement A)
+  readonly MAX_IMAGE_SIZE_BYTES = MAX_COMMUNITY_IMAGE_BYTES;
+
+  /** Compresses an image selected anywhere in Community to the API's 100 KB upload limit. */
+  prepareCommunityPhoto(file: File): Promise<File> {
+    return compressCommunityImage(file, this.MAX_IMAGE_SIZE_BYTES);
+  }
 
   async uploadProfilePhoto(file: File): Promise<string> {
-    if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
-      throw new Error('Picture size exceeds 100 KB limit.');
-    }
+    file = await this.prepareCommunityPhoto(file);
     if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
     // Signed-in members upload to the Web API (PUT /api/profile/photo, multipart):
     // the photograph is stored on the member row and served from /api/profile/{id}/photo.
@@ -3250,9 +3295,7 @@ export class CommunityService {
   }
 
   async uploadCoverPhoto(file: File): Promise<string> {
-    if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
-      throw new Error('Picture size exceeds 100 KB limit.');
-    }
+    file = await this.prepareCommunityPhoto(file);
     if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
     // Cover photographs go to the Web API too (PUT /api/profile/cover — patch:
     // community-complete). Without that endpoint yet, the local copy is kept.
@@ -3395,9 +3438,7 @@ export class CommunityService {
   // ---------------------------------------------------------------------------
 
   async addGalleryPhoto(file: File, caption?: string, albumId?: number): Promise<GalleryPhoto> {
-    if (file.size > this.MAX_IMAGE_SIZE_BYTES) {
-      throw new Error('Picture size exceeds 100 KB limit.');
-    }
+    file = await this.prepareCommunityPhoto(file);
     if (!this.storageAllows(file.size)) {
       throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
     }
@@ -3594,13 +3635,20 @@ export class CommunityService {
     // Signed-in members write the entry to the Web API (POST /api/messagebook); the
     // stored answer (real id, real author, attached photograph) replaces the draft.
     if (this.apiLive) {
+      // MessageBook.ImageUrl is a short URL column, not a place to persist a large base64
+      // data URL. Store the optimized bytes through the existing multipart gallery API first.
+      let apiImageUrl = imageUrl || undefined;
+      if (apiImageUrl?.startsWith('data:') && apiImageUrl.length > 1024) {
+        apiImageUrl = (await this.uploadDataUrlForComment(apiImageUrl, text.slice(0, 80))) ?? undefined;
+      }
       const dto = await this.apiSend<ApiBookCommentDto>('POST', '/api/messagebook', {
         text,
         parentId: parentId ?? undefined,
-        imageUrl: imageUrl || undefined,
+        imageUrl: apiImageUrl,
       });
       if (dto) {
         const stored = this.bookCommentFromApi(dto);
+        if (!stored.imageUrl && imageUrl) stored.imageUrl = imageUrl;
         this.comments.update((list) => {
           const replace = (entries: CommunityComment[]): CommunityComment[] =>
             entries.map((entry) =>
@@ -7895,6 +7943,86 @@ export class CommunityService {
   // DEVICES USED (current sessions + up to 10 previous devices)
   // ---------------------------------------------------------------------------
 
+  /** Stable opaque id for this browser, scoped to the signed-in account. */
+  private currentDeviceId(
+    accountId: number | string = this.currentUser()?.id ?? this.profile()?.id ?? 'anonymous',
+  ): string {
+    const storageKey = `${DEVICE_ID_KEY_PREFIX}:${accountId}`;
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(storageKey) : null;
+      if (saved) return saved;
+      const created = this.generateDeviceId();
+      if (typeof localStorage !== 'undefined') localStorage.setItem(storageKey, created);
+      return created;
+    } catch {
+      return this.generateDeviceId();
+    }
+  }
+
+  private generateDeviceId(): string {
+    const cryptoApi = typeof crypto !== 'undefined' ? crypto : undefined;
+    if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+    if (cryptoApi?.getRandomValues) {
+      const bytes = cryptoApi.getRandomValues(new Uint8Array(16));
+      return `nb-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+    }
+    return `nb-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+  }
+
+  /** Registers this browser with the existing authenticated POST /api/devices endpoint. */
+  private async registerCurrentDevice(): Promise<void> {
+    if (!this.apiLive) return;
+    const userId = this.currentUser()?.id ?? this.profile()?.id;
+    if (userId == null) return;
+
+    const device = this.detectCurrentDevice(this.currentDeviceId());
+    const key = `${userId}:${device.id}`;
+    if (this.currentDeviceRegistrationKey === key) return;
+    if (this.currentDeviceRegistrationInFlight) {
+      if (this.currentDeviceRegistrationInFlight.key === key) {
+        await this.currentDeviceRegistrationInFlight.promise;
+        return;
+      }
+      await this.currentDeviceRegistrationInFlight.promise;
+    }
+
+    this.upsertCurrentDevice(device);
+    const promise = (async () => {
+      const dto = await this.apiSend<ApiDeviceDto>('POST', '/api/devices', {
+        id: device.id,
+        name: device.name,
+        type: device.type,
+        os: device.os,
+        browser: device.browser,
+        isCurrent: true,
+      });
+      if (!dto) return;
+
+      this.upsertCurrentDevice({ ...this.deviceFromApi(dto), isCurrent: true });
+      this.currentDeviceRegistrationKey = key;
+    })();
+    this.currentDeviceRegistrationInFlight = { key, promise };
+    try {
+      await promise;
+    } finally {
+      if (this.currentDeviceRegistrationInFlight?.key === key) {
+        this.currentDeviceRegistrationInFlight = null;
+      }
+    }
+  }
+
+  private upsertCurrentDevice(device: LoginDevice): void {
+    const accountId = this.currentUser()?.id ?? this.profile()?.id;
+    const anonymousDeviceId = accountId == null ? null : this.currentDeviceId('anonymous');
+    this.devices.update((list) => [
+      { ...device, isCurrent: true },
+      ...list
+        .filter((existing) => existing.id !== device.id && existing.id !== anonymousDeviceId)
+        .map((existing) => ({ ...existing, isCurrent: false })),
+    ]);
+    this.saveJson(DEVICES_KEY, this.devices());
+  }
+
   visibleDevices(): LoginDevice[] {
     const all = this.devices();
     const active = all.filter((d) => d.isActive && !d.blocked);
@@ -7964,42 +8092,69 @@ export class CommunityService {
     return { ...device, ipAddress: '', macAddress: '', location: '' };
   }
 
-  private detectCurrentDevice(): LoginDevice {
-    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-    let type: LoginDevice['type'] = 'Desktop';
-    let os = 'Desktop';
-    let name = 'This computer';
-    if (/iPad|Tablet/i.test(ua)) {
-      type = 'Tablet';
-      os = /iPad/.test(ua) ? 'iPadOS 18' : 'Android 15';
-      name = /iPad/.test(ua) ? 'iPad Air' : 'Android tablet';
-    } else if (/Mobile|iPhone|Android/i.test(ua)) {
-      type = 'Phone';
-      os = /iPhone/.test(ua) ? 'iOS 18' : 'Android 15';
-      name = /iPhone/.test(ua) ? 'iPhone' : 'Android phone';
-    } else if (/Mac/i.test(ua)) {
-      type = 'Laptop';
+  private detectCurrentDevice(deviceId = this.currentDeviceId()): LoginDevice {
+    const nav = typeof navigator !== 'undefined' ? navigator : null;
+    const ua = nav?.userAgent ?? '';
+    const userAgentData = nav as (Navigator & { userAgentData?: { mobile?: boolean; platform?: string } }) | null;
+    const platform = userAgentData?.userAgentData?.platform || nav?.platform || '';
+    const isIpad = /iPad/i.test(ua) || (/Macintosh/i.test(ua) && /Mobile/i.test(ua));
+    const isAndroidTablet = /Android/i.test(ua) && !/Mobile/i.test(ua);
+    const isMobile = userAgentData?.userAgentData?.mobile ?? /Mobile|iPhone|iPod/i.test(ua);
+    const type: LoginDevice['type'] =
+      isIpad || isAndroidTablet || /Tablet/i.test(ua)
+        ? 'Tablet'
+        : isMobile
+          ? 'Phone'
+          : /Mac/i.test(`${ua} ${platform}`)
+            ? 'Laptop'
+            : 'Desktop';
+
+    let os = 'Unknown OS';
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      const version = /OS ([\d_]+)/i.exec(ua)?.[1]?.replace(/_/g, '.');
+      os = version ? `iOS ${version}` : 'iOS';
+    } else if (/Android/i.test(ua)) {
+      const version = /Android ([\d.]+)/i.exec(ua)?.[1];
+      os = version ? `Android ${version}` : 'Android';
+    } else if (/Windows/i.test(`${ua} ${platform}`)) {
+      const version = /Windows NT ([\d.]+)/i.exec(ua)?.[1];
+      os = version === '10.0' ? 'Windows 10 / 11' : version ? `Windows ${version}` : 'Windows';
+    } else if (/Mac/i.test(`${ua} ${platform}`)) {
       os = 'macOS';
-      name = 'MacBook';
-    } else if (/Windows/i.test(ua)) {
-      type = 'Laptop';
-      os = 'Windows 11';
-      name = 'Windows laptop';
-    } else if (/Linux/i.test(ua)) {
-      type = 'Desktop';
+    } else if (/CrOS/i.test(ua)) {
+      os = 'ChromeOS';
+    } else if (/Linux/i.test(`${ua} ${platform}`)) {
       os = 'Linux';
-      name = 'Linux workstation';
     }
-    const browser = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+
+    const browser = /Edg\//i.test(ua)
+      ? 'Edge'
+      : /OPR\//i.test(ua)
+        ? 'Opera'
+        : /SamsungBrowser\//i.test(ua)
+          ? 'Samsung Internet'
+          : /Firefox\//i.test(ua)
+            ? 'Firefox'
+            : /CriOS\//i.test(ua)
+              ? 'Chrome'
+              : /Chrome\//i.test(ua)
+                ? 'Chrome'
+                : /Safari\//i.test(ua)
+                  ? 'Safari'
+                  : 'Browser';
+    const family = /iPhone/i.test(ua) ? 'iPhone' : isIpad ? 'iPad' : type;
+
     return {
-      id: 'device-current',
-      name: `${name} · ${browser}`,
+      id: deviceId,
+      name: `${family} · ${browser}`,
       type,
       os,
       browser,
-      ipAddress: this.stableIp('current'),
-      macAddress: this.stableMac('current'),
-      location: 'Kolkata, India',
+      // Browsers do not expose a real hardware MAC or network address. Never invent
+      // security-sensitive values; the API may fill the IP from its trusted request.
+      ipAddress: '',
+      macAddress: '',
+      location: '',
       lastSeenUtc: new Date().toISOString(),
       isCurrent: true,
       isActive: true,
@@ -8026,12 +8181,6 @@ export class CommunityService {
     for (let i = 0; i < seed.length; i++) h = (h * 33 + seed.charCodeAt(i)) >>> 0;
     const bytes = [0x02, (h >> 16) & 0xff, (h >> 8) & 0xff, h & 0xff, (h >> 24) & 0xff, (h >> 4) & 0xff];
     return bytes.map((b) => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
-  }
-
-  private stableIp(seed: string): string {
-    let h = 7;
-    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-    return `103.25.${(h >> 8) & 0xff}.${h & 0xff}`;
   }
 
   private loadJson<T>(key: string): T | null {
