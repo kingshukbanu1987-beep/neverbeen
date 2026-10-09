@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { Chess, type Square } from 'chess.js';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -106,7 +106,7 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
     PostAudienceControl,
   ],
   templateUrl: './profile.html',
-  styleUrl: './profile.css',
+  styleUrls: ['./profile.css', './profile-journey.css'],
 })
 export class CommunityProfile implements OnInit {
   protected readonly service = inject(CommunityService);
@@ -203,6 +203,36 @@ export class CommunityProfile implements OnInit {
   protected shareAudience: PostAudience = { mode: 'public', allowIds: [], denyIds: [] };
   protected readonly activeHashtag = signal<string | null>(null);
   protected readonly hashtagSuggestions = signal<{ tag: string; isNew: boolean }[]>([]);
+
+  /**
+   * Journey composer popup. The Journey feed shows only a one-line textarea; clicking it
+   * opens this popup, which carries the multiline text plus every posting option
+   * (audience, travel moods, photos, tags, destination).
+   */
+  protected readonly journeyComposerOpen = signal(false);
+  @ViewChild('journeyComposerPopupText') private journeyComposerPopupText?: ElementRef<HTMLTextAreaElement>;
+
+  /**
+   * Right rail column (tablet / laptop / wide screens): online companions on top,
+   * the member's Circles below. Only shown while the member's own Journey feed is open.
+   */
+  readonly showJourneyRightRail = computed(() => this.activeSection() === 'journey' && !this.viewingVisitor());
+
+  openJourneyComposerPopup(): void {
+    if (this.journeyComposerOpen()) return;
+    this.journeyComposerOpen.set(true);
+    setTimeout(() => {
+      const el = this.journeyComposerPopupText?.nativeElement;
+      if (!el) return;
+      el.focus();
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    });
+  }
+
+  closeJourneyComposerPopup(): void {
+    this.journeyComposerOpen.set(false);
+  }
   protected readonly birthdayView = signal<'day' | 'week' | 'month'>('day');
   protected readonly birthdayDrafts = signal<Record<number, string>>({});
   protected readonly editingPostId = signal<number | null>(null);
@@ -1306,7 +1336,9 @@ export class CommunityProfile implements OnInit {
   }
 
   applyHashtag(tag: string): void {
-    const input = document.querySelector<HTMLTextAreaElement>('.composer-textarea');
+    const input =
+      document.querySelector<HTMLTextAreaElement>('.composer-textarea-popup') ??
+      document.querySelector<HTMLTextAreaElement>('.composer-textarea');
     const cursor = input?.selectionStart ?? this.newJourneyText.length;
     const hit = hashtagAtCursor(this.newJourneyText, cursor);
     const start = hit?.start ?? this.newJourneyText.length;
@@ -1822,6 +1854,8 @@ export class CommunityProfile implements OnInit {
         wall ?? undefined,
       );
       if (!created) return;
+      // The post went through — close the composer popup (when open) and reset the form.
+      this.journeyComposerOpen.set(false);
       this.newJourneyText = '';
       this.postAudience = { mode: 'public', allowIds: [], denyIds: [] };
       this.hashtagSuggestions.set([]);
