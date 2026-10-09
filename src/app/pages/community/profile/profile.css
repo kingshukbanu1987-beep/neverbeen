@@ -446,51 +446,6 @@
   color: #10b981;
 }
 
-/* Quick stats row (companions / circles / photos) */
-.side-stats-chips {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-  width: 100%;
-  margin: 0.15rem 0 0.75rem;
-}
-
-.stat-chip {
-  background: transparent;
-  border: none;
-  border-radius: 16px;
-  padding: 0.5rem 0.2rem 0.42rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.12rem;
-  box-shadow: none;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.stat-chip:hover {
-  transform: translateY(-3px);
-}
-
-.stat-chip strong {
-  font-size: 1.02rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  background: linear-gradient(120deg, var(--ct-b1, #059669) 0%, var(--ct-b2, #0d9488) 55%, var(--ct-b3, #4f46e5) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.stat-chip span {
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ct-mu, #64748b);
-}
-
 .active-status-bar {
   display: inline-flex;
   align-items: center;

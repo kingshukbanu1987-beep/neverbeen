@@ -229,22 +229,6 @@
             <span>{{ service.profile()?.cityName || service.profile()?.city || 'Paris' }}, {{ service.profile()?.countryName || service.profile()?.country || 'France' }}</span>
           </p>
 
-          <!-- Quick stats: companions, circles, photos -->
-          <div class="side-stats-chips" aria-label="Profile statistics">
-            <div class="stat-chip">
-              <strong>{{ connectedCompanionsCount() }}</strong>
-              <span>Companions</span>
-            </div>
-            <div class="stat-chip">
-              <strong>{{ service.circles().length }}</strong>
-              <span>Circles</span>
-            </div>
-            <div class="stat-chip">
-              <strong>{{ myJourneyPostCount() }}</strong>
-              <span>Journey Posts</span>
-            </div>
-          </div>
-
           <!-- ACTIVE STATUS SELECTOR (Dropdown with pulsing Active indicator) -->
           <div class="active-status-bar">
             <div class="status-indicator-dot" [ngClass]="getStatusIconClass(service.currentUser()?.activeStatus)">

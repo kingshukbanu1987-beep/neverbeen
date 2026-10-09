@@ -1688,6 +1688,21 @@ describe('CommunityProfile', () => {
     expect(component['viewingVisitor']()).toBeNull();
   });
 
+  it('hides Companions, Circles and Journey Posts stats from the side panel above View Profile', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    const userCard = element.querySelector('.left-side-panel .user-card-summary');
+    expect(userCard).toBeTruthy();
+
+    // No quick stat chips are rendered in the user card above the View Profile button
+    expect(userCard!.querySelector('.side-stats-chips')).toBeNull();
+    expect(userCard!.querySelector('.stat-chip')).toBeNull();
+
+    // View Profile button is still shown in the same card
+    expect(userCard!.querySelector('.btn-side-view-profile')).toBeTruthy();
+  });
+
   it('removes Copy Link and Copy Profile Link buttons from user profiles (Requirement D)', () => {
     const fixture = create();
     const component = fixture.componentInstance;
