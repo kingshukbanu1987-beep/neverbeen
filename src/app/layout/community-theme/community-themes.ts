@@ -517,13 +517,12 @@ export class CommunityThemeService {
     const id = this.community.currentUser()?.id;
     return id === undefined || id === null ? 'guest' : String(id);
   });
-  readonly themeId = computed<CommunityThemeId>(() => {
-    const saved = this.choices()[this.userKey()];
-    if (saved) return communityTheme(saved).id;
-    // After login, Business Pro is the member's theme until they pick another.
-    if (this.userKey() !== 'guest') return 'business-pro';
-    return 'default';
-  });
+  /**
+   * Community themes are hidden: the Community always runs on the Default look.
+   * The choice is locked to Default for every member and guest, and any theme a
+   * member may have stored earlier is ignored.
+   */
+  readonly themeId = computed<CommunityThemeId>(() => 'default');
   readonly theme = computed(() => communityTheme(this.themeId()));
 
   constructor() {
@@ -536,23 +535,9 @@ export class CommunityThemeService {
     inject(DestroyRef).onDestroy(() => window.removeEventListener('storage', onStorage));
   }
 
-  select(id: CommunityThemeId): void {
-    if (!THEME_IDS.has(id)) return;
-    const key = this.userKey();
-    this.choices.update((c) => {
-      const next = { ...c };
-      // Guests have no stored choice when they pick Default. A signed-in member
-      // who explicitly picks Default must keep that choice — otherwise the
-      // post-login Business Pro default would snap back immediately.
-      if (id === 'default' && key === 'guest') delete next[key];
-      else next[key] = id;
-      return next;
-    });
-    try {
-      localStorage.setItem(COMMUNITY_THEME_KEY, JSON.stringify(this.choices()));
-    } catch {
-      /* storage full / unavailable — still applies for this visit */
-    }
+  /** Themes are locked to Default — selecting a theme no longer does anything. */
+  select(_id: CommunityThemeId): void {
+    /* Themes are hidden: the Community always keeps the Default look. */
   }
 
   /** Put the current theme on <html>; `animate` cross-fades colours while switching. */

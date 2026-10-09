@@ -65,15 +65,8 @@
           }
         </a>
       </nav>
-
-      <!-- Community theme dropdown, always at the top right. -->
-      <div class="theme-slot">
-        @defer (on immediate) {
-          <app-community-theme-picker />
-        } @placeholder {
-          <span class="theme-slot-placeholder" aria-hidden="true"></span>
-        }
-      </div>
+      <!-- Community themes are hidden: the Community always uses the Default look,
+           so there is no theme dropdown in the header anymore. -->
     </div>
   } @else {
     <div class="bar container" [class.compact-bar]="isCompactLogo()">

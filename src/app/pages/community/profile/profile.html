@@ -126,7 +126,7 @@
   </div>
 
   <!-- MAIN DASHBOARD: LEFT COLUMN + RIGHT WIDE PANEL -->
-  <div class="dashboard-columns">
+  <div class="dashboard-columns" [class.has-right-rail]="showJourneyRightRail()">
     <!-- LEFT COLUMN (Mobile slide-out drawer or desktop sidebar) -->
     <div class="left-column-wrapper" [class.mobile-open]="isMobileSidePanelOpen()">
       <!-- MAIN SIDE PANEL: User Info & Menu -->
@@ -759,130 +759,21 @@
             </header>
 
             <!-- FACEBOOK-LIKE TRAVEL POST COMPOSER -->
-            <div class="journey-composer-card">
-              <div class="composer-header">
-                <img
-                  [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
-                  [alt]="service.profile()?.fullName || 'Me'"
-                  class="composer-user-avatar clickable-user"
-                  [nbUserPreview]="service.profile()"
-                  (click)="openVisitorProfile(service.currentUser()?.id || 1)"
-                />
-                <div class="composer-author-info">
-                  <span class="composer-user-name clickable-user" [nbUserPreview]="service.profile()" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
-                    {{ service.profile()?.fullName || 'You' }}
-                  </span>
-                  <span class="composer-audience-badge">{{ composerAudienceLabel() }}</span>
-                </div>
-              </div>
-
+            <!-- Collapsed composer: only a one-line textarea is visible by default.
+                 Clicking it opens the full composer popup with every posting option
+                 (audience, travel moods, photos, tags, destination). -->
+            <div class="journey-composer-card journey-composer-collapsed">
               <textarea
                 [(ngModel)]="newJourneyText"
-                rows="3"
-                placeholder="What's on your travel mind? Use # to add a hashtag."
-                class="composer-textarea"
-                (input)="onJourneyTextInput($event)"
-                (click)="onJourneyTextInput($event)"
+                rows="1"
+                placeholder="What's on your travel mind? Click to post on your Journey…"
+                class="composer-input-line"
+                aria-label="Post to your Journey"
+                title="Click to open the Journey post composer"
+                (click)="openJourneyComposerPopup()"
+                (focus)="openJourneyComposerPopup()"
+                (keydown.enter)="$event.preventDefault(); openJourneyComposerPopup()"
               ></textarea>
-              @if (hashtagSuggestions().length) {
-                <div class="hashtag-suggest" role="listbox">
-                  @for (hit of hashtagSuggestions(); track hit.tag) {
-                    <button type="button" (click)="applyHashtag(hit.tag)">
-                      #{{ hit.tag }}
-                      @if (hit.isNew) { <small>New hashtag</small> }
-                    </button>
-                  }
-                </div>
-              }
-              <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="postAudience = $event" />
-
-              <!-- COMPOSER ACCESSORIES: Photo, Tag, Mood & Destination (Requirement A, B, C, F) -->
-              <div class="composer-accessory-row">
-                <label class="btn-tool-photo-label" title="Add Photos">
-                  📷 Add Photos
-                  <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" [disabled]="journeyPhotosProcessing()" class="hidden-file-input" />
-                </label>
-
-                <!-- REQUIREMENT C: Tag People button -->
-                <button
-                  type="button"
-                  class="btn-tool-tag"
-                  (click)="openTagPeopleModal('journey')"
-                  title="Tag companions in this post"
-                >
-                  🏷️ Tag People
-                  @if (selectedJourneyTaggedCompanions().length > 0) {
-                    <span class="tag-count-bubble">({{ selectedJourneyTaggedCompanions().length }})</span>
-                  }
-                </button>
-
-                <div class="accessory-item">
-                  <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" />
-                </div>
-
-                <ng-container *ngTemplateOutlet="destinationPicker" />
-              </div>
-
-              <!-- Tagged companions chips preview (Requirement C) -->
-              @if (selectedJourneyTaggedCompanions().length > 0) {
-                <div class="tagged-chips-strip">
-                  <span class="tagged-chips-label">With:</span>
-                  @for (tagged of selectedJourneyTaggedCompanions(); track tagged.id) {
-                    <span class="tagged-chip">
-                      {{ tagged.fullName }}
-                      <button type="button" class="btn-remove-tagged" (click)="removeTaggedCompanion(tagged.id, 'journey')" title="Remove">✕</button>
-                    </span>
-                  }
-                </div>
-              }
-
-              <!-- Journey Photo Attachment Previews (Requirement F: Multi-photo) -->
-              @if (journeyPhotoPreviews().length > 0) {
-                <div class="composer-multi-photos-preview">
-                  <div class="multi-photos-preview-grid">
-                    @for (photo of journeyPhotoPreviews(); track $index) {
-                      <div class="composer-photo-thumb-wrap">
-                        <img [src]="photo" alt="Attached photo preview" class="composer-preview-img-thumb" (click)="openImageModal(photo)" />
-                        <button type="button" class="btn-remove-thumb" (click)="removeJourneyPhoto($index)" title="Remove this photo">✕</button>
-                      </div>
-                    }
-                  </div>
-                  <div class="composer-photos-meta-line">
-                    <span class="composer-photos-count-lbl">{{ journeyPhotoPreviews().length }} {{ journeyPhotoPreviews().length === 1 ? 'photo' : 'photos' }} attached</span>
-                    <button type="button" class="btn-clear-all-thumbs" (click)="clearJourneyPhoto()">Clear all</button>
-                  </div>
-                </div>
-              } @else if (journeyPhotoPreview()) {
-                <div class="composer-photo-preview-wrap">
-                  <img [src]="journeyPhotoPreview()!" alt="Attached photo preview" class="composer-preview-img" />
-                  <button type="button" class="btn-remove-photo" (click)="clearJourneyPhoto()" title="Remove photo">✕</button>
-                </div>
-              }
-
-              <!-- Image upload error banner (Requirement A) -->
-              @if (journeyPhotoError()) {
-                <div class="composer-error-banner">
-                  ⚠️ {{ journeyPhotoError() }}
-                </div>
-              }
-
-              <!-- Destination validation message if unselected text entered -->
-              @if (destinationError()) {
-                <div class="destination-error-banner">
-                  ⚠️ {{ destinationError() }}
-                </div>
-              }
-
-              <div class="composer-footer">
-                <button
-                  type="button"
-                  class="btn-primary-action btn-post"
-                  [disabled]="!canSubmitJourney()"
-                  (click)="submitJourneyPost()"
-                >
-                  {{ postingJourney() ? 'Posting...' : 'Post to Journey' }}
-                </button>
-              </div>
             </div>
 
             <!-- JOURNEY WALL FEED LIST (Requirement F: Virtual scrolling / infinite scroll) -->
@@ -3592,6 +3483,88 @@
         }
       }
     </main>
+
+    <!-- ================================================================= -->
+    <!-- RIGHT RAIL COLUMN (tablet / laptop / wide screens, Journey view)  -->
+    <!-- Same width as the left side panel: 70% online companions,         -->
+    <!-- 30% the member's Circles (or Create Circle when none exist).      -->
+    <!-- ================================================================= -->
+    @if (showJourneyRightRail()) {
+      <aside class="right-rail-panel" aria-label="Online companions and travel circles">
+        <!-- TOP 70%: Companions who are online right now -->
+        <section class="rail-online-box">
+          <div class="rail-head">
+            <h3 class="rail-title">
+              <span class="rail-title-icon online" aria-hidden="true"></span>
+              Online Companions
+            </h3>
+            <span class="rail-count-badge" title="Companions online now">{{ service.onlineCompanions().length }}</span>
+          </div>
+          <div class="rail-online-list">
+            @for (comp of service.onlineCompanions(); track comp.id) {
+              <div class="rail-companion-row" (click)="openVisitorProfile(comp)" role="button" tabindex="0" (keydown.enter)="openVisitorProfile(comp)">
+                <div class="rail-avatar-wrap">
+                  <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="rail-avatar" [nbUserPreview]="comp" />
+                  <span class="rail-online-dot" title="Online now"></span>
+                </div>
+                <div class="rail-comp-info">
+                  <span class="rail-comp-name" [nbUserPreview]="comp">
+                    {{ comp.fullName }}
+                    @if (isAuthorVerified(comp)) {
+                      <span class="blue-verified-badge" title="Verified Account">
+                        <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                      </span>
+                    }
+                  </span>
+                  <span class="rail-comp-sub">{{ comp.city }}, {{ comp.country }}</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn-rail-chat"
+                  title="Message {{ comp.fullName }}"
+                  aria-label="Message {{ comp.fullName }}"
+                  (click)="$event.stopPropagation(); openChatWith(comp)"
+                >
+                  💬
+                </button>
+              </div>
+            } @empty {
+              <p class="rail-empty">No companions are online right now.</p>
+            }
+          </div>
+        </section>
+
+        <!-- BOTTOM 30%: Circles the member belongs to (Admin or Member) -->
+        <section class="rail-circles-box">
+          <div class="rail-head">
+            <h3 class="rail-title">Circles</h3>
+            <span class="rail-count-badge" title="Your circles">{{ service.myCircles().length }}</span>
+          </div>
+          <div class="rail-circles-list">
+            @for (circle of service.myCircles(); track circle.id) {
+              <div class="rail-circle-row" (click)="openCircleChat(circle, $event)" role="button" tabindex="0">
+                @if (circle.photoUrl) {
+                  <img class="circle-icon-badge circle-photo-badge" [src]="circle.photoUrl" [alt]="circle.name" />
+                } @else {
+                  <span class="circle-icon-badge" [style.background]="circle.color">{{ circle.icon }}</span>
+                }
+                <div class="circle-info-mini">
+                  <span class="circle-name-mini">{{ circle.name }}</span>
+                  <span class="circle-meta-mini">{{ isCircleAdmin(circle) ? 'Admin' : 'Member' }} · {{ circle.memberIds.length }} members</span>
+                </div>
+              </div>
+            } @empty {
+              <div class="rail-circles-empty">
+                <p>You are not part of any Circle yet.</p>
+                <button type="button" class="btn-primary-action btn-create-circle-rail" (click)="openCreateCircleModal()">
+                  + Create Circle
+                </button>
+              </div>
+            }
+          </div>
+        </section>
+      </aside>
+    }
   </div>
 
   <!-- FLOATING MESSENGER CHAT DOCK (Max 5 open popup boxes at bottom right - Requirements J & K) -->
@@ -5612,6 +5585,204 @@
         <div class="lightbox-caption">
           <h3>{{ enlargedCoverUser() || 'Traveler' }}'s Cover Photo</h3>
           <p>NeverBeen Community Header Panorama</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================================================================= -->
+  <!-- JOURNEY COMPOSER POPUP                                            -->
+  <!-- Opens from the one-line Journey textarea. Carries the full post   -->
+  <!-- form: multiline text plus Who can see this, Travel Moods, Add     -->
+  <!-- Photos, Tag People and Destination options.                       -->
+  <!-- ================================================================= -->
+  @if (journeyComposerOpen()) {
+    <div
+      class="modal-backdrop-overlay journey-composer-overlay"
+      (click)="closeJourneyComposerPopup()"
+      (window:keydown.escape)="closeJourneyComposerPopup()"
+    >
+      <div class="modal-dialog-card journey-composer-modal-card" (click)="$event.stopPropagation()">
+        <header class="modal-head">
+          <h3 class="modal-head-title">Create Journey post</h3>
+          <button type="button" class="btn-close-modal" (click)="closeJourneyComposerPopup()" aria-label="Close composer">✕</button>
+        </header>
+
+        <div class="modal-body-content journey-composer-modal-body">
+          <div class="composer-header">
+            <img
+              [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
+              [alt]="service.profile()?.fullName || 'Me'"
+              class="composer-user-avatar clickable-user"
+              [nbUserPreview]="service.profile()"
+              (click)="openVisitorProfile(service.currentUser()?.id || 1)"
+            />
+            <div class="composer-author-info">
+              <span class="composer-user-name clickable-user" [nbUserPreview]="service.profile()" (click)="openVisitorProfile(service.currentUser()?.id || 1)">
+                {{ service.profile()?.fullName || 'You' }}
+              </span>
+              <span class="composer-audience-badge">{{ composerAudienceLabel() }}</span>
+            </div>
+          </div>
+
+          <textarea
+            #journeyComposerPopupText
+            [(ngModel)]="newJourneyText"
+            rows="4"
+            placeholder="What's on your travel mind? Use # to add a hashtag."
+            class="composer-textarea composer-textarea-popup"
+            (input)="onJourneyTextInput($event)"
+            (click)="onJourneyTextInput($event)"
+          ></textarea>
+          @if (hashtagSuggestions().length) {
+            <div class="hashtag-suggest" role="listbox">
+              @for (hit of hashtagSuggestions(); track hit.tag) {
+                <button type="button" (click)="applyHashtag(hit.tag)">
+                  #{{ hit.tag }}
+                  @if (hit.isNew) { <small>New hashtag</small> }
+                </button>
+              }
+            </div>
+          }
+          <app-post-audience [audience]="postAudience" [companions]="connectedCompanions()" [people]="audienceCandidates()" (audienceChange)="postAudience = $event" />
+
+          <!-- COMPOSER ACCESSORIES: Photo, Tag, Mood & Destination -->
+          <div class="composer-accessory-row">
+            <label class="btn-tool-photo-label" title="Add Photos">
+              📷 Add Photos
+              <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" [disabled]="journeyPhotosProcessing()" class="hidden-file-input" />
+            </label>
+
+            <button
+              type="button"
+              class="btn-tool-tag"
+              (click)="openTagPeopleModal('journey')"
+              title="Tag companions in this post"
+            >
+              🏷️ Tag People
+              @if (selectedJourneyTaggedCompanions().length > 0) {
+                <span class="tag-count-bubble">({{ selectedJourneyTaggedCompanions().length }})</span>
+              }
+            </button>
+
+            <div class="accessory-item">
+              <app-mood-picker [value]="selectedMood" (valueChange)="selectedMood = $event" />
+            </div>
+
+            <!-- Destination picker (inlined: the #destinationPicker template is
+                 scoped to the section panes and cannot be reached from this popup) -->
+            <div class="accessory-item destination-autocomplete-wrapper">
+              <div class="dest-field-inline">
+                <span class="accessory-lbl dest-lbl-nowrap"><span class="dest-pin-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> Destination:</span>
+                @if (selectedGoogleLocation()) {
+                  <div class="selected-google-dest-pill">
+                    <span class="gmap-pin"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span>
+                    <span class="dest-text">{{ selectedGoogleLocation()!.name }}, {{ selectedGoogleLocation()!.country }}</span>
+                    <span class="gmap-badge">Verified Google Maps</span>
+                    <button type="button" class="btn-clear-dest" (click)="clearSelectedGoogleLocation()" title="Remove location">✕</button>
+                  </div>
+                } @else {
+                  <div class="dest-search-input-box">
+                    <input
+                      type="text"
+                      [(ngModel)]="destinationSearchInput"
+                      (input)="onDestinationSearchInput()"
+                      (focus)="onDestinationSearchFocus()"
+                      placeholder="Add Destination Tag (Type to auto-search Google Maps API)..."
+                      class="input-location-tag"
+                      aria-label="Destination"
+                    />
+                  </div>
+                }
+              </div>
+              @if (showDestinationDropdown() && destinationSuggestions().length > 0) {
+                <div class="google-maps-dropdown">
+                  <div class="gmaps-header-bar">
+                    <svg viewBox="0 0 24 24" class="gmap-icon-svg" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                      <line x1="8" y1="2" x2="8" y2="18"></line>
+                      <line x1="16" y1="6" x2="16" y2="18"></line>
+                    </svg>
+                    <span>Google Maps Suggestions (Click to select)</span>
+                  </div>
+                  <div class="gmaps-suggestions-scroll">
+                    @for (loc of destinationSuggestions(); track loc.placeId) {
+                      <div class="gmap-suggestion-row" (click)="selectGoogleLocation(loc)">
+                        <span class="gmap-pin-red"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /></span>
+                        <div class="gmap-loc-info">
+                          <strong class="loc-name">{{ loc.name }}</strong>
+                          <span class="loc-address">{{ loc.formattedAddress }}</span>
+                        </div>
+                        <span class="loc-category-badge">{{ loc.category || 'Destination' }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Tagged companions chips preview -->
+          @if (selectedJourneyTaggedCompanions().length > 0) {
+            <div class="tagged-chips-strip">
+              <span class="tagged-chips-label">With:</span>
+              @for (tagged of selectedJourneyTaggedCompanions(); track tagged.id) {
+                <span class="tagged-chip">
+                  {{ tagged.fullName }}
+                  <button type="button" class="btn-remove-tagged" (click)="removeTaggedCompanion(tagged.id, 'journey')" title="Remove">✕</button>
+                </span>
+              }
+            </div>
+          }
+
+          <!-- Journey Photo Attachment Previews (multi-photo) -->
+          @if (journeyPhotoPreviews().length > 0) {
+            <div class="composer-multi-photos-preview">
+              <div class="multi-photos-preview-grid">
+                @for (photo of journeyPhotoPreviews(); track $index) {
+                  <div class="composer-photo-thumb-wrap">
+                    <img [src]="photo" alt="Attached photo preview" class="composer-preview-img-thumb" (click)="openImageModal(photo)" />
+                    <button type="button" class="btn-remove-thumb" (click)="removeJourneyPhoto($index)" title="Remove this photo">✕</button>
+                  </div>
+                }
+              </div>
+              <div class="composer-photos-meta-line">
+                <span class="composer-photos-count-lbl">{{ journeyPhotoPreviews().length }} {{ journeyPhotoPreviews().length === 1 ? 'photo' : 'photos' }} attached</span>
+                <button type="button" class="btn-clear-all-thumbs" (click)="clearJourneyPhoto()">Clear all</button>
+              </div>
+            </div>
+          } @else if (journeyPhotoPreview()) {
+            <div class="composer-photo-preview-wrap">
+              <img [src]="journeyPhotoPreview()!" alt="Attached photo preview" class="composer-preview-img" />
+              <button type="button" class="btn-remove-photo" (click)="clearJourneyPhoto()" title="Remove photo">✕</button>
+            </div>
+          }
+
+          <!-- Image upload error banner -->
+          @if (journeyPhotoError()) {
+            <div class="composer-error-banner">
+              ⚠️ {{ journeyPhotoError() }}
+            </div>
+          }
+
+          <!-- Destination validation message if unselected text entered -->
+          @if (destinationError()) {
+            <div class="destination-error-banner">
+              ⚠️ {{ destinationError() }}
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer-bar journey-composer-modal-footer">
+          <button type="button" class="btn-secondary-action" (click)="closeJourneyComposerPopup()">Cancel</button>
+          <button
+            type="button"
+            class="btn-primary-action btn-post"
+            [disabled]="!canSubmitJourney()"
+            (click)="submitJourneyPost()"
+          >
+            {{ postingJourney() ? 'Posting...' : 'Post to Journey' }}
+          </button>
         </div>
       </div>
     </div>

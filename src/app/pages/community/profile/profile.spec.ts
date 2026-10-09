@@ -157,6 +157,9 @@ describe('CommunityProfile', () => {
     const fixture = create();
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
+    // The full composer (with Travel Moods) lives in the Journey composer popup.
+    fixture.componentInstance.openJourneyComposerPopup();
+    fixture.detectChanges();
     expect(element.querySelector('label[for="journey-travel-mood"]')?.textContent).toContain('Travel Mood');
     const moods = TRAVEL_MOOD_GROUPS.flatMap((group) => [...group.moods]);
     expect(TRAVEL_MOOD_GROUPS.length).toBe(80);
@@ -806,6 +809,9 @@ describe('CommunityProfile', () => {
     const element: HTMLElement = fixture.nativeElement;
 
     component.setSection('journey');
+    fixture.detectChanges();
+    // Destination lives in the Journey composer popup, opened from the one-line textarea.
+    component.openJourneyComposerPopup();
     fixture.detectChanges();
 
     // In composer: destination wrapper contains inline field with pin and text
@@ -1479,6 +1485,9 @@ describe('CommunityProfile', () => {
     // -------------------------------------------------------------------------
     component.closeVisitorProfile();
     component.setSection('journey');
+    fixture.detectChanges();
+    // Photo attachments are managed in the Journey composer popup.
+    component.openJourneyComposerPopup();
     fixture.detectChanges();
 
     // Create 2 mock files under 100 KB
@@ -2336,6 +2345,9 @@ describe('CommunityProfile', () => {
     const component = fixture.componentInstance;
     const element: HTMLElement = fixture.nativeElement;
     component.setSection('journey');
+    fixture.detectChanges();
+    // The Add Photos tool sits in the Journey composer popup.
+    component.openJourneyComposerPopup();
     fixture.detectChanges();
     expect(element.querySelector('.btn-tool-photo-label')?.textContent).toContain('Add Photos');
     expect(element.querySelector('.btn-tool-photo-label')?.textContent).not.toContain('Max 100 KB');

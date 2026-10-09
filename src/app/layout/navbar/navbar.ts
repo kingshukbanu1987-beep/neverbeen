@@ -4,7 +4,6 @@ import { NgOptimizedImage } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { SiteConfigService } from '../../services/site-config.service';
 import { CommunityBadgeService } from '../../services/community-badge.service';
-import { CommunityThemePicker } from '../community-theme/community-theme-picker';
 import { CommunitySearchBox } from '../community-search/community-search-box';
 
 interface NavLink {
@@ -17,7 +16,7 @@ interface NavLink {
 
 @Component({
   selector: 'app-navbar',
-  imports: [NgOptimizedImage, RouterLink, RouterLinkActive, CommunityThemePicker, CommunitySearchBox],
+  imports: [NgOptimizedImage, RouterLink, RouterLinkActive, CommunitySearchBox],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })

@@ -2,14 +2,12 @@ import { Component } from '@angular/core';
 import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
-import { COMMUNITY_THEMES, COMMUNITY_THEME_KEY, CommunityThemeService, communityTheme, communityThemeArtwork } from './community-themes';
-import { CommunityService, TOKEN_KEY, deleteCookie } from '../../services/community.service';
-import { openDemoAccount } from '../../services/community-demo.testing';
+import { COMMUNITY_THEME_KEY, CommunityThemeService, communityTheme, communityThemeArtwork } from './community-themes';
+import { deleteCookie, TOKEN_KEY } from '../../services/community.service';
 
 @Component({ template: '' })
 class Blank {}
 
-const text = (el: Element | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 const root = () => document.documentElement;
 
 async function navbarAt(url: string) {
@@ -28,20 +26,12 @@ async function navbarAt(url: string) {
   const router = TestBed.inject(Router);
   await router.navigateByUrl(url);
   fixture.detectChanges();
-  await renderDefer(fixture);
+  for (const block of await fixture.getDeferBlocks()) await block.render(DeferBlockState.Complete);
+  fixture.detectChanges();
   return { fixture, router, el: fixture.nativeElement as HTMLElement };
 }
 
-async function renderDefer(fixture: { detectChanges: () => void; getDeferBlocks: () => Promise<{ render: (s: DeferBlockState) => Promise<void> }[]> }) {
-  for (const block of await fixture.getDeferBlocks()) await block.render(DeferBlockState.Complete);
-  fixture.detectChanges();
-}
-
-function openPicker(el: HTMLElement) {
-  (el.querySelector('.ctp-trigger') as HTMLButtonElement).click();
-}
-
-describe('Community theme dropdown', () => {
+describe('Community themes (hidden)', () => {
   beforeEach(() => {
     localStorage.clear();
     deleteCookie(TOKEN_KEY);
@@ -49,272 +39,52 @@ describe('Community theme dropdown', () => {
     root().removeAttribute('data-ctheme-mode');
   });
 
-  it('is shown in the header on Community pages only, with Default selected', async () => {
+  it('shows no theme dropdown in the Community header — Default is the only look', async () => {
     const { el, fixture, router } = await navbarAt('/community/message-book');
-    const trigger = el.querySelector('.theme-slot .ctp-trigger');
-    expect(trigger).toBeTruthy();
-    expect(text(trigger)).toContain('Default');
+    expect(el.querySelector('.theme-slot')).toBeNull();
+    expect(el.querySelector('.ctp-trigger')).toBeNull();
+    expect(el.querySelector('.ctp-panel')).toBeNull();
+    // The Community always renders with the Default look (no theme attribute).
+    expect(root().hasAttribute('data-ctheme')).toBe(false);
+
+    await router.navigateByUrl('/community/profile');
+    fixture.detectChanges();
+    expect(el.querySelector('.theme-slot')).toBeNull();
+    expect(el.querySelector('.ctp-trigger')).toBeNull();
     expect(root().hasAttribute('data-ctheme')).toBe(false);
 
     await router.navigateByUrl('/collection');
     fixture.detectChanges();
     expect(el.querySelector('.theme-slot')).toBeNull();
     expect(el.querySelector('.ctp-trigger')).toBeNull();
-
-    // The Community sign-in page keeps the website header — no theme picker there either.
-    await router.navigateByUrl('/community');
-    fixture.detectChanges();
-    expect(el.querySelector('.theme-slot')).toBeNull();
-    expect(el.querySelector('.ctp-trigger')).toBeNull();
   });
 
-  it('lists all thirty-eight themes with their colours and audience, Default first', async () => {
-    const { el, fixture } = await navbarAt('/community/profile');
-    openPicker(el);
-    fixture.detectChanges();
-    const options = Array.from(el.querySelectorAll<HTMLButtonElement>('.ctp-panel [role="option"]'));
-    expect(options.map((o) => o.dataset['theme'])).toEqual(COMMUNITY_THEMES.map((t) => t.id));
-    const names = options.map((o) => text(o.querySelector('.ctp-option-text b')).replace(/^\W+/u, ''));
-    expect(names).toEqual([
-      'Default',
-      'Winter Wonderland',
-      'City Explorer',
-      'Green Nature',
-      'Travel Classic',
-      'Midnight',
-      'Cherry Blossom',
-      'Tropical Paradise',
-      'Mountain Escape',
-      'Ocean Breeze',
-      'Dreamscape',
-      'Boarding Pass',
-      'Cosmic',
-      'Pixel World',
-      'Social Snap',
-      'Retro 90s',
-      'Graffiti',
-      'Fantasy',
-      'Disney World',
-      'Peppa Pig',
-      'Dino World',
-      'Unicorn Magic',
-      'Japanese Aesthetic',
-      'Haunted House',
-      'Spooky Night',
-      'Disco Diva',
-      'Minions',
-      "Santa's Village",
-      'KPop Demon Hunters',
-      'Fashion Editor',
-      'SpongeBob SquarePants',
-      'Business Pro',
-      'iOS-inspired',
-      'Digital Earth',
-      'Aurora',
-      'Galactic Void',
-      'Digital DNA',
-      'Football Arena',
-    ]);
-    const byId = (id: string) => text(options.find((o) => o.dataset['theme'] === id));
-    expect(byId('winter-wonderland')).toContain('Snow destinations');
-    expect(byId('city-explorer')).toContain('Urban travelers');
-    expect(byId('travel-classic')).toContain('Clean, professional profile');
-    expect(byId('ocean-breeze')).toContain('Beach & island travelers');
-    expect(byId('boarding-pass')).toContain('Aviation-inspired');
-    expect(byId('japanese-aesthetic')).toContain('Quiet, mindful');
-    expect(byId('haunted-house')).toContain('gothic mansion');
-    expect(byId('spooky-night')).toContain('spookiest night');
-    expect(byId('disco-diva')).toContain('dance floor');
-    expect(byId('minions')).toContain('goofy fun');
-    expect(byId('santas-village')).toContain('Reindeer, Santa');
-    expect(byId('kpop-demon-hunters')).toContain('supernatural');
-    expect(byId('fashion-editor')).toContain('Runway-ready');
-    expect(byId('spongebob')).toContain('Boo-yeah');
-    expect(byId('business-pro')).toContain('Polished, structured');
-    expect(byId('ios-inspired')).toContain('Apple-style');
-    expect(byId('digital-earth')).toContain('world from above');
-    expect(byId('aurora')).toContain('polar glow');
-    expect(byId('galactic-void')).toContain('endless void');
-    expect(byId('digital-dna')).toContain('Sequenced for');
-    expect(byId('football-arena')).toContain('Match-day');
-    expect(options[0].getAttribute('aria-selected')).toBe('true');
-    expect(options.filter((o) => o.classList.contains('is-selected')).length).toBe(1);
-  });
-
-  it('filters themes as the member types and applies the clicked match', async () => {
-    const { el, fixture } = await navbarAt('/community/profile');
-    openPicker(el);
-    fixture.detectChanges();
-
-    const search = el.querySelector('.ctp-search') as HTMLInputElement;
-    expect(search).toBeTruthy();
-
-    const visible = () =>
-      Array.from(el.querySelectorAll<HTMLButtonElement>('.ctp-panel [role="option"]')).map(
-        (o) => o.dataset['theme'],
-      );
-    expect(visible().length).toBe(38);
-
-    // Typing narrows the list to matching themes (name / palette / audience).
-    search.value = 'midn';
-    search.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    expect(visible()).toEqual(['midnight', 'santas-village']);
-
-    // Clicking a match applies it and closes the picker.
-    (el.querySelector('[data-theme="midnight"]') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(root().getAttribute('data-ctheme')).toBe('midnight');
-    expect(el.querySelector('.ctp-panel')).toBeNull();
-
-    // A query with no match shows the empty state with a reset action.
-    // (Re-open the picker — the panel DOM, incl. the search input, is recreated.)
-    openPicker(el);
-    fixture.detectChanges();
-    const search2 = el.querySelector('.ctp-search') as HTMLInputElement;
-    search2.value = 'zzzz-no-theme';
-    search2.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    expect(visible().length).toBe(0);
-    expect(el.querySelector('.ctp-no-results')).toBeTruthy();
-    (el.querySelector('.ctp-no-results button') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(visible().length).toBe(38);
-  });
-
-  it('applies a picked theme immediately, remembers it, and reverts to Default outside the Community', async () => {
-    const { el, fixture, router } = await navbarAt('/community/profile');
-    openPicker(el);
-    fixture.detectChanges();
-    (el.querySelector('[data-theme="midnight"]') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    expect(root().getAttribute('data-ctheme')).toBe('midnight');
-    expect(root().getAttribute('data-ctheme-mode')).toBe('dark');
-    expect(el.querySelector('.ctp-panel')).toBeNull();
-    expect(text(el.querySelector('.ctp-trigger'))).toContain('Midnight');
-    expect(JSON.parse(localStorage.getItem(COMMUNITY_THEME_KEY)!)).toEqual({ guest: 'midnight' });
-    // The token sheet for the theme is on the page.
-    const sheets = Array.from(document.querySelectorAll('style')).map((s) => s.textContent ?? '');
-    expect(sheets.some((s) => /data-ctheme=["']?midnight/.test(s) && s.includes('--ct-sf'))).toBe(true);
-
-    // Profile / Message Book keep it…
-    await router.navigateByUrl('/community/message-book');
-    fixture.detectChanges();
-    expect(root().getAttribute('data-ctheme')).toBe('midnight');
-
-    // …leaving the Community via the header restores the website's default look.
-    await router.navigateByUrl('/');
-    fixture.detectChanges();
-    expect(root().hasAttribute('data-ctheme')).toBe(false);
-    expect(root().hasAttribute('data-ctheme-mode')).toBe(false);
-
-    // Coming back re-applies the member's theme.
-    await router.navigateByUrl('/profile');
-    fixture.detectChanges();
-    await renderDefer(fixture);
-    expect(root().getAttribute('data-ctheme')).toBe('midnight');
-
-    // Choosing Default again removes it.
-    openPicker(el);
-    fixture.detectChanges();
-    (el.querySelector('[data-theme="default"]') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(root().hasAttribute('data-ctheme')).toBe(false);
-    expect(JSON.parse(localStorage.getItem(COMMUNITY_THEME_KEY)!)).toEqual({});
-  });
-
-  it('provides local artwork for every non-default theme and renders decorative previews', async () => {
-    const { el, fixture } = await navbarAt('/community/profile');
-    openPicker(el);
-    fixture.detectChanges();
-    expect(new Set(COMMUNITY_THEMES.map((t) => t.id)).size).toBe(38);
-    expect(communityThemeArtwork('default')).toBeNull();
-    expect(el.querySelector('[data-theme="default"] img')).toBeNull();
-    for (const theme of COMMUNITY_THEMES.slice(1)) {
-      const preview = el.querySelector(`[data-theme="${theme.id}"] .ctp-scene-preview`);
-      expect(preview?.getAttribute('src')).toBe(communityThemeArtwork(theme.id));
-      expect(preview?.getAttribute('alt')).toBe('');
-    }
-  });
-
-  it('applies and persists every new world, including the correct light or dark mode', async () => {
-    const { el, fixture } = await navbarAt('/community/profile');
-    for (const theme of COMMUNITY_THEMES.slice(33)) {
-      openPicker(el);
-      fixture.detectChanges();
-      (el.querySelector(`[data-theme="${theme.id}"]`) as HTMLButtonElement).click();
-      fixture.detectChanges();
-      expect(root().getAttribute('data-ctheme')).toBe(theme.id);
-      expect(root().getAttribute('data-ctheme-mode')).toBe(theme.mode);
-      expect(JSON.parse(localStorage.getItem(COMMUNITY_THEME_KEY)!)).toEqual({ guest: theme.id });
-    }
-    openPicker(el);
-    fixture.detectChanges();
-    (el.querySelector('[data-theme="default"]') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(root().hasAttribute('data-ctheme')).toBe(false);
-    expect(root().hasAttribute('data-ctheme-mode')).toBe(false);
-  });
-
-  it('restores a saved new theme on load and ignores unrecognized theme IDs', async () => {
-    localStorage.setItem(COMMUNITY_THEME_KEY, JSON.stringify({ guest: 'cosmic', invalid: 'not-a-theme' }));
-    const { el } = await navbarAt('/community/profile');
-    expect(root().getAttribute('data-ctheme')).toBe('cosmic');
-    expect(text(el.querySelector('.ctp-trigger'))).toContain('Cosmic');
-    expect(communityTheme('not-a-theme').id).toBe('default');
-  });
-
-  it('keeps a separate theme per member', async () => {
-    const { el, fixture } = await navbarAt('/community/profile');
-    const community = TestBed.inject(CommunityService);
+  it('keeps the Default theme even when a different theme was stored earlier', async () => {
+    localStorage.setItem(COMMUNITY_THEME_KEY, JSON.stringify({ guest: 'midnight' }));
+    TestBed.configureTestingModule({});
     const themes = TestBed.inject(CommunityThemeService);
-    openDemoAccount(community, 'active_member');
-    const id = String(community.currentUser()!.id);
-    fixture.detectChanges();
-
-    openPicker(el);
-    fixture.detectChanges();
-    (el.querySelector('[data-theme="cherry-blossom"]') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(root().getAttribute('data-ctheme')).toBe('cherry-blossom');
-    expect(root().getAttribute('data-ctheme-mode')).toBe('light');
-    expect(JSON.parse(localStorage.getItem(COMMUNITY_THEME_KEY)!)[id]).toBe('cherry-blossom');
-
-    community.logout();
-    fixture.detectChanges();
-    expect(themes.userKey()).toBe('guest');
+    expect(themes.themeId()).toBe('default');
+    expect(themes.theme().id).toBe('default');
+    themes.apply();
     expect(root().hasAttribute('data-ctheme')).toBe(false);
-    expect(text(el.querySelector('.ctp-trigger'))).toContain('Default');
-
-    openDemoAccount(community, 'active_member');
-    fixture.detectChanges();
-    expect(root().getAttribute('data-ctheme')).toBe('cherry-blossom');
+    expect(root().hasAttribute('data-ctheme-mode')).toBe(false);
   });
 
-  it('dropdown is keyboard friendly: arrows move between themes, Escape closes and returns focus', async () => {
-    const { el, fixture } = await navbarAt('/community/profile');
-    const trigger = el.querySelector('.ctp-trigger') as HTMLButtonElement;
-    expect(trigger.getAttribute('aria-haspopup')).toBe('listbox');
-    trigger.click();
-    fixture.detectChanges();
-    expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    const options = Array.from(el.querySelectorAll<HTMLButtonElement>('.ctp-option'));
-    options[0].focus();
-    el.querySelector('.ctp-panel')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-    expect(document.activeElement).toBe(options[1]);
-    el.querySelector('.ctp-panel')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
-    expect(document.activeElement).toBe(options[options.length - 1]);
+  it('ignores theme selections — the choice is locked to Default', async () => {
+    TestBed.configureTestingModule({});
+    const themes = TestBed.inject(CommunityThemeService);
+    themes.select('midnight');
+    expect(themes.themeId()).toBe('default');
+    themes.apply(true);
+    expect(root().hasAttribute('data-ctheme')).toBe(false);
+    expect(root().hasAttribute('data-ctheme-mode')).toBe(false);
+    themes.select('default');
+    expect(themes.themeId()).toBe('default');
+  });
 
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    fixture.detectChanges();
-    expect(el.querySelector('.ctp-panel')).toBeNull();
-
-    // Clicking outside also closes it.
-    trigger.click();
-    fixture.detectChanges();
-    document.body.click();
-    fixture.detectChanges();
-    expect(el.querySelector('.ctp-panel')).toBeNull();
+  it('falls back to Default for unknown ids and has no artwork for it', () => {
+    expect(communityTheme('not-a-theme').id).toBe('default');
+    expect(communityTheme(null).id).toBe('default');
+    expect(communityThemeArtwork('default')).toBeNull();
   });
 });

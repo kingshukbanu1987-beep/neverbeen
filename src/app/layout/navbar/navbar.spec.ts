@@ -191,7 +191,8 @@ describe('Navbar', () => {
     expect(element.querySelector('nav#site-nav')).toBeNull();
     expect(element.querySelector('button.menu')).toBeNull();
 
-    // …and the new header carries the three icon shortcuts + the theme dropdown at the top right.
+    // …and the new header carries the three icon shortcuts. The theme dropdown is
+    // hidden: the Community always uses the Default look.
     expect(element.querySelector('.ch-brand')).toBeTruthy();
     const shortcuts = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav#ch-nav a'));
     expect(shortcuts.map((a) => a.getAttribute('href'))).toEqual([
@@ -202,7 +203,8 @@ describe('Navbar', () => {
     expect(shortcuts[0].querySelector('use')?.getAttribute('href')).toBe('#nb-icon-home');
     expect(shortcuts[1].querySelector('use')?.getAttribute('href')).toBe('#nb-icon-bell');
     expect(shortcuts[2].querySelector('use')?.getAttribute('href')).toBe('#nb-icon-message-square');
-    expect(element.querySelector('nav#ch-nav ~ .theme-slot')).not.toBeNull();
+    expect(element.querySelector('.theme-slot')).toBeNull();
+    expect(element.querySelector('app-community-theme-picker')).toBeNull();
 
     // Same replacement on member profile pages.
     component['currentUrl'].set('/profile?id=89201534010000000101');
