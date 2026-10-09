@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import {
   Observable,
@@ -608,6 +608,8 @@ export interface ApiFollowDto {
   fullName?: string | null;
   profilePhotoUrl?: string | null;
   profession?: string | null;
+  country?: string | null;
+  city?: string | null;
   followedAtUtc?: string;
 }
 
@@ -716,6 +718,7 @@ function withApiTimeout<T>(source: Observable<T>, url: string, ms = API_TIMEOUT_
 })
 export class CommunityService {
   private readonly http = inject(HttpClient, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
   /** Admin Console moderation — accounts disabled by an admin are hidden from the community. */
   private readonly moderation = inject(AdminModerationService);
   /**
@@ -897,6 +900,7 @@ export class CommunityService {
   );
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.stopLiveUpdates());
     const existingCookieToken = getCookie(TOKEN_KEY);
     if (existingCookieToken && !isDemoSessionToken(existingCookieToken)) {
       // A real member session always supersedes guest browsing: the seeded demo community
@@ -1325,6 +1329,33 @@ export class CommunityService {
     void this.apiSend<unknown>(method, path, body);
   }
 
+  /** Like apiSend, but also says why a write failed (the API's own message when it gave one). */
+  private async apiSendReporting<T>(
+    method: 'POST' | 'PUT' | 'DELETE',
+    path: string,
+    body?: unknown,
+  ): Promise<{ data: T | null; error: string | null }> {
+    if (!this.http || !this.apiLive) return { data: null, error: 'Sign in to save this.' };
+    const url = this.apiEndpoint(path);
+    try {
+      const data = await firstValueFrom(
+        withApiTimeout(
+          this.http.request<T>(method, url, {
+            headers: this.authHeaders(),
+            body: body === undefined ? null : body,
+          }),
+          url,
+        ),
+      );
+      this.apiOnline.set(true);
+      return { data, error: null };
+    } catch (error) {
+      if (this.isNetworkError(error)) this.apiOnline.set(false);
+      this.logApiFailure(`${method} ${path}`, url, error);
+      return { data: null, error: this.apiErrorMessage(error, 'The change could not be saved') };
+    }
+  }
+
   /** Parses a structured About-me JSON payload the Web API stores as a string. */
   private static parseAboutMeDetails(json?: string | null): AboutMeDetails | undefined {
     if (!json) return undefined;
@@ -1560,6 +1591,7 @@ export class CommunityService {
     if (!this.http || !this.apiLive) return;
     const me = this.currentUser()?.id ?? this.profile()?.id;
     if (!me) return;
+    this.startLiveUpdates();
 
     const [companions, followsCounts, followers, following, circles, journey, book, conversations, notifications, gallery, albums, devices, blocks, hidden, reports] =
       await Promise.all([
@@ -2740,6 +2772,7 @@ export class CommunityService {
       this.currentUser.set({ ...u, activeStatus: 'Inactive' });
     }
     deleteCookie(TOKEN_KEY);
+    this.stopLiveUpdates();
     this.token.set(null);
     this.currentUser.set(null);
     this.profile.set(null);
@@ -3538,7 +3571,7 @@ export class CommunityService {
         id: user?.id ?? 1,
         fullName: user?.fullName || 'NeverBeen Traveler',
         profession: this.profile()?.profession || 'Member',
-        profilePhotoUrl: user?.profilePhotoUrl,
+        profilePhotoUrl: this.memberPhotoUrl() || undefined,
       },
       myReaction: null,
       reactions: [],
@@ -3689,7 +3722,7 @@ export class CommunityService {
       id: user?.id ?? 1,
       fullName: user?.fullName || 'Kingshuk',
       profession: this.profile()?.profession || 'Travel Creator',
-      profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
+      profilePhotoUrl: this.memberPhotoUrl(),
     };
 
     if (myReaction === target) {
@@ -3808,7 +3841,7 @@ export class CommunityService {
         uniqueId: profile?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
         fullName: user?.fullName || profile?.fullName || 'Kingshuk',
         profession: profile?.profession || 'Senior Software Engineer and founder of NeverBeen',
-        profilePhotoUrl: user?.profilePhotoUrl || profile?.profilePhotoUrl || '/author.jpeg',
+        profilePhotoUrl: this.memberPhotoUrl(),
         isVerified: !!user?.isVerified || !!profile?.isVerified,
       },
       text: text.trim(),
@@ -3904,7 +3937,7 @@ export class CommunityService {
         id: user?.id ?? 1,
         fullName: user?.fullName || 'Kingshuk',
         profession: profile?.profession || 'Senior Software Engineer and founder of NeverBeen',
-        profilePhotoUrl: user?.profilePhotoUrl || '/author.jpeg',
+        profilePhotoUrl: this.memberPhotoUrl(),
         isVerified: !!user?.isVerified || !!profile?.isVerified,
       },
       text: userThought ? userThought.trim() : '',
@@ -4091,7 +4124,7 @@ export class CommunityService {
       uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
       fullName: user?.fullName || prof?.fullName || 'Kingshuk',
       profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
-      profilePhotoUrl: user?.profilePhotoUrl || prof?.profilePhotoUrl || '/author.jpeg',
+      profilePhotoUrl: this.memberPhotoUrl(),
     };
 
     this.updatePostEverywhere(
@@ -4164,7 +4197,7 @@ export class CommunityService {
         uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
         fullName: user?.fullName || prof?.fullName || 'Kingshuk',
         profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
-        profilePhotoUrl: user?.profilePhotoUrl || prof?.profilePhotoUrl || '/author.jpeg',
+        profilePhotoUrl: this.memberPhotoUrl(),
         isVerified: !!user?.isVerified || !!prof?.isVerified,
       },
       text: text.trim(),
@@ -4308,7 +4341,7 @@ export class CommunityService {
       uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
       fullName: user?.fullName || prof?.fullName || 'Kingshuk',
       profession: prof?.profession || 'Senior Software Engineer and founder of NeverBeen',
-      profilePhotoUrl: user?.profilePhotoUrl || prof?.profilePhotoUrl || '/author.jpeg',
+      profilePhotoUrl: this.memberPhotoUrl(),
     };
 
     this.updatePostEverywhere(
@@ -4857,7 +4890,18 @@ export class CommunityService {
     );
     this.saveJson(COMPANIONS_KEY, this.companions());
     // Stored on the Web API (POST /api/companions/{id}/request) for signed-in members.
-    if (this.apiLive && numId > 0) this.apiWrite('POST', `/api/companions/${numId}/request`);
+    if (this.apiLive && numId > 0) {
+      // A request the Web API did not store was never delivered: the optimistic state is withdrawn.
+      void this.apiSendReporting<unknown>('POST', `/api/companions/${numId}/request`).then(({ error }) => {
+        if (!error) return;
+        this.companions.update((list) =>
+          list.map((c) =>
+            Number(c.id) === numId && c.status === 'pending_outgoing' ? { ...c, status: 'none' as const } : c,
+          ),
+        );
+        this.saveJson(COMPANIONS_KEY, this.companions());
+      });
+    }
     // Sending a companionship request follows that traveler by default.
     this.follow(numId);
   }
@@ -4951,6 +4995,153 @@ export class CommunityService {
     if (this.apiLive && notificationId > 0 && notificationId <= 0x7fffffffffffffff) {
       this.apiWrite('POST', `/api/notifications/${notificationId}/read`);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // LIVE UPDATES — requests, notifications and chats reach the other member without
+  // a reload. The Web API has no push channel, so the signed-in page re-reads them on
+  // a short timer, and again when the tab is back in focus.
+  // ---------------------------------------------------------------------------
+
+  /** How often a signed-in member's page re-reads requests, notifications and chats. */
+  private static readonly LIVE_POLL_MS = 4000;
+  private liveTimer: ReturnType<typeof setInterval> | null = null;
+  private livePollInFlight = false;
+  /** Latest message seen per 1:1 conversation, so a new message can be told apart from history. */
+  private readonly lastSeenConversationMessage = new Map<number, number>();
+  /** Chat bubbles that the Web API has not stored yet. */
+  private readonly unsentChatIds = new Set<number>();
+  /** The conversation start in flight per companion. */
+  private readonly conversationStarts = new Map<number, Promise<ApiConversationDto | null>>();
+  /** Circles being saved to the Web API, keyed by their draft id. */
+  private readonly pendingCircleSaves = new Map<number, Promise<Circle | null>>();
+
+  /** The signed-in member's photo: the profile first, the session user second. */
+  readonly memberPhotoUrl = computed(
+    () => this.profile()?.profilePhotoUrl || this.currentUser()?.profilePhotoUrl || '',
+  );
+
+  private readonly onPageVisible = (): void => {
+    if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+      void this.pollLiveUpdates();
+    }
+  };
+
+  private startLiveUpdates(): void {
+    if (this.liveTimer !== null || !this.apiLive) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    this.liveTimer = setInterval(() => void this.pollLiveUpdates(), CommunityService.LIVE_POLL_MS);
+    window.addEventListener('focus', this.onPageVisible);
+    document.addEventListener('visibilitychange', this.onPageVisible);
+  }
+
+  private stopLiveUpdates(): void {
+    if (this.liveTimer !== null) {
+      clearInterval(this.liveTimer);
+      this.liveTimer = null;
+    }
+    if (typeof window !== 'undefined') window.removeEventListener('focus', this.onPageVisible);
+    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', this.onPageVisible);
+  }
+
+  /** One live round: requests and notifications, the chat inbox, and every open Circle chat. */
+  private async pollLiveUpdates(): Promise<void> {
+    if (!this.apiLive) {
+      this.stopLiveUpdates();
+      return;
+    }
+    if (this.livePollInFlight) return;
+    this.livePollInFlight = true;
+    try {
+      await Promise.all([
+        this.refreshCompanionsAndNotifications(),
+        this.refreshChatInbox(),
+        ...this.activeChatBoxes()
+          .filter((b) => !!b.circleId)
+          .map((b) => this.refreshCircleMessages(b.circleId as number)),
+      ]);
+    } finally {
+      this.livePollInFlight = false;
+    }
+  }
+
+  /**
+   * Reads the chat inbox. A new message from a companion pops their chat open (or un-minimizes
+   * it) and refreshes the chat when it is open.
+   */
+  private async refreshChatInbox(): Promise<void> {
+    const conversations = await this.apiGet<ApiConversationDto[]>('/api/messages/conversations');
+    if (!conversations) return;
+    const me = this.myId();
+    this.pendingChats.set(this.pendingChatsFromApi(conversations));
+
+    for (const conversation of conversations) {
+      const last = conversation.lastMessage;
+      // Circle chats are refreshed through their own messages.
+      if (!last || conversation.circleId) continue;
+      const previous = this.lastSeenConversationMessage.get(conversation.id);
+      this.lastSeenConversationMessage.set(conversation.id, last.id);
+      // The first look only records the baseline; nothing is "new" yet.
+      if (previous === undefined || previous === last.id) continue;
+
+      const fromPartner = (last.senderId ?? 0) !== me;
+      const open = this.activeChatBoxes().find((b) => b.conversationId === conversation.id);
+      if (open) {
+        await this.refreshOpenConversation(open.companionId, conversation.id);
+        const shown = this.activeChatBoxes().find((b) => b.conversationId === conversation.id);
+        if (shown?.isMinimized && fromPartner) {
+          this.activeChatBoxes.update((boxes) =>
+            boxes.map((b) => (b.conversationId === conversation.id ? { ...b, isMinimized: false } : b)),
+          );
+        }
+        if (shown && !shown.isMinimized && fromPartner) {
+          this.apiWrite('POST', `/api/messages/conversations/${conversation.id}/read`);
+        }
+      } else if (fromPartner && !conversation.isGroup) {
+        const partner = conversation.participants?.find((p) => p.id !== me);
+        if (partner) this.popUpChat(partner);
+      }
+    }
+  }
+
+  /** Opens the chat with a companion who has just written to this member. */
+  private popUpChat(partner: ApiAuthorDto): void {
+    const companion =
+      this.companions().find((c) => Number(c.id) === partner.id) ??
+      this.followPersonFromApi(partner.id) ??
+      this.chatPartnerAsCompanion(partner);
+    this.openChatBox(companion);
+  }
+
+  private chatPartnerAsCompanion(partner: ApiAuthorDto): Companion {
+    return {
+      id: partner.id,
+      uniqueId: partner.uniqueId ?? generate20DigitUid(partner.id),
+      fullName: partner.fullName ?? 'NeverBeen Traveler',
+      profilePhotoUrl: this.absoluteApiUrl(partner.profilePhotoUrl) ?? '',
+      country: partner.country ?? '',
+      city: partner.city ?? '',
+      profession: partner.profession ?? '',
+      isOnline: false,
+      mutualCompanionsCount: 0,
+      status: 'none',
+    };
+  }
+
+  /** Re-reads one open 1:1 chat's history into its box. */
+  private async refreshOpenConversation(companionId: number, conversationId: number): Promise<void> {
+    const history = await this.apiGet<ApiChatMessageDto[]>(
+      `/api/messages/conversations/${conversationId}?pageSize=100`,
+    );
+    if (!history) return;
+    const incoming = history.map((dto) => this.chatMessageFromApi(dto));
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((box) =>
+        box.companionId === companionId
+          ? { ...box, messages: this.mergeChatMessages(box.messages, incoming) }
+          : box,
+      ),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -5059,10 +5250,7 @@ export class CommunityService {
       id: selfId,
       uniqueId: prof?.uniqueId || user?.uniqueId || generate20DigitUid(selfId),
       fullName: prof?.fullName || user?.fullName || 'Kingshuk',
-      profilePhotoUrl:
-        prof?.profilePhotoUrl ||
-        user?.profilePhotoUrl ||
-        '/author.jpeg',
+      profilePhotoUrl: this.memberPhotoUrl(),
       coverPhotoUrl:
         prof?.coverPhotoUrl ||
         user?.coverPhotoUrl ||
@@ -5447,32 +5635,55 @@ export class CommunityService {
     this.circleActionError.set(null);
     this.circles.update((list) => [...list, newCircle]);
     this.saveJson(CIRCLES_KEY, this.circles());
-    // Circles are stored on the Web API (POST /api/circles) for signed-in members;
-    // the stored circle (database id, members) replaces the optimistic copy.
+    // Circles are stored on the Web API (POST /api/circles) for signed-in members. The
+    // Circle only counts as created once the API has stored it — see circleSaved().
     if (this.apiLive) {
-      void this.apiSend<ApiCircleDto>('POST', '/api/circles', {
-        name: newCircle.name,
-        description: newCircle.description,
-        icon: newCircle.icon,
-        color: newCircle.color,
-        photoUrl: newCircle.photoUrl ?? undefined,
-        memberIds: newCircle.memberIds,
-      }).then((dto) => {
-        if (!dto) return;
-        const stored = this.circleFromApi(dto);
-        this.circles.update((list) => list.map((c) => (c.id === newCircle.id ? stored : c)));
-        this.saveJson(CIRCLES_KEY, this.circles());
-        // A chat box that was saved as this Circle follows the stored circle id.
-        this.activeChatBoxes.update((boxes) =>
-          boxes.map((b) =>
-            b.circleId === newCircle.id
-              ? { ...b, circleId: stored.id, companionId: -Math.abs(stored.id) }
-              : b,
-          ),
-        );
-      });
+      const saved = this.saveCircleOnApi(newCircle);
+      this.pendingCircleSaves.set(newCircle.id, saved);
+      void saved.finally(() => this.pendingCircleSaves.delete(newCircle.id));
     }
     return newCircle;
+  }
+
+  /**
+   * Resolves once the Web API has stored a Circle made by createCircle(): the stored Circle,
+   * or null when it was not saved (the optimistic copy is removed and circleActionError says why).
+   */
+  circleSaved(circleId: number): Promise<Circle | null> {
+    return (
+      this.pendingCircleSaves.get(circleId) ??
+      Promise.resolve(this.circles().find((c) => c.id === circleId) ?? null)
+    );
+  }
+
+  private async saveCircleOnApi(draft: Circle): Promise<Circle | null> {
+    const result = await this.apiSendReporting<ApiCircleDto>('POST', '/api/circles', {
+      name: draft.name,
+      description: draft.description,
+      icon: draft.icon,
+      color: draft.color,
+      photoUrl: draft.photoUrl ?? undefined,
+      memberIds: draft.memberIds,
+    });
+    if (result.data) {
+      // The stored circle (database id, members) replaces the optimistic copy.
+      const stored = this.circleFromApi(result.data);
+      this.circles.update((list) => list.map((c) => (c.id === draft.id ? stored : c)));
+      this.saveJson(CIRCLES_KEY, this.circles());
+      // A chat box that was saved as this Circle follows the stored circle id.
+      this.activeChatBoxes.update((boxes) =>
+        boxes.map((b) =>
+          b.circleId === draft.id ? { ...b, circleId: stored.id, companionId: -Math.abs(stored.id) } : b,
+        ),
+      );
+      return stored;
+    }
+    // Not stored (rejected, or the API could not be reached): it must not stay on screen as if saved.
+    this.circles.update((list) => list.filter((c) => c.id !== draft.id));
+    this.saveJson(CIRCLES_KEY, this.circles());
+    this.closeChatBox(-Math.abs(draft.id));
+    this.circleActionError.set(result.error ?? 'Your Circle could not be saved. Please try again.');
+    return null;
   }
 
   deleteCircle(circleId: number): boolean {
@@ -5702,7 +5913,9 @@ export class CommunityService {
               isGroup: true,
               participantIds: circle.memberIds,
               companion: this.circleAsCompanion(circle),
-              messages: b.messages?.length ? b.messages : circle.messages ?? [],
+              messages: circle.messages?.length
+                ? this.mergeChatMessages(b.messages ?? [], circle.messages)
+                : b.messages ?? [],
             }
           : b,
       ),
@@ -5828,7 +6041,8 @@ export class CommunityService {
   private async refreshCircleMessages(circleId: number): Promise<void> {
     const messages = await this.apiGet<ApiCircleMessageDto[]>(`/api/circles/${circleId}/messages?pageSize=100`);
     if (!messages) return;
-    const mapped = messages.map((dto) => this.chatMessageFromApi(dto));
+    const current = this.circles().find((c) => c.id === circleId)?.messages ?? [];
+    const mapped = this.mergeChatMessages(current, messages.map((dto) => this.chatMessageFromApi(dto)));
     this.circles.update((list) =>
       list.map((c) => (c.id === circleId ? { ...c, messages: mapped } : c)),
     );
@@ -5977,21 +6191,19 @@ export class CommunityService {
 
   /** Starts (or reuses) the 1:1 conversation and loads its messages into the open box. */
   private async openConversationOnApi(companion: Companion, pending?: PendingChat): Promise<void> {
-    const conversation = await this.apiSend<ApiConversationDto>('POST', '/api/messages/conversations', {
-      companionId: companion.id,
-    });
+    const conversation = await this.ensureConversation(companion.id);
     if (!conversation) return;
     const history = await this.apiGet<ApiChatMessageDto[]>(
       `/api/messages/conversations/${conversation.id}?pageSize=100`,
     );
-    const messages = (history ?? []).map((dto) => this.chatMessageFromApi(dto));
+    const incoming = (history ?? []).map((dto) => this.chatMessageFromApi(dto));
     this.activeChatBoxes.update((boxes) =>
       boxes.map((box) =>
         box.companionId === companion.id
           ? {
               ...box,
               conversationId: conversation.id,
-              messages,
+              messages: this.mergeChatMessages(box.messages, incoming),
               unreadCount: conversation.unreadCount ?? pending?.unreadCount ?? 0,
             }
           : box,
@@ -6000,6 +6212,25 @@ export class CommunityService {
     if ((conversation.unreadCount ?? 0) > 0) {
       this.apiWrite('POST', `/api/messages/conversations/${conversation.id}/read`);
     }
+  }
+
+  /** The member's 1:1 conversation with a companion, reused or started on the Web API (one call at a time). */
+  private ensureConversation(companionId: number): Promise<ApiConversationDto | null> {
+    const inFlight = this.conversationStarts.get(companionId);
+    if (inFlight) return inFlight;
+    const started = this.apiSend<ApiConversationDto>('POST', '/api/messages/conversations', {
+      companionId,
+    }).then((conversation) => {
+      this.conversationStarts.delete(companionId);
+      if (conversation) {
+        this.activeChatBoxes.update((boxes) =>
+          boxes.map((b) => (b.companionId === companionId ? { ...b, conversationId: conversation.id } : b)),
+        );
+      }
+      return conversation;
+    });
+    this.conversationStarts.set(companionId, started);
+    return started;
   }
 
   closeChatBox(companionId: number): void {
@@ -6024,7 +6255,7 @@ export class CommunityService {
 
     const newMsg: ChatMessage = {
       id: generateUniqueId(),
-      senderId: 1,
+      senderId: this.myId(),
       receiverId: companionId,
       text: text.trim(),
       sentAtUtc: new Date().toISOString(),
@@ -6049,24 +6280,8 @@ export class CommunityService {
     // POST /api/messages/conversations/{id}/messages and Circle chats through
     // POST /api/circles/{id}/messages — and no simulated reply is ever added.
     if (this.apiLive) {
-      const payload = {
-        text: newMsg.text,
-        replyToMessageId:
-          replyTo?.id && replyTo.id > 0 && replyTo.id <= 0x7fffffffffffffff ? replyTo.id : undefined,
-      };
-      if (box?.circleId && box.circleId > 0 && box.circleId <= 0x7fffffff) {
-        void this.apiSend<ApiCircleMessageDto>(
-          'POST',
-          `/api/circles/${box.circleId}/messages`,
-          payload,
-        ).then((dto) => this.replaceOptimisticChatMessage(companionId, newMsg.id, dto));
-      } else if (box?.conversationId) {
-        void this.apiSend<ApiChatMessageDto>(
-          'POST',
-          `/api/messages/conversations/${box.conversationId}/messages`,
-          payload,
-        ).then((dto) => this.replaceOptimisticChatMessage(companionId, newMsg.id, dto));
-      }
+      this.unsentChatIds.add(newMsg.id);
+      void this.deliverChatMessage(companionId, newMsg, replyTo);
       return;
     }
 
@@ -6107,6 +6322,62 @@ export class CommunityService {
   }
 
   /** Swaps an optimistic chat message for the one the Web API stored. */
+  /**
+   * Stores a sent chat message on the Web API: a Circle chat through the Circle, a 1:1 chat
+   * through its conversation (started first when it is not loaded yet). The stored message
+   * replaces the bubble. A message the API did not store is taken back out of the chat, and its
+   * text goes back into the composer, so nothing looks sent that was not.
+   */
+  private async deliverChatMessage(
+    companionId: number,
+    draft: ChatMessage,
+    replyTo?: { id: number; senderName: string; text: string } | null,
+  ): Promise<void> {
+    const payload = {
+      text: draft.text,
+      replyToMessageId:
+        replyTo?.id && replyTo.id > 0 && replyTo.id <= 0x7fffffffffffffff ? replyTo.id : undefined,
+    };
+    const box = this.activeChatBoxes().find((b) => b.companionId === companionId);
+    let stored: ApiChatMessageDto | ApiCircleMessageDto | null = null;
+    if (box?.circleId && box.circleId > 0 && box.circleId <= 0x7fffffff) {
+      stored = await this.apiSend<ApiCircleMessageDto>('POST', `/api/circles/${box.circleId}/messages`, payload);
+    } else {
+      // The conversation is reused when the box already knows it; otherwise it is started first.
+      const conversationId = box?.conversationId ?? (await this.ensureConversation(companionId))?.id;
+      if (conversationId) {
+        stored = await this.apiSend<ApiChatMessageDto>(
+          'POST',
+          `/api/messages/conversations/${conversationId}/messages`,
+          payload,
+        );
+      }
+    }
+    this.unsentChatIds.delete(draft.id);
+    if (stored) {
+      this.replaceOptimisticChatMessage(companionId, draft.id, stored);
+      return;
+    }
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) =>
+        b.companionId === companionId
+          ? {
+              ...b,
+              messages: b.messages.filter((m) => m.id !== draft.id),
+              draftText: b.draftText || draft.text,
+            }
+          : b,
+      ),
+    );
+  }
+
+  /** Server history, plus any bubble that is still being sent, so a refresh never drops it. */
+  private mergeChatMessages(current: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
+    const stored = new Set(incoming.map((m) => m.id));
+    const unsent = current.filter((m) => this.unsentChatIds.has(m.id) && !stored.has(m.id));
+    return [...incoming, ...unsent];
+  }
+
   private replaceOptimisticChatMessage(
     companionId: number,
     optimisticId: number,
@@ -6927,8 +7198,8 @@ export class CommunityService {
       uniqueId: dto.uniqueId ?? generate20DigitUid(dto.id),
       fullName: dto.fullName ?? 'NeverBeen Traveler',
       profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? '',
-      country: '',
-      city: '',
+      country: dto.country ?? '',
+      city: dto.city ?? '',
       profession: dto.profession ?? '',
       isOnline: false,
       mutualCompanionsCount: 0,

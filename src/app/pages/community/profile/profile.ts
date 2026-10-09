@@ -377,6 +377,8 @@ export class CommunityProfile implements OnInit {
   protected newCircleColor = '#2563eb';
   protected readonly selectedCircleMemberIds = signal<number[]>([]);
   protected readonly circleError = signal<string | null>(null);
+  /** True while a new Circle is being stored on the Web API. */
+  protected readonly circleSaving = signal(false);
   protected readonly circlePhotoPreview = signal<string | null>(null);
   protected editCirclePhoto = '';
   protected readonly circleQuery = signal('');
@@ -2448,6 +2450,11 @@ export class CommunityProfile implements OnInit {
     return owner ? `${owner.fullName.split(' ')[0]}'s ${kind.toLowerCase()}` : kind;
   }
 
+  /** "City, Country" for a member card; a dash when the member has not given a location. */
+  locationLabel(person: Companion): string {
+    return [person.city, person.country].filter((part) => !!part && part.trim()).join(', ') || '—';
+  }
+
   followListPeople(): Companion[] {
     const ownerId = this.followListOwnerId() ?? this.service.currentUser()?.id ?? 1;
     return this.followListKind() === 'following'
@@ -2599,15 +2606,36 @@ export class CommunityProfile implements OnInit {
       this.circlePhotoPreview() || undefined,
     );
 
-    if (created) {
-      this.showCreateCircleModal.set(false);
-      this.circleError.set(null);
-      this.service.openCircleChat(created);
-    } else {
+    if (!created) {
       const message = this.service.circleActionError() || 'Could not create this Circle.';
       this.circleError.set(message);
       void this.confirmSvc.notify(message);
+      return;
     }
+    if (!this.service.apiLive) {
+      this.finishCreateCircle(created);
+      return;
+    }
+    // Signed in: the Circle is only created once the Web API has stored it. Until then the
+    // form stays open; if the API refuses it, the form stays open with the reason.
+    this.circleError.set(null);
+    this.circleSaving.set(true);
+    void this.service.circleSaved(created.id).then((stored) => {
+      this.circleSaving.set(false);
+      if (stored) {
+        this.finishCreateCircle(stored);
+        return;
+      }
+      const message = this.service.circleActionError() || 'Could not create this Circle.';
+      this.circleError.set(message);
+      void this.confirmSvc.notify(message);
+    });
+  }
+
+  private finishCreateCircle(circle: Circle): void {
+    this.showCreateCircleModal.set(false);
+    this.circleError.set(null);
+    this.service.openCircleChat(circle);
   }
 
   async deleteCircle(circleId: number, event?: Event): Promise<void> {
@@ -3412,16 +3440,14 @@ export class CommunityProfile implements OnInit {
 
   reportChatMsgAbuse(companion: Companion, msg: ChatMessage): void {
     this.activeDotsMenuMsgId.set(null);
+    const mine = msg.senderId === (this.service.currentUser()?.id || 1);
     this.openReportAbuseModal(
       'comment',
       msg.id,
       {
         id: msg.senderId,
-        fullName: msg.senderId === 1 ? 'Me' : companion.fullName,
-        profilePhotoUrl:
-          msg.senderId === 1
-            ? this.service.profile()?.profilePhotoUrl
-            : companion.profilePhotoUrl,
+        fullName: mine ? 'Me' : companion.fullName,
+        profilePhotoUrl: mine ? this.service.memberPhotoUrl() : companion.profilePhotoUrl,
         profession: companion.profession,
       },
       msg.text,

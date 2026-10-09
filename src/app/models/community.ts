@@ -571,7 +571,7 @@ export interface NotificationItem {
   createdAtUtc: string;
   isRead: boolean;
   requestId?: number;
-  status?: 'pending' | 'approved' | 'rejected';
+  status?: 'pending' | 'approved' | 'rejected' | 'cancelled';
 }
 
 export interface ChatMessage {

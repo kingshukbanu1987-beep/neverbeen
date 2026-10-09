@@ -13,7 +13,7 @@
     @if (service.isAuthenticated()) {
       <div class="composer-header">
         <img
-          [src]="service.currentUser()?.profilePhotoUrl || defaultAvatar"
+          [src]="service.memberPhotoUrl() || defaultAvatar"
           alt="My avatar"
           class="composer-avatar"
         />
