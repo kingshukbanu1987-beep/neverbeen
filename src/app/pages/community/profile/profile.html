@@ -156,7 +156,7 @@
               (error)="onCoverImgError($event)"
             />
             <div class="cover-veil" aria-hidden="true"></div>
-            <label class="btn-change-cover-badge" for="userCoverUploadInput" title="Update Cover Photo (Max 100 KB)" (click)="$event.stopPropagation()">
+            <label class="btn-change-cover-badge" for="userCoverUploadInput" title="Update cover photo (automatically optimized to 100 KB)" (click)="$event.stopPropagation()">
               <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="currentColor">
                 <path d="M12 12c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-1.5c0-2.33-4.67-3.5-7-3.5z"/>
               </svg>
@@ -167,6 +167,7 @@
               id="userCoverUploadInput"
               accept="image/*"
               (change)="onCoverPhotoUpload($event)"
+              [disabled]="coverPhotoUploading()"
               class="hidden-file-input"
             />
           </div>
@@ -195,7 +196,7 @@
               <span>Enlarge</span>
             </div>
             <!-- Photo uploader trigger -->
-            <label class="photo-change-btn-mini" for="avatarUploadInput" (click)="$event.stopPropagation()" title="Update profile photo (Max 100 KB)">
+            <label class="photo-change-btn-mini" for="avatarUploadInput" (click)="$event.stopPropagation()" title="Update profile photo (automatically optimized to 100 KB)">
               <svg viewBox="0 0 24 24" class="icon-camera-mini" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                 <circle cx="12" cy="13" r="4"></circle>
@@ -206,6 +207,7 @@
               id="avatarUploadInput"
               accept="image/*"
               (change)="onPhotoUpload($event)"
+              [disabled]="profilePhotoUploading()"
               class="hidden-file-input"
             />
           </div>
@@ -814,7 +816,7 @@
               <div class="composer-accessory-row">
                 <label class="btn-tool-photo-label" title="Add Photos">
                   📷 Add Photos
-                  <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
+                  <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" [disabled]="journeyPhotosProcessing()" class="hidden-file-input" />
                 </label>
 
                 <!-- REQUIREMENT C: Tag People button -->
@@ -1188,14 +1190,14 @@
                             placeholder="Write a comment..."
                             class="comment-input"
                           />
-                          <label class="btn-attach-comment-pic" title="Attach picture (Max 100 KB)">
+                          <label class="btn-attach-comment-pic" title="Photos are automatically optimized to 100 KB or less">
                             📷
-                            <input type="file" accept="image/*" (change)="onJourneyCommentPhotoSelected($event, post.id)" class="hidden-file-input" />
+                            <input type="file" accept="image/*" (change)="onJourneyCommentPhotoSelected($event, post.id)" [disabled]="journeyCommentPhotoProcessing()" class="hidden-file-input" />
                           </label>
                           <button
                             type="button"
                             class="btn-send-comment"
-                            [disabled]="(!journeyCommentText.trim() && !journeyCommentPhotoPreview())"
+                            [disabled]="journeyCommentPhotoProcessing() || (!journeyCommentText.trim() && !journeyCommentPhotoPreview())"
                             (click)="submitJourneyComment(post.id)"
                           >
                             Post
@@ -1284,7 +1286,7 @@
                 class="about-cover-img"
                 (error)="onCoverImgError($event)"
               />
-              <label class="btn-edit-cover-pill" for="aboutCoverUploadInput" title="Update Cover Photo (Max 100 KB)" (click)="$event.stopPropagation()">
+              <label class="btn-edit-cover-pill" for="aboutCoverUploadInput" title="Update cover photo (automatically optimized to 100 KB)" (click)="$event.stopPropagation()">
                 📷 Edit Cover Photo
               </label>
               <input
@@ -1292,6 +1294,7 @@
                 id="aboutCoverUploadInput"
                 accept="image/*"
                 (change)="onCoverPhotoUpload($event)"
+                [disabled]="coverPhotoUploading()"
                 class="hidden-file-input"
               />
             </div>
@@ -1959,12 +1962,13 @@
             @if (showUploadCard()) {
               <div class="gallery-upload-box">
                 <div class="gallery-limit-notice">
-                  <span>📸 Select photograph (Max 100 KB limit)</span>
+                  <span>📸 Photos are automatically optimized to 100 KB or less</span>
                 </div>
                 <input
                   type="file"
                   accept="image/*"
                   (change)="onGalleryFileSelected($event)"
+                  [disabled]="galleryPhotoProcessing()"
                   class="file-picker-input"
                 />
                 @if (galleryError()) {
@@ -1986,10 +1990,10 @@
                   <button
                     type="button"
                     class="btn-primary-action"
-                    [disabled]="!selectedGalleryFile() || uploadingGallery()"
+                    [disabled]="!selectedGalleryFile() || galleryPhotoProcessing() || uploadingGallery()"
                     (click)="submitGalleryUpload()"
                   >
-                    {{ uploadingGallery() ? 'Uploading...' : 'Save to Gallery' }}
+                    {{ galleryPhotoProcessing() ? 'Optimizing photo...' : uploadingGallery() ? 'Uploading...' : 'Save to Gallery' }}
                   </button>
                 </div>
               </div>
@@ -2113,9 +2117,9 @@
               ></textarea>
 
               <div class="composer-toolbar-row">
-                <label class="btn-tool-photo-label" title="Attach picture (Max 100 KB)">
-                  📷 Add Photo (Max 100 KB)
-                  <input type="file" accept="image/*" (change)="onMessageBookPhotoSelected($event)" class="hidden-file-input" />
+                <label class="btn-tool-photo-label" title="Photos are automatically optimized to 100 KB or less">
+                  📷 Add Photo (automatically optimized to 100 KB)
+                  <input type="file" accept="image/*" (change)="onMessageBookPhotoSelected($event)" [disabled]="messageBookPhotoProcessing()" class="hidden-file-input" />
                 </label>
 
                 <!-- REQUIREMENT C: Tag People in MessageBook -->
@@ -2159,7 +2163,7 @@
                 <button
                   type="button"
                   class="btn-primary-action"
-                  [disabled]="(!newPostText.trim() && !messageBookPhotoPreview()) || postingPost()"
+                  [disabled]="messageBookPhotoProcessing() || (!newPostText.trim() && !messageBookPhotoPreview()) || postingPost()"
                   (click)="submitPost()"
                 >
                   {{ postingPost() ? 'Writing...' : 'Sign MessageBook' }}
@@ -2958,7 +2962,7 @@
                       @if (isCircleAdmin(circle)) {
                         <label class="circle-photo-change" (click)="$event.stopPropagation()">
                           Change photo
-                          <input type="file" accept="image/*" (change)="changeCirclePhoto(circle, $event)" />
+                          <input type="file" accept="image/*" (change)="changeCirclePhoto(circle, $event)" [disabled]="circlePhotoProcessing()" />
                         </label>
                       }
                     </div>
@@ -3493,7 +3497,7 @@
 
               <div class="settings-card devices-card">
                 <h3 class="card-title">Devices used</h3>
-                <p class="card-desc">Every signed-in session, plus the last 10 devices that used this profile. Log a session out, or block a device so it cannot reopen your profile. Browsers cannot read a hardware MAC address, so each device keeps a stable NeverBeen device address.</p>
+                <p class="card-desc">Devices are saved to your NeverBeen account whenever you sign in, so your recent sign-in history follows you between browsers. We show the device, operating system, browser, and last-seen time; a hardware MAC address is not exposed to websites.</p>
                 <div class="device-list">
                   @for (device of service.visibleDevices(); track device.id) {
                     <article class="device-row" [class.blocked]="device.blocked" [class.current]="device.isCurrent">
@@ -3501,8 +3505,13 @@
                       <div class="device-copy">
                         <strong>{{ device.name }}</strong>
                         <span>{{ device.type }} · {{ device.os }} · {{ device.browser }}</span>
-                        <span class="device-net">IP {{ device.ipAddress }} · MAC {{ device.macAddress }}</span>
-                        <span>{{ device.location }} · {{ device.isCurrent ? 'This device' : (device.isActive ? 'Signed in' : 'Last seen ' + formatTime(device.lastSeenUtc)) }}</span>
+                        @if (device.ipAddress || device.location) {
+                          <span class="device-net">
+                            @if (device.ipAddress) { IP {{ device.ipAddress }} }
+                            @if (device.location) { · {{ device.location }} }
+                          </span>
+                        }
+                        <span>{{ device.isCurrent ? 'This device' : (device.isActive ? 'Signed in' : 'Last seen') }} · {{ formatTime(device.lastSeenUtc) }}</span>
                       </div>
                       <div class="device-actions">
                         @if (device.blocked) {
@@ -4066,7 +4075,7 @@
 
           <div class="form-group">
             <label>Circle photo</label>
-            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" />
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" [disabled]="circlePhotoProcessing()" />
             @if (circlePhotoPreview()) {
               <img class="circle-photo-preview" [src]="circlePhotoPreview()" alt="Circle photo preview" />
             }
@@ -4097,7 +4106,7 @@
         </div>
         <footer class="modal-footer-bar">
           <button type="button" class="btn-secondary-action" (click)="closeCreateCircleModal()">Cancel</button>
-          <button type="button" class="btn-primary-action" [disabled]="circleSaving()" (click)="submitCreateCircle()">{{ circleSaving() ? 'Saving…' : 'Create Circle' }}</button>
+          <button type="button" class="btn-primary-action" [disabled]="circleSaving() || circlePhotoProcessing()" (click)="submitCreateCircle()">{{ circleSaving() ? 'Saving…' : 'Create Circle' }}</button>
         </footer>
       </div>
     </div>
@@ -4122,7 +4131,7 @@
           </div>
           <div class="form-group">
             <label>Photo</label>
-            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'edit')" />
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'edit')" [disabled]="circlePhotoProcessing()" />
             @if (editCirclePhoto) {
               <img class="circle-photo-preview" [src]="editCirclePhoto" alt="Updated circle photo" />
             }
@@ -4131,7 +4140,7 @@
         </div>
         <footer class="modal-footer-bar">
           <button type="button" class="btn-secondary-action" (click)="showEditCircleModal.set(false)">Cancel</button>
-          <button type="button" class="btn-primary-action" (click)="saveEditCircle()">Save</button>
+          <button type="button" class="btn-primary-action" [disabled]="circlePhotoProcessing()" (click)="saveEditCircle()">Save</button>
         </footer>
       </div>
     </div>
@@ -4193,7 +4202,7 @@
           </label>
           <label class="chat-field chat-photo-field">
             <span>Photo</span>
-            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" />
+            <input type="file" accept="image/*" (change)="onCirclePhotoSelected($event, 'create')" [disabled]="circlePhotoProcessing()" />
             @if (circlePhotoPreview()) {
               <img class="circle-photo-preview" [src]="circlePhotoPreview()" alt="Circle photo preview" />
             }
@@ -4202,7 +4211,7 @@
         </div>
         <footer class="chat-action-foot">
           <button type="button" class="btn-secondary-action" (click)="showSaveCircleModal.set(false)">Cancel</button>
-          <button type="button" class="btn-primary-action" (click)="confirmSaveCircle()">Save Chat as Circle</button>
+          <button type="button" class="btn-primary-action" [disabled]="circleSaving() || circlePhotoProcessing()" (click)="confirmSaveCircle()">Save Chat as Circle</button>
         </footer>
       </div>
     </div>
@@ -4220,7 +4229,7 @@
           @if (isCircleAdmin(membersCircle)) {
             <label class="circle-photo-change circle-photo-change-inline">
               Change photo
-              <input type="file" accept="image/*" (change)="changeCirclePhoto(membersCircle, $event)" />
+              <input type="file" accept="image/*" (change)="changeCirclePhoto(membersCircle, $event)" [disabled]="circlePhotoProcessing()" />
             </label>
           }
           @for (person of filteredCircleMembers(); track person.id) {
@@ -4964,7 +4973,7 @@
                 }
                 <div class="composer-accessory-row">
                   <label class="btn-tool-photo-label">📷 Add Photos
-                    <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" class="hidden-file-input" />
+                    <input type="file" multiple accept="image/*" (change)="onJourneyPhotoSelected($event)" [disabled]="journeyPhotosProcessing()" class="hidden-file-input" />
                   </label>
                   <button type="button" class="btn-tool-tag" (click)="openTagPeopleModal('journey')">🏷️ Tag People
                     @if (selectedJourneyTaggedCompanions().length > 0) {

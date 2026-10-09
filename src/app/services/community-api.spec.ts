@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   CommunityService,
   CreateAccountData,
+  DEVICE_ID_KEY_PREFIX,
   deleteCookie,
   getCookie,
   PROFILE_KEY,
@@ -201,6 +202,26 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     });
 
     const result = await pending;
+    await tick();
+
+    const device = httpMock.expectOne(`${API}/api/devices`);
+    expect(device.request.method).toBe('POST');
+    expect(device.request.body).toMatchObject({
+      id: expect.any(String),
+      type: expect.any(String),
+      os: expect.any(String),
+      browser: expect.any(String),
+      isCurrent: true,
+    });
+    device.flush({
+      ...device.request.body,
+      lastSeenUtc: new Date().toISOString(),
+      isActive: true,
+      blocked: false,
+      ipAddress: '',
+      macAddress: '',
+      location: '',
+    });
 
     expect(result.profileComplete).toBe(false);
     expect(result.isNewUser).toBe(true);
@@ -939,6 +960,112 @@ describe('CommunityService — live requests, notifications, chats, circles and 
   afterEach(() => {
     httpMock.verify();
     deleteCookie(TOKEN_KEY);
+  });
+
+  it('registers the signed-in browser and displays API-backed device history', async () => {
+    const registerCurrentDevice = (
+      service as unknown as { registerCurrentDevice: () => Promise<void> }
+    ).registerCurrentDevice.bind(service);
+    const registering = registerCurrentDevice();
+    await tick();
+
+    const request = httpMock.expectOne(`${API}/api/devices`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Authorization')).toBe('Bearer jwt.member.7');
+    const body = request.request.body as {
+      id: string;
+      name: string;
+      type: string;
+      os: string;
+      browser: string;
+      isCurrent: boolean;
+      ipAddress?: string;
+      macAddress?: string;
+    };
+    expect(body.id).not.toBe('device-current');
+    expect(body.id.length).toBeGreaterThan(10);
+    expect(body.name).toContain(body.browser);
+    expect(body.isCurrent).toBe(true);
+    expect(body.ipAddress).toBeUndefined();
+    expect(body.macAddress).toBeUndefined();
+
+    request.flush({
+      ...body,
+      lastSeenUtc: new Date().toISOString(),
+      isActive: true,
+      blocked: false,
+      ipAddress: '',
+      macAddress: '',
+      location: '',
+    });
+    await registering;
+
+    expect(localStorage.getItem(`${DEVICE_ID_KEY_PREFIX}:7`)).toBe(body.id);
+    expect(service.devices()).toHaveLength(1); // discard the signed-out placeholder browser row
+    expect(service.devices()[0]).toMatchObject({ id: body.id, isCurrent: true, isActive: true });
+    expect(service.visibleDevices()).toContainEqual(expect.objectContaining({ id: body.id, isCurrent: true }));
+  });
+
+  it('hydrates real previous sign-in devices from GET /api/devices', async () => {
+    const refreshing = service.refreshCommunityFromApi();
+    await tick();
+
+    const registration = httpMock.expectOne(`${API}/api/devices`);
+    const currentBody = registration.request.body as {
+      id: string;
+      name: string;
+      type: string;
+      os: string;
+      browser: string;
+      isCurrent: boolean;
+    };
+    registration.flush({
+      ...currentBody,
+      lastSeenUtc: new Date().toISOString(),
+      isActive: true,
+      blocked: false,
+    });
+    await tick();
+
+    const reads = httpMock.match((request) => request.method === 'GET');
+    const devicesRead = reads.find((request) => request.request.url.endsWith('/api/devices'));
+    expect(devicesRead).toBeDefined();
+    for (const request of reads) {
+      if (request === devicesRead) {
+        request.flush([
+          {
+            id: 'member7-previous-phone',
+            name: 'iPhone · Safari',
+            type: 'Phone',
+            os: 'iOS',
+            browser: 'Safari',
+            lastSeenUtc: '2026-10-01T12:00:00Z',
+            isActive: false,
+            blocked: false,
+          },
+        ]);
+      } else if (request.request.url.includes('/api/journey?')) {
+        request.flush({ items: [] });
+      } else if (request.request.url.includes('/api/messagebook?')) {
+        request.flush({ items: [] });
+      } else if (request.request.url.includes('/api/follows/counts/')) {
+        request.flush({ followers: 0, following: 0 });
+      } else {
+        request.flush([]);
+      }
+    }
+    await refreshing;
+
+    const currentId = localStorage.getItem(`${DEVICE_ID_KEY_PREFIX}:7`)!;
+    expect(service.devices()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: currentId, isCurrent: true, isActive: true }),
+        expect.objectContaining({ id: 'member7-previous-phone', isCurrent: false, isActive: false }),
+      ]),
+    );
+    expect(service.visibleDevices()).toContainEqual(
+      expect.objectContaining({ id: 'member7-previous-phone' }),
+    );
   });
 
   it('shows a companionship request another member sent, without a reload', async () => {

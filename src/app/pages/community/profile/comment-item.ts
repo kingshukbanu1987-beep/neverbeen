@@ -15,6 +15,7 @@ import { UserPreviewDirective } from '../../../shared/user-hover-card';
 import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
 import { CommunityService } from '../../../services/community.service';
 import { PresenceDot } from '../../../shared/presence-dot/presence-dot';
+import { MAX_COMMUNITY_IMAGE_BYTES, readImageAsDataUrl } from '../../../shared/community-image-compression';
 
 @Component({
   selector: 'app-comment-thread',
@@ -58,8 +59,9 @@ export class CommentThreadComponent {
   replyText = '';
   readonly replyPhotoPreview = signal<string | null>(null);
   readonly replyPhotoError = signal<string | null>(null);
+  readonly replyPhotoProcessing = signal(false);
 
-  readonly MAX_PICTURE_SIZE = 100 * 1024; // 100 KB limit (Requirement A)
+  readonly MAX_PICTURE_SIZE = MAX_COMMUNITY_IMAGE_BYTES;
 
   // Hold reaction popover state
   readonly showReactionPicker = signal(false);
@@ -148,22 +150,23 @@ export class CommentThreadComponent {
     this.replyPhotoError.set(null);
   }
 
-  onReplyPhotoSelected(event: Event): void {
+  async onReplyPhotoSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-    const file = input.files[0];
-    this.replyPhotoError.set(null);
-    if (file.size > this.MAX_PICTURE_SIZE) {
-      this.replyPhotoError.set('Picture size exceeds 100 KB limit.');
-      input.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.replyPhotoPreview.set(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    const source = input.files[0];
     input.value = '';
+    this.replyPhotoError.set(null);
+    this.replyPhotoProcessing.set(true);
+    try {
+      const file = await this.community.prepareCommunityPhoto(source);
+      this.replyPhotoPreview.set(await readImageAsDataUrl(file));
+    } catch (error) {
+      this.replyPhotoError.set(
+        error instanceof Error ? error.message : 'This photo could not be optimized for upload.',
+      );
+    } finally {
+      this.replyPhotoProcessing.set(false);
+    }
   }
 
   clearReplyPhoto(): void {
@@ -172,7 +175,7 @@ export class CommentThreadComponent {
   }
 
   submitReply(): void {
-    if (!this.replyText.trim()) return;
+    if (this.replyPhotoProcessing() || !this.replyText.trim()) return;
     this.reply.emit({
       postId: this.postId,
       parentCommentId: this.comment.id,

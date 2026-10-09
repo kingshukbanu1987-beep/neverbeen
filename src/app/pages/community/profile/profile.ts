@@ -53,6 +53,7 @@ import { PostAudienceControl } from './post-audience';
 import { birthdayCards, BirthdayCard } from './birthdays';
 import { extractHashtags, hashtagAtCursor, insertHashtag, suggestHashtags } from './hashtags';
 import { formatStorage, storagePie } from './storage-meter';
+import { MAX_COMMUNITY_IMAGE_BYTES, readImageAsDataUrl } from '../../../shared/community-image-compression';
 
 export type ProfileSection =
   | 'journey'
@@ -170,8 +171,12 @@ export class CommunityProfile implements OnInit {
   protected readonly showEnlargedPhoto = signal(false);
   protected readonly lightboxImageUrl = signal<string | null>(null);
 
-  // Maximum picture upload limit (Requirement A: 100 KB)
-  readonly MAX_PICTURE_SIZE = 100 * 1024; // 100 KB limit (102,400 bytes)
+  // Community photo files are automatically optimized to this hard upload limit.
+  readonly MAX_PICTURE_SIZE = MAX_COMMUNITY_IMAGE_BYTES;
+  protected readonly profilePhotoUploading = signal(false);
+  protected readonly coverPhotoUploading = signal(false);
+  protected readonly galleryPhotoProcessing = signal(false);
+  protected readonly circlePhotoProcessing = signal(false);
   readonly defaultCoverPhoto =
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
   protected readonly coverPhotoError = signal<string | null>(null);
@@ -221,6 +226,7 @@ export class CommunityProfile implements OnInit {
   protected readonly journeyPhotoPreviews = signal<string[]>([]);
   protected readonly journeyPhotoPreview = signal<string | null>(null);
   protected readonly journeyPhotoError = signal<string | null>(null);
+  protected readonly journeyPhotosProcessing = signal(false);
 
   // Virtual Scrolling / Infinite Scroll for Journey Posts (Requirement F)
   readonly displayedJourneyPostLimit = signal<number>(25);
@@ -237,6 +243,7 @@ export class CommunityProfile implements OnInit {
   // Journey Comment Photo Attachment (Requirement A: <= 100 KB)
   protected readonly journeyCommentPhotoPreview = signal<{ postId: number; dataUrl: string } | null>(null);
   protected readonly journeyCommentPhotoError = signal<{ postId: number; message: string } | null>(null);
+  protected readonly journeyCommentPhotoProcessing = signal(false);
 
   // Multi-level Journey Comment Replies
   protected readonly activeJourneyReplyCommentId = signal<number | null>(null);
@@ -669,6 +676,7 @@ export class CommunityProfile implements OnInit {
   protected readonly selectedMessageBookPhoto = signal<File | null>(null);
   protected readonly messageBookPhotoPreview = signal<string | null>(null);
   protected readonly messageBookPhotoError = signal<string | null>(null);
+  protected readonly messageBookPhotoProcessing = signal(false);
 
   // Settings state
   protected readonly savingSettings = signal(false);
@@ -1721,39 +1729,36 @@ export class CommunityProfile implements OnInit {
   // JOURNEY (PUBLIC FEED WITH NESTED COMMENTS ON COMMENTS & SHARE)
   // ---------------------------------------------------------------------------
 
-  onJourneyPhotoSelected(event: Event): void {
+  async onJourneyPhotoSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const files = Array.from(input.files);
-    this.journeyPhotoError.set(null);
-
-    for (const file of files) {
-      if (file.size > this.MAX_PICTURE_SIZE) {
-        this.journeyPhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
-        this.selectedJourneyPhoto.set(null);
-        this.selectedJourneyPhotos.set([]);
-        this.journeyPhotoPreview.set(null);
-        this.journeyPhotoPreviews.set([]);
-        input.value = '';
-        return;
-      }
-    }
-
-    this.selectedJourneyPhoto.set(files[0]);
-    this.selectedJourneyPhotos.update((existing) => [...existing, ...files]);
-
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        this.journeyPhotoPreviews.update((list) => [...list, dataUrl]);
-        if (!this.journeyPhotoPreview()) {
-          this.journeyPhotoPreview.set(dataUrl);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
     input.value = '';
+    this.journeyPhotoError.set(null);
+    this.journeyPhotosProcessing.set(true);
+
+    try {
+      const optimizedFiles: File[] = [];
+      const previews: string[] = [];
+      for (const file of files) {
+        const optimized = await this.service.prepareCommunityPhoto(file);
+        optimizedFiles.push(optimized);
+        previews.push(await readImageAsDataUrl(optimized));
+      }
+
+      const selected = [...this.selectedJourneyPhotos(), ...optimizedFiles];
+      const allPreviews = [...this.journeyPhotoPreviews(), ...previews];
+      this.selectedJourneyPhotos.set(selected);
+      this.selectedJourneyPhoto.set(selected[0] ?? null);
+      this.journeyPhotoPreviews.set(allPreviews);
+      this.journeyPhotoPreview.set(allPreviews[0] ?? null);
+    } catch (error) {
+      this.journeyPhotoError.set(
+        error instanceof Error ? error.message : 'This photo could not be optimized for upload.',
+      );
+    } finally {
+      this.journeyPhotosProcessing.set(false);
+    }
   }
 
   removeJourneyPhoto(index: number): void {
@@ -1780,7 +1785,7 @@ export class CommunityProfile implements OnInit {
 
   canSubmitJourney(): boolean {
     const hasPhotos = this.journeyPhotoPreviews().length > 0 || !!this.journeyPhotoPreview();
-    return (!!this.newJourneyText.trim() || hasPhotos) && !this.postingJourney();
+    return (!!this.newJourneyText.trim() || hasPhotos) && !this.postingJourney() && !this.journeyPhotosProcessing();
   }
 
   submitJourneyPost(): void {
@@ -1858,22 +1863,24 @@ export class CommunityProfile implements OnInit {
     }
   }
 
-  onJourneyCommentPhotoSelected(event: Event, postId: number): void {
+  async onJourneyCommentPhotoSelected(event: Event, postId: number): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-    const file = input.files[0];
-    this.journeyCommentPhotoError.set(null);
-    if (file.size > this.MAX_PICTURE_SIZE) {
-      this.journeyCommentPhotoError.set({ postId, message: 'Picture size exceeds 100 KB limit.' });
-      input.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.journeyCommentPhotoPreview.set({ postId, dataUrl: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+    const source = input.files[0];
     input.value = '';
+    this.journeyCommentPhotoError.set(null);
+    this.journeyCommentPhotoProcessing.set(true);
+    try {
+      const file = await this.service.prepareCommunityPhoto(source);
+      this.journeyCommentPhotoPreview.set({ postId, dataUrl: await readImageAsDataUrl(file) });
+    } catch (error) {
+      this.journeyCommentPhotoError.set({
+        postId,
+        message: error instanceof Error ? error.message : 'This photo could not be optimized for upload.',
+      });
+    } finally {
+      this.journeyCommentPhotoProcessing.set(false);
+    }
   }
 
   clearJourneyCommentPhoto(): void {
@@ -1882,7 +1889,7 @@ export class CommunityProfile implements OnInit {
   }
 
   submitJourneyComment(postId: number): void {
-    if (!this.journeyCommentText.trim() && !this.journeyCommentPhotoPreview()) return;
+    if (this.journeyCommentPhotoProcessing() || (!this.journeyCommentText.trim() && !this.journeyCommentPhotoPreview())) return;
     const attachedImg =
       this.journeyCommentPhotoPreview()?.postId === postId
         ? this.journeyCommentPhotoPreview()?.dataUrl
@@ -2592,6 +2599,7 @@ export class CommunityProfile implements OnInit {
   }
 
   submitCreateCircle(): void {
+    if (this.circlePhotoProcessing()) return;
     if (!this.newCircleName.trim()) {
       this.circleError.set('Circle Name is required.');
       return;
@@ -2741,24 +2749,25 @@ export class CommunityProfile implements OnInit {
     if (error) void this.confirmSvc.notify(error);
   }
 
-  changeCirclePhoto(circle: Circle, event: Event): void {
+  async changeCirclePhoto(circle: Circle, event: Event): Promise<void> {
     event.stopPropagation();
     if (!this.isCircleAdmin(circle)) return;
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    if (file.size > 1024 * 1024) {
-      void this.confirmSvc.notify('Circle photo must be 1 MB or smaller.');
-      input.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const ok = this.service.updateCircle(circle.id, { photoUrl: String(reader.result || '') });
-      if (!ok) void this.confirmSvc.notify('Only an admin can change this Circle photo.');
-    };
-    reader.readAsDataURL(file);
+    const source = input.files?.[0];
+    if (!source) return;
     input.value = '';
+    this.circlePhotoProcessing.set(true);
+    try {
+      const photo = await this.service.prepareCommunityPhoto(source);
+      const ok = this.service.updateCircle(circle.id, { photoUrl: await readImageAsDataUrl(photo) });
+      if (!ok) void this.confirmSvc.notify('Only an admin can change this Circle photo.');
+    } catch (error) {
+      void this.confirmSvc.notify(
+        error instanceof Error ? error.message : 'This Circle photo could not be optimized for upload.',
+      );
+    } finally {
+      this.circlePhotoProcessing.set(false);
+    }
   }
 
   isChatCircleAdmin(box: ActiveChatBox): boolean {
@@ -2767,21 +2776,25 @@ export class CommunityProfile implements OnInit {
     return !!circle && this.isCircleAdmin(circle);
   }
 
-  onCirclePhotoSelected(event: Event, target: 'create' | 'edit' = 'create'): void {
+  async onCirclePhotoSelected(event: Event, target: 'create' | 'edit' = 'create'): Promise<void> {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    if (file.size > 1024 * 1024) {
-      this.circleError.set('Circle photo must be 1 MB or smaller.');
-      return;
+    const source = input.files?.[0];
+    if (!source) return;
+    input.value = '';
+    this.circleError.set(null);
+    this.circlePhotoProcessing.set(true);
+    try {
+      const photo = await this.service.prepareCommunityPhoto(source);
+      const preview = await readImageAsDataUrl(photo);
+      if (target === 'edit') this.editCirclePhoto = preview;
+      else this.circlePhotoPreview.set(preview);
+    } catch (error) {
+      this.circleError.set(
+        error instanceof Error ? error.message : 'This Circle photo could not be optimized for upload.',
+      );
+    } finally {
+      this.circlePhotoProcessing.set(false);
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = String(reader.result || '');
-      if (target === 'edit') this.editCirclePhoto = url;
-      else this.circlePhotoPreview.set(url);
-    };
-    reader.readAsDataURL(file);
   }
 
   openEditCircle(circle: Circle, event?: Event): void {
@@ -2797,6 +2810,7 @@ export class CommunityProfile implements OnInit {
   }
 
   saveEditCircle(): void {
+    if (this.circlePhotoProcessing()) return;
     const id = this.editingCircleId();
     if (!id) return;
     if (!this.newCircleName.trim()) {
@@ -2870,6 +2884,7 @@ export class CommunityProfile implements OnInit {
   }
 
   confirmSaveCircle(): void {
+    if (this.circlePhotoProcessing()) return;
     const key = this.saveCircleChatKey();
     if (key == null) return;
     if (!this.newCircleName.trim()) {
@@ -3135,59 +3150,67 @@ export class CommunityProfile implements OnInit {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    this.profilePhotoError.set(null);
-    if (file.size > this.MAX_PICTURE_SIZE) {
-      this.profilePhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
-      input.value = '';
-      return;
-    }
-    await this.service.uploadProfilePhoto(file);
     input.value = '';
+    this.profilePhotoError.set(null);
+    this.profilePhotoUploading.set(true);
+    try {
+      await this.service.uploadProfilePhoto(file);
+    } catch (error) {
+      this.profilePhotoError.set(
+        error instanceof Error ? error.message : 'Could not optimize or upload the profile photo.',
+      );
+    } finally {
+      this.profilePhotoUploading.set(false);
+    }
   }
 
   async onCoverPhotoUpload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
+    input.value = '';
     this.coverPhotoError.set(null);
-    if (file.size > this.MAX_PICTURE_SIZE) {
-      this.coverPhotoError.set('Picture size exceeds 100 KB limit. Please choose an image under 100 KB.');
-      input.value = '';
-      return;
-    }
+    this.coverPhotoUploading.set(true);
     try {
       await this.service.uploadCoverPhoto(file);
-    } catch (err: any) {
-      this.coverPhotoError.set(err.message || 'Failed to upload cover photo');
+    } catch (error) {
+      this.coverPhotoError.set(
+        error instanceof Error ? error.message : 'Could not optimize or upload the cover photo.',
+      );
+    } finally {
+      this.coverPhotoUploading.set(false);
     }
-    input.value = '';
   }
 
   // ---------------------------------------------------------------------------
   // GALLERY
   // ---------------------------------------------------------------------------
 
-  onGalleryFileSelected(event: Event): void {
+  async onGalleryFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-    const file = input.files[0];
+    const source = input.files[0];
+    input.value = '';
     this.galleryError.set(null);
-    if (file.size > this.MAX_PICTURE_SIZE) {
-      this.galleryError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
+    this.galleryPhotoProcessing.set(true);
+    try {
+      const file = await this.service.prepareCommunityPhoto(source);
+      this.selectedGalleryFile.set(file);
+      this.galleryPreviewUrl.set(await readImageAsDataUrl(file));
+    } catch (error) {
       this.selectedGalleryFile.set(null);
       this.galleryPreviewUrl.set(null);
-      input.value = '';
-      return;
+      this.galleryError.set(
+        error instanceof Error ? error.message : 'This photo could not be optimized for upload.',
+      );
+    } finally {
+      this.galleryPhotoProcessing.set(false);
     }
-    this.selectedGalleryFile.set(file);
-    const reader = new FileReader();
-    reader.onload = () => this.galleryPreviewUrl.set(reader.result as string);
-    reader.readAsDataURL(file);
   }
 
   async submitGalleryUpload(): Promise<void> {
     const file = this.selectedGalleryFile();
-    if (!file) return;
+    if (!file || this.galleryPhotoProcessing()) return;
 
     this.uploadingGallery.set(true);
     try {
@@ -3212,23 +3235,26 @@ export class CommunityProfile implements OnInit {
   // MESSAGEBOOK (PERSONAL TO USER AND COMPANIONS)
   // ---------------------------------------------------------------------------
 
-  onMessageBookPhotoSelected(event: Event): void {
+  async onMessageBookPhotoSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
-    const file = input.files[0];
+    const source = input.files[0];
+    input.value = '';
     this.messageBookPhotoError.set(null);
-    if (file.size > this.MAX_PICTURE_SIZE) {
-      this.messageBookPhotoError.set('Picture size exceeds 100 KB limit. Please choose a photo under 100 KB.');
+    this.messageBookPhotoProcessing.set(true);
+    try {
+      const file = await this.service.prepareCommunityPhoto(source);
+      this.selectedMessageBookPhoto.set(file);
+      this.messageBookPhotoPreview.set(await readImageAsDataUrl(file));
+    } catch (error) {
       this.selectedMessageBookPhoto.set(null);
       this.messageBookPhotoPreview.set(null);
-      input.value = '';
-      return;
+      this.messageBookPhotoError.set(
+        error instanceof Error ? error.message : 'This photo could not be optimized for upload.',
+      );
+    } finally {
+      this.messageBookPhotoProcessing.set(false);
     }
-    this.selectedMessageBookPhoto.set(file);
-    const reader = new FileReader();
-    reader.onload = () => this.messageBookPhotoPreview.set(reader.result as string);
-    reader.readAsDataURL(file);
-    input.value = '';
   }
 
   clearMessageBookPhoto(): void {
@@ -3238,7 +3264,7 @@ export class CommunityProfile implements OnInit {
   }
 
   async submitPost(): Promise<void> {
-    if (!this.newPostText.trim() && !this.messageBookPhotoPreview()) return;
+    if (this.messageBookPhotoProcessing() || (!this.newPostText.trim() && !this.messageBookPhotoPreview())) return;
     this.postingPost.set(true);
     try {
       await this.service.postComment(

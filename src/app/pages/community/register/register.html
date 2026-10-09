@@ -51,7 +51,7 @@
         </div>
         <div class="photo-meta">
           <label class="photo-label">Profile Photograph <span class="req">*</span></label>
-          <p class="photo-hint">Mandatory Picture for your community profile (JPEG, PNG, JPG &lt; 200 KB).</p>
+          <p class="photo-hint">Mandatory JPEG or PNG photo. Images larger than 100 KB are automatically optimized before upload.</p>
           @if (photoError()) {
             <span class="field-error-msg">{{ photoError() }}</span>
           }
@@ -226,9 +226,11 @@
         <button
           type="submit"
           class="btn-create-account"
-          [disabled]="submitting()"
+          [disabled]="submitting() || photoProcessing()"
         >
-          @if (submitting()) {
+          @if (photoProcessing()) {
+            Optimizing photo...
+          } @else if (submitting()) {
             Creating Account...
           } @else {
             Create Neverbeen Account

@@ -125,9 +125,9 @@
               placeholder="Write a reply..."
               class="reply-input-field"
             />
-            <label class="btn-attach-reply-photo" title="Attach photo (Max 100 KB)">
+            <label class="btn-attach-reply-photo" title="Photo is automatically optimized to 100 KB or less">
               📷
-              <input type="file" accept="image/*" (change)="onReplyPhotoSelected($event)" class="hidden-file-input" />
+              <input type="file" accept="image/*" (change)="onReplyPhotoSelected($event)" [disabled]="replyPhotoProcessing()" class="hidden-file-input" />
             </label>
           </div>
           @if (replyPhotoPreview()) {
@@ -144,7 +144,7 @@
             <button
               type="button"
               class="btn-submit-reply"
-              [disabled]="!replyText.trim()"
+              [disabled]="replyPhotoProcessing() || !replyText.trim()"
               (click)="submitReply()"
             >
               Reply
