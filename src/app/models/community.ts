@@ -551,12 +551,21 @@ export interface Circle {
 export interface LoginDevice {
   id: string;
   name: string;
+  /** Exact device model the browser reports (e.g. "iPhone 15 Pro", "Google Pixel 8"). */
+  model?: string;
   type: 'Phone' | 'Tablet' | 'Laptop' | 'Desktop';
   os: string;
   browser: string;
   ipAddress: string;
   macAddress: string;
+  /** Legacy free-form location string (kept for devices saved by older builds). */
   location: string;
+  /** IP-geolocation parts (filled when the geolocation lookup answered). */
+  country?: string;
+  city?: string;
+  locality?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   lastSeenUtc: string;
   isCurrent: boolean;
   isActive: boolean;
@@ -565,7 +574,16 @@ export interface LoginDevice {
 
 export interface NotificationItem {
   id: number;
-  type: 'companionship_request' | 'companionship_accepted' | 'journey_like' | 'journey_comment';
+  /**
+   * 'message' = a messenger message arrived (one per message; drives the bell badge
+   * and the Notifications list). `requestId` then holds the conversation / message id.
+   */
+  type:
+    | 'companionship_request'
+    | 'companionship_accepted'
+    | 'journey_like'
+    | 'journey_comment'
+    | 'message';
   fromUser: AuthorInfo;
   message: string;
   createdAtUtc: string;

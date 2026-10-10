@@ -1,0 +1,85 @@
+From 496e57feec5345f1ffdba6a9a0986520c071bc71 Mon Sep 17 00:00:00 2001
+From: Arena Agent <agent@arena.ai>
+Date: Sat, 10 Oct 2026 12:50:15 +0000
+Subject: [PATCH] Community: device detail columns, follow-feed index,
+ per-message notification index
+
+- LoginDevices stores the exact device model (Model) and the IP-geolocation
+  details (Country, City, Locality, Latitude, Longitude) shown on the
+  Settings "Devices used" page (Requirement B). Existing databases get the
+  columns through idempotent ALTER TABLE ... ADD COLUMN IF NOT EXISTS.
+- IX_Follows_FollowerId speeds the Journey feed's join with the members the
+  feed owner follows (Requirement A).
+- IX_Notifications_User_Type supports the one-notification-per-message
+  stream of the messenger (Requirement C).
+---
+ README.md  |  2 +-
+ schema.sql | 18 ++++++++++++++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 8e44e9e..3568a1b 100644
+--- a/README.md
++++ b/README.md
+@@ -8,7 +8,7 @@ table the .NET 7 `NeverBeen.API` writes to:
+ | Sign in / sign up | `Users`, `ExternalIdentities` (Google / Facebook / Microsoft SSO) |
+ | Profile + About Me | `Users` (details JSON, photos, verification, active status, profile lock) |
+ | Settings | `UserSettings` (privacy, messaging, tagging, notifications, 2FA …) |
+-| Login security | `LoginDevices` (phones / laptops used to sign in) |
++| Login security | `LoginDevices` (phones / laptops used to sign in — exact model, browser, IP, country / city / locality, coordinates) |
+ | Gallery | `GalleryAlbums`, `GalleryPhotos` |
+ | Journey feed | `JourneyPosts`, `JourneyPostAudienceEntries`, `JourneyPostTags`, `JourneyPostReactions`, `JourneyComments`, `JourneyCommentReactions` |
+ | Message Book | `CommunityComments`, `CommunityCommentTags`, `CommentReactions` |
+diff --git a/schema.sql b/schema.sql
+index af3a6a7..bc8341e 100644
+--- a/schema.sql
++++ b/schema.sql
+@@ -153,6 +153,12 @@ CREATE TABLE IF NOT EXISTS "LoginDevices" (
+     "IpAddress"    varchar(45),
+     "MacAddress"   varchar(32),
+     "Location"     varchar(120),
++    "Model"        varchar(120),                                         -- exact device model ("iPhone 15 Pro", "Google Pixel 8")
++    "Country"      varchar(100),                                         -- IP-geolocation country
++    "City"         varchar(120),                                         -- IP-geolocation city
++    "Locality"     varchar(120),                                         -- finest area the geolocation answered
++    "Latitude"     double precision,                                     -- WGS 84
++    "Longitude"    double precision,                                     -- WGS 84
+     "LastSeenUtc"  timestamptz  NOT NULL DEFAULT now(),
+     "IsCurrent"    boolean      NOT NULL DEFAULT false,
+     "IsActive"     boolean      NOT NULL DEFAULT true,
+@@ -160,6 +166,14 @@ CREATE TABLE IF NOT EXISTS "LoginDevices" (
+     "CreatedAtUtc" timestamptz  NOT NULL DEFAULT now()
+ );
+ 
++-- Requirement B: existing databases get the device detail columns (idempotent ADD COLUMN IF NOT EXISTS).
++ALTER TABLE "LoginDevices" ADD COLUMN IF NOT EXISTS "Model"      varchar(120);
++ALTER TABLE "LoginDevices" ADD COLUMN IF NOT EXISTS "Country"    varchar(100);
++ALTER TABLE "LoginDevices" ADD COLUMN IF NOT EXISTS "City"       varchar(120);
++ALTER TABLE "LoginDevices" ADD COLUMN IF NOT EXISTS "Locality"   varchar(120);
++ALTER TABLE "LoginDevices" ADD COLUMN IF NOT EXISTS "Latitude"   double precision;
++ALTER TABLE "LoginDevices" ADD COLUMN IF NOT EXISTS "Longitude"  double precision;
++
+ CREATE INDEX IF NOT EXISTS "IX_LoginDevices_UserId" ON "LoginDevices" ("UserId");
+ 
+ -- ---------------------------------------------------------------------------
+@@ -347,6 +361,8 @@ CREATE TABLE IF NOT EXISTS "Follows" (
+ 
+ CREATE UNIQUE INDEX IF NOT EXISTS "UX_Follows_Follower_Followee" ON "Follows" ("FollowerId", "FolloweeId");
+ CREATE INDEX IF NOT EXISTS "IX_Follows_FolloweeId" ON "Follows" ("FolloweeId");
++-- Requirement A: the Journey feed joins Follows on the follower (the feed owner).
++CREATE INDEX IF NOT EXISTS "IX_Follows_FollowerId" ON "Follows" ("FollowerId");
+ 
+ -- ---------------------------------------------------------------------------
+ -- Circles (travel circles + group chat)
+@@ -445,6 +461,8 @@ CREATE TABLE IF NOT EXISTS "Notifications" (
+ );
+ 
+ CREATE INDEX IF NOT EXISTS "IX_Notifications_UserId" ON "Notifications" ("UserId", "IsRead", "CreatedAtUtc" DESC);
++-- Requirement C: one row per messenger message — the unread bell badge counts them.
++CREATE INDEX IF NOT EXISTS "IX_Notifications_User_Type" ON "Notifications" ("UserId", "Type", "CreatedAtUtc" DESC);
+ 
+ -- ---------------------------------------------------------------------------
+ -- Moderation (abuse reports, blocks, hidden posts)
+-- 
+2.39.5
+

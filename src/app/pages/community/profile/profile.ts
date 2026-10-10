@@ -24,6 +24,8 @@ import {
   HOLD_REACTION_OPTIONS,
   JourneyComment,
   JourneyPost,
+  LoginDevice,
+  NotificationItem,
   GalleryAlbum,
   GalleryPhoto,
   PostAudience,
@@ -3014,6 +3016,42 @@ export class CommunityProfile implements OnInit {
     );
   }
 
+  /** Small per-type icon for the Notifications list. */
+  notificationTypeIcon(type: NotificationItem['type']): string {
+    switch (type) {
+      case 'message':
+        return '💬';
+      case 'journey_like':
+        return '❤️';
+      case 'journey_comment':
+        return '✍️';
+      case 'companionship_accepted':
+        return '🤝';
+      default:
+        return '👋';
+    }
+  }
+
+  /** Requirement C — "Reply" on a message notification opens the floating chat with the sender. */
+  replyToMessageNotification(notif: NotificationItem): void {
+    const known = this.service.companions().find((c) => Number(c.id) === Number(notif.fromUser.id));
+    this.openChatWith(
+      known ?? {
+        id: notif.fromUser.id,
+        uniqueId: notif.fromUser.uniqueId,
+        fullName: notif.fromUser.fullName || 'NeverBeen Traveler',
+        profilePhotoUrl: notif.fromUser.profilePhotoUrl || '',
+        country: notif.fromUser.country || '',
+        city: notif.fromUser.city || '',
+        profession: notif.fromUser.profession || '',
+        isOnline: false,
+        mutualCompanionsCount: 0,
+        status: 'connected',
+      },
+    );
+    this.setSection('messenger');
+  }
+
   closeChat(companionId: number): void {
     this.service.closeChatBox(companionId);
   }
@@ -3929,15 +3967,40 @@ export class CommunityProfile implements OnInit {
     if (result === 'self') this.logout();
   }
 
+  /**
+   * Requirement B — the device row's location line: locality, city and country from
+   * the geolocation parts (or the legacy free-form string when the device predates
+   * them). Duplicates are dropped so "Kolkata, Kolkata, India" never happens.
+   */
+  deviceLocationParts(device: LoginDevice): string[] {
+    const parts = [device.locality, device.city, device.country].filter((v): v is string => !!v && v.length > 0);
+    if (parts.length === 0 && device.location) return [device.location];
+    const unique: string[] = [];
+    for (const part of parts) {
+      if (!unique.some((u) => u.toLowerCase() === part.toLowerCase())) unique.push(part);
+    }
+    return unique;
+  }
+
   async blockDevice(deviceId: string): Promise<void> {
     const device = this.service.devices().find((d) => d.id === deviceId);
+    if (device?.isCurrent) {
+      // Requirement B: the current device can never be blocked — no confirm, no
+      // logout, just a clear answer (the UI only offers the "This Device" badge).
+      alert('This is the device you are using now — it cannot be blocked. You can block the other devices signed in to your account instead.');
+      return;
+    }
     const ok = await this.confirmSvc.confirm(
-      `Block ${device?.name ?? 'this device'}? It will be signed out and cannot open your profile until you unblock it.`,
+      `Block ${device?.model || device?.name || 'this device'}? It will be signed out and cannot open your profile until you unblock it.`,
       'Block device',
     );
     if (!ok) return;
     const result = this.service.blockDevice(deviceId);
-    if (result === 'self') this.logout();
+    if (result === 'self') {
+      // Defensive: the service also refuses the current device.
+      alert('This is the device you are using now — it cannot be blocked.');
+      return;
+    }
   }
 
   unblockDevice(deviceId: string): void {

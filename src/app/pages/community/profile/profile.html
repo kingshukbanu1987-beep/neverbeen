@@ -3010,7 +3010,7 @@
 
             <div class="notifications-list">
               @for (notif of service.notifications(); track notif.id) {
-                <div class="notification-card" [class.unread]="!notif.isRead">
+                <div class="notification-card" [class.unread]="!notif.isRead" [attr.data-type]="notif.type">
                   <img
                     [src]="notif.fromUser.profilePhotoUrl || defaultAvatar"
                     [alt]="notif.fromUser.fullName || 'User'"
@@ -3019,6 +3019,7 @@
                     (click)="openVisitorProfile(notif.fromUser)"
                   />
                   <div class="notif-content">
+                    <span class="notif-type-chip" aria-hidden="true">{{ notificationTypeIcon(notif.type) }}</span>
                     <p class="notif-text">
                       <strong class="clickable-user" [nbUserPreview]="notif.fromUser" (click)="openVisitorProfile(notif.fromUser)">
                         {{ notif.fromUser.fullName }}
@@ -3049,6 +3050,17 @@
                       <span class="badge-approved">✓ Companionship Approved</span>
                     } @else if (notif.type === 'companionship_request' && notif.status === 'rejected') {
                       <span class="badge-rejected">✕ Companionship Declined</span>
+                    } @else if (notif.type === 'message') {
+                      <!-- Requirement C: a message notification links straight back to the chat. -->
+                      <div class="notif-actions-row">
+                        <button
+                          type="button"
+                          class="btn-primary-action btn-sm"
+                          (click)="replyToMessageNotification(notif)"
+                        >
+                          Reply
+                        </button>
+                      </div>
                     }
                   </div>
                 </div>
@@ -3372,24 +3384,33 @@
 
               <div class="settings-card devices-card">
                 <h3 class="card-title">Devices used</h3>
-                <p class="card-desc">Devices are saved to your NeverBeen account whenever you sign in, so your recent sign-in history follows you between browsers. We show the device, operating system, browser, and last-seen time; a hardware MAC address is not exposed to websites.</p>
+                <p class="card-desc">Devices are saved to your NeverBeen account whenever you sign in, so your recent sign-in history follows you between browsers. We show the exact device model, browser, IP address, location (country, city and locality) and coordinates; a hardware MAC address is not exposed to websites. You can block any other signed-in device — this device itself can never be blocked.</p>
                 <div class="device-list">
                   @for (device of service.visibleDevices(); track device.id) {
                     <article class="device-row" [class.blocked]="device.blocked" [class.current]="device.isCurrent">
                       <div class="device-mark">{{ device.type === 'Phone' ? '📱' : device.type === 'Tablet' ? '📲' : device.type === 'Laptop' ? '💻' : '🖥️' }}</div>
                       <div class="device-copy">
-                        <strong>{{ device.name }}</strong>
-                        <span>{{ device.type }} · {{ device.os }} · {{ device.browser }}</span>
-                        @if (device.ipAddress || device.location) {
-                          <span class="device-net">
-                            @if (device.ipAddress) { IP {{ device.ipAddress }} }
-                            @if (device.location) { · {{ device.location }} }
-                          </span>
+                        <strong>{{ device.model || device.name }}</strong>
+                        <span class="device-specs">{{ device.type }} · {{ device.os }} · {{ device.browser }}</span>
+                        @if (device.ipAddress) {
+                          <span class="device-net">IP {{ device.ipAddress }}</span>
                         }
-                        <span>{{ device.isCurrent ? 'This device' : (device.isActive ? 'Signed in' : 'Last seen') }} · {{ formatTime(device.lastSeenUtc) }}</span>
+                        @if (deviceLocationParts(device).length > 0) {
+                          <span class="device-net">
+                            📍 {{ deviceLocationParts(device).join(', ') }}
+                          </span>
+                        } @else if (device.location) {
+                          <span class="device-net">📍 {{ device.location }}</span>
+                        }
+                        @if (device.latitude !== null && device.latitude !== undefined && device.longitude !== null && device.longitude !== undefined) {
+                          <span class="device-coords" title="Coordinates">🌐 {{ device.latitude!.toFixed(4) }}, {{ device.longitude!.toFixed(4) }}</span>
+                        }
+                        <span class="device-seen-line">{{ device.isCurrent ? 'This device' : (device.isActive ? 'Signed in' : 'Last seen') }} · {{ formatTime(device.lastSeenUtc) }}</span>
                       </div>
                       <div class="device-actions">
-                        @if (device.blocked) {
+                        @if (device.isCurrent && !device.blocked) {
+                          <span class="device-pill current">This Device</span>
+                        } @else if (device.blocked) {
                           <span class="device-pill blocked">Blocked</span>
                           <button type="button" class="btn-action-subtle" (click)="unblockDevice(device.id)">Unblock</button>
                         } @else {
