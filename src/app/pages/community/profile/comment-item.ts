@@ -44,7 +44,7 @@ export class CommentThreadComponent {
   private readonly community = inject(CommunityService);
 
   presenceLabel(author: AuthorInfo): string {
-    return this.community.presenceFor(author.id).label;
+    return this.community.presenceFor(author.id, author).label;
   }
 
   @Output() reply = new EventEmitter<{ postId: number; parentCommentId: number; text: string; imageUrl?: string }>();

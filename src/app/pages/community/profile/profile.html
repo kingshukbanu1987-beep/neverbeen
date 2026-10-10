@@ -231,14 +231,14 @@
 
           <!-- ACTIVE STATUS SELECTOR (Dropdown with pulsing Active indicator) -->
           <div class="active-status-bar">
-            <div class="status-indicator-dot" [ngClass]="getStatusIconClass(service.currentUser()?.activeStatus)">
-              @if (service.currentUser()?.activeStatus === 'Active') {
+            <div class="status-indicator-dot" [ngClass]="getStatusIconClass(ownPresence().status)">
+              @if (ownPresence().status === 'Active') {
                 <span class="pulse-ring"></span>
               }
             </div>
             <select
               class="active-status-dropdown"
-              [value]="service.currentUser()?.activeStatus || 'Active'"
+              [value]="ownStatusChoice()"
               (change)="onStatusSelect($event)"
               title="Change active presence"
             >
@@ -248,6 +248,9 @@
                 </option>
               }
             </select>
+            @if (ownPresence().lastSeenLabel) {
+              <span class="status-last-seen">{{ ownPresence().label }}</span>
+            }
           </div>
 
           <div class="follow-count-row" aria-label="Followers and following">
@@ -579,7 +582,7 @@
               <div class="side-companion-main-row">
                 <div class="side-companion-avatar-wrap">
                   <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="side-companion-avatar" [nbUserPreview]="comp" />
-                  <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
+                  <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)" [title]="presenceLabel(comp)"></span>
                 </div>
                 <div class="side-companion-meta">
                   <span class="side-companion-name" [nbUserPreview]="comp">
@@ -685,7 +688,7 @@
                     </div>
                     <div class="post-sub-meta">
                       <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
-                      <span class="post-presence-label">{{ presenceLabel(post.author.id) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(post.author) }}</span>
                       @if (post.location) {
                         <span class="post-loc">{{ post.location }}</span>
                       }
@@ -815,7 +818,7 @@
                       </div>
                       <div class="post-sub-meta">
                         <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
-                        <span class="post-presence-label" [title]="presenceLabel(post.author.id)">{{ presenceLabel(post.author.id) }}</span>
+                        <span class="post-presence-label" [title]="presenceLabel(post.author)">{{ presenceLabel(post.author) }}</span>
                         @if (post.location) {
                           <span class="post-loc" title="Google Maps Verified Location">
                             <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
@@ -2068,7 +2071,7 @@
                         <app-tagged-with [people]="comment.taggedCompanions || []" (openPerson)="openVisitorProfile($event)" />
                       </div>
                       <span class="post-time">{{ formatTime(comment.createdAtUtc) }}</span>
-                      <span class="post-presence-label">{{ presenceLabel(comment.author.id) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(comment.author) }}</span>
                     </div>
                   </div>
                   <p class="post-body-text" [nbTranslatable]="comment.text">{{ comment.text }}</p>
@@ -2914,7 +2917,7 @@
                       </div>
                       <div class="chat-item-info">
                         <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
-                        <span>{{ presenceLabel(c.id) }} · {{ c.city }}, {{ c.country }}</span>
+                        <span>{{ presenceLabel(c) }} · {{ c.city }}, {{ c.country }}</span>
                       </div>
                       <button type="button" class="btn-launch-chat">Chat</button>
                     </div>
@@ -2935,7 +2938,7 @@
                       </div>
                       <div class="chat-item-info">
                         <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
-                        <span>Last seen recently</span>
+                        <span>Last seen {{ lastSeenLabel(c) }}</span>
                       </div>
                       <button type="button" class="btn-launch-chat">Leave Message</button>
                     </div>
@@ -3605,7 +3608,7 @@
             </div>
             <div class="chat-header-info">
               <span class="chat-user-name">{{ box.companion.fullName }}</span>
-              <span class="chat-user-subhead">{{ box.isGroup ? (box.participantIds?.length || 0) + ' travelers' : presenceLabel(box.companion.id) }}</span>
+              <span class="chat-user-subhead">{{ box.isGroup ? (box.participantIds?.length || 0) + ' travelers' : presenceLabel(box.companion) }}</span>
             </div>
           </div>
           <div class="chat-controls">
@@ -4459,7 +4462,7 @@
               (click)="openImageModal(viewingVisitor()!.profilePhotoUrl || defaultAvatar)"
               title="Click to view full photo"
             />
-            <span class="visitor-avatar-status-dot" [ngClass]="getStatusIconClass(viewingVisitor()!.activeStatus)"></span>
+            <span class="visitor-avatar-status-dot" [ngClass]="getStatusIconClass(viewingVisitor()!.activeStatus)" [title]="presenceLabel(viewingVisitor())"></span>
             <button
               type="button"
               class="btn-avatar-zoom-badge"
@@ -4492,7 +4495,7 @@
             </p>
 
             <div class="visitor-hero-badges">
-              <span class="badge-active-tag">{{ getStatusLabel(viewingVisitor()!.activeStatus, viewingVisitor()!.customStatusText) }}</span>
+              <span class="badge-active-tag">{{ presenceLabel(viewingVisitor()) }}</span>
               <button type="button" class="follow-count-btn follow-count-inline" (click)="openFollowList('followers', viewingVisitor()!.id)">
                 <strong>{{ service.followerCount(viewingVisitor()!.id) }}</strong>
                 <span>Followers</span>
@@ -4658,7 +4661,7 @@
                     <div class="visitor-side-comp-left" (click)="comp.id === (service.currentUser()?.id || 1) ? closeVisitorProfile() : openVisitorProfile(comp)">
                       <div class="visitor-side-comp-avatar-wrap">
                         <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="visitor-side-comp-avatar" [nbUserPreview]="comp" />
-                        <span class="visitor-side-comp-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
+                        <span class="visitor-side-comp-dot" [ngClass]="getStatusIconClass(comp.activeStatus)" [title]="presenceLabel(comp)"></span>
                       </div>
                       <div class="visitor-side-comp-details">
                         <strong class="visitor-side-comp-name" [nbUserPreview]="comp">
@@ -5043,7 +5046,7 @@
                     </div>
                     <div class="post-sub-meta">
                       <span class="post-time">{{ formatTime(post.createdAtUtc) }}</span>
-                      <span class="post-presence-label">{{ presenceLabel(post.author.id) }}</span>
+                      <span class="post-presence-label">{{ presenceLabel(post.author) }}</span>
                       @if (post.location) {
                         <span class="post-loc" title="Google Maps Verified Location">
                           <span class="post-loc-icon"><img src="https://pngimg.com/uploads/gps/gps_PNG38.png" alt="GPS" class="inline-gps-icon" /><span class="pin-txt">📍</span></span> <span class="post-loc-text">{{ post.location }}</span>
@@ -5368,7 +5371,7 @@
               <div class="modal-comp-user-info" (click)="closeAllUserCompanionsModal(); openVisitorProfile(comp)">
                 <div class="modal-comp-avatar-wrap">
                   <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" [nbUserPreview]="comp" />
-                  <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
+                  <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)" [title]="presenceLabel(comp)"></span>
                 </div>
                 <div class="modal-comp-meta">
                   <strong class="modal-comp-name" [nbUserPreview]="comp">
@@ -5436,7 +5439,7 @@
               <div class="modal-comp-user-info" (click)="closeMutualCompanionsModal(); openVisitorProfile(comp)">
                 <div class="modal-comp-avatar-wrap">
                   <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="modal-comp-avatar" [nbUserPreview]="comp" />
-                  <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)"></span>
+                  <span class="side-companion-status-dot" [ngClass]="getStatusIconClass(comp.activeStatus)" [title]="presenceLabel(comp)"></span>
                 </div>
                 <div class="modal-comp-meta">
                   <strong class="modal-comp-name" [nbUserPreview]="comp">

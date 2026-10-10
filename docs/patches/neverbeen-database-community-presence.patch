@@ -1,0 +1,22 @@
+diff --git a/schema.sql b/schema.sql
+index af3a6a7..1c76717 100644
+--- a/schema.sql
++++ b/schema.sql
+@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS "Users" (
+     "AboutMeDetailsJson"        text,                                     -- About Me (8 sub-sections + visibility) as JSON
+     "ActiveStatus"              varchar(20)  NOT NULL DEFAULT 'Active',   -- Active|Busy|Don't Disturb|Away|Inactive|Custom
+     "CustomStatusText"          varchar(30),
++    "LastSeenUtc"               timestamptz,                              -- last use of the community (presence); Away after 15 min without use
+     "IsProfileLocked"           boolean      NOT NULL DEFAULT false,
+     "IsVerified"                boolean      NOT NULL DEFAULT false,
+     "VerifiedEmail"             varchar(256),
+@@ -83,6 +84,9 @@ CREATE TABLE IF NOT EXISTS "Users" (
+ CREATE UNIQUE INDEX IF NOT EXISTS "UX_Users_Email"    ON "Users" ("Email");
+ CREATE UNIQUE INDEX IF NOT EXISTS "UX_Users_UniqueId" ON "Users" ("UniqueId");
+ 
++-- Presence (patch: community-presence): databases created before LastSeenUtc existed.
++ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "LastSeenUtc" timestamptz;
++
+ -- Derive the 20-digit UniqueId automatically ('8920153401' + lpad(Id, 10, '0')).
+ CREATE OR REPLACE FUNCTION neverbeen_set_user_unique_id() RETURNS trigger AS $$
+ BEGIN

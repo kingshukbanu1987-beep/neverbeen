@@ -458,6 +458,14 @@
   box-shadow: none;
 }
 
+/* “Away · last seen 12 min ago” beside the member's own status */
+.status-last-seen {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
 .status-indicator-dot {
   position: relative;
   width: 10px;

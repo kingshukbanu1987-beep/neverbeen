@@ -59,6 +59,15 @@ import {
   normalizeCircle,
 } from '../models/circle-seed';
 import { statusIconClass } from '../shared/presence-dot/presence-dot';
+import {
+  chosenPresence,
+  effectivePresence,
+  PRESENCE_CLOCK_MS,
+  PRESENCE_HEARTBEAT_MS,
+  PRESENCE_INPUT_REPORT_GAP_MS,
+  PresenceActivity,
+  presenceText,
+} from './community-presence';
 import { inspectCommunityText } from '../pages/community/profile/content-guard';
 import { extractHashtags } from '../pages/community/profile/hashtags';
 import { StorageReport, StorageSlice, buildStorageReport, imageBytes, utf8Bytes } from '../pages/community/profile/storage-meter';
@@ -317,6 +326,38 @@ export function splitFullName(fullName?: string | null): { firstName: string; la
 export const DEMO_SESSION_TOKEN = 'jwt_default_active_token';
 
 /** True when an auth cookie holds the demo marker rather than a real member's JWT. */
+/** Presence fields a hint may carry (an author, a companion or a preview card). */
+export interface PresenceHint {
+  activeStatus?: UserActiveStatus;
+  customStatusText?: string;
+  lastSeenUtc?: string;
+  isOnline?: boolean;
+}
+
+/** How a member's presence reads right now (see `CommunityService.presenceFor`). */
+export interface PresenceView {
+  status: UserActiveStatus;
+  /** Full wording, e.g. “Away · last seen 12 min ago”. */
+  label: string;
+  klass: string;
+  lastSeenUtc: string | null;
+  /** The time part of the last-seen wording (“12 min ago”), for Away and Inactive only. */
+  lastSeenLabel: string | null;
+}
+
+/** Input events that count as the member using the community. */
+const PRESENCE_INPUT_EVENTS = ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel', 'scroll'] as const;
+const PRESENCE_INPUT_LISTENER: AddEventListenerOptions = { capture: true, passive: true };
+
+/**
+ * Demo members who are Away or Inactive get a stable “last seen” time (20 minutes to 3 days
+ * ago), so the guest tour shows the same wording as a real member.
+ */
+function demoLastSeenIso(userId: number, nowMs: number): string {
+  const minutesAgo = 20 + ((Math.abs(Math.trunc(userId)) * 37) % (3 * 24 * 60 - 20));
+  return new Date(nowMs - minutesAgo * 60_000).toISOString();
+}
+
 export function isDemoSessionToken(token: string | null | undefined): boolean {
   return token === DEMO_SESSION_TOKEN;
 }
@@ -400,6 +441,8 @@ export interface ApiProfileDto {
   activeStatus?: string | null;
   /** Custom presence text used when `activeStatus` is "Custom". */
   customStatusText?: string | null;
+  /** When the member was last using the community (ISO, UTC); the member's own stored value on /me. */
+  lastSeenUtc?: string | null;
   /** Relative API URL of the uploaded cover photograph (`/api/profile/{id}/cover`). */
   coverPhotoUrl?: string | null;
   profession?: string | null;
@@ -422,6 +465,11 @@ export interface ApiAuthorDto {
   country?: string | null;
   city?: string | null;
   isVerified?: boolean;
+  /** Presence the API resolved for the viewer (Active, Away, Inactive, …). */
+  activeStatus?: string | null;
+  customStatusText?: string | null;
+  /** When the member was last using the community (ISO, UTC). */
+  lastSeenUtc?: string | null;
 }
 
 export interface ApiCompanionDto {
@@ -447,6 +495,8 @@ export interface ApiCompanionDto {
   isFollowing?: boolean;
   relationshipStatus?: string | null;
   connectedCompanionIds?: number[] | null;
+  /** When the traveler was last using the community (ISO, UTC). */
+  lastSeenUtc?: string | null;
 }
 
 /**
@@ -1064,6 +1114,7 @@ export class CommunityService {
       coverPhotoUrl: p.coverPhotoUrl,
       activeStatus: p.activeStatus,
       customStatusText: p.customStatusText,
+      lastSeenUtc: p.lastSeenUtc,
       isProfileLocked: p.isProfileLocked,
       isVerified: p.isVerified,
       verifiedEmail: p.verifiedEmail,
@@ -1403,6 +1454,9 @@ export class CommunityService {
     country?: string | null;
     city?: string | null;
     isVerified?: boolean | null;
+    activeStatus?: string | null;
+    customStatusText?: string | null;
+    lastSeenUtc?: string | null;
   } | null): AuthorInfo {
     return {
       id: dto?.id ?? 0,
@@ -1413,6 +1467,9 @@ export class CommunityService {
       country: dto?.country ?? undefined,
       city: dto?.city ?? undefined,
       isVerified: !!dto?.isVerified,
+      activeStatus: dto?.activeStatus ? (dto.activeStatus as UserActiveStatus) : undefined,
+      customStatusText: dto?.customStatusText ?? undefined,
+      lastSeenUtc: dto?.lastSeenUtc ?? undefined,
     };
   }
 
@@ -1436,6 +1493,7 @@ export class CommunityService {
       isProfileLocked: !!dto.isProfileLocked,
       activeStatus: (dto.activeStatus as UserActiveStatus) ?? 'Active',
       customStatusText: dto.customStatusText ?? undefined,
+      lastSeenUtc: dto.lastSeenUtc ?? undefined,
       isVerified: !!dto.isVerified,
       isFollowing: !!dto.isFollowing,
       connectedCompanionIds: dto.connectedCompanionIds ?? undefined,
@@ -1949,6 +2007,7 @@ export class CommunityService {
       commentCount: dto.commentCount ?? fallback?.commentCount ?? 0,
       activeStatus: (dto.activeStatus as UserActiveStatus) ?? fallback?.activeStatus,
       customStatusText: dto.customStatusText ?? fallback?.customStatusText,
+      lastSeenUtc: dto.lastSeenUtc ?? fallback?.lastSeenUtc,
       isProfileLocked: dto.settings?.isProfileLocked ?? fallback?.isProfileLocked,
       aboutMeDetails:
         CommunityService.parseAboutMeDetails(dto.aboutMeDetailsJson) ?? fallback?.aboutMeDetails,
@@ -2190,6 +2249,10 @@ export class CommunityService {
       status: dto.user?.status ?? 'Pending',
       profileComplete: dto.user?.profileComplete ?? false,
       profilePhotoUrl: this.absoluteApiUrl(dto.user?.profilePhotoUrl),
+      // Signing in always starts the member as Active (the Web API does the same on login).
+      activeStatus: 'Active',
+      customStatusText: '',
+      lastSeenUtc: new Date().toISOString(),
     };
     this.currentUser.set(user);
     this.saveJson(USER_KEY, user);
@@ -2531,6 +2594,7 @@ export class CommunityService {
         profilePhotoUrl: storedProfile.profilePhotoUrl || p.picture || '',
         activeStatus: 'Active',
         customStatusText: '',
+        lastSeenUtc: new Date().toISOString(),
         isProfileLocked: storedProfile.settings?.isProfileLocked ?? false,
         isVerified: false,
         verificationType: null,
@@ -2813,10 +2877,13 @@ export class CommunityService {
   }
 
   logout(): void {
+    // Signing out makes the member Inactive, whatever status they had chosen. Sent first, while
+    // the Bearer token is still in place.
+    this.reportSignOut();
     this.exitGuestBrowsing();
     const u = this.currentUser();
     if (u) {
-      this.currentUser.set({ ...u, activeStatus: 'Inactive' });
+      this.currentUser.set({ ...u, activeStatus: 'Inactive', lastSeenUtc: new Date().toISOString() });
     }
     deleteCookie(TOKEN_KEY);
     this.stopLiveUpdates();
@@ -2847,6 +2914,8 @@ export class CommunityService {
     }
     this.currentUser.update((u) => (u ? { ...u, activeStatus: status, customStatusText: sanitized } : null));
     this.profile.update((p) => (p ? { ...p, activeStatus: status, customStatusText: sanitized } : null));
+    // Choosing a status is a use of the community: the member is not Away because of it.
+    this.recordSelfLastSeen(Date.now());
     this.saveJson(USER_KEY, this.currentUser());
     this.saveJson(PROFILE_KEY, this.profile());
     // Presence lives in the member row's own columns on the Web API
@@ -5109,7 +5178,138 @@ export class CommunityService {
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // Presence — Active on sign-in, Away after 15 minutes without use, Inactive on sign-out.
+  // The rules live in community-presence.ts. While a member's page is open it reports the
+  // member's activity (POST /api/presence/heartbeat) and tells the Web API when the member
+  // leaves the page; the Web API keeps the last-seen time and shows Away to other members.
+  // ---------------------------------------------------------------------------
+
+  /** Re-evaluates Away and the “last seen” wording while the page is open (every 30 s). */
+  readonly presenceNow = signal(Date.now());
+  private readonly presenceActivity = new PresenceActivity(Date.now());
+  private presenceListening = false;
+  private presenceBeatTimer: ReturnType<typeof setInterval> | null = null;
+  private presenceClockTimer: ReturnType<typeof setInterval> | null = null;
+  private lastPresenceReportMs = 0;
+
+  /** Input that proves the member is using the page (pointer, keyboard, touch, scroll). */
+  private readonly onPresenceInput = (): void => {
+    const now = Date.now();
+    this.presenceActivity.noteInput(now);
+    if (now - this.lastPresenceReportMs > PRESENCE_INPUT_REPORT_GAP_MS) this.sendPresence(now, false);
+  };
+
+  private readonly onPresenceFocus = (): void => {
+    this.presenceActivity.setFocused(true);
+    this.sendPresenceIfUsing();
+  };
+
+  /** The window lost focus (another window or app, or the page is closing): the member left. */
+  private readonly onPresenceBlur = (): void => {
+    this.presenceActivity.setFocused(false);
+    this.sendPresence(Date.now(), true);
+  };
+
+  private readonly onPresenceVisibility = (): void => {
+    const visible = typeof document === 'undefined' || document.visibilityState === 'visible';
+    this.presenceActivity.setVisible(visible);
+    if (visible) this.sendPresenceIfUsing();
+    else this.sendPresence(Date.now(), true);
+  };
+
+  private startPresence(): void {
+    if (this.presenceListening || !this.apiLive) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    const now = Date.now();
+    this.presenceListening = true;
+    this.presenceActivity.setVisible(document.visibilityState === 'visible');
+    this.presenceActivity.noteInput(now);
+    this.presenceNow.set(now);
+    for (const type of PRESENCE_INPUT_EVENTS) {
+      window.addEventListener(type, this.onPresenceInput, PRESENCE_INPUT_LISTENER);
+    }
+    window.addEventListener('focus', this.onPresenceFocus);
+    window.addEventListener('blur', this.onPresenceBlur);
+    window.addEventListener('pagehide', this.onPresenceBlur);
+    document.addEventListener('visibilitychange', this.onPresenceVisibility);
+    this.presenceBeatTimer = setInterval(() => this.sendPresence(Date.now(), false), PRESENCE_HEARTBEAT_MS);
+    this.presenceClockTimer = setInterval(() => this.presenceNow.set(Date.now()), PRESENCE_CLOCK_MS);
+    // The page is in use the moment it opens: this browser knows it at once, and the Web API
+    // hears about it with the first heartbeat (the next tick, or the member's first input).
+    this.recordSelfLastSeen(now);
+  }
+
+  private stopPresence(): void {
+    if (this.presenceBeatTimer !== null) clearInterval(this.presenceBeatTimer);
+    if (this.presenceClockTimer !== null) clearInterval(this.presenceClockTimer);
+    this.presenceBeatTimer = null;
+    this.presenceClockTimer = null;
+    if (!this.presenceListening) return;
+    this.presenceListening = false;
+    if (typeof window !== 'undefined') {
+      for (const type of PRESENCE_INPUT_EVENTS) {
+        window.removeEventListener(type, this.onPresenceInput, PRESENCE_INPUT_LISTENER);
+      }
+      window.removeEventListener('focus', this.onPresenceFocus);
+      window.removeEventListener('blur', this.onPresenceBlur);
+      window.removeEventListener('pagehide', this.onPresenceBlur);
+    }
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.onPresenceVisibility);
+    }
+  }
+
+  /** Reports the member's activity again when they are using the page and no report went out just now. */
+  private sendPresenceIfUsing(): void {
+    const now = Date.now();
+    if (now - this.lastPresenceReportMs > PRESENCE_INPUT_REPORT_GAP_MS) this.sendPresence(now, false);
+  }
+
+  /**
+   * Tells the Web API when the member last used the community. While the member is using the
+   * page this is their last input on it; when they leave the page (`leaving`) it is now.
+   */
+  private sendPresence(nowMs: number, leaving: boolean): void {
+    if (!this.apiLive) return;
+    if (!leaving && !this.presenceActivity.isUsing(nowMs)) return;
+    const lastUse = leaving ? nowMs : this.presenceActivity.lastActivityAt(nowMs);
+    this.lastPresenceReportMs = nowMs;
+    this.recordSelfLastSeen(lastUse);
+    const body = { lastActivityUtc: new Date(lastUse).toISOString() };
+    if (leaving) this.sendPresenceKeepalive(body);
+    else this.apiWrite('POST', '/api/presence/heartbeat', body);
+  }
+
+  /** A leaving report may be the last request of the page: keepalive lets it finish after unload. */
+  private sendPresenceKeepalive(body: unknown): void {
+    const token = this.token();
+    if (typeof fetch !== 'function' || !token) return;
+    void fetch(this.apiEndpoint('/api/presence/heartbeat'), {
+      method: 'POST',
+      keepalive: true,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    }).catch(() => undefined);
+  }
+
+  /** Signing out: the Web API makes the member Inactive and keeps the time they signed out. */
+  private reportSignOut(): void {
+    if (!this.apiLive) return;
+    this.apiWrite('POST', '/api/presence/sign-out');
+  }
+
+  /** Keeps this browser's own last-seen time current, so the member's own Away is right. */
+  private recordSelfLastSeen(atMs: number): void {
+    const me = this.currentUser();
+    if (!me) return;
+    const known = Date.parse(me.lastSeenUtc ?? '');
+    if (!Number.isNaN(known) && known >= atMs) return;
+    this.currentUser.set({ ...me, lastSeenUtc: new Date(atMs).toISOString() });
+  }
+
   private startLiveUpdates(): void {
+    this.startPresence();
     if (this.liveTimer !== null || !this.apiLive) return;
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
     this.liveTimer = setInterval(() => void this.pollLiveUpdates(), CommunityService.LIVE_POLL_MS);
@@ -5118,6 +5318,7 @@ export class CommunityService {
   }
 
   private stopLiveUpdates(): void {
+    this.stopPresence();
     if (this.liveTimer !== null) {
       clearInterval(this.liveTimer);
       this.liveTimer = null;
@@ -8056,30 +8257,49 @@ export class CommunityService {
     return saved || [];
   }
 
-  presenceFor(
-    userId?: number | null,
-    hint?: { activeStatus?: UserActiveStatus; customStatusText?: string; isOnline?: boolean } | AuthorInfo | Companion | null,
-  ): { status: UserActiveStatus; label: string; klass: string } {
+  /**
+   * How a member's presence reads right now: the status other members see, the wording
+   * (“Away · last seen 12 min ago”) and the last-seen time. Away and Inactive always carry
+   * the last-seen part.
+   */
+  presenceFor(userId?: number | null, hint?: PresenceHint | null): PresenceView {
+    // Reading the clock signal keeps every view that shows presence in step with Away.
+    this.presenceNow();
+    const nowMs = Date.now();
     const me = this.currentUser();
-    const hinted = hint as { activeStatus?: UserActiveStatus; customStatusText?: string; isOnline?: boolean } | null | undefined;
+    const hinted = hint as PresenceHint | null | undefined;
     let status: UserActiveStatus | undefined = hinted?.activeStatus;
     let custom = hinted?.customStatusText;
+    let lastSeen = hinted?.lastSeenUtc;
     let online = hinted?.isOnline;
     if (userId != null && me && userId === me.id) {
-      status = me.activeStatus;
+      // The member's own presence: the status they chose, with Away worked out from this browser.
+      status = chosenPresence(me.activeStatus);
       custom = me.customStatusText;
+      lastSeen = me.lastSeenUtc;
       online = true;
     } else if (userId != null) {
       const companion = this.companions().find((c) => c.id === userId);
       if (companion) {
         status = companion.activeStatus;
         custom = companion.customStatusText;
+        lastSeen = companion.lastSeenUtc;
         online = companion.isOnline;
       }
     }
     if (!status) status = online === false ? 'Inactive' : 'Active';
-    const label = status === 'Custom' && custom ? custom : status;
-    return { status, label, klass: statusIconClass(status) };
+    if (!lastSeen && userId != null && this.demoSession && (status === 'Away' || status === 'Inactive')) {
+      lastSeen = demoLastSeenIso(userId, nowMs);
+    }
+    const presence = effectivePresence(status, lastSeen, nowMs);
+    const text = presenceText(presence.status, custom, presence.lastSeenUtc, nowMs);
+    return {
+      status: presence.status,
+      label: text.label,
+      klass: statusIconClass(presence.status),
+      lastSeenUtc: presence.lastSeenUtc,
+      lastSeenLabel: text.lastSeenLabel,
+    };
   }
 
   relationshipLabel(companion: Companion | null | undefined): string {

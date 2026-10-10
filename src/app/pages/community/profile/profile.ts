@@ -37,6 +37,7 @@ import {
   WorkExperience,
 } from '../../../models/community';
 import { CommunityService, PendingChat, splitFullName } from '../../../services/community.service';
+import { chosenPresence } from '../../../services/community-presence';
 import { SiteConfigService } from '../../../services/site-config.service';
 import { GoogleMapLocation, GoogleMapsService } from '../../../services/google-maps.service';
 import { CommunityConfirmService } from '../../../shared/community-confirm/community-confirm';
@@ -184,15 +185,19 @@ export class CommunityProfile implements OnInit {
   protected readonly coverPhotoError = signal<string | null>(null);
   protected readonly profilePhotoError = signal<string | null>(null);
 
-  // Active Status Dropdown & Custom Status
+  // Active Status Dropdown & Custom Status. Away is not a choice: it is automatic (no use for
+  // 15 minutes), so the member picks Active, Busy, Don't Disturb, Inactive or Custom.
   protected readonly activeStatusOptions: UserActiveStatus[] = [
     'Active',
     'Busy',
     "Don't Disturb",
-    'Away',
     'Inactive',
     'Custom',
   ];
+  /** The member's own presence as others see it: Away and the last-seen time included. */
+  protected readonly ownPresence = computed(() =>
+    this.service.presenceFor(this.service.currentUser()?.id ?? null),
+  );
   protected readonly showCustomStatusModal = signal(false);
   protected customStatusInput = '';
   protected readonly statusError = signal<string | null>(null);
@@ -1636,13 +1641,6 @@ export class CommunityProfile implements OnInit {
       default:
         return 'status-icon-active';
     }
-  }
-
-  getStatusLabel(status?: string, customText?: string): string {
-    if (status === 'Custom' && customText) {
-      return customText;
-    }
-    return status || 'Active';
   }
 
   // ---------------------------------------------------------------------------
@@ -3950,8 +3948,21 @@ export class CommunityProfile implements OnInit {
     return this.service.relationshipLabel(c);
   }
 
-  presenceLabel(userId?: number | null): string {
-    return this.service.presenceFor(userId).label;
+  /** The status the member chose (the dropdown's value); Away is never a choice. */
+  ownStatusChoice(): UserActiveStatus {
+    return chosenPresence(this.service.currentUser()?.activeStatus);
+  }
+
+  /** Presence wording for a member: “Active”, or “Away · last seen 12 min ago”. */
+  presenceLabel(user?: number | AuthorInfo | Companion | null): string {
+    const id = typeof user === 'number' ? user : user?.id;
+    const hint = typeof user === 'object' && user ? user : undefined;
+    return this.service.presenceFor(id, hint).label;
+  }
+
+  /** The time part of a traveler's last-seen wording, for the offline list. */
+  lastSeenLabel(traveler: Companion): string {
+    return this.service.presenceFor(traveler.id, traveler).lastSeenLabel ?? 'recently';
   }
 
   async logoutDevice(deviceId: string): Promise<void> {
