@@ -2263,6 +2263,24 @@
 
 .notif-content {
   flex: 1;
+  position: relative;
+}
+
+.notif-type-chip {
+  position: absolute;
+  top: -0.35rem;
+  right: 0;
+  font-size: 0.85rem;
+  background: var(--ct-sf2, #f1f5f9);
+  border: 1px solid var(--ct-ln2, #e2e8f0);
+  border-radius: 999px;
+  padding: 0.05rem 0.3rem;
+  line-height: 1.2;
+}
+
+.notification-card[data-type='message'] .notif-type-chip {
+  background: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 .notif-text {
@@ -7558,6 +7576,30 @@
 .device-pill.blocked {
   color: #b91c1c;
   font-weight: 700;
+}
+.device-pill.current {
+  color: #0f766e;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  background: #ccfbf1;
+  border: 1px solid #99f6e4;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
+}
+.device-specs {
+  font-weight: 600;
+  color: #475569;
+}
+.device-coords {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+  color: #0f766e;
+}
+.device-seen-line {
+  color: #94a3b8;
 }
 .visit-gate-card {
   margin: 1.5rem;

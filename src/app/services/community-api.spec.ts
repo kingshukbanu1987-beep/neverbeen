@@ -1178,6 +1178,28 @@ describe('CommunityService — live requests, notifications, chats, circles and 
   });
 
   it('pops the chat open for the recipient when a companion writes, without a reload', async () => {
+    // Requirement C: the floating chat popup opens on tablet / laptop / wide screens —
+    // jsdom's matchMedia never matches, so stub a wide screen for this test.
+    const previousMatchMedia = window.matchMedia;
+    const wideScreenList: MediaQueryList = {
+      matches: true,
+      media: '(min-width: 901px)',
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => false,
+    } as unknown as MediaQueryList;
+    window.matchMedia = (() => wideScreenList) as unknown as typeof window.matchMedia;
+    try {
+      await popChatForNewMessage();
+    } finally {
+      window.matchMedia = previousMatchMedia;
+    }
+  });
+
+  async function popChatForNewMessage(): Promise<void> {
     const oldMessage = { id: 500, conversationId: 900, senderId: 21, receiverId: 7, text: 'Hello from last week', sentAtUtc: '2026-10-01T10:00:00Z' };
     const newMessage = { id: 501, conversationId: 900, senderId: 21, receiverId: 7, text: 'Hi Kingshuk!', sentAtUtc: new Date().toISOString() };
     const participants = [
@@ -1214,7 +1236,7 @@ describe('CommunityService — live requests, notifications, chats, circles and 
     expect(box).toBeDefined();
     expect(box?.isMinimized).toBe(false);
     expect(box?.messages.map((m) => m.text)).toEqual(['Hi Kingshuk!']);
-  });
+  }
 
   it('shows a follower’s city and country on their card', () => {
     (service as unknown as { apiFollowers: { set(list: unknown[]): void } }).apiFollowers.set([

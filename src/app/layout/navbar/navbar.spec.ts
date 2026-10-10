@@ -293,15 +293,15 @@ describe('Navbar', () => {
     apply([], []);
     expect(element.querySelectorAll('.ch-badge').length).toBe(0);
 
-    // One unread notification + two chats holding unread messages (of three boxes) →
-    // badge on the bell and on the messenger icon only.
+    // One unread notification + three unread chat messages across two boxes (of three)
+    // → badge on the bell and on the messenger icon (one per unread message).
     apply([makeNotification(1)], [makeBox(7, 2), makeBox(8, 1), makeBox(9, 0)]);
-    expect(iconBadges()).toEqual([null, '1', '2']);
+    expect(iconBadges()).toEqual([null, '1', '3']);
 
     // Browser tab ( ) is chats + notifications, not notifications alone.
     setCookie(TOKEN_KEY, 'jwt_default_active_token', 1);
     TestBed.inject(SiteTabService).sync();
-    expect(document.title).toBe('(3) NeverBeen');
+    expect(document.title).toBe('(4) NeverBeen');
     deleteCookie(TOKEN_KEY);
     TestBed.inject(SiteTabService).sync();
 

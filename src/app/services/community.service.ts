@@ -629,12 +629,18 @@ export interface ApiFollowCountsDto {
 export interface ApiDeviceDto {
   id: string;
   name?: string;
+  model?: string;
   type?: string;
   os?: string;
   browser?: string;
   ipAddress?: string;
   macAddress?: string;
   location?: string;
+  country?: string;
+  city?: string;
+  locality?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   lastSeenUtc?: string;
   isCurrent?: boolean;
   isActive?: boolean;
@@ -867,14 +873,17 @@ export class CommunityService {
   );
 
   /**
-   * Pending chats for the header badge: unread inbox threads, plus any open box
-   * that still has unread messages and is not already counted from the inbox.
+   * Unread chat messages for the header badge (one per unread message, so every new
+   * message adds one to the messenger icon): the sum of unread messages across open
+   * chat boxes and the waiting inbox threads that are not already open as a box.
    */
   readonly unreadChatCount = computed(() => {
     const boxes = this.activeChatBoxes();
     const openIds = new Set(boxes.map((b) => b.companionId));
-    const fromBoxes = boxes.filter((b) => (b.unreadCount ?? 0) > 0).length;
-    const fromInbox = this.pendingChats().filter((c) => (c.unreadCount ?? 0) > 0 && !openIds.has(c.companionId)).length;
+    const fromBoxes = boxes.reduce((sum, b) => sum + (b.unreadCount ?? 0), 0);
+    const fromInbox = this.pendingChats()
+      .filter((c) => !openIds.has(c.companionId))
+      .reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
     return fromBoxes + fromInbox;
   });
 
@@ -956,6 +965,9 @@ export class CommunityService {
       localStorage.setItem(GUEST_KEY, '1');
       localStorage.setItem(DEMO_COMMUNITY_KEY, '1');
     }
+    // Requirement B: fill the current device's IP / location / coordinates
+    // (best-effort, skipped in unit tests).
+    void this.enrichCurrentDeviceNetworkInfo();
   }
 
   /** Guest browsing ends the moment a real account session starts or the visitor logs out. */
@@ -1843,12 +1855,18 @@ export class CommunityService {
     return {
       id: dto.id,
       name: dto.name ?? 'Device',
+      model: dto.model || undefined,
       type: (dto.type as LoginDevice['type']) || 'Desktop',
       os: dto.os ?? '',
       browser: dto.browser ?? '',
       ipAddress: dto.ipAddress ?? '',
       macAddress: dto.macAddress ?? '',
       location: dto.location ?? '',
+      country: dto.country || undefined,
+      city: dto.city || undefined,
+      locality: dto.locality || undefined,
+      latitude: dto.latitude ?? null,
+      longitude: dto.longitude ?? null,
       lastSeenUtc: dto.lastSeenUtc || new Date().toISOString(),
       isCurrent: !!dto.isCurrent,
       isActive: dto.isActive ?? true,
@@ -4033,6 +4051,10 @@ export class CommunityService {
     }
     if (audience.mode === 'only-me') return false;
     if (post.wallOwnerId != null && Number(post.wallOwnerId) === Number(viewerId)) return true;
+    // Followed members' posts flow into the viewer's Journey feed (Requirement A):
+    // following someone pulls their public and companion posts into your feed, so the
+    // posts appear the moment the follow is written.
+    if (this.isFollowing(post.author.id, viewerId)) return true;
     if (audience.mode === 'public') return true;
     const connected = this.companions().some((c) => c.id === post.author.id && c.status === 'connected');
     if (audience.mode === 'companions') return connected;
@@ -5022,20 +5044,32 @@ export class CommunityService {
     }
   }
 
+  /** In-flight companions / notifications re-read, so callers share one round trip. */
+  private refreshCompanionsInFlight: Promise<void> | null = null;
+
   /** Re-reads the companions list and the notifications from the Web API. */
   private async refreshCompanionsAndNotifications(): Promise<void> {
-    const [companions, notifications] = await Promise.all([
-      this.apiGet<ApiCompanionDto[]>('/api/companions'),
-      this.apiGet<ApiNotificationDto[]>('/api/notifications'),
-    ]);
-    if (companions) {
-      this.companions.set(companions.map((dto) => this.companionFromApi(dto)));
-      this.saveJson(COMPANIONS_KEY, this.companions());
-    }
-    if (notifications) {
-      this.notifications.set(notifications.map((dto) => this.notificationFromApi(dto)));
-      this.saveJson(NOTIFS_KEY, this.notifications());
-    }
+    if (this.refreshCompanionsInFlight) return this.refreshCompanionsInFlight;
+    const run = (async () => {
+      try {
+        const [companions, notifications] = await Promise.all([
+          this.apiGet<ApiCompanionDto[]>('/api/companions'),
+          this.apiGet<ApiNotificationDto[]>('/api/notifications'),
+        ]);
+        if (companions) {
+          this.companions.set(companions.map((dto) => this.companionFromApi(dto)));
+          this.saveJson(COMPANIONS_KEY, this.companions());
+        }
+        if (notifications) {
+          this.notifications.set(notifications.map((dto) => this.notificationFromApi(dto)));
+          this.saveJson(NOTIFS_KEY, this.notifications());
+        }
+      } finally {
+        this.refreshCompanionsInFlight = null;
+      }
+    })();
+    this.refreshCompanionsInFlight = run;
+    return run;
   }
 
   /** Marks one notification read on the Web API (small int ids only). */
@@ -5133,27 +5167,142 @@ export class CommunityService {
       if (previous === undefined || previous === last.id) continue;
 
       const fromPartner = (last.senderId ?? 0) !== me;
+      if (!fromPartner) continue;
+      const partner = conversation.participants?.find((p) => p.id !== me);
       const open = this.activeChatBoxes().find((b) => b.conversationId === conversation.id);
       if (open) {
         await this.refreshOpenConversation(open.companionId, conversation.id);
         const shown = this.activeChatBoxes().find((b) => b.conversationId === conversation.id);
-        if (shown?.isMinimized && fromPartner) {
+        // Requirement C: a message that lands in a minimized box pops it back open,
+        // and while it stays minimized it counts as one unread message on the badge.
+        if (shown?.isMinimized) {
           this.activeChatBoxes.update((boxes) =>
-            boxes.map((b) => (b.conversationId === conversation.id ? { ...b, isMinimized: false } : b)),
+            boxes.map((b) =>
+              b.conversationId === conversation.id
+                ? { ...b, isMinimized: false, unreadCount: (b.unreadCount ?? 0) + 1 }
+                : b,
+            ),
           );
-        }
-        if (shown && !shown.isMinimized && fromPartner) {
+        } else if (shown) {
+          // The box is open and on screen: the message is visible, so the read
+          // receipt goes out and the local unread count never grows.
           this.apiWrite('POST', `/api/messages/conversations/${conversation.id}/read`);
+          if ((shown.unreadCount ?? 0) > 0) {
+            this.activeChatBoxes.update((boxes) =>
+              boxes.map((b) => (b.conversationId === conversation.id ? { ...b, unreadCount: 0 } : b)),
+            );
+          }
         }
-      } else if (fromPartner && !conversation.isGroup) {
-        const partner = conversation.participants?.find((p) => p.id !== me);
-        if (partner) this.popUpChat(partner);
+      } else if (!conversation.isGroup && partner) {
+        this.popUpChat(partner);
       }
+      // One notification + chat badge item + chime per new message (Requirement C).
+      if (partner) this.noteIncomingMessage(partner, last.text ?? '', last.sentAtUtc ?? '', conversation.id, last.id);
     }
   }
 
-  /** Opens the chat with a companion who has just written to this member. */
+  /** Message ids already reported (the live poll re-reads the inbox every few seconds). */
+  private readonly seenIncomingMessageIds = new Set<number>();
+
+  /**
+   * Requirement C — the moment a companion's message arrives:
+   *  - one notification item appears on the Notifications page (and the header bell
+   *    badge counts it) — written by the Web API for members, locally for the guest tour;
+   *  - the incoming-message chime plays (when In-App Audio Chimes are switched on);
+   *  - the floating chat dock pops the chat open at the bottom right on wide screens.
+   */
+  private noteIncomingMessage(
+    sender: { id: number; fullName?: string | null; profilePhotoUrl?: string | null; profession?: string | null },
+    text: string,
+    sentAtUtc: string,
+    conversationId: number,
+    messageId: number,
+  ): void {
+    if (messageId > 0 && this.seenIncomingMessageIds.has(messageId)) return;
+    if (messageId > 0) {
+      this.seenIncomingMessageIds.add(messageId);
+      if (this.seenIncomingMessageIds.size > 300) {
+        const first = this.seenIncomingMessageIds.values().next().value;
+        if (first !== undefined) this.seenIncomingMessageIds.delete(first);
+      }
+    }
+    this.playIncomingMessageSound();
+    // Member sessions: the Web API stores the 'message' notification when it stores
+    // the message; the live poll's notification re-read brings it onto the page.
+    if (this.apiLive) {
+      void this.refreshCompanionsAndNotifications();
+      return;
+    }
+    // Guest tour: build the notification locally so the bell badge and the
+    // Notifications page show it right away.
+    const preview = (text ?? '').trim().replace(/\s+/g, ' ');
+    this.notifications.update((list) => [
+      {
+        id: generateUniqueId(),
+        type: 'message' as const,
+        fromUser: {
+          id: sender.id,
+          fullName: sender.fullName || 'NeverBeen Traveler',
+          profilePhotoUrl: this.absoluteApiUrl(sender.profilePhotoUrl) ?? '',
+          profession: sender.profession || '',
+        },
+        message: preview
+          ? `sent you a message: “${preview.length > 80 ? `${preview.slice(0, 80)}…` : preview}”`
+          : 'sent you a message.',
+        createdAtUtc: sentAtUtc || new Date().toISOString(),
+        isRead: false,
+        requestId: conversationId,
+      },
+      ...list,
+    ]);
+    this.saveJson(NOTIFS_KEY, this.notifications());
+  }
+
+  /**
+   * The Facebook / Instagram style incoming-message chime. Respects the member's
+   * “In-App Audio Chimes” setting; silent while the setting is off or the browser
+   * has not allowed audio yet.
+   */
+  private playIncomingMessageSound(): void {
+    if (this.profile()?.settings?.soundNotificationsEnabled === false) return;
+    if (typeof window === 'undefined' || typeof AudioContext === 'undefined') return;
+    try {
+      const context = new AudioContext();
+      const playTone = (frequency: number, start: number, duration: number, volume: number) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.05);
+      };
+      // A soft two-note “ding-ding” pop.
+      playTone(987.77, 0, 0.16, 0.12);
+      playTone(1318.51, 0.14, 0.24, 0.12);
+      setTimeout(() => void context.close(), 800);
+    } catch {
+      /* audio is blocked until the first user gesture — stay silent */
+    }
+  }
+
+  /**
+   * True while the floating chat dock makes sense: tablet, laptop or any wide
+   * screen. On narrow phones the message waits in the Messenger page instead of
+   * covering the screen (Requirement C).
+   */
+  private wideScreenChatPopup(): boolean {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return window.matchMedia('(min-width: 901px)').matches;
+  }
+
+  /** Opens the floating chat popup for a companion who has just written to this member. */
   private popUpChat(partner: ApiAuthorDto): void {
+    if (!this.wideScreenChatPopup()) return;
     const companion =
       this.companions().find((c) => Number(c.id) === partner.id) ??
       this.followPersonFromApi(partner.id) ??
@@ -6366,6 +6515,9 @@ export class CommunityService {
             : b,
         ),
       );
+      // Requirement C: the simulated reply counts as a real incoming message —
+      // notification item, chat badge item and chime.
+      this.noteIncomingMessage(companion, replyMsg.text, replyMsg.sentAtUtc, 0, replyMsg.id);
     }, 1200);
   }
 
@@ -7991,14 +8143,46 @@ export class CommunityService {
       const dto = await this.apiSend<ApiDeviceDto>('POST', '/api/devices', {
         id: device.id,
         name: device.name,
+        model: device.model,
         type: device.type,
         os: device.os,
         browser: device.browser,
         isCurrent: true,
       });
+      // Requirement B: the IP address, country / city / locality and coordinates are
+      // looked up best-effort right after the registration, then the row is refreshed
+      // so Settings can show the exact location (the guest tour does the same without
+      // the extra write). Unit tests skip the lookup — it needs a real network.
+      const network = (typeof import.meta !== 'undefined' && (import.meta as { env?: { VITEST?: boolean } }).env?.VITEST)
+        ? null
+        : await this.lookupDeviceNetworkInfo();
+      if (network) {
+        const enriched = { ...this.devices().find((d) => d.id === device.id) ?? device, ...network };
+        this.upsertCurrentDevice(enriched);
+        if (this.apiLive) {
+          this.apiWrite('POST', '/api/devices', {
+            id: enriched.id,
+            name: enriched.name,
+            model: enriched.model,
+            type: enriched.type,
+            os: enriched.os,
+            browser: enriched.browser,
+            ipAddress: enriched.ipAddress || undefined,
+            location: enriched.location || undefined,
+            country: enriched.country,
+            city: enriched.city,
+            locality: enriched.locality,
+            latitude: enriched.latitude ?? undefined,
+            longitude: enriched.longitude ?? undefined,
+            isCurrent: true,
+          });
+        }
+      }
       if (!dto) return;
 
-      this.upsertCurrentDevice({ ...this.deviceFromApi(dto), isCurrent: true });
+      // The stored answer first, the just-looked-up network facts on top (the
+      // refresh write above carries them to the database).
+      this.upsertCurrentDevice({ ...this.deviceFromApi(dto), ...(network ?? {}), isCurrent: true });
       this.currentDeviceRegistrationKey = key;
     })();
     this.currentDeviceRegistrationInFlight = { key, promise };
@@ -8044,9 +8228,14 @@ export class CommunityService {
     return 'remote';
   }
 
+  /**
+   * Blocks another device signed in to the account. The member's current device can
+   * never be blocked (Requirement B) — it is answered with 'self' and left untouched.
+   */
   blockDevice(deviceId: string): 'self' | 'remote' | 'missing' {
     const device = this.devices().find((d) => d.id === deviceId);
     if (!device) return 'missing';
+    if (device.isCurrent) return 'self';
     this.devices.update((list) =>
       list.map((d) =>
         d.id === deviceId
@@ -8057,7 +8246,6 @@ export class CommunityService {
     this.saveJson(DEVICES_KEY, this.devices());
     // Device blocks are stored on the Web API (POST /api/devices/{id}/block?blocked=true).
     if (this.apiLive) this.apiWrite('POST', `/api/devices/${encodeURIComponent(deviceId)}/block?blocked=true`);
-    if (device.isCurrent) return 'self';
     return 'remote';
   }
 
@@ -8142,16 +8330,21 @@ export class CommunityService {
                 : /Safari\//i.test(ua)
                   ? 'Safari'
                   : 'Browser';
+    // Requirement B: the exact hardware model when the user agent names one
+    // (most phones); otherwise the best hardware family the browser reveals.
+    const model = this.detectDeviceModel(ua, platform, type);
     const family = /iPhone/i.test(ua) ? 'iPhone' : isIpad ? 'iPad' : type;
 
     return {
       id: deviceId,
-      name: `${family} · ${browser}`,
+      name: `${model || family} · ${browser}`,
+      model,
       type,
       os,
       browser,
       // Browsers do not expose a real hardware MAC or network address. Never invent
-      // security-sensitive values; the API may fill the IP from its trusted request.
+      // security-sensitive values; the IP + location are looked up over the network
+      // (lookupDeviceNetworkInfo) and the API may fill the IP from its trusted request.
       ipAddress: '',
       macAddress: '',
       location: '',
@@ -8162,16 +8355,151 @@ export class CommunityService {
     };
   }
 
+  /**
+   * Requirement B — the exact device model from the user agent. Browsers only name
+   * the model for phones (and a few other cases); desktops fall back to the best
+   * hardware family the agent reveals, which the Settings page shows as-is.
+   */
+  private detectDeviceModel(ua: string, platform: string, type: LoginDevice['type']): string {
+    const clean = (text: string | undefined) => (text ?? '').replace(/\s+/g, ' ').trim();
+    let m: RegExpMatchArray | null;
+
+    // Apple — the agent names the hardware revision (iPhone16,1 = iPhone 15 Pro …).
+    if (/iPhone/i.test(ua)) {
+      if (/iPhone17,/.exec(ua)) return 'iPhone 16';
+      if (/iPhone16,/.exec(ua)) return 'iPhone 15';
+      if (/iPhone15,/.exec(ua)) return 'iPhone 14';
+      if (/iPhone14,/.exec(ua)) return 'iPhone 13';
+      if (/iPhone13,/.exec(ua)) return 'iPhone 12';
+      if (/iPhone12,/.exec(ua)) return 'iPhone 11';
+      if (/iPhone11,/.exec(ua)) return 'iPhone XS';
+      if (/iPhone10,/.exec(ua)) return 'iPhone X';
+      if (/iPhone9,/.exec(ua)) return 'iPhone 8';
+      if (/iPhone8,/.exec(ua)) return 'iPhone 7';
+      if (/iPhone7,/.exec(ua)) return 'iPhone 6';
+      if (/iPhone5[34]/.exec(ua)) return 'iPhone SE';
+      return 'iPhone';
+    }
+    if (/iPad/i.test(ua)) {
+      if (/iPad1[34],/.exec(ua) || /iPad15,/.exec(ua)) return 'iPad Pro';
+      if (/iPad11,/.exec(ua) || /iPad13,[1-9]/.exec(ua)) return 'iPad';
+      if (/iPad6,|iPad7,|iPad8,|iPad13,1[0-8]/.exec(ua)) return 'iPad Air';
+      if (/iPad11,6/.exec(ua) || /iPad11,7/.exec(ua) || /iPad13,18/.exec(ua)) return 'iPad mini';
+      return 'iPad';
+    }
+    // Google
+    if ((m = /Pixel\s+(\d+)[a-z]?/.exec(ua))) return `Google Pixel ${m[1]}`;
+    // Samsung (SM- model codes)
+    if (/SM-S92[1-8]/.exec(ua)) return 'Samsung Galaxy S24 Ultra';
+    if (/SM-S91[18]/.exec(ua)) return 'Samsung Galaxy S23 Ultra';
+    if (/SM-S72[1B]/.exec(ua)) return 'Samsung Galaxy S24+ / S24';
+    if (/SM-S71[1B]/.exec(ua)) return 'Samsung Galaxy S23';
+    if (/SM-A556/.exec(ua)) return 'Samsung Galaxy A55';
+    if (/SM-A546/.exec(ua)) return 'Samsung Galaxy A54';
+    if (/SM-A356/.exec(ua)) return 'Samsung Galaxy A35';
+    if (/SM-A256/.exec(ua)) return 'Samsung Galaxy A25';
+    if (/SM-A155/.exec(ua)) return 'Samsung Galaxy A15';
+    if (/SM-N98[0-9]/.exec(ua)) return 'Samsung Galaxy Note 20';
+    if (/SM-X70[0-9]/.exec(ua)) return 'Samsung Galaxy Tab S9';
+    if (/SM-T53[0-9]/.exec(ua)) return 'Samsung Galaxy Tab A9';
+    if ((m = /Galaxy\s+(?:Note\s+|Tab\s+)?(S?\d{1,2}[a-z]*)(?:\s|\/|$)/.exec(ua))) {
+      const model = clean(m[1]);
+      return /tab/i.test(ua) ? `Samsung Galaxy Tab ${model}` : `Samsung Galaxy ${model}`;
+    }
+    // Other Android makers
+    if ((m = /Moto\s+([GZX]\s?\d+\w*)/.exec(ua))) return `Moto ${clean(m[1])}`;
+    if ((m = /Motorola\s+([\w+-]+)/.exec(ua))) return `Motorola ${clean(m[1])}`;
+    if ((m = /OnePlus\s+(\d+|Ace\s?\d+[a-z]?|Nord\s?\d+[a-z]?)/.exec(ua))) return `OnePlus ${clean(m[1])}`;
+    if ((m = /(Redmi\s+[\w-]+|Poco\s+[\w-]+|POCO\s+[\w-]+)/.exec(ua))) return clean(m[1]);
+    if ((m = /OPPO\s+(A\d{2,3}|F\d{2,3}|Reno\s?\d+[a-z]?|Find\s?X\d+[a-z]?)/.exec(ua))) return `OPPO ${clean(m[1])}`;
+    if ((m = /Vivo\s+([A-Z]\d{2,3})/.exec(ua))) return `Vivo ${clean(m[1])}`;
+    if (/Huawei/i.test(ua) && (m = /(Mate\s?\d+[a-z]?|P\d{1,2}\s?(?:Pro|Lite)?|Nova\s?\d+[a-z]?)/.exec(ua)))
+      return `Huawei ${clean(m[1])}`;
+    if ((m = /Nokia\s+([A-Z]?\d{2,3})/.exec(ua))) return `Nokia ${clean(m[1])}`;
+    if ((m = /LG-(\w+)/.exec(ua))) return `LG ${clean(m[1])}`;
+
+    // Desktops / laptops — the user agent only reveals the hardware family.
+    if (/Mac/i.test(`${ua} ${platform}`)) return 'MacBook';
+    if (/CrOS/i.test(ua)) return 'Chromebook';
+    if (/Windows/i.test(`${ua} ${platform}`)) return 'Windows PC';
+    if (type === 'Phone') return 'Android Phone';
+    if (type === 'Tablet') return 'Android Tablet';
+    return 'Device';
+  }
+
+  /**
+   * Requirement B — the network facts the Settings page shows for the current
+   * device: public IP address plus the IP-geolocation answer (country, city,
+   * locality and coordinates). The lookup is best-effort: it is skipped in unit
+   * tests (no real network there) and every failure degrades to “not available”.
+   */
+  private async lookupDeviceNetworkInfo(): Promise<Partial<LoginDevice> | null> {
+    if ((typeof import.meta !== 'undefined' && (import.meta as { env?: { VITEST?: boolean } }).env?.VITEST) ||
+      typeof fetch !== 'function') {
+      return null;
+    }
+    const endpoints = ['https://ipapi.co/json/', 'https://ipwho.is/'];
+    for (const endpoint of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch(endpoint, { signal: controller.signal });
+        clearTimeout(timer);
+        if (!response.ok) continue;
+        const data = (await response.json()) as Record<string, unknown>;
+        const ip = typeof data['ip'] === 'string' ? data['ip'] : '';
+        const country =
+          typeof data['country_name'] === 'string'
+            ? data['country_name']
+            : typeof data['country'] === 'string'
+              ? data['country']
+              : '';
+        const city = typeof data['city'] === 'string' ? data['city'] : '';
+        // The finest area the provider answers: a named locality / suburb when it
+        // has one, otherwise the state / region — never the city or country again.
+        const rawLocality = [data['locality'], data['suburb'], data['town'], data['district'], data['region']].find(
+          (v): v is string => typeof v === 'string' && v.length > 0 && v !== city && v !== country,
+        );
+        const latitude = typeof data['latitude'] === 'number' ? data['latitude'] : null;
+        const longitude = typeof data['longitude'] === 'number' ? data['longitude'] : null;
+        if (!ip && !country && latitude === null) continue;
+        const parts = [city, country].filter((v) => v.length > 0);
+        return {
+          ipAddress: ip,
+          country: country || undefined,
+          city: city || undefined,
+          locality: rawLocality,
+          latitude,
+          longitude,
+          location: parts.join(', '),
+        };
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }
+
+  /** Requirement B — the guest tour also gets the real IP / location for the current device. */
+  private async enrichCurrentDeviceNetworkInfo(): Promise<void> {
+    const network = await this.lookupDeviceNetworkInfo();
+    if (!network) return;
+    this.devices.update((list) =>
+      list.map((d) => (d.isCurrent ? { ...d, ...network } : d)),
+    );
+    this.saveJson(DEVICES_KEY, this.devices());
+  }
+
   private seedDevices(current: LoginDevice): LoginDevice[] {
     const ago = (hours: number) => new Date(Date.now() - hours * 3600_000).toISOString();
     const previous: LoginDevice[] = [
-      { id: 'device-iphone', name: 'iPhone 15 Pro · Safari', type: 'Phone', os: 'iOS 18.1', browser: 'Safari', ipAddress: '103.25.184.42', macAddress: this.stableMac('iphone'), location: 'Kolkata, India', lastSeenUtc: ago(2), isCurrent: false, isActive: true, blocked: false },
-      { id: 'device-ipad', name: 'iPad Pro · Safari', type: 'Tablet', os: 'iPadOS 18', browser: 'Safari', ipAddress: '103.25.184.58', macAddress: this.stableMac('ipad'), location: 'Kolkata, India', lastSeenUtc: ago(5), isCurrent: false, isActive: true, blocked: false },
-      { id: 'device-pixel', name: 'Pixel 8 · Chrome', type: 'Phone', os: 'Android 15', browser: 'Chrome', ipAddress: '49.37.12.90', macAddress: this.stableMac('pixel'), location: 'Bengaluru, India', lastSeenUtc: ago(30), isCurrent: false, isActive: false, blocked: false },
-      { id: 'device-galaxy', name: 'Galaxy S24 · Samsung Internet', type: 'Phone', os: 'Android 14', browser: 'Samsung Internet', ipAddress: '122.176.44.18', macAddress: this.stableMac('galaxy'), location: 'Delhi, India', lastSeenUtc: ago(54), isCurrent: false, isActive: false, blocked: false },
-      { id: 'device-win', name: 'Office Desktop · Edge', type: 'Desktop', os: 'Windows 11', browser: 'Edge', ipAddress: '202.142.88.16', macAddress: this.stableMac('win'), location: 'Salt Lake, Kolkata', lastSeenUtc: ago(80), isCurrent: false, isActive: false, blocked: false },
-      { id: 'device-mbp', name: 'MacBook Pro · Chrome', type: 'Laptop', os: 'macOS Sequoia', browser: 'Chrome', ipAddress: '157.48.201.77', macAddress: this.stableMac('mbp'), location: 'Mumbai, India', lastSeenUtc: ago(120), isCurrent: false, isActive: false, blocked: false },
-      { id: 'device-linux', name: 'ThinkPad · Firefox', type: 'Laptop', os: 'Ubuntu 24.04', browser: 'Firefox', ipAddress: '45.118.22.9', macAddress: this.stableMac('linux'), location: 'Hyderabad, India', lastSeenUtc: ago(200), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-iphone', name: 'iPhone 15 Pro · Safari', model: 'iPhone 15 Pro', type: 'Phone', os: 'iOS 18.1', browser: 'Safari', ipAddress: '103.25.184.42', macAddress: this.stableMac('iphone'), location: 'Kolkata, West Bengal, India', country: 'India', city: 'Kolkata', locality: 'Salt Lake', latitude: 22.5726, longitude: 88.3639, lastSeenUtc: ago(2), isCurrent: false, isActive: true, blocked: false },
+      { id: 'device-ipad', name: 'iPad Pro · Safari', model: 'iPad Pro', type: 'Tablet', os: 'iPadOS 18', browser: 'Safari', ipAddress: '103.25.184.58', macAddress: this.stableMac('ipad'), location: 'Kolkata, West Bengal, India', country: 'India', city: 'Kolkata', locality: 'Park Street', latitude: 22.5675, longitude: 88.3482, lastSeenUtc: ago(5), isCurrent: false, isActive: true, blocked: false },
+      { id: 'device-pixel', name: 'Google Pixel 8 · Chrome', model: 'Google Pixel 8', type: 'Phone', os: 'Android 15', browser: 'Chrome', ipAddress: '49.37.12.90', macAddress: this.stableMac('pixel'), location: 'Bengaluru, Karnataka, India', country: 'India', city: 'Bengaluru', locality: 'Indiranagar', latitude: 12.9757, longitude: 77.6243, lastSeenUtc: ago(30), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-galaxy', name: 'Samsung Galaxy S24 · Samsung Internet', model: 'Samsung Galaxy S24', type: 'Phone', os: 'Android 14', browser: 'Samsung Internet', ipAddress: '122.176.44.18', macAddress: this.stableMac('galaxy'), location: 'New Delhi, India', country: 'India', city: 'New Delhi', locality: 'Connaught Place', latitude: 28.6315, longitude: 77.2167, lastSeenUtc: ago(54), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-win', name: 'Windows PC · Edge', model: 'Windows PC', type: 'Desktop', os: 'Windows 11', browser: 'Edge', ipAddress: '202.142.88.16', macAddress: this.stableMac('win'), location: 'Kolkata, West Bengal, India', country: 'India', city: 'Kolkata', locality: 'Salt Lake', latitude: 22.5726, longitude: 88.3639, lastSeenUtc: ago(80), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-mbp', name: 'MacBook Pro · Chrome', model: 'MacBook', type: 'Laptop', os: 'macOS Sequoia', browser: 'Chrome', ipAddress: '157.48.201.77', macAddress: this.stableMac('mbp'), location: 'Mumbai, Maharashtra, India', country: 'India', city: 'Mumbai', locality: 'Bandra West', latitude: 19.0596, longitude: 72.8295, lastSeenUtc: ago(120), isCurrent: false, isActive: false, blocked: false },
+      { id: 'device-linux', name: 'ThinkPad · Firefox', model: 'ThinkPad', type: 'Laptop', os: 'Ubuntu 24.04', browser: 'Firefox', ipAddress: '45.118.22.9', macAddress: this.stableMac('linux'), location: 'Hyderabad, Telangana, India', country: 'India', city: 'Hyderabad', locality: 'HITEC City', latitude: 17.4435, longitude: 78.3772, lastSeenUtc: ago(200), isCurrent: false, isActive: false, blocked: false },
     ];
     return [current, ...previous];
   }
