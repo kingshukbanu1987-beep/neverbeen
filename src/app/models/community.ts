@@ -238,6 +238,8 @@ export interface CurrentUser {
   coverPhotoUrl?: string;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
+  /** ISO time the signed-in member was last using the community (heartbeat / sign-out). */
+  lastSeenUtc?: string;
   isProfileLocked?: boolean;
   aboutMeDetails?: AboutMeDetails;
   isVerified?: boolean;
@@ -337,6 +339,8 @@ export interface Profile {
   commentCount: number;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
+  /** ISO time the member was last using the community. */
+  lastSeenUtc?: string;
   isProfileLocked?: boolean;
   aboutMeDetails?: AboutMeDetails;
   isVerified?: boolean;
@@ -376,6 +380,11 @@ export interface AuthorInfo {
   country?: string;
   city?: string;
   isVerified?: boolean;
+  /** Presence as the API resolved it for this viewer (Active, Away, Inactive, …). */
+  activeStatus?: UserActiveStatus;
+  customStatusText?: string;
+  /** ISO time the member was last using the community. */
+  lastSeenUtc?: string;
 }
 
 export interface CommunityComment {
@@ -514,6 +523,8 @@ export interface Companion {
   isProfileLocked?: boolean;
   activeStatus?: UserActiveStatus;
   customStatusText?: string;
+  /** ISO time the traveler was last using the community. */
+  lastSeenUtc?: string;
   connectedCompanionIds?: number[];
   isVerified?: boolean;
   verifiedEmail?: string;

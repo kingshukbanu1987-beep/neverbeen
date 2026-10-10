@@ -1,5 +1,5 @@
 import { DestroyRef, Injectable, signal } from '@angular/core';
-import { CommunityService } from '../../services/community.service';
+import { CommunityService, PresenceHint } from '../../services/community.service';
 import { UserActiveStatus } from '../../models/community';
 
 /**
@@ -18,6 +18,8 @@ export interface PreviewableUser {
   isVerified?: boolean;
   activeStatus?: UserActiveStatus | string;
   customStatusText?: string;
+  /** When the member was last using the community (ISO, UTC). */
+  lastSeenUtc?: string;
   isOnline?: boolean;
 }
 
@@ -244,21 +246,27 @@ export class UserPreviewOverlayService {
   }
 
   private statusFor(user: PreviewableUser): { label: string; tone: PreviewStatusTone } {
-    switch (user.activeStatus) {
+    if (!user.activeStatus) {
+      return user.isOnline ? { label: 'Online', tone: 'online' } : { label: 'Traveler', tone: 'inactive' };
+    }
+    // Same presence as every other place: Away is worked out from the last-seen time, and
+    // Away / Inactive carry “last seen …” in the label.
+    const presence = this.community.presenceFor(user.id ?? null, user as PresenceHint);
+    const label =
+      presence.status === 'Custom' && presence.label === 'Custom' ? 'Custom status' : presence.label;
+    switch (presence.status) {
       case 'Busy':
-        return { label: 'Busy', tone: 'busy' };
+        return { label, tone: 'busy' };
       case "Don't Disturb":
-        return { label: "Don't Disturb", tone: 'dnd' };
+        return { label, tone: 'dnd' };
       case 'Away':
-        return { label: 'Away', tone: 'away' };
+        return { label, tone: 'away' };
       case 'Inactive':
-        return { label: 'Inactive', tone: 'inactive' };
+        return { label, tone: 'inactive' };
       case 'Custom':
-        return { label: user.customStatusText || 'Custom status', tone: 'custom' };
-      case 'Active':
-        return { label: 'Active', tone: 'online' };
+        return { label, tone: 'custom' };
       default:
-        return user.isOnline ? { label: 'Online', tone: 'online' } : { label: 'Traveler', tone: 'inactive' };
+        return { label, tone: 'online' };
     }
   }
 
