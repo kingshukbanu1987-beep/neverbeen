@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { vi } from 'vitest';
 import { CommunityProfile } from './profile';
+import type { ChatMessage } from '../../../models/community';
 import { TRAVEL_MOOD_GROUPS } from './travel-moods';
 import { CommunityService, getCookie, TOKEN_KEY, deleteCookie } from '../../../services/community.service';
 import { openDemoAccount } from '../../../services/community-demo.testing';
@@ -1294,6 +1295,121 @@ describe('CommunityProfile', () => {
     expect(dotsMenu).toBeTruthy();
     expect(dotsMenu!.querySelector('.btn-menu-delete')).toBeTruthy();
     expect(dotsMenu!.querySelector('.btn-menu-report')).toBeTruthy();
+  });
+
+  it('chat window shows both travelers’ pictures, Messenger bubble colours and a session date header (Requirements C & D)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const companion = service.companions().find((c) => c.status === 'connected')!;
+    component.openChatWith(companion);
+    fixture.detectChanges();
+    const box = service.activeChatBoxes()[0];
+
+    // The companion's message sits in a light grey bubble, on the left, with their picture.
+    const incomingRow = element.querySelector('.chat-msg-row.incoming');
+    expect(incomingRow).toBeTruthy();
+    expect(incomingRow!.querySelector('.chat-comp-avatar')).toBeTruthy();
+    expect(incomingRow!.querySelector('.chat-bubble.incoming')).toBeTruthy();
+
+    // My own message sits in a purple bubble, on the right, with my picture.
+    component.sendChat(box.companionId, 'Booking the flight tonight!');
+    fixture.detectChanges();
+    const outgoingRow = element.querySelector('.chat-msg-row.outgoing');
+    expect(outgoingRow).toBeTruthy();
+    expect(outgoingRow!.querySelector('.chat-my-avatar')).toBeTruthy();
+    expect(outgoingRow!.querySelector('.chat-bubble.outgoing')).toBeTruthy();
+
+    // Both pictures are in the same window.
+    expect(element.querySelectorAll('.chat-bubble-avatar').length).toBeGreaterThanOrEqual(2);
+
+    // A date and time header per chat session, worded like Messenger ("3 Oct 2026, 07:54").
+    const headers = Array.from(element.querySelectorAll('.chat-session-divider .chat-session-label'));
+    expect(headers.length).toBeGreaterThanOrEqual(1);
+    expect(headers.length).toBeLessThanOrEqual(element.querySelectorAll('.chat-msg-row').length);
+    for (const header of headers) {
+      expect(header.textContent?.trim()).toMatch(/^\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2}$/);
+    }
+
+    // The picture is lined up with the message text: it is the first thing in the row.
+    const row = element.querySelector('.chat-msg-row')!;
+    expect(row.firstElementChild?.classList.contains('chat-avatar-column')).toBe(true);
+  });
+
+  it('heads every chat session of more than an hour apart with its date and time', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const at = (iso: string, id: number): ChatMessage => ({
+      id,
+      senderId: 2,
+      receiverId: 1,
+      text: 'hello',
+      sentAtUtc: iso,
+    });
+    const messages = [
+      at(new Date(2026, 9, 3, 7, 54).toISOString(), 1),
+      at(new Date(2026, 9, 3, 8, 10).toISOString(), 2),
+      at(new Date(2026, 9, 3, 11, 30).toISOString(), 3),
+    ];
+
+    expect(component.isChatSessionStart(messages, 0)).toBe(true);
+    expect(component.isChatSessionStart(messages, 1)).toBe(false);
+    expect(component.isChatSessionStart(messages, 2)).toBe(true);
+    expect(component.isChatSessionStart(messages, 9)).toBe(false);
+
+    expect(component.chatSessionLabel(new Date(2026, 9, 3, 7, 54).toISOString())).toBe('3 Oct 2026, 07:54');
+    expect(component.chatSessionLabel('not a date')).toBe('');
+  });
+
+  it('lists companions by presence: Online Now / Online Companions, Offline Companions when Inactive (Requirement A)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+
+    const connected = service.companions().filter((c) => c.status === 'connected');
+    expect(connected.length).toBeGreaterThanOrEqual(4);
+    const [busy, doNotDisturb, away, inactive] = connected;
+    const now = new Date().toISOString();
+    const fortyMinutesAgo = new Date(Date.now() - 40 * 60_000).toISOString();
+    service.companions.update((list) =>
+      list.map((c) => {
+        if (c.id === busy.id) return { ...c, activeStatus: 'Busy' as const, lastSeenUtc: now };
+        if (c.id === doNotDisturb.id) return { ...c, activeStatus: "Don't Disturb" as const, lastSeenUtc: now };
+        if (c.id === away.id) return { ...c, activeStatus: 'Active' as const, lastSeenUtc: fortyMinutesAgo };
+        if (c.id === inactive.id) return { ...c, activeStatus: 'Inactive' as const, lastSeenUtc: fortyMinutesAgo };
+        return c;
+      }),
+    );
+    fixture.detectChanges();
+
+    // The right rail of the Journey page: Online Companions, each with their status.
+    const rail = element.querySelector('.right-rail-panel');
+    expect(rail).toBeTruthy();
+    const railRows = Array.from(rail!.querySelectorAll<HTMLElement>('.rail-companion-row'));
+    const busyRow = railRows.find((row) => row.textContent?.includes(busy.fullName));
+    expect(busyRow?.querySelector('app-presence-dot')).toBeTruthy();
+    expect(busyRow?.querySelector('.rail-comp-status')?.textContent?.trim()).toBe('Busy');
+    expect(railRows.some((row) => row.textContent?.includes(inactive.fullName))).toBe(false);
+
+    // The Messenger page: the same split, with the statuses spelled out.
+    component.setSection('messenger');
+    fixture.detectChanges();
+    const columns = element.querySelectorAll('.messenger-pane .messenger-col');
+    const onlineText = columns[0]?.textContent ?? '';
+    const offlineText = columns[1]?.textContent ?? '';
+
+    expect(onlineText).toContain('Online Now');
+    expect(onlineText).toContain(busy.fullName);
+    expect(onlineText).toContain('Busy');
+    expect(onlineText).toContain(doNotDisturb.fullName);
+    expect(onlineText).toContain(away.fullName);
+    expect(onlineText).toContain('Away');
+    expect(onlineText).not.toContain(inactive.fullName);
+
+    expect(offlineText).toContain('Offline Companions');
+    expect(offlineText).toContain(inactive.fullName);
+    expect(offlineText).toContain('Last seen 40 min ago');
   });
 
   it('seeds 50 profiles from India, 20 from Pakistan, and 20 from Bangladesh into community profiles (Requirement L)', () => {

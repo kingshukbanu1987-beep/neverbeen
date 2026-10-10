@@ -47,6 +47,7 @@ import { CommentThreadComponent } from './comment-item';
 import { TaggedWith } from './tagged-with';
 import { FieldAudienceControl } from './field-audience';
 import { PresenceDot } from '../../../shared/presence-dot/presence-dot';
+import { ChatAutoScroll } from '../../../shared/chat-auto-scroll/chat-auto-scroll';
 import { SelectValueSync } from '../../../shared/select-value-sync';
 import { AnnouncementInboxService, AnnouncementNotice, noticeTime, viewerProfile } from '../../../services/announcement-inbox.service';
 
@@ -91,6 +92,12 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
   'settings',
 ];
 
+/**
+ * A pause longer than this splits a chat into two sessions, and each session gets its own
+ * date and time header inside the chat window (“3 Oct 2026, 07:54”), like Messenger.
+ */
+export const CHAT_SESSION_GAP_MS = 60 * 60_000;
+
 @Component({
   selector: 'app-community-profile',
   standalone: true,
@@ -105,6 +112,7 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
     TaggedWith,
     FieldAudienceControl,
     PresenceDot,
+    ChatAutoScroll,
     MoodPicker,
     PostAudienceControl,
   ],
@@ -3568,12 +3576,67 @@ export class CommunityProfile implements OnInit {
     this.activeReactionPickerMsgId.set(null);
   }
 
+  /** True for the messages this member wrote (they get the purple, right-aligned bubble). */
+  isMyChatMessage(msg: ChatMessage): boolean {
+    return msg.senderId === (this.service.currentUser()?.id || 1);
+  }
+
+  /**
+   * The traveler a chat message came from: the chat's companion in a 1:1 chat, or — in a group
+   * chat — the member who actually wrote it, when this member knows them. Both sides' profile
+   * pictures in the chat window come from here.
+   */
+  chatSender(box: ActiveChatBox, msg: ChatMessage): Companion {
+    if (!this.isMyChatMessage(msg) && msg.senderId !== box.companion.id) {
+      const known = this.service.companions().find((c) => c.id === msg.senderId);
+      if (known) return known;
+    }
+    return box.companion;
+  }
+
+  chatSenderPhoto(box: ActiveChatBox, msg: ChatMessage): string {
+    if (this.isMyChatMessage(msg)) {
+      return this.service.profile()?.profilePhotoUrl || this.defaultAvatar;
+    }
+    return this.chatSender(box, msg).profilePhotoUrl || this.defaultAvatar;
+  }
+
   getMsgSenderName(box: ActiveChatBox, msg: ChatMessage): string {
-    const currentUserId = this.service.currentUser()?.id || 1;
-    if (msg.senderId === currentUserId) {
+    if (this.isMyChatMessage(msg)) {
       return this.service.profile()?.fullName || 'Me';
     }
-    return box.companion.fullName;
+    return this.chatSender(box, msg).fullName;
+  }
+
+  /** Alias of `getMsgSenderName` for the chat window template. */
+  chatSenderName(box: ActiveChatBox, msg: ChatMessage): string {
+    return this.getMsgSenderName(box, msg);
+  }
+
+  /**
+   * True on the first message of a chat session, which gets the date and time header
+   * (“3 Oct 2026, 07:54”) above it, like Messenger. A new session starts after a pause of
+   * more than {@link CHAT_SESSION_GAP_MS}.
+   */
+  isChatSessionStart(messages: readonly ChatMessage[], index: number): boolean {
+    const msg = messages[index];
+    if (!msg) return false;
+    if (index === 0) return true;
+    const previous = messages[index - 1];
+    const at = Date.parse(msg.sentAtUtc);
+    const before = Date.parse(previous.sentAtUtc);
+    if (Number.isNaN(at) || Number.isNaN(before)) return false;
+    return at - before > CHAT_SESSION_GAP_MS;
+  }
+
+  /** The chat session header wording: “3 Oct 2026, 07:54”. */
+  chatSessionLabel(isoString: string): string {
+    const at = new Date(isoString);
+    if (Number.isNaN(at.getTime())) return '';
+    const month = at.toLocaleDateString('en-GB', { month: 'short' });
+    const hours = String(at.getHours()).padStart(2, '0');
+    const minutes = String(at.getMinutes()).padStart(2, '0');
+    return `${at.getDate()} ${month} ${at.getFullYear()}, ${hours}:${minutes}`;
   }
 
   getMsgReactionsEntries(msg: ChatMessage): { emoji: string; count: number }[] {
@@ -3958,6 +4021,13 @@ export class CommunityProfile implements OnInit {
     const id = typeof user === 'number' ? user : user?.id;
     const hint = typeof user === 'object' && user ? user : undefined;
     return this.service.presenceFor(id, hint).label;
+  }
+
+  /** The bare status behind the wording (Active, Busy, Away, …), for styling a status line. */
+  presenceStatus(user?: number | AuthorInfo | Companion | null): string {
+    const id = typeof user === 'number' ? user : user?.id;
+    const hint = typeof user === 'object' && user ? user : undefined;
+    return this.service.presenceFor(id, hint).status;
   }
 
   /** The time part of a traveler's last-seen wording, for the offline list. */

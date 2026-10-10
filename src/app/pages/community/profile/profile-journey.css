@@ -134,16 +134,30 @@
   display: block;
 }
 
-.rail-online-dot {
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: #10b981;
-  border: 2px solid var(--ct-sf, #ffffff);
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+/* The status behind the coloured presence dot (Active, Busy, Don't Disturb, Away, Custom). */
+.rail-comp-status {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #10b981;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rail-comp-status[data-status='Busy'] {
+  color: #ef4444;
+}
+
+.rail-comp-status[data-status="Don't Disturb"] {
+  color: #b91c1c;
+}
+
+.rail-comp-status[data-status='Away'] {
+  color: #f59e0b;
+}
+
+.rail-comp-status[data-status='Custom'] {
+  color: #8b5cf6;
 }
 
 .rail-comp-info {

@@ -245,6 +245,68 @@ describe('CommunityService — presence', () => {
     expect(presence.label).toBe('Inactive · last seen 3 h ago');
   });
 
+  /** A connected companion with the given status, as the Web API hands it over. */
+  const connected = (
+    id: number,
+    activeStatus: string,
+    overrides: Partial<Companion> = {},
+  ): Companion =>
+    ({
+      id,
+      fullName: `Traveler ${id}`,
+      profilePhotoUrl: '',
+      country: 'India',
+      city: 'Kolkata',
+      profession: 'Traveler',
+      isOnline: activeStatus !== 'Inactive',
+      activeStatus,
+      lastSeenUtc: minutesAgo(2),
+      mutualCompanionsCount: 0,
+      status: 'connected',
+      isProfileLocked: false,
+      ...overrides,
+    }) as unknown as Companion;
+
+  it('keeps Active, Busy, Don’t Disturb, Away and Custom companions in Online Now', () => {
+    service.companions.set([
+      connected(11, 'Active'),
+      connected(12, 'Busy'),
+      connected(13, "Don't Disturb"),
+      connected(14, 'Away', { lastSeenUtc: minutesAgo(40) }),
+      connected(15, 'Custom', { customStatusText: 'In Ladakh' }),
+    ]);
+
+    expect(service.onlineCompanions().map((c) => c.id)).toEqual([11, 12, 13, 14, 15]);
+    expect(service.offlineCompanions()).toEqual([]);
+  });
+
+  it('moves a companion to Offline Companions when their status becomes Inactive', () => {
+    service.companions.set([connected(11, 'Busy'), connected(12, 'Inactive')]);
+
+    expect(service.onlineCompanions().map((c) => c.id)).toEqual([11]);
+    expect(service.offlineCompanions().map((c) => c.id)).toEqual([12]);
+    expect(service.presenceFor(12).label).toBe('Inactive · last seen 2 min ago');
+
+    // The same companion choosing Active again puts them straight back in Online Now.
+    service.companions.set([
+      connected(11, 'Busy'),
+      connected(12, 'Active'),
+    ]);
+
+    expect(service.onlineCompanions().map((c) => c.id)).toEqual([11, 12]);
+    expect(service.offlineCompanions()).toEqual([]);
+  });
+
+  it('counts a companion with no recorded status as online, and one the API reports offline as Inactive', () => {
+    service.companions.set([
+      connected(11, 'Active', { activeStatus: undefined }),
+      connected(12, 'Active', { activeStatus: undefined, isOnline: false }),
+    ]);
+
+    expect(service.onlineCompanions().map((c) => c.id)).toEqual([11]);
+    expect(service.offlineCompanions().map((c) => c.id)).toEqual([12]);
+  });
+
   it('signing in starts the member as Active', async () => {
     const pending = service.loginWithOAuth('Google', 'auth-code-123');
     httpMock.expectOne(`${API}/health`).flush('Healthy');
