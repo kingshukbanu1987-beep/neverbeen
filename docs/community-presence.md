@@ -19,6 +19,27 @@ A member with no recorded last-seen time is shown as "last seen recently".
 The status a member chooses (Active, Busy, Don't Disturb or Custom) is what they see on their own profile. The
 choice of Away is removed from the dropdown because Away is now automatic. Inactive is still a choice.
 
+## Who is in “Online Now” and who is in “Offline Companions”
+
+**Every status except Inactive is online.** A member whose status is Active, Busy, Don't Disturb, Away or any
+Custom status appears in the **Online Now** list of the Messenger page and in the **Online Companions** panel on
+the right of the profile home page, with that status beside their name (and the matching dot colour). The moment
+their status is Inactive — because they chose it, or because signing out set it — they leave both lists and are
+listed under **Offline Companions** on the Messenger page with their last-seen time.
+
+The rule is `status !== 'Inactive'` on the effective status (so Away counts as online):
+
+- **Browser** — `CommunityService.companionIsOnline()`, used by the `onlineCompanions` / `offlineCompanions`
+  computed lists in `src/app/services/community.service.ts`. Both the Messenger page and the profile right rail
+  read those two lists, so they can never disagree.
+- **Web API** (`neverbeen-api`, patch `docs/patches/neverbeen-api-community-online-status.patch`) —
+  `PresenceRules.IsOnline(status)` is now `status != "Inactive"`, and `CompanionsController.ToCompanionDto`
+  uses it for `CompanionDto.IsOnline`. Before this patch the API answered `IsOnline = presence == "Active"`,
+  which pushed Busy, Don't Disturb, Away and Custom members into the offline list even though the website
+  showed them as online.
+
+The Admin Console keeps its own seeded presence and is not part of this rule.
+
 ## How it is kept up to date
 
 - **Browser** (`src/app/services/community.service.ts`, `community-presence.ts`): while the page is in use it
@@ -42,6 +63,19 @@ git -C neverbeen-database apply docs/patches/neverbeen-database-community-presen
 # run the migration on existing databases (idempotent):
 psql "$DATABASE_URL" -f docs/patches/neverbeen-database-community-presence.sql
 ```
+
+The “Online Now” rule above is a second, later API patch, made against `neverbeen-api` `94fa5fb` (which already
+contains the presence patch). It changes only `Common/PresenceRules.cs` and `Controllers/CompanionsController.cs`
+and needs **no database change** — `Users.ActiveStatus` and `Users.LastSeenUtc` already hold everything it reads:
+
+```bash
+git -C neverbeen-api apply docs/patches/neverbeen-api-community-online-status.patch
+python3 docs/patches/neverbeen-api-community-online-status-verification.py /path/to/neverbeen-api
+```
+
+Until it is applied the website still lists Busy, Don't Disturb, Away and Custom members as online — it decides
+from `ActiveStatus` and `LastSeenUtc`, not from `IsOnline` — but any list that reads `IsOnline` (the member
+directory search, once the API ships it) would answer the old, narrower rule.
 
 Each patch has a verification script that checks it applies, parses the C# (tree-sitter), checks the rules and the
 SQL against a live PostgreSQL:

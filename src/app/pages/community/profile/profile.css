@@ -2051,6 +2051,30 @@
   background: var(--ct-sf2, #f8fafc);
 }
 
+/* Date and time of a chat session, shown as a header inside the window (“3 Oct 2026, 07:54”). */
+.chat-session-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.1rem;
+}
+
+.chat-session-divider::before,
+.chat-session-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ct-ln2, #cbd5e1);
+}
+
+.chat-session-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ct-mu, #64748b);
+  white-space: nowrap;
+}
+
 .chat-bubble {
   max-width: 82%;
   padding: 0.4rem 0.65rem;
@@ -2059,17 +2083,19 @@
   line-height: 1.35;
 }
 
+/* My own messages: purple bubble, white text. */
 .chat-bubble.outgoing {
   align-self: flex-end;
-  background: var(--ct-ac, #1877f2);
+  background: #6829ff;
   color: #ffffff;
   border-bottom-right-radius: 2px;
 }
 
+/* The companion's messages: light grey bubble, black text. */
 .chat-bubble.incoming {
   align-self: flex-start;
-  background: var(--ct-ln, #e2e8f0);
-  color: var(--ct-ink, #0f172a);
+  background: #ebebeb;
+  color: #000000;
   border-bottom-left-radius: 2px;
 }
 
@@ -5720,7 +5746,12 @@
 .chat-msg-row {
   display: flex;
   gap: 6px;
-  align-items: flex-end;
+  /*
+   * The picture is lined up with the first line of the message text. `flex-end` used to drop
+   * it to the bottom of the whole column — under the bubble and its hover actions — so the
+   * text sat well above the picture.
+   */
+  align-items: flex-start;
   position: relative;
 }
 
@@ -5730,7 +5761,8 @@
 
 .chat-avatar-column {
   flex-shrink: 0;
-  margin-bottom: 2px;
+  /* The bubble's 0.4rem top padding puts the 24px picture level with the first text line. */
+  margin-top: 3px;
 }
 
 .chat-bubble-avatar {

@@ -959,12 +959,22 @@ export class CommunityService {
   readonly adminCircleCount = computed(() => this.countAdminCircles(this.currentUser()?.id ?? this.profile()?.id ?? 1));
   readonly memberOnlyCircleCount = computed(() => this.countMemberOnlyCircles(this.currentUser()?.id ?? this.profile()?.id ?? 1));
 
+  /**
+   * A companion counts as online while their presence reads as anything other than Inactive:
+   * Active, Busy, Don't Disturb, Away and any Custom status all stay in "Online Now"
+   * (Messenger page) and "Online Companions" (profile right rail). Only Inactive — chosen by
+   * the member or set by signing out — moves them to "Offline Companions".
+   */
+  companionIsOnline(companion: Companion): boolean {
+    return this.presenceFor(companion.id, companion).status !== 'Inactive';
+  }
+
   readonly onlineCompanions = computed(() =>
-    this.visibleCompanions().filter((c) => c.status === 'connected' && c.isOnline),
+    this.visibleCompanions().filter((c) => c.status === 'connected' && this.companionIsOnline(c)),
   );
 
   readonly offlineCompanions = computed(() =>
-    this.visibleCompanions().filter((c) => c.status === 'connected' && !c.isOnline),
+    this.visibleCompanions().filter((c) => c.status === 'connected' && !this.companionIsOnline(c)),
   );
 
   constructor() {

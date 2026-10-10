@@ -2935,6 +2935,7 @@
                     <div class="companion-chat-item offline" (click)="openChatWith(c)">
                       <div class="chat-avatar-wrap">
                         <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
+                        <app-presence-dot [user]="c" />
                       </div>
                       <div class="chat-item-info">
                         <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
@@ -3529,7 +3530,7 @@
               <div class="rail-companion-row" (click)="openVisitorProfile(comp)" role="button" tabindex="0" (keydown.enter)="openVisitorProfile(comp)">
                 <div class="rail-avatar-wrap">
                   <img [src]="comp.profilePhotoUrl || defaultAvatar" [alt]="comp.fullName" class="rail-avatar" [nbUserPreview]="comp" />
-                  <span class="rail-online-dot" title="Online now"></span>
+                  <app-presence-dot [user]="comp" />
                 </div>
                 <div class="rail-comp-info">
                   <span class="rail-comp-name" [nbUserPreview]="comp">
@@ -3540,6 +3541,7 @@
                       </span>
                     }
                   </span>
+                  <span class="rail-comp-status" [attr.data-status]="presenceStatus(comp)">{{ presenceLabel(comp) }}</span>
                   <span class="rail-comp-sub">{{ comp.city }}, {{ comp.country }}</span>
                 </div>
                 <button
@@ -3655,17 +3657,23 @@
         <!-- Chat Popup Body (Visible when not minimized) -->
         @if (!box.isMinimized) {
           <div class="chat-popup-body">
-            <!-- Messages Container -->
-            <div class="chat-messages-container">
-              @for (msg of box.messages; track msg.id) {
+            <!-- Messages Container (always kept at the latest message — Requirement B) -->
+            <div class="chat-messages-container" [nbChatAutoScroll]="box.messages">
+              @for (msg of box.messages; track msg.id; let i = $index) {
+                <!-- Date and time of this chat session, as a header inside the window (Requirement C) -->
+                @if (isChatSessionStart(box.messages, i)) {
+                  <div class="chat-session-divider" role="separator">
+                    <span class="chat-session-label">{{ chatSessionLabel(msg.sentAtUtc) }}</span>
+                  </div>
+                }
                 <div
                   class="chat-msg-row"
-                  [class.outgoing]="msg.senderId === (service.currentUser()?.id || 1)"
-                  [class.incoming]="msg.senderId !== (service.currentUser()?.id || 1)"
+                  [class.outgoing]="isMyChatMessage(msg)"
+                  [class.incoming]="!isMyChatMessage(msg)"
                 >
-                  <!-- Requirement J: Show user profile picture in Chat Window beside message -->
+                  <!-- Requirement C: both travelers' profile pictures are shown in the chat window -->
                   <div class="chat-avatar-column">
-                    @if (msg.senderId === (service.currentUser()?.id || 1)) {
+                    @if (isMyChatMessage(msg)) {
                       <img
                         [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
                         alt="Me"
@@ -3674,18 +3682,22 @@
                       />
                     } @else {
                       <img
-                        [src]="box.companion.profilePhotoUrl || defaultAvatar"
-                        [alt]="box.companion.fullName"
+                        [src]="chatSenderPhoto(box, msg)"
+                        [alt]="chatSenderName(box, msg)"
                         class="chat-bubble-avatar chat-comp-avatar clickable-user"
-                        [nbUserPreview]="box.companion"
-                        (click)="openVisitorProfile(box.companion)"
+                        [nbUserPreview]="chatSender(box, msg)"
+                        (click)="openVisitorProfile(chatSender(box, msg))"
                       />
                     }
                   </div>
 
                   <!-- Bubble Content Column -->
                   <div class="chat-bubble-content-col">
-                    <div class="chat-bubble">
+                    <div
+                      class="chat-bubble"
+                      [class.outgoing]="isMyChatMessage(msg)"
+                      [class.incoming]="!isMyChatMessage(msg)"
+                    >
                       <!-- Requirement K: Reply quote preview inside message bubble -->
                       @if (msg.replyTo) {
                         <div class="chat-bubble-reply-quote">

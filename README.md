@@ -443,6 +443,31 @@ Until the API is patched the affected features fall back gracefully: the cover p
 presence change stay on the member's own browser, tagged companions are applied one tag request at
 a time by the older endpoint, and message book entries with a picture keep their picture locally.
 
+### Online Now, the chat pop-up and the API “online” rule
+
+The community decides who is online from the member's **status**, not from a heartbeat flag: Active, Busy,
+Don't Disturb, Away and any Custom status all appear in **Online Now** (Messenger page) and **Online Companions**
+(the profile right rail) with that status beside their name; only **Inactive** — chosen, or set by signing out —
+moves them to **Offline Companions**. The chat pop-up always opens on the latest message and follows every
+message that arrives, shows both travellers' pictures with `#EBEBEB` (theirs, black text) and `#6829FF` (mine,
+white text) bubbles, and heads each chat session with its date and time (`3 Oct 2026, 07:54`). All of that is
+described in [`docs/community-messenger-chat.md`](docs/community-messenger-chat.md) and
+[`docs/community-presence.md`](docs/community-presence.md).
+
+The website needs no API change for it — it reads `ActiveStatus` and `LastSeenUtc` — but the API answered
+`IsOnline = presence == "Active"`, which is narrower than the rule. That ships as
+[`docs/patches/neverbeen-api-community-online-status.patch`](docs/patches/neverbeen-api-community-online-status.patch)
+(against `neverbeen-api` `94fa5fb`, which already contains the presence patch; no database change is needed):
+
+```bash
+cd neverbeen-api
+git apply /path/to/neverbeen/docs/patches/neverbeen-api-community-online-status.patch
+python3 /path/to/neverbeen/docs/patches/neverbeen-api-community-online-status-verification.py .
+```
+
+`PresenceRules.IsOnline(status)` is now `status != "Inactive"` and `CompanionsController.ToCompanionDto` uses it
+for `CompanionDto.IsOnline`, so the API and the website give the same answer for every status and last-seen time.
+
 ### Real member vs “Explore as Guest” — where the demo data lives
 
 Everything the seeded community holds — the founder's sample profile, the demo travellers, the
