@@ -1,0 +1,426 @@
+<main class="biography-page">
+  <div class="biography-aurora" aria-hidden="true"></div>
+  <div class="biography-grain" aria-hidden="true"></div>
+
+  <div class="biography-shell">
+    @if (model(); as profile) {
+      <nav class="biography-nav" aria-label="Biography navigation">
+        <a [routerLink]="['/ai-models', profile.slug]" class="back-to-profile">
+          <span aria-hidden="true">←</span> Back to {{ profile.name }}’s portfolio
+        </a>
+        <span class="archive-mark">NEVERBEEN <i aria-hidden="true">/</i> MULTIVERSE ARCHIVE</span>
+      </nav>
+
+      @if (biography(); as story) {
+        <header class="biography-hero">
+          @if (profile.cover) {
+            <img class="hero-backdrop" [src]="profile.cover" alt="" aria-hidden="true" />
+          }
+          <div class="hero-light hero-light-one" aria-hidden="true"></div>
+          <div class="hero-light hero-light-two" aria-hidden="true"></div>
+
+          <div class="hero-copy">
+            <p class="eyebrow"><span></span> NeverBeen Multiverse <i>·</i> a fictional life</p>
+            <h1>{{ headerTitle }}</h1>
+            <p class="hero-deck">
+              One model. A thousand possible worlds. This is {{ firstName(profile.name) }}’s
+              imagined story, told as if the camera had always been there.
+            </p>
+            <div class="hero-author">
+              <span class="hero-author-line"></span>
+              <span>{{ profile.name }}</span>
+              <span class="hero-author-dot" aria-hidden="true">✳</span>
+              <span>NEVERBEEN / BIOGRAPHICAL FICTION</span>
+            </div>
+          </div>
+
+          <figure class="hero-portrait">
+            @if (profile.cover) {
+              <img
+                [src]="profile.cover"
+                [alt]="profile.name + ' — fictional multiverse portrait'"
+              />
+            } @else {
+              <div class="portrait-placeholder" aria-hidden="true">✳</div>
+            }
+            <figcaption><span>PORTRAIT / 01</span><span>AI MODEL · FICTIONAL</span></figcaption>
+            <span class="portrait-stamp" aria-hidden="true">NB<br />∞</span>
+          </figure>
+
+          <div class="hero-index" aria-hidden="true"><span>FIELD NOTES</span><b>01—10</b></div>
+        </header>
+
+        <section class="general-panel" aria-label="General information">
+          <div class="general-topline">
+            <span class="general-index">00 <i>—</i> PROFILE CARD</span>
+            <span class="fiction-chip"><span></span> ENTIRELY FICTIONAL</span>
+          </div>
+          <p class="general-summary">{{ story.summary }}</p>
+          @if (generalDetails().length > 0) {
+            <dl class="general-facts">
+              @for (detail of generalDetails(); track detail.key) {
+                <div>
+                  <dt>{{ detail.label }}</dt>
+                  <dd>{{ detail.value }}</dd>
+                </div>
+              }
+            </dl>
+          }
+        </section>
+
+        <div class="biography-layout">
+          <aside class="chapter-rail" aria-label="On this page">
+            <p>IN THIS STORY</p>
+            <a href="#early-life"><span>01</span> Early Life</a>
+            <a href="#memories"><span>02</span> Memory Archive</a>
+            <a href="#education"><span>03</span> Education</a>
+            <a href="#career"><span>04</span> Career</a>
+            <a href="#achievements"><span>05</span> Achievements</a>
+            <a href="#personal-life"><span>06</span> Personal Life</a>
+            <a href="#interests"><span>07</span> Hobbies & Interests</a>
+            <a href="#final-notes"><span>08</span> Final Notes</a>
+            <div class="rail-note">
+              <span>∞</span> All roads lead to a story that never happened.
+            </div>
+          </aside>
+
+          <article class="biography-article">
+            <section class="chapter" id="early-life" aria-labelledby="early-life-title">
+              <header class="chapter-heading">
+                <p class="chapter-kicker">01 <i>·</i> Before the first frame</p>
+                <h2 id="early-life-title">Early Life</h2>
+              </header>
+              <div class="chapter-copy">
+                @for (paragraph of story.earlyLife; track $index) {
+                  <p>{{ paragraph }}</p>
+                }
+              </div>
+              <blockquote class="chapter-pullquote">
+                <span aria-hidden="true">“</span>
+                <p>Her first map was the walk home. Everything else came into focus from there.</p>
+                <cite>NEVERBEEN / IMAGINED ARCHIVE</cite>
+              </blockquote>
+            </section>
+
+            <section class="memory-section" id="memories" aria-labelledby="memory-title">
+              <header class="memory-heading">
+                <div>
+                  <p class="chapter-kicker">02 <i>·</i> Ten imagined moments</p>
+                  <h2 id="memory-title">Memory Archive</h2>
+                </div>
+                <span class="memory-count"
+                  ><b>{{ story.memories.length.toString().padStart(2, '0') }}</b> FRAMES</span
+                >
+              </header>
+              <p class="memory-intro">
+                Personal, phone-camera-style scenes from an invented life. Every finished image is
+                an AI-generated illustration, never an archival or documentary photograph.
+              </p>
+              @if (story.memories.length > 0) {
+                <div class="memory-grid">
+                  @for (memory of story.memories; track memory.id; let index = $index) {
+                    <figure class="memory-card" [class.has-image]="!!memory.src">
+                      <div class="memory-image">
+                        @if (memory.src) {
+                          <img
+                            [src]="memory.src"
+                            [alt]="memoryImageAlt(memory.alt, profile.name)"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        } @else {
+                          <div
+                            class="memory-pending"
+                            role="img"
+                            [attr.aria-label]="memoryImageAlt(memory.alt, profile.name)"
+                          >
+                            <span class="pending-mark" aria-hidden="true">✳</span>
+                            <span>Visual memory<br />awaiting its frame</span>
+                            <small>FICTIONAL IMAGE / {{ memoryNumber(index) }}</small>
+                          </div>
+                        }
+                        <span class="memory-number">{{ memoryNumber(index) }}</span>
+                        <span class="memory-ai-label">AI MEMORY <i>·</i> FICTION</span>
+                      </div>
+                      <figcaption>
+                        <span class="memory-period">{{ memory.period }}</span>
+                        <span class="memory-caption">{{ memory.caption }}</span>
+                      </figcaption>
+                    </figure>
+                  }
+                </div>
+              } @else {
+                <p class="empty-memories">
+                  The image prompts are being assembled for this fictional story.
+                </p>
+              }
+            </section>
+
+            <section class="chapter" id="education" aria-labelledby="education-title">
+              <header class="chapter-heading">
+                <p class="chapter-kicker">03 <i>·</i> Curiosity, with a timetable</p>
+                <h2 id="education-title">Educational Background</h2>
+              </header>
+              <div class="timeline">
+                @for (education of story.educationalBackground; track $index) {
+                  <article class="timeline-entry">
+                    <div class="timeline-marker" aria-hidden="true"><span></span></div>
+                    <div class="timeline-content">
+                      <p class="timeline-period">{{ education.period }}</p>
+                      <h3>{{ education.qualification }}</h3>
+                      <p class="timeline-place">
+                        {{ education.institution }} <i>·</i> {{ education.location }}
+                      </p>
+                      <p class="timeline-description">{{ education.description }}</p>
+                    </div>
+                  </article>
+                }
+              </div>
+            </section>
+
+            <section class="chapter" id="career" aria-labelledby="career-title">
+              <header class="chapter-heading">
+                <p class="chapter-kicker">04 <i>·</i> The work behind the image</p>
+                <h2 id="career-title">Career</h2>
+              </header>
+              <p class="chapter-lede">
+                A LinkedIn-inspired timeline, imagined for this character and aligned with her
+                fictional education—not a real employment record.
+              </p>
+              <div class="timeline career-timeline">
+                @for (role of story.career; track $index) {
+                  <article class="timeline-entry">
+                    <div class="timeline-marker" aria-hidden="true"><span></span></div>
+                    <div class="timeline-content">
+                      <p class="timeline-period">
+                        {{ role.period }} <i>·</i> {{ role.employmentType }}
+                      </p>
+                      <h3>{{ role.role }}</h3>
+                      <p class="timeline-place">
+                        {{ role.organization }} <i>·</i> {{ role.location }}
+                      </p>
+                      <p class="timeline-description">{{ role.description }}</p>
+                    </div>
+                  </article>
+                }
+              </div>
+            </section>
+
+            <section class="chapter" id="achievements" aria-labelledby="achievements-title">
+              <header class="chapter-heading">
+                <p class="chapter-kicker">05 <i>·</i> Milestones, not mythology</p>
+                <h2 id="achievements-title">Achievements</h2>
+              </header>
+              <ul class="achievement-list">
+                @for (achievement of story.achievements; track $index) {
+                  <li>
+                    <span aria-hidden="true">✳</span>
+                    <p>{{ achievement }}</p>
+                  </li>
+                }
+              </ul>
+            </section>
+
+            <section class="chapter" id="personal-life" aria-labelledby="personal-life-title">
+              <header class="chapter-heading">
+                <p class="chapter-kicker">06 <i>·</i> The life outside the frame</p>
+                <h2 id="personal-life-title">Personal Life</h2>
+              </header>
+              <div class="personal-card">
+                <div class="personal-status">
+                  <span class="personal-orbit" aria-hidden="true">∞</span>
+                  <div>
+                    <small>IN THIS FICTIONAL STORY</small
+                    ><strong>{{ story.personalLife.relationshipStatus }}</strong>
+                  </div>
+                </div>
+                <p>{{ story.personalLife.narrative }}</p>
+                @if (story.personalLife.relationshipType) {
+                  <p class="relationship-type">{{ story.personalLife.relationshipType }}</p>
+                }
+                @if (story.personalLife.partner; as partner) {
+                  <div class="family-detail">
+                    <span class="family-icon" aria-hidden="true">♡</span>
+                    <div>
+                      <small>
+                        {{
+                          story.personalLife.relationshipStatus === 'Married' ? 'SPOUSE' : 'PARTNER'
+                        }}
+                        / FICTIONAL CHARACTER
+                      </small>
+                      <strong>{{ partner.name }}</strong>
+                      <p>
+                        {{ partner.met }}
+                        @if (partner.married) {
+                          Married {{ partner.married }}.
+                        }
+                      </p>
+                      <span>{{ partner.note }}</span>
+                    </div>
+                  </div>
+                }
+                @if (story.personalLife.children.length > 0) {
+                  <div class="children-list">
+                    @for (child of story.personalLife.children; track child.name) {
+                      <div class="family-detail">
+                        <span class="family-icon" aria-hidden="true">✿</span>
+                        <div>
+                          <small>CHILD / FICTIONAL CHARACTER</small>
+                          <strong
+                            >{{ child.name }} <span>· {{ child.age }} years old</span></strong
+                          >
+                          <p>{{ child.note }}</p>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+                <p class="privacy-note">{{ story.personalLife.privacyNote }}</p>
+              </div>
+            </section>
+
+            <section class="chapter" id="interests" aria-labelledby="interests-title">
+              <header class="chapter-heading">
+                <p class="chapter-kicker">07 <i>·</i> Her own kind of energy</p>
+                <h2 id="interests-title">Hobbies and Interests</h2>
+              </header>
+              <div class="interest-columns">
+                <div>
+                  <p class="list-label">OFF THE CLOCK</p>
+                  <ul class="interest-list">
+                    @for (hobby of story.hobbies; track hobby) {
+                      <li>{{ hobby }}</li>
+                    }
+                  </ul>
+                </div>
+                <div>
+                  <p class="list-label">ALWAYS CURIOUS</p>
+                  <ul class="interest-list">
+                    @for (interest of story.interests; track interest) {
+                      <li>{{ interest }}</li>
+                    }
+                  </ul>
+                </div>
+              </div>
+              <div class="passion-panel">
+                <div>
+                  <p class="list-label">WHAT SHE CARES ABOUT</p>
+                  <div class="word-cloud">
+                    @for (passion of story.passions; track passion) {
+                      <span>{{ passion }}</span>
+                    }
+                  </div>
+                </div>
+                <div>
+                  <p class="list-label">WHERE SHE’S HEADED</p>
+                  <ul class="ambition-list">
+                    @for (ambition of story.ambitions; track ambition) {
+                      <li>{{ ambition }}</li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="chapter final-chapter"
+              id="final-notes"
+              aria-labelledby="final-notes-title"
+            >
+              <header class="chapter-heading">
+                <p class="chapter-kicker">08 <i>·</i> A note from another world</p>
+                <h2 id="final-notes-title">Final Notes</h2>
+              </header>
+              <div class="chapter-copy final-copy">
+                @for (note of story.finalNotes; track $index) {
+                  <p>{{ note }}</p>
+                }
+              </div>
+              @if (story.quotes.length > 0) {
+                <div class="quote-grid">
+                  @for (quote of story.quotes; track $index) {
+                    <blockquote>
+                      <span aria-hidden="true">“</span>
+                      <p>{{ quote.text }}</p>
+                      <cite>— {{ quote.by }} <i>·</i> fictional quote</cite>
+                    </blockquote>
+                  }
+                </div>
+              }
+              <div class="signature-block">
+                <span class="signature-rule"></span>
+                <p class="signature-label">SIGNED IN THE NEVERBEEN MULTIVERSE</p>
+                <p class="signature">{{ story.signature || profile.name }}</p>
+                <span class="signature-small"
+                  >{{ profile.name }} <i>·</i> digital model, imagined life</span
+                >
+              </div>
+            </section>
+          </article>
+        </div>
+
+        <footer class="fiction-footer">
+          <span class="footer-sigil" aria-hidden="true">NB <i>∞</i></span>
+          <p class="footer-overline">A NEVERBEEN MULTIVERSE STORY</p>
+          <p class="footer-disclaimer">
+            This biography is completely fictional. All details, schools, work experience,
+            relationships, family stories, quotes and pictures are imagined creations from the
+            Multiverse of NeverBeen. They do not describe real events or real people.
+          </p>
+          <a [routerLink]="['/ai-models', profile.slug]"
+            >Return to {{ profile.name }}’s portfolio <span aria-hidden="true">↗</span></a
+          >
+        </footer>
+      } @else {
+        <section class="biography-unavailable" aria-labelledby="unavailable-title">
+          <div class="unavailable-orbit" aria-hidden="true"><span>NB</span><i>∞</i></div>
+          <p class="eyebrow"><span></span> NeverBeen Multiverse <i>·</i> profile archive</p>
+          <h1 id="unavailable-title">Biography not Available</h1>
+          <p class="unavailable-name">{{ profile.name }}</p>
+          <p class="unavailable-copy">
+            This model’s imagined biography has not been created yet. When it is ready, her
+            multiverse story, career timeline and fictional memory gallery will appear here.
+          </p>
+          <a [routerLink]="['/ai-models', profile.slug]" class="unavailable-back">
+            <span aria-hidden="true">←</span> Return to portfolio
+          </a>
+        </section>
+
+        <footer class="fiction-footer unavailable-footer">
+          <span class="footer-sigil" aria-hidden="true">NB <i>∞</i></span>
+          <p class="footer-overline">A NEVERBEEN MULTIVERSE STORY</p>
+          <p class="footer-disclaimer">
+            Any biography published here is completely fictional, including its details and
+            pictures, and exists only in the Multiverse of NeverBeen.
+          </p>
+        </footer>
+      }
+    } @else {
+      <nav class="biography-nav" aria-label="Biography navigation">
+        <a routerLink="/ai-models" class="back-to-profile"
+          ><span aria-hidden="true">←</span> All AI models</a
+        >
+        <span class="archive-mark">NEVERBEEN <i aria-hidden="true">/</i> MULTIVERSE ARCHIVE</span>
+      </nav>
+      <section class="biography-unavailable" aria-labelledby="not-found-title">
+        <div class="unavailable-orbit" aria-hidden="true"><span>NB</span><i>∞</i></div>
+        <p class="eyebrow"><span></span> NeverBeen Multiverse <i>·</i> profile archive</p>
+        <h1 id="not-found-title">This story is out of frame.</h1>
+        <p class="unavailable-copy">
+          The model may have moved, or the profile is not in the directory yet.
+        </p>
+        <a routerLink="/ai-models" class="unavailable-back"
+          >Browse all models <span aria-hidden="true">↗</span></a
+        >
+      </section>
+      <footer class="fiction-footer unavailable-footer">
+        <span class="footer-sigil" aria-hidden="true">NB <i>∞</i></span>
+        <p class="footer-overline">A NEVERBEEN MULTIVERSE STORY</p>
+        <p class="footer-disclaimer">
+          Any biography published here is completely fictional and exists only in the Multiverse of
+          NeverBeen.
+        </p>
+      </footer>
+    }
+  </div>
+</main>

@@ -74,8 +74,9 @@ ng test
 | `/collection`             | Collection     | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
 | `/founder`                | Founder        | Founder profile and expertise                                                                        |
 | `/documentation`          | Brochure       | Visitor brochure: 36 pages on how to place a Neverbeen Request, packages and destinations            |
-| `/ai-models`              | AI Models      | Dark studio directory and model portfolios at `/ai-models/:slug` (12 random photographs each)        |
-| `/ai-models/:slug/photos` | AI Model album | A model's complete album as a mosaic of differently sized, zoomable photographs                      |
+| `/ai-models`                  | AI Models       | Dark studio directory and model portfolios at `/ai-models/:slug` (12 random photographs each)        |
+| `/ai-models/:slug/biography`  | Model biography | Fictional, editorial-style multiverse biography and memory archive                                    |
+| `/ai-models/:slug/photos`     | AI Model album  | A model's complete album as a mosaic of differently sized, zoomable photographs                      |
 | `/login`                  | Login          | Sign-in form                                                                                         |
 
 ## NeverBeen AI Models
@@ -107,6 +108,12 @@ Right below the personal details, a **Videos** reel plays the clips from the mod
 volume, playback speed, previous/next clip, picture-in-picture, true full screen (F or a double
 click) and a **Download** button for the file. Tapping the picture plays or pauses it, and
 Space/K, ←/→, ↑/↓ and M work as shortcuts. The profile header shows the model's city and country.
+A text-only **Read full Biography** link sits immediately above **Rent Me**. It opens
+`/ai-models/:slug/biography`, an editorial biography page with general information, early life,
+education, a LinkedIn-style fictional career timeline, achievements, personal life, interests,
+quotes, a signature and a ten-frame memory gallery. If that model has no `Biography/biography.json`,
+the page shows **Biography not Available**. Every published biography and memory image is explicitly
+fictional and belongs only to the NeverBeen Multiverse.
 
 Below the portfolio grid, Community members can publish a testimonial with a 10–100 character
 headline, 20–2,500 character quote and a full- or half-star rating. Testimonials include linked

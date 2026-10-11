@@ -6,11 +6,16 @@ import { of } from 'rxjs';
 import { CommunityService } from '../../services/community.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
+import { AiModelBiographyPage } from './biography/ai-model-biography';
 import { AiModelAllPhotosPage } from './all-photos/ai-model-all-photos';
 import { AiModelPortfolioPage, PREVIEW_LIMIT, shufflePhotos } from './ai-model-portfolio';
 import { AiModelVideoPlayer, formatTime } from './video/ai-model-video-player';
 
 const testRoutes = [
+  {
+    path: 'ai-models/:slug/biography',
+    component: AiModelBiographyPage,
+  },
   {
     path: 'ai-models/:slug/photos',
     component: AiModelAllPhotosPage,
@@ -160,6 +165,24 @@ describe('AiModelPortfolioPage', () => {
         tag.textContent?.trim(),
       );
       expect(tags).toEqual(['Editorial', 'Campaign']);
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('offers Read full Biography as a text link directly above Rent Me', async () => {
+    const profile = withPhotos(1);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      const link = element.querySelector<HTMLAnchorElement>('.biography-link');
+      const rent = element.querySelector<HTMLButtonElement>('.action-rent');
+      expect(link?.tagName).toBe('A');
+      expect(link?.textContent).toContain('Read full Biography');
+      expect(link?.getAttribute('href')).toBe(`/ai-models/${profile.slug}/biography`);
+      expect(link?.parentElement?.classList.contains('rent-action-stack')).toBe(true);
+      expect(link?.nextElementSibling).toBe(rent);
     } finally {
       release(profile);
     }
