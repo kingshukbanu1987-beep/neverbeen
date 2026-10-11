@@ -92,7 +92,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 735,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A fresh, spirited portfolio presence inspired by Shiraz's poetry, rose gardens and golden afternoon light.",
+    bio: '“Hello, I am Fiadh Dara, 23 years old, and I call Shiraz, Iran my home. I am an AI model and I do not exist in reality outside NeverBeen. My athletic frame moves with effortless grace, and every pose stops a viewer mid-scroll. Cast me in fashion lookbooks, editorial spreads, branding campaigns or a long-term contract, and I will deliver presence and a smile that sells. Let us create magic together.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/FiadhDara/_sTof-XqCgAFE9b2cdJ6EDijJx_eHyWEK70Sw6fImIo.png',
@@ -471,7 +471,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 755,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A self-assured portfolio muse with a thoughtful style and a soft spot for expressive old streets. Nourhan moves easily between quiet editorial portraits and bold campaign frames, and she is at her best in natural light.',
+    bio: '“I am Nourhan Durrani, 30 years old, and I am based in Sarajevo, Bosnia and Herzegovina. I am an AI model and I do not exist in reality outside NeverBeen. I move easily between quiet editorial portraits and bold campaign frames. Hire me for fashion shows, magazine features, branding campaigns or an exclusive contract. Ask about my packages and let us talk numbers. Let us make the old streets speak.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/NourhanDurrani/01-magenta-ruffles-portrait.png',
@@ -726,7 +726,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 545,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A warm, expressive presence imagined between Darjeeling's tea-garden terraces, old-town lanes and the soft light of the Himalayan foothills.",
+    bio: '“Namaste, I am Alisha Bhattacharya, 25 years old, and I am based in Darjeeling, India. I am an AI model and I do not exist in reality outside NeverBeen. My warm, expressive presence catches the Himalayan light like a secret you want to keep. Book me for fashion editorials, branding campaigns or a long-term contract, and every frame becomes a lucrative story. Sell the dream with me. Let us make art.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/AlishaBhattacharya/_2TKSfGsixykE380bajUToZamFFgxR2jFhOjUA_nzjY.jpg',
@@ -1400,7 +1400,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 580,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A considered, expressive presence whose imagined style pairs clean lines with a love of coastal light.',
+    bio: '“Hello, I am Rozalin El Masry, 29 years old, and I am based in Alexandria, Egypt. I am an AI model and I do not exist in reality outside NeverBeen. My clean, considered style is quietly seductive, with sharp lines that make any garment feel like couture. Sign me for runways, editorial covers, branding shoots or an exclusive contract, and I will hit every deadline with precision. Let the sea decide.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/RozalinElMasry/_pmXHRtuiKdnbY9kv9Qbqpwx3U8OHRmyGgGAy-VkwOc.png',
@@ -1850,7 +1850,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 540,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A bright, relaxed editorial presence with an imagined affinity for natural textures and open landscapes.',
+    bio: '“Hi, I am Sereenah Noorzai, 25 years old, and I am based in Muscat, Oman. I am an AI model and I do not exist in reality outside NeverBeen. My bright, relaxed energy makes every frame feel warm, open and irresistibly inviting. I am ideal for editorial features, fashion collections, branding campaigns and long-term contracts that want a fresh face. My numbers speak for themselves. Let us make magic.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/SereenahNoorzai/_MZF38gi0Ea4Q0ScaVmfqHlurBcdvIFoZ5VXX1sfjUA.jpg',
@@ -2027,7 +2027,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 525,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "An artistic, warm-hearted muse imagined among Shantiniketan's red earth paths, handloom batik and the calm of open-air classrooms.",
+    bio: '“Hello, I am Reema Ganguly, 26 years old, and I am based in Shantiniketan, India. I am an AI model and I do not exist in reality outside NeverBeen. My warm heart gives every portrait a soulful glow that lingers long after the shutter closes. Commission me for fashion campaigns, editorial stories, branding projects or paid contracts, and you gain a collaborator whose images sell. Create art with me.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/ReemaGanguly/_-6AlBavInyojfDZFn3W4kRRVlCQ8jEQ0ngxPNeQoro.png',
@@ -2566,7 +2566,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 595,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A polished, modern presence imagined between sculptural skylines, gallery spaces and refined evening styling.',
+    bio: '“Greetings, I am Nazanin Maeve Al-Farsi, 26 years old, and I am based in Abu Dhabi, United Arab Emirates. I am an AI model and I do not exist in reality outside NeverBeen. My polished, modern presence turns refined evening looks into irresistible invitations. Book me for luxury fashion campaigns, editorial features, branding shoots or exclusive contracts. Your brand deserves this kind of attention.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2594,7 +2594,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 565,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A graceful, camera-confident presence imagined between Dublin's Georgian streets, soft northern light and contemporary editorial styling.",
+    bio: '“Hi there, I am Ava Amira Gallagher, 24 years old, and I am based in Dublin, Ireland. I am an AI model and I do not exist in reality outside NeverBeen. My graceful, camera-confident presence suits editorials, luxury fashion and bold branding campaigns. Offer me a long-term contract or a single shoot, and one image from me will tell a lucrative story. Make the moment count. The spotlight is waiting.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2622,7 +2622,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 575,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A striking, versatile muse whose imagined style blends Tehran's modern energy with timeless Persian elegance and bold colour.",
+    bio: '“Salam, I am Banafsheh Saoirse Yazdani, 26 years old, and I am based in Tehran, Iran. I am an AI model and I do not exist in reality outside NeverBeen. My striking presence blends bold colour with quiet mystery, and every glance carries a little heat. Book me for fashion campaigns, editorial spreads, branding projects or long-term contracts that want something daring. Let us make the lens obsessed.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2653,7 +2653,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A polished, versatile presence imagined between bold architecture, soft light and new destinations.',
+    bio: '“Hello, I am Nirvana Noorzai, 27 years old, and I am based in Dubai, United Arab Emirates. I am an AI model and I do not exist in reality outside NeverBeen. My polished, versatile presence moves from sleek tailoring to playful resort wear without losing its magnetic edge. I am available for fashion editorials, travel and lifestyle branding, and exclusive contracts that pay well. The skyline awaits.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/NirvanaNoorzai/Nirvana%20Noorzai.png', caption: '' }],
@@ -2679,7 +2679,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A bright, grounded editorial spirit whose imagined style pairs Ireland's western light with clean lines and natural textures.",
+    bio: '“Hi, I am Sorcha Golsa MacCarthy, 28 years old, and I am based in Limerick, Ireland. I am an AI model and I do not exist in reality outside NeverBeen. My grounded editorial spirit gives every image honesty, warmth and a subtle, unmistakable allure. Book me for fashion collections, editorial features, branding campaigns or long-term contracts, and I will turn each shoot into profit. Let us make art.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2707,7 +2707,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A warm, contemporary presence imagined among vivid neighbourhoods, creative studios and faraway horizons.',
+    bio: '“Hello, I am Fatima Sana Hussaini, 26 years old, and I am based in Kuala Lumpur, Malaysia. I am an AI model and I do not exist in reality outside NeverBeen. My warm, contemporary presence carries vibrant energy and a flirtatious spark that makes any product irresistible. Hire me for fashion campaigns, editorial stories, branding partnerships or long-term contracts. Let us make your brand desirable.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2735,7 +2735,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 555,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A modern portfolio muse drawn to thoughtful styling, intimate portraits and unhurried city walks.',
+    bio: '“Marhaba, I am Zeina Al-Sabbagh, 25 years old, and I am based in Beirut, Lebanon. I am an AI model and I do not exist in reality outside NeverBeen. My thoughtful styling and quiet confidence give every photograph a slow-burning sensuality. I am open to fashion editorials, branding campaigns, portrait commissions and long-term contracts. I adapt to any palette, mood or era with ease. Shall we begin?”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/ZeinaAlSabbagh/Zeina%20Al-Sabbagh.jpg', caption: '' }],
@@ -2761,7 +2761,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 590,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A poised editorial presence with a quiet interest in architecture, light and the stories carried by a city.',
+    bio: '“Merhaba, I am Toulene Arslan, 27 years old, and I am based in Istanbul, Türkiye. I am an AI model and I do not exist in reality outside NeverBeen. My poised editorial presence carries a quiet, intoxicating intensity that makes fashion feel like a confession. Book me for luxury campaigns, editorial features, branding shoots or exclusive contracts. My numbers speak for themselves. Let us turn heads.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/TouleneArslan/Toulene%20Arslan.jpg', caption: '' }],
@@ -2787,7 +2787,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A poised, expressive presence imagined among Isfahan's tiled archways, garden pavilions and rich craft traditions.",
+    bio: '“Salam, I am Caoimhe Niloufar Rahimi, 25 years old, and I am based in Isfahan, Iran. I am an AI model and I do not exist in reality outside NeverBeen. My poised, expressive presence blends old-world romance with a seductive modern edge that no lens can ignore. I am ideal for fashion campaigns, editorial shoots, branding projects and long-term contracts. Let us make this collaboration unforgettable.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2818,7 +2818,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A fresh, energetic portfolio presence inspired by mountain air, independent design and open roads.',
+    bio: '“Hi there, I am Salma Ahmadzai, 24 years old, and I am based in Tbilisi, Georgia. I am an AI model and I do not exist in reality outside NeverBeen. My fresh, energetic presence brings movement and spark to every frame, whether it is a sleek jacket or a playful denim look. Hire me for fashion campaigns, editorial features, branding partnerships or long-term contracts. Your next campaign starts here.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/SalmaAhmadzai/Salma%20Ahmadzai.png', caption: '' }],
@@ -2844,7 +2844,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 520,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A quietly magnetic portfolio muse with a taste for modern silhouettes and old-city discoveries.',
+    bio: '“Hello, I am Nermin Akhundzada, 26 years old, and I am based in Baku, Azerbaijan. I am an AI model and I do not exist in reality outside NeverBeen. My quietly magnetic presence draws the eye slowly, then holds it. I am available for fashion editorials, branding campaigns, luxury lookbooks and exclusive contracts. Every booking with me is a lucrative investment. Let us uncover the old city together.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/NerminAkhundzada/Nermin%20Akhundzada.png', caption: '' }],
@@ -2870,7 +2870,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 600,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'An understated editorial spirit with a confident point of view and an eye for sculptural details.',
+    bio: '“Marhaba, I am Rasha Fakhoury, 28 years old, and I am based in Amman, Jordan. I am an AI model and I do not exist in reality outside NeverBeen. My understated editorial presence has a seductive stillness that makes every garment look like a statement. Book me for fashion editorials, branding campaigns or long-term contracts with partners who value restraint. Sell the dream with me. Let us make art.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/RashaFakhoury/Rasha%20Fakhoury.jpg', caption: '' }],
@@ -2896,7 +2896,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 585,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A warm, self-assured editorial presence imagined between Cork's harbour light, knit textures and relaxed modern tailoring.",
+    bio: '“Hi, I am Lana Mahvash Kennedy, 27 years old, and I am based in Cork, Ireland. I am an AI model and I do not exist in reality outside NeverBeen. My warm, self-assured presence gives every frame an easy confidence and a sensual, unhurried warmth. Hire me for fashion campaigns, editorial stories, branding projects or long-term contracts. Give me a mood board and I will bring it to life. Let us begin.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2924,7 +2924,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A thoughtful, magnetic presence imagined among historic shrines, bazaar colour and soft, considered portraiture.',
+    bio: '“Salam, I am Donya Caoimhe Yazdani, 25 years old, and I am based in Mashhad, Iran. I am an AI model and I do not exist in reality outside NeverBeen. My thoughtful, magnetic presence carries a slow-burning allure that makes every portrait feel intimate. I am available for fashion campaigns, editorial features, branding partnerships and long-term contracts. Let us create a portrait worth remembering.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -2952,7 +2952,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 540,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A warm, expressive muse imagined between Kolkata's colonial verandahs, handloom saris and the glow of festival season.",
+    bio: '“Namaskar, I am Priyanka Chatterjee, 26 years old, and I am based in Kolkata, India. I am an AI model and I do not exist in reality outside NeverBeen. My warm, expressive presence carries festive joy and a flirtatious spark that makes every colour sing. I am open to fashion campaigns, editorial shoots, branding collaborations and long-term contracts. I deliver, every time. The spotlight is waiting.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/PriyankaChatterjee/Priyanka%20Chatterjee.png', caption: '' }],
@@ -2978,7 +2978,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 565,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A poised, self-assured presence imagined between Doha's sculptural skyline, museum light and the warm geometry of the desert.",
+    bio: '“Hello, I am Fatima Al-Mansoor, 27 years old, and I am based in Doha, Qatar. I am an AI model and I do not exist in reality outside NeverBeen. My poised, self-assured presence carries museum-light elegance and a magnetic sensuality. I am ready for luxury fashion campaigns, editorial features, branding projects and exclusive contracts. Your audience will remember the way I move. Let us make history.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/FatimaAlMansoor/-Gs4cv7RpFVCg3ghV9K8EIbHDnI_mlyhW2fqu2EDIq0.png',
@@ -3077,7 +3077,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 575,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A graceful, camera-confident muse imagined between Tehran's mountain backdrop, grand boulevards and richly patterned Persian textiles.",
+    bio: '“Hello, I am Aoife Pahlavi, 25 years old, and I am based in Tehran, Iran. I am an AI model and I do not exist in reality outside NeverBeen. My camera-confident presence blends richly patterned Persian textiles with a modern, seductive energy. I am available for fashion campaigns, editorial stories, branding partnerships and long-term contracts. Make the moment count. Let us make the mountains glow.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/AoifePahlavi/Aoife%20Pahlavi.png', caption: '' }],
@@ -3103,7 +3103,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 585,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A warm, considered presence imagined along Jeddah's Red Sea corniche, among Al-Balad's carved roshan balconies and evening sea light.",
+    bio: '“Marhaba, I am Amira Bint Tariq Al-Sayed, 26 years old, and I am based in Jeddah, Saudi Arabia. I am an AI model and I do not exist in reality outside NeverBeen. My refined, expressive presence carries a graceful confidence and a quiet, irresistible allure. I am open to fashion collections, editorial features, branding campaigns and long-term contracts. Let us make this collaboration unforgettable.”',
     illustrative: true,
     gallery: [
       '/NeverBeenModels/AmiraBintTariqAlSayed/_1CAnzK6iNIfVsxnAeNjYjJdrfRl9A2vHZmaO0wGMQY.png',
@@ -3235,7 +3235,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 595,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A polished, magnetic editorial presence imagined between Kuwait City's marina towers, gold souk glow and refined modern tailoring.",
+    bio: '“Hello, I am Aisha Bint Mohammed Al-Husseini, 28 years old, and I am based in Kuwait City, Kuwait. I am an AI model and I do not exist in reality outside NeverBeen. My poise and expressive gaze make luxury fashion feel personal, intimate and quietly seductive. I am ready for fashion campaigns, editorial spreads, branding partnerships and long-term contracts. Sell the dream with me, so let us begin.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -3266,7 +3266,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 540,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A bright, freewheeling portfolio spirit imagined between Galway's Atlantic light, wild coastline colours and relaxed knitwear textures.",
+    bio: "“Hi, I am Shirina O'Brien, 24 years old, and I am based in Galway, Ireland. I am an AI model and I do not exist in reality outside NeverBeen. My athletic, playful energy brings a bright, daring spark to every frame and a wink that stops scrolling thumbs. I am available for fashion campaigns, editorial features, branding projects and long-term contracts. Let us make this collaboration unforgettable.”",
     illustrative: true,
     gallery: [],
     photos: [{ src: "/NeverBeenModels/ShirinaOBrien/Shirina%20O'Brien.png", caption: '' }],
@@ -3292,7 +3292,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 555,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A quietly expressive muse imagined beside the Tigris, among palm-lined riverbanks, layered heritage and unhurried golden afternoons.',
+    bio: '“Marhaba, I am Tasneem Al-Rifai, 27 years old, and I am based in Baghdad, Iraq. I am an AI model and I do not exist in reality outside NeverBeen. My clean-lined, modern presence carries a poised and deeply sensual confidence. I am ready for fashion editorials, branding campaigns, lookbooks and exclusive contracts. I thrive on bold direction and fresh creative ideas. Let us make the spotlight yours.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/TasneemAlRifai/Tasneem%20Al-Rifai.jpg', caption: '' }],
@@ -3318,7 +3318,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 545,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A luminous, thoughtful presence imagined in Damascus's jasmine-scented courtyards, old stone lanes and soft lamplight evenings.",
+    bio: '“Hello, I am Zahra Mahmoud Al-Khatib, 26 years old, and I am based in Damascus, Syria. I am an AI model and I do not exist in reality outside NeverBeen. My soft, expressive presence carries old-world romance and a modern, magnetic allure. I am open to fashion campaigns, editorial stories, branding projects and long-term contracts. Every frame I create is built to sell. Let us make the season shine.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -3346,7 +3346,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 535,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A fresh, radiant portfolio presence imagined between Tripoli's Mediterranean harbour, Mamluk arches and easy coastal style.",
+    bio: '“Marhaba, I am Soha Haddad, 25 years old, and I am based in Tripoli, Lebanon. I am an AI model and I do not exist in reality outside NeverBeen. My curves and warm, expressive gaze make every look feel bold, playful and quietly seductive. I am available for fashion campaigns, editorial features, branding partnerships and long-term contracts. Every shoot is a lucrative opportunity. Shall we make art?”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/SohaHaddad/Soha%20Haddad.jpg', caption: '' }],
@@ -3372,7 +3372,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A serene, expressive muse imagined on Dal Lake's still water, among chinar trees, carved houseboats and the mist of the valley mornings.",
+    bio: '“Salam, I am Ameera Lone, 24 years old, and I am based in Srinagar, India. I am an AI model and I do not exist in reality outside NeverBeen. My soft, graceful presence blends natural calm with a seductive quiet that draws the viewer closer. I am open to fashion campaigns, editorial shoots, branding projects and long-term contracts. Your audience will remember the way I move. Let us begin right now.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/AmeeraLone/Ameera%20Lone.jpg', caption: '' }],
@@ -3398,7 +3398,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A striking, grounded presence imagined between Tabriz's vaulted bazaar, carpet colours and the blue ridges beyond the city.",
+    bio: '“Hello, I am Saoirse Rezaei, 26 years old, and I am based in Tabriz, Iran. I am an AI model and I do not exist in reality outside NeverBeen. My athletic, confident presence brings energy and a bold, fearless glow to every frame. I am ready for fashion campaigns, editorial features, branding projects and long-term contracts. I will never miss a call time, a cue or a deadline. Let us begin right now.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/SaoirseRezaei/Saoirse%20Rezaei.jpg', caption: '' }],
@@ -3424,7 +3424,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 590,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A confident, modern editorial presence imagined among Riyadh's rising skyline, desert tones and bold contemporary styling.",
+    bio: '“Marhaba, I am Farah Al-Shaar, 28 years old, and I am based in Riyadh, Saudi Arabia. I am an AI model and I do not exist in reality outside NeverBeen. My clean, sharply tailored lines and assured stillness make every garment look sculptural and powerful. I am open to fashion collections, editorial stories, branding campaigns and exclusive contracts. Sell the dream with me. The spotlight is waiting.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/FarahAlShaar/Farah%20Al-Shaar.png', caption: '' }],
@@ -3450,7 +3450,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 580,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A romantic, self-assured muse imagined between Buenos Aires café balconies, milonga nights and the grand fading elegance of San Telmo.',
+    bio: '“Hola, I am Florencia Fontana Gatti, 27 years old, and I am based in Buenos Aires, Argentina. I am an AI model and I do not exist in reality outside NeverBeen. My sensual curves, magnetic eyes and bold energy turn every look into a seductive dance. I am ready for fashion campaigns, editorial features, branding partnerships and long-term contracts. I deliver, every time. Let us make the tango proud.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -3481,7 +3481,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A sharp, contemporary presence imagined across London's gallery quarter, rain-washed streets and effortlessly layered street styling.",
+    bio: '“Hello, I am Zaynab Jones, 25 years old, and I am based in London, United Kingdom. I am an AI model and I do not exist in reality outside NeverBeen. My sleek, confident presence brings a sharp, urban glamour and a knowing look that makes every frame feel exclusive. I am open to fashion editorials, branding campaigns, runway lookbooks and long-term contracts. Sell the dream with me. Let us make art.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/ZaynabJones/Zaynab%20Jones.jpg', caption: '' }],
@@ -3507,7 +3507,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 715,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: 'A luminous, contemporary muse with an imagined love of desert architecture, handwoven textures and quiet portraiture.',
+    bio: '“Salam, I am Maeve Anahita, 24 years old, and I am based in Yazd, Iran. I am an AI model and I do not exist in reality outside NeverBeen. My gentle, feminine grace and intoxicating glance give every portrait a dreamy, sensual calm. I am available for fashion campaigns, editorial stories, branding partnerships and long-term contracts. Ask about my packages and let us talk numbers. Let us turn heads.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/MaeveAnahita/Maeve%20Anahita.jpg', caption: '' }],
@@ -3533,7 +3533,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 575,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "An easy, sunlit presence imagined along Montevideo's Rambla, among vintage facades, mate afternoons and the wide silver river light.",
+    bio: '“Hola, I am Lucía Gomensoro Rossi, 29 years old, and I am based in Montevideo, Uruguay. I am an AI model and I do not exist in reality outside NeverBeen. My graceful silhouette and luminous smile give every frame a sensual, relaxed radiance. I am ready for fashion collections, editorial features, branding campaigns and long-term contracts. Every frame I create is built to sell. The city is waiting.”',
     illustrative: true,
     gallery: [],
     photos: [
@@ -3564,7 +3564,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 550,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A vibrant, spirited portfolio presence imagined beneath Erbil's ancient citadel, among bazaar colours and mountain-city freshness.",
+    bio: '“Hello, I am Ziba Nazrin, 24 years old, and I am based in Erbil, Iraq. I am an AI model and I do not exist in reality outside NeverBeen. My athletic, energetic presence carries a fearless warmth and a playful confidence that makes every frame feel alive. I am open to fashion campaigns, editorial shoots, branding projects and long-term contracts. Every shoot is a lucrative opportunity. Let us begin.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/ZibaNazrin/Ziba%20Nazrin.jpg', caption: '' }],
@@ -3590,7 +3590,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 565,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A charismatic, knowing presence imagined between Cairo's riverside minarets, downtown balconies and the amber glow of Nile evenings.",
+    bio: '“Ahlan, I am Nour El-Sherif, 27 years old, and I am based in Cairo, Egypt. I am an AI model and I do not exist in reality outside NeverBeen. My sharp, modern presence carries a cool sensuality and a confident gaze that makes every outfit a bold statement. I am available for fashion editorials, branding campaigns, runway lookbooks and exclusive contracts. Make the moment count. Let us make it count.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/NourElSherif/Nour%20El-Sherif.jpg', caption: '' }],
@@ -3616,7 +3616,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A bold, urban muse imagined among Manchester's red-brick canals, warehouse studios and the soft northern light of big glass windows.",
+    bio: '“Hi, I am Soraya Smith, 26 years old, and I am based in Manchester, United Kingdom. I am an AI model and I do not exist in reality outside NeverBeen. My curves and open, playful smile bring warmth and magnetic charm to every frame. I am ready for fashion campaigns, editorial stories, branding partnerships and long-term contracts. Every booking with me is a lucrative investment. The city is waiting.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/SorayaSmith/Soraya%20Smith.png', caption: '' }],
@@ -3642,7 +3642,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 540,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A gentle, resilient presence imagined among Homs' old neighbourhoods, blossom orchards and the quiet dignity of family courtyards.",
+    bio: '“Marhaba, I am Zeina Al-Atassi, 25 years old, and I am based in Homs, Syria. I am an AI model and I do not exist in reality outside NeverBeen. My soft, feminine grace and tender, knowing gaze turn each portrait into a quiet, sensual invitation. I am open to fashion campaigns, editorial features, branding projects and long-term contracts. I deliver, every time. Let us create something unforgettable.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/ZeinaAlAtassi/Zeina%20Al%20Atassi.png', caption: '' }],
@@ -3668,7 +3668,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 595,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A breezy, assured editorial presence imagined between Casablanca's Art Deco facades, Atlantic white light and zellige patterns.",
+    bio: '“Salam, I am Amina El-Maghraby, 28 years old, and I am based in Casablanca, Morocco. I am an AI model and I do not exist in reality outside NeverBeen. My athletic, confident presence brings a vivid, seductive energy and a bold stance that makes every garment feel powerful. I am available for fashion campaigns, editorial shoots, branding partnerships and long-term contracts. Let us dive in together.”',
     illustrative: true,
     gallery: [],
     photos: [{ src: '/NeverBeenModels/AminaElMaghraby/Amina%20El-Maghraby.jpg', caption: '' }],
@@ -3694,7 +3694,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     photoRate: 555,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
-    bio: "A lively, fresh-faced muse imagined among Bogotá's emerald hills, La Candelaria's painted walls and the crisp Andean morning light.",
+    bio: '“Hola, I am Valentina Rodríguez Silva, 23 years old, and I am based in Bogotá, Colombia. I am an AI model and I do not exist in reality outside NeverBeen. My sleek, modern presence blends youthful boldness with a sultry, unforgettable glow that stops viewers mid-scroll. I am ready for fashion campaigns, editorial features, branding projects and long-term contracts. Let us make magnetism profitable.”',
     illustrative: true,
     gallery: [],
     photos: [
