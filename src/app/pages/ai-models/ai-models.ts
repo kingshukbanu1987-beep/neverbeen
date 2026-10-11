@@ -6,6 +6,17 @@ type AvailabilityState = 'available' | 'unavailable' | 'future';
 type SortMode = 'default' | 'price-asc' | 'price-desc';
 type AvailabilityFilter = 'all' | AvailabilityState;
 
+/**
+ * Draws one photograph at random from the model's album to use as her card cover, so the directory
+ * opens with a different set of covers on every visit. A model whose album is still empty keeps the
+ * stored cover, which the card renders as the designed "original portrait pending" placeholder.
+ */
+export function drawCover(model: AiModelProfile): string {
+  if (model.photos.length === 0) return model.cover;
+  const index = Math.floor(Math.random() * model.photos.length);
+  return model.photos[index].src;
+}
+
 @Component({
   selector: 'app-ai-models-page',
   imports: [RouterLink],
@@ -15,6 +26,15 @@ type AvailabilityFilter = 'all' | AvailabilityState;
 })
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
+
+  /**
+   * The cover every card shows, drawn once per visit — reopening the page re-picks each model's
+   * cover from her album, while the cards keep their published running order.
+   */
+  private readonly covers = new Map(
+    aiModelProfiles.map((model) => [model.slug, drawCover(model)] as const),
+  );
+
   protected readonly search = signal('');
   protected readonly sort = signal<SortMode>('default');
   protected readonly availabilityFilter = signal<AvailabilityFilter>('all');
@@ -83,6 +103,11 @@ export class AiModelsPage {
 
   protected indexLabel(index: number): string {
     return String(index + 1).padStart(2, '0');
+  }
+
+  /** The frame this card displays: a random pick from the model's album, fixed for this visit. */
+  protected coverFor(model: AiModelProfile): string {
+    return this.covers.get(model.slug) ?? model.cover;
   }
 
   /** How many photographs the model's album holds — shown large on the cover. */
