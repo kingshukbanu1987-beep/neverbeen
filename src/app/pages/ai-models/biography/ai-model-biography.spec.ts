@@ -194,6 +194,9 @@ describe('AiModelBiographyPage', () => {
         'blue ballpoint',
       );
       expect(element.querySelector('.footer-disclaimer')?.textContent).toContain('fictional');
+      expect(element.querySelector('.footer-disclaimer')?.textContent).toContain(
+        'Multiverse of NeverBeen',
+      );
     } finally {
       removeTestModel(model);
     }
