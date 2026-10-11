@@ -97,20 +97,24 @@ npm run biography -- --model "Nourhan Durrani"
 ```
 
 Use `--dry-run` to preview the selected model and output paths. An existing biography is protected;
-pass `--force` only when replacing it. The script creates `Biography/biography.json` with the
-fictional early-life, education, career, achievements, personal-life, interests, ambitions, quotes
-and signature sections, plus `Biography/photo-prompts.json` with ten separate, tailored mobile-photo
-scenes. It uses the model's published city and country as inspiration, labels the neighborhood,
-schools, employers, family and all other added biographical details as invented, and does not claim
-the generated scenes are real memories.
+pass `--force` only when replacing it. The script creates `Biography/biography.json` with fictional
+early-life, completed higher-education qualifications, career, achievements, personal-life,
+interests, ambitions, quotes and signature details, plus `Biography/photo-prompts.json` with ten
+tailored mobile-photo scenes. The education list contains degrees earned in the fictional timeline
+only; it does not add school history or disclaimers for unearned qualifications. The page presents
+the photos alongside the life, education, career and personal-life passages they illustrate rather
+than in one gallery. It uses the model's published city and country as inspiration and marks added
+biographical details as fictional, never as real records.
 
 The image prompt queue is an input for the available AI image-generation tool; the standalone Node
 script cannot call an image-generation service by itself. Generate each prompt as one individual
 image, save it in the same `Biography/` folder with the exact `filename` from the queue (for example
 `01-childhood-home.jpg`), and run `npm run generate:ai-models`. The manifest publishes those files to
-the biography page; until a file exists, its memory card remains an explicit image-pending placeholder.
+the biography page; until a file exists, its in-story figure remains an explicit image-pending placeholder.
 The ten files should be visibly synthetic illustrations and must never be represented as documentary
-or factual photos. The biography page repeats the fictional notice in its footer.
+or factual photos. An optional `signature.jpg` in the same folder is rendered as the signature-on-paper
+photo; without one, the page uses its blue-ink handwritten-style fallback. The biography page repeats
+the fictional notice in its footer.
 
 ## Photographs attached in Arena chat
 

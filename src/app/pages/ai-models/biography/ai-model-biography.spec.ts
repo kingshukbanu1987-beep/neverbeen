@@ -4,28 +4,49 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { AiModelBiography, AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { AiModelBiographyPage } from './ai-model-biography';
 
+const storyMemoryIds = [
+  'childhood-home',
+  'neighbourhood',
+  'school-days',
+  'school-project',
+  'college',
+  'first-workplace',
+  'first-editorial',
+  'friends',
+  'family-now',
+  'present-day',
+];
+
 const sampleBiography: AiModelBiography = {
   version: 1,
   fictional: true,
   generatedAt: '2026-10-11T00:00:00.000Z',
-  title: 'In the Multiverse of NeverBeen, imagine if I am really there',
+  title: 'In the Multiverse of NeverBeen',
   name: 'Test Studio Model',
   signature: 'Test Studio Model',
+  signatureStyle: 'Handwritten-style blue ballpoint signature on white paper; fictional facsimile.',
+  signatureImage: '/test/signature.jpg',
   generalInformation: {
     fullName: 'Test Studio Model',
     born: 'A fictional quarter, George Town, Malaysia',
     relationshipStatus: 'Single',
+    education: 'Bachelor of Arts in Visual Communication',
     universe: 'NeverBeen Multiverse',
   },
   summary: 'A fictional profile for the biography page component tests.',
-  earlyLife: ['The early life in this test is fictional and intentionally brief.'],
+  earlyLife: [
+    'The early life in this test is fictional and intentionally brief.',
+    'A fictional childhood-home memory follows.',
+    'A fictional neighbourhood memory comes next.',
+    'Fictional school-age memories close the early-life section.',
+  ],
   educationalBackground: [
     {
       period: 'September 2018 – June 2022',
       qualification: 'Bachelor of Arts in Visual Communication',
       institution: 'Aurora College (fictional)',
       location: 'George Town, Malaysia',
-      description: 'A fictional education entry used to exercise the timeline layout.',
+      description: 'A fictional degree entry used to exercise the education timeline.',
     },
   ],
   career: [
@@ -53,17 +74,15 @@ const sampleBiography: AiModelBiography = {
   ambitions: ['Support new artists.'],
   finalNotes: ['This story is fictional.'],
   quotes: [{ text: 'A fictional quote.', by: 'Test Studio Model' }],
-  memories: [
-    {
-      id: 'test-memory',
-      fileName: '01-test-memory.jpg',
-      period: 'School years',
-      caption: 'A fictional memory',
-      alt: 'An imagined school memory',
-      src: '',
-      fictional: true,
-    },
-  ],
+  memories: storyMemoryIds.map((id, index) => ({
+    id,
+    fileName: `${String(index + 1).padStart(2, '0')}-${id}.jpg`,
+    period: `Fictional memory ${index + 1}`,
+    caption: `A fictional ${id.replaceAll('-', ' ')} memory`,
+    alt: `An imagined ${id.replaceAll('-', ' ')} scene`,
+    src: '',
+    fictional: true,
+  })),
   fictionalNotice: 'This fictional biography exists only in the NeverBeen Multiverse.',
 };
 
@@ -93,32 +112,50 @@ describe('AiModelBiographyPage', () => {
     }).compileComponents();
   });
 
-  it('renders the fictional biography, required sections, memory frame and signature', async () => {
+  it('renders a white-article-style biography with the shorter title and paper signature', async () => {
     const model = addTestModel(sampleBiography);
     try {
       const harness = await RouterTestingHarness.create(`/ai-models/${model.slug}/biography`);
       const element = harness.routeNativeElement as HTMLElement;
 
-      expect(element.querySelector('.biography-hero h1')?.textContent).toContain(
-        'In the Multiverse of NeverBeen, imagine if I am really there',
+      expect(element.querySelector('.article-heading h1')?.textContent).toContain(
+        'Test Studio Model',
       );
-      expect(element.querySelector('.general-panel')?.textContent).toContain('fictional profile');
+      expect(element.querySelector('.article-subtitle')?.textContent).toBe(
+        'In the Multiverse of NeverBeen',
+      );
+      expect(element.querySelector('.infobox')?.textContent).toContain('fictional quarter');
+      expect(element.querySelector('.lead-summary')?.textContent).toContain('fictional profile');
+      const educationSection = element.querySelector('#education');
+      expect(educationSection?.querySelectorAll('.education-entry').length).toBe(1);
+      expect(educationSection?.textContent).toContain('Bachelor of Arts in Visual Communication');
+      expect(educationSection?.textContent).not.toMatch(/high school|master|mba|phd/i);
       for (const title of [
-        'Early Life',
-        'Educational Background',
+        'Early life',
+        'Education',
         'Career',
         'Achievements',
-        'Personal Life',
-        'Hobbies and Interests',
-        'Final Notes',
+        'Personal life',
+        'Interests and ambitions',
+        'Final notes',
       ]) {
         expect(element.textContent).toContain(title);
       }
+      expect(element.querySelectorAll('.wiki-section#early-life .story-photo').length).toBe(4);
+      expect(element.querySelectorAll('.wiki-section#education .story-photo').length).toBe(1);
+      expect(element.querySelectorAll('.wiki-section#career .story-photo').length).toBe(3);
+      expect(element.querySelectorAll('.wiki-section#personal-life .story-photo').length).toBe(2);
+      expect(element.querySelectorAll('.wiki-section#final-notes .story-photo').length).toBe(0);
+      expect(element.querySelectorAll('.story-photo').length).toBe(10);
+      expect(element.querySelector('#memories')).toBeNull();
       expect(element.querySelector('.memory-pending')).not.toBeNull();
-      expect(element.querySelector('.signature')?.textContent).toContain('Test Studio Model');
-      expect(element.querySelector('.footer-disclaimer')?.textContent).toContain(
-        'completely fictional',
+      expect(element.querySelector<HTMLImageElement>('.signature-image')?.src).toContain(
+        '/test/signature.jpg',
       );
+      expect(element.querySelector('.signature-image')?.getAttribute('alt')).toContain(
+        'blue ballpoint',
+      );
+      expect(element.querySelector('.footer-disclaimer')?.textContent).toContain('fictional');
     } finally {
       removeTestModel(model);
     }
@@ -136,10 +173,8 @@ describe('AiModelBiographyPage', () => {
       expect(element.querySelector('.unavailable-back')?.getAttribute('href')).toBe(
         `/ai-models/${model.slug}`,
       );
-      expect(element.querySelector('.footer-disclaimer')?.textContent).toContain(
-        'completely fictional',
-      );
-      expect(element.querySelector('#memory-title')).toBeNull();
+      expect(element.querySelector('.footer-disclaimer')?.textContent).toContain('fictional');
+      expect(element.querySelector('#memories')).toBeNull();
     } finally {
       removeTestModel(model);
     }

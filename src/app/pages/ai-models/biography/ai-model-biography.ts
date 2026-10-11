@@ -8,9 +8,9 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
-import { aiModelProfiles } from '../ai-model-data';
+import { AiModelBiographyMemory, aiModelProfiles } from '../ai-model-data';
 
-const BIOGRAPHY_TITLE = 'In the Multiverse of NeverBeen, imagine if I am really there';
+const BIOGRAPHY_TITLE = 'In the Multiverse of NeverBeen';
 
 @Component({
   selector: 'app-ai-model-biography-page',
@@ -63,12 +63,8 @@ export class AiModelBiographyPage {
     );
   }
 
-  protected firstName(name: string): string {
-    return name.trim().split(/\s+/)[0] ?? name;
-  }
-
-  protected memoryNumber(index: number): string {
-    return String(index + 1).padStart(2, '0');
+  protected memory(id: string): AiModelBiographyMemory | null {
+    return this.biography()?.memories.find((memory) => memory.id === id) ?? null;
   }
 
   protected memoryImageAlt(alt: string, name: string): string {

@@ -75,7 +75,7 @@ ng test
 | `/founder`                | Founder        | Founder profile and expertise                                                                        |
 | `/documentation`          | Brochure       | Visitor brochure: 36 pages on how to place a Neverbeen Request, packages and destinations            |
 | `/ai-models`                  | AI Models       | Dark studio directory and model portfolios at `/ai-models/:slug` (12 random photographs each)        |
-| `/ai-models/:slug/biography`  | Model biography | Fictional, editorial-style multiverse biography and memory archive                                    |
+| `/ai-models/:slug/biography`  | Model biography | White encyclopedia-style fictional biography with story-placed images and degree-only education     |
 | `/ai-models/:slug/photos`     | AI Model album  | A model's complete album as a mosaic of differently sized, zoomable photographs                      |
 | `/login`                  | Login          | Sign-in form                                                                                         |
 
@@ -109,9 +109,11 @@ volume, playback speed, previous/next clip, picture-in-picture, true full screen
 click) and a **Download** button for the file. Tapping the picture plays or pauses it, and
 Space/K, ←/→, ↑/↓ and M work as shortcuts. The profile header shows the model's city and country.
 A text-only **Read full Biography** link sits immediately above **Rent Me**. It opens
-`/ai-models/:slug/biography`, an editorial biography page with general information, early life,
-education, a LinkedIn-style fictional career timeline, achievements, personal life, interests,
-quotes, a signature and a ten-frame memory gallery. If that model has no `Biography/biography.json`,
+`/ai-models/:slug/biography`, a Wikipedia-inspired white article with a biographical infobox,
+early life, completed higher-education qualifications only, fictional career history, achievements,
+personal life, interests, and photos interleaved through the relevant life sections. Its blue-ink
+handwritten-style signature is shown on photographed-looking white paper. If that model has no
+`Biography/biography.json`,
 the page shows **Biography not Available**. Every published biography and memory image is explicitly
 fictional and belongs only to the NeverBeen Multiverse.
 

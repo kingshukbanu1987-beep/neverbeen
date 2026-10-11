@@ -58,6 +58,8 @@ export interface AiModelBiography {
   title: string;
   name: string;
   signature: string;
+  signatureStyle: string;
+  signatureImage: string;
   generalInformation: Record<string, string>;
   summary: string;
   earlyLife: string[];
@@ -158,10 +160,13 @@ export const aiModelProfiles: AiModelProfile[] = [
     biography: {
       version: 1,
       fictional: true,
-      generatedAt: '2026-10-11T13:09:01.902Z',
-      title: 'In the Multiverse of NeverBeen, imagine if I am really there',
+      generatedAt: '2026-10-11T13:31:38.885Z',
+      title: 'In the Multiverse of NeverBeen',
       name: 'Fiadh Dara',
       signature: 'Fiadh Dara',
+      signatureStyle:
+        'Handwritten-style blue ballpoint signature for Fiadh Dara on white paper; a fictional facsimile.',
+      signatureImage: '/NeverBeenModels/FiadhDara/Biography/signature.jpg',
       generalInformation: {
         fullName: 'Fiadh Dara',
         profession: 'Fictional digital model and creative collaborator',
@@ -174,27 +179,12 @@ export const aiModelProfiles: AiModelProfile[] = [
       summary:
         'Fiadh Dara is a fictional NeverBeen digital model and imagined creative professional in an alternate universe. In this version of her story, the city she calls home is Shiraz, Iran; the neighbourhood and every biographical detail below are invented for this fictional character.',
       earlyLife: [
-        'In this alternate-universe story, Fiadh Dara was born in Shiraz, Iran, and grew up around the Eram quarter. The district, family home and childhood episodes are invented, not personal records.',
-        'The neighbourhood gave her a first education in noticing: shop shutters opening, light shifting across old walls, and the small rituals that turn a city into a home. She began carrying a notebook before she knew it could become part of her creative work.',
-        'Her fictional family encouraged curiosity, humour and independence. The childhood photographs in this gallery are generated illustrations of imagined memories, not archival photographs.',
+        'In this alternate-universe story, Fiadh Dara was born in Shiraz, Iran, and grew up around the Eram quarter. The district, family home and every childhood episode are invented, not personal records.',
+        'At age four, around 2007, a slow family breakfast and the familiar rooms of home became the first small landmarks in her imagined life. The accompanying mobile-camera scene is a fictional memory, not an archival photograph.',
+        'By age eight, around 2011, she had begun exploring the nearby streets with a parent, noticing rain-dark pavement, shop shutters and changing light. That curiosity gradually became a habit of observation.',
+        'In secondary school, around age sixteen in 2019, she found confidence in friends and hands-on class projects. These school scenes are fictional snapshots from the character’s timeline, not records of a real school or child.',
       ],
       educationalBackground: [
-        {
-          period: 'January 2009 – April 2015',
-          qualification: 'Primary schooling',
-          institution: 'Northstar Community School (fictional)',
-          location: 'Shiraz, Iran',
-          description:
-            'An imaginative early education in this fictional timeline. Her first creative habit was keeping a small notebook of observations from the walk home.',
-        },
-        {
-          period: 'April 2015 – July 2021',
-          qualification: 'Secondary schooling',
-          institution: 'Silverleaf Senior School (fictional)',
-          location: 'Shiraz, Iran',
-          description:
-            'She gravitated toward art, language and collaborative projects, learning to shape an idea and present it clearly.',
-        },
         {
           period: 'July 2021 – October 2025',
           qualification: 'Bachelor of Business in Brand Strategy',
@@ -202,16 +192,7 @@ export const aiModelProfiles: AiModelProfile[] = [
             'Aurora College of Creative Studies · Atlas University (fictional institutions)',
           location: 'Shiraz, Iran',
           description:
-            'Her undergraduate work explored brand strategy and digital marketing, with a final project on visual identity, place and the way people read an image.',
-        },
-        {
-          period: 'Not part of this fictional profile',
-          qualification: 'Doctoral / postdoctoral study',
-          institution:
-            'No PhD or postdoctoral appointment is included in this character biography.',
-          location: '—',
-          description:
-            'This is an invented profile, not an academic record; no doctorate or postdoctoral role is being claimed.',
+            'Completed a fictional undergraduate degree in brand strategy and digital marketing, with a final project on visual identity, place and the way people read an image.',
         },
       ],
       career: [

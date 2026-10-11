@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 const modelsDir = join(projectRoot, 'public', 'NeverBeenModels');
 const sharedProfilesFile = join(projectRoot, 'data', 'ai-models', 'profiles.json');
-const biographyTitle = 'In the Multiverse of NeverBeen, imagine if I am really there';
+const biographyTitle = 'In the Multiverse of NeverBeen';
 const currentYear = new Date().getUTCFullYear();
 const monthNames = [
   'January',
@@ -446,45 +446,34 @@ function makeBiography(model) {
   const hasChild = isMarried && age >= 29 && seed % 2 === 0;
   const partnerName = `${pick(partnerFirstNames, seed, 4)} ${pick(partnerLastNames, seed, 7)}`;
   const childName = pick(firstNames, seed, 5);
-  const graduationYear = birthYear + (age >= 27 ? 24 : 22);
   const undergradStart = birthYear + 18;
+  const bachelorDuration = Math.min(4, Math.max(3, age - 18));
+  const bachelorEnd = undergradStart + bachelorDuration;
   const masters = age >= 27;
-  const mastersStart = birthYear + 22;
+  const mastersStart = bachelorEnd;
+  const graduationYear = masters ? mastersStart + 2 : bachelorEnd;
   const currentRoleStart = Math.min(
     currentYear,
     Math.max(birthYear + 20, graduationYear + (masters ? 1 : 0)),
   );
   const marriageYear = Math.max(birthYear + 21, currentYear - 2);
   const marriageMonth = monthYear(marriageYear, seed, 6);
-  const schoolName = `${pick(['Aster Lane', 'Cedar House', 'Riverlight', 'Juniper Hill', 'Northstar'], seed, 5)} Community School`;
-  const seniorSchoolName = `${pick(['Meridian', 'Willow', 'Silverleaf', 'Harbourlight', 'Open Sky'], seed, 8)} Senior School`;
   const collegeName = `${pick(['Aurora', 'Common Ground', 'New Meridian', 'Crescent', 'Open Frame'], seed, 1)} College of Creative Studies`;
   const universityName = `${pick(['NeverBeen', 'Atlas', 'Brightwater', 'North Star', 'Fieldnote'], seed, 2)} University`;
   const organizations = track.employers;
   const hometown = `${area}, ${city}, ${country}`;
   const fictionalIntro = `${model.name} is a fictional NeverBeen digital model and imagined creative professional in an alternate universe. In this version of her story, the city she calls home is ${city}, ${country}; the neighbourhood and every biographical detail below are invented for this fictional character.`;
 
+  // List completed higher-education qualifications only; never pad this timeline with school
+  // years or disclaimers about degrees the fictional character has not earned.
   const education = [
     {
-      period: period(birthYear + 6, birthYear + 12, seed, 1),
-      qualification: 'Primary schooling',
-      institution: `${schoolName} (fictional)`,
-      location: `${city}, ${country}`,
-      description: `An imaginative early education in this fictional timeline. Her first creative habit was keeping a small notebook of observations from the walk home.`,
-    },
-    {
-      period: period(birthYear + 12, birthYear + 18, seed, 4),
-      qualification: 'Secondary schooling',
-      institution: `${seniorSchoolName} (fictional)`,
-      location: `${city}, ${country}`,
-      description: `She gravitated toward art, language and collaborative projects, learning to shape an idea and present it clearly.`,
-    },
-    {
-      period: period(undergradStart, undergradStart + 4, seed, 7),
+      period: period(undergradStart, bachelorEnd, seed, 7),
       qualification: track.degree,
+      completed: true,
       institution: `${collegeName} · ${universityName} (fictional institutions)`,
       location: `${city}, ${country}`,
-      description: `Her undergraduate work explored ${track.field}, with a final project on visual identity, place and the way people read an image.`,
+      description: `Completed a fictional undergraduate degree in ${track.field}, with a final project on visual identity, place and the way people read an image.`,
     },
   ];
 
@@ -492,20 +481,12 @@ function makeBiography(model) {
     education.push({
       period: period(mastersStart, mastersStart + 2, seed, 9),
       qualification: track.postgraduate,
+      completed: true,
       institution: `${universityName} (fictional institution)`,
       location: `${city}, ${country}`,
-      description: `A postgraduate programme that deepened her research in ${track.field} and connected creative practice with responsible collaboration.`,
+      description: `Completed this fictional postgraduate degree, deepening her research in ${track.field} and connecting creative practice with responsible collaboration.`,
     });
   }
-
-  education.push({
-    period: 'Not part of this fictional profile',
-    qualification: 'Doctoral / postdoctoral study',
-    institution: 'No PhD or postdoctoral appointment is included in this character biography.',
-    location: '—',
-    description:
-      'This is an invented profile, not an academic record; no doctorate or postdoctoral role is being claimed.',
-  });
 
   const earlyWorkStart = Math.max(birthYear + 19, undergradStart + 2);
   const earlyWorkEnd = Math.min(currentYear - 1, earlyWorkStart + 2);
@@ -655,20 +636,22 @@ function makeBiography(model) {
     title: biographyTitle,
     name: model.name,
     signature: model.name,
+    signatureStyle: `Handwritten-style blue ballpoint signature for ${model.name} on white paper; a fictional facsimile.`,
     generalInformation: {
       fullName: model.name,
       profession: 'Fictional digital model and creative collaborator',
       born: `${hometown} (imagined for this story)`,
       age: `${age} · fictional character detail`,
-      education: track.degree,
+      education: education.map((entry) => entry.qualification).join('; '),
       relationshipStatus: personalLife.relationshipStatus,
       universe: 'NeverBeen Multiverse',
     },
     summary: fictionalIntro,
     earlyLife: [
-      `In this alternate-universe story, ${model.name} was born in ${city}, ${country}, and grew up around ${area}. The district, family home and childhood episodes are invented, not personal records.`,
-      `The neighbourhood gave her a first education in noticing: shop shutters opening, light shifting across old walls, and the small rituals that turn a city into a home. She began carrying a notebook before she knew it could become part of her creative work.`,
-      `Her fictional family encouraged curiosity, humour and independence. The childhood photographs in this gallery are generated illustrations of imagined memories, not archival photographs.`,
+      `In this alternate-universe story, ${model.name} was born in ${city}, ${country}, and grew up around ${area}. The district, family home and every childhood episode are invented, not personal records.`,
+      `At age four, around ${birthYear + 4}, a slow family breakfast and the familiar rooms of home became the first small landmarks in her imagined life. The accompanying mobile-camera scene is a fictional memory, not an archival photograph.`,
+      `By age eight, around ${birthYear + 8}, she had begun exploring the nearby streets with a parent, noticing rain-dark pavement, shop shutters and changing light. That curiosity gradually became a habit of observation.`,
+      `In secondary school, around age sixteen in ${birthYear + 16}, she found confidence in friends and hands-on class projects. These school scenes are fictional snapshots from the character’s timeline, not records of a real school or child.`,
     ],
     educationalBackground: education,
     career,

@@ -429,6 +429,29 @@ function biographyEntries(value, fields) {
     .map((entry) => Object.fromEntries(fields.map((field) => [field, text(entry[field])])));
 }
 
+function completedDegreeEntries(value) {
+  if (!Array.isArray(value)) return [];
+  const degreeQualification =
+    /\b(?:bachelor(?:['’]s)?|master(?:['’]s)?|mba|ph\.?\s*d\.?|doctor of philosophy|post[\s-]?doctorate)\b/i;
+  const incompleteStatus =
+    /\b(?:in progress|ongoing|pending|currently (?:studying|enrolled|pursuing)|pursuing|expected|candidate|planned|not completed|not earned|not yet earned|not acquired|unearned|incomplete)\b/i;
+
+  return value.filter((entry) => {
+    if (
+      !entry ||
+      typeof entry !== 'object' ||
+      Array.isArray(entry) ||
+      entry.completed === false ||
+      text(entry.completed).toLowerCase() === 'false'
+    ) {
+      return false;
+    }
+    const qualification = text(entry.qualification);
+    const details = `${qualification} ${text(entry.description)} ${text(entry.status)}`;
+    return degreeQualification.test(qualification) && !incompleteStatus.test(details);
+  });
+}
+
 /** Reads one fictional biography and resolves only image files that live inside its Biography folder. */
 function albumBiography(albumDir) {
   const biographyDir = join(albumDir, 'Biography');
@@ -478,24 +501,34 @@ function albumBiography(albumDir) {
           };
         })
     : [];
+  const signaturePath = ['signature.jpg', 'signature.jpeg', 'signature.png', 'signature.webp']
+    .map((fileName) => resolveInside(biographyDir, fileName, isImage))
+    .find(Boolean);
+  const educationalBackground = biographyEntries(
+    completedDegreeEntries(source.educationalBackground),
+    ['period', 'qualification', 'institution', 'location', 'description'],
+  );
+  if (educationalBackground.length > 0) {
+    generalInformation.education = educationalBackground
+      .map((entry) => entry.qualification)
+      .join('; ');
+  } else {
+    delete generalInformation.education;
+  }
 
   return {
     version: numberValue(source.version) || 1,
     fictional: true,
     generatedAt: text(source.generatedAt),
-    title: text(source.title) || 'In the Multiverse of NeverBeen, imagine if I am really there',
+    title: text(source.title) || 'In the Multiverse of NeverBeen',
     name: text(source.name),
     signature: text(source.signature),
+    signatureStyle: text(source.signatureStyle),
+    signatureImage: signaturePath ? publicUrl(signaturePath) : '',
     generalInformation,
     summary: text(source.summary),
     earlyLife: textList(source.earlyLife),
-    educationalBackground: biographyEntries(source.educationalBackground, [
-      'period',
-      'qualification',
-      'institution',
-      'location',
-      'description',
-    ]),
+    educationalBackground,
     career: biographyEntries(source.career, [
       'period',
       'role',
@@ -877,6 +910,8 @@ export interface AiModelBiography {
   title: string;
   name: string;
   signature: string;
+  signatureStyle: string;
+  signatureImage: string;
   generalInformation: Record<string, string>;
   summary: string;
   earlyLife: string[];
