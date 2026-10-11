@@ -301,7 +301,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'Early childhood',
           caption: 'A slow morning at home',
           alt: 'A fictional, family-friendly childhood memory at home with generic parent figures',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/01-childhood-home.jpg',
           fictional: true,
         },
         {
@@ -310,7 +310,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'Growing up',
           caption: 'The neighbourhood after the rain',
           alt: 'A fictional childhood memory outdoors in the model’s imagined home neighbourhood',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/02-neighbourhood.jpg',
           fictional: true,
         },
         {
@@ -319,7 +319,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'School years',
           caption: 'The last bell of the day',
           alt: 'A fictional, fully clothed school-age memory with anonymous classmates',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/03-school-days.jpg',
           fictional: true,
         },
         {
@@ -328,7 +328,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'School years',
           caption: 'A project built after class',
           alt: 'A fictional school project memory around a table with friends',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/04-school-project.jpg',
           fictional: true,
         },
         {
@@ -337,7 +337,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'College',
           caption: 'A studio night before the deadline',
           alt: 'A fictional college memory in a design studio with anonymous classmates',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/05-college-studio.jpg',
           fictional: true,
         },
         {
@@ -346,7 +346,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'First role',
           caption: 'The first day that felt like hers',
           alt: 'A fictional early-career memory at a creative workplace',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/06-first-workplace.jpg',
           fictional: true,
         },
         {
@@ -355,7 +355,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'Creative career',
           caption: 'A small crew, a big idea',
           alt: 'A fictional behind-the-scenes editorial memory with a small creative team',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/07-first-editorial.jpg',
           fictional: true,
         },
         {
@@ -364,7 +364,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'Off duty',
           caption: 'The people who know every version of her',
           alt: 'A fictional casual memory with adult friends',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/08-close-friends.jpg',
           fictional: true,
         },
         {
@@ -373,7 +373,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'Family',
           caption: 'Everyone talking at once',
           alt: 'A fictional family gathering with generic, non-identifiable family members',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/09-family-table.jpg',
           fictional: true,
         },
         {
@@ -382,7 +382,7 @@ export const aiModelProfiles: AiModelProfile[] = [
           period: 'Today',
           caption: 'A new frame, on her own terms',
           alt: 'A fictional present-day outdoor portrait from the model’s creative life',
-          src: '',
+          src: '/NeverBeenModels/FiadhDara/Biography/10-present-day.jpg',
           fictional: true,
         },
       ],
