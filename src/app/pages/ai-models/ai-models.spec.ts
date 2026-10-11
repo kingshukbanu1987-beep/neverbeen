@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { aiModelProfiles } from './ai-model-data';
-import { AiModelsPage } from './ai-models';
+import { AiModelProfile, aiModelProfiles } from './ai-model-data';
+import { AiModelsPage, drawCover } from './ai-models';
+
+/** The cover each card is showing, in the order the cards sit on the page. */
+function cardCovers(element: HTMLElement): string[] {
+  return Array.from(element.querySelectorAll('.model-card img')).map(
+    (image) => image.getAttribute('src') ?? '',
+  );
+}
 
 describe('AiModelsPage', () => {
   beforeEach(async () => {
@@ -226,5 +233,84 @@ describe('AiModelsPage', () => {
     const card = element.querySelectorAll('.model-card')[missingCoverIndex];
     expect(card.querySelector('.card-portrait-placeholder')).toBeTruthy();
     expect(card.querySelector('img')).toBeNull();
+  });
+
+  it('shows each model a cover picked from her own album', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const covers = cardCovers(fixture.nativeElement as HTMLElement);
+    expect(covers.length).toBe(aiModelProfiles.length);
+
+    for (const [index, profile] of aiModelProfiles.entries()) {
+      expect(
+        profile.photos.map((photo) => photo.src),
+        `${profile.name} album`,
+      ).toContain(covers[index]);
+    }
+  });
+
+  it('re-draws the covers on every visit, so the directory opens with a new set of photographs', () => {
+    const random = vi.spyOn(Math, 'random');
+    try {
+      // The first draw of each visit takes the first frame of the album, the second the last one.
+      random.mockReturnValue(0);
+      const first = TestBed.createComponent(AiModelsPage);
+      first.detectChanges();
+
+      random.mockReturnValue(0.999);
+      const second = TestBed.createComponent(AiModelsPage);
+      second.detectChanges();
+
+      const firstCovers = cardCovers(first.nativeElement as HTMLElement);
+      const secondCovers = cardCovers(second.nativeElement as HTMLElement);
+
+      for (const [index, profile] of aiModelProfiles.entries()) {
+        expect(firstCovers[index], `${profile.name} opening frame`).toBe(profile.photos[0].src);
+        expect(secondCovers[index], `${profile.name} closing frame`).toBe(
+          profile.photos[profile.photos.length - 1].src,
+        );
+      }
+
+      // The two visits disagree wherever an album holds more than one photograph.
+      expect(secondCovers).not.toEqual(firstCovers);
+
+      first.destroy();
+      second.destroy();
+    } finally {
+      random.mockRestore();
+    }
+  });
+
+  it('keeps every cover fixed for the whole visit, however the directory is filtered', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const before = cardCovers(element);
+
+    const search = element.querySelector('input[type="search"]') as HTMLInputElement;
+    search.value = 'reema';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    // Browsing the directory never re-draws a cover.
+    for (const cover of cardCovers(element)) expect(before).toContain(cover);
+
+    search.value = '';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(cardCovers(element)).toEqual(before);
+  });
+
+  it('falls back to the stored cover for a model whose album is still empty', () => {
+    const profile: AiModelProfile = {
+      ...aiModelProfiles[0],
+      photos: [],
+      cover: 'stored-cover.jpg',
+    };
+
+    expect(drawCover(profile)).toBe('stored-cover.jpg');
   });
 });

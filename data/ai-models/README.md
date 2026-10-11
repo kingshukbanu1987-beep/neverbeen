@@ -104,7 +104,10 @@ labelled **Details to be added** rather than being guessed. The build compiles t
 for the Angular pages.
 
 Each cover on `/ai-models` states how many photographs that model has in her album — the count is
-read from the manifest, so it follows the folder. Every portfolio also carries a **Rent this model**
+read from the manifest, so it follows the folder. The photograph itself is drawn at random from that
+album, a fresh pick on every visit, so the directory opens with a different set of frames each time;
+a model whose album still holds a single frame simply keeps it, and a model's own portfolio stays
+anchored to her album cover. Every portfolio also carries a **Rent this model**
 button; the pop-up it opens shows the model's booking information, her rate per photo in INR, the 10 /
 25 / 50 / 100 photograph packages and a customized order, plus a calendar for the delivery date, and
 sends the request to the studio's WhatsApp (see the main README).

@@ -180,9 +180,9 @@
               [attr.aria-label]="'View the portfolio of ' + model.name"
             >
               <div class="card-image">
-                @if (model.cover) {
+                @if (coverFor(model)) {
                   <img
-                    [src]="model.cover"
+                    [src]="coverFor(model)"
                     [alt]="model.name + ' — NeverBeen AI model portfolio cover'"
                     loading="lazy"
                     decoding="async"
