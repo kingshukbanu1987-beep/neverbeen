@@ -1,7 +1,8 @@
 # Community Messenger: online lists and the chat pop-up window
 
-Four requirements of the Community Messenger, and where each one lives. All four are in the
-website — the Web API needed one change (the “online” rule) and the database needed none.
+Requirements of the Community Messenger, and where each one lives. A–D are in the website — the
+Web API needed one change (the “online” rule) and the database needed none. E is the Messenger
+page's three-panel layout on tablets, laptops and wide screens.
 
 ## A. Who is online
 
@@ -64,6 +65,51 @@ so the text sat well above the picture. The row now uses `align-items: flex-star
 column carries a 3px top offset, which puts the 24px picture level with the first line of the
 message text (the bubble's `0.4rem` top padding plus half a `1.35` line of `0.82rem` text).
 
+## E. Messenger page on tablets, laptops and wide screens
+
+From **768px wide** the Messenger page is a three-panel page in the style of Facebook Messenger
+(design: [`design/messenger-wide-layout-mockup.html`](design/messenger-wide-layout-mockup.html),
+[`screenshots/messenger-wide-design.png`](screenshots/messenger-wide-design.png); the real page:
+[`screenshots/messenger-wide-page.png`](screenshots/messenger-wide-page.png)). Phones keep the
+Online Now / Offline Companions lists and the pop-up chats described above.
+
+| Panel | What it shows |
+| --- | --- |
+| **Left — Chats** | Every previous and current chat, newest first: 1:1 chats with companions (read and unread, from the chat inbox), chats opened in this session and the member's Circles. Each row has the picture with the presence dot, the name, “You: …” / “Liam: …” preview and its age (now · 5m · 3h · Mon · 2 Oct). Unread rows are bold with a blue count. Search (also finds companions to **start a new chat**), chips **All / Unread · N / Circles**, ✎ new message. The Community default side panel is **not** shown — it is only an off-canvas menu behind ☰. |
+| **Centre, top 20% — Online now** | Companions who are online: round picture, first name and a green dot. Clicking one opens the chat with them. |
+| **Centre — the open chat** | The same chat body as the pop-ups (session headers, bubbles, replies, reactions, emoji tray, composer — one shared `ng-template #chatBodyTpl`), sized to the panel, with Add people / Save as Circle / Manage Circle and the profile toggle (ⓘ) in its header. |
+| **Right — Profile** | The companion being chatted with: cover, picture with presence dot, name + verified tick, status, profession · location, **View Profile** and Follow. Then About (See more), Details (work, home, hometown, languages, relationship · mutual companions, last seen), Circles in common and Photos. Each About-me field follows the companion's per-field audience; a locked profile shows only a notice to non-companions. For a Circle chat: its description, members (admins marked) and Manage Circle. |
+
+Breakpoints (`messenger-wide.css`): ≥1200px `320px | chat | 300px`; 1024–1199px
+`280px | chat | 280px`; 768–1023px `260px | chat` with the profile as a drawer over the chat (ⓘ).
+The three panels fill the window under the site header and scroll on their own.
+
+How it works (`profile.ts`, “MESSENGER PAGE — tablet / laptop / wide screens”):
+
+- `messengerWide` = Messenger section ∧ not viewing a visitor ∧ `(min-width: 768px)`. While it is
+  true, the floating chat dock, the phone header and the in-page search are hidden, and
+  `CommunityService.messengerPageActive` stops chats from popping up.
+- The page opens on the latest conversation with a companion. Choosing a chat sets
+  `CommunityService.messengerPageChatKey` and opens (or restores) its chat box; the box the page
+  opened itself (`messengerPageOwnedKey`) is closed again when the member moves on or leaves the
+  page, while chats that were already open as pop-ups come back when they leave. The chat shown is
+  never evicted by the five-box limit and is marked read as messages arrive; other chats get an
+  unread count in the list instead of popping up.
+- Sending (or receiving, in the guest tour) moves the conversation to the top of the list at once
+  (`notePendingChatActivity`). The list itself is the pure `buildMessengerChats` /
+  `filterMessengerChats` in `messenger-chats.ts`.
+- “Chat” anywhere on the page (Circle chat buttons, Circles in common, search hits) opens in the
+  wide panel instead of a pop-up.
+
+**Web API** — [`patches/neverbeen-api-community-messenger-wide.patch`](patches/neverbeen-api-community-messenger-wide.patch)
+(verify with `python3 docs/patches/neverbeen-api-community-messenger-wide-verification.py <neverbeen-api>`):
+`GET /api/messages/conversations` is ordered by the new `ConversationDto.LastActivityUtc` (newest
+message, else creation time) and every conversation DTO — also the one returned when a chat is
+(re)opened with `POST /api/messages/conversations` — carries `LastMessage`, `UnreadCount` and
+`LastActivityUtc`; unread counts only the other members' messages. The website works with older API
+builds too (it falls back to the last message's time). **Database** — no change: every value comes
+from existing columns.
+
 ## Tests
 
 - `src/app/services/community-presence.spec.ts` — the online / offline split for every status.
@@ -72,3 +118,9 @@ message text (the bubble's `0.4rem` top padding plus half a `1.35` line of `0.82
   and wording helpers.
 - `src/app/shared/chat-auto-scroll/chat-auto-scroll.spec.ts` — the window opens on the latest
   message and follows every message that arrives (Requirement B).
+- `src/app/pages/community/profile/messenger-chats.spec.ts` — the chats panel (Requirement E):
+  read and unread chats newest first, open chats, hidden members, Circle rows, filters, search,
+  “You: …” previews and the age labels.
+- `src/app/services/community-messenger-page.spec.ts` — the service side of Requirement E:
+  previous chats in the guest tour, the shown chat is never evicted, a sent message moves the chat
+  to the top, restoring a minimized box.

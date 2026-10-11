@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>NeverBeen Community Messenger — tablet / laptop / wide screen design</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" />
+<style>
+  /* Design mockup for the Messenger page on tablet, laptop and wide screens.
+     Left: chats side panel · Centre: online companions row (20%) + open chat · Right: companion profile. */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font-family: 'Outfit', system-ui, sans-serif; background: #f1f5f9; color: #0f172a; }
+  .nav { height: 68px; display: flex; align-items: center; gap: 1.2rem; padding: 0 140px; background: #fff; border-bottom: 1px solid #e2e8f0; }
+  .nav .brand { font: 700 1.35rem 'Cormorant Garamond', Georgia, serif; letter-spacing: .01em; }
+  .nav .search { width: 256px; height: 38px; border: 1px solid #e2e8f0; border-radius: 999px; display: flex; align-items: center; padding: 0 .9rem; color: #94a3b8; font-size: .85rem; gap: .5rem; }
+  .nav .ico { width: 36px; height: 36px; display: grid; place-items: center; position: relative; font-size: 1.15rem; color: #334155; }
+  .nav .ico b { position: absolute; top: 0; right: 0; background: #e11d48; color: #fff; font-size: .62rem; border-radius: 999px; min-width: 16px; height: 16px; display: grid; place-items: center; }
+  .nav .ico.active { color: #2563eb; }
+
+  /* ===== Messenger shell (same rules as profile.css .mx-*) ===== */
+  .mx-shell { display: grid; grid-template-columns: 340px minmax(0, 1fr) 320px; gap: 12px; padding: 12px; height: calc(100vh - 68px); }
+  .mx-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; box-shadow: 0 8px 24px -18px rgba(15, 23, 42, .25); min-height: 0; }
+
+  /* Left: chats */
+  .mx-chats { display: flex; flex-direction: column; overflow: hidden; }
+  .mx-chats-head { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1rem .4rem; }
+  .mx-chats-head h2 { margin: 0; font-size: 1.55rem; font-weight: 800; letter-spacing: -.02em; }
+  .mx-icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #f1f5f9; color: #0f172a; display: inline-grid; place-items: center; font-size: 1rem; cursor: pointer; }
+  .mx-icon-btn + .mx-icon-btn { margin-left: .35rem; }
+  .mx-chat-search { margin: .35rem 1rem .6rem; height: 38px; border-radius: 999px; background: #f1f5f9; display: flex; align-items: center; gap: .5rem; padding: 0 .9rem; color: #64748b; font-size: .88rem; }
+  .mx-filters { display: flex; gap: .4rem; padding: 0 1rem .6rem; }
+  .mx-chip { border: 0; border-radius: 999px; padding: .38rem .8rem; font: 600 .82rem 'Outfit', sans-serif; background: transparent; color: #334155; }
+  .mx-chip.active { background: #e0ebff; color: #1d4ed8; }
+  .mx-chat-list { flex: 1; overflow-y: auto; padding: 0 .45rem .6rem; }
+  .mx-chat-row { display: flex; align-items: center; gap: .75rem; padding: .55rem .6rem; border-radius: 12px; cursor: pointer; }
+  .mx-chat-row:hover { background: #f8fafc; }
+  .mx-chat-row.selected { background: #eef4ff; }
+  .mx-av { position: relative; flex: 0 0 auto; }
+  .mx-av img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; display: block; }
+  .mx-dot { position: absolute; right: 1px; bottom: 1px; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; border: 2.5px solid #fff; }
+  .mx-dot.busy { background: #ef4444; } .mx-dot.away { background: #f59e0b; } .mx-dot.off { display: none; }
+  .mx-row-main { min-width: 0; flex: 1; }
+  .mx-row-name { font-size: .95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mx-row-sub { font-size: .8rem; color: #64748b; display: flex; gap: .3rem; min-width: 0; }
+  .mx-row-sub span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .mx-row-sub span:last-child { flex: 0 0 auto; white-space: nowrap; }
+  .mx-chat-row.unread .mx-row-name, .mx-chat-row.unread .mx-row-sub { color: #0f172a; font-weight: 700; }
+  .mx-unread { flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #2563eb; color: #fff; font-size: .7rem; font-weight: 700; display: grid; place-items: center; }
+  .mx-circle-badge { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 1.4rem; color: #fff; }
+
+  /* Centre: wide panel */
+  .mx-wide { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+  .mx-online { flex: 0 0 20%; min-height: 112px; display: flex; flex-direction: column; padding: .7rem 1rem .5rem; overflow: hidden; }
+  .mx-online-head { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: .9rem; color: #0f172a; }
+  .mx-online-head .count { background: #dcfce7; color: #15803d; border-radius: 999px; padding: .05rem .5rem; font-size: .74rem; }
+  .mx-online-strip { flex: 1; display: flex; align-items: center; gap: 1.05rem; overflow-x: auto; padding: .35rem .1rem 0; scrollbar-width: thin; }
+  .mx-online-item { flex: 0 0 auto; width: 70px; display: flex; flex-direction: column; align-items: center; gap: .3rem; cursor: pointer; border: 0; background: none; padding: 0; font: inherit; color: inherit; }
+  .mx-online-item .mx-av img { width: 58px; height: 58px; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #bbf7d0; }
+  .mx-online-item .mx-dot { width: 15px; height: 15px; }
+  .mx-online-name { font-size: .76rem; font-weight: 500; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .mx-chat { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .mx-chat-head { display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; border-bottom: 1px solid #eef2f7; }
+  .mx-chat-head .mx-av img { width: 44px; height: 44px; }
+  .mx-chat-title { flex: 1; min-width: 0; }
+  .mx-chat-title strong { display: block; font-size: 1rem; }
+  .mx-chat-title span { font-size: .78rem; color: #16a34a; font-weight: 500; }
+  .mx-chat-actions .mx-icon-btn { background: transparent; color: #2563eb; font-size: 1.1rem; }
+  .mx-chat-actions .mx-icon-btn.on { background: #eef4ff; }
+  .mx-msgs { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .45rem; }
+  .mx-session { align-self: center; font-size: .72rem; color: #64748b; background: #f1f5f9; border-radius: 999px; padding: .15rem .7rem; margin: .4rem 0; }
+  .mx-msg { display: flex; align-items: flex-start; gap: .5rem; max-width: 70%; }
+  .mx-msg img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-top: 3px; }
+  .mx-msg.out { align-self: flex-end; flex-direction: row-reverse; }
+  .mx-bubble { padding: .5rem .8rem; border-radius: 18px; font-size: .9rem; line-height: 1.38; }
+  .mx-msg.in .mx-bubble { background: #ebebeb; color: #000; border-top-left-radius: 6px; }
+  .mx-msg.out .mx-bubble { background: #6829ff; color: #fff; border-top-right-radius: 6px; }
+  .mx-bubble small { display: block; font-size: .66rem; opacity: .65; margin-top: .15rem; text-align: right; }
+  .mx-composer { display: flex; align-items: center; gap: .5rem; padding: .7rem 1rem; border-top: 1px solid #eef2f7; }
+  .mx-composer .field { flex: 1; height: 40px; border-radius: 999px; background: #f1f5f9; display: flex; align-items: center; padding: 0 1rem; color: #94a3b8; font-size: .9rem; }
+  .mx-send { height: 40px; padding: 0 1.1rem; border-radius: 999px; border: 0; background: #2563eb; color: #fff; font: 600 .88rem 'Outfit', sans-serif; }
+
+  /* Right: profile */
+  .mx-profile { overflow-y: auto; }
+  .mx-cover { height: 118px; border-radius: 18px 18px 0 0; overflow: hidden; }
+  .mx-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mx-profile-id { text-align: center; padding: 0 1rem .9rem; margin-top: -48px; border-bottom: 1px solid #eef2f7; }
+  .mx-profile-id .mx-av { display: inline-block; }
+  .mx-profile-id .mx-av img { width: 96px; height: 96px; border: 4px solid #fff; box-shadow: 0 6px 18px -8px rgba(15,23,42,.4); }
+  .mx-profile-id .mx-dot { width: 20px; height: 20px; right: 6px; bottom: 6px; border-width: 3px; }
+  .mx-profile-id h3 { margin: .45rem 0 .1rem; font-size: 1.15rem; }
+  .mx-verified { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: .6rem; vertical-align: 2px; }
+  .mx-status { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 600; color: #15803d; background: #dcfce7; border-radius: 999px; padding: .12rem .6rem; }
+  .mx-profile-id p { margin: .45rem 0 0; font-size: .83rem; color: #475569; }
+  .mx-profile-actions { display: flex; gap: .5rem; justify-content: center; margin-top: .8rem; }
+  .mx-btn { border: 0; border-radius: 10px; padding: .5rem .9rem; font: 600 .82rem 'Outfit', sans-serif; background: #f1f5f9; color: #0f172a; }
+  .mx-btn.primary { background: #2563eb; color: #fff; }
+  .mx-sec { padding: .85rem 1rem; border-bottom: 1px solid #eef2f7; }
+  .mx-sec h4 { margin: 0 0 .5rem; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; }
+  .mx-sec p { margin: 0; font-size: .85rem; line-height: 1.5; color: #334155; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .mx-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: .45rem; font-size: .84rem; color: #334155; }
+  .mx-facts li { display: flex; gap: .55rem; }
+  .mx-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .mx-chips span { font-size: .76rem; background: #f1f5f9; border-radius: 999px; padding: .2rem .6rem; }
+  .mx-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-radius: 12px; overflow: hidden; }
+  .mx-photos img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .tag { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: .7rem; color: #94a3b8; }
+</style>
+</head>
+<body>
+  <header class="nav">
+    <span class="brand">NeverBeen</span>
+    <span class="search">🔍 Search travelers, companions, or circles</span>
+    <span class="ico">⌂</span><span class="ico">🔔<b>2</b></span><span class="ico active">💬<b>3</b></span>
+  </header>
+
+  <div class="mx-shell">
+    <!-- LEFT: chats side panel (replaces the Community default profile side panel) -->
+    <aside class="mx-panel mx-chats">
+      <div class="mx-chats-head">
+        <h2>Chats</h2>
+        <div><button class="mx-icon-btn" title="Menu">☰</button><button class="mx-icon-btn" title="New message">✎</button></div>
+      </div>
+      <div class="mx-chat-search">🔍 Search Messenger</div>
+      <div class="mx-filters"><button class="mx-chip active">All</button><button class="mx-chip">Unread · 2</button><button class="mx-chip">Circles</button></div>
+      <div class="mx-chat-list">
+        <div class="mx-chat-row selected"><div class="mx-av"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="" /><span class="mx-dot"></span></div><div class="mx-row-main"><div class="mx-row-name">Elena Rostova</div><div class="mx-row-sub"><span>You: See you at the station at 7!</span><span>· 2m</span></div></div></div>
+        <div class="mx-chat-row unread"><div class="mx-av"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" alt="" /><span class="mx-dot busy"></span></div><div class="mx-row-main"><div class="mx-row-name">Marco Rossi</div><div class="mx-row-sub"><span>The sunrise platform is still free if you want…</span><span>· 1h</span></div></div><span class="mx-unread">1</span></div>
+        <div class="mx-chat-row unread"><div class="mx-av"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" alt="" /><span class="mx-dot away"></span></div><div class="mx-row-main"><div class="mx-row-name">Chloe Dupont</div><div class="mx-row-sub"><span>Are we still meeting at the station tomorrow?</span><span>· 3h</span></div></div><span class="mx-unread">1</span></div>
+        <div class="mx-chat-row"><div class="mx-av"><span class="mx-circle-badge" style="background:#0ea5e9">🏔️</span></div><div class="mx-row-main"><div class="mx-row-name">Alpine Trekkers</div><div class="mx-row-sub"><span>Liam: Weather looks clear for Saturday</span><span>· 5h</span></div></div></div>
+        <div class="mx-chat-row"><div class="mx-av"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200" alt="" /><span class="mx-dot busy"></span></div><div class="mx-row-main"><div class="mx-row-name">Liam O'Connor</div><div class="mx-row-sub"><span>You: Thanks for the trail map 🙌</span><span>· Yesterday</span></div></div></div>
+        <div class="mx-chat-row"><div class="mx-av"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200" alt="" /><span class="mx-dot"></span></div><div class="mx-row-main"><div class="mx-row-name">Priya Patel</div><div class="mx-row-sub"><span>Mumbai monsoon shots are up on my Journey</span><span>· Mon</span></div></div></div>
+        <div class="mx-chat-row"><div class="mx-av"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200" alt="" /><span class="mx-dot off"></span></div><div class="mx-row-main"><div class="mx-row-name">Kenji Sato</div><div class="mx-row-sub"><span>Kyoto in November is unreal.</span><span>· 2 Oct</span></div></div></div>
+        <div class="mx-chat-row"><div class="mx-av"><img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200" alt="" /><span class="mx-dot"></span></div><div class="mx-row-main"><div class="mx-row-name">Aarav Sharma</div><div class="mx-row-sub"><span>You: Delhi food walk this weekend?</span><span>· 28 Sep</span></div></div></div>
+      </div>
+    </aside>
+
+    <!-- CENTRE: wide panel -->
+    <main class="mx-wide">
+      <!-- Top 20%: online companions -->
+      <section class="mx-panel mx-online">
+        <div class="mx-online-head">Online now <span class="count">42</span></div>
+        <div class="mx-online-strip">
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Elena</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Marco</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Chloe</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Liam</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Aarav</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Priya</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Rohan</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Ananya</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Vikram</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Meera</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Arjun</span></button>
+          <button class="mx-online-item"><span class="mx-av"><img src="https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=200" alt="" /><span class="mx-dot"></span></span><span class="mx-online-name">Sana</span></button>
+        </div>
+      </section>
+
+      <!-- Bottom 80%: the open chat -->
+      <section class="mx-panel mx-chat">
+        <div class="mx-chat-head">
+          <div class="mx-av"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="" /><span class="mx-dot"></span></div>
+          <div class="mx-chat-title"><strong>Elena Rostova</strong><span>Active now</span></div>
+          <div class="mx-chat-actions"><button class="mx-icon-btn" title="Add people"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><button class="mx-icon-btn" title="Save as Circle">◎</button><button class="mx-icon-btn on" title="Profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1" fill="currentColor" stroke="none"/></svg></button></div>
+        </div>
+        <div class="mx-msgs">
+          <span class="mx-session">10 Oct 2026, 18:42</span>
+          <div class="mx-msg in"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="" /><div class="mx-bubble">I left three photos from the night market in our chat — the lantern alley came out beautifully ✨<small>18:42</small></div></div>
+          <div class="mx-msg out"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200" alt="" /><div class="mx-bubble">They look incredible! The light on the steam from the noodle stall is perfect.<small>18:45</small></div></div>
+          <div class="mx-msg in"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="" /><div class="mx-bubble">Thank you! Are you still up for the early train to Lucerne?<small>18:46</small></div></div>
+          <span class="mx-session">11 Oct 2026, 06:58</span>
+          <div class="mx-msg out"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200" alt="" /><div class="mx-bubble">Absolutely — I booked two window seats on the 07:12 🚆<small>06:58</small></div></div>
+          <div class="mx-msg in"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="" /><div class="mx-bubble">Perfect. Bring the wide lens, the lake is glass at sunrise.<small>07:01</small></div></div>
+          <div class="mx-msg out"><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200" alt="" /><div class="mx-bubble">See you at the station at 7!<small>07:02</small></div></div>
+        </div>
+        <div class="mx-composer"><button class="mx-icon-btn">😀</button><div class="field">Type a message…</div><button class="mx-send">Send</button></div>
+      </section>
+    </main>
+
+    <!-- RIGHT: profile of the companion being chatted with -->
+    <aside class="mx-panel mx-profile">
+      <div class="mx-cover"><img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800" alt="" /></div>
+      <div class="mx-profile-id">
+        <span class="mx-av"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200" alt="" /><span class="mx-dot"></span></span>
+        <h3>Elena Rostova <span class="mx-verified">✓</span></h3>
+        <span class="mx-status">● Active</span>
+        <p>Travel Blogger · Zurich, Switzerland</p>
+        <div class="mx-profile-actions"><button class="mx-btn primary">View Profile</button><button class="mx-btn">MessageBook</button></div>
+      </div>
+      <div class="mx-sec"><h4>About</h4><p>I find my deepest peace gazing out the window of a regional train as it winds between mist-shrouded pine forests and turquoise alpine lakes.</p></div>
+      <div class="mx-sec"><h4>Details</h4>
+        <ul class="mx-facts"><li>📍 Lives in Zurich, Switzerland</li><li>🏠 From Saint Petersburg</li><li>🗣️ English, Russian, German</li><li>🤝 Companion · 12 mutual companions</li></ul>
+      </div>
+      <div class="mx-sec"><h4>Circles in common</h4><div class="mx-chips"><span>🏔️ Alpine Trekkers</span><span>📸 Golden Hour Club</span></div></div>
+      <div class="mx-sec"><h4>Photos</h4>
+        <div class="mx-photos"><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800" alt="" /><img src="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800" alt="" /><img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800" alt="" /><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800" alt="" /><img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800" alt="" /><img src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800" alt="" /></div>
+      </div>
+    </aside>
+  </div>
+</body>
+</html>

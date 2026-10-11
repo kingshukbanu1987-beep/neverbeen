@@ -96,7 +96,7 @@ export const DEVICES_KEY = 'neverbeen_devices';
 export const DEVICE_ID_KEY_PREFIX = 'neverbeen_device_id';
 export const NOTIFS_KEY = 'neverbeen_notifications';
 export const PENDING_CHATS_KEY = 'neverbeen_pending_chats';
-export const PENDING_CHATS_SEED_VERSION = 'pending-chats-v1';
+export const PENDING_CHATS_SEED_VERSION = 'pending-chats-v2';
 export const PENDING_CHATS_SEED_VERSION_KEY = 'neverbeen_pending_chats_seed';
 export const BLOCKED_USERS_KEY = 'neverbeen_blocked_users';
 export const ABUSE_REPORTS_KEY = 'neverbeen_abuse_reports';
@@ -646,6 +646,8 @@ export interface ApiConversationDto {
   lastMessage?: ApiChatMessageDto | null;
   unreadCount?: number;
   createdAtUtc?: string;
+  /** Time of the newest message, or the creation time (patch: community-messenger-wide). */
+  lastActivityUtc?: string | null;
 }
 
 export interface ApiNotificationDto {
@@ -745,6 +747,8 @@ export interface PendingChat {
   preview: string;
   unreadCount: number;
   sentAtUtc: string;
+  /** Who wrote the last message (the Messenger chat list prefixes the member's own with “You:”). */
+  lastSenderId?: number;
 }
 
 function loadJsonValue(key: string): unknown {
@@ -845,6 +849,16 @@ export class CommunityService {
   /** Dummy (and later real) conversations that still have unread messages. */
   readonly pendingChats = signal<PendingChat[]>(this.loadPendingChats());
   readonly activeChatBoxes = signal<ActiveChatBox[]>([]);
+  /**
+   * True while the Messenger page is open in its tablet / laptop / wide-screen layout
+   * (chats side panel · open chat · companion profile). The floating chat dock is hidden
+   * then, so only the chat shown in the page counts as "on screen".
+   */
+  readonly messengerPageActive = signal(false);
+  /** Chat key (companion id, or -circleId) shown in the Messenger page's wide panel. */
+  readonly messengerPageChatKey = signal<number | null>(null);
+  /** Chat box the Messenger page opened for itself (closed again when the member moves on). */
+  messengerPageOwnedKey: number | null = null;
   readonly blockedUserIds = signal<number[]>(this.loadBlockedUsers());
   readonly abuseReports = signal<AbuseReport[]>(this.loadAbuseReports());
   readonly hiddenPostIds = signal<number[]>(this.loadHiddenPostIds());
@@ -1893,7 +1907,10 @@ export class CommunityService {
           country: partner?.country ?? '',
           preview: c.lastMessage?.text ?? '',
           unreadCount: c.unreadCount ?? 0,
-          sentAtUtc: c.lastMessage?.sentAtUtc ?? c.createdAtUtc ?? new Date().toISOString(),
+          // Latest activity (newer API builds send it; otherwise the last message / creation time).
+          sentAtUtc:
+            c.lastActivityUtc ?? c.lastMessage?.sentAtUtc ?? c.createdAtUtc ?? new Date().toISOString(),
+          lastSenderId: c.lastMessage?.senderId ?? undefined,
         };
       })
       .filter((chat) => !!chat.companionId);
@@ -5384,13 +5401,22 @@ export class CommunityService {
       if (open) {
         await this.refreshOpenConversation(open.companionId, conversation.id);
         const shown = this.activeChatBoxes().find((b) => b.conversationId === conversation.id);
+        // While the Messenger page is open its wide panel is the only chat on screen: any
+        // other open box is hidden with the floating dock, so its message stays unread (and
+        // shows in the page's chat list) instead of being marked read unseen.
+        const hiddenByMessengerPage =
+          !!shown && this.messengerPageActive() && shown.companionId !== this.messengerPageChatKey();
         // Requirement C: a message that lands in a minimized box pops it back open,
         // and while it stays minimized it counts as one unread message on the badge.
-        if (shown?.isMinimized) {
+        if (shown?.isMinimized || hiddenByMessengerPage) {
           this.activeChatBoxes.update((boxes) =>
             boxes.map((b) =>
               b.conversationId === conversation.id
-                ? { ...b, isMinimized: false, unreadCount: (b.unreadCount ?? 0) + 1 }
+                ? {
+                    ...b,
+                    isMinimized: hiddenByMessengerPage ? b.isMinimized : false,
+                    unreadCount: (b.unreadCount ?? 0) + 1,
+                  }
                 : b,
             ),
           );
@@ -5514,6 +5540,8 @@ export class CommunityService {
   /** Opens the floating chat popup for a companion who has just written to this member. */
   private popUpChat(partner: ApiAuthorDto): void {
     if (!this.wideScreenChatPopup()) return;
+    // The Messenger page lists the conversation (with its unread count) in its chats panel.
+    if (this.messengerPageActive()) return;
     const companion =
       this.companions().find((c) => Number(c.id) === partner.id) ??
       this.followPersonFromApi(partner.id) ??
@@ -6355,6 +6383,29 @@ export class CommunityService {
     }
   }
 
+  /**
+   * Records the newest message of a 1:1 chat in the chat inbox (`pendingChats`), so the
+   * Messenger page's chats panel lists the conversation first with that message as its preview.
+   * The Web API's conversation list replaces the inbox on the next live poll.
+   */
+  private notePendingChatActivity(companion: Companion, message: ChatMessage, unreadCount: number): void {
+    if (!(companion.id > 0)) return;
+    const entry: PendingChat = {
+      companionId: companion.id,
+      fullName: companion.fullName,
+      profilePhotoUrl: companion.profilePhotoUrl,
+      profession: companion.profession,
+      city: companion.city,
+      country: companion.country,
+      preview: message.text,
+      unreadCount,
+      sentAtUtc: message.sentAtUtc,
+      lastSenderId: message.senderId,
+    };
+    this.pendingChats.update((list) => [entry, ...list.filter((c) => c.companionId !== companion.id)]);
+    this.saveJson(PENDING_CHATS_KEY, this.pendingChats());
+  }
+
   markPendingChatRead(companionId: number): void {
     if (!this.pendingChats().some((c) => c.companionId === companionId && c.unreadCount > 0)) return;
     this.pendingChats.update((list) => list.map((c) => (c.companionId === companionId ? { ...c, unreadCount: 0 } : c)));
@@ -6394,8 +6445,7 @@ export class CommunityService {
       );
       return;
     }
-    let updated = [...current];
-    if (updated.length >= 5) updated.shift();
+    const updated = this.withRoomForChatBox(current);
     // Signed-in members read the Circle's chat history from the Web API
     // (GET /api/circles/{id}/messages); the guest tour keeps its seeded greeting.
     if (this.apiLive && circle.id > 0 && circle.id <= 0x7fffffff) {
@@ -6521,6 +6571,9 @@ export class CommunityService {
     this.saveJson(CIRCLES_KEY, this.circles());
     const saved = this.circles().find((c) => c.id === created.id) ?? created;
     const key = -Math.abs(saved.id);
+    // The Messenger page keeps showing the chat under its new (Circle) key.
+    if (this.messengerPageChatKey() === chatKey) this.messengerPageChatKey.set(key);
+    if (this.messengerPageOwnedKey === chatKey) this.messengerPageOwnedKey = key;
     this.activeChatBoxes.update((boxes) =>
       boxes.map((b) =>
         b.companionId === chatKey
@@ -6551,11 +6604,8 @@ export class CommunityService {
       return;
     }
 
-    // Maximum 5 chat boxes can be open at a time
-    let updated = [...current];
-    if (updated.length >= 5) {
-      updated.shift(); // remove oldest
-    }
+    // Maximum 5 chat boxes can be open at a time (the oldest one makes room).
+    const updated = this.withRoomForChatBox(current);
 
     // Signed-in members chat through the Web API: the conversation is started /
     // reused (POST /api/messages/conversations) and its real history is loaded —
@@ -6575,19 +6625,22 @@ export class CommunityService {
       return;
     }
 
-    const pending = this.pendingChats().find((c) => c.companionId === companion.id && c.unreadCount > 0);
+    // A waiting inbox thread keeps its unread count and an earlier (read) thread opens on its
+    // last message; a brand-new chat starts with the companion's greeting as one unread chat.
+    const pending = this.pendingChats().find((c) => c.companionId === companion.id);
+    const me = this.myId();
+    const firstSender = pending?.lastSenderId ?? companion.id;
     const newBox: ActiveChatBox = {
       companionId: companion.id,
       companion,
       isMinimized: false,
       draftText: '',
-      // A waiting inbox thread keeps its unread count; otherwise the greeting counts as one unread chat.
-      unreadCount: pending?.unreadCount ?? 1,
+      unreadCount: pending ? pending.unreadCount : 1,
       messages: [
         {
           id: 1,
-          senderId: companion.id,
-          receiverId: 1,
+          senderId: firstSender,
+          receiverId: firstSender === companion.id ? me : companion.id,
           text: pending?.preview ?? `Hey Kingshuk! So wonderful to connect here on NeverBeen. Are you planning any trips soon?`,
           sentAtUtc: pending?.sentAtUtc ?? new Date(Date.now() - 3600000).toISOString(),
         },
@@ -6595,6 +6648,27 @@ export class CommunityService {
     };
 
     this.activeChatBoxes.set([...updated, newBox]);
+  }
+
+  /**
+   * The open chat boxes with room for one more (at most 5 are open at a time): the oldest box
+   * is dropped — never the chat the Messenger page is showing in its wide panel.
+   */
+  private withRoomForChatBox(current: ActiveChatBox[]): ActiveChatBox[] {
+    const updated = [...current];
+    if (updated.length < 5) return updated;
+    const pinned = this.messengerPageChatKey();
+    const oldest = updated.findIndex((b) => b.companionId !== pinned);
+    updated.splice(oldest > -1 ? oldest : 0, 1);
+    return updated;
+  }
+
+  /** Un-minimizes an open chat box (no-op when it is not open or already expanded). */
+  restoreChatBox(companionId: number): void {
+    if (!this.activeChatBoxes().some((b) => b.companionId === companionId && b.isMinimized)) return;
+    this.activeChatBoxes.update((boxes) =>
+      boxes.map((b) => (b.companionId === companionId ? { ...b, isMinimized: false } : b)),
+    );
   }
 
   /** Starts (or reuses) the 1:1 conversation and loads its messages into the open box. */
@@ -6683,6 +6757,8 @@ export class CommunityService {
       ),
     );
     const box = this.activeChatBoxes().find((b) => b.companionId === companionId);
+    // The conversation moves to the top of the Messenger page's chats panel at once.
+    if (box && !box.isGroup && !box.circleId) this.notePendingChatActivity(box.companion, newMsg, 0);
 
     // Signed-in members store the message on the Web API — 1:1 chats through
     // POST /api/messages/conversations/{id}/messages and Circle chats through
@@ -6726,6 +6802,9 @@ export class CommunityService {
             : b,
         ),
       );
+      const replyBox = this.activeChatBoxes().find((b) => b.companionId === companionId);
+      const seen = this.messengerPageActive() && this.messengerPageChatKey() === companionId;
+      this.notePendingChatActivity(companion, replyMsg, seen ? 0 : (replyBox?.unreadCount ?? 1));
       // Requirement C: the simulated reply counts as a real incoming message —
       // notification item, chat badge item and chime.
       this.noteIncomingMessage(companion, replyMsg.text, replyMsg.sentAtUtc, 0, replyMsg.id);
@@ -8177,8 +8256,38 @@ export class CommunityService {
     return seed;
   }
 
-  /** Three waiting conversations so the header Chats badge and browser tab can be checked. */
+  /**
+   * The guest tour's conversations: three waiting ones (so the header Chats badge and browser
+   * tab can be checked) and a few earlier, already-read ones, so the Messenger page's chats
+   * panel shows a real history of previous chats.
+   */
   private buildPendingChatSeed(): PendingChat[] {
+    const waiting = this.buildWaitingChatSeed();
+    const taken = new Set(waiting.map((c) => c.companionId));
+    const me = this.currentUser()?.id ?? 1;
+    const earlier = [
+      { text: 'Thanks for the trail map, it saved our hike!', mine: true },
+      { text: 'The monsoon photos are up on my Journey.', mine: false },
+      { text: 'Food walk in the old city this weekend?', mine: true },
+      { text: 'Kyoto in November is unreal. You have to go.', mine: false },
+    ];
+    const connected = this.companions().filter((c) => c.status === 'connected' && c.id > 0 && !taken.has(c.id));
+    const previous = connected.slice(0, earlier.length).map((c, i) => ({
+      companionId: c.id,
+      fullName: c.fullName,
+      profilePhotoUrl: c.profilePhotoUrl,
+      profession: c.profession,
+      city: c.city,
+      country: c.country,
+      preview: earlier[i].text,
+      unreadCount: 0,
+      sentAtUtc: new Date(Date.now() - (i + 1) * 86400000 - 5 * 3600000).toISOString(),
+      lastSenderId: earlier[i].mine ? me : c.id,
+    }));
+    return [...waiting, ...previous];
+  }
+
+  private buildWaitingChatSeed(): PendingChat[] {
     const connected = this.companions().filter((c) => c.status === 'connected' && c.id > 0);
     const preferred = [12, 33, 42, 71]
       .map((id) => connected.find((c) => c.id === id))
@@ -8199,6 +8308,7 @@ export class CommunityService {
       preview: previews[i] ?? 'Sent you a message.',
       unreadCount: 1,
       sentAtUtc: new Date(Date.now() - (i + 1) * 3600000).toISOString(),
+      lastSenderId: c.id,
     }));
   }
 

@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Chess, type Square } from 'chess.js';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -98,6 +98,17 @@ const PROFILE_SECTION_VALUES: readonly ProfileSection[] = [
  */
 export const CHAT_SESSION_GAP_MS = 60 * 60_000;
 
+import {
+  MessengerChatFilter,
+  MessengerChatItem,
+  buildMessengerChats,
+  circleChatKey,
+  filterMessengerChats,
+  messengerFirstName,
+  messengerPreview,
+  messengerTimeLabel,
+} from './messenger-chats';
+
 @Component({
   selector: 'app-community-profile',
   standalone: true,
@@ -117,7 +128,7 @@ export const CHAT_SESSION_GAP_MS = 60 * 60_000;
     PostAudienceControl,
   ],
   templateUrl: './profile.html',
-  styleUrls: ['./profile.css', './profile-journey.css'],
+  styleUrls: ['./profile.css', './profile-journey.css', './messenger-wide.css'],
 })
 export class CommunityProfile implements OnInit {
   protected readonly service = inject(CommunityService);
@@ -2707,6 +2718,10 @@ export class CommunityProfile implements OnInit {
       void this.confirmSvc.notify('You can only open a Circle you belong to.');
       return;
     }
+    if (this.messengerWide()) {
+      this.showInMessenger(circleChatKey(circle.id), () => this.service.openCircleChat(circle));
+      return;
+    }
     this.service.openCircleChat(circle);
   }
 
@@ -2997,8 +3012,321 @@ export class CommunityProfile implements OnInit {
   }
 
   openChatWith(companion: Companion): void {
-    this.service.openChatBox(companion);
     this.showMessengerFlyout.set(false);
+    // On the Messenger page's wide layout the chat opens in the wide panel, not as a pop-up.
+    if (this.messengerWide()) {
+      this.messageCompanion(companion);
+      return;
+    }
+    this.service.openChatBox(companion);
+  }
+
+  // ---------------------------------------------------------------------------
+  // MESSENGER PAGE — tablet / laptop / wide screens (Facebook Messenger style)
+  //   left:   chats side panel (previous and current chats) instead of the
+  //           Community default profile side panel
+  //   centre: online companions row (top 20%) + the open chat
+  //   right:  profile of the companion (or Circle) being chatted with
+  // Phones keep the Online Now / Offline Companions lists and the pop-up chats.
+  // ---------------------------------------------------------------------------
+
+  /** Tablet, laptop and wide screens get the three-panel Messenger page. */
+  static readonly MESSENGER_WIDE_QUERY = '(min-width: 768px)';
+  /** From this width the companion profile is a column; below it, a drawer over the chat. */
+  static readonly MESSENGER_INFO_COLUMN_QUERY = '(min-width: 1024px)';
+
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly hostEl = inject(ElementRef<HTMLElement>);
+  private readonly wideViewport = signal(CommunityProfile.mediaMatches(CommunityProfile.MESSENGER_WIDE_QUERY));
+
+  /** True while the Messenger page shows its three-panel layout. */
+  protected readonly messengerWide = computed(
+    () => this.activeSection() === 'messenger' && !this.viewingVisitor() && this.wideViewport(),
+  );
+  protected readonly messengerFilter = signal<MessengerChatFilter>('all');
+  protected readonly messengerQuery = signal('');
+  /** Right-hand companion profile panel shown (a column on laptops, a drawer on tablets). */
+  protected readonly messengerInfoOpen = signal(true);
+  /** “See more” on the companion's About text. */
+  protected readonly messengerAboutExpanded = signal(false);
+  /** Members whose full profile was already requested for the profile panel. */
+  private readonly messengerProfileRequested = new Set<number>();
+
+  protected readonly messengerPreview = messengerPreview;
+  protected readonly messengerTimeLabel = messengerTimeLabel;
+  protected readonly messengerFirstName = messengerFirstName;
+
+  private static mediaMatches(query: string): boolean {
+    return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(query).matches;
+  }
+
+  private readonly messengerViewportWatch = (() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return null;
+    const mq = window.matchMedia(CommunityProfile.MESSENGER_WIDE_QUERY);
+    const onChange = () => this.wideViewport.set(mq.matches);
+    mq.addEventListener?.('change', onChange);
+    const onResize = () => this.measureMessengerShell();
+    window.addEventListener('resize', onResize);
+    this.destroyRef.onDestroy(() => {
+      mq.removeEventListener?.('change', onChange);
+      window.removeEventListener('resize', onResize);
+      this.leaveMessengerPage();
+    });
+    return mq;
+  })();
+
+  /** Every previous and current chat, newest first. */
+  protected readonly messengerChats = computed<MessengerChatItem[]>(() => {
+    const me = this.service.currentUser()?.id ?? this.service.profile()?.id ?? 1;
+    const visible = new Set(this.service.visibleCompanions().map((c) => Number(c.id)));
+    const hidden = new Set<number>(this.service.blockedUserIds().map(Number));
+    // Known travelers that are not visible any more (blocked / disabled) stay out of the list.
+    for (const c of this.service.companions()) if (!visible.has(Number(c.id))) hidden.add(Number(c.id));
+    return buildMessengerChats({
+      me,
+      pendingChats: this.service.pendingChats(),
+      boxes: this.service.activeChatBoxes(),
+      circles: this.service.myCircles(),
+      companions: this.service.companions(),
+      hiddenIds: hidden,
+      selectedKey: this.service.messengerPageChatKey(),
+      circleUnread: (circle) => this.service.circleUnreadCount(circle, me),
+    });
+  });
+
+  protected readonly messengerVisibleChats = computed(() =>
+    filterMessengerChats(this.messengerChats(), this.messengerFilter(), this.messengerQuery()),
+  );
+
+  protected readonly messengerUnreadChats = computed(() => this.messengerChats().filter((c) => c.unread > 0).length);
+
+  /** While searching: companions the member has never chatted with, to start a new chat. */
+  protected readonly messengerNewChatCandidates = computed(() => {
+    const q = this.messengerQuery().trim().toLowerCase();
+    if (!q || this.messengerFilter() === 'circles') return [];
+    const listed = new Set(this.messengerChats().map((c) => c.key));
+    return this.service
+      .visibleCompanions()
+      .filter((c) => c.status === 'connected' && !listed.has(c.id) && c.fullName.toLowerCase().includes(q))
+      .slice(0, 8);
+  });
+
+  protected readonly messengerSelectedKey = computed(() => this.service.messengerPageChatKey());
+
+  /** The chat box shown in the wide panel. */
+  protected readonly messengerBox = computed(() => {
+    const key = this.service.messengerPageChatKey();
+    return key === null ? null : (this.service.activeChatBoxes().find((b) => b.companionId === key) ?? null);
+  });
+
+  /** The companion being chatted with (fresh from the directory when known). */
+  protected readonly messengerCompanion = computed<Companion | null>(() => {
+    const key = this.service.messengerPageChatKey();
+    if (key === null || key < 0) return null;
+    const box = this.messengerBox();
+    if (box?.isGroup) return null;
+    return (
+      this.service.companions().find((c) => Number(c.id) === key) ??
+      box?.companion ??
+      this.messengerChats().find((c) => c.key === key)?.companion ??
+      null
+    );
+  });
+
+  /** The Circle being chatted with. */
+  protected readonly messengerCircle = computed<Circle | null>(() => {
+    const key = this.service.messengerPageChatKey();
+    if (key === null || key >= 0) return null;
+    const box = this.messengerBox();
+    const id = box?.circleId ?? Math.abs(key);
+    return this.service.circles().find((c) => c.id === id) ?? null;
+  });
+
+  /** Circles the member shares with the companion being chatted with. */
+  protected readonly messengerCommonCircles = computed(() => {
+    const c = this.messengerCompanion();
+    if (!c) return [];
+    return this.service.myCircles().filter((circle) => circle.memberIds.includes(Number(c.id)));
+  });
+
+  /** Travelers of the Circle being chatted with (known ones first). */
+  protected readonly messengerCircleMembers = computed(() => {
+    const circle = this.messengerCircle();
+    return circle ? this.getCircleMembers(circle.memberIds) : [];
+  });
+
+  /** Entering / leaving the three-panel layout (section change, visitor profile, resize). */
+  private readonly messengerPageSync = effect(() => {
+    const wide = this.messengerWide();
+    untracked(() => (wide ? this.enterMessengerPage() : this.leaveMessengerPage()));
+  });
+
+  /** The chat in the wide panel is on screen: whatever arrives in it is read at once. */
+  private readonly messengerReadSync = effect(() => {
+    if (!this.messengerWide()) return;
+    const box = this.messengerBox();
+    if (box && (box.unreadCount ?? 0) > 0) untracked(() => this.service.markChatRead(box.companionId));
+  });
+
+  /** The profile panel needs the full profile (cover, About me): read it once per member. */
+  private readonly messengerProfileSync = effect(() => {
+    const c = this.messengerCompanion();
+    if (!c || !this.messengerWide() || !this.service.apiLive) return;
+    const id = Number(c.id);
+    if (this.messengerProfileRequested.has(id) || (c.aboutMeDetails && c.coverPhotoUrl)) return;
+    this.messengerProfileRequested.add(id);
+    untracked(() => void this.service.loadUserById(id));
+  });
+
+  private enterMessengerPage(): void {
+    const first = !this.service.messengerPageActive();
+    this.service.messengerPageActive.set(true);
+    if (first) {
+      this.messengerInfoOpen.set(CommunityProfile.mediaMatches(CommunityProfile.MESSENGER_INFO_COLUMN_QUERY));
+      this.closeMobileSidePanel();
+    }
+    // Messenger opens on the latest conversation, like Facebook Messenger.
+    if (this.service.messengerPageChatKey() === null) {
+      // A conversation with a companion first (its profile fills the right panel), else a Circle.
+      const chats = this.messengerChats().filter((c) => c.hasHistory);
+      const latest = chats.find((c) => c.kind === 'direct') ?? chats[0];
+      if (latest) this.selectMessengerChat(latest);
+    }
+    setTimeout(() => this.measureMessengerShell());
+  }
+
+  private leaveMessengerPage(): void {
+    if (!this.service.messengerPageActive()) return;
+    if (this.service.messengerPageOwnedKey !== null) this.service.closeChatBox(this.service.messengerPageOwnedKey);
+    this.service.messengerPageOwnedKey = null;
+    this.service.messengerPageChatKey.set(null);
+    this.service.messengerPageActive.set(false);
+    this.messengerQuery.set('');
+  }
+
+  /**
+   * The three panels fill the rest of the window below the site header, so the chat list,
+   * the messages and the profile scroll inside their own panels.
+   */
+  private measureMessengerShell(): void {
+    if (typeof window === 'undefined') return;
+    const host = this.hostEl.nativeElement as HTMLElement;
+    const shell = host.querySelector?.('.mx-shell') as HTMLElement | null;
+    if (!shell) return;
+    const top = shell.getBoundingClientRect().top + window.scrollY;
+    host.style.setProperty('--mx-offset', `${Math.max(0, Math.round(top))}px`);
+  }
+
+  /** Opens a row of the chats panel in the wide panel. */
+  selectMessengerChat(item: MessengerChatItem): void {
+    if (item.kind === 'circle' && item.circle) {
+      const circle = item.circle;
+      this.showInMessenger(item.key, () => this.service.openCircleChat(circle));
+      return;
+    }
+    this.showInMessenger(item.key, () => this.service.openChatBox(this.companionForChatItem(item)));
+  }
+
+  /** Online companions row, a new-chat search hit, or “Chat” anywhere on the Messenger page. */
+  messageCompanion(companion: Companion): void {
+    this.messengerQuery.set('');
+    this.showInMessenger(Number(companion.id), () => this.service.openChatBox(companion));
+  }
+
+  private showInMessenger(key: number, open: () => void): void {
+    const previous = this.service.messengerPageChatKey();
+    this.messengerAboutExpanded.set(false);
+    this.activeEmojiTrayCompanionId.set(null);
+    this.activeReactionPickerMsgId.set(null);
+    this.activeDotsMenuMsgId.set(null);
+    if (!CommunityProfile.mediaMatches(CommunityProfile.MESSENGER_INFO_COLUMN_QUERY)) this.messengerInfoOpen.set(false);
+    if (previous === key && this.messengerBox()) {
+      this.service.markChatRead(key);
+      return;
+    }
+    // A chat the page opened for itself is closed when the member moves to another chat;
+    // a chat that was already open as a pop-up stays open for when they leave the page.
+    if (previous !== null && previous !== key && this.service.messengerPageOwnedKey === previous) {
+      this.service.closeChatBox(previous);
+    }
+    this.service.messengerPageOwnedKey = null;
+    this.service.messengerPageChatKey.set(key);
+    if (this.service.activeChatBoxes().some((b) => b.companionId === key)) {
+      this.service.restoreChatBox(key);
+    } else {
+      open();
+      if (this.service.activeChatBoxes().some((b) => b.companionId === key)) this.service.messengerPageOwnedKey = key;
+    }
+    this.service.markChatRead(key);
+    setTimeout(() => {
+      const input = (this.hostEl.nativeElement as HTMLElement).querySelector?.('.mx-chat .chat-composer-input') as HTMLInputElement | null;
+      input?.focus({ preventScroll: true });
+    });
+  }
+
+  private companionForChatItem(item: MessengerChatItem): Companion {
+    const known = item.companion ?? this.service.companions().find((c) => Number(c.id) === item.key);
+    if (known) return known;
+    const pending = this.service.pendingChats().find((c) => c.companionId === item.key);
+    return {
+      id: item.key,
+      fullName: item.name,
+      profilePhotoUrl: item.photoUrl,
+      country: pending?.country ?? '',
+      city: pending?.city ?? '',
+      profession: pending?.profession ?? '',
+      isOnline: false,
+      mutualCompanionsCount: 0,
+      status: 'connected',
+    };
+  }
+
+  /** The ✎ button: search companions to start a new chat. */
+  startNewMessengerChat(input: HTMLInputElement): void {
+    if (this.messengerFilter() === 'circles') this.messengerFilter.set('all');
+    input.focus();
+  }
+
+  toggleMessengerInfo(): void {
+    this.messengerInfoOpen.update((open) => !open);
+  }
+
+  /** Online dot in the chats list (offline companions show none, like Messenger). */
+  isCompanionOnline(c: Companion | null | undefined): boolean {
+    return !!c && this.service.companionIsOnline(c);
+  }
+
+  /** Circle key used by the chat dock for a Circle row. */
+  protected readonly circleChatKey = circleChatKey;
+
+  /** An About-me field of the companion that the member may see (per-field audience). */
+  messengerCanSee(c: Companion, field: AboutFieldKey): boolean {
+    const audience = c.aboutMeDetails?.visibility?.[field] ?? { visibility: 'public' as const };
+    return this.audienceAllows(audience, c.status === 'connected', this.service.currentUser()?.id ?? 0);
+  }
+
+  /** The companion's details are hidden behind a locked profile for non-companions. */
+  messengerProfileLocked(c: Companion): boolean {
+    return !!c.isProfileLocked && c.status !== 'connected';
+  }
+
+  messengerAbout(c: Companion): string {
+    const details = c.aboutMeDetails;
+    if (details?.intro && this.messengerCanSee(c, 'intro')) return details.intro;
+    return c.bio || c.aboutMe || '';
+  }
+
+  messengerLanguages(c: Companion): string {
+    return this.messengerCanSee(c, 'languagesKnown') ? (c.aboutMeDetails?.languagesKnown ?? []).join(', ') : '';
+  }
+
+  messengerHometown(c: Companion): string {
+    return this.messengerCanSee(c, 'hometown') ? (c.aboutMeDetails?.hometown ?? '') : '';
+  }
+
+  messengerPhotos(c: Companion): GalleryPhoto[] {
+    if (this.messengerProfileLocked(c)) return [];
+    return (c.gallery ?? []).slice(0, 6);
   }
 
   protected pendingChats(): PendingChat[] {
