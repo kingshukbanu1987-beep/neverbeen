@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
+import { takeCommunityReturnPath } from '../../../shared/community-return-path';
 
 /**
  * OAuth callback (also served at `/auth/callback`, the URL registered with each provider).
@@ -56,7 +57,10 @@ export class CommunityCallback implements OnInit {
       const res = await this.service.loginWithOAuth(provider, code);
       if (res.profileComplete) {
         this.statusMessage.set('Sign in verified! Redirecting to your profile...');
-        setTimeout(() => this.router.navigate(['/community/profile']), 500);
+        setTimeout(
+          () => this.router.navigateByUrl(takeCommunityReturnPath() ?? '/community/profile'),
+          500,
+        );
       } else {
         this.statusMessage.set('New member detected! Redirecting to complete registration...');
         setTimeout(() => this.router.navigate(['/community/register']), 500);

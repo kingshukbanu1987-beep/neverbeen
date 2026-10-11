@@ -12,6 +12,15 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { CommunityService } from '../../services/community.service';
+import {
+  CreateModelTestimonial,
+  ModelTestimonial,
+  ModelTestimonialAuthor,
+  ModelTestimonialsService,
+} from '../../services/model-testimonials.service';
+import { rememberCommunityReturnPath } from '../../shared/community-return-path';
+import { CommunitySignInCard } from '../../shared/community-sign-in-card/community-sign-in-card';
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
@@ -42,7 +51,7 @@ export function shufflePhotos(photos: readonly AiModelPhoto[]): AiModelPhoto[] {
 
 @Component({
   selector: 'app-ai-model-portfolio-page',
-  imports: [RouterLink, AiModelBookingDialog, AiModelVideoPlayer],
+  imports: [RouterLink, AiModelBookingDialog, AiModelVideoPlayer, CommunitySignInCard],
   templateUrl: './ai-model-portfolio.html',
   styleUrl: './ai-model-portfolio.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +69,64 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected readonly model = computed(
     () => aiModelProfiles.find((profile) => profile.slug === this.slug()) ?? null,
   );
+
+  protected readonly community = inject(CommunityService);
+  private readonly testimonialsApi = inject(ModelTestimonialsService);
+
+  /** Only completed, active Community accounts may publish portfolio testimonials. */
+  protected readonly canLeaveTestimonial = computed(() => {
+    const user = this.community.currentUser();
+    return (
+      this.community.isAuthenticated() &&
+      !this.community.guestBrowsing() &&
+      !!user?.profileComplete &&
+      user.status.trim().toLocaleLowerCase() === 'active'
+    );
+  });
+  protected readonly needsCommunityProfileCompletion = computed(
+    () => this.community.currentUser()?.status.trim().toLocaleLowerCase() === 'pending',
+  );
+
+  protected readonly testimonials = signal<ModelTestimonial[]>([]);
+  protected readonly testimonialTotal = signal(0);
+  protected readonly testimonialPage = signal(0);
+  protected readonly testimonialPageSize = 50;
+  protected readonly testimonialLoadState = signal<'loading' | 'ready' | 'error'>('loading');
+  protected readonly testimonialLoadError = signal('');
+  protected readonly loadingMoreTestimonials = signal(false);
+  protected readonly moreTestimonialsError = signal('');
+
+  protected readonly headline = signal('');
+  protected readonly testimonialText = signal('');
+  protected readonly rating = signal(0);
+  protected readonly submittingTestimonial = signal(false);
+  protected readonly testimonialSubmitError = signal('');
+  protected readonly testimonialSubmitSuccess = signal('');
+  protected readonly ratingStars = [1, 2, 3, 4, 5];
+  protected readonly ratingSteps = Array.from({ length: 10 }, (_, index) => (index + 1) / 2);
+
+  protected readonly headlineIsValid = computed(() => {
+    const length = this.headline().trim().length;
+    return length >= 10 && length <= 100;
+  });
+  protected readonly testimonialTextIsValid = computed(() => {
+    const length = this.testimonialText().trim().length;
+    return length >= 20 && length <= 2500;
+  });
+  protected readonly canPublishTestimonial = computed(() => {
+    const selectedRating = this.rating();
+    return (
+      this.canLeaveTestimonial() &&
+      this.headlineIsValid() &&
+      this.testimonialTextIsValid() &&
+      selectedRating >= 0.5 &&
+      selectedRating <= 5 &&
+      Number.isInteger(selectedRating * 2) &&
+      !this.submittingTestimonial()
+    );
+  });
+
+  private testimonialRequestId = 0;
 
   /**
    * Every photograph in the model's album, shuffled fresh for this visit. It recomputes whenever the
@@ -150,6 +217,26 @@ export class AiModelPortfolioPage implements OnDestroy {
   private shareTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    // Load a fresh model-specific public testimonial feed whenever the route changes.
+    effect(() => {
+      const slug = this.model()?.slug;
+      const requestId = ++this.testimonialRequestId;
+      this.testimonials.set([]);
+      this.testimonialTotal.set(0);
+      this.testimonialPage.set(0);
+      this.testimonialLoadError.set('');
+      this.moreTestimonialsError.set('');
+      this.loadingMoreTestimonials.set(false);
+      this.headline.set('');
+      this.testimonialText.set('');
+      this.rating.set(0);
+      this.submittingTestimonial.set(false);
+      this.testimonialSubmitError.set('');
+      this.testimonialSubmitSuccess.set('');
+      this.testimonialLoadState.set(slug ? 'loading' : 'ready');
+      if (slug) void this.fetchTestimonials(slug, 1, requestId, false);
+    });
+
     // Keep the page behind the pop-up from scrolling while it is open.
     effect((onCleanup) => {
       if (typeof document === 'undefined') return;
@@ -172,7 +259,256 @@ export class AiModelPortfolioPage implements OnDestroy {
 
   ngOnDestroy(): void {
     if (this.shareTimer) clearTimeout(this.shareTimer);
+    this.testimonialRequestId += 1;
     if (typeof document !== 'undefined') document.body.style.overflow = '';
+  }
+
+  protected modelLocation(profile: AiModelProfile): string {
+    const parts = profile.location
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean);
+    return parts.length > 0 ? parts.join(' · ') : 'Location to be announced';
+  }
+
+  protected rememberPortfolioReturnPath(slug: string): void {
+    rememberCommunityReturnPath(`/ai-models/${encodeURIComponent(slug)}`);
+  }
+
+  protected updateHeadline(event: Event): void {
+    this.headline.set((event.target as HTMLInputElement).value);
+    this.testimonialSubmitError.set('');
+    this.testimonialSubmitSuccess.set('');
+  }
+
+  protected updateTestimonialText(event: Event): void {
+    this.testimonialText.set((event.target as HTMLTextAreaElement).value);
+    this.testimonialSubmitError.set('');
+    this.testimonialSubmitSuccess.set('');
+  }
+
+  protected chooseRating(value: number): void {
+    if (this.ratingSteps.includes(value)) this.rating.set(value);
+  }
+
+  protected onRatingKeydown(event: KeyboardEvent): void {
+    const current = this.ratingSteps.indexOf(this.rating());
+    let next = current;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') next = Math.min(current + 1, 9);
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown')
+      next = Math.max(current - 1, 0);
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = 9;
+    else return;
+
+    event.preventDefault();
+    const value = this.ratingSteps[next];
+    this.rating.set(value);
+    (event.currentTarget as HTMLElement)
+      .querySelector<HTMLButtonElement>(`[data-rating-value="${value}"]`)
+      ?.focus();
+  }
+
+  protected scoreLabel(value: number): string {
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  }
+
+  protected isFullStar(value: number): boolean {
+    return this.rating() >= value;
+  }
+
+  protected isHalfStar(value: number): boolean {
+    return this.rating() === value - 0.5;
+  }
+
+  protected ratingLabel(value: number): string {
+    return `${this.scoreLabel(value)} out of 5 stars`;
+  }
+
+  protected onTestimonialsScroll(event: Event): void {
+    const list = event.currentTarget as HTMLElement;
+    if (
+      this.testimonialLoadState() !== 'ready' ||
+      this.loadingMoreTestimonials() ||
+      this.testimonials().length >= this.testimonialTotal() ||
+      list.scrollTop + list.clientHeight < list.scrollHeight - 120
+    ) {
+      return;
+    }
+
+    const slug = this.model()?.slug;
+    if (!slug) return;
+    this.loadingMoreTestimonials.set(true);
+    this.moreTestimonialsError.set('');
+    void this.fetchTestimonials(slug, this.testimonialPage() + 1, this.testimonialRequestId, true);
+  }
+
+  protected async publishTestimonial(event: SubmitEvent): Promise<void> {
+    event.preventDefault();
+    const profile = this.model();
+    if (!profile || !this.canPublishTestimonial()) return;
+    const requestId = this.testimonialRequestId;
+
+    const payload: CreateModelTestimonial = {
+      headline: this.headline().trim(),
+      text: this.testimonialText().trim(),
+      rating: this.rating(),
+    };
+    this.submittingTestimonial.set(true);
+    this.testimonialSubmitError.set('');
+    this.testimonialSubmitSuccess.set('');
+
+    try {
+      const created = await this.testimonialsApi.create(profile.slug, payload);
+      if (requestId !== this.testimonialRequestId) return;
+      this.testimonials.update((current) =>
+        [created, ...current.filter((item) => item.id !== created.id)].slice(
+          0,
+          Math.max(this.testimonialPageSize, current.length + 1),
+        ),
+      );
+      this.testimonialTotal.update((total) => total + 1);
+      this.headline.set('');
+      this.testimonialText.set('');
+      this.rating.set(0);
+      this.testimonialSubmitSuccess.set(
+        'Your testimonial has been published. Thank you for sharing.',
+      );
+    } catch {
+      if (requestId !== this.testimonialRequestId) return;
+      this.testimonialSubmitError.set(
+        'Your testimonial could not be published right now. Please try again in a moment.',
+      );
+    } finally {
+      if (requestId === this.testimonialRequestId) this.submittingTestimonial.set(false);
+    }
+  }
+
+  protected testimonialPreview(value: string): string {
+    if (value.length <= 210) return value;
+    const prefix = value.slice(0, 210).trimEnd();
+    const lastSpace = prefix.lastIndexOf(' ');
+    return `${prefix.slice(0, lastSpace > 150 ? lastSpace : prefix.length)}…`;
+  }
+
+  protected hasLongTestimonial(value: string): boolean {
+    return value.length > 210;
+  }
+
+  protected authorName(author: ModelTestimonialAuthor): string {
+    return author.fullName?.trim() || 'NeverBeen Community member';
+  }
+
+  protected authorInitials(author: ModelTestimonialAuthor): string {
+    const names = this.authorName(author).split(/\s+/).filter(Boolean);
+    return (
+      names
+        .slice(0, 2)
+        .map((name) => name[0]?.toUpperCase() ?? '')
+        .join('') || 'NB'
+    );
+  }
+
+  protected authorPhotoUrl(author: ModelTestimonialAuthor): string {
+    const url = author.profilePhotoUrl?.trim();
+    if (!url) return '';
+    return url.startsWith('/api/') ? `${this.community.apiUrl}${url}` : url;
+  }
+
+  protected authorLocation(author: ModelTestimonialAuthor): string {
+    return (
+      [author.city?.trim(), author.country?.trim()].filter(Boolean).join(', ') ||
+      'Location not shared'
+    );
+  }
+
+  protected authorStatus(author: ModelTestimonialAuthor): string {
+    const status = author.activeStatus?.trim();
+    if (status?.toLocaleLowerCase() === 'custom' && author.customStatusText?.trim()) {
+      return author.customStatusText.trim();
+    }
+    return status || 'Community member';
+  }
+
+  protected authorStatusClass(author: ModelTestimonialAuthor): string {
+    switch (author.activeStatus?.trim().toLocaleLowerCase()) {
+      case 'active':
+        return 'status-active';
+      case 'busy':
+      case "don't disturb":
+        return 'status-busy';
+      case 'away':
+        return 'status-away';
+      case 'custom':
+        return 'status-custom';
+      default:
+        return 'status-inactive';
+    }
+  }
+
+  protected timestamp(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Date unavailable';
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
+      date,
+    );
+  }
+
+  protected hideBrokenAvatar(event: Event): void {
+    (event.currentTarget as HTMLImageElement).hidden = true;
+  }
+
+  protected async loadMoreTestimonials(): Promise<void> {
+    const slug = this.model()?.slug;
+    if (
+      !slug ||
+      this.loadingMoreTestimonials() ||
+      this.testimonials().length >= this.testimonialTotal()
+    ) {
+      return;
+    }
+    this.loadingMoreTestimonials.set(true);
+    this.moreTestimonialsError.set('');
+    await this.fetchTestimonials(slug, this.testimonialPage() + 1, this.testimonialRequestId, true);
+  }
+
+  private async fetchTestimonials(
+    slug: string,
+    page: number,
+    requestId: number,
+    append: boolean,
+  ): Promise<void> {
+    try {
+      const result = await this.testimonialsApi.list(slug, page, this.testimonialPageSize);
+      if (requestId !== this.testimonialRequestId) return;
+
+      this.testimonials.update((current) => {
+        const combined = append ? [...current, ...result.items] : result.items;
+        const seen = new Set<number>();
+        return combined.filter((item) => {
+          if (seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        });
+      });
+      this.testimonialTotal.set(Math.max(result.totalCount, this.testimonials().length));
+      this.testimonialPage.set(page);
+      this.testimonialLoadState.set('ready');
+    } catch {
+      if (requestId !== this.testimonialRequestId) return;
+      if (append) {
+        this.moreTestimonialsError.set('Could not load more testimonials. Scroll to retry.');
+      } else {
+        this.testimonialLoadError.set(
+          'Testimonials are temporarily unavailable. Please try again later.',
+        );
+        this.testimonialLoadState.set('error');
+      }
+    } finally {
+      if (requestId === this.testimonialRequestId && append) {
+        this.loadingMoreTestimonials.set(false);
+      }
+    }
   }
 
   protected fact(value: string): string {

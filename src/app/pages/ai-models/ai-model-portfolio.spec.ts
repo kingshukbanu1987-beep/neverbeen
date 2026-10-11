@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { signal } from '@angular/core';
 import { of } from 'rxjs';
+import { CommunityService } from '../../services/community.service';
+import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelPortfolioPage, shufflePhotos } from './ai-model-portfolio';
 import { AiModelVideoPlayer, formatTime } from './video/ai-model-video-player';
@@ -75,10 +78,56 @@ function shownOrder(element: HTMLElement): string[] {
 }
 
 describe('AiModelPortfolioPage', () => {
+  let session: {
+    authenticated: ReturnType<typeof signal<boolean>>;
+    guest: ReturnType<typeof signal<boolean>>;
+    user: ReturnType<typeof signal<any>>;
+  };
+  let testimonialsApi: {
+    list: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+  };
+
   beforeEach(async () => {
+    session = {
+      authenticated: signal(false),
+      guest: signal(false),
+      user: signal<any>(null),
+    };
+    testimonialsApi = {
+      list: vi.fn().mockResolvedValue({
+        items: [],
+        totalCount: 0,
+        page: 1,
+        pageSize: 50,
+        totalPages: 0,
+      }),
+      create: vi.fn(),
+    };
+
+    const communityMock = {
+      isAuthenticated: () => session.authenticated(),
+      guestBrowsing: () => session.guest(),
+      currentUser: () => session.user(),
+      token: () => null,
+      apiLive: false,
+      apiUrl: 'https://neverbeen-api.test',
+      checkApiOnline: vi.fn().mockResolvedValue(false),
+      startOAuthRedirect: vi.fn().mockReturnValue(false),
+      signInWithGoogle: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      completeGoogleSignIn: vi.fn(),
+      awaitGoogleIdentity: vi.fn(),
+      cancelGoogleIdentity: vi.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [AiModelPortfolioPage],
-      providers: [provideRouter(testRoutes)],
+      providers: [
+        provideRouter(testRoutes),
+        { provide: CommunityService, useValue: communityMock },
+        { provide: ModelTestimonialsService, useValue: testimonialsApi },
+      ],
     }).compileComponents();
   });
 
@@ -90,7 +139,7 @@ describe('AiModelPortfolioPage', () => {
     try {
       expect(element.querySelector('h1')?.textContent?.trim()).toBe('Test Studio Model');
       expect(element.textContent).toContain('@test.studio.model');
-      expect(element.textContent).toContain('Open for bookings');
+      expect(element.textContent).toContain('Available for Contract');
       expect(element.textContent).toContain('170 cm');
 
       const tiles = element.querySelectorAll('.grid-tile');
@@ -106,6 +155,198 @@ describe('AiModelPortfolioPage', () => {
         tag.textContent?.trim(),
       );
       expect(tags).toEqual(['Editorial', 'Campaign']);
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('shows the model city and country instead of the generic model label', async () => {
+    const profile = withPhotos(1);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelector('.model-location')?.textContent?.trim()).toBe(
+        'George Town · Malaysia',
+      );
+      expect(element.textContent).not.toContain('NeverBeen AI model');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('shows a compact Google Community sign-in card without a guest option for visitors', async () => {
+    const profile = withPhotos(0);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelector('.community-auth-card')).not.toBeNull();
+      expect(element.querySelector('.community-auth-card')?.textContent).toContain(
+        'Sign in with Google',
+      );
+      expect(element.querySelector('.community-auth-card .guest-explore-btn')).toBeNull();
+      expect(element.querySelector('.testimonial-form')).toBeNull();
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('does not allow the seeded guest session to publish a testimonial', async () => {
+    const profile = withPhotos(0);
+    session.guest.set(true);
+    session.user.set({ status: 'Active', profileComplete: true });
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelector('.testimonial-form')).toBeNull();
+      expect(element.querySelector('.community-auth-card')).not.toBeNull();
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('requires a complete active member session and validates headline, quote, and half-star rating', async () => {
+    const profile = withPhotos(0);
+    session.authenticated.set(true);
+    session.user.set({ status: 'Active', profileComplete: true });
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelector('.testimonial-form')).not.toBeNull();
+      expect(element.querySelector('.community-auth-card')).toBeNull();
+
+      const headline = element.querySelector<HTMLInputElement>('#testimonial-headline')!;
+      headline.value = 'A thoughtful and memorable collaboration';
+      headline.dispatchEvent(new Event('input', { bubbles: true }));
+      const testimonial = element.querySelector<HTMLTextAreaElement>('#testimonial-copy')!;
+      testimonial.value = 'The process felt thoughtful, professional, and genuinely collaborative.';
+      testimonial.dispatchEvent(new Event('input', { bubbles: true }));
+      element
+        .querySelector<HTMLButtonElement>('[aria-label="Set rating to 3.5 out of 5 stars"]')
+        ?.click();
+      harness.detectChanges();
+
+      const publish = element.querySelector<HTMLButtonElement>('.publish-testimonial-button')!;
+      expect(publish.disabled).toBe(false);
+      expect(element.querySelector('.rating-value')?.textContent?.trim()).toBe('3.5 / 5');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('publishes a valid testimonial and shows the returned quote in the feed', async () => {
+    const profile = withPhotos(0);
+    session.authenticated.set(true);
+    session.user.set({ status: 'Active', profileComplete: true });
+    const created = {
+      id: 83,
+      modelSlug: profile.slug,
+      headline: 'A wonderful creative partnership',
+      text: 'The collaboration felt thoughtful, professional, and genuinely creative.',
+      rating: 4.5,
+      createdAtUtc: '2025-05-12T15:30:00.000Z',
+      author: {
+        id: 7,
+        uniqueId: '89201534010000000007',
+        fullName: 'Sam Rivera',
+        city: 'Lisbon',
+        country: 'Portugal',
+        activeStatus: 'Active',
+      },
+    };
+    testimonialsApi.create.mockResolvedValue(created);
+    const harness = await openPortfolio(profile.slug);
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      const headline = element.querySelector<HTMLInputElement>('#testimonial-headline')!;
+      headline.value = created.headline;
+      headline.dispatchEvent(new Event('input', { bubbles: true }));
+      const quote = element.querySelector<HTMLTextAreaElement>('#testimonial-copy')!;
+      quote.value = created.text;
+      quote.dispatchEvent(new Event('input', { bubbles: true }));
+      element
+        .querySelector<HTMLButtonElement>('[aria-label="Set rating to 4.5 out of 5 stars"]')
+        ?.click();
+      harness.detectChanges();
+
+      const form = element.querySelector<HTMLFormElement>('.testimonial-form')!;
+      form.dispatchEvent(new SubmitEvent('submit', { bubbles: true, cancelable: true }));
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      expect(testimonialsApi.create).toHaveBeenCalledWith(profile.slug, {
+        headline: created.headline,
+        text: created.text,
+        rating: 4.5,
+      });
+      expect(element.querySelector('.testimonial-headline')?.textContent?.trim()).toBe(
+        created.headline,
+      );
+      expect(element.querySelector('.submit-success')?.textContent).toContain('published');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('renders quotes, half-star scores, member status, location, timestamp, and Community profile links', async () => {
+    const profile = withPhotos(0);
+    testimonialsApi.list.mockResolvedValue({
+      items: [
+        {
+          id: 52,
+          modelSlug: profile.slug,
+          headline: 'A wonderful creative partnership',
+          text: 'The collaboration felt thoughtful, professional, and genuinely creative.',
+          rating: 4.5,
+          createdAtUtc: '2025-05-12T15:30:00.000Z',
+          author: {
+            id: 7,
+            uniqueId: '89201534010000000007',
+            fullName: 'Sam Rivera',
+            profilePhotoUrl: 'https://images.example.test/sam.jpg',
+            city: 'Lisbon',
+            country: 'Portugal',
+            activeStatus: 'Active',
+            isVerified: true,
+          },
+        },
+      ],
+      totalCount: 1,
+      page: 1,
+      pageSize: 50,
+      totalPages: 1,
+    });
+    const harness = await openPortfolio(profile.slug);
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelector('.testimonial-headline')?.textContent?.trim()).toBe(
+        'A wonderful creative partnership',
+      );
+      expect(element.querySelector('blockquote')?.textContent).toContain(
+        'thoughtful, professional',
+      );
+      expect(element.querySelectorAll('.display-star.is-full').length).toBe(4);
+      expect(element.querySelectorAll('.display-star.is-half').length).toBe(1);
+      expect(element.querySelector('.author-status')?.textContent).toContain('Active');
+      expect(element.querySelector('.author-location')?.textContent).toContain('Lisbon, Portugal');
+      expect(element.querySelector('time')?.getAttribute('datetime')).toBe(
+        '2025-05-12T15:30:00.000Z',
+      );
+      expect(element.querySelector('.testimonial-author-name')?.getAttribute('href')).toContain(
+        'id=89201534010000000007',
+      );
+      expect(element.querySelector('.testimonial-avatar-link')?.getAttribute('href')).toContain(
+        'id=89201534010000000007',
+      );
     } finally {
       release(profile);
     }
@@ -295,6 +536,28 @@ describe('AiModelPortfolioPage photo shuffle', () => {
       imports: [AiModelPortfolioPage],
       providers: [
         provideRouter([]),
+        {
+          provide: CommunityService,
+          useValue: {
+            isAuthenticated: () => false,
+            guestBrowsing: () => false,
+            currentUser: () => null,
+            apiUrl: 'https://neverbeen-api.test',
+          },
+        },
+        {
+          provide: ModelTestimonialsService,
+          useValue: {
+            list: vi.fn().mockResolvedValue({
+              items: [],
+              totalCount: 0,
+              page: 1,
+              pageSize: 50,
+              totalPages: 0,
+            }),
+            create: vi.fn(),
+          },
+        },
         {
           provide: ActivatedRoute,
           useValue: {

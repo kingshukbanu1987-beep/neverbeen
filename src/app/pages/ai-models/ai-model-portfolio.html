@@ -38,7 +38,7 @@
             </div>
 
             <div class="identity-copy">
-              <p class="eyebrow">NeverBeen AI model</p>
+              <p class="eyebrow model-location">{{ modelLocation(profile) }}</p>
               <h1 id="portfolio-title">{{ profile.name }}</h1>
               <p class="handle-line">
                 <span class="handle">{{ profile.handle }}</span>
@@ -338,6 +338,297 @@
                 appear here.</span
               >
             </div>
+          </div>
+        }
+      </section>
+
+      <section class="testimonials-section" aria-labelledby="testimonials-title">
+        <header class="testimonials-heading">
+          <div>
+            <p class="eyebrow">Community voices</p>
+            <h2 id="testimonials-title">Testimonials</h2>
+            <p class="testimonials-intro">
+              Real stories from NeverBeen Community members who have worked with {{ profile.name }}.
+            </p>
+          </div>
+          <div class="testimonial-count" aria-live="polite">
+            <span class="testimonial-count-number">{{ testimonialTotal() }}</span>
+            <span>{{ testimonialTotal() === 1 ? 'testimonial' : 'testimonials' }}</span>
+          </div>
+        </header>
+
+        @if (canLeaveTestimonial()) {
+          <div class="testimonial-compose-card">
+            <div class="composer-kicker">
+              <span aria-hidden="true">✳</span> Add your testimonial
+            </div>
+            <form class="testimonial-form" (submit)="publishTestimonial($event)">
+              <div class="testimonial-field">
+                <label for="testimonial-headline">Headline</label>
+                <input
+                  id="testimonial-headline"
+                  type="text"
+                  autocomplete="off"
+                  required
+                  minlength="10"
+                  maxlength="100"
+                  [value]="headline()"
+                  (input)="updateHeadline($event)"
+                  aria-describedby="testimonial-headline-hint"
+                  placeholder="Summarize your experience"
+                />
+                <div class="field-hint" id="testimonial-headline-hint">
+                  <span>10–100 characters</span>
+                  <span>{{ headline().length }} / 100</span>
+                </div>
+              </div>
+
+              <div class="testimonial-field">
+                <label for="testimonial-copy">Your testimonial</label>
+                <textarea
+                  id="testimonial-copy"
+                  required
+                  minlength="20"
+                  maxlength="2500"
+                  rows="5"
+                  [value]="testimonialText()"
+                  (input)="updateTestimonialText($event)"
+                  aria-describedby="testimonial-copy-hint"
+                  placeholder="Tell the community what stood out about your experience…"
+                ></textarea>
+                <div class="field-hint" id="testimonial-copy-hint">
+                  <span>20–2,500 characters</span>
+                  <span>{{ testimonialText().length }} / 2,500</span>
+                </div>
+              </div>
+
+              <fieldset class="rating-field">
+                <legend>Your rating</legend>
+                <div
+                  class="rating-picker"
+                  role="radiogroup"
+                  aria-label="Choose a rating from half a star to five stars"
+                  aria-required="true"
+                  (keydown)="onRatingKeydown($event)"
+                >
+                  @for (star of ratingStars; track star) {
+                    <span class="rating-star-control">
+                      <span class="rating-star-base" aria-hidden="true">★</span>
+                      <span
+                        class="rating-star-fill"
+                        [class.is-half]="isHalfStar(star)"
+                        [class.is-full]="isFullStar(star)"
+                        aria-hidden="true"
+                        >★</span
+                      >
+                      <button
+                        type="button"
+                        class="rating-hitbox rating-hitbox-half"
+                        [attr.data-rating-value]="star - 0.5"
+                        role="radio"
+                        [attr.aria-checked]="rating() === star - 0.5"
+                        [attr.aria-label]="
+                          'Set rating to ' + scoreLabel(star - 0.5) + ' out of 5 stars'
+                        "
+                        [attr.tabindex]="rating() === star - 0.5 ? 0 : -1"
+                        (click)="chooseRating(star - 0.5)"
+                      ></button>
+                      <button
+                        type="button"
+                        class="rating-hitbox rating-hitbox-full"
+                        [attr.data-rating-value]="star"
+                        role="radio"
+                        [attr.aria-checked]="rating() === star"
+                        [attr.aria-label]="'Set rating to ' + scoreLabel(star) + ' out of 5 stars'"
+                        [attr.tabindex]="rating() === star ? 0 : -1"
+                        (click)="chooseRating(star)"
+                      ></button>
+                    </span>
+                  }
+                  <span class="rating-value" aria-live="polite">
+                    {{ rating() > 0 ? scoreLabel(rating()) + ' / 5' : 'Select rating' }}
+                  </span>
+                </div>
+                <p class="rating-hint">Select a full or half star. Use arrow keys to adjust.</p>
+              </fieldset>
+
+              <div class="testimonial-submit-row">
+                <div class="submit-feedback" aria-live="polite">
+                  @if (testimonialSubmitError()) {
+                    <span class="submit-error" role="alert">{{ testimonialSubmitError() }}</span>
+                  } @else if (testimonialSubmitSuccess()) {
+                    <span class="submit-success" role="status">{{
+                      testimonialSubmitSuccess()
+                    }}</span>
+                  }
+                </div>
+                <button
+                  class="publish-testimonial-button"
+                  type="submit"
+                  [disabled]="!canPublishTestimonial()"
+                >
+                  @if (submittingTestimonial()) {
+                    Publishing…
+                  } @else {
+                    Publish testimonial
+                  }
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        } @else {
+          @if (needsCommunityProfileCompletion()) {
+            <div class="testimonial-signin-prompt" role="status">
+              <p>Finish setting up your Community profile to leave a testimonial.</p>
+              <a
+                routerLink="/community/register"
+                (click)="rememberPortfolioReturnPath(profile.slug)"
+                >Complete your profile <span aria-hidden="true">↗</span></a
+              >
+            </div>
+          } @else {
+            <app-community-sign-in-card [returnTo]="'/ai-models/' + profile.slug" />
+          }
+        }
+
+        <div class="testimonials-feed-heading">
+          <div>
+            <span class="feed-overline">THE COMMUNITY SAYS</span>
+            <h3>Shared experiences</h3>
+          </div>
+          <span class="feed-scroll-hint">Scroll to explore <span aria-hidden="true">↓</span></span>
+        </div>
+
+        @if (testimonialLoadState() === 'loading') {
+          <div class="testimonial-state-card" role="status">Loading community testimonials…</div>
+        } @else if (testimonialLoadState() === 'error') {
+          <div class="testimonial-state-card testimonial-state-error" role="status">
+            {{ testimonialLoadError() }}
+          </div>
+        } @else if (testimonials().length === 0) {
+          <div class="testimonial-state-card testimonial-empty-state">
+            <span class="empty-quote-mark" aria-hidden="true">“</span>
+            <p>Be the first to share a story about {{ profile.name }}.</p>
+            <span>Every thoughtful experience gives the community a little more insight.</span>
+          </div>
+        } @else {
+          <div
+            class="testimonials-scroll"
+            aria-label="Model testimonials"
+            (scroll)="onTestimonialsScroll($event)"
+          >
+            <div class="testimonial-list">
+              @for (testimonial of testimonials(); track testimonial.id) {
+                <article class="testimonial-card">
+                  <div class="testimonial-card-topline">
+                    <div class="display-rating" [attr.aria-label]="ratingLabel(testimonial.rating)">
+                      @for (star of ratingStars; track star) {
+                        <span
+                          class="display-star"
+                          [class.is-half]="
+                            testimonial.rating >= star - 0.5 && testimonial.rating < star
+                          "
+                          [class.is-full]="testimonial.rating >= star"
+                          aria-hidden="true"
+                          >★</span
+                        >
+                      }
+                      <span class="display-rating-number">{{
+                        scoreLabel(testimonial.rating)
+                      }}</span>
+                    </div>
+                    <time
+                      class="testimonial-timestamp"
+                      [attr.datetime]="testimonial.createdAtUtc"
+                      [attr.title]="testimonial.createdAtUtc"
+                      >{{ timestamp(testimonial.createdAtUtc) }}</time
+                    >
+                  </div>
+
+                  <h4 class="testimonial-headline">{{ testimonial.headline }}</h4>
+                  <blockquote class="testimonial-quote">
+                    <span class="quote-mark" aria-hidden="true">“</span>
+                    <div class="quote-copy">
+                      <p>{{ testimonialPreview(testimonial.text) }}</p>
+                      @if (hasLongTestimonial(testimonial.text)) {
+                        <details class="quote-expanded">
+                          <summary>Read full testimonial</summary>
+                          <p class="quote-full-text">{{ testimonial.text }}</p>
+                        </details>
+                      }
+                    </div>
+                  </blockquote>
+
+                  <footer class="testimonial-author">
+                    <a
+                      class="testimonial-avatar-link"
+                      [routerLink]="['/profile']"
+                      [queryParams]="{ id: testimonial.author.uniqueId || testimonial.author.id }"
+                      [attr.aria-label]="
+                        'View ' + authorName(testimonial.author) + '’s Community profile'
+                      "
+                    >
+                      <span class="testimonial-avatar">
+                        <span class="avatar-initials" aria-hidden="true">{{
+                          authorInitials(testimonial.author)
+                        }}</span>
+                        @if (authorPhotoUrl(testimonial.author)) {
+                          <img
+                            [src]="authorPhotoUrl(testimonial.author)"
+                            [alt]="''"
+                            loading="lazy"
+                            (error)="hideBrokenAvatar($event)"
+                          />
+                        }
+                      </span>
+                    </a>
+                    <div class="author-copy">
+                      <a
+                        class="testimonial-author-name"
+                        [routerLink]="['/profile']"
+                        [queryParams]="{ id: testimonial.author.uniqueId || testimonial.author.id }"
+                      >
+                        {{ authorName(testimonial.author) }}
+                        @if (testimonial.author.isVerified) {
+                          <span class="author-verified" aria-label="Verified Community member"
+                            >✓</span
+                          >
+                        }
+                      </a>
+                      <span
+                        class="author-status"
+                        [class.status-active]="
+                          authorStatusClass(testimonial.author) === 'status-active'
+                        "
+                        [class.status-away]="
+                          authorStatusClass(testimonial.author) === 'status-away'
+                        "
+                        [class.status-busy]="
+                          authorStatusClass(testimonial.author) === 'status-busy'
+                        "
+                        [class.status-custom]="
+                          authorStatusClass(testimonial.author) === 'status-custom'
+                        "
+                      >
+                        <i aria-hidden="true"></i>{{ authorStatus(testimonial.author) }}
+                      </span>
+                    </div>
+                    <span class="author-location">
+                      <span aria-hidden="true">⌖</span>{{ authorLocation(testimonial.author) }}
+                    </span>
+                  </footer>
+                </article>
+              }
+            </div>
+            @if (loadingMoreTestimonials()) {
+              <p class="feed-loading-more" role="status">Loading more testimonials…</p>
+            }
+            @if (moreTestimonialsError()) {
+              <button type="button" class="feed-retry-button" (click)="loadMoreTestimonials()">
+                {{ moreTestimonialsError() }} Retry
+              </button>
+            }
           </div>
         }
       </section>
