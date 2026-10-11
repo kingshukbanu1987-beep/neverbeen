@@ -148,9 +148,32 @@
 }
 
 .lead-summary {
-  margin: 0 0 1rem;
+  margin: 0 0 0.85rem;
   font-size: 0.98rem;
   line-height: 1.7;
+}
+
+.general-summary {
+  margin: 0.85rem 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--wiki-soft-border);
+  border-left: 3px solid var(--wiki-border);
+  background: var(--wiki-surface);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.general-summary h2 {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--wiki-muted);
+}
+
+.general-summary p {
+  margin: 0;
 }
 
 .fiction-note {
@@ -182,8 +205,8 @@
 }
 
 .infobox-media-pair {
-  position: relative;
-  isolation: isolate;
+  display: grid;
+  gap: 0;
   margin: 0.35rem 0.25rem 0.45rem;
 }
 
@@ -207,28 +230,27 @@
 }
 
 .infobox-signature {
-  position: absolute;
-  right: 0.35rem;
-  bottom: 0.85rem;
-  width: min(68%, 220px);
-  margin: 0;
-  padding: 0.26rem 0.34rem 0.18rem;
-  border: 1px solid rgb(162 169 177 / 80%);
-  background: rgb(255 255 252 / 92%);
-  box-shadow: 0 3px 12px rgb(0 0 0 / 19%);
-  transform: rotate(-2deg);
+  display: block;
+  width: calc(100% - 0.2rem);
+  margin: 0.3rem auto 0;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--wiki-border);
+  background: #fff;
+  text-align: center;
 }
 
 .infobox-signature img {
   display: block;
   width: 100%;
-  height: 55px;
+  max-width: 200px;
+  height: 60px;
+  margin: 0 auto;
   object-fit: contain;
 }
 
 .infobox-signature-script {
   display: grid;
-  min-height: 55px;
+  min-height: 60px;
   place-items: center;
   overflow-wrap: anywhere;
   color: #164f9c;
@@ -239,10 +261,7 @@
 }
 
 .infobox-signature figcaption {
-  color: var(--wiki-muted);
-  font-size: 0.58rem;
-  line-height: 1.2;
-  text-align: right;
+  display: none;
 }
 
 .infobox-facts {
@@ -278,7 +297,7 @@
 .contents-box {
   display: inline-block;
   max-width: 100%;
-  margin: 1.3rem 0 0.3rem;
+  margin: 0.4rem 0 0.3rem;
   padding: 0.55rem 1rem 0.65rem;
   border: 1px solid var(--wiki-border);
   background: var(--wiki-surface);
