@@ -1,0 +1,98 @@
+{
+  "model": "Fiadh Dara",
+  "fictional": true,
+  "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+  "note": "Generate each prompt as one standalone image. Save each JPG in this Biography folder with its exact filename. These are fictional, AI-generated illustrations, not documentary photos.",
+  "images": [
+    {
+      "id": "childhood-home",
+      "filename": "01-childhood-home.jpg",
+      "caption": "A slow morning at home",
+      "period": "Early childhood",
+      "alt": "A fictional, family-friendly childhood memory at home with generic parent figures",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: a warm, ordinary morning at home with her as a young child beside two generic, non-identifiable parent figures; modest lived-in room, candid family snapshot. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "neighbourhood",
+      "filename": "02-neighbourhood.jpg",
+      "caption": "The neighbourhood after the rain",
+      "period": "Growing up",
+      "alt": "A fictional childhood memory outdoors in the model’s imagined home neighbourhood",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: a young child exploring a leafy street in the imagined neighbourhood after a light rain, with a parent nearby and no identifiable addresses or landmarks. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "school-days",
+      "filename": "03-school-days.jpg",
+      "caption": "The last bell of the day",
+      "period": "School years",
+      "alt": "A fictional, fully clothed school-age memory with anonymous classmates",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: a school-age girl in a modest, age-appropriate school outfit leaving a fictional school courtyard with a small group of anonymous friends; joyful, natural, fully clothed. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "school-project",
+      "filename": "04-school-project.jpg",
+      "caption": "A project built after class",
+      "period": "School years",
+      "alt": "A fictional school project memory around a table with friends",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: a school-age girl and anonymous classmates making a colourful class project around a kitchen table, paper scraps and pencils, adults supervising in the background. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "college",
+      "filename": "05-college-studio.jpg",
+      "caption": "A studio night before the deadline",
+      "period": "College",
+      "alt": "A fictional college memory in a design studio with anonymous classmates",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: the same person as a young adult college student in a late-night creative studio with anonymous classmates, sketchbooks and fabric or design samples, candid and relaxed. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "first-workplace",
+      "filename": "06-first-workplace.jpg",
+      "caption": "The first day that felt like hers",
+      "period": "First role",
+      "alt": "A fictional early-career memory at a creative workplace",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: the same adult woman at her first fictional creative-workplace desk, with anonymous colleagues, coffee cups and an in-progress mood board; everyday smartphone snapshot. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "first-editorial",
+      "filename": "07-first-editorial.jpg",
+      "caption": "A small crew, a big idea",
+      "period": "Creative career",
+      "alt": "A fictional behind-the-scenes editorial memory with a small creative team",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: the same adult woman between takes on a small independent editorial set, fully clothed in contemporary fashion, laughing with an anonymous photographer and stylist, no branded equipment. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "friends",
+      "filename": "08-close-friends.jpg",
+      "caption": "The people who know every version of her",
+      "period": "Off duty",
+      "alt": "A fictional casual memory with adult friends",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: the same adult woman sharing an unposed outdoor café moment with a few anonymous adult friends in her city, natural expressions, no legible signage. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "family-now",
+      "filename": "09-family-table.jpg",
+      "caption": "Everyone talking at once",
+      "period": "Family",
+      "alt": "A fictional family gathering with generic, non-identifiable family members",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: a warm, modest family meal with the adult woman and generic, non-identifiable parents and relatives; no spouse or child is part of this fictional story, wholesome and fully clothed. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    },
+    {
+      "id": "present-day",
+      "filename": "10-present-day.jpg",
+      "caption": "A new frame, on her own terms",
+      "period": "Today",
+      "alt": "A fictional present-day outdoor portrait from the model’s creative life",
+      "identityReference": "/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg",
+      "prompt": "Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of Fiadh Dara. Scene: the same adult woman taking a spontaneous golden-hour walk outdoors in her city, confident and self-possessed, a personal rather than commercial moment. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of the Eram quarter, Shiraz, Iran; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence."
+    }
+  ]
+}
