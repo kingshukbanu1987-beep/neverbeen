@@ -158,7 +158,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     biography: {
       version: 1,
       fictional: true,
-      generatedAt: '2026-10-11T12:47:45.531Z',
+      generatedAt: '2026-10-11T13:09:01.902Z',
       title: 'In the Multiverse of NeverBeen, imagine if I am really there',
       name: 'Fiadh Dara',
       signature: 'Fiadh Dara',
@@ -298,7 +298,7 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'childhood-home',
           fileName: '01-childhood-home.jpg',
-          period: 'Early childhood',
+          period: 'Early childhood · 2007 · age 4',
           caption: 'A slow morning at home',
           alt: 'A fictional, family-friendly childhood memory at home with generic parent figures',
           src: '/NeverBeenModels/FiadhDara/Biography/01-childhood-home.jpg',
@@ -307,7 +307,7 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'neighbourhood',
           fileName: '02-neighbourhood.jpg',
-          period: 'Growing up',
+          period: 'Growing up · 2011 · age 8',
           caption: 'The neighbourhood after the rain',
           alt: 'A fictional childhood memory outdoors in the model’s imagined home neighbourhood',
           src: '/NeverBeenModels/FiadhDara/Biography/02-neighbourhood.jpg',
@@ -316,7 +316,7 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'school-days',
           fileName: '03-school-days.jpg',
-          period: 'School years',
+          period: 'School years · 2019 · age 16',
           caption: 'The last bell of the day',
           alt: 'A fictional, fully clothed school-age memory with anonymous classmates',
           src: '/NeverBeenModels/FiadhDara/Biography/03-school-days.jpg',

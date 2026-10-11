@@ -177,28 +177,31 @@ const memories = [
     id: 'childhood-home',
     file: '01-childhood-home.jpg',
     period: 'Early childhood',
+    ageAtCapture: 4,
     caption: 'A slow morning at home',
     alt: 'A fictional, family-friendly childhood memory at home with generic parent figures',
     scene:
-      'a warm, ordinary morning at home with her as a young child beside two generic, non-identifiable parent figures; modest lived-in room, candid family snapshot',
+      'a warm, ordinary morning at home in the imagined Eram quarter of Shiraz, showing her as a {age}-year-old child beside two generic, non-identifiable parent figures; modest lived-in room, candid family snapshot',
   },
   {
     id: 'neighbourhood',
     file: '02-neighbourhood.jpg',
     period: 'Growing up',
+    ageAtCapture: 8,
     caption: 'The neighbourhood after the rain',
     alt: 'A fictional childhood memory outdoors in the model’s imagined home neighbourhood',
     scene:
-      'a young child exploring a leafy street in the imagined neighbourhood after a light rain, with a parent nearby and no identifiable addresses or landmarks',
+      'a {age}-year-old child exploring a leafy residential street in the imagined Eram quarter of Shiraz after a light rain, with a generic parent nearby and no identifiable addresses or landmarks',
   },
   {
     id: 'school-days',
     file: '03-school-days.jpg',
     period: 'School years',
+    ageAtCapture: 16,
     caption: 'The last bell of the day',
     alt: 'A fictional, fully clothed school-age memory with anonymous classmates',
     scene:
-      'a school-age girl in a modest, age-appropriate school outfit leaving a fictional school courtyard with a small group of anonymous friends; joyful, natural, fully clothed',
+      'a {age}-year-old schoolgirl in modest, age-appropriate clothes leaving a fictional secondary-school courtyard in {year} with a small group of anonymous classmates; joyful, natural and fully clothed, backpacks and everyday school details appropriate to that year',
   },
   {
     id: 'school-project',
@@ -400,6 +403,27 @@ function period(startYear, endYear, seed, offset = 0, ongoing = false) {
   return ongoing ? `${start} – Present` : `${start} – ${monthYear(endYear, seed, offset + 3)}`;
 }
 
+function memoryPeriod(memory, birthYear) {
+  if (!Number.isInteger(memory.ageAtCapture)) return memory.period;
+  return `${memory.period} · ${birthYear + memory.ageAtCapture} · age ${memory.ageAtCapture}`;
+}
+
+function memoryCamera(year) {
+  if (year <= 2001) {
+    return `an early ${year}-era mobile-camera snapshot: very low resolution, soft focus, uneven exposure, hand-shake blur, noisy shadows, visible compression and a casual tilt`;
+  }
+  if (year <= 2008) {
+    return `a basic ${year}-era camera-phone snapshot: small 4:3 low-resolution JPEG, soft focus, uneven exposure, slight hand-shake blur, visible compression and sensor noise, casually tilted framing`;
+  }
+  if (year <= 2013) {
+    return `a ${year}-era feature-phone camera snapshot: low-resolution 4:3 compressed JPEG, imperfect auto white balance, soft focus, motion smear, sensor noise, slightly tilted horizon and imperfect crop`;
+  }
+  if (year <= 2018) {
+    return `a ${year}-era early-smartphone snapshot: modest 4:3 phone-camera framing, imperfect autofocus, slight motion blur, clipped highlights, noisy shadows, mild compression and a crooked horizon`;
+  }
+  return `a ${year}-era mid-range smartphone snapshot: casual 4:3 framing, slightly smudged lens, mild motion blur, small focus miss, clipped highlights, compressed shadows and a crooked horizon`;
+}
+
 function makeBiography(model) {
   const seed = hash(model.name);
   const profile = { ...model.sharedProfile, ...model.localProfile };
@@ -599,15 +623,30 @@ function makeBiography(model) {
     `Every school, employer, qualification, relationship, quote, memory and biographical detail on this page is fictional and exists only in the NeverBeen Multiverse.`,
   ];
 
-  const photoPrompts = memories.map((memory) => ({
-    id: memory.id,
-    filename: memory.file,
-    caption: memory.caption,
-    period: memory.period,
-    alt: memory.alt,
-    identityReference: model.identityReference,
-    prompt: `Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of ${model.name}. Scene: ${memory.id === 'family-now' ? familyScene : memory.scene}. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of ${hometown}; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence.`,
-  }));
+  const photoPrompts = memories.map((memory) => {
+    const captureYear = Number.isInteger(memory.ageAtCapture)
+      ? birthYear + memory.ageAtCapture
+      : null;
+    const timelineNote = captureYear
+      ? `Timeline accuracy: this fictional snapshot is from ${captureYear}, when ${model.name} is ${memory.ageAtCapture} years old, based on the character’s fictional birth year ${birthYear}. Use only clothes, devices and details appropriate to that year. Camera: ${memoryCamera(captureYear)}; avoid contemporary computational polish, cinematic lighting or studio-perfect framing.`
+      : '';
+    const timelinePrefix = timelineNote ? ` ${timelineNote}` : '';
+    const scene = (memory.id === 'family-now' ? familyScene : memory.scene)
+      .replaceAll('{age}', String(memory.ageAtCapture ?? ''))
+      .replaceAll('{year}', String(captureYear ?? ''));
+    const alt = captureYear
+      ? `A fictional ${captureYear} mobile-camera snapshot of ${model.name} at age ${memory.ageAtCapture}.`
+      : memory.alt;
+    return {
+      id: memory.id,
+      filename: memory.file,
+      caption: memory.caption,
+      period: memoryPeriod(memory, birthYear),
+      alt,
+      identityReference: model.identityReference,
+      prompt: `Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of ${model.name}.${timelinePrefix} Scene: ${scene}. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of ${hometown}; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence.`,
+    };
+  });
 
   return {
     version: 1,
@@ -658,12 +697,12 @@ function makeBiography(model) {
         by: 'A fictional mentor in the NeverBeen Multiverse',
       },
     ],
-    memories: memories.map(({ id, file, period: memoryPeriod, caption, alt }) => ({
-      id,
-      file,
-      period: memoryPeriod,
-      caption,
-      alt,
+    memories: memories.map((memory) => ({
+      id: memory.id,
+      file: memory.file,
+      period: memoryPeriod(memory, birthYear),
+      caption: memory.caption,
+      alt: memory.alt,
       fictional: true,
     })),
     photoPrompts,
