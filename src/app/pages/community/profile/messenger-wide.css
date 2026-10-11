@@ -1,0 +1,995 @@
+/* =========================================================================
+ * MESSENGER PAGE — tablet, laptop and wide screens (Facebook Messenger style)
+ *   left:   chats side panel (replaces the Community default side panel)
+ *   centre: online companions row (top 20%) + the open chat
+ *   right:  profile of the companion / Circle being chatted with
+ * Phones (< 768px) keep the Online Now / Offline lists and the pop-up chats.
+ * See docs/community-messenger-chat.md and docs/design/messenger-wide-layout-mockup.html.
+ * ========================================================================= */
+
+/* --- Page chrome while the three-panel layout is shown -------------------- */
+.profile-layout-container.is-messenger-wide {
+  padding-bottom: 0.65rem;
+}
+
+.is-messenger-wide .mobile-top-header,
+.is-messenger-wide .community-top-search-bar {
+  display: none;
+}
+
+.is-messenger-wide .dashboard-columns {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* The Community side panel is not part of the Messenger page: it is only an
+   off-canvas menu behind the ☰ button of the chats panel. */
+.is-messenger-wide .left-column-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  max-width: 85vw;
+  background: var(--ct-sf, #ffffff);
+  z-index: 9999;
+  transform: translateX(-105%);
+  transition: transform 0.25s ease;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.is-messenger-wide .left-column-wrapper.mobile-open {
+  transform: translateX(0);
+}
+
+.is-messenger-wide .btn-close-mobile-drawer {
+  display: flex;
+}
+
+.is-messenger-wide .mobile-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(var(--ct-ink-rgb, 15 23 42) / 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+}
+
+/* --- Shell ----------------------------------------------------------------- */
+.mx-shell {
+  --mx-gap: 12px;
+  --mx-radius: 18px;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: var(--mx-gap);
+  /* Fills the window below the site header, so each panel scrolls on its own. */
+  height: calc(100dvh - var(--mx-offset, 140px) - 0.65rem);
+  min-height: 560px;
+  padding: 0 0.65rem;
+}
+
+.mx-shell.mx-info-open {
+  grid-template-columns: 320px minmax(0, 1fr) 300px;
+}
+
+.mx-panel {
+  background: var(--ct-sf, #ffffff);
+  border: 1px solid var(--ct-ln, #e2e8f0);
+  border-radius: var(--mx-radius);
+  box-shadow: 0 8px 24px -18px rgba(15, 23, 42, 0.25);
+  min-height: 0;
+  min-width: 0;
+}
+
+.mx-icon-btn {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 0;
+  background: var(--ct-sf2, #f1f5f9);
+  color: var(--ct-ink, #0f172a);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mx-icon-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+.mx-icon-btn:hover {
+  background: var(--ct-ln, #e2e8f0);
+}
+
+.mx-av {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-block;
+  line-height: 0;
+}
+
+.mx-av img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Presence dot scaled to the bigger Messenger pictures. */
+.mx-av app-presence-dot {
+  transform: scale(1.3);
+  transform-origin: 100% 100%;
+}
+
+.mx-circle-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #ffffff;
+  background: var(--ct-ac, #2563eb);
+}
+
+/* --- Left: chats ----------------------------------------------------------- */
+.mx-chats {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mx-chats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.4rem;
+}
+
+.mx-chats-title {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ct-ink, #0f172a);
+}
+
+.mx-head-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.mx-chat-search {
+  margin: 0.35rem 1rem 0.6rem;
+  height: 38px;
+  border-radius: 999px;
+  background: var(--ct-sf2, #f1f5f9);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.9rem;
+  color: var(--ct-mu, #64748b);
+}
+
+.mx-chat-search svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.mx-chat-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ct-ink, #0f172a);
+}
+
+.mx-filters {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0 1rem 0.6rem;
+}
+
+.mx-chip {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.38rem 0.8rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--ct-ink2, #334155);
+  cursor: pointer;
+}
+
+.mx-chip:hover {
+  background: var(--ct-sf2, #f1f5f9);
+}
+
+.mx-chip.active {
+  background: #e0ebff;
+  color: #1d4ed8;
+}
+
+.mx-chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 0.45rem 0.6rem;
+}
+
+.mx-chat-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.6rem;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mx-chat-row:hover {
+  background: var(--ct-sf2, #f8fafc);
+}
+
+.mx-chat-row.selected {
+  background: #eef4ff;
+}
+
+.mx-row-main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.mx-row-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ct-ink, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mx-row-sub {
+  font-size: 0.8rem;
+  color: var(--ct-mu, #64748b);
+  display: flex;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.mx-row-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.mx-row-time {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.mx-chat-row.unread .mx-row-name,
+.mx-chat-row.unread .mx-row-sub {
+  color: var(--ct-ink, #0f172a);
+  font-weight: 700;
+}
+
+.mx-unread {
+  flex: 0 0 auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.mx-list-label {
+  margin: 0.7rem 0.6rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ct-mu, #64748b);
+}
+
+.mx-empty-list {
+  margin: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--ct-mu, #64748b);
+}
+
+/* --- Centre: wide panel ---------------------------------------------------- */
+.mx-wide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mx-gap);
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Top row: 20% of the wide panel for the companions who are online now. */
+.mx-online {
+  flex: 0 0 20%;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  padding: 0.7rem 1rem 0.5rem;
+  overflow: hidden;
+}
+
+.mx-online-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ct-ink, #0f172a);
+}
+
+.mx-online-count {
+  background: #dcfce7;
+  color: #15803d;
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.74rem;
+}
+
+.mx-online-strip {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.05rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.35rem 0.1rem 0;
+  scrollbar-width: thin;
+}
+
+.mx-online-item {
+  flex: 0 0 auto;
+  width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--ct-ink, #0f172a);
+  cursor: pointer;
+}
+
+.mx-online-item .mx-av img {
+  width: 58px;
+  height: 58px;
+  box-shadow:
+    0 0 0 2px var(--ct-sf, #ffffff),
+    0 0 0 4px #bbf7d0;
+  transition: transform 0.15s ease;
+}
+
+.mx-online-item:hover .mx-av img {
+  transform: scale(1.05);
+}
+
+.mx-online-item.selected .mx-av img {
+  box-shadow:
+    0 0 0 2px var(--ct-sf, #ffffff),
+    0 0 0 4px #2563eb;
+}
+
+/* Green online dot (everyone in this row is online). */
+.mx-online-dot {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2.5px solid var(--ct-sf, #ffffff);
+}
+
+.mx-online-name {
+  font-size: 0.76rem;
+  font-weight: 500;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mx-online-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ct-mu, #64748b);
+}
+
+/* Bottom: the open chat (same chat body as the pop-ups, sized for the panel). */
+.mx-chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mx-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem 0.65rem 1rem;
+  border-bottom: 1px solid var(--ct-ln, #eef2f7);
+}
+
+.mx-chat-who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mx-chat-head .mx-av img,
+.mx-chat-head .mx-circle-badge {
+  width: 44px;
+  height: 44px;
+  font-size: 1.15rem;
+}
+
+.mx-chat-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mx-chat-title strong {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 1rem;
+  color: var(--ct-ink, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mx-chat-status {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ct-mu, #64748b);
+}
+
+.mx-chat-status[data-status='Online'] {
+  color: #16a34a;
+}
+
+.mx-chat-status[data-status='Busy'] {
+  color: #dc2626;
+}
+
+.mx-chat-status[data-status='Away'] {
+  color: #d97706;
+}
+
+.mx-chat-actions {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.mx-chat-actions .mx-icon-btn {
+  background: transparent;
+  color: #2563eb;
+}
+
+.mx-chat-actions .mx-icon-btn:hover,
+.mx-chat-actions .mx-icon-btn.on {
+  background: #eef4ff;
+}
+
+.mx-chat .chat-popup-body {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.mx-chat .chat-messages-container {
+  padding: 1rem 1.25rem;
+  gap: 0.55rem;
+  background: var(--ct-sf, #ffffff);
+}
+
+.mx-chat .chat-bubble-content-col {
+  max-width: min(70%, 560px);
+}
+
+.mx-chat .chat-bubble {
+  max-width: 100%;
+  padding: 0.5rem 0.85rem;
+  border-radius: 18px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.mx-chat .chat-bubble.outgoing {
+  border-bottom-right-radius: 6px;
+}
+
+.mx-chat .chat-bubble.incoming {
+  border-bottom-left-radius: 6px;
+}
+
+.mx-chat .chat-bubble-avatar {
+  width: 30px;
+  height: 30px;
+}
+
+.mx-chat .chat-session-label {
+  font-size: 0.72rem;
+}
+
+.mx-chat .chat-popup-footer {
+  align-items: center;
+  padding: 0.7rem 1rem;
+  gap: 0.5rem;
+}
+
+.mx-chat .chat-composer-input {
+  height: 40px;
+  border-radius: 999px;
+  border-color: transparent;
+  background: var(--ct-sf2, #f1f5f9);
+  padding: 0 1rem;
+  font-size: 0.92rem;
+}
+
+.mx-chat .chat-composer-input:focus {
+  border-color: var(--ct-ac, #2563eb);
+  background: var(--ct-sf, #ffffff);
+}
+
+.mx-chat .btn-send-chat {
+  height: 40px;
+  padding: 0 1.15rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+}
+
+.mx-chat-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  color: var(--ct-mu, #64748b);
+}
+
+.mx-chat-empty-icon {
+  font-size: 2.6rem;
+}
+
+.mx-chat-empty h2 {
+  margin: 0.6rem 0 0.25rem;
+  font-size: 1.2rem;
+  color: var(--ct-ink, #0f172a);
+}
+
+.mx-chat-empty p {
+  margin: 0;
+  max-width: 320px;
+  font-size: 0.88rem;
+}
+
+/* --- Right: companion / Circle profile ------------------------------------ */
+.mx-profile {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.mx-profile-close {
+  display: none;
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: rgb(15 23 42 / 0.55);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.mx-info-backdrop {
+  display: none;
+}
+
+.mx-cover {
+  height: 118px;
+  border-radius: var(--mx-radius) var(--mx-radius) 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--ct-ln, #e2e8f0), var(--ct-sf2, #f8fafc));
+}
+
+.mx-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mx-profile-id {
+  text-align: center;
+  padding: 0 1rem 0.9rem;
+  margin-top: -48px;
+  border-bottom: 1px solid var(--ct-ln, #eef2f7);
+}
+
+.mx-profile-id-plain {
+  margin-top: 0;
+  padding-top: 1.4rem;
+}
+
+.mx-profile-avatar {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.mx-profile-avatar img,
+.mx-profile-avatar .mx-circle-badge {
+  width: 96px;
+  height: 96px;
+  border: 4px solid var(--ct-sf, #ffffff);
+  box-shadow: 0 6px 18px -8px rgba(15, 23, 42, 0.4);
+  font-size: 2.2rem;
+}
+
+.mx-profile-avatar app-presence-dot {
+  transform: translate(-6px, -6px) scale(1.7);
+}
+
+.mx-profile-id h3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0.45rem 0 0.25rem;
+  font-size: 1.15rem;
+  color: var(--ct-ink, #0f172a);
+}
+
+.mx-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.12rem 0.6rem;
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.mx-status[data-status='Online'] {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.mx-status[data-status='Busy'] {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.mx-status[data-status='Away'] {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.mx-status[data-status='Circle'] {
+  color: #1d4ed8;
+  background: #e0ebff;
+}
+
+.mx-profile-sub {
+  margin: 0.45rem 0 0;
+  font-size: 0.83rem;
+  color: var(--ct-mu, #475569);
+}
+
+.mx-profile-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.8rem;
+}
+
+.mx-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--ct-sf2, #f1f5f9);
+  color: var(--ct-ink, #0f172a);
+  cursor: pointer;
+}
+
+.mx-btn:hover {
+  background: var(--ct-ln, #e2e8f0);
+}
+
+.mx-btn.primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.mx-btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.mx-sec {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--ct-ln, #eef2f7);
+}
+
+.mx-sec:last-child {
+  border-bottom: 0;
+}
+
+.mx-sec h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ct-mu, #64748b);
+}
+
+.mx-about {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ct-ink2, #334155);
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mx-about.expanded {
+  display: block;
+}
+
+.mx-link {
+  margin-top: 0.3rem;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.mx-locked {
+  font-size: 0.85rem;
+  color: var(--ct-mu, #64748b);
+}
+
+.mx-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.84rem;
+  color: var(--ct-ink2, #334155);
+}
+
+.mx-facts li {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.mx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.mx-chips button {
+  border: 0;
+  font: inherit;
+  font-size: 0.76rem;
+  background: var(--ct-sf2, #f1f5f9);
+  color: var(--ct-ink, #0f172a);
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem;
+  cursor: pointer;
+}
+
+.mx-photos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mx-photos button {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.mx-photos img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+
+.mx-members {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.mx-members button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 0;
+  background: none;
+  padding: 0.35rem 0.3rem;
+  border-radius: 10px;
+  font: inherit;
+  color: var(--ct-ink, #0f172a);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mx-members button:hover {
+  background: var(--ct-sf2, #f8fafc);
+}
+
+.mx-members .mx-av img {
+  width: 36px;
+  height: 36px;
+}
+
+.mx-member-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.86rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mx-member-role {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #e0ebff;
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+}
+
+/* --- Breakpoints ------------------------------------------------------------ */
+/* Laptops: narrower side columns. */
+@media (max-width: 1199px) {
+  .mx-shell {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .mx-shell.mx-info-open {
+    grid-template-columns: 280px minmax(0, 1fr) 280px;
+  }
+}
+
+/* Tablets: chats + chat; the profile slides over the chat from the right. */
+@media (max-width: 1023px) {
+  .mx-shell,
+  .mx-shell.mx-info-open {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+
+  .mx-chats-title {
+    font-size: 1.35rem;
+  }
+
+  .mx-chat-row .mx-av img,
+  .mx-chat-row .mx-circle-badge {
+    width: 46px;
+    height: 46px;
+  }
+
+  .mx-profile {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(340px, 88vw);
+    z-index: 9997;
+    border-radius: var(--mx-radius) 0 0 var(--mx-radius);
+    animation: mxDrawerIn 0.22s ease;
+  }
+
+  .mx-profile-close {
+    display: grid;
+    place-items: center;
+  }
+
+  .mx-info-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 9996;
+    background: rgb(15 23 42 / 0.35);
+  }
+}
+
+@keyframes mxDrawerIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Short windows: the online row keeps its minimum height, the chat scrolls. */
+@media (max-height: 640px) {
+  .mx-online {
+    flex-basis: 112px;
+  }
+}

@@ -1,4 +1,4 @@
-<div class="profile-layout-container" [class.is-viewing-visitor]="!!viewingVisitor()">
+<div class="profile-layout-container" [class.is-viewing-visitor]="!!viewingVisitor()" [class.is-messenger-wide]="messengerWide()">
   <!-- MOBILE TOP BAR (Portrait mode hamburger navigation) -->
   <header class="mobile-top-header" aria-label="Mobile Navigation">
     <button
@@ -2877,77 +2877,452 @@
         <!-- SECTION 7: MESSENGER                                              -->
         <!-- ================================================================= -->
         @if (activeSection() === 'messenger') {
-          <section class="section-pane messenger-pane">
-            <header class="section-top-bar">
-              <h1 class="section-title">Messenger</h1>
-              <p class="section-desc">Real-time chats with active online companions. Click anyone to launch a floating chat dock.</p>
-            </header>
-
-            @if (pendingChats().length) {
-              <div class="pending-chats" aria-label="Pending chats">
-                <h3 class="col-head">Pending chats ({{ pendingChats().length }})</h3>
-                <div class="companion-chat-list">
-                  @for (chat of pendingChats(); track chat.companionId) {
-                    <div class="companion-chat-item pending-chat-item" (click)="openPendingChat(chat)">
-                      <div class="chat-avatar-wrap">
-                        <img [src]="chat.profilePhotoUrl" [alt]="chat.fullName" class="chat-list-avatar" />
-                        <span class="pending-chat-badge">{{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}</span>
-                      </div>
-                      <div class="chat-item-info">
-                        <strong>{{ chat.fullName }}</strong>
-                        <span>{{ chat.preview }}</span>
-                      </div>
-                      <button type="button" class="btn-launch-chat">Open</button>
-                    </div>
-                  }
+          @if (messengerWide()) {
+            <!-- Tablet / laptop / wide screens: Facebook Messenger-style page.
+                 Left: chats side panel · centre: online companions row (20%) + the open chat ·
+                 right: profile of the companion (or Circle) being chatted with. -->
+            <section class="section-pane mx-shell" [class.mx-info-open]="messengerInfoOpen() && !!messengerBox()" aria-label="Messenger">
+              <!-- LEFT: chats side panel (previous and current chats) -->
+              <aside class="mx-panel mx-chats" aria-label="Chats">
+                <div class="mx-chats-head">
+                  <h1 class="mx-chats-title">Chats</h1>
+                  <div class="mx-head-actions">
+                    <button type="button" class="mx-icon-btn" (click)="toggleMobileSidePanel()" title="Menu" aria-label="Open the profile menu">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                    </button>
+                    <button type="button" class="mx-icon-btn" (click)="startNewMessengerChat(mxSearch)" title="New message" aria-label="New message">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            }
+                <label class="mx-chat-search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5" stroke-linecap="round"/></svg>
+                  <input
+                    #mxSearch
+                    type="search"
+                    placeholder="Search Messenger"
+                    aria-label="Search chats and companions"
+                    [value]="messengerQuery()"
+                    (input)="messengerQuery.set($any($event.target).value)"
+                  />
+                </label>
+                <div class="mx-filters" role="tablist" aria-label="Filter chats">
+                  <button type="button" role="tab" class="mx-chip" [class.active]="messengerFilter() === 'all'" [attr.aria-selected]="messengerFilter() === 'all'" (click)="messengerFilter.set('all')">All</button>
+                  <button type="button" role="tab" class="mx-chip" [class.active]="messengerFilter() === 'unread'" [attr.aria-selected]="messengerFilter() === 'unread'" (click)="messengerFilter.set('unread')">
+                    Unread @if (messengerUnreadChats()) { · {{ messengerUnreadChats() }} }
+                  </button>
+                  <button type="button" role="tab" class="mx-chip" [class.active]="messengerFilter() === 'circles'" [attr.aria-selected]="messengerFilter() === 'circles'" (click)="messengerFilter.set('circles')">Circles</button>
+                </div>
 
-            <div class="messenger-columns">
-              <!-- Online Companions Directory -->
-              <div class="messenger-col">
-                <h3 class="col-head">🟢 Online Now ({{ service.onlineCompanions().length }})</h3>
-                <div class="companion-chat-list">
-                  @for (c of service.onlineCompanions(); track c.id) {
-                    <div class="companion-chat-item" (click)="openChatWith(c)">
-                      <div class="chat-avatar-wrap">
-                        <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
-                        <app-presence-dot [user]="c" />
-                      </div>
-                      <div class="chat-item-info">
-                        <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
-                        <span>{{ presenceLabel(c) }} · {{ c.city }}, {{ c.country }}</span>
-                      </div>
-                      <button type="button" class="btn-launch-chat">Chat</button>
-                    </div>
+                <div class="mx-chat-list">
+                  @for (item of messengerVisibleChats(); track item.key) {
+                    <button
+                      type="button"
+                      class="mx-chat-row"
+                      [class.selected]="item.key === messengerSelectedKey()"
+                      [class.unread]="item.unread > 0"
+                      (click)="selectMessengerChat(item)"
+                      [attr.aria-current]="item.key === messengerSelectedKey() ? 'true' : null"
+                    >
+                      <span class="mx-av">
+                        @if (item.kind === 'circle' && !item.photoUrl) {
+                          <span class="mx-circle-badge" [style.background]="item.circle?.color">{{ item.circle?.icon }}</span>
+                        } @else {
+                          <img [src]="item.photoUrl || defaultAvatar" [alt]="item.name" />
+                        }
+                        @if (item.companion && isCompanionOnline(item.companion)) {
+                          <app-presence-dot [user]="item.companion" />
+                        }
+                      </span>
+                      <span class="mx-row-main">
+                        <span class="mx-row-name">{{ item.name }}</span>
+                        <span class="mx-row-sub">
+                          <span class="mx-row-preview">{{ messengerPreview(item) }}</span>
+                          @if (messengerTimeLabel(item.sentAtUtc)) {
+                            <span class="mx-row-time">· {{ messengerTimeLabel(item.sentAtUtc) }}</span>
+                          }
+                        </span>
+                      </span>
+                      @if (item.unread > 0) {
+                        <span class="mx-unread" [attr.aria-label]="item.unread + ' unread'">{{ item.unread > 99 ? '99+' : item.unread }}</span>
+                      }
+                    </button>
                   } @empty {
-                    <div class="empty-chat-list">No companions are currently online.</div>
+                    @if (!messengerNewChatCandidates().length) {
+                      <p class="mx-empty-list">
+                        @if (messengerQuery().trim()) {
+                          No chats match “{{ messengerQuery().trim() }}”.
+                        } @else if (messengerFilter() === 'unread') {
+                          You're all caught up.
+                        } @else if (messengerFilter() === 'circles') {
+                          You are not in any Circle yet.
+                        } @else {
+                          No chats yet. Pick an online companion above to say hello.
+                        }
+                      </p>
+                    }
+                  }
+
+                  @if (messengerNewChatCandidates().length) {
+                    <p class="mx-list-label">Start a new chat</p>
+                    @for (c of messengerNewChatCandidates(); track c.id) {
+                      <button type="button" class="mx-chat-row" (click)="messageCompanion(c)">
+                        <span class="mx-av">
+                          <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" />
+                          @if (isCompanionOnline(c)) {
+                            <app-presence-dot [user]="c" />
+                          }
+                        </span>
+                        <span class="mx-row-main">
+                          <span class="mx-row-name">{{ c.fullName }}</span>
+                          <span class="mx-row-sub"><span class="mx-row-preview">{{ presenceLabel(c) }} · {{ c.city }}, {{ c.country }}</span></span>
+                        </span>
+                      </button>
+                    }
                   }
                 </div>
-              </div>
+              </aside>
 
-              <!-- Offline Companions Directory -->
-              <div class="messenger-col">
-                <h3 class="col-head">⚪ Offline Companions ({{ service.offlineCompanions().length }})</h3>
-                <div class="companion-chat-list">
-                  @for (c of service.offlineCompanions(); track c.id) {
-                    <div class="companion-chat-item offline" (click)="openChatWith(c)">
-                      <div class="chat-avatar-wrap">
-                        <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
-                        <app-presence-dot [user]="c" />
+              <!-- CENTRE: wide panel -->
+              <div class="mx-wide">
+                <!-- Top 20%: companions who are online now -->
+                <section class="mx-panel mx-online" aria-label="Online companions">
+                  <div class="mx-online-head">
+                    <span>Online now</span>
+                    <span class="mx-online-count">{{ service.onlineCompanions().length }}</span>
+                  </div>
+                  <div class="mx-online-strip">
+                    @for (c of service.onlineCompanions(); track c.id) {
+                      <button
+                        type="button"
+                        class="mx-online-item"
+                        [class.selected]="c.id === messengerSelectedKey()"
+                        (click)="messageCompanion(c)"
+                        [title]="c.fullName + ' · ' + presenceLabel(c)"
+                        [attr.aria-label]="'Chat with ' + c.fullName"
+                      >
+                        <span class="mx-av">
+                          <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" />
+                          <span class="mx-online-dot" aria-hidden="true"></span>
+                        </span>
+                        <span class="mx-online-name">{{ messengerFirstName(c.fullName) }}</span>
+                      </button>
+                    } @empty {
+                      <p class="mx-online-empty">No companions are online right now.</p>
+                    }
+                  </div>
+                </section>
+
+                <!-- Bottom 80%: the open chat -->
+                <section class="mx-panel mx-chat" aria-label="Conversation">
+                  @if (messengerBox(); as box) {
+                    <header class="mx-chat-head">
+                      <button
+                        type="button"
+                        class="mx-chat-who"
+                        (click)="box.circleId || box.isGroup ? toggleMessengerInfo() : openVisitorProfile(box.companion)"
+                        [title]="box.circleId || box.isGroup ? 'Circle details' : 'View ' + box.companion.fullName + '\'s profile'"
+                      >
+                        <span class="mx-av">
+                          @if (messengerCircle(); as circle) {
+                            @if (circle.photoUrl) {
+                              <img [src]="circle.photoUrl" [alt]="circle.name" />
+                            } @else {
+                              <span class="mx-circle-badge" [style.background]="circle.color">{{ circle.icon }}</span>
+                            }
+                          } @else {
+                            <img [src]="box.companion.profilePhotoUrl || defaultAvatar" [alt]="box.companion.fullName" />
+                            @if (!box.isGroup) {
+                              <app-presence-dot [user]="messengerCompanion() || box.companion" />
+                            }
+                          }
+                        </span>
+                        <span class="mx-chat-title">
+                          <strong>
+                            {{ box.companion.fullName }}
+                            @if (messengerCompanion() && isAuthorVerified(messengerCompanion()!)) {
+                              <span class="blue-verified-badge" title="Verified Account">
+                                <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                              </span>
+                            }
+                          </strong>
+                          @if (box.circleId || box.isGroup) {
+                            <span class="mx-chat-status">{{ (box.participantIds?.length || 0) }} travelers</span>
+                          } @else {
+                            <span class="mx-chat-status" [attr.data-status]="presenceStatus(messengerCompanion() || box.companion)">{{ presenceLabel(messengerCompanion() || box.companion) }}</span>
+                          }
+                        </span>
+                      </button>
+                      <div class="mx-chat-actions">
+                        <button type="button" class="mx-icon-btn" title="Add people" aria-label="Add people" (click)="openAddPeople(box.companionId, $event)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 19.5c.8-3.3 3.4-5 6.5-5s5.7 1.7 6.5 5"/><path d="M19 8v6M16 11h6"/></svg>
+                        </button>
+                        @if (!box.circleId) {
+                          <button type="button" class="mx-icon-btn" title="Save as Circle" aria-label="Save as Circle" (click)="openSaveCircle(box.companionId, $event)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></svg>
+                          </button>
+                        } @else if (isChatCircleAdmin(box)) {
+                          <button type="button" class="mx-icon-btn" title="Manage Circle" aria-label="Manage Circle" (click)="openManageCircle(box.circleId!, $event)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 5.6l2.1 2.1M17.7 16.3l2.1 2.1M2.5 12h3M18.5 12h3M4.2 18.4l2.1-2.1M17.7 7.7l2.1-2.1"/></svg>
+                          </button>
+                        }
+                        <button
+                          type="button"
+                          class="mx-icon-btn"
+                          [class.on]="messengerInfoOpen()"
+                          [title]="messengerInfoOpen() ? 'Hide profile' : 'Show profile'"
+                          [attr.aria-pressed]="messengerInfoOpen()"
+                          aria-label="Profile information"
+                          (click)="toggleMessengerInfo()"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1" fill="currentColor" stroke="none"/></svg>
+                        </button>
                       </div>
-                      <div class="chat-item-info">
-                        <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
-                        <span>Last seen {{ lastSeenLabel(c) }}</span>
-                      </div>
-                      <button type="button" class="btn-launch-chat">Leave Message</button>
+                    </header>
+                    <ng-container *ngTemplateOutlet="chatBodyTpl; context: { $implicit: box }" />
+                  } @else {
+                    <div class="mx-chat-empty">
+                      <span class="mx-chat-empty-icon" aria-hidden="true">💬</span>
+                      <h2>Your messages</h2>
+                      <p>Choose a chat on the left, or tap an online companion above to start chatting.</p>
                     </div>
                   }
+                </section>
+              </div>
+
+              <!-- RIGHT: profile of the companion / Circle being chatted with -->
+              @if (messengerInfoOpen() && messengerBox()) {
+                <div class="mx-info-backdrop" (click)="toggleMessengerInfo()" aria-hidden="true"></div>
+                <aside class="mx-panel mx-profile" aria-label="Profile information">
+                  <button type="button" class="mx-profile-close" (click)="toggleMessengerInfo()" title="Hide profile" aria-label="Hide profile">✕</button>
+                  @if (messengerCompanion(); as c) {
+                    <div class="mx-cover">
+                      <img [src]="c.coverPhotoUrl || defaultCoverPhoto" alt="" (error)="onCoverImgError($event)" />
+                    </div>
+                    <div class="mx-profile-id">
+                      <button type="button" class="mx-av mx-profile-avatar" (click)="openVisitorProfile(c)" [title]="'View ' + c.fullName + '\'s profile'">
+                        <img [src]="c.profilePhotoUrl || defaultAvatar" [alt]="c.fullName" />
+                        <app-presence-dot [user]="c" />
+                      </button>
+                      <h3>
+                        {{ c.fullName }}
+                        @if (isAuthorVerified(c)) {
+                          <span class="blue-verified-badge" title="Verified Account">
+                            <svg viewBox="0 0 24 24" class="verified-svg"><path fill="#ffffff" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                          </span>
+                        }
+                      </h3>
+                      <span class="mx-status" [attr.data-status]="presenceStatus(c)">{{ presenceLabel(c) }}</span>
+                      <p class="mx-profile-sub">
+                        {{ c.profession }}@if (c.profession && (c.city || c.country)) { · }{{ c.city }}@if (c.city && c.country) {, }{{ c.country }}
+                      </p>
+                      <div class="mx-profile-actions">
+                        <button type="button" class="mx-btn primary" (click)="openVisitorProfile(c)">View Profile</button>
+                        @if (service.isFollowing(c.id)) {
+                          <button type="button" class="mx-btn" (click)="service.unfollow(c.id)">Following</button>
+                        } @else {
+                          <button type="button" class="mx-btn" (click)="service.follow(c.id)">Follow</button>
+                        }
+                      </div>
+                    </div>
+
+                    @if (messengerProfileLocked(c)) {
+                      <div class="mx-sec mx-locked">🔒 {{ c.fullName }} has locked their profile. Only companions can see their details.</div>
+                    } @else {
+                      @if (messengerAbout(c); as about) {
+                        <div class="mx-sec">
+                          <h4>About</h4>
+                          <p class="mx-about" [class.expanded]="messengerAboutExpanded()" [nbTranslatable]="about">{{ about }}</p>
+                          @if (about.length > 160) {
+                            <button type="button" class="mx-link" (click)="messengerAboutExpanded.set(!messengerAboutExpanded())">
+                              {{ messengerAboutExpanded() ? 'See less' : 'See more' }}
+                            </button>
+                          }
+                        </div>
+                      }
+                      <div class="mx-sec">
+                        <h4>Details</h4>
+                        <ul class="mx-facts">
+                          @if (c.profession) {
+                            <li><span aria-hidden="true">💼</span> {{ c.profession }}</li>
+                          }
+                          @if (c.city || c.country) {
+                            <li><span aria-hidden="true">📍</span> Lives in {{ c.city }}@if (c.city && c.country) {, }{{ c.country }}</li>
+                          }
+                          @if (messengerHometown(c); as hometown) {
+                            <li><span aria-hidden="true">🏠</span> From {{ hometown }}</li>
+                          }
+                          @if (messengerLanguages(c); as languages) {
+                            <li><span aria-hidden="true">🗣️</span> {{ languages }}</li>
+                          }
+                          <li>
+                            <span aria-hidden="true">🤝</span>
+                            {{ relationshipLabel(c) }}@if (c.mutualCompanionsCount) { · {{ c.mutualCompanionsCount }} mutual companions }
+                          </li>
+                          @if (!isCompanionOnline(c) && lastSeenLabel(c)) {
+                            <li><span aria-hidden="true">🕒</span> Last seen {{ lastSeenLabel(c) }}</li>
+                          }
+                        </ul>
+                      </div>
+                      @if (messengerCommonCircles().length) {
+                        <div class="mx-sec">
+                          <h4>Circles in common</h4>
+                          <div class="mx-chips">
+                            @for (circle of messengerCommonCircles(); track circle.id) {
+                              <button type="button" (click)="openCircleChat(circle, $event)">{{ circle.icon }} {{ circle.name }}</button>
+                            }
+                          </div>
+                        </div>
+                      }
+                      @if (messengerPhotos(c).length) {
+                        <div class="mx-sec">
+                          <h4>Photos</h4>
+                          <div class="mx-photos">
+                            @for (photo of messengerPhotos(c); track photo.id) {
+                              <button type="button" (click)="openVisitorProfile(c)" [title]="photo.caption || 'Open ' + c.fullName + '\'s gallery'">
+                                <img [src]="photo.url" [alt]="photo.caption || c.fullName" loading="lazy" />
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    }
+                  } @else if (messengerCircle(); as circle) {
+                    <div class="mx-cover mx-cover-circle" [style.background]="circle.color">
+                      @if (circle.photoUrl) {
+                        <img [src]="circle.photoUrl" [alt]="circle.name" />
+                      }
+                    </div>
+                    <div class="mx-profile-id">
+                      <span class="mx-av mx-profile-avatar">
+                        @if (circle.photoUrl) {
+                          <img [src]="circle.photoUrl" [alt]="circle.name" />
+                        } @else {
+                          <span class="mx-circle-badge" [style.background]="circle.color">{{ circle.icon }}</span>
+                        }
+                      </span>
+                      <h3>{{ circle.name }}</h3>
+                      <span class="mx-status" data-status="Circle">{{ isCircleAdmin(circle) ? 'You are an admin' : 'Member' }}</span>
+                      <p class="mx-profile-sub">Travel Circle · {{ circle.memberIds.length }} members</p>
+                      @if (isCircleAdmin(circle)) {
+                        <div class="mx-profile-actions">
+                          <button type="button" class="mx-btn primary" (click)="openManageCircle(circle.id, $event)">Manage Circle</button>
+                        </div>
+                      }
+                    </div>
+                    @if (circle.description) {
+                      <div class="mx-sec">
+                        <h4>About</h4>
+                        <p class="mx-about expanded">{{ circle.description }}</p>
+                      </div>
+                    }
+                    <div class="mx-sec">
+                      <h4>Members</h4>
+                      <ul class="mx-members">
+                        @for (m of messengerCircleMembers(); track m.id) {
+                          <li>
+                            <button type="button" (click)="openVisitorProfile(m)">
+                              <span class="mx-av">
+                                <img [src]="m.profilePhotoUrl || defaultAvatar" [alt]="m.fullName" />
+                                @if (isCompanionOnline(m)) {
+                                  <app-presence-dot [user]="m" />
+                                }
+                              </span>
+                              <span class="mx-member-name">{{ m.fullName }}</span>
+                              @if (service.isCircleAdmin(circle, m.id)) {
+                                <span class="mx-member-role">Admin</span>
+                              }
+                            </button>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  } @else if (messengerBox(); as box) {
+                    <!-- Unsaved group chat -->
+                    <div class="mx-profile-id mx-profile-id-plain">
+                      <h3>{{ box.companion.fullName }}</h3>
+                      <p class="mx-profile-sub">Group chat · {{ box.participantIds?.length || 0 }} travelers</p>
+                      <div class="mx-profile-actions">
+                        <button type="button" class="mx-btn primary" (click)="openSaveCircle(box.companionId, $event)">Save as Circle</button>
+                      </div>
+                    </div>
+                  }
+                </aside>
+              }
+            </section>
+          } @else {
+            <section class="section-pane messenger-pane">
+              <header class="section-top-bar">
+                <h1 class="section-title">Messenger</h1>
+                <p class="section-desc">Real-time chats with active online companions. Click anyone to launch a floating chat dock.</p>
+              </header>
+
+              @if (pendingChats().length) {
+                <div class="pending-chats" aria-label="Pending chats">
+                  <h3 class="col-head">Pending chats ({{ pendingChats().length }})</h3>
+                  <div class="companion-chat-list">
+                    @for (chat of pendingChats(); track chat.companionId) {
+                      <div class="companion-chat-item pending-chat-item" (click)="openPendingChat(chat)">
+                        <div class="chat-avatar-wrap">
+                          <img [src]="chat.profilePhotoUrl" [alt]="chat.fullName" class="chat-list-avatar" />
+                          <span class="pending-chat-badge">{{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}</span>
+                        </div>
+                        <div class="chat-item-info">
+                          <strong>{{ chat.fullName }}</strong>
+                          <span>{{ chat.preview }}</span>
+                        </div>
+                        <button type="button" class="btn-launch-chat">Open</button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="messenger-columns">
+                <!-- Online Companions Directory -->
+                <div class="messenger-col">
+                  <h3 class="col-head">🟢 Online Now ({{ service.onlineCompanions().length }})</h3>
+                  <div class="companion-chat-list">
+                    @for (c of service.onlineCompanions(); track c.id) {
+                      <div class="companion-chat-item" (click)="openChatWith(c)">
+                        <div class="chat-avatar-wrap">
+                          <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
+                          <app-presence-dot [user]="c" />
+                        </div>
+                        <div class="chat-item-info">
+                          <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
+                          <span>{{ presenceLabel(c) }} · {{ c.city }}, {{ c.country }}</span>
+                        </div>
+                        <button type="button" class="btn-launch-chat">Chat</button>
+                      </div>
+                    } @empty {
+                      <div class="empty-chat-list">No companions are currently online.</div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Offline Companions Directory -->
+                <div class="messenger-col">
+                  <h3 class="col-head">⚪ Offline Companions ({{ service.offlineCompanions().length }})</h3>
+                  <div class="companion-chat-list">
+                    @for (c of service.offlineCompanions(); track c.id) {
+                      <div class="companion-chat-item offline" (click)="openChatWith(c)">
+                        <div class="chat-avatar-wrap">
+                          <img [src]="c.profilePhotoUrl" [alt]="c.fullName" class="chat-list-avatar" [nbUserPreview]="c" />
+                          <app-presence-dot [user]="c" />
+                        </div>
+                        <div class="chat-item-info">
+                          <strong [nbUserPreview]="c">{{ c.fullName }}</strong>
+                          <span>Last seen {{ lastSeenLabel(c) }}</span>
+                        </div>
+                        <button type="button" class="btn-launch-chat">Leave Message</button>
+                      </div>
+                    }
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          }
         }
 
         <!-- ================================================================= -->
@@ -3593,7 +3968,9 @@
     }
   </div>
 
-  <!-- FLOATING MESSENGER CHAT DOCK (Max 5 open popup boxes at bottom right - Requirements J & K) -->
+  <!-- FLOATING MESSENGER CHAT DOCK (Max 5 open popup boxes at bottom right - Requirements J & K).
+       Hidden on the Messenger page's wide layout, where chats open in the wide panel. -->
+  @if (!messengerWide()) {
   <div class="floating-chat-dock" aria-label="Active floating chats">
     @for (box of service.activeChatBoxes(); track box.companionId) {
       <div class="chat-popup-box" [class.minimized]="box.isMinimized">
@@ -3656,234 +4033,241 @@
 
         <!-- Chat Popup Body (Visible when not minimized) -->
         @if (!box.isMinimized) {
-          <div class="chat-popup-body">
-            <!-- Messages Container (always kept at the latest message — Requirement B) -->
-            <div class="chat-messages-container" [nbChatAutoScroll]="box.messages">
-              @for (msg of box.messages; track msg.id; let i = $index) {
-                <!-- Date and time of this chat session, as a header inside the window (Requirement C) -->
-                @if (isChatSessionStart(box.messages, i)) {
-                  <div class="chat-session-divider" role="separator">
-                    <span class="chat-session-label">{{ chatSessionLabel(msg.sentAtUtc) }}</span>
-                  </div>
-                }
-                <div
-                  class="chat-msg-row"
-                  [class.outgoing]="isMyChatMessage(msg)"
-                  [class.incoming]="!isMyChatMessage(msg)"
-                >
-                  <!-- Requirement C: both travelers' profile pictures are shown in the chat window -->
-                  <div class="chat-avatar-column">
-                    @if (isMyChatMessage(msg)) {
-                      <img
-                        [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
-                        alt="Me"
-                        class="chat-bubble-avatar chat-my-avatar"
-                        title="You"
-                      />
-                    } @else {
-                      <img
-                        [src]="chatSenderPhoto(box, msg)"
-                        [alt]="chatSenderName(box, msg)"
-                        class="chat-bubble-avatar chat-comp-avatar clickable-user"
-                        [nbUserPreview]="chatSender(box, msg)"
-                        (click)="openVisitorProfile(chatSender(box, msg))"
-                      />
-                    }
-                  </div>
-
-                  <!-- Bubble Content Column -->
-                  <div class="chat-bubble-content-col">
-                    <div
-                      class="chat-bubble"
-                      [class.outgoing]="isMyChatMessage(msg)"
-                      [class.incoming]="!isMyChatMessage(msg)"
-                    >
-                      <!-- Requirement K: Reply quote preview inside message bubble -->
-                      @if (msg.replyTo) {
-                        <div class="chat-bubble-reply-quote">
-                          <span class="reply-quote-author">↩️ {{ msg.replyTo.senderName }}</span>
-                          <span class="reply-quote-snippet" [nbTranslatable]="msg.replyTo.text">{{ msg.replyTo.text }}</span>
-                        </div>
-                      }
-
-                      <p class="msg-text" [nbTranslatable]="msg.text">{{ msg.text }}</p>
-                      <span class="msg-time">{{ formatTime(msg.sentAtUtc) }}</span>
-                    </div>
-
-                    <!-- Reactions Display on Bubble -->
-                    @if (getMsgReactionsEntries(msg).length > 0) {
-                      <div class="chat-reactions-display">
-                        @for (r of getMsgReactionsEntries(msg); track r.emoji) {
-                          <button
-                            type="button"
-                            class="chat-reaction-pill"
-                            [class.reacted]="msg.myReaction === r.emoji"
-                            (click)="reactToChatMsg(box.companionId, msg.id, r.emoji)"
-                            [title]="r.emoji"
-                          >
-                            <span>{{ r.emoji }}</span>
-                            <span class="rx-count">{{ r.count }}</span>
-                          </button>
-                        }
-                      </div>
-                    }
-
-                    <!-- Requirement K: Actions Bar: Quick Like, 10 other emojis picker, Reply, Three dots menu -->
-                    <div class="chat-msg-hover-actions">
-                      <!-- Quick Like Button (Like = 👍) -->
-                      <button
-                        type="button"
-                        class="chat-act-btn btn-chat-like"
-                        [class.active]="msg.myReaction === '👍'"
-                        (click)="reactToChatMsg(box.companionId, msg.id, '👍')"
-                        title="Like (👍)"
-                      >
-                        👍
-                      </button>
-
-                      <!-- React with 10 other emojis button / popover -->
-                      <div class="chat-react-picker-wrapper">
-                        <button
-                          type="button"
-                          class="chat-act-btn btn-chat-react"
-                          (click)="toggleMsgReactionPicker(box.companionId, msg.id)"
-                          title="React with other emojis"
-                        >
-                          😊
-                        </button>
-                        @if (activeReactionPickerMsgId() === msg.id) {
-                          <div class="chat-emojis-reaction-bar" (click)="$event.stopPropagation()">
-                            @for (emoji of chatReactionEmojis; track emoji) {
-                              <button
-                                type="button"
-                                class="chat-emoji-item-btn"
-                                (click)="selectChatReaction(box.companionId, msg.id, emoji)"
-                              >
-                                {{ emoji }}
-                              </button>
-                            }
-                          </div>
-                        }
-                      </div>
-
-                      <!-- Reply to this message button -->
-                      <button
-                        type="button"
-                        class="chat-act-btn btn-chat-reply"
-                        (click)="startChatReply(box.companionId, msg)"
-                        title="Reply to message"
-                      >
-                        ↩️
-                      </button>
-
-                      <!-- Three dots action menu: Remove Message & Report Abuse -->
-                      <div class="chat-three-dots-wrapper">
-                        <button
-                          type="button"
-                          class="chat-act-btn btn-chat-dots"
-                          (click)="toggleMsgDotsMenu(box.companionId, msg.id)"
-                          title="More options"
-                        >
-                          ⋯
-                        </button>
-                        @if (activeDotsMenuMsgId() === msg.id) {
-                          <div class="chat-msg-dropdown-menu" (click)="$event.stopPropagation()">
-                            <button
-                              type="button"
-                              class="chat-menu-item"
-                              (click)="startChatReply(box.companionId, msg)"
-                            >
-                              ↩️ Reply
-                            </button>
-                            <button
-                              type="button"
-                              class="chat-menu-item btn-menu-delete"
-                              (click)="removeChatMsg(box.companionId, msg.id)"
-                            >
-                              🗑️ Remove Message
-                            </button>
-                            <button
-                              type="button"
-                              class="chat-menu-item btn-menu-report"
-                              (click)="reportChatMsgAbuse(box.companion, msg)"
-                            >
-                              🚩 Report Abuse
-                            </button>
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- Reply Banner Preview (When replying to a particular message) -->
-            @if (box.replyingToMessage) {
-              <div class="chat-replying-banner">
-                <div class="replying-banner-text">
-                  <span class="replying-label">Replying to <strong>{{ getMsgSenderName(box, box.replyingToMessage) }}</strong></span>
-                  <span class="replying-snippet" [nbTranslatable]="box.replyingToMessage.text">{{ box.replyingToMessage.text }}</span>
-                </div>
-                <button
-                  type="button"
-                  class="btn-cancel-replying"
-                  (click)="cancelChatReply(box.companionId)"
-                  title="Cancel reply"
-                >
-                  ✕
-                </button>
-              </div>
-            }
-
-            <!-- Quick Emoji Tray (Requirement K: Ability to send emoji) -->
-            @if (activeEmojiTrayCompanionId() === box.companionId) {
-              <div class="chat-quick-emoji-tray">
-                @for (emoji of quickSendEmojis; track emoji) {
-                  <button
-                    type="button"
-                    class="quick-emoji-btn"
-                    (click)="insertChatEmoji(box, emoji)"
-                  >
-                    {{ emoji }}
-                  </button>
-                }
-              </div>
-            }
-
-            <!-- Chat Composer Footer -->
-            <div class="chat-popup-footer">
-              <button
-                type="button"
-                class="btn-toggle-emoji-tray"
-                (click)="toggleQuickEmojiTray(box.companionId)"
-                title="Choose emoji"
-              >
-                😀
-              </button>
-
-              <input
-                type="text"
-                [(ngModel)]="box.draftText"
-                (keydown.enter)="sendChatWithReply(box)"
-                placeholder="Type a message..."
-                class="chat-composer-input"
-              />
-
-              <button
-                type="button"
-                class="btn-send-chat"
-                [disabled]="!box.draftText.trim()"
-                (click)="sendChatWithReply(box)"
-              >
-                Send
-              </button>
-            </div>
-          </div>
+          <ng-container *ngTemplateOutlet="chatBodyTpl; context: { $implicit: box }" />
         }
       </div>
     }
   </div>
+  }
+
+  <!-- CHAT BODY (messages, reply banner, emoji tray, composer): shared by the floating chat
+       pop-ups and the Messenger page's wide panel, so both behave exactly alike. -->
+  <ng-template #chatBodyTpl let-box>
+    <div class="chat-popup-body">
+      <!-- Messages Container (always kept at the latest message — Requirement B) -->
+      <div class="chat-messages-container" [nbChatAutoScroll]="box.messages">
+        @for (msg of box.messages; track msg.id; let i = $index) {
+          <!-- Date and time of this chat session, as a header inside the window (Requirement C) -->
+          @if (isChatSessionStart(box.messages, i)) {
+            <div class="chat-session-divider" role="separator">
+              <span class="chat-session-label">{{ chatSessionLabel(msg.sentAtUtc) }}</span>
+            </div>
+          }
+          <div
+            class="chat-msg-row"
+            [class.outgoing]="isMyChatMessage(msg)"
+            [class.incoming]="!isMyChatMessage(msg)"
+          >
+            <!-- Requirement C: both travelers' profile pictures are shown in the chat window -->
+            <div class="chat-avatar-column">
+              @if (isMyChatMessage(msg)) {
+                <img
+                  [src]="service.profile()?.profilePhotoUrl || defaultAvatar"
+                  alt="Me"
+                  class="chat-bubble-avatar chat-my-avatar"
+                  title="You"
+                />
+              } @else {
+                <img
+                  [src]="chatSenderPhoto(box, msg)"
+                  [alt]="chatSenderName(box, msg)"
+                  class="chat-bubble-avatar chat-comp-avatar clickable-user"
+                  [nbUserPreview]="chatSender(box, msg)"
+                  (click)="openVisitorProfile(chatSender(box, msg))"
+                />
+              }
+            </div>
+
+            <!-- Bubble Content Column -->
+            <div class="chat-bubble-content-col">
+              <div
+                class="chat-bubble"
+                [class.outgoing]="isMyChatMessage(msg)"
+                [class.incoming]="!isMyChatMessage(msg)"
+              >
+                <!-- Requirement K: Reply quote preview inside message bubble -->
+                @if (msg.replyTo) {
+                  <div class="chat-bubble-reply-quote">
+                    <span class="reply-quote-author">↩️ {{ msg.replyTo.senderName }}</span>
+                    <span class="reply-quote-snippet" [nbTranslatable]="msg.replyTo.text">{{ msg.replyTo.text }}</span>
+                  </div>
+                }
+
+                <p class="msg-text" [nbTranslatable]="msg.text">{{ msg.text }}</p>
+                <span class="msg-time">{{ formatTime(msg.sentAtUtc) }}</span>
+              </div>
+
+              <!-- Reactions Display on Bubble -->
+              @if (getMsgReactionsEntries(msg).length > 0) {
+                <div class="chat-reactions-display">
+                  @for (r of getMsgReactionsEntries(msg); track r.emoji) {
+                    <button
+                      type="button"
+                      class="chat-reaction-pill"
+                      [class.reacted]="msg.myReaction === r.emoji"
+                      (click)="reactToChatMsg(box.companionId, msg.id, r.emoji)"
+                      [title]="r.emoji"
+                    >
+                      <span>{{ r.emoji }}</span>
+                      <span class="rx-count">{{ r.count }}</span>
+                    </button>
+                  }
+                </div>
+              }
+
+              <!-- Requirement K: Actions Bar: Quick Like, 10 other emojis picker, Reply, Three dots menu -->
+              <div class="chat-msg-hover-actions">
+                <!-- Quick Like Button (Like = 👍) -->
+                <button
+                  type="button"
+                  class="chat-act-btn btn-chat-like"
+                  [class.active]="msg.myReaction === '👍'"
+                  (click)="reactToChatMsg(box.companionId, msg.id, '👍')"
+                  title="Like (👍)"
+                >
+                  👍
+                </button>
+
+                <!-- React with 10 other emojis button / popover -->
+                <div class="chat-react-picker-wrapper">
+                  <button
+                    type="button"
+                    class="chat-act-btn btn-chat-react"
+                    (click)="toggleMsgReactionPicker(box.companionId, msg.id)"
+                    title="React with other emojis"
+                  >
+                    😊
+                  </button>
+                  @if (activeReactionPickerMsgId() === msg.id) {
+                    <div class="chat-emojis-reaction-bar" (click)="$event.stopPropagation()">
+                      @for (emoji of chatReactionEmojis; track emoji) {
+                        <button
+                          type="button"
+                          class="chat-emoji-item-btn"
+                          (click)="selectChatReaction(box.companionId, msg.id, emoji)"
+                        >
+                          {{ emoji }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <!-- Reply to this message button -->
+                <button
+                  type="button"
+                  class="chat-act-btn btn-chat-reply"
+                  (click)="startChatReply(box.companionId, msg)"
+                  title="Reply to message"
+                >
+                  ↩️
+                </button>
+
+                <!-- Three dots action menu: Remove Message & Report Abuse -->
+                <div class="chat-three-dots-wrapper">
+                  <button
+                    type="button"
+                    class="chat-act-btn btn-chat-dots"
+                    (click)="toggleMsgDotsMenu(box.companionId, msg.id)"
+                    title="More options"
+                  >
+                    ⋯
+                  </button>
+                  @if (activeDotsMenuMsgId() === msg.id) {
+                    <div class="chat-msg-dropdown-menu" (click)="$event.stopPropagation()">
+                      <button
+                        type="button"
+                        class="chat-menu-item"
+                        (click)="startChatReply(box.companionId, msg)"
+                      >
+                        ↩️ Reply
+                      </button>
+                      <button
+                        type="button"
+                        class="chat-menu-item btn-menu-delete"
+                        (click)="removeChatMsg(box.companionId, msg.id)"
+                      >
+                        🗑️ Remove Message
+                      </button>
+                      <button
+                        type="button"
+                        class="chat-menu-item btn-menu-report"
+                        (click)="reportChatMsgAbuse(box.companion, msg)"
+                      >
+                        🚩 Report Abuse
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Reply Banner Preview (When replying to a particular message) -->
+      @if (box.replyingToMessage) {
+        <div class="chat-replying-banner">
+          <div class="replying-banner-text">
+            <span class="replying-label">Replying to <strong>{{ getMsgSenderName(box, box.replyingToMessage) }}</strong></span>
+            <span class="replying-snippet" [nbTranslatable]="box.replyingToMessage.text">{{ box.replyingToMessage.text }}</span>
+          </div>
+          <button
+            type="button"
+            class="btn-cancel-replying"
+            (click)="cancelChatReply(box.companionId)"
+            title="Cancel reply"
+          >
+            ✕
+          </button>
+        </div>
+      }
+
+      <!-- Quick Emoji Tray (Requirement K: Ability to send emoji) -->
+      @if (activeEmojiTrayCompanionId() === box.companionId) {
+        <div class="chat-quick-emoji-tray">
+          @for (emoji of quickSendEmojis; track emoji) {
+            <button
+              type="button"
+              class="quick-emoji-btn"
+              (click)="insertChatEmoji(box, emoji)"
+            >
+              {{ emoji }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Chat Composer Footer -->
+      <div class="chat-popup-footer">
+        <button
+          type="button"
+          class="btn-toggle-emoji-tray"
+          (click)="toggleQuickEmojiTray(box.companionId)"
+          title="Choose emoji"
+        >
+          😀
+        </button>
+
+        <input
+          type="text"
+          [(ngModel)]="box.draftText"
+          (keydown.enter)="sendChatWithReply(box)"
+          placeholder="Type a message..."
+          class="chat-composer-input"
+        />
+
+        <button
+          type="button"
+          class="btn-send-chat"
+          [disabled]="!box.draftText.trim()"
+          (click)="sendChatWithReply(box)"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  </ng-template>
 
   @if (followListKind()) {
     <div class="modal-backdrop-overlay" (click)="closeFollowList()">
