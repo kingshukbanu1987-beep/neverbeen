@@ -59,7 +59,8 @@
                     [src]="story.signatureImage"
                     [alt]="
                       'Signature of ' +
-                      (story.signature || profile.name)
+                      (story.signature || profile.name) +
+                      (story.signatureStyle ? '. ' + story.signatureStyle : '')
                     "
                     loading="lazy"
                     decoding="async"
