@@ -67,15 +67,16 @@ ng test
 
 ## Routes
 
-| Path             | Page       | Notes                                                                                                |
-| ---------------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| `/`              | Home       | Hero, how it works, destinations, gallery (20 random collection stills), pricing, FAQ, contact       |
-| `/audience`      | Audience   | Who NeverBeen is for, age note, destination list, privacy promises                                   |
-| `/collection`    | Collection | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
-| `/founder`       | Founder    | Founder profile and expertise                                                                        |
-| `/documentation` | Brochure   | Visitor brochure: 36 pages on how to place a Neverbeen Request, packages and destinations            |
-| `/ai-models`     | AI Models  | Dark studio directory and individual model portfolios at `/ai-models/:slug`                          |
-| `/login`         | Login      | Sign-in form                                                                                         |
+| Path                      | Page           | Notes                                                                                                |
+| ------------------------- | -------------- | ---------------------------------------------------------------------------------------------------- |
+| `/`                       | Home           | Hero, how it works, destinations, gallery (20 random collection stills), pricing, FAQ, contact       |
+| `/audience`               | Audience       | Who NeverBeen is for, age note, destination list, privacy promises                                   |
+| `/collection`             | Collection     | Mobile-gallery wall of every photograph in `public/collection`; tap to enlarge, tap outside to close |
+| `/founder`                | Founder        | Founder profile and expertise                                                                        |
+| `/documentation`          | Brochure       | Visitor brochure: 36 pages on how to place a Neverbeen Request, packages and destinations            |
+| `/ai-models`              | AI Models      | Dark studio directory and model portfolios at `/ai-models/:slug` (12 random photographs each)        |
+| `/ai-models/:slug/photos` | AI Model album | A model's complete album as a mosaic of differently sized, zoomable photographs                      |
+| `/login`                  | Login          | Sign-in form                                                                                         |
 
 ## NeverBeen AI Models
 
@@ -84,11 +85,23 @@ bar — no artwork or decorative panels. Portfolios appear in the published orde
 `data/ai-models/profiles.json`) and every cover states, in large bold type, how many photographs that
 model has in her portfolio. Each cover opens its own
 portfolio at `/ai-models/:slug`: an Instagram-style profile header (avatar, handle, photographs
-count, location, age, height, weight, body shape, tags and short introduction) above a photo grid that
-is shuffled into a fresh random order on every visit — with a **Shuffle** control in the toolbar for
-another arrangement on demand.
-Clicking any photograph expands it in a full-screen pop-up that can be browsed with the arrow keys,
-the on-screen arrows, the thumbnail strip or a swipe on mobile, with a grid/feed layout switch.
+count, location, age, height, weight, body shape, tags and short introduction) above a photo grid of
+**12 photographs drawn at random** from the album on every visit — with a **Shuffle** control in the
+toolbar for another draw on demand and a grid/feed layout switch. When the album holds more than 12,
+the twelfth tile becomes a **View All** tile (`+N`) that opens the complete album at
+`/ai-models/:slug/photos`: every photograph, cover first, set in an editorial mosaic of differently
+sized tiles (2, 3 or 4 columns depending on the available width), with a floating **Back to
+portfolio** button that returns straight to the portfolio grid.
+
+Clicking any photograph — on either page — expands it in a full-screen viewer that can be browsed
+with the arrow keys, the on-screen arrows, the thumbnail strip or a swipe on touch screens. Every
+photograph zooms up to 5×: with the mouse wheel or a trackpad pinch (zooming in at the cursor), a
+two-finger pinch on phones, tablets and touchscreen laptops, a double-click or double-tap, the
+on-screen −/+ buttons or the `+`, `-` and `0` keys; once zoomed it can be dragged around (or moved
+with the arrow keys), and the zoom readout resets it to fit. Zooming never changes the photograph:
+only a single-finger swipe at normal size moves to the next or previous frame, so pinches, pans and
+the finger left over after a pinch always stay on the current photograph. The viewer opened from the
+portfolio browses the 12 photographs on show and links to the complete album.
 Right below the personal details, a **Videos** reel plays the clips from the model's own
 `<album>/video/` folder: tap a clip to open it in the portfolio's player — play, pause, stop, scrub,
 volume, playback speed, previous/next clip, picture-in-picture, true full screen (F or a double

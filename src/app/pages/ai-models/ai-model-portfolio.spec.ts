@@ -6,10 +6,15 @@ import { of } from 'rxjs';
 import { CommunityService } from '../../services/community.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
-import { AiModelPortfolioPage, shufflePhotos } from './ai-model-portfolio';
+import { AiModelAllPhotosPage } from './all-photos/ai-model-all-photos';
+import { AiModelPortfolioPage, PREVIEW_LIMIT, shufflePhotos } from './ai-model-portfolio';
 import { AiModelVideoPlayer, formatTime } from './video/ai-model-video-player';
 
 const testRoutes = [
+  {
+    path: 'ai-models/:slug/photos',
+    component: AiModelAllPhotosPage,
+  },
   {
     path: 'ai-models/:slug',
     component: AiModelPortfolioPage,
@@ -495,6 +500,141 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
+  it('shows twelve photographs from a larger album, the twelfth opening the complete album', async () => {
+    const profile = withPhotos(20);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(PREVIEW_LIMIT).toBe(12);
+      const tiles = element.querySelectorAll<HTMLElement>('.portfolio-grid .grid-tile');
+      expect(tiles.length).toBe(12);
+
+      // Twelve different photographs, all from the album.
+      const shown = shownOrder(element);
+      const album = new Set(profile.photos.map((photo) => photo.src));
+      expect(new Set(shown).size).toBe(12);
+      expect(shown.every((src) => album.has(src))).toBe(true);
+
+      // Eleven tiles open the viewer; the twelfth is the View All link.
+      expect(element.querySelectorAll('.portfolio-grid button.grid-tile').length).toBe(11);
+      const viewAll = tiles[11];
+      expect(viewAll.tagName).toBe('A');
+      expect(viewAll.classList).toContain('view-all-tile');
+      expect(viewAll.getAttribute('href')).toBe('/ai-models/test-studio-model/photos');
+      expect(viewAll.textContent).toContain('View All');
+      expect(viewAll.textContent).toContain('+8');
+      expect(viewAll.getAttribute('aria-label')).toBe(
+        'View all 20 photographs of Test Studio Model',
+      );
+
+      // The counts still describe the whole album.
+      expect(element.querySelector('.gallery-count')?.textContent).toContain('20');
+      expect(element.querySelector('.gallery-intro')?.textContent).toContain('20');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('shows an album of twelve or fewer photographs whole, without a View All tile', async () => {
+    const profile = withPhotos(12);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      expect(element.querySelectorAll('.portfolio-grid button.grid-tile').length).toBe(12);
+      expect(element.querySelector('.view-all-tile')).toBeNull();
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('offers View All on the twelfth photograph of the feed layout too', async () => {
+    const profile = withPhotos(15);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      Array.from(element.querySelectorAll<HTMLButtonElement>('.view-switch button'))
+        .find((button) => button.textContent?.includes('Feed'))
+        ?.click();
+      harness.detectChanges();
+
+      const items = element.querySelectorAll('.feed-item');
+      expect(items.length).toBe(12);
+      expect(items[11].classList).toContain('view-all-item');
+      const link = items[11].querySelector<HTMLAnchorElement>('a.view-all-tile');
+      expect(link?.getAttribute('href')).toBe('/ai-models/test-studio-model/photos');
+      expect(link?.textContent).toContain('+3');
+      expect(element.querySelectorAll('button.feed-photo').length).toBe(11);
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('browses the twelve shown photographs in the viewer and links to the complete album', async () => {
+    const profile = withPhotos(20);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      (element.querySelectorAll('.grid-tile')[0] as HTMLButtonElement).click();
+      harness.detectChanges();
+
+      expect(element.querySelector('.lightbox-counter')?.textContent?.trim()).toBe('01 / 12');
+      expect(element.querySelectorAll('.lightbox-thumb').length).toBe(12);
+      expect(element.querySelector('.zoom-dock')).not.toBeNull();
+      const albumLink = element.querySelector<HTMLAnchorElement>('.viewer-album-link');
+      expect(albumLink?.getAttribute('href')).toBe('/ai-models/test-studio-model/photos');
+      expect(albumLink?.textContent).toContain('20');
+
+      // Browsing wraps within the twelve shown photographs.
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+      harness.detectChanges();
+      expect(element.querySelector('.lightbox-counter')?.textContent?.trim()).toBe('12 / 12');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('opens the complete album page from the View All tile', async () => {
+    const profile = withPhotos(20);
+    const harness = await openPortfolio(profile.slug);
+
+    try {
+      const element = harness.routeNativeElement as HTMLElement;
+      element.querySelector<HTMLAnchorElement>('.view-all-tile')!.click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      const album = harness.routeNativeElement as HTMLElement;
+      expect(album.querySelectorAll('.mosaic-tile').length).toBe(20);
+      expect(album.querySelector('.album-dock .dock-link')?.getAttribute('href')).toBe(
+        '/ai-models/test-studio-model#photos',
+      );
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('lands straight on the gallery when coming back from the complete album', async () => {
+    const profile = withPhotos(20);
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    try {
+      const harness = await RouterTestingHarness.create(`/ai-models/${profile.slug}#photos`);
+      harness.detectChanges();
+      await harness.fixture.whenStable();
+
+      const element = harness.routeNativeElement as HTMLElement;
+      expect(element.querySelector('.gallery-section #photos')).not.toBeNull();
+      expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: 'instant' }));
+    } finally {
+      scrollTo.mockRestore();
+      release(profile);
+    }
+  });
+
   it('points at the album folder when a model has no photographs yet', async () => {
     const profile = withPhotos(0);
     const harness = await openPortfolio(profile.slug);
@@ -622,6 +762,32 @@ describe('AiModelPortfolioPage photo shuffle', () => {
       expect(after).not.toEqual(before);
       expect([...after].sort()).toEqual(profile.photos.map((photo) => photo.src).sort());
       expect(element.querySelectorAll('.grid-tile').length).toBe(4);
+    } finally {
+      random.mockRestore();
+      release(profile);
+    }
+  });
+
+  it('draws a different twelve from a larger album on every visit and every shuffle', () => {
+    const profile = withPhotos(20);
+    const random = vi.spyOn(Math, 'random');
+
+    try {
+      // Draws near 1 keep the album order; draws of 0 rotate it by one photograph.
+      random.mockReturnValue(0.999);
+      const fixture = TestBed.createComponent(AiModelPortfolioPage);
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      const first = shownOrder(element);
+      expect(first).toEqual(profile.photos.slice(0, 12).map((photo) => photo.src));
+
+      random.mockReturnValue(0);
+      element.querySelector<HTMLButtonElement>('.shuffle-button')!.click();
+      fixture.detectChanges();
+      const second = shownOrder(element);
+      expect(second).toEqual(profile.photos.slice(1, 13).map((photo) => photo.src));
+      expect(element.querySelectorAll('.grid-tile').length).toBe(12);
+      expect(element.querySelector('.view-all-tile')).not.toBeNull();
     } finally {
       random.mockRestore();
       release(profile);
