@@ -93,7 +93,15 @@ Right below the personal details, a **Videos** reel plays the clips from the mod
 `<album>/video/` folder: tap a clip to open it in the portfolio's player — play, pause, stop, scrub,
 volume, playback speed, previous/next clip, picture-in-picture, true full screen (F or a double
 click) and a **Download** button for the file. Tapping the picture plays or pauses it, and
-Space/K, ←/→, ↑/↓ and M work as shortcuts.
+Space/K, ←/→, ↑/↓ and M work as shortcuts. The profile header shows the model's city and country.
+
+Below the portfolio grid, Community members can publish a testimonial with a 10–100 character
+headline, 20–2,500 character quote and a full- or half-star rating. Testimonials include linked
+Community author cards, presence status, city/country and a localized timestamp; the scrollable feed
+loads additional entries as needed. Visitors get the compact Google sign-in option (without guest
+mode) and return to the model portfolio after signing in. API/database patch and deployment
+instructions are in [`docs/ai-model-testimonials.md`](docs/ai-model-testimonials.md).
+
 Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative
 until verified.
 

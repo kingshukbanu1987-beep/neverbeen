@@ -4,7 +4,11 @@ import { Router, RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
 import { City } from '../../../models/community';
 import { getStatesForCountry, getCitiesForState } from '../../../models/location-cascade';
-import { MAX_COMMUNITY_IMAGE_BYTES, readImageAsDataUrl } from '../../../shared/community-image-compression';
+import {
+  MAX_COMMUNITY_IMAGE_BYTES,
+  readImageAsDataUrl,
+} from '../../../shared/community-image-compression';
+import { takeCommunityReturnPath } from '../../../shared/community-return-path';
 
 /** Registration profile photographs use the same 100 KB upload cap as Community. */
 export const MAX_PHOTO_BYTES = MAX_COMMUNITY_IMAGE_BYTES;
@@ -226,7 +230,9 @@ export class CommunityRegister implements OnInit {
         photo: this.selectedFile(),
       });
 
-      this.router.navigate(['/community/profile']);
+      const returnPath = takeCommunityReturnPath();
+      if (returnPath) this.router.navigateByUrl(returnPath);
+      else this.router.navigate(['/community/profile']);
     } catch (error) {
       this.submitError.set(
         error instanceof Error && error.message
