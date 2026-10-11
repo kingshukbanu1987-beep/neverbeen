@@ -48,6 +48,8 @@ export class AiModelsPage {
     { value: 'future', label: 'Looking for Future Contract' },
   ];
   protected readonly totalCount = computed(() => String(this.models.length).padStart(2, '0'));
+  /** The current calendar year, so the "Portfolio index /YYYY" eyebrow stays accurate across visits. */
+  protected readonly currentYear = new Date().getFullYear();
   protected readonly hasIllustrativeProfiles = computed(() =>
     this.models.some((model) => model.illustrative),
   );
