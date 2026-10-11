@@ -128,31 +128,133 @@ const studyTracks = [
   },
 ];
 
-const firstNames = ['Ari', 'Lina', 'Mira', 'Niko', 'Sami', 'Rumi', 'Theo', 'Yara', 'Noor', 'Eli'];
-const partnerFirstNames = [
-  'Elias',
-  'Samira',
-  'Milan',
-  'Nadia',
-  'Rami',
-  'Ayla',
-  'Dara',
-  'Kian',
-  'Leila',
-  'Tomas',
-];
-const partnerLastNames = [
-  'Vale',
-  'Rahman',
-  'Sen',
-  'Marlow',
-  'Qadir',
-  'Bennett',
-  'Navarro',
-  'Haddad',
-  'Farzan',
-  'Reed',
-];
+const relatedNameStyles = {
+  persian: {
+    feminine: ['Laleh', 'Shirin', 'Parisa', 'Neda', 'Roya', 'Darya', 'Simin', 'Mahsa'],
+    masculine: ['Reza', 'Farhad', 'Kaveh', 'Navid', 'Arman', 'Mehrdad', 'Siamak', 'Behzad'],
+    surnames: ['Farzan', 'Mehr', 'Rahimi', 'Naderi', 'Azimi', 'Vaziri'],
+  },
+  arabic: {
+    feminine: ['Layla', 'Mariam', 'Nour', 'Yasmin', 'Rania', 'Salma', 'Huda', 'Amira'],
+    masculine: ['Omar', 'Karim', 'Samir', 'Tarek', 'Ziad', 'Youssef', 'Rami', 'Hadi'],
+    surnames: ['Haddad', 'Mansour', 'Khalil', 'Farouk', 'Nasser', 'Saad'],
+  },
+  southAsian: {
+    feminine: ['Ananya', 'Kavya', 'Aditi', 'Mira', 'Riya', 'Tara', 'Nisha', 'Ishani'],
+    masculine: ['Arjun', 'Dev', 'Karan', 'Rohan', 'Kabir', 'Neel', 'Adil', 'Raj'],
+    surnames: ['Sen', 'Banerjee', 'Mukherjee', 'Sharma', 'Qureshi', 'Das'],
+  },
+  malay: {
+    feminine: ['Aisyah', 'Nurul', 'Hana', 'Siti', 'Amira', 'Farah', 'Nadia', 'Zahra'],
+    masculine: ['Amir', 'Hakim', 'Danial', 'Firdaus', 'Iqbal', 'Rizwan', 'Arif', 'Zain'],
+    surnames: ['Ismail', 'Rahman', 'Abdullah', 'Zainal', 'Osman', 'Aziz'],
+  },
+  celtic: {
+    feminine: ['Maeve', 'Aisling', 'Nora', 'Alice', 'Erin', 'Grace', 'Clara', 'Wren'],
+    masculine: ['Cian', 'Eoin', 'Liam', 'Thomas', 'Owen', 'James', 'Niall', 'Rowan'],
+    surnames: ['O’Connell', 'Reed', 'Byrne', 'Murphy', 'Gallagher', 'Vale'],
+  },
+  british: {
+    feminine: ['Amelia', 'Charlotte', 'Freya', 'Isla', 'Georgia', 'Imogen', 'Maya', 'Sophie'],
+    masculine: ['Oliver', 'George', 'Harry', 'Arthur', 'Theo', 'Noah', 'Jack', 'Callum'],
+    surnames: ['Bennett', 'Parker', 'Hughes', 'Williams', 'Carter', 'Reed'],
+  },
+  latin: {
+    feminine: ['Lucía', 'Valentina', 'Camila', 'Emilia', 'Sofía', 'Inés', 'Julieta', 'Rosa'],
+    masculine: ['Mateo', 'Diego', 'Martín', 'Nicolás', 'Santiago', 'Rafael', 'Andrés', 'Tomás'],
+    surnames: ['Álvarez', 'Pereira', 'Rojas', 'Navarro', 'Silva', 'Torres'],
+  },
+  turkic: {
+    feminine: ['Leyla', 'Aylin', 'Zeynep', 'Elif', 'Selin', 'Aysel', 'Nigar', 'Derya'],
+    masculine: ['Emre', 'Murad', 'Kemal', 'Arda', 'Deniz', 'Kaan', 'Cem', 'Orhan'],
+    surnames: ['Yılmaz', 'Demir', 'Aliyev', 'Kaya', 'Mammadov', 'Arslan'],
+  },
+  caucasus: {
+    feminine: ['Nino', 'Tamara', 'Ana', 'Mariam', 'Salome', 'Ketevan', 'Lela', 'Tamar'],
+    masculine: ['Giorgi', 'Luka', 'Nika', 'Levan', 'Zurab', 'Irakli', 'Davit', 'Gela'],
+    surnames: ['Beridze', 'Kapanadze', 'Maisuradze', 'Gelashvili', 'Dolidze', 'Vale'],
+  },
+  balkan: {
+    feminine: ['Amina', 'Lejla', 'Ema', 'Hana', 'Sara', 'Amra', 'Jasna', 'Mira'],
+    masculine: ['Emir', 'Tarik', 'Adnan', 'Mirza', 'Jasmin', 'Haris', 'Amar', 'Nedim'],
+    surnames: ['Hadžić', 'Kovač', 'Marković', 'Begić', 'Ilić', 'Petrović'],
+  },
+  international: {
+    feminine: ['Ari', 'Lina', 'Mira', 'Sami', 'Rumi', 'Yara', 'Noor', 'Eli'],
+    masculine: ['Ari', 'Niko', 'Sami', 'Theo', 'Kian', 'Rami', 'Dara', 'Eli'],
+    surnames: ['Vale', 'Rahman', 'Sen', 'Marlow', 'Qadir', 'Bennett'],
+  },
+};
+
+const countryNameStyles = {
+  argentina: 'latin',
+  colombia: 'latin',
+  uruguay: 'latin',
+  iran: 'persian',
+  iraq: 'arabic',
+  syria: 'arabic',
+  egypt: 'arabic',
+  jordan: 'arabic',
+  kuwait: 'arabic',
+  lebanon: 'arabic',
+  morocco: 'arabic',
+  oman: 'arabic',
+  qatar: 'arabic',
+  'saudi arabia': 'arabic',
+  'united arab emirates': 'arabic',
+  india: 'southAsian',
+  malaysia: 'malay',
+  ireland: 'celtic',
+  'united kingdom': 'british',
+  türkiye: 'turkic',
+  azerbaijan: 'turkic',
+  georgia: 'caucasus',
+  'bosnia and herzegovina': 'balkan',
+};
+
+const cityTimeZones = {
+  'abu dhabi': 'Asia/Dubai',
+  alexandria: 'Africa/Cairo',
+  amman: 'Asia/Amman',
+  baghdad: 'Asia/Baghdad',
+  baku: 'Asia/Baku',
+  beirut: 'Asia/Beirut',
+  bogotá: 'America/Bogota',
+  'buenos aires': 'America/Argentina/Buenos_Aires',
+  cairo: 'Africa/Cairo',
+  casablanca: 'Africa/Casablanca',
+  cork: 'Europe/Dublin',
+  damascus: 'Asia/Damascus',
+  darjeeling: 'Asia/Kolkata',
+  doha: 'Asia/Qatar',
+  dubai: 'Asia/Dubai',
+  dublin: 'Europe/Dublin',
+  erbil: 'Asia/Baghdad',
+  galway: 'Europe/Dublin',
+  homs: 'Asia/Damascus',
+  isfahan: 'Asia/Tehran',
+  istanbul: 'Europe/Istanbul',
+  jeddah: 'Asia/Riyadh',
+  kolkata: 'Asia/Kolkata',
+  'kuala lumpur': 'Asia/Kuala_Lumpur',
+  'kuwait city': 'Asia/Kuwait',
+  limerick: 'Europe/Dublin',
+  london: 'Europe/London',
+  manchester: 'Europe/London',
+  mashhad: 'Asia/Tehran',
+  montevideo: 'America/Montevideo',
+  muscat: 'Asia/Muscat',
+  riyadh: 'Asia/Riyadh',
+  sarajevo: 'Europe/Sarajevo',
+  shantiniketan: 'Asia/Kolkata',
+  shiraz: 'Asia/Tehran',
+  srinagar: 'Asia/Kolkata',
+  tabriz: 'Asia/Tehran',
+  tbilisi: 'Asia/Tbilisi',
+  tehran: 'Asia/Tehran',
+  tripoli: 'Asia/Beirut',
+  yazd: 'Asia/Tehran',
+};
 const hobbyPool = [
   ['film photography', 'late-night city walks', 'making playlists'],
   ['ceramics', 'bouldering', 'collecting old maps'],
@@ -178,6 +280,7 @@ const memories = [
     file: '01-childhood-home.jpg',
     period: 'Early childhood',
     ageAtCapture: 4,
+    hourRange: [8, 8],
     caption: 'A slow morning at home',
     alt: 'A fictional, family-friendly childhood memory at home with generic parent figures',
     scene:
@@ -188,6 +291,7 @@ const memories = [
     file: '02-neighbourhood.jpg',
     period: 'Growing up',
     ageAtCapture: 8,
+    hourRange: [17, 17],
     caption: 'The neighbourhood after the rain',
     alt: 'A fictional childhood memory outdoors in the model’s imagined home neighbourhood',
     scene:
@@ -198,6 +302,7 @@ const memories = [
     file: '03-school-days.jpg',
     period: 'School years',
     ageAtCapture: 16,
+    hourRange: [14, 17],
     caption: 'The last bell of the day',
     alt: 'A fictional, fully clothed school-age memory with anonymous classmates',
     scene:
@@ -207,6 +312,8 @@ const memories = [
     id: 'school-project',
     file: '04-school-project.jpg',
     period: 'School years',
+    ageAtCapture: 14,
+    hourRange: [15, 19],
     caption: 'A project built after class',
     alt: 'A fictional school project memory around a table with friends',
     scene:
@@ -216,6 +323,8 @@ const memories = [
     id: 'college',
     file: '05-college-studio.jpg',
     period: 'College',
+    ageAtCapture: 20,
+    hourRange: [21, 23],
     caption: 'A studio night before the deadline',
     alt: 'A fictional college memory in a design studio with anonymous classmates',
     scene:
@@ -225,6 +334,8 @@ const memories = [
     id: 'first-workplace',
     file: '06-first-workplace.jpg',
     period: 'First role',
+    ageAtCapture: 21,
+    hourRange: [9, 17],
     caption: 'The first day that felt like hers',
     alt: 'A fictional early-career memory at a creative workplace',
     scene:
@@ -234,6 +345,8 @@ const memories = [
     id: 'first-editorial',
     file: '07-first-editorial.jpg',
     period: 'Creative career',
+    ageAtCapture: 22,
+    hourRange: [13, 18],
     caption: 'A small crew, a big idea',
     alt: 'A fictional behind-the-scenes editorial memory with a small creative team',
     scene:
@@ -243,6 +356,8 @@ const memories = [
     id: 'friends',
     file: '08-close-friends.jpg',
     period: 'Off duty',
+    ageAtCapture: 'current',
+    hourRange: [15, 19],
     caption: 'The people who know every version of her',
     alt: 'A fictional casual memory with adult friends',
     scene:
@@ -252,6 +367,8 @@ const memories = [
     id: 'family-now',
     file: '09-family-table.jpg',
     period: 'Family',
+    ageAtCapture: 'current',
+    hourRange: [18, 21],
     caption: 'Everyone talking at once',
     alt: 'A fictional family gathering with generic, non-identifiable family members',
     scene:
@@ -261,6 +378,8 @@ const memories = [
     id: 'present-day',
     file: '10-present-day.jpg',
     period: 'Today',
+    ageAtCapture: 'current',
+    hourRange: [16, 18],
     caption: 'A new frame, on her own terms',
     alt: 'A fictional present-day outdoor portrait from the model’s creative life',
     scene:
@@ -394,6 +513,67 @@ function pick(values, seed, offset = 0) {
   return values[(seed + offset) % values.length];
 }
 
+function relatedNameStyle(country) {
+  return relatedNameStyles[
+    countryNameStyles[String(country).toLocaleLowerCase()] ?? 'international'
+  ];
+}
+
+function relatedName(country, gender, seed, offset, familySurname = '') {
+  const style = relatedNameStyle(country);
+  const given = pick(style[gender] ?? style.feminine, seed, offset);
+  const surname = familySurname || pick(style.surnames, seed, offset + 17);
+  return `${given} ${surname}`;
+}
+
+function timeZoneForCity(city) {
+  return cityTimeZones[String(city).toLocaleLowerCase()] ?? 'local time';
+}
+
+function fictionalDateTime(year, seed, offset = 0, latestDate = null, hourRange = null) {
+  const now = new Date();
+  const explicitLimit = latestDate?.year === year ? latestDate : null;
+  const maxMonth =
+    explicitLimit?.monthIndex ?? (year === now.getUTCFullYear() ? now.getUTCMonth() : 11);
+  const monthIndex = Math.abs(seed + offset * 13) % (maxMonth + 1);
+  const daysInMonth = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+  const latestDay = explicitLimit
+    ? monthIndex === explicitLimit.monthIndex
+      ? Math.min(daysInMonth, explicitLimit.day)
+      : daysInMonth
+    : year === now.getUTCFullYear() && monthIndex === now.getUTCMonth()
+      ? Math.min(daysInMonth, now.getUTCDate())
+      : daysInMonth;
+  const day = (Math.abs(Math.floor(seed / 13) + offset * 7) % latestDay) + 1;
+  const earliestHour = Math.max(0, Math.min(23, hourRange?.[0] ?? 0));
+  const latestHour = Math.max(earliestHour, Math.min(23, hourRange?.[1] ?? 23));
+  const hour = (earliestHour + (Math.abs(seed + offset * 11) % (latestHour - earliestHour + 1)))
+    .toString()
+    .padStart(2, '0');
+  const minute = (Math.abs(Math.floor(seed / 5) + offset * 19) % 60).toString().padStart(2, '0');
+  const month = (monthIndex + 1).toString().padStart(2, '0');
+  const date = day.toString().padStart(2, '0');
+  const shortYear = String(year).slice(-2);
+
+  return {
+    year,
+    monthIndex,
+    month,
+    day,
+    date,
+    hour,
+    minute,
+    dateLabel: `${day} ${monthNames[monthIndex]} ${year}`,
+    timeLabel: `${hour}:${minute}`,
+    cameraStamp: `${month}/${date}/${shortYear} ${hour}:${minute}`,
+  };
+}
+
+function memoryAge(memory, currentAge) {
+  if (memory.ageAtCapture === 'current') return currentAge;
+  return Number.isInteger(memory.ageAtCapture) ? Math.min(memory.ageAtCapture, currentAge) : null;
+}
+
 function monthYear(year, seed, offset = 0) {
   return `${monthNames[(seed + offset) % monthNames.length]} ${year}`;
 }
@@ -403,25 +583,48 @@ function period(startYear, endYear, seed, offset = 0, ongoing = false) {
   return ongoing ? `${start} – Present` : `${start} – ${monthYear(endYear, seed, offset + 3)}`;
 }
 
-function memoryPeriod(memory, birthYear) {
-  if (!Number.isInteger(memory.ageAtCapture)) return memory.period;
-  return `${memory.period} · ${birthYear + memory.ageAtCapture} · age ${memory.ageAtCapture}`;
+function memoryPeriod(memory, birthYear, currentAge) {
+  const ageAtCapture = memoryAge(memory, currentAge);
+  if (!Number.isInteger(ageAtCapture)) return memory.period;
+  return `${memory.period} · ${birthYear + ageAtCapture} · age ${ageAtCapture}`;
 }
 
 function memoryCamera(year) {
-  if (year <= 2001) {
-    return `an early ${year}-era mobile-camera snapshot: very low resolution, soft focus, uneven exposure, hand-shake blur, noisy shadows, visible compression and a casual tilt`;
+  if (year <= 1998) {
+    return `a ${year}-era consumer 35mm point-and-shoot film photograph, with a 3:2 print scan, direct on-camera flash, visible fine film grain, slight focus softness, mild red-eye or hand-shake where natural, uneven lab-print colour and a casually tilted crop; no phone or digital-camera artifacts`;
+  }
+  if (year <= 2002) {
+    return `a ${year}-era pocket point-and-shoot photograph, either a compact 35mm print scan or an early 1–3 megapixel digital compact, with soft focus, weak flash, noisy shadows, uneven colour, imperfect crop and a slight tilt; never a modern smartphone`;
   }
   if (year <= 2008) {
-    return `a basic ${year}-era camera-phone snapshot: small 4:3 low-resolution JPEG, soft focus, uneven exposure, slight hand-shake blur, visible compression and sensor noise, casually tilted framing`;
+    return `a ${year}-era 3–5 megapixel compact digital camera or basic early camera-phone snapshot: small 4:3 JPEG, slow autofocus, direct-flash hotspots, hand-shake blur, visible sensor noise and compression, casually tilted framing`;
   }
   if (year <= 2013) {
-    return `a ${year}-era feature-phone camera snapshot: low-resolution 4:3 compressed JPEG, imperfect auto white balance, soft focus, motion smear, sensor noise, slightly tilted horizon and imperfect crop`;
+    return `a ${year}-era feature-phone camera or modest compact-camera snapshot: low-resolution 4:3 compressed JPEG, imperfect auto white balance, soft focus, motion smear, sensor noise, slightly tilted horizon and imperfect crop`;
   }
   if (year <= 2018) {
     return `a ${year}-era early-smartphone snapshot: modest 4:3 phone-camera framing, imperfect autofocus, slight motion blur, clipped highlights, noisy shadows, mild compression and a crooked horizon`;
   }
   return `a ${year}-era mid-range smartphone snapshot: casual 4:3 framing, slightly smudged lens, mild motion blur, small focus miss, clipped highlights, compressed shadows and a crooked horizon`;
+}
+
+function memoryPhotoFlaws(year) {
+  if (year <= 1998) {
+    return 'fine analog film grain, slight point-and-shoot focus softness, uneven lab-print colour, a little scan dust, natural flash falloff and a subtle 1–2 degree tilted horizon; no digital-camera artifacts';
+  }
+  if (year <= 2002) {
+    return 'soft compact-camera focus, mild film grain or early-CCD noise, weak direct flash, imperfect crop and a slight tilted horizon; no smartphone processing';
+  }
+  if (year <= 2008) {
+    return 'visible but restrained JPEG compression, small-sensor chroma noise, slow autofocus, slight hand-shake blur, direct-flash hotspots and a casually tilted horizon';
+  }
+  if (year <= 2013) {
+    return 'low-resolution JPEG softness, sensor noise in shadows, imperfect white balance, slight motion smear, a modest focus miss and a crooked horizon';
+  }
+  if (year <= 2018) {
+    return 'mild compression, clipped highlights, noisy shadows, small autofocus miss, slight motion blur and an imperfectly tilted crop';
+  }
+  return 'a slightly smudged lens, gentle compressed-shadow noise, a small focus miss, mild hand-shake blur and a casual 1–2 degree tilted frame';
 }
 
 function makeBiography(model) {
@@ -436,16 +639,112 @@ function makeBiography(model) {
   const area = pick(neighborhoods[city.toLocaleLowerCase()] ?? ['a fictional neighbourhood'], seed);
   const age = Math.max(21, Number.parseInt(profile.age, 10) || 25);
   const birthYear = currentYear - age;
+  const birthMoment = fictionalDateTime(birthYear, seed, 29, {
+    year: birthYear,
+    monthIndex: new Date().getUTCMonth(),
+    day: new Date().getUTCDate(),
+  });
+  const birthTimeZone = timeZoneForCity(city);
+  const birthFacility = 'NeverBeen House of Birth';
+  const birthDetails = {
+    date: birthMoment.dateLabel,
+    time: birthMoment.timeLabel,
+    timeZone: birthTimeZone,
+    facility: birthFacility,
+    neighborhood: area,
+    city,
+    country,
+    note: 'This venue, date and time are invented for the NeverBeen story; no real address or medical record is represented.',
+  };
+  const memoryCaptures = new Map(
+    memories.map((memory) => {
+      const ageAtCapture = memoryAge(memory, age);
+      const captureYear = Number.isInteger(ageAtCapture) ? birthYear + ageAtCapture : null;
+      const moment = captureYear
+        ? fictionalDateTime(
+            captureYear,
+            hash(`${model.name}:${memory.id}`),
+            3,
+            null,
+            memory.hourRange,
+          )
+        : null;
+      return [
+        memory.id,
+        {
+          age: ageAtCapture,
+          year: captureYear,
+          timestamp: moment ? `${moment.dateLabel} · ${moment.timeLabel} ${birthTimeZone}` : '',
+          cameraStamp:
+            moment && captureYear >= 2000 && captureYear <= 2013 ? moment.cameraStamp : '',
+          date: moment?.dateLabel ?? '',
+          time: moment?.timeLabel ?? '',
+        },
+      ];
+    }),
+  );
   const track = pick(studyTracks, seed, 2);
   const hobbies = pick(hobbyPool, seed, 1);
   const passions = pick(passionPool, seed, 3);
   const firstName = model.name.split(/\s+/)[0] || model.name;
+  const familySurname = model.name.trim().split(/\s+/).at(-1) || model.name;
+  const declaredReligion = String(profile.religion ?? '').trim();
+  const declaredCulture = String(profile.culturalContext ?? '').trim();
+  const wardrobeContext = [
+    `Choose everyday clothing, hair and grooming that are plausible for ${city}, ${country}, the exact year and the depicted setting; reflect local climate, materials, school/work conventions and ordinary cultural diversity rather than costume.`,
+    declaredCulture
+      ? `Fictional cultural context explicitly provided for this model: ${declaredCulture}. Respect that context without adding stereotypes.`
+      : 'No individual cultural affiliation is specified; use locally plausible everyday details without assigning an ethnicity from appearance.',
+    declaredReligion
+      ? `Only use the explicitly supplied fictional religious context, ${declaredReligion}, when it is relevant to the scene; do not add observances or beliefs beyond it.`
+      : 'Religion is not specified. Do not infer or depict a personal religion from the model name, country or appearance; omit religious garments (including faith-signalling veils or headscarves), symbols, scriptures and rituals. If the depicted public setting has a historically documented school or workplace uniform, reflect that neutral setting convention without implying personal belief.',
+  ].join(' ');
   const relationshipType =
     seed % 4 === 0 ? 'Married' : seed % 4 === 1 ? 'In a relationship' : 'Single';
   const isMarried = relationshipType === 'Married';
+  const hasFormerSpouse = age >= 30 && seed % 5 === 0;
   const hasChild = isMarried && age >= 29 && seed % 2 === 0;
-  const partnerName = `${pick(partnerFirstNames, seed, 4)} ${pick(partnerLastNames, seed, 7)}`;
-  const childName = pick(firstNames, seed, 5);
+  const partnerGender = seed % 2 === 0 ? 'masculine' : 'feminine';
+  const partnerName = relatedName(country, partnerGender, seed, 4);
+  const childGender = (seed + 5) % 2 === 0 ? 'feminine' : 'masculine';
+  const childName = relatedName(country, childGender, seed, 5, familySurname);
+  const parents = [
+    {
+      name: relatedName(country, 'feminine', seed, 12, familySurname),
+      relationship: 'Mother',
+      note: 'A fictional parent character created for this alternate-universe biography.',
+    },
+    {
+      name: relatedName(country, 'masculine', seed, 18, familySurname),
+      relationship: 'Father',
+      note: 'A fictional parent character created for this alternate-universe biography.',
+    },
+  ];
+  const siblings = Array.from({ length: 1 + (seed % 3) }, (_, index) => {
+    const gender = (seed + index) % 2 === 0 ? 'feminine' : 'masculine';
+    const ageOffset = ((seed + index * 3) % 9) - 4;
+    return {
+      name: relatedName(country, gender, seed, 31 + index, familySurname),
+      relationship: gender === 'feminine' ? 'Sister' : 'Brother',
+      age: String(Math.max(1, age + ageOffset)),
+      note: 'A fictional sibling character created for this alternate-universe biography.',
+    };
+  });
+  const formerSpouses = hasFormerSpouse
+    ? [
+        {
+          name: relatedName(
+            country,
+            partnerGender === 'feminine' ? 'masculine' : 'feminine',
+            seed,
+            23,
+          ),
+          married: monthYear(birthYear + 22, seed, 10),
+          separated: monthYear(birthYear + 25, seed, 14),
+          note: 'A fictional former spouse; the relationship and dates are invented for this story.',
+        },
+      ]
+    : [];
   const undergradStart = birthYear + 18;
   const bachelorDuration = Math.min(4, Math.max(3, age - 18));
   const bachelorEnd = undergradStart + bachelorDuration;
@@ -572,18 +871,30 @@ function makeBiography(model) {
     personalLife = {
       relationshipStatus: 'Single',
       relationshipType: 'Single (fictional storyline)',
-      narrative: `In this fictional version, ${firstName} is single and content to build a life that feels like her own. She shares her time with family and friends, but no spouse, partner or children are invented for this chapter.`,
+      narrative: hasFormerSpouse
+        ? `In this fictional version, ${firstName} is single and content to build a life that feels like her own. An earlier marriage to ${formerSpouses[0].name} ended in ${formerSpouses[0].separated}; no real person or relationship is represented.`
+        : `In this fictional version, ${firstName} is single and content to build a life that feels like her own. She shares her time with family and friends, and no current spouse, partner or children are included in this chapter.`,
       partner: null,
       children: [],
       privacyNote:
-        'This status is invented for the character and is not a statement about any real individual.',
+        'All names and relationship details in this fictional family roster are invented and are not claims about any real individual.',
     };
   }
 
+  personalLife.parents = parents;
+  personalLife.siblings = siblings;
+  personalLife.formerSpouses = formerSpouses;
+
   const partnerLabel = personalLife.relationshipStatus === 'Married' ? 'spouse' : 'partner';
-  const familyScene = personalLife.partner
-    ? `a warm, modest family meal with the adult woman, her fictional ${partnerLabel} ${personalLife.partner.name}${hasChild ? ` and their fictional child ${childName}` : ''}, and a few generic non-identifiable family members; affectionate, wholesome and fully clothed`
-    : 'a warm, modest family meal with the adult woman and generic, non-identifiable parents and relatives; no spouse or child is part of this fictional story, wholesome and fully clothed';
+  const childhoodHomeScene = `a warm, ordinary morning at home in the imagined neighbourhood of ${area}, ${city}, showing ${model.name} as a {age}-year-old child beside her fictional mother ${parents[0].name} and father ${parents[1].name}; their faces are invented and non-identifiable, modest lived-in room, candid family snapshot`;
+  const neighbourhoodScene = `an {age}-year-old child exploring a leafy residential street in the imagined neighbourhood of ${area}, ${city}, after light rain, with her fictional mother ${parents[0].name} nearby; no identifiable addresses or landmarks`;
+  const relativesAtTable = [
+    ...parents.map((parent) => `${parent.relationship.toLowerCase()} ${parent.name}`),
+    ...siblings.map((sibling) => `${sibling.relationship.toLowerCase()} ${sibling.name}`),
+    ...(personalLife.partner ? [`${partnerLabel} ${personalLife.partner.name}`] : []),
+    ...personalLife.children.map((child) => `child ${child.name}`),
+  ].join(', ');
+  const familyScene = `a warm, modest family meal with ${model.name} and her fictional relatives: ${relativesAtTable}; all people are non-identifiable invented characters, affectionate and candid, everyday locally appropriate clothing, fully clothed, no readable signs or name labels`;
 
   const ambitions = [
     `Build a thoughtful creative label that gives emerging artists their first serious commission.`,
@@ -605,27 +916,48 @@ function makeBiography(model) {
   ];
 
   const photoPrompts = memories.map((memory) => {
-    const captureYear = Number.isInteger(memory.ageAtCapture)
-      ? birthYear + memory.ageAtCapture
-      : null;
-    const timelineNote = captureYear
-      ? `Timeline accuracy: this fictional snapshot is from ${captureYear}, when ${model.name} is ${memory.ageAtCapture} years old, based on the character’s fictional birth year ${birthYear}. Use only clothes, devices and details appropriate to that year. Camera: ${memoryCamera(captureYear)}; avoid contemporary computational polish, cinematic lighting or studio-perfect framing.`
-      : '';
-    const timelinePrefix = timelineNote ? ` ${timelineNote}` : '';
-    const scene = (memory.id === 'family-now' ? familyScene : memory.scene)
-      .replaceAll('{age}', String(memory.ageAtCapture ?? ''))
+    const capture = memoryCaptures.get(memory.id) ?? {};
+    const captureYear = capture.year;
+    const timestampNote = capture.timestamp
+      ? `Fictional capture date and local time: ${capture.timestamp}. This time and date are invented, not archive metadata.`
+      : 'The fictional capture date is unspecified.';
+    const cameraNote = captureYear
+      ? `Era-matched equipment: ${memoryCamera(captureYear)}.`
+      : 'Use only ordinary consumer-camera details appropriate to the scene.';
+    const captureFlaws = captureYear
+      ? memoryPhotoFlaws(captureYear)
+      : 'slight focus softness, natural grain, uneven exposure and a gently tilted horizon';
+    const stampNote = capture.cameraStamp
+      ? `If a date imprint suits this camera generation, burn a tiny, slightly faded orange seven-segment camera timestamp into the lower-right corner reading exactly “${capture.cameraStamp}”; this is the only text permitted in the picture.`
+      : 'Do not add a modern date graphic, phone UI, watermark, or fabricated text overlay.';
+    const sceneTemplate =
+      memory.id === 'family-now'
+        ? familyScene
+        : memory.id === 'childhood-home'
+          ? childhoodHomeScene
+          : memory.id === 'neighbourhood'
+            ? neighbourhoodScene
+            : memory.scene;
+    const scene = sceneTemplate
+      .replaceAll('{age}', String(capture.age ?? ''))
       .replaceAll('{year}', String(captureYear ?? ''));
+    const ageNote =
+      capture.age < 18
+        ? `The model is a child or teenager aged ${capture.age} here: preserve her family resemblance, but use age-appropriate facial features, body proportions, hairstyle and ordinary clothing; no adult makeup, adult styling or sexualization.`
+        : `The model is an adult aged ${capture.age}; keep her face and natural figure consistent with the supplied portrait, while showing period-appropriate hair and grooming.`;
     const alt = captureYear
-      ? `A fictional ${captureYear} mobile-camera snapshot of ${model.name} at age ${memory.ageAtCapture}.`
+      ? `Fictional archival-style ${captureYear} consumer-camera photo of ${model.name}, age ${capture.age}; captured ${capture.timestamp}.`
       : memory.alt;
     return {
       id: memory.id,
       filename: memory.file,
       caption: memory.caption,
-      period: memoryPeriod(memory, birthYear),
+      period: memoryPeriod(memory, birthYear, age),
+      timestamp: capture.timestamp,
+      cameraStamp: capture.cameraStamp,
       alt,
       identityReference: model.identityReference,
-      prompt: `Create one single, standalone, photorealistic but clearly fictional mobile-phone memory image of ${model.name}.${timelinePrefix} Scene: ${scene}. Identity continuity: use the model’s supplied NeverBeen portrait as a loose reference for the adult character only; childhood scenes should depict a plausible fictional younger version, not a real or identifiable child. Set it in the imagined neighbourhood of ${hometown}; all people other than the model are generic, synthetic and non-identifiable. Natural candid phone-camera framing, believable ambient light, slight handheld imperfection, gentle sensor grain, sincere expressions, unretouched everyday realism. Family-safe, fully clothed, non-sexual. No real-world claims, no logos, no readable text, no collage, no watermark. The picture is an AI-generated illustration for an alternate-universe fictional biography, not documentary evidence.`,
+      prompt: `Create one single photorealistic candid snapshot for a fictional biography of ${model.name}, captured in ${captureYear ?? 'the present day'}. It should feel like an ordinary real consumer-camera photo from that exact year—not an illustration, CGI render, fashion campaign or polished AI portrait. ${timestampNote} ${cameraNote} ${stampNote} Scene: ${scene}. Age and identity continuity: ${ageNote} For adult scenes, use the supplied NeverBeen portrait as an identity reference; for childhood scenes, make a plausible younger version of this fictional adult model, never depict a real or identifiable child. ${wardrobeContext} Place and props should fit ${hometown} and the period, with no identifiable real address or landmark. Use naturally imperfect photographic flaws appropriate to that era: ${captureFlaws}. Keep the subject readable and anatomically natural; avoid waxy skin, extreme symmetry, beauty retouching, hyper-sharp detail, fake bokeh, cinematic color grading or contemporary computational-camera polish. Candid, fully clothed, family-safe. The people, names, date, place and family story are fictional and the site labels the image as AI-generated; do not add captions, logos, signs or any other text.`,
     };
   });
 
@@ -637,10 +969,13 @@ function makeBiography(model) {
     name: model.name,
     signature: model.name,
     signatureStyle: `Handwritten-style blue ballpoint signature for ${model.name} on white paper; a fictional facsimile.`,
+    birthDetails,
     generalInformation: {
       fullName: model.name,
       profession: 'Fictional digital model and creative collaborator',
-      born: `${hometown} (imagined for this story)`,
+      born: birthDetails.date,
+      birthTime: `${birthDetails.time} (${birthTimeZone})`,
+      birthplace: `${birthFacility} (fictional), ${area}, ${city}, ${country}`,
       age: `${age} · fictional character detail`,
       education: education.map((entry) => entry.qualification).join('; '),
       relationshipStatus: personalLife.relationshipStatus,
@@ -648,9 +983,9 @@ function makeBiography(model) {
     },
     summary: fictionalIntro,
     earlyLife: [
-      `In this alternate-universe story, ${model.name} was born in ${city}, ${country}, and grew up around ${area}. The district, family home and every childhood episode are invented, not personal records.`,
+      `In this alternate-universe story, ${model.name} was born on ${birthDetails.date} at ${birthDetails.time} ${birthTimeZone} at the fictional ${birthFacility} in ${area}, ${city}, ${country}. The venue, date, time and every childhood episode are invented; no real address or medical record is represented.`,
       `At age four, around ${birthYear + 4}, a slow family breakfast and the familiar rooms of home became the first small landmarks in her imagined life. The accompanying mobile-camera scene is a fictional memory, not an archival photograph.`,
-      `By age eight, around ${birthYear + 8}, she had begun exploring the nearby streets with a parent, noticing rain-dark pavement, shop shutters and changing light. That curiosity gradually became a habit of observation.`,
+      `By age eight, around ${birthYear + 8}, she had begun exploring the nearby streets with her fictional mother ${parents[0].name}, noticing rain-dark pavement, shop shutters and changing light. That curiosity gradually became a habit of observation.`,
       `In secondary school, around age sixteen in ${birthYear + 16}, she found confidence in friends and hands-on class projects. These school scenes are fictional snapshots from the character’s timeline, not records of a real school or child.`,
     ],
     educationalBackground: education,
@@ -680,17 +1015,22 @@ function makeBiography(model) {
         by: 'A fictional mentor in the NeverBeen Multiverse',
       },
     ],
-    memories: memories.map((memory) => ({
-      id: memory.id,
-      file: memory.file,
-      period: memoryPeriod(memory, birthYear),
-      caption: memory.caption,
-      alt: memory.alt,
-      fictional: true,
-    })),
+    memories: memories.map((memory) => {
+      const capture = memoryCaptures.get(memory.id) ?? {};
+      return {
+        id: memory.id,
+        file: memory.file,
+        period: memoryPeriod(memory, birthYear, age),
+        timestamp: capture.timestamp ?? '',
+        cameraStamp: capture.cameraStamp ?? '',
+        caption: memory.caption,
+        alt: memory.alt,
+        fictional: true,
+      };
+    }),
     photoPrompts,
     fictionalNotice:
-      'This biography and every image prompt are fictional creations from the NeverBeen Multiverse. They are not biographical claims or documentary photographs.',
+      'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
   };
 }
 
@@ -738,7 +1078,7 @@ function main() {
       `[biography] Would write ${promptsFile} with ${biography.photoPrompts.length} mobile-photo prompts`,
     );
     console.log(
-      `[biography] Birthplace is explicitly fictional: ${biography.generalInformation.born}`,
+      `[biography] Fictional birth details: ${biography.birthDetails.date} at ${biography.birthDetails.time} ${biography.birthDetails.timeZone}, ${biography.birthDetails.facility}, ${biography.birthDetails.neighborhood}, ${biography.birthDetails.city}, ${biography.birthDetails.country}.`,
     );
     return;
   }
@@ -752,7 +1092,7 @@ function main() {
         model: model.name,
         fictional: true,
         identityReference: model.identityReference,
-        note: 'Generate each prompt as one standalone image. Save each JPG in this Biography folder with its exact filename. These are fictional, AI-generated illustrations, not documentary photos.',
+        note: 'Generate each prompt as one standalone photorealistic archival-style image. Save each JPG in this Biography folder with its exact filename. The people, scenes and camera timestamps are fictional; these AI-generated images are not documentary photographs.',
         images: biography.photoPrompts,
       },
       null,

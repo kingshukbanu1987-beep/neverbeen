@@ -181,8 +181,14 @@
   text-align: center;
 }
 
+.infobox-media-pair {
+  position: relative;
+  isolation: isolate;
+  margin: 0.35rem 0.25rem 0.45rem;
+}
+
 .infobox-portrait {
-  margin: 0.35rem 0.2rem 0.25rem;
+  margin: 0;
   text-align: center;
 }
 
@@ -198,6 +204,45 @@
   padding: 0.2rem 0 0;
   color: var(--wiki-muted);
   font-size: 0.7rem;
+}
+
+.infobox-signature {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.85rem;
+  width: min(68%, 220px);
+  margin: 0;
+  padding: 0.26rem 0.34rem 0.18rem;
+  border: 1px solid rgb(162 169 177 / 80%);
+  background: rgb(255 255 252 / 92%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 19%);
+  transform: rotate(-2deg);
+}
+
+.infobox-signature img {
+  display: block;
+  width: 100%;
+  height: 55px;
+  object-fit: contain;
+}
+
+.infobox-signature-script {
+  display: grid;
+  min-height: 55px;
+  place-items: center;
+  overflow-wrap: anywhere;
+  color: #164f9c;
+  font-family: 'Caveat', 'Segoe Print', cursive;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.infobox-signature figcaption {
+  color: var(--wiki-muted);
+  font-size: 0.58rem;
+  line-height: 1.2;
+  text-align: right;
 }
 
 .infobox-facts {
@@ -410,19 +455,67 @@
   column-gap: 2rem;
 }
 
-.family-detail {
-  margin: 0.5rem 0;
-  padding: 0.55rem 0.7rem;
-  border-left: 2px solid #a2a9b1;
+.family-roster {
+  clear: both;
+  margin: 1.15rem 0 1rem;
+  padding: 0.65rem 0.8rem 0.35rem;
+  border: 1px solid var(--wiki-soft-border);
   background: #f8f9fa;
 }
 
-.family-detail strong {
-  display: block;
+.family-roster > h3 {
+  margin: 0 0 0.35rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #c8ccd1;
+  font-size: 1.08rem;
 }
 
-.family-detail p {
-  margin: 0.25rem 0;
+.family-roster-list {
+  display: grid;
+  margin: 0;
+}
+
+.family-roster-list > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.28fr) minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.48rem 0;
+  border-bottom: 1px solid #eaecf0;
+}
+
+.family-roster-list > div:last-child {
+  border-bottom: 0;
+}
+
+.family-roster-list dt {
+  font-weight: 700;
+}
+
+.family-roster-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.family-roster-list ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.family-roster-list li {
+  margin: 0.1rem 0 0.45rem;
+}
+
+.family-roster-list li:last-child {
+  margin-bottom: 0;
+}
+
+.family-roster-list li > span,
+.family-roster-list dd > span {
+  display: block;
+  margin-top: 0.12rem;
+  color: var(--wiki-muted);
+  font-size: 0.8rem;
 }
 
 .privacy-note {
@@ -449,64 +542,12 @@
   font-style: normal;
 }
 
-.signature-photo {
-  clear: both;
-  width: min(470px, 100%);
-  margin: 2rem auto 0.4rem;
-  padding: 0.55rem 0.55rem 0.3rem;
-  border: 1px solid #c8ccd1;
-  background: #eeeeec;
-  box-shadow: 0 2px 7px rgb(0 0 0 / 18%), 0 12px 24px rgb(0 0 0 / 8%);
-  transform: rotate(-0.55deg);
-}
-
 .signature-image {
   display: block;
   width: 100%;
   height: auto;
   background: #fff;
   object-fit: contain;
-}
-
-.signature-paper {
-  display: grid;
-  min-height: 148px;
-  align-content: center;
-  overflow: hidden;
-  padding: 0.85rem 1.4rem 0.55rem;
-  border: 1px solid #e6e5e0;
-  background:
-    repeating-linear-gradient(0deg, rgb(20 34 56 / 1.2%) 0 1px, transparent 1px 4px),
-    linear-gradient(112deg, #fff 0%, #fffefa 58%, #fdfdfb 100%);
-  box-shadow: inset 0 0 18px rgb(35 45 58 / 3%), 0 0 1px rgb(0 0 0 / 10%);
-}
-
-.signature {
-  width: max-content;
-  max-width: 100%;
-  margin: 0.1rem 0 0;
-  color: #164f9c;
-  font-family: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
-  font-size: clamp(3rem, 7vw, 4.6rem);
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
-  text-shadow: 0.35px 0.25px 0 rgb(8 50 122 / 50%), -0.25px 0 0 rgb(8 50 122 / 24%);
-  transform: rotate(-2.1deg) skewX(-5deg);
-}
-
-.signature-pen-note {
-  justify-self: end;
-  color: #69717a;
-  font-size: 0.62rem;
-  letter-spacing: 0.02em;
-}
-
-.signature-photo > figcaption {
-  padding: 0.25rem 0 0.05rem;
-  color: #54595d;
-  font-size: 0.7rem;
-  text-align: center;
 }
 
 .fiction-footer {
@@ -631,6 +672,11 @@
     column-gap: 0.7rem;
     font-size: 0.76rem;
   }
+
+  .family-roster-list > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.15rem;
+  }
 }
 
 @media print {
@@ -651,7 +697,6 @@
   }
 
   .story-photo,
-  .signature-photo,
   .infobox {
     break-inside: avoid;
   }

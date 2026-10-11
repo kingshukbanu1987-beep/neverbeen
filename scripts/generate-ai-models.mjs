@@ -466,6 +466,22 @@ function albumBiography(albumDir) {
           Object.entries(source.generalInformation).map(([key, value]) => [key, text(value)]),
         )
       : {};
+  const birthSource =
+    source.birthDetails &&
+    typeof source.birthDetails === 'object' &&
+    !Array.isArray(source.birthDetails)
+      ? source.birthDetails
+      : {};
+  const birthDetails = {
+    date: text(birthSource.date),
+    time: text(birthSource.time),
+    timeZone: text(birthSource.timeZone),
+    facility: text(birthSource.facility),
+    neighborhood: text(birthSource.neighborhood),
+    city: text(birthSource.city),
+    country: text(birthSource.country),
+    note: text(birthSource.note),
+  };
   const personalLife =
     source.personalLife &&
     typeof source.personalLife === 'object' &&
@@ -494,6 +510,8 @@ function albumBiography(albumDir) {
             id: text(entry.id) || `memory-${index + 1}`,
             fileName,
             period: text(entry.period),
+            timestamp: text(entry.timestamp),
+            cameraStamp: text(entry.cameraStamp),
             caption: text(entry.caption),
             alt: text(entry.alt) || text(entry.caption) || `Fictional memory ${index + 1}`,
             src: imagePath ? publicUrl(imagePath) : '',
@@ -525,6 +543,7 @@ function albumBiography(albumDir) {
     signature: text(source.signature),
     signatureStyle: text(source.signatureStyle),
     signatureImage: signaturePath ? publicUrl(signaturePath) : '',
+    birthDetails,
     generalInformation,
     summary: text(source.summary),
     earlyLife: textList(source.earlyLife),
@@ -543,6 +562,14 @@ function albumBiography(albumDir) {
       relationshipType: text(personalLife.relationshipType),
       narrative: text(personalLife.narrative),
       partner,
+      parents: biographyEntries(personalLife.parents, ['name', 'relationship', 'note']),
+      siblings: biographyEntries(personalLife.siblings, ['name', 'relationship', 'age', 'note']),
+      formerSpouses: biographyEntries(personalLife.formerSpouses, [
+        'name',
+        'married',
+        'separated',
+        'note',
+      ]),
       children: biographyEntries(personalLife.children, ['name', 'age', 'note']),
       privacyNote: text(personalLife.privacyNote),
     },
@@ -896,11 +923,38 @@ export interface AiModelBiographyMemory {
   id: string;
   fileName: string;
   period: string;
+  timestamp: string;
+  cameraStamp: string;
   caption: string;
   alt: string;
   /** Empty until the corresponding generated image exists in the Biography folder. */
   src: string;
   fictional: boolean;
+}
+
+export interface AiModelBiographyBirthDetails {
+  date: string;
+  time: string;
+  timeZone: string;
+  facility: string;
+  neighborhood: string;
+  city: string;
+  country: string;
+  note: string;
+}
+
+export interface AiModelBiographyRelative {
+  name: string;
+  relationship: string;
+  age?: string;
+  note: string;
+}
+
+export interface AiModelBiographyFormerSpouse {
+  name: string;
+  married: string;
+  separated: string;
+  note: string;
 }
 
 export interface AiModelBiography {
@@ -912,6 +966,7 @@ export interface AiModelBiography {
   signature: string;
   signatureStyle: string;
   signatureImage: string;
+  birthDetails: AiModelBiographyBirthDetails;
   generalInformation: Record<string, string>;
   summary: string;
   earlyLife: string[];
@@ -923,6 +978,9 @@ export interface AiModelBiography {
     relationshipType: string;
     narrative: string;
     partner: { name: string; note: string; met: string; married: string } | null;
+    parents: AiModelBiographyRelative[];
+    siblings: AiModelBiographyRelative[];
+    formerSpouses: AiModelBiographyFormerSpouse[];
     children: Array<{ name: string; age: string; note: string }>;
     privacyNote: string;
   };

@@ -52,7 +52,9 @@ export class AiModelBiographyPage {
     const labels: Record<string, string> = {
       fullName: 'Full name',
       profession: 'Profession',
-      born: 'Born in',
+      born: 'Born',
+      birthTime: 'Birth time',
+      birthplace: 'Birthplace',
       age: 'Age',
       education: 'Education',
       relationshipStatus: 'Relationship status',
@@ -69,5 +71,11 @@ export class AiModelBiographyPage {
 
   protected memoryImageAlt(alt: string, name: string): string {
     return alt || `Fictional AI-generated memory of ${name}`;
+  }
+
+  protected memoryMetadata(memory: AiModelBiographyMemory): string {
+    return [memory.period, memory.timestamp, 'fictional AI-generated image']
+      .filter(Boolean)
+      .join(' · ');
   }
 }

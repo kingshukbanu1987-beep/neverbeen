@@ -35,16 +35,38 @@
 
           <aside class="infobox" aria-label="Biographical information">
             <p class="infobox-title">{{ profile.name }}</p>
-            @if (profile.cover) {
-              <figure class="infobox-portrait">
-                <img
-                  [src]="profile.cover"
-                  [alt]="profile.name + ' — fictional NeverBeen portrait'"
-                  decoding="async"
-                />
-                <figcaption>Fictional digital model</figcaption>
+            <div class="infobox-media-pair">
+              @if (profile.cover) {
+                <figure class="infobox-portrait">
+                  <img
+                    [src]="profile.cover"
+                    [alt]="profile.name + ' — fictional NeverBeen portrait'"
+                    decoding="async"
+                  />
+                  <figcaption>Fictional digital model</figcaption>
+                </figure>
+              }
+              <figure class="infobox-signature">
+                @if (story.signatureImage) {
+                  <img
+                    class="signature-image"
+                    [src]="story.signatureImage"
+                    [alt]="
+                      'Fictional handwritten signature for ' +
+                      (story.signature || profile.name) +
+                      ' in blue ballpoint on white paper.'
+                    "
+                    loading="lazy"
+                    decoding="async"
+                  />
+                } @else {
+                  <span class="infobox-signature-script">{{
+                    story.signature || profile.name
+                  }}</span>
+                }
+                <figcaption>Fictional signature facsimile</figcaption>
               </figure>
-            }
+            </div>
             @if (generalDetails().length > 0) {
               <dl class="infobox-facts">
                 @for (detail of generalDetails(); track detail.key) {
@@ -66,6 +88,7 @@
             <li><a href="#career">Career</a></li>
             <li><a href="#achievements">Achievements</a></li>
             <li><a href="#personal-life">Personal life</a></li>
+            <li><a href="#family">Family</a></li>
             <li><a href="#interests">Interests and ambitions</a></li>
             <li><a href="#final-notes">Final notes</a></li>
           </ol>
@@ -92,11 +115,13 @@
                           class="memory-pending"
                           role="img"
                           [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                        >Fictional childhood image awaiting its frame</div>
+                        >
+                          Fictional childhood image awaiting its frame
+                        </div>
                       }
                       <figcaption>
                         <strong>{{ photo.caption }}</strong>
-                        <span>{{ photo.period }} · fictional AI-generated image</span>
+                        <span>{{ memoryMetadata(photo) }}</span>
                       </figcaption>
                     </figure>
                   }
@@ -116,11 +141,13 @@
                           class="memory-pending"
                           role="img"
                           [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                        >Fictional neighbourhood image awaiting its frame</div>
+                        >
+                          Fictional neighbourhood image awaiting its frame
+                        </div>
                       }
                       <figcaption>
                         <strong>{{ photo.caption }}</strong>
-                        <span>{{ photo.period }} · fictional AI-generated image</span>
+                        <span>{{ memoryMetadata(photo) }}</span>
                       </figcaption>
                     </figure>
                   }
@@ -140,11 +167,13 @@
                           class="memory-pending"
                           role="img"
                           [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                        >Fictional school-days image awaiting its frame</div>
+                        >
+                          Fictional school-days image awaiting its frame
+                        </div>
                       }
                       <figcaption>
                         <strong>{{ photo.caption }}</strong>
-                        <span>{{ photo.period }} · fictional AI-generated image</span>
+                        <span>{{ memoryMetadata(photo) }}</span>
                       </figcaption>
                     </figure>
                   }
@@ -162,11 +191,13 @@
                           class="memory-pending"
                           role="img"
                           [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                        >Fictional school-project image awaiting its frame</div>
+                        >
+                          Fictional school-project image awaiting its frame
+                        </div>
                       }
                       <figcaption>
                         <strong>{{ photo.caption }}</strong>
-                        <span>{{ photo.period }} · fictional AI-generated image</span>
+                        <span>{{ memoryMetadata(photo) }}</span>
                       </figcaption>
                     </figure>
                   }
@@ -208,11 +239,13 @@
                             class="memory-pending"
                             role="img"
                             [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                          >Fictional college image awaiting its frame</div>
+                          >
+                            Fictional college image awaiting its frame
+                          </div>
                         }
                         <figcaption>
                           <strong>{{ photo.caption }}</strong>
-                          <span>{{ photo.period }} · fictional AI-generated image</span>
+                          <span>{{ memoryMetadata(photo) }}</span>
                         </figcaption>
                       </figure>
                     }
@@ -259,11 +292,13 @@
                           class="memory-pending"
                           role="img"
                           [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                        >Fictional first-workplace image awaiting its frame</div>
+                        >
+                          Fictional first-workplace image awaiting its frame
+                        </div>
                       }
                       <figcaption>
                         <strong>{{ photo.caption }}</strong>
-                        <span>{{ photo.period }} · fictional AI-generated image</span>
+                        <span>{{ memoryMetadata(photo) }}</span>
                       </figcaption>
                     </figure>
                   }
@@ -283,11 +318,13 @@
                           class="memory-pending"
                           role="img"
                           [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                        >Fictional editorial image awaiting its frame</div>
+                        >
+                          Fictional editorial image awaiting its frame
+                        </div>
                       }
                       <figcaption>
                         <strong>{{ photo.caption }}</strong>
-                        <span>{{ photo.period }} · fictional AI-generated image</span>
+                        <span>{{ memoryMetadata(photo) }}</span>
                       </figcaption>
                     </figure>
                   }
@@ -307,11 +344,13 @@
                       class="memory-pending"
                       role="img"
                       [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                    >Fictional present-day image awaiting its frame</div>
+                    >
+                      Fictional present-day image awaiting its frame
+                    </div>
                   }
                   <figcaption>
                     <strong>{{ photo.caption }}</strong>
-                    <span>{{ photo.period }} · fictional AI-generated image</span>
+                    <span>{{ memoryMetadata(photo) }}</span>
                   </figcaption>
                 </figure>
               }
@@ -333,22 +372,104 @@
             @if (story.personalLife.relationshipType) {
               <p>{{ story.personalLife.relationshipType }}.</p>
             }
-            @if (story.personalLife.partner; as partner) {
-              <p>
-                In this fictional account, {{ partner.name }} is her
-                {{ story.personalLife.relationshipStatus === 'Married' ? 'spouse' : 'partner' }}.
-                {{ partner.met }} @if (partner.married) { Married {{ partner.married }}. }
-                {{ partner.note }}
-              </p>
-            }
-            @if (story.personalLife.children.length > 0) {
-              @for (child of story.personalLife.children; track child.name) {
-                <p>
-                  {{ child.name }} is a fictional child character, {{ child.age }} years old.
-                  {{ child.note }}
-                </p>
-              }
-            }
+            <div class="family-roster" id="family">
+              <h3>Family</h3>
+              <dl class="family-roster-list">
+                @if (story.personalLife.parents.length > 0) {
+                  <div>
+                    <dt>Parents</dt>
+                    <dd>
+                      <ul>
+                        @for (parent of story.personalLife.parents; track parent.name) {
+                          <li>
+                            <strong>{{ parent.relationship }}:</strong> {{ parent.name }}
+                            <span>{{ parent.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.siblings.length > 0) {
+                  <div>
+                    <dt>Siblings</dt>
+                    <dd>
+                      <ul>
+                        @for (sibling of story.personalLife.siblings; track sibling.name) {
+                          <li>
+                            <strong>{{ sibling.relationship }}:</strong> {{ sibling.name }}
+                            @if (sibling.age) {
+                              ({{ sibling.age }} years old)
+                            }
+                            <span>{{ sibling.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.partner; as partner) {
+                  <div>
+                    <dt>
+                      {{
+                        story.personalLife.relationshipStatus === 'Married' ? 'Spouse' : 'Partner'
+                      }}
+                    </dt>
+                    <dd>
+                      <strong>{{ partner.name }}</strong>
+                      @if (partner.married) {
+                        · Married {{ partner.married }}.
+                      }
+                      @if (partner.met) {
+                        {{ partner.met }}
+                      }
+                      <span>{{ partner.note }}</span>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.formerSpouses.length > 0) {
+                  <div>
+                    <dt>
+                      Former spouse{{ story.personalLife.formerSpouses.length > 1 ? 's' : '' }}
+                    </dt>
+                    <dd>
+                      <ul>
+                        @for (
+                          formerSpouse of story.personalLife.formerSpouses;
+                          track formerSpouse.name
+                        ) {
+                          <li>
+                            <strong>{{ formerSpouse.name }}</strong>
+                            @if (formerSpouse.married) {
+                              · Married {{ formerSpouse.married }}.
+                            }
+                            @if (formerSpouse.separated) {
+                              Separated {{ formerSpouse.separated }}.
+                            }
+                            <span>{{ formerSpouse.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.children.length > 0) {
+                  <div>
+                    <dt>Children</dt>
+                    <dd>
+                      <ul>
+                        @for (child of story.personalLife.children; track child.name) {
+                          <li>
+                            <strong>{{ child.name }}</strong> ({{ child.age }} years old)
+                            <span>{{ child.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+              </dl>
+            </div>
             @if (memory('friends'); as photo) {
               <figure class="story-photo story-photo-right">
                 @if (photo.src) {
@@ -363,11 +484,13 @@
                     class="memory-pending"
                     role="img"
                     [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                  >Fictional friends image awaiting its frame</div>
+                  >
+                    Fictional friends image awaiting its frame
+                  </div>
                 }
                 <figcaption>
                   <strong>{{ photo.caption }}</strong>
-                  <span>{{ photo.period }} · fictional AI-generated image</span>
+                  <span>{{ memoryMetadata(photo) }}</span>
                 </figcaption>
               </figure>
             }
@@ -385,11 +508,13 @@
                     class="memory-pending"
                     role="img"
                     [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
-                  >Fictional family image awaiting its frame</div>
+                  >
+                    Fictional family image awaiting its frame
+                  </div>
                 }
                 <figcaption>
                   <strong>{{ photo.caption }}</strong>
-                  <span>{{ photo.period }} · fictional AI-generated image</span>
+                  <span>{{ memoryMetadata(photo) }}</span>
                 </figcaption>
               </figure>
             }
@@ -439,26 +564,6 @@
                 }
               </div>
             }
-
-            <figure class="signature-photo">
-              @if (story.signatureImage) {
-                <img
-                  class="signature-image"
-                  [src]="story.signatureImage"
-                  [alt]="'Fictional handwritten signature for ' + (story.signature || profile.name) + ' in blue ballpoint on white paper.'"
-                  loading="lazy"
-                  decoding="async"
-                />
-              } @else {
-                <div class="signature-paper" role="img" [attr.aria-label]="story.signatureStyle">
-                  <p class="signature">{{ story.signature || profile.name }}</p>
-                  <span class="signature-pen-note">Blue ballpoint on paper</span>
-                </div>
-              }
-              <figcaption>
-                A handwritten-style blue ballpoint signature facsimile for this fictional character.
-              </figcaption>
-            </figure>
           </section>
         </article>
 
@@ -469,7 +574,9 @@
             family stories, quotations and pictures are invented; they do not describe real events
             or real people.
           </p>
-          <a [routerLink]="['/ai-models', profile.slug]">Return to {{ profile.name }}’s portfolio</a>
+          <a [routerLink]="['/ai-models', profile.slug]"
+            >Return to {{ profile.name }}’s portfolio</a
+          >
         </footer>
       } @else {
         <section class="biography-unavailable" aria-labelledby="unavailable-title">
@@ -494,7 +601,9 @@
     } @else {
       <header class="wiki-site-header">
         <a class="back-to-profile" routerLink="/ai-models">← All AI models</a>
-        <a class="wiki-wordmark" routerLink="/ai-models">NeverBeen <small>Multiverse biographies</small></a>
+        <a class="wiki-wordmark" routerLink="/ai-models"
+          >NeverBeen <small>Multiverse biographies</small></a
+        >
       </header>
       <section class="biography-unavailable" aria-labelledby="not-found-title">
         <p class="article-kicker">NeverBeen Multiverse</p>

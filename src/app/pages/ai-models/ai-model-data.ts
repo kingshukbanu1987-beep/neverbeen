@@ -44,11 +44,38 @@ export interface AiModelBiographyMemory {
   id: string;
   fileName: string;
   period: string;
+  timestamp: string;
+  cameraStamp: string;
   caption: string;
   alt: string;
   /** Empty until the corresponding generated image exists in the Biography folder. */
   src: string;
   fictional: boolean;
+}
+
+export interface AiModelBiographyBirthDetails {
+  date: string;
+  time: string;
+  timeZone: string;
+  facility: string;
+  neighborhood: string;
+  city: string;
+  country: string;
+  note: string;
+}
+
+export interface AiModelBiographyRelative {
+  name: string;
+  relationship: string;
+  age?: string;
+  note: string;
+}
+
+export interface AiModelBiographyFormerSpouse {
+  name: string;
+  married: string;
+  separated: string;
+  note: string;
 }
 
 export interface AiModelBiography {
@@ -60,6 +87,7 @@ export interface AiModelBiography {
   signature: string;
   signatureStyle: string;
   signatureImage: string;
+  birthDetails: AiModelBiographyBirthDetails;
   generalInformation: Record<string, string>;
   summary: string;
   earlyLife: string[];
@@ -71,6 +99,9 @@ export interface AiModelBiography {
     relationshipType: string;
     narrative: string;
     partner: { name: string; note: string; met: string; married: string } | null;
+    parents: AiModelBiographyRelative[];
+    siblings: AiModelBiographyRelative[];
+    formerSpouses: AiModelBiographyFormerSpouse[];
     children: Array<{ name: string; age: string; note: string }>;
     privacyNote: string;
   };
@@ -160,17 +191,29 @@ export const aiModelProfiles: AiModelProfile[] = [
     biography: {
       version: 1,
       fictional: true,
-      generatedAt: '2026-10-11T13:31:38.885Z',
+      generatedAt: '2026-10-11T14:46:33.107Z',
       title: 'In the Multiverse of NeverBeen',
       name: 'Fiadh Dara',
       signature: 'Fiadh Dara',
       signatureStyle:
         'Handwritten-style blue ballpoint signature for Fiadh Dara on white paper; a fictional facsimile.',
       signatureImage: '/NeverBeenModels/FiadhDara/Biography/signature.jpg',
+      birthDetails: {
+        date: '21 July 2003',
+        time: '06:58',
+        timeZone: 'Asia/Tehran',
+        facility: 'NeverBeen House of Birth',
+        neighborhood: 'the Eram quarter',
+        city: 'Shiraz',
+        country: 'Iran',
+        note: 'This venue, date and time are invented for the NeverBeen story; no real address or medical record is represented.',
+      },
       generalInformation: {
         fullName: 'Fiadh Dara',
         profession: 'Fictional digital model and creative collaborator',
-        born: 'the Eram quarter, Shiraz, Iran (imagined for this story)',
+        born: '21 July 2003',
+        birthTime: '06:58 (Asia/Tehran)',
+        birthplace: 'NeverBeen House of Birth (fictional), the Eram quarter, Shiraz, Iran',
         age: '23 · fictional character detail',
         education: 'Bachelor of Business in Brand Strategy',
         relationshipStatus: 'Single',
@@ -179,9 +222,9 @@ export const aiModelProfiles: AiModelProfile[] = [
       summary:
         'Fiadh Dara is a fictional NeverBeen digital model and imagined creative professional in an alternate universe. In this version of her story, the city she calls home is Shiraz, Iran; the neighbourhood and every biographical detail below are invented for this fictional character.',
       earlyLife: [
-        'In this alternate-universe story, Fiadh Dara was born in Shiraz, Iran, and grew up around the Eram quarter. The district, family home and every childhood episode are invented, not personal records.',
+        'In this alternate-universe story, Fiadh Dara was born on 21 July 2003 at 06:58 Asia/Tehran at the fictional NeverBeen House of Birth in the Eram quarter, Shiraz, Iran. The venue, date, time and every childhood episode are invented; no real address or medical record is represented.',
         'At age four, around 2007, a slow family breakfast and the familiar rooms of home became the first small landmarks in her imagined life. The accompanying mobile-camera scene is a fictional memory, not an archival photograph.',
-        'By age eight, around 2011, she had begun exploring the nearby streets with a parent, noticing rain-dark pavement, shop shutters and changing light. That curiosity gradually became a habit of observation.',
+        'By age eight, around 2011, she had begun exploring the nearby streets with her fictional mother Neda Dara, noticing rain-dark pavement, shop shutters and changing light. That curiosity gradually became a habit of observation.',
         'In secondary school, around age sixteen in 2019, she found confidence in friends and hands-on class projects. These school scenes are fictional snapshots from the character’s timeline, not records of a real school or child.',
       ],
       educationalBackground: [
@@ -234,11 +277,44 @@ export const aiModelProfiles: AiModelProfile[] = [
         relationshipStatus: 'Single',
         relationshipType: 'Single (fictional storyline)',
         narrative:
-          'In this fictional version, Fiadh is single and content to build a life that feels like her own. She shares her time with family and friends, but no spouse, partner or children are invented for this chapter.',
+          'In this fictional version, Fiadh is single and content to build a life that feels like her own. She shares her time with family and friends, and no current spouse, partner or children are included in this chapter.',
         partner: null,
+        parents: [
+          {
+            name: 'Neda Dara',
+            relationship: 'Mother',
+            note: 'A fictional parent character created for this alternate-universe biography.',
+          },
+          {
+            name: 'Farhad Dara',
+            relationship: 'Father',
+            note: 'A fictional parent character created for this alternate-universe biography.',
+          },
+        ],
+        siblings: [
+          {
+            name: 'Siamak Dara',
+            relationship: 'Brother',
+            age: '21',
+            note: 'A fictional sibling character created for this alternate-universe biography.',
+          },
+          {
+            name: 'Mahsa Dara',
+            relationship: 'Sister',
+            age: '24',
+            note: 'A fictional sibling character created for this alternate-universe biography.',
+          },
+          {
+            name: 'Reza Dara',
+            relationship: 'Brother',
+            age: '27',
+            note: 'A fictional sibling character created for this alternate-universe biography.',
+          },
+        ],
+        formerSpouses: [],
         children: [],
         privacyNote:
-          'This status is invented for the character and is not a statement about any real individual.',
+          'All names and relationship details in this fictional family roster are invented and are not claims about any real individual.',
       },
       hobbies: ['film photography', 'late-night city walks', 'making playlists'],
       interests: [
@@ -280,6 +356,8 @@ export const aiModelProfiles: AiModelProfile[] = [
           id: 'childhood-home',
           fileName: '01-childhood-home.jpg',
           period: 'Early childhood · 2007 · age 4',
+          timestamp: '2 March 2007 · 08:42 Asia/Tehran',
+          cameraStamp: '03/02/07 08:42',
           caption: 'A slow morning at home',
           alt: 'A fictional, family-friendly childhood memory at home with generic parent figures',
           src: '/NeverBeenModels/FiadhDara/Biography/01-childhood-home.jpg',
@@ -289,6 +367,8 @@ export const aiModelProfiles: AiModelProfile[] = [
           id: 'neighbourhood',
           fileName: '02-neighbourhood.jpg',
           period: 'Growing up · 2011 · age 8',
+          timestamp: '6 December 2011 · 17:15 Asia/Tehran',
+          cameraStamp: '12/06/11 17:15',
           caption: 'The neighbourhood after the rain',
           alt: 'A fictional childhood memory outdoors in the model’s imagined home neighbourhood',
           src: '/NeverBeenModels/FiadhDara/Biography/02-neighbourhood.jpg',
@@ -298,6 +378,8 @@ export const aiModelProfiles: AiModelProfile[] = [
           id: 'school-days',
           fileName: '03-school-days.jpg',
           period: 'School years · 2019 · age 16',
+          timestamp: '27 September 2019 · 16:41 Asia/Tehran',
+          cameraStamp: '',
           caption: 'The last bell of the day',
           alt: 'A fictional, fully clothed school-age memory with anonymous classmates',
           src: '/NeverBeenModels/FiadhDara/Biography/03-school-days.jpg',
@@ -306,7 +388,9 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'school-project',
           fileName: '04-school-project.jpg',
-          period: 'School years',
+          period: 'School years · 2017 · age 14',
+          timestamp: '2 July 2017 · 15:26 Asia/Tehran',
+          cameraStamp: '',
           caption: 'A project built after class',
           alt: 'A fictional school project memory around a table with friends',
           src: '/NeverBeenModels/FiadhDara/Biography/04-school-project.jpg',
@@ -315,7 +399,9 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'college',
           fileName: '05-college-studio.jpg',
-          period: 'College',
+          period: 'College · 2023 · age 20',
+          timestamp: '21 August 2023 · 22:43 Asia/Tehran',
+          cameraStamp: '',
           caption: 'A studio night before the deadline',
           alt: 'A fictional college memory in a design studio with anonymous classmates',
           src: '/NeverBeenModels/FiadhDara/Biography/05-college-studio.jpg',
@@ -324,7 +410,9 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'first-workplace',
           fileName: '06-first-workplace.jpg',
-          period: 'First role',
+          period: 'First role · 2024 · age 21',
+          timestamp: '4 June 2024 · 14:23 Asia/Tehran',
+          cameraStamp: '',
           caption: 'The first day that felt like hers',
           alt: 'A fictional early-career memory at a creative workplace',
           src: '/NeverBeenModels/FiadhDara/Biography/06-first-workplace.jpg',
@@ -333,7 +421,9 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'first-editorial',
           fileName: '07-first-editorial.jpg',
-          period: 'Creative career',
+          period: 'Creative career · 2025 · age 22',
+          timestamp: '9 July 2025 · 13:02 Asia/Tehran',
+          cameraStamp: '',
           caption: 'A small crew, a big idea',
           alt: 'A fictional behind-the-scenes editorial memory with a small creative team',
           src: '/NeverBeenModels/FiadhDara/Biography/07-first-editorial.jpg',
@@ -342,7 +432,9 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'friends',
           fileName: '08-close-friends.jpg',
-          period: 'Off duty',
+          period: 'Off duty · 2026 · age 23',
+          timestamp: '16 February 2026 · 15:59 Asia/Tehran',
+          cameraStamp: '',
           caption: 'The people who know every version of her',
           alt: 'A fictional casual memory with adult friends',
           src: '/NeverBeenModels/FiadhDara/Biography/08-close-friends.jpg',
@@ -351,7 +443,9 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'family-now',
           fileName: '09-family-table.jpg',
-          period: 'Family',
+          period: 'Family · 2026 · age 23',
+          timestamp: '21 June 2026 · 21:38 Asia/Tehran',
+          cameraStamp: '',
           caption: 'Everyone talking at once',
           alt: 'A fictional family gathering with generic, non-identifiable family members',
           src: '/NeverBeenModels/FiadhDara/Biography/09-family-table.jpg',
@@ -360,7 +454,9 @@ export const aiModelProfiles: AiModelProfile[] = [
         {
           id: 'present-day',
           fileName: '10-present-day.jpg',
-          period: 'Today',
+          period: 'Today · 2026 · age 23',
+          timestamp: '18 January 2026 · 18:29 Asia/Tehran',
+          cameraStamp: '',
           caption: 'A new frame, on her own terms',
           alt: 'A fictional present-day outdoor portrait from the model’s creative life',
           src: '/NeverBeenModels/FiadhDara/Biography/10-present-day.jpg',
@@ -368,7 +464,7 @@ export const aiModelProfiles: AiModelProfile[] = [
         },
       ],
       fictionalNotice:
-        'This biography and every image prompt are fictional creations from the NeverBeen Multiverse. They are not biographical claims or documentary photographs.',
+        'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
     },
     gallery: [
       '/NeverBeenModels/FiadhDara/_sTof-XqCgAFE9b2cdJ6EDijJx_eHyWEK70Sw6fImIo.png',

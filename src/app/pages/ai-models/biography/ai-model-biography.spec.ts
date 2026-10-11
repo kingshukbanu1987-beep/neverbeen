@@ -26,9 +26,21 @@ const sampleBiography: AiModelBiography = {
   signature: 'Test Studio Model',
   signatureStyle: 'Handwritten-style blue ballpoint signature on white paper; fictional facsimile.',
   signatureImage: '/test/signature.jpg',
+  birthDetails: {
+    date: '4 March 2000',
+    time: '09:42',
+    timeZone: 'Asia/Kuala_Lumpur',
+    facility: 'NeverBeen House of Birth',
+    neighborhood: 'Fictional quarter',
+    city: 'George Town',
+    country: 'Malaysia',
+    note: 'A fully fictional place and time.',
+  },
   generalInformation: {
     fullName: 'Test Studio Model',
-    born: 'A fictional quarter, George Town, Malaysia',
+    born: '4 March 2000',
+    birthTime: '09:42 (Asia/Kuala_Lumpur)',
+    birthplace: 'NeverBeen House of Birth (fictional), Fictional quarter, George Town, Malaysia',
     relationshipStatus: 'Single',
     education: 'Bachelor of Arts in Visual Communication',
     universe: 'NeverBeen Multiverse',
@@ -65,6 +77,14 @@ const sampleBiography: AiModelBiography = {
     relationshipType: 'Single (fictional storyline)',
     narrative: 'This fictional character is single in the test story.',
     partner: null,
+    parents: [
+      { name: 'Mira Test', relationship: 'Mother', note: 'Fictional family member.' },
+      { name: 'Rafi Test', relationship: 'Father', note: 'Fictional family member.' },
+    ],
+    siblings: [
+      { name: 'Nadia Test', relationship: 'Sister', age: '24', note: 'Fictional family member.' },
+    ],
+    formerSpouses: [],
     children: [],
     privacyNote: 'Every detail in this biography is fictional.',
   },
@@ -78,6 +98,8 @@ const sampleBiography: AiModelBiography = {
     id,
     fileName: `${String(index + 1).padStart(2, '0')}-${id}.jpg`,
     period: `Fictional memory ${index + 1}`,
+    timestamp: '4 March 2026 · 09:42 Asia/Kuala_Lumpur',
+    cameraStamp: '',
     caption: `A fictional ${id.replaceAll('-', ' ')} memory`,
     alt: `An imagined ${id.replaceAll('-', ' ')} scene`,
     src: '',
@@ -112,7 +134,7 @@ describe('AiModelBiographyPage', () => {
     }).compileComponents();
   });
 
-  it('renders a white-article-style biography with the shorter title and paper signature', async () => {
+  it('renders a fictional biography with a paired portrait and signature, birth details, family, and ten story photos', async () => {
     const model = addTestModel(sampleBiography);
     try {
       const harness = await RouterTestingHarness.create(`/ai-models/${model.slug}/biography`);
@@ -124,7 +146,15 @@ describe('AiModelBiographyPage', () => {
       expect(element.querySelector('.article-subtitle')?.textContent).toBe(
         'In the Multiverse of NeverBeen',
       );
-      expect(element.querySelector('.infobox')?.textContent).toContain('fictional quarter');
+      const infobox = element.querySelector('.infobox');
+      expect(infobox?.textContent).toContain('Fictional quarter');
+      expect(infobox?.textContent).toContain('4 March 2000');
+      expect(infobox?.textContent).toContain('09:42 (Asia/Kuala_Lumpur)');
+      expect(infobox?.textContent).toContain('George Town, Malaysia');
+      expect(infobox?.querySelector('.infobox-portrait img')).not.toBeNull();
+      expect(
+        infobox?.querySelector('.infobox-signature .signature-image')?.getAttribute('alt'),
+      ).toContain('blue ballpoint');
       expect(element.querySelector('.lead-summary')?.textContent).toContain('fictional profile');
       const educationSection = element.querySelector('#education');
       expect(educationSection?.querySelectorAll('.education-entry').length).toBe(1);
@@ -136,6 +166,7 @@ describe('AiModelBiographyPage', () => {
         'Career',
         'Achievements',
         'Personal life',
+        'Family',
         'Interests and ambitions',
         'Final notes',
       ]) {
@@ -149,6 +180,13 @@ describe('AiModelBiographyPage', () => {
       expect(element.querySelectorAll('.story-photo').length).toBe(10);
       expect(element.querySelector('#memories')).toBeNull();
       expect(element.querySelector('.memory-pending')).not.toBeNull();
+      const familyRoster = element.querySelector('#family');
+      expect(familyRoster?.textContent).toContain('Mira Test');
+      expect(familyRoster?.textContent).toContain('Rafi Test');
+      expect(familyRoster?.textContent).toContain('Nadia Test');
+      expect(element.querySelector('.story-photo figcaption')?.textContent).toContain(
+        '4 March 2026 · 09:42 Asia/Kuala_Lumpur',
+      );
       expect(element.querySelector<HTMLImageElement>('.signature-image')?.src).toContain(
         '/test/signature.jpg',
       );
