@@ -574,12 +574,20 @@ function memoryAge(memory, currentAge) {
   return Number.isInteger(memory.ageAtCapture) ? Math.min(memory.ageAtCapture, currentAge) : null;
 }
 
-function monthYear(year, seed, offset = 0) {
-  return `${monthNames[(seed + offset) % monthNames.length]} ${year}`;
+// A month and year for the story timeline. When the year is the current year, `latestDate`
+// keeps the month in the past, so an ongoing role never starts in a month that has not
+// happened yet in the fictional timeline.
+function monthYear(year, seed, offset = 0, latestDate = null) {
+  const monthIndex = (seed + offset) % monthNames.length;
+  const capped =
+    latestDate && latestDate.year === year
+      ? Math.min(monthIndex, latestDate.monthIndex)
+      : monthIndex;
+  return `${monthNames[capped]} ${year}`;
 }
 
-function period(startYear, endYear, seed, offset = 0, ongoing = false) {
-  const start = monthYear(startYear, seed, offset);
+function period(startYear, endYear, seed, offset = 0, ongoing = false, latestDate = null) {
+  const start = monthYear(startYear, seed, offset, ongoing ? latestDate : null);
   return ongoing ? `${start} – Present` : `${start} – ${monthYear(endYear, seed, offset + 3)}`;
 }
 
@@ -810,7 +818,10 @@ function makeBiography(model) {
       description: `Coordinated a compact team across ${track.strengths[1]} and ${track.strengths[2]}, building a calm, practical approach to ambitious work.`,
     },
     {
-      period: period(modelStart, currentYear, seed, 8, true),
+      period: period(modelStart, currentYear, seed, 8, true, {
+        year: currentYear,
+        monthIndex: new Date().getUTCMonth(),
+      }),
       role: 'Independent model & creative collaborator',
       organization: 'NeverBeen Multiverse',
       location: `${city}, ${country} · remote and on location`,
