@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   OnDestroy,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -23,6 +24,7 @@ import { rememberCommunityReturnPath } from '../../shared/community-return-path'
 import { CommunitySignInCard } from '../../shared/community-sign-in-card/community-sign-in-card';
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
+import { AiModelPhotoViewer } from './photo-viewer/ai-model-photo-viewer';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
 
 type PortfolioView = 'grid' | 'feed';
@@ -49,15 +51,24 @@ export function shufflePhotos(photos: readonly AiModelPhoto[]): AiModelPhoto[] {
   return order.map((source) => photos[source]);
 }
 
+/**
+ * How many photographs the portfolio shows. A larger album shows a random selection of this many,
+ * and its last tile opens the complete album on the model's "View All" page.
+ */
+export const PREVIEW_LIMIT = 12;
+
 @Component({
   selector: 'app-ai-model-portfolio-page',
-  imports: [RouterLink, AiModelBookingDialog, AiModelVideoPlayer, CommunitySignInCard],
+  imports: [
+    RouterLink,
+    AiModelBookingDialog,
+    AiModelPhotoViewer,
+    AiModelVideoPlayer,
+    CommunitySignInCard,
+  ],
   templateUrl: './ai-model-portfolio.html',
   styleUrl: './ai-model-portfolio.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-    '(document:keydown)': 'onDocumentKeydown($event)',
-  },
 })
 export class AiModelPortfolioPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -139,6 +150,31 @@ export class AiModelPortfolioPage implements OnDestroy {
     return shufflePhotos(this.model()?.photos ?? []);
   });
 
+  protected readonly previewLimit = PREVIEW_LIMIT;
+
+  /**
+   * The photographs the gallery shows: the first twelve of this visit's shuffle, so every visit (and
+   * every Shuffle) draws a different random twelve. Smaller albums are shown whole.
+   */
+  protected readonly previewPhotos = computed(() => this.photos().slice(0, PREVIEW_LIMIT));
+
+  /** True when the album holds more photographs than the gallery shows. */
+  protected readonly hasMorePhotos = computed(() => this.photos().length > PREVIEW_LIMIT);
+
+  /** Photographs only the complete album shows — the "+N" on the View All tile. */
+  protected readonly hiddenPhotoCount = computed(() =>
+    Math.max(this.photos().length - PREVIEW_LIMIT, 0),
+  );
+
+  /** Position of the View All tile — the twelfth — or -1 when the whole album is on show. */
+  protected readonly viewAllIndex = computed(() => (this.hasMorePhotos() ? PREVIEW_LIMIT - 1 : -1));
+
+  /** Router link to the model's complete album. */
+  protected readonly allPhotosLink = computed(() => {
+    const slug = this.model()?.slug;
+    return slug ? ['/ai-models', slug, 'photos'] : null;
+  });
+
   protected readonly view = signal<PortfolioView>('grid');
 
   /**
@@ -148,8 +184,10 @@ export class AiModelPortfolioPage implements OnDestroy {
    */
   protected readonly videos = computed(() => this.model()?.videos ?? []);
 
-  /** Index of the photograph expanded in the pop-up, or null when it is closed. */
+  /** Index (within the preview) of the photograph open in the viewer, or null when it is closed. */
   protected readonly activeIndex = signal<number | null>(null);
+
+  protected readonly lightboxOpen = computed(() => this.activeIndex() !== null);
 
   /** Index of the clip open in the video player, or null when the player is closed. */
   protected readonly activeVideoIndex = signal<number | null>(null);
@@ -189,13 +227,6 @@ export class AiModelPortfolioPage implements OnDestroy {
   /** The model's own rate for one photograph, shown next to the Rent button. */
   protected readonly ratePerPhoto = computed(() => this.model()?.photoRate ?? 0);
 
-  protected readonly lightboxPhoto = computed(() => {
-    const index = this.activeIndex();
-    if (index === null) return null;
-    const photo = this.photos()[index];
-    return photo ? { photo, index } : null;
-  });
-
   protected readonly shareLabel = computed(() => {
     switch (this.shareState()) {
       case 'shared':
@@ -209,11 +240,9 @@ export class AiModelPortfolioPage implements OnDestroy {
     }
   });
 
-  private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('lightboxClose');
   private readonly rentButton = viewChild<ElementRef<HTMLButtonElement>>('rentButton');
   private lastFocused: HTMLElement | null = null;
   private lastFocusedVideo: HTMLElement | null = null;
-  private touchStartX = 0;
   private shareTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -250,10 +279,14 @@ export class AiModelPortfolioPage implements OnDestroy {
       });
     });
 
-    // Move focus into the pop-up as soon as it renders.
-    effect(() => {
-      if (this.activeIndex() === null) return;
-      this.closeButton()?.nativeElement.focus({ preventScroll: true });
+    // Coming back from the complete album ("Back to portfolio" links to #photos), land on the
+    // gallery straight away instead of gliding down from wherever the album was scrolled to.
+    afterNextRender(() => {
+      if (this.route.snapshot.fragment !== 'photos') return;
+      const anchor = document.getElementById('photos');
+      if (!anchor || typeof window.scrollTo !== 'function') return;
+      const top = anchor.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top, left: 0, behavior: 'instant' });
     });
   }
 
@@ -523,10 +556,6 @@ export class AiModelPortfolioPage implements OnDestroy {
     return String(index + 1).padStart(2, '0');
   }
 
-  protected totalLabel(): string {
-    return this.frameLabel(Math.max(this.photos().length - 1, 0));
-  }
-
   protected photoCount(): string {
     return String(this.photos().length).padStart(2, '0');
   }
@@ -560,12 +589,8 @@ export class AiModelPortfolioPage implements OnDestroy {
     return Math.min(index * 45, 540);
   }
 
-  protected photoCaption(index: number): string {
-    const photo = this.photos()[index];
-    if (!photo) return '';
-    return (
-      photo.caption || `${this.model()?.name ?? 'Portfolio'} · frame ${this.frameLabel(index)}`
-    );
+  protected viewAllLabel(name: string): string {
+    return `View all ${this.photos().length} photographs of ${name}`;
   }
 
   /**
@@ -599,6 +624,7 @@ export class AiModelPortfolioPage implements OnDestroy {
   }
 
   protected openLightbox(index: number): void {
+    if (index < 0 || index >= this.previewPhotos().length) return;
     this.lastFocused =
       typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null;
     this.activeIndex.set(index);
@@ -622,61 +648,6 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.activeIndex.set(null);
     this.lastFocused?.focus?.({ preventScroll: true });
     this.lastFocused = null;
-  }
-
-  protected selectPhoto(index: number): void {
-    if (index < 0 || index >= this.photos().length) return;
-    this.activeIndex.set(index);
-  }
-
-  protected showNext(): void {
-    const count = this.photos().length;
-    if (count === 0) return;
-    this.activeIndex.update((index) => ((index ?? 0) + 1) % count);
-  }
-
-  protected showPrevious(): void {
-    const count = this.photos().length;
-    if (count === 0) return;
-    this.activeIndex.update((index) => ((index ?? 0) - 1 + count) % count);
-  }
-
-  protected onDocumentKeydown(event: KeyboardEvent): void {
-    // The video player runs its own shortcuts while it is open.
-    if (this.activeIndex() === null || this.activeVideoIndex() !== null) return;
-
-    switch (event.key) {
-      case 'Escape':
-        this.closeLightbox();
-        break;
-      case 'ArrowRight':
-        this.showNext();
-        break;
-      case 'ArrowLeft':
-        this.showPrevious();
-        break;
-      default:
-        return;
-    }
-    event.preventDefault();
-  }
-
-  /** Clicking the dark space around the pop-up photograph dismisses it. */
-  protected onLightboxBackdropClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement | null;
-    if (target?.closest('button, img, a')) return;
-    this.closeLightbox();
-  }
-
-  protected onTouchStart(event: TouchEvent): void {
-    this.touchStartX = event.changedTouches[0]?.clientX ?? 0;
-  }
-
-  protected onTouchEnd(event: TouchEvent): void {
-    const delta = (event.changedTouches[0]?.clientX ?? 0) - this.touchStartX;
-    if (Math.abs(delta) < 45) return;
-    if (delta < 0) this.showNext();
-    else this.showPrevious();
   }
 
   protected async shareProfile(profile: AiModelProfile): Promise<void> {

@@ -222,13 +222,23 @@
       }
 
       <section class="gallery-section" aria-labelledby="gallery-title">
+        <!-- Landing point for the "Back to portfolio" button of the complete album. -->
+        <span id="photos" class="section-anchor" aria-hidden="true"></span>
         <header class="gallery-heading">
           <div class="gallery-heading-copy">
             <p class="eyebrow">Portfolio grid</p>
-            <h2 id="gallery-title">Every frame</h2>
+            <h2 id="gallery-title">{{ hasMorePhotos() ? 'Selected frames' : 'Every frame' }}</h2>
             <p class="gallery-intro">
-              The album is shuffled for every visit. Tap any photograph to open it full screen, then
-              browse the whole set with the arrows, the keyboard or a swipe.
+              @if (hasMorePhotos()) {
+                <span class="num">{{ previewLimit }}</span> frames are drawn at random from the
+                album on every visit — the last tile opens all
+                <span class="num">{{ photos().length }}</span
+                >.
+              } @else {
+                The album is shuffled for every visit.
+              }
+              Tap any photograph to open it full screen, then zoom in with a scroll, a pinch or a
+              double-tap.
             </p>
           </div>
 
@@ -268,39 +278,39 @@
         @if (photos().length > 0) {
           @if (view() === 'grid') {
             <div class="portfolio-grid">
-              @for (photo of photos(); track photo.src; let index = $index) {
-                <button
-                  type="button"
-                  class="grid-tile"
-                  (click)="openLightbox(index)"
-                  [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
-                  [style.animation-delay.ms]="tileDelay(index)"
-                >
-                  <img
-                    [src]="photo.src"
-                    [alt]="photoAlt(profile.name, index)"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <span class="tile-glow" aria-hidden="true"></span>
-                  <span class="tile-overlay" aria-hidden="true">
-                    <span class="tile-number"
-                      >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
-                    >
-                    <span class="tile-expand">⤢</span>
-                  </span>
-                </button>
-              }
-            </div>
-          } @else {
-            <div class="portfolio-feed">
-              @for (photo of photos(); track photo.src; let index = $index) {
-                <figure class="feed-item" [style.animation-delay.ms]="tileDelay(index)">
+              @for (photo of previewPhotos(); track photo.src; let index = $index) {
+                @if (index === viewAllIndex()) {
+                  <!-- The twelfth tile opens the complete album on its own page. -->
+                  <a
+                    class="grid-tile view-all-tile"
+                    [routerLink]="['/ai-models', profile.slug, 'photos']"
+                    [attr.aria-label]="viewAllLabel(profile.name)"
+                    [style.animation-delay.ms]="tileDelay(index)"
+                  >
+                    <img [src]="photo.src" alt="" loading="lazy" decoding="async" />
+                    <span class="view-all-veil" aria-hidden="true"></span>
+                    <span class="view-all-body" aria-hidden="true">
+                      <span class="view-all-more"
+                        >+<span class="num">{{ hiddenPhotoCount() }}</span></span
+                      >
+                      <span class="view-all-cta"
+                        >View All
+                        <i
+                          ><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+                            <path d="M5 12h14M13 6l6 6-6 6" /></svg></i
+                      ></span>
+                      <span class="view-all-total"
+                        ><span class="num">{{ photos().length }}</span> photographs</span
+                      >
+                    </span>
+                  </a>
+                } @else {
                   <button
                     type="button"
-                    class="feed-photo"
+                    class="grid-tile"
                     (click)="openLightbox(index)"
                     [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                    [style.animation-delay.ms]="tileDelay(index)"
                   >
                     <img
                       [src]="photo.src"
@@ -308,6 +318,7 @@
                       loading="lazy"
                       decoding="async"
                     />
+                    <span class="tile-glow" aria-hidden="true"></span>
                     <span class="tile-overlay" aria-hidden="true">
                       <span class="tile-number"
                         >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
@@ -315,16 +326,79 @@
                       <span class="tile-expand">⤢</span>
                     </span>
                   </button>
-                  <figcaption>
-                    <span class="feed-index">{{ frameLabel(index) }}</span>
-                    <span class="feed-caption">
-                      {{ captionParts(index).text }}
-                      @if (captionParts(index).frame) {
-                        <span class="num">{{ captionParts(index).frame }}</span>
-                      }
-                    </span>
-                  </figcaption>
-                </figure>
+                }
+              }
+            </div>
+          } @else {
+            <div class="portfolio-feed">
+              @for (photo of previewPhotos(); track photo.src; let index = $index) {
+                @if (index === viewAllIndex()) {
+                  <figure
+                    class="feed-item view-all-item"
+                    [style.animation-delay.ms]="tileDelay(index)"
+                  >
+                    <a
+                      class="feed-photo view-all-tile"
+                      [routerLink]="['/ai-models', profile.slug, 'photos']"
+                      [attr.aria-label]="viewAllLabel(profile.name)"
+                    >
+                      <img [src]="photo.src" alt="" loading="lazy" decoding="async" />
+                      <span class="view-all-veil" aria-hidden="true"></span>
+                      <span class="view-all-body" aria-hidden="true">
+                        <span class="view-all-more"
+                          >+<span class="num">{{ hiddenPhotoCount() }}</span></span
+                        >
+                        <span class="view-all-cta"
+                          >View All
+                          <i
+                            ><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+                              <path d="M5 12h14M13 6l6 6-6 6" /></svg></i
+                        ></span>
+                        <span class="view-all-total"
+                          ><span class="num">{{ photos().length }}</span> photographs</span
+                        >
+                      </span>
+                    </a>
+                    <figcaption>
+                      <span class="feed-index">{{ frameLabel(index) }}</span>
+                      <span class="feed-caption">
+                        The complete album — every one of the
+                        <span class="num">{{ photos().length }}</span> photographs.
+                      </span>
+                    </figcaption>
+                  </figure>
+                } @else {
+                  <figure class="feed-item" [style.animation-delay.ms]="tileDelay(index)">
+                    <button
+                      type="button"
+                      class="feed-photo"
+                      (click)="openLightbox(index)"
+                      [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                    >
+                      <img
+                        [src]="photo.src"
+                        [alt]="photoAlt(profile.name, index)"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <span class="tile-overlay" aria-hidden="true">
+                        <span class="tile-number"
+                          >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
+                        >
+                        <span class="tile-expand">⤢</span>
+                      </span>
+                    </button>
+                    <figcaption>
+                      <span class="feed-index">{{ frameLabel(index) }}</span>
+                      <span class="feed-caption">
+                        {{ captionParts(index).text }}
+                        @if (captionParts(index).frame) {
+                          <span class="num">{{ captionParts(index).frame }}</span>
+                        }
+                      </span>
+                    </figcaption>
+                  </figure>
+                }
               }
             </div>
           }
@@ -654,90 +728,16 @@
   <app-ai-model-booking [model]="bookable" (closed)="closeBooking()" />
 }
 
-@if (lightboxPhoto(); as lightbox) {
-  <div
-    class="lightbox"
-    role="dialog"
-    aria-modal="true"
-    [attr.aria-label]="photoCaption(lightbox.index)"
-    (click)="onLightboxBackdropClick($event)"
-  >
-    <div class="lightbox-panel">
-      <header class="lightbox-bar">
-        <span class="lightbox-counter">
-          <b>{{ frameLabel(lightbox.index) }}</b> / {{ totalLabel() }}
-        </span>
-        <span class="lightbox-title">
-          {{ model()?.name }}<i aria-hidden="true">·</i>{{ model()?.handle }}
-        </span>
-        <button
-          #lightboxClose
-          type="button"
-          class="lightbox-close"
-          (click)="closeLightbox()"
-          aria-label="Close photograph"
-        >
-          ✕
-        </button>
-      </header>
-
-      <div
-        class="lightbox-stage"
-        (touchstart)="onTouchStart($event)"
-        (touchend)="onTouchEnd($event)"
-      >
-        <img
-          class="lightbox-image"
-          [src]="lightbox.photo.src"
-          [alt]="photoAlt(model()?.name ?? 'Portfolio', lightbox.index)"
-        />
-
-        @if (photos().length > 1) {
-          <button
-            type="button"
-            class="lightbox-arrow lightbox-prev"
-            (click)="showPrevious()"
-            aria-label="Previous photograph"
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            class="lightbox-arrow lightbox-next"
-            (click)="showNext()"
-            aria-label="Next photograph"
-          >
-            →
-          </button>
-        }
-      </div>
-
-      <footer class="lightbox-foot">
-        <p class="lightbox-caption">
-          {{ captionParts(lightbox.index).text }}
-          @if (captionParts(lightbox.index).frame) {
-            <span class="num">{{ captionParts(lightbox.index).frame }}</span>
-          }
-        </p>
-        @if (photos().length > 1) {
-          <div class="lightbox-thumbs" role="group" aria-label="Choose a photograph">
-            @for (photo of photos(); track photo.src; let index = $index) {
-              <button
-                type="button"
-                class="lightbox-thumb"
-                [class.is-active]="index === lightbox.index"
-                [attr.aria-current]="index === lightbox.index ? 'true' : null"
-                (click)="selectPhoto(index)"
-                [attr.aria-label]="'Show photograph ' + frameLabel(index)"
-              >
-                <img [src]="photo.src" alt="" loading="lazy" decoding="async" />
-              </button>
-            }
-          </div>
-        }
-      </footer>
-    </div>
-  </div>
+@if (lightboxOpen()) {
+  <app-ai-model-photo-viewer
+    [photos]="previewPhotos()"
+    [startIndex]="activeIndex() ?? 0"
+    [modelName]="model()?.name ?? ''"
+    [modelHandle]="model()?.handle ?? ''"
+    [albumLink]="hasMorePhotos() ? allPhotosLink() : null"
+    [albumSize]="photos().length"
+    (closed)="closeLightbox()"
+  />
 }
 
 @if (videoPlayerOpen()) {

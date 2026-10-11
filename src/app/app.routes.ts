@@ -58,6 +58,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/ai-models/ai-models').then((m) => m.AiModelsPage),
   },
   {
+    path: 'ai-models/:slug/photos',
+    loadComponent: () =>
+      import('./pages/ai-models/all-photos/ai-model-all-photos').then(
+        (m) => m.AiModelAllPhotosPage,
+      ),
+  },
+  {
     path: 'ai-models/:slug',
     loadComponent: () =>
       import('./pages/ai-models/ai-model-portfolio').then((m) => m.AiModelPortfolioPage),
