@@ -1118,6 +1118,12 @@
                     </div>
                   }
                 </article>
+
+                <!-- ADVERTISEMENT: a random NeverBeen AI Models portfolio, injected between
+                     Journey posts so it reads as a sponsored card instead of a member post. -->
+                @if (advertisementAfter($index); as advertisement) {
+                  <app-ai-model-ad-card [advertisement]="advertisement" />
+                }
               } @empty {
                 <!-- Nothing in the member's own timeline yet (the demo feed is the guest tour's). -->
                 <div class="journey-feed-empty">
@@ -3886,11 +3892,12 @@
 
     <!-- ================================================================= -->
     <!-- RIGHT RAIL COLUMN (tablet / laptop / wide screens, Journey view)  -->
-    <!-- Same width as the left side panel: 70% online companions,         -->
-    <!-- 30% the member's Circles (or Create Circle when none exist).      -->
+    <!-- Same width as the left side panel: “Online Companions” on top,    -->
+    <!-- then the NeverBeen AI Models advertisement (this replaced the     -->
+    <!-- member's Circles list that used to sit at the bottom).           -->
     <!-- ================================================================= -->
     @if (showJourneyRightRail()) {
-      <aside class="right-rail-panel" aria-label="Online companions and travel circles">
+      <aside class="right-rail-panel" aria-label="Online companions and NeverBeen AI Models advertisement">
         <!-- TOP 70%: Companions who are online right now -->
         <section class="rail-online-box">
           <div class="rail-head">
@@ -3935,35 +3942,12 @@
           </div>
         </section>
 
-        <!-- BOTTOM 30%: Circles the member belongs to (Admin or Member) -->
-        <section class="rail-circles-box">
-          <div class="rail-head">
-            <h3 class="rail-title">Circles</h3>
-            <span class="rail-count-badge" title="Your circles">{{ service.myCircles().length }}</span>
-          </div>
-          <div class="rail-circles-list">
-            @for (circle of service.myCircles(); track circle.id) {
-              <div class="rail-circle-row" (click)="openCircleChat(circle, $event)" role="button" tabindex="0">
-                @if (circle.photoUrl) {
-                  <img class="circle-icon-badge circle-photo-badge" [src]="circle.photoUrl" [alt]="circle.name" />
-                } @else {
-                  <span class="circle-icon-badge" [style.background]="circle.color">{{ circle.icon }}</span>
-                }
-                <div class="circle-info-mini">
-                  <span class="circle-name-mini">{{ circle.name }}</span>
-                  <span class="circle-meta-mini">{{ isCircleAdmin(circle) ? 'Admin' : 'Member' }} · {{ circle.memberIds.length }} members</span>
-                </div>
-              </div>
-            } @empty {
-              <div class="rail-circles-empty">
-                <p>You are not part of any Circle yet.</p>
-                <button type="button" class="btn-primary-action btn-create-circle-rail" (click)="openCreateCircleModal()">
-                  + Create Circle
-                </button>
-              </div>
-            }
-          </div>
-        </section>
+        <!-- BOTTOM: NeverBeen AI Models advertisement — 15 random portfolios from the
+             `/ai-models` studio, each with her portrait, name, city/country, availability
+             status and a View Portfolio button. Replaces the former Circles list. -->
+        @if (showModelAdsPanel()) {
+          <app-ai-model-ads-panel class="rail-ads-box" [count]="modelAdCount()" />
+        }
       </aside>
     }
   </div>

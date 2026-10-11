@@ -15,7 +15,9 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 0.65rem 0 2rem;
+  /* No blank row above the profile: the first card sits straight under the community header
+     (the community shell also drops its top padding on this route). */
+  padding: 0.35rem 0 2rem;
 }
 
 .mobile-top-header {

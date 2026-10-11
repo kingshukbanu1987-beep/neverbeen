@@ -22,4 +22,17 @@ describe('CommunityHub', () => {
     expect(element.querySelector('.community-shell')).toBeTruthy();
     expect(element.querySelector('router-outlet')).toBeTruthy();
   });
+
+  it('drops the shell top padding on the profile route so no blank row shows above the profile', () => {
+    const fixture = create();
+    const shell = fixture.nativeElement.querySelector('.community-shell') as HTMLElement;
+
+    // Every other community page keeps the shell's 2rem breathing room.
+    expect(shell.classList.contains('is-profile-route')).toBe(false);
+
+    // The member profile page (the Community Home) starts directly under the community header.
+    (fixture.componentInstance as any).currentUrl.set('/community/profile');
+    fixture.detectChanges();
+    expect(shell.classList.contains('is-profile-route')).toBe(true);
+  });
 });

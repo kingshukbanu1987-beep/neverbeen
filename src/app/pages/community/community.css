@@ -7,6 +7,15 @@
   padding: 2rem 0 4rem;
 }
 
+/*
+ * The member profile supplies its own top spacing, so the page must not add a blank strip
+ * above it. Without this the shell's 2rem padding showed up as an empty white row between
+ * the community header and the profile cards.
+ */
+.community-shell.is-profile-route {
+  padding-top: 0;
+}
+
 .community-aurora {
   position: absolute;
   inset: 0;
