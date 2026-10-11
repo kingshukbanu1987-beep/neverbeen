@@ -111,3 +111,13 @@ anchored to her album cover. Every portfolio also carries a **Rent this model**
 button; the pop-up it opens shows the model's booking information, her rate per photo in INR, the 10 /
 25 / 50 / 100 photograph packages and a customized order, plus a calendar for the delivery date, and
 sends the request to the studio's WhatsApp (see the main README).
+
+## Fictional biographies
+
+Each album has a separate `Biography/` folder. The text-only **Read full Biography** link on the
+portfolio opens a dedicated page; when `Biography/biography.json` is absent, that page says
+**Biography not Available**. Create a complete alternate-universe biography and ten tailored image
+prompts with `node BiographyScript.mjs --model "Model Name"` (or
+`npm run biography -- --model "Model Name"`). See [`public/NeverBeenModels/README.md`](../../public/NeverBeenModels/README.md)
+for the output structure, prompt-image filenames, fictional-content safeguards and manifest refresh
+steps. Images placed in `Biography/` are never added to the model's standard portfolio gallery.

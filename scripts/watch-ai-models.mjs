@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
- * Watches `public/NeverBeenModels` and regenerates the AI model manifest whenever photographs or
- * videos are added, replaced or removed — so a photo dropped into a model's album folder, or a
- * clip dropped into her `video/` sub-folder, appears on that model's portfolio page without any
- * further command or code change.
+ * Watches `public/NeverBeenModels` and regenerates the AI model manifest when album media or model
+ * metadata changes. Gallery images and clips appear on the portfolio page; Biography/ JSON and
+ * image files refresh the biography page without leaking its memory images into the portfolio grid.
  *
  * `npm start` runs this next to `ng serve`; the Angular dev server then rebuilds and reloads the
  * page by itself. Run it on its own with:
@@ -101,7 +100,7 @@ try {
       fileName &&
       !imageExtensions.has(extension) &&
       !videoExtensions.has(extension) &&
-      fileName !== 'profile.json'
+      extension !== '.json'
     ) {
       return;
     }
@@ -116,10 +115,7 @@ try {
 }
 
 console.log(
-  "[ai-models] Watching public/NeverBeenModels — drop photographs into a model's folder, or " +
-    'videos into her video/ sub-folder, and ' +
-    `${watchingEvents ? 'they appear' : 'they appear (scan mode)'} on that portfolio page ` +
-    'automatically.',
+  `[ai-models] Watching public/NeverBeenModels (${watchingEvents ? 'filesystem events' : 'scan mode'}) — album media refreshes portfolios; Biography/ JSON and images refresh biographies.`,
 );
 
 function shutdown() {

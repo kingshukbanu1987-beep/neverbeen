@@ -15,6 +15,11 @@ public/NeverBeenModels/
     video/                  ← video clips, shown in the reel under the personal details
       reel-01.mp4
       poster-01.jpg         ← optional poster frame for a clip (see below)
+    Biography/              ← this model's separate fictional biography assets
+      .gitkeep
+      biography.json        ← created by BiographyScript.mjs
+      photo-prompts.json    ← ten individual AI-image prompts
+      01-childhood-home.jpg ← generated memory images (kept out of the portfolio grid)
 ```
 
 ## Adding photographs
@@ -75,6 +80,41 @@ nothing has to be run by hand — drop the file into `video/` and it appears.
 Images placed directly in `public/NeverBeenModels` (outside the folders) are still picked up, and
 `public/ai-model-assets/portraits` + `public/ai-model-assets/gallery` remain supported as legacy
 locations.
+
+## Fictional model biographies
+
+Every existing model album has its own `Biography/` directory. The portfolio's **Read full
+Biography** link opens `/ai-models/<slug>/biography`; an absent `biography.json` deliberately shows
+**Biography not Available**. Biography images are scanned from this sub-folder for the biography
+page only and are excluded from the model's regular portfolio grid.
+
+Create a fictional alternate-universe biography and its ten-image prompt queue with:
+
+```bash
+node BiographyScript.mjs --model "Nourhan Durrani"
+# or
+npm run biography -- --model "Nourhan Durrani"
+```
+
+Use `--dry-run` to preview the selected model and output paths. An existing biography is protected;
+pass `--force` only when replacing it. The script creates `Biography/biography.json` with fictional
+early-life, completed higher-education qualifications, career, achievements, personal-life,
+interests, ambitions, quotes and signature details, plus `Biography/photo-prompts.json` with ten
+tailored mobile-photo scenes. The education list contains degrees earned in the fictional timeline
+only; it does not add school history or disclaimers for unearned qualifications. The page presents
+the photos alongside the life, education, career and personal-life passages they illustrate rather
+than in one gallery. It uses the model's published city and country as inspiration and marks added
+biographical details as fictional, never as real records.
+
+The image prompt queue is an input for the available AI image-generation tool; the standalone Node
+script cannot call an image-generation service by itself. Generate each prompt as one individual
+image, save it in the same `Biography/` folder with the exact `filename` from the queue (for example
+`01-childhood-home.jpg`), and run `npm run generate:ai-models`. The manifest publishes those files to
+the biography page; until a file exists, its in-story figure remains an explicit image-pending placeholder.
+The ten files should be visibly synthetic illustrations and must never be represented as documentary
+or factual photos. An optional `signature.jpg` in the same folder is rendered as the signature-on-paper
+photo; without one, the page uses its blue-ink handwritten-style fallback. The biography page repeats
+the fictional notice in its footer.
 
 ## Photographs attached in Arena chat
 

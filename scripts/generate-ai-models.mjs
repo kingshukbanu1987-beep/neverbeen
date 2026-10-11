@@ -15,8 +15,10 @@
  *
  * Optional per-model facts live in `<album>/profile.json`; the shared
  * `data/ai-models/profiles.json` remains supported and can be keyed by cover filename,
- * model name or album folder. The legacy `public/ai-model-assets/portraits` folder and
- * `public/ai-model-assets/gallery` photographs remain supported.
+ * model name or album folder. Fictional long-form bios live in `<album>/Biography/biography.json`;
+ * images in that folder are exposed only to the biography page, never the portfolio gallery. The
+ * legacy `public/ai-model-assets/portraits` folder and `public/ai-model-assets/gallery` photographs
+ * remain supported.
  *
  * The generated TypeScript is rebuilt by `npm start` / `npm run build` and can
  * also be refreshed directly with `npm run generate:ai-models`.
@@ -80,6 +82,16 @@ function listFiles(directory, accepts) {
 
 function listImages(directory) {
   return listFiles(directory, isImage);
+}
+
+/** Biography images belong to the full-biography page and must never leak into the portfolio grid. */
+function listAlbumImages(albumDir) {
+  return naturalSort(
+    listImages(albumDir).filter((absolutePath) => {
+      const firstDirectory = relative(albumDir, absolutePath).split(sep)[0];
+      return firstDirectory?.toLocaleLowerCase() !== 'biography';
+    }),
+  );
 }
 
 function listVideos(directory) {
@@ -294,7 +306,7 @@ function normalizePhotoEntries(entries) {
 }
 
 function albumPhotos({ albumDir, coverPath, preferredOrder, captions, modelName }) {
-  const files = naturalSort(listImages(albumDir));
+  const files = listAlbumImages(albumDir);
   const seen = new Set();
   const ordered = [];
 
@@ -410,11 +422,173 @@ function albumVideos({ albumDir, modelName, merged }) {
   }));
 }
 
+function biographyEntries(value, fields) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((entry) => entry && typeof entry === 'object' && !Array.isArray(entry))
+    .map((entry) => Object.fromEntries(fields.map((field) => [field, text(entry[field])])));
+}
+
+function completedDegreeEntries(value) {
+  if (!Array.isArray(value)) return [];
+  const degreeQualification =
+    /\b(?:bachelor(?:['’]s)?|master(?:['’]s)?|mba|ph\.?\s*d\.?|doctor of philosophy|post[\s-]?doctorate)\b/i;
+  const incompleteStatus =
+    /\b(?:in progress|ongoing|pending|currently (?:studying|enrolled|pursuing)|pursuing|expected|candidate|planned|not completed|not earned|not yet earned|not acquired|unearned|incomplete)\b/i;
+
+  return value.filter((entry) => {
+    if (
+      !entry ||
+      typeof entry !== 'object' ||
+      Array.isArray(entry) ||
+      entry.completed === false ||
+      text(entry.completed).toLowerCase() === 'false'
+    ) {
+      return false;
+    }
+    const qualification = text(entry.qualification);
+    const details = `${qualification} ${text(entry.description)} ${text(entry.status)}`;
+    return degreeQualification.test(qualification) && !incompleteStatus.test(details);
+  });
+}
+
+/** Reads one fictional biography and resolves only image files that live inside its Biography folder. */
+function albumBiography(albumDir) {
+  const biographyDir = join(albumDir, 'Biography');
+  const source = readJson(join(biographyDir, 'biography.json'));
+  if (source.fictional !== true) return null;
+
+  const generalInformation =
+    source.generalInformation &&
+    typeof source.generalInformation === 'object' &&
+    !Array.isArray(source.generalInformation)
+      ? Object.fromEntries(
+          Object.entries(source.generalInformation).map(([key, value]) => [key, text(value)]),
+        )
+      : {};
+  const birthSource =
+    source.birthDetails &&
+    typeof source.birthDetails === 'object' &&
+    !Array.isArray(source.birthDetails)
+      ? source.birthDetails
+      : {};
+  const birthDetails = {
+    date: text(birthSource.date),
+    time: text(birthSource.time),
+    timeZone: text(birthSource.timeZone),
+    facility: text(birthSource.facility),
+    neighborhood: text(birthSource.neighborhood),
+    city: text(birthSource.city),
+    country: text(birthSource.country),
+    note: text(birthSource.note),
+  };
+  const personalLife =
+    source.personalLife &&
+    typeof source.personalLife === 'object' &&
+    !Array.isArray(source.personalLife)
+      ? source.personalLife
+      : {};
+  const partner =
+    personalLife.partner &&
+    typeof personalLife.partner === 'object' &&
+    !Array.isArray(personalLife.partner)
+      ? {
+          name: text(personalLife.partner.name),
+          note: text(personalLife.partner.note),
+          met: text(personalLife.partner.met),
+          married: text(personalLife.partner.married),
+        }
+      : null;
+
+  const memories = Array.isArray(source.memories)
+    ? source.memories
+        .filter((entry) => entry && typeof entry === 'object' && !Array.isArray(entry))
+        .map((entry, index) => {
+          const fileName = text(entry.file);
+          const imagePath = resolveInside(biographyDir, fileName, isImage);
+          return {
+            id: text(entry.id) || `memory-${index + 1}`,
+            fileName,
+            period: text(entry.period),
+            timestamp: text(entry.timestamp),
+            cameraStamp: text(entry.cameraStamp),
+            caption: text(entry.caption),
+            alt: text(entry.alt) || text(entry.caption) || `Fictional memory ${index + 1}`,
+            src: imagePath ? publicUrl(imagePath) : '',
+            fictional: true,
+          };
+        })
+    : [];
+  const signaturePath = ['signature.jpg', 'signature.jpeg', 'signature.png', 'signature.webp']
+    .map((fileName) => resolveInside(biographyDir, fileName, isImage))
+    .find(Boolean);
+  const educationalBackground = biographyEntries(
+    completedDegreeEntries(source.educationalBackground),
+    ['period', 'qualification', 'institution', 'location', 'description'],
+  );
+  if (educationalBackground.length > 0) {
+    generalInformation.education = educationalBackground
+      .map((entry) => entry.qualification)
+      .join('; ');
+  } else {
+    delete generalInformation.education;
+  }
+
+  return {
+    version: numberValue(source.version) || 1,
+    fictional: true,
+    generatedAt: text(source.generatedAt),
+    title: text(source.title) || 'In the Multiverse of NeverBeen',
+    name: text(source.name),
+    signature: text(source.signature),
+    signatureStyle: text(source.signatureStyle),
+    signatureImage: signaturePath ? publicUrl(signaturePath) : '',
+    birthDetails,
+    generalInformation,
+    summary: text(source.summary),
+    earlyLife: textList(source.earlyLife),
+    educationalBackground,
+    career: biographyEntries(source.career, [
+      'period',
+      'role',
+      'organization',
+      'location',
+      'employmentType',
+      'description',
+    ]),
+    achievements: textList(source.achievements),
+    personalLife: {
+      relationshipStatus: text(personalLife.relationshipStatus) || 'Not specified',
+      relationshipType: text(personalLife.relationshipType),
+      narrative: text(personalLife.narrative),
+      partner,
+      parents: biographyEntries(personalLife.parents, ['name', 'relationship', 'note']),
+      siblings: biographyEntries(personalLife.siblings, ['name', 'relationship', 'age', 'note']),
+      formerSpouses: biographyEntries(personalLife.formerSpouses, [
+        'name',
+        'married',
+        'separated',
+        'note',
+      ]),
+      children: biographyEntries(personalLife.children, ['name', 'age', 'note']),
+      privacyNote: text(personalLife.privacyNote),
+    },
+    hobbies: textList(source.hobbies),
+    interests: textList(source.interests),
+    passions: textList(source.passions),
+    ambitions: textList(source.ambitions),
+    finalNotes: textList(source.finalNotes),
+    quotes: biographyEntries(source.quotes, ['text', 'by']),
+    memories,
+    fictionalNotice: text(source.fictionalNotice),
+  };
+}
+
 function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover = null }) {
   const albumDir = join(albumsDir, folderName);
   const albumData = readJson(join(albumDir, 'profile.json'));
 
-  const albumImages = naturalSort(listImages(albumDir));
+  const albumImages = listAlbumImages(albumDir);
   const albumImageNames = albumImages.map((imagePath) => imagePath.split(sep).pop());
   const shared = profilesEntryFor(profileData, {
     name: text(albumData.name),
@@ -509,6 +683,7 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     photoNote: text(merged.photoNote ?? merged.rateNote),
     bio: text(merged.bio ?? merged.shortInfo ?? merged.description),
     illustrative: merged.illustrative === true,
+    biography: albumBiography(albumDir),
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
     /** Clips from `public/NeverBeenModels/<album>/video/`, played in the portfolio's reel. */
@@ -570,6 +745,7 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     photoNote: text(profile.photoNote ?? profile.rateNote),
     bio: text(profile.bio ?? profile.shortInfo ?? profile.description),
     illustrative: profile.illustrative === true,
+    biography: null,
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
     // Flat (legacy) profiles have no album folder, so they carry no video folder either.
@@ -726,6 +902,98 @@ export interface AiModelVideo {
   type: string;
 }
 
+export interface AiModelBiographyEntry {
+  period: string;
+  qualification: string;
+  institution: string;
+  location: string;
+  description: string;
+}
+
+export interface AiModelBiographyCareerEntry {
+  period: string;
+  role: string;
+  organization: string;
+  location: string;
+  employmentType: string;
+  description: string;
+}
+
+export interface AiModelBiographyMemory {
+  id: string;
+  fileName: string;
+  period: string;
+  timestamp: string;
+  cameraStamp: string;
+  caption: string;
+  alt: string;
+  /** Empty until the corresponding generated image exists in the Biography folder. */
+  src: string;
+  fictional: boolean;
+}
+
+export interface AiModelBiographyBirthDetails {
+  date: string;
+  time: string;
+  timeZone: string;
+  facility: string;
+  neighborhood: string;
+  city: string;
+  country: string;
+  note: string;
+}
+
+export interface AiModelBiographyRelative {
+  name: string;
+  relationship: string;
+  age?: string;
+  note: string;
+}
+
+export interface AiModelBiographyFormerSpouse {
+  name: string;
+  married: string;
+  separated: string;
+  note: string;
+}
+
+export interface AiModelBiography {
+  version: number;
+  fictional: boolean;
+  generatedAt: string;
+  title: string;
+  name: string;
+  signature: string;
+  signatureStyle: string;
+  signatureImage: string;
+  birthDetails: AiModelBiographyBirthDetails;
+  generalInformation: Record<string, string>;
+  summary: string;
+  earlyLife: string[];
+  educationalBackground: AiModelBiographyEntry[];
+  career: AiModelBiographyCareerEntry[];
+  achievements: string[];
+  personalLife: {
+    relationshipStatus: string;
+    relationshipType: string;
+    narrative: string;
+    partner: { name: string; note: string; met: string; married: string } | null;
+    parents: AiModelBiographyRelative[];
+    siblings: AiModelBiographyRelative[];
+    formerSpouses: AiModelBiographyFormerSpouse[];
+    children: Array<{ name: string; age: string; note: string }>;
+    privacyNote: string;
+  };
+  hobbies: string[];
+  interests: string[];
+  passions: string[];
+  ambitions: string[];
+  finalNotes: string[];
+  quotes: Array<{ text: string; by: string }>;
+  memories: AiModelBiographyMemory[];
+  fictionalNotice: string;
+}
+
 export interface AiModelProfile {
   /** URL-safe path segment derived from the model name. */
   slug: string;
@@ -763,6 +1031,8 @@ export interface AiModelProfile {
   bio: string;
   /** Whether profile details are illustrative placeholders pending verification. */
   illustrative: boolean;
+  /** Optional fictional multiverse biography stored under the model's Biography/ folder. */
+  biography?: AiModelBiography | null;
   /** Photographs beyond the cover, kept for backwards compatibility. */
   gallery: string[];
   /** Every photograph in the album, cover first — the Instagram-style grid. */

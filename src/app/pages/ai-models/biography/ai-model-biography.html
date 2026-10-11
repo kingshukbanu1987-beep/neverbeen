@@ -1,0 +1,619 @@
+<main class="biography-page">
+  <div class="biography-shell">
+    @if (model(); as profile) {
+      <header class="wiki-site-header">
+        <a class="back-to-profile" [routerLink]="['/ai-models', profile.slug]">
+          <span aria-hidden="true">←</span> Back to {{ profile.name }}’s portfolio
+        </a>
+        <a class="wiki-wordmark" routerLink="/ai-models" aria-label="NeverBeen model biographies">
+          <span class="wiki-mark" aria-hidden="true">N</span>
+          <span><strong>NeverBeen</strong><small>Multiverse biographies</small></span>
+        </a>
+      </header>
+
+      @if (biography(); as story) {
+        <header class="article-heading">
+          <p class="article-kicker">Fictional biography</p>
+          <h1>{{ profile.name }}</h1>
+          <p class="article-subtitle">{{ headerTitle }}</p>
+          <div class="article-meta">
+            <span>From the fictional NeverBeen Multiverse</span>
+            <span aria-hidden="true">·</span>
+            <span>All details are imagined</span>
+          </div>
+        </header>
+
+        <section class="article-lead" aria-label="Article introduction and biographical facts">
+          <div class="lead-copy">
+            <p class="lead-summary">{{ story.summary }}</p>
+            <p class="fiction-note">
+              <strong>Fictional account.</strong>
+              This biography describes an imagined character in the Multiverse of NeverBeen; it is
+              not a record of a real person’s life.
+            </p>
+          </div>
+
+          <aside class="infobox" aria-label="Biographical information">
+            <p class="infobox-title">{{ profile.name }}</p>
+            <div class="infobox-media-pair">
+              @if (profile.cover) {
+                <figure class="infobox-portrait">
+                  <img
+                    [src]="profile.cover"
+                    [alt]="profile.name + ' — fictional NeverBeen portrait'"
+                    decoding="async"
+                  />
+                  <figcaption>Fictional digital model</figcaption>
+                </figure>
+              }
+              <figure class="infobox-signature">
+                @if (story.signatureImage) {
+                  <img
+                    class="signature-image"
+                    [src]="story.signatureImage"
+                    [alt]="
+                      'Fictional handwritten signature for ' +
+                      (story.signature || profile.name) +
+                      ' in blue ballpoint on white paper.'
+                    "
+                    loading="lazy"
+                    decoding="async"
+                  />
+                } @else {
+                  <span class="infobox-signature-script">{{
+                    story.signature || profile.name
+                  }}</span>
+                }
+                <figcaption>Fictional signature facsimile</figcaption>
+              </figure>
+            </div>
+            @if (generalDetails().length > 0) {
+              <dl class="infobox-facts">
+                @for (detail of generalDetails(); track detail.key) {
+                  <div>
+                    <dt>{{ detail.label }}</dt>
+                    <dd>{{ detail.value }}</dd>
+                  </div>
+                }
+              </dl>
+            }
+          </aside>
+        </section>
+
+        <nav class="contents-box" aria-label="Contents">
+          <h2>Contents</h2>
+          <ol>
+            <li><a href="#early-life">Early life</a></li>
+            <li><a href="#education">Education</a></li>
+            <li><a href="#career">Career</a></li>
+            <li><a href="#achievements">Achievements</a></li>
+            <li><a href="#personal-life">Personal life</a></li>
+            <li><a href="#family">Family</a></li>
+            <li><a href="#interests">Interests and ambitions</a></li>
+            <li><a href="#final-notes">Final notes</a></li>
+          </ol>
+        </nav>
+
+        <article class="wiki-article">
+          <section class="wiki-section story-section" id="early-life">
+            <h2>Early life</h2>
+            <div class="story-copy">
+              @for (paragraph of story.earlyLife; track $index; let paragraphIndex = $index) {
+                <p>{{ paragraph }}</p>
+                @if (paragraphIndex === 1) {
+                  @if (memory('childhood-home'); as photo) {
+                    <figure class="story-photo story-photo-right">
+                      @if (photo.src) {
+                        <img
+                          [src]="photo.src"
+                          [alt]="memoryImageAlt(photo.alt, profile.name)"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      } @else {
+                        <div
+                          class="memory-pending"
+                          role="img"
+                          [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                        >
+                          Fictional childhood image awaiting its frame
+                        </div>
+                      }
+                      <figcaption>
+                        <strong>{{ photo.caption }}</strong>
+                        <span>{{ memoryMetadata(photo) }}</span>
+                      </figcaption>
+                    </figure>
+                  }
+                }
+                @if (paragraphIndex === 2) {
+                  @if (memory('neighbourhood'); as photo) {
+                    <figure class="story-photo story-photo-left">
+                      @if (photo.src) {
+                        <img
+                          [src]="photo.src"
+                          [alt]="memoryImageAlt(photo.alt, profile.name)"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      } @else {
+                        <div
+                          class="memory-pending"
+                          role="img"
+                          [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                        >
+                          Fictional neighbourhood image awaiting its frame
+                        </div>
+                      }
+                      <figcaption>
+                        <strong>{{ photo.caption }}</strong>
+                        <span>{{ memoryMetadata(photo) }}</span>
+                      </figcaption>
+                    </figure>
+                  }
+                }
+                @if (paragraphIndex === 3) {
+                  @if (memory('school-days'); as photo) {
+                    <figure class="story-photo story-photo-right">
+                      @if (photo.src) {
+                        <img
+                          [src]="photo.src"
+                          [alt]="memoryImageAlt(photo.alt, profile.name)"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      } @else {
+                        <div
+                          class="memory-pending"
+                          role="img"
+                          [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                        >
+                          Fictional school-days image awaiting its frame
+                        </div>
+                      }
+                      <figcaption>
+                        <strong>{{ photo.caption }}</strong>
+                        <span>{{ memoryMetadata(photo) }}</span>
+                      </figcaption>
+                    </figure>
+                  }
+                  @if (memory('school-project'); as photo) {
+                    <figure class="story-photo story-photo-left">
+                      @if (photo.src) {
+                        <img
+                          [src]="photo.src"
+                          [alt]="memoryImageAlt(photo.alt, profile.name)"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      } @else {
+                        <div
+                          class="memory-pending"
+                          role="img"
+                          [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                        >
+                          Fictional school-project image awaiting its frame
+                        </div>
+                      }
+                      <figcaption>
+                        <strong>{{ photo.caption }}</strong>
+                        <span>{{ memoryMetadata(photo) }}</span>
+                      </figcaption>
+                    </figure>
+                  }
+                }
+              }
+            </div>
+          </section>
+
+          <section class="wiki-section story-section" id="education">
+            <h2>Education</h2>
+            @if (story.educationalBackground.length > 0) {
+              <div class="education-list">
+                @for (
+                  education of story.educationalBackground;
+                  track $index;
+                  let educationIndex = $index
+                ) {
+                  <article class="education-entry">
+                    <p class="entry-period">{{ education.period }}</p>
+                    <h3>{{ education.qualification }}</h3>
+                    <p class="entry-institution">
+                      {{ education.institution }} <span aria-hidden="true">·</span>
+                      {{ education.location }}
+                    </p>
+                    <p>{{ education.description }}</p>
+                  </article>
+                  @if (educationIndex === 0) {
+                    @if (memory('college'); as photo) {
+                      <figure class="story-photo story-photo-right">
+                        @if (photo.src) {
+                          <img
+                            [src]="photo.src"
+                            [alt]="memoryImageAlt(photo.alt, profile.name)"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        } @else {
+                          <div
+                            class="memory-pending"
+                            role="img"
+                            [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                          >
+                            Fictional college image awaiting its frame
+                          </div>
+                        }
+                        <figcaption>
+                          <strong>{{ photo.caption }}</strong>
+                          <span>{{ memoryMetadata(photo) }}</span>
+                        </figcaption>
+                      </figure>
+                    }
+                  }
+                }
+              </div>
+            } @else {
+              <p class="section-note">
+                No completed university-level qualifications are included in this fictional profile.
+              </p>
+            }
+          </section>
+
+          <section class="wiki-section story-section" id="career">
+            <h2>Career</h2>
+            <p class="section-intro">
+              The following positions are fictional and belong only to this alternate-universe
+              character.
+            </p>
+            <div class="career-list">
+              @for (role of story.career; track $index; let roleIndex = $index) {
+                <article class="career-entry">
+                  <p class="entry-period">
+                    {{ role.period }} <span aria-hidden="true">·</span> {{ role.employmentType }}
+                  </p>
+                  <h3>{{ role.role }}</h3>
+                  <p class="entry-institution">
+                    {{ role.organization }} <span aria-hidden="true">·</span> {{ role.location }}
+                  </p>
+                  <p>{{ role.description }}</p>
+                </article>
+                @if (roleIndex === 0) {
+                  @if (memory('first-workplace'); as photo) {
+                    <figure class="story-photo story-photo-left">
+                      @if (photo.src) {
+                        <img
+                          [src]="photo.src"
+                          [alt]="memoryImageAlt(photo.alt, profile.name)"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      } @else {
+                        <div
+                          class="memory-pending"
+                          role="img"
+                          [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                        >
+                          Fictional first-workplace image awaiting its frame
+                        </div>
+                      }
+                      <figcaption>
+                        <strong>{{ photo.caption }}</strong>
+                        <span>{{ memoryMetadata(photo) }}</span>
+                      </figcaption>
+                    </figure>
+                  }
+                }
+                @if (roleIndex === story.career.length - 1) {
+                  @if (memory('first-editorial'); as photo) {
+                    <figure class="story-photo story-photo-right">
+                      @if (photo.src) {
+                        <img
+                          [src]="photo.src"
+                          [alt]="memoryImageAlt(photo.alt, profile.name)"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      } @else {
+                        <div
+                          class="memory-pending"
+                          role="img"
+                          [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                        >
+                          Fictional editorial image awaiting its frame
+                        </div>
+                      }
+                      <figcaption>
+                        <strong>{{ photo.caption }}</strong>
+                        <span>{{ memoryMetadata(photo) }}</span>
+                      </figcaption>
+                    </figure>
+                  }
+                }
+              }
+              @if (memory('present-day'); as photo) {
+                <figure class="story-photo story-photo-left">
+                  @if (photo.src) {
+                    <img
+                      [src]="photo.src"
+                      [alt]="memoryImageAlt(photo.alt, profile.name)"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  } @else {
+                    <div
+                      class="memory-pending"
+                      role="img"
+                      [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                    >
+                      Fictional present-day image awaiting its frame
+                    </div>
+                  }
+                  <figcaption>
+                    <strong>{{ photo.caption }}</strong>
+                    <span>{{ memoryMetadata(photo) }}</span>
+                  </figcaption>
+                </figure>
+              }
+            </div>
+          </section>
+
+          <section class="wiki-section" id="achievements">
+            <h2>Achievements</h2>
+            <ul class="wiki-list">
+              @for (achievement of story.achievements; track $index) {
+                <li>{{ achievement }}</li>
+              }
+            </ul>
+          </section>
+
+          <section class="wiki-section story-section" id="personal-life">
+            <h2>Personal life</h2>
+            <p>{{ story.personalLife.narrative }}</p>
+            @if (story.personalLife.relationshipType) {
+              <p>{{ story.personalLife.relationshipType }}.</p>
+            }
+            <div class="family-roster" id="family">
+              <h3>Family</h3>
+              <dl class="family-roster-list">
+                @if (story.personalLife.parents.length > 0) {
+                  <div>
+                    <dt>Parents</dt>
+                    <dd>
+                      <ul>
+                        @for (parent of story.personalLife.parents; track parent.name) {
+                          <li>
+                            <strong>{{ parent.relationship }}:</strong> {{ parent.name }}
+                            <span>{{ parent.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.siblings.length > 0) {
+                  <div>
+                    <dt>Siblings</dt>
+                    <dd>
+                      <ul>
+                        @for (sibling of story.personalLife.siblings; track sibling.name) {
+                          <li>
+                            <strong>{{ sibling.relationship }}:</strong> {{ sibling.name }}
+                            @if (sibling.age) {
+                              ({{ sibling.age }} years old)
+                            }
+                            <span>{{ sibling.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.partner; as partner) {
+                  <div>
+                    <dt>
+                      {{
+                        story.personalLife.relationshipStatus === 'Married' ? 'Spouse' : 'Partner'
+                      }}
+                    </dt>
+                    <dd>
+                      <strong>{{ partner.name }}</strong>
+                      @if (partner.married) {
+                        · Married {{ partner.married }}.
+                      }
+                      @if (partner.met) {
+                        {{ partner.met }}
+                      }
+                      <span>{{ partner.note }}</span>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.formerSpouses.length > 0) {
+                  <div>
+                    <dt>
+                      Former spouse{{ story.personalLife.formerSpouses.length > 1 ? 's' : '' }}
+                    </dt>
+                    <dd>
+                      <ul>
+                        @for (
+                          formerSpouse of story.personalLife.formerSpouses;
+                          track formerSpouse.name
+                        ) {
+                          <li>
+                            <strong>{{ formerSpouse.name }}</strong>
+                            @if (formerSpouse.married) {
+                              · Married {{ formerSpouse.married }}.
+                            }
+                            @if (formerSpouse.separated) {
+                              Separated {{ formerSpouse.separated }}.
+                            }
+                            <span>{{ formerSpouse.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+                @if (story.personalLife.children.length > 0) {
+                  <div>
+                    <dt>Children</dt>
+                    <dd>
+                      <ul>
+                        @for (child of story.personalLife.children; track child.name) {
+                          <li>
+                            <strong>{{ child.name }}</strong> ({{ child.age }} years old)
+                            <span>{{ child.note }}</span>
+                          </li>
+                        }
+                      </ul>
+                    </dd>
+                  </div>
+                }
+              </dl>
+            </div>
+            @if (memory('friends'); as photo) {
+              <figure class="story-photo story-photo-right">
+                @if (photo.src) {
+                  <img
+                    [src]="photo.src"
+                    [alt]="memoryImageAlt(photo.alt, profile.name)"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                } @else {
+                  <div
+                    class="memory-pending"
+                    role="img"
+                    [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                  >
+                    Fictional friends image awaiting its frame
+                  </div>
+                }
+                <figcaption>
+                  <strong>{{ photo.caption }}</strong>
+                  <span>{{ memoryMetadata(photo) }}</span>
+                </figcaption>
+              </figure>
+            }
+            @if (memory('family-now'); as photo) {
+              <figure class="story-photo story-photo-left">
+                @if (photo.src) {
+                  <img
+                    [src]="photo.src"
+                    [alt]="memoryImageAlt(photo.alt, profile.name)"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                } @else {
+                  <div
+                    class="memory-pending"
+                    role="img"
+                    [attr.aria-label]="memoryImageAlt(photo.alt, profile.name)"
+                  >
+                    Fictional family image awaiting its frame
+                  </div>
+                }
+                <figcaption>
+                  <strong>{{ photo.caption }}</strong>
+                  <span>{{ memoryMetadata(photo) }}</span>
+                </figcaption>
+              </figure>
+            }
+            <p class="privacy-note">{{ story.personalLife.privacyNote }}</p>
+          </section>
+
+          <section class="wiki-section" id="interests">
+            <h2>Interests and ambitions</h2>
+            <h3>Hobbies</h3>
+            <ul class="wiki-list two-column-list">
+              @for (hobby of story.hobbies; track hobby) {
+                <li>{{ hobby }}</li>
+              }
+            </ul>
+            <h3>Interests</h3>
+            <ul class="wiki-list two-column-list">
+              @for (interest of story.interests; track interest) {
+                <li>{{ interest }}</li>
+              }
+            </ul>
+            <h3>Passions</h3>
+            <ul class="wiki-list two-column-list">
+              @for (passion of story.passions; track passion) {
+                <li>{{ passion }}</li>
+              }
+            </ul>
+            <h3>Ambitions</h3>
+            <ul class="wiki-list">
+              @for (ambition of story.ambitions; track ambition) {
+                <li>{{ ambition }}</li>
+              }
+            </ul>
+          </section>
+
+          <section class="wiki-section story-section" id="final-notes">
+            <h2>Final notes</h2>
+            @for (note of story.finalNotes; track $index) {
+              <p>{{ note }}</p>
+            }
+            @if (story.quotes.length > 0) {
+              <div class="quotes-list">
+                @for (quote of story.quotes; track $index) {
+                  <blockquote>
+                    <p>“{{ quote.text }}”</p>
+                    <cite>— {{ quote.by }} (fictional quote)</cite>
+                  </blockquote>
+                }
+              </div>
+            }
+          </section>
+        </article>
+
+        <footer class="fiction-footer">
+          <p><strong>Fiction notice</strong></p>
+          <p class="footer-disclaimer">
+            {{ story.fictionalNotice }} All details, education, work experience, relationships,
+            family stories, quotations and pictures are invented and exist only in the fictional
+            Multiverse of NeverBeen; they do not describe real events or real people.
+          </p>
+          <a [routerLink]="['/ai-models', profile.slug]"
+            >Return to {{ profile.name }}’s portfolio</a
+          >
+        </footer>
+      } @else {
+        <section class="biography-unavailable" aria-labelledby="unavailable-title">
+          <p class="article-kicker">NeverBeen Multiverse</p>
+          <h1 id="unavailable-title">Biography not Available</h1>
+          <p class="unavailable-name">{{ profile.name }}</p>
+          <p>
+            This model’s fictional biography has not been created yet. When it is ready, her story
+            will appear here.
+          </p>
+          <a [routerLink]="['/ai-models', profile.slug]" class="unavailable-back">
+            ← Return to portfolio
+          </a>
+        </section>
+        <footer class="fiction-footer">
+          <p class="footer-disclaimer">
+            Any biography published here is fictional and exists only in the Multiverse of
+            NeverBeen.
+          </p>
+        </footer>
+      }
+    } @else {
+      <header class="wiki-site-header">
+        <a class="back-to-profile" routerLink="/ai-models">← All AI models</a>
+        <a class="wiki-wordmark" routerLink="/ai-models"
+          >NeverBeen <small>Multiverse biographies</small></a
+        >
+      </header>
+      <section class="biography-unavailable" aria-labelledby="not-found-title">
+        <p class="article-kicker">NeverBeen Multiverse</p>
+        <h1 id="not-found-title">This story is out of frame</h1>
+        <p>The model may have moved, or the profile is not in the directory yet.</p>
+        <a routerLink="/ai-models" class="unavailable-back">Browse all models</a>
+      </section>
+      <footer class="fiction-footer">
+        <p>This biography service contains fictional stories from the Multiverse of NeverBeen.</p>
+      </footer>
+    }
+  </div>
+</main>

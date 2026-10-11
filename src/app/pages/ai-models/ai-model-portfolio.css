@@ -319,8 +319,46 @@
 .profile-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 0.7rem;
   margin-top: 1.5rem;
+}
+
+.rent-action-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.biography-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  margin-left: 0.42rem;
+  color: #f28fbd;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.biography-link span {
+  color: #f9c0dc;
+  font-size: 0.86rem;
+}
+
+.biography-link:hover,
+.biography-link:focus-visible {
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.biography-link:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 4px;
 }
 
 .action-button {

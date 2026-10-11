@@ -58,6 +58,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/ai-models/ai-models').then((m) => m.AiModelsPage),
   },
   {
+    path: 'ai-models/:slug/biography',
+    loadComponent: () =>
+      import('./pages/ai-models/biography/ai-model-biography').then((m) => m.AiModelBiographyPage),
+  },
+  {
     path: 'ai-models/:slug/photos',
     loadComponent: () =>
       import('./pages/ai-models/all-photos/ai-model-all-photos').then(
@@ -75,7 +80,8 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    loadComponent: () => import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
+    loadComponent: () =>
+      import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
   },
   // OAuth callback registered with Google / Facebook / Microsoft (and with the Web API's
   // `OAuth:FrontendRedirectUri`): the provider appends `?code=…&state=<provider>` here.
@@ -90,15 +96,18 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./pages/community/connect/connect').then((m) => m.CommunityConnect),
+        loadComponent: () =>
+          import('./pages/community/connect/connect').then((m) => m.CommunityConnect),
       },
       {
         path: 'register',
-        loadComponent: () => import('./pages/community/register/register').then((m) => m.CommunityRegister),
+        loadComponent: () =>
+          import('./pages/community/register/register').then((m) => m.CommunityRegister),
       },
       {
         path: 'profile',
-        loadComponent: () => import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
+        loadComponent: () =>
+          import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
       },
       {
         path: 'message-book',
@@ -112,7 +121,8 @@ export const routes: Routes = [
       },
       {
         path: 'callback',
-        loadComponent: () => import('./pages/community/callback/callback').then((m) => m.CommunityCallback),
+        loadComponent: () =>
+          import('./pages/community/callback/callback').then((m) => m.CommunityCallback),
       },
     ],
   },
