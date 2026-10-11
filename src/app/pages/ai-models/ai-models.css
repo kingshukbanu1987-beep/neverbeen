@@ -836,11 +836,6 @@
     margin-top: 1.25rem;
   }
 
-  .search-field {
-    min-width: 0;
-    flex: 1;
-  }
-
   .model-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
@@ -1133,11 +1128,19 @@
 
 @media (width <= 760px) {
   .directory-tools {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
   }
 
+  .search-field,
   .sort-field {
-    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .results-count {
+    justify-self: end;
   }
 }
 
