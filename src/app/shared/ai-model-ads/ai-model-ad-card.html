@@ -1,0 +1,54 @@
+<aside
+  class="aim-ad"
+  role="complementary"
+  aria-label="Advertisement from NeverBeen AI Models"
+  [attr.data-count]="advertisement().photos.length"
+>
+  <span class="aim-ad__glow" aria-hidden="true"></span>
+
+  <header class="aim-ad__bar">
+    <span class="aim-ad__tag"><i aria-hidden="true">✦</i> Advertisement</span>
+    <span class="aim-ad__brand">NeverBeen <em>AI Models</em></span>
+    <span class="aim-ad__hint">Portfolio for rent</span>
+  </header>
+
+  <div class="aim-ad__body">
+    <div class="aim-ad__mosaic">
+      @for (photo of advertisement().photos; track photo; let index = $index) {
+        <img
+          class="aim-ad__photo"
+          [src]="photo"
+          [alt]="advertisement().name + ' — NeverBeen AI model portfolio photograph ' + (index + 1)"
+          loading="lazy"
+          decoding="async"
+          [style.--aim-delay]="index * 60 + 'ms'"
+        />
+      }
+      @if (!advertisement().photos.length) {
+        <span class="aim-ad__pending" aria-hidden="true"><span>✳</span>Portrait coming soon</span>
+      }
+      <span class="aim-ad__stamp" aria-hidden="true">NB&nbsp;/&nbsp;STUDIO</span>
+    </div>
+
+    <div class="aim-ad__copy">
+      <p class="aim-ad__kicker">Rent her portfolio</p>
+      <h3 class="aim-ad__name">{{ advertisement().name }}</h3>
+      <p class="aim-ad__place" [title]="advertisement().location">
+        <span aria-hidden="true">📍</span>
+        {{ advertisement().city }}@if (advertisement().country) {,&nbsp;{{ advertisement().country }}}
+      </p>
+      <p class="aim-ad__status" [attr.data-state]="advertisement().availability.state">
+        <i aria-hidden="true"></i>{{ advertisement().availability.label }}
+      </p>
+      <a
+        class="aim-ad__cta"
+        [routerLink]="['/ai-models', advertisement().slug]"
+        (click)="openPortfolio()"
+        [attr.aria-label]="'View the portfolio of ' + advertisement().name"
+      >
+        <span>View Portfolio</span>
+        <span class="aim-ad__arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</aside>

@@ -165,6 +165,40 @@ the WhatsApp Cloud API when configured, and the local development stand-in
 (`scripts/dev-booking-api.mjs`) writes to the gitignored `booking-outbox.log` when those credentials
 are absent. These endpoints are separate from the portfolio form's direct WhatsApp handoff.
 
+### Advertising the models in the Community
+
+The studio advertises itself inside the Community, on the member's own Journey page — the page the
+community header's home icon opens:
+
+- **Right rail, under “Online Companions”.** The bottom of the rail (where the member's Circles list
+  used to sit) is a dark, magenta-lit advertisement panel that rotates through **15 random
+  portfolios** from `/ai-models`. Every card shows the model's portfolio portrait, her name, her
+  **city and country**, her **availability status** (`Available for Contract`, `Currently
+  Unavailable`, `Looking for Future Contract`) and a **View Portfolio** button that opens
+  `/ai-models/<slug>`. The panel header links to the full directory and the rotation is drawn once
+  per visit, so the faces stay put while the member reads.
+- **Journey feed, between the posts.** Sponsored cards appear at irregular intervals (roughly every
+  four to six posts, never on the first two and never two in a row). Each card is clearly labelled
+  **ADVERTISEMENT** and shows the model's brand row, **four random photographs from her own album
+  folder** — or the single photograph she has when the folder holds fewer than four — her name, city
+  and country, her availability status and a **View Portfolio** button. Advertisements are inserted
+  between the `displayedJourneyPosts()` cards, so infinite scrolling never reshuffles them.
+
+Both surfaces select from the same generated catalog the studio page uses (`ai-model-data.ts`), so
+every model in `data/ai-models/profiles.json` is advertising material. They can be switched off (or
+the rail count changed) per site in **Admin Console → Website → Member profile**, under
+`community.profile`: `showModelAdsPanel`, `showModelAdsInFeed` and `modelAdCount` (default 15).
+
+The advertisement works offline and for guests. When the member is signed in against the (optional)
+Web API it additionally reads the advertising pool from `GET /api/models/ads` — which lets the
+Founder pause a model (`IsActive = false`) or rotate one more heavily (`Weight` 1–10) — and reports
+impressions and clicks to `POST /api/models/ads/events` so each portfolio's reach is measurable.
+Apply `docs/patches/neverbeen-api-model-advertisement.patch` to `neverbeen-api` and
+`docs/patches/neverbeen-database-model-advertisement.patch` (or run the standalone
+`docs/patches/neverbeen-database-model-advertisement.sql`) to neverbeen-database for the pool
+tables — each patch ships with a `*-verification.py` script. Without them the advertisement still
+runs: the pool simply answers “everything”, and nothing is recorded.
+
 ## The Collection page
 
 Photographs shown on `/collection` live in `public/collection`. Drop image files (`jpg`, `jpeg`,

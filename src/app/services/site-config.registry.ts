@@ -429,6 +429,9 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
       { key: 'sections', label: 'Profile menu', type: 'items', default: items(PROFILE_SECTIONS), labelEditable: true, lockedIds: ['journey', 'settings'] },
       { key: 'showCompanionsPanel', label: 'Show “My Companions” side panel', type: 'toggle', default: true },
       { key: 'showCirclesPanel', label: 'Show “My Circles” side panel', type: 'toggle', default: true },
+      { key: 'showModelAdsPanel', label: 'Show the AI Models advertisement under “Online Companions”', type: 'toggle', default: true },
+      { key: 'showModelAdsInFeed', label: 'Show AI Models advertisements between Journey posts', type: 'toggle', default: true },
+      { key: 'modelAdCount', label: 'Model advertisements in the right rail', type: 'number', default: 15, min: 4, max: 42 },
     ],
   },
   {

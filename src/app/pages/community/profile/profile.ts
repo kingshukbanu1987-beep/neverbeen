@@ -50,6 +50,10 @@ import { PresenceDot } from '../../../shared/presence-dot/presence-dot';
 import { ChatAutoScroll } from '../../../shared/chat-auto-scroll/chat-auto-scroll';
 import { SelectValueSync } from '../../../shared/select-value-sync';
 import { AnnouncementInboxService, AnnouncementNotice, noticeTime, viewerProfile } from '../../../services/announcement-inbox.service';
+import { AiModelAdsService } from '../../../services/ai-model-ads.service';
+import { AiModelAd } from '../../../shared/ai-model-ads/ai-model-ad';
+import { AiModelAdCard } from '../../../shared/ai-model-ads/ai-model-ad-card';
+import { AiModelAdsPanel } from '../../../shared/ai-model-ads/ai-model-ads-panel';
 
 import { TRAVEL_MOOD_GROUPS } from './travel-moods';
 import { MoodPicker } from './mood-picker';
@@ -126,6 +130,8 @@ import {
     ChatAutoScroll,
     MoodPicker,
     PostAudienceControl,
+    AiModelAdsPanel,
+    AiModelAdCard,
   ],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css', './profile-journey.css', './messenger-wide.css'],
@@ -133,6 +139,8 @@ import {
 export class CommunityProfile implements OnInit {
   protected readonly service = inject(CommunityService);
   protected readonly googleMapsService = inject(GoogleMapsService);
+  /** Serves the NeverBeen AI Models advertisement (right rail + sponsored feed cards). */
+  private readonly modelAds = inject(AiModelAdsService);
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -240,9 +248,33 @@ export class CommunityProfile implements OnInit {
 
   /**
    * Right rail column (tablet / laptop / wide screens): online companions on top,
-   * the member's Circles below. Only shown while the member's own Journey feed is open.
+   * the NeverBeen AI Models advertisement below (it replaced the member's Circles
+   * list at the bottom of the rail). Only shown while the member's own Journey feed
+   * is open.
    */
   readonly showJourneyRightRail = computed(() => this.activeSection() === 'journey' && !this.viewingVisitor());
+
+  /** CMS: the AI Models advertisement below “Online Companions” in the Journey right rail. */
+  protected readonly showModelAdsPanel = computed(() => this.profileFlag('showModelAdsPanel'));
+
+  /** CMS: sponsored AI Model cards rotating through the Journey feed. */
+  protected readonly showModelAdsInFeed = computed(() => this.profileFlag('showModelAdsInFeed'));
+
+  /** CMS: how many model portfolios the rail advertisement rotates through (15 by default). */
+  protected readonly modelAdCount = computed(() => {
+    const configured = Number(this.cms.get<number>('community.profile', 'modelAdCount'));
+    return Number.isFinite(configured) && configured > 0 ? Math.floor(configured) : 15;
+  });
+
+  /**
+   * The sponsored AI Model card that runs **after** Journey post `index`, or null when that post
+   * keeps the feed advertisement-free. Placement is irregular and drawn once per visit, so the
+   * ads sit randomly between the member's posts and never shuffle as the feed is scrolled.
+   */
+  protected advertisementAfter(index: number): AiModelAd | null {
+    if (!this.showModelAdsInFeed()) return null;
+    return this.modelAds.feedAdAfter(index);
+  }
 
   openJourneyComposerPopup(): void {
     if (this.journeyComposerOpen()) return;

@@ -1,0 +1,78 @@
+<section class="aim-panel" aria-label="Advertisement: NeverBeen AI Models portfolios available for rent">
+  <span class="aim-aurora" aria-hidden="true"></span>
+  <span class="aim-grid" aria-hidden="true"></span>
+
+  <header class="aim-head">
+    <p class="aim-eyebrow">
+      <span class="aim-spark" aria-hidden="true">✦</span>
+      Advertisement
+      <span class="aim-sep" aria-hidden="true">·</span>
+      <span class="aim-eyebrow__soft">Studio directory</span>
+    </p>
+    <h3 class="aim-title">NeverBeen <em>AI Models</em></h3>
+    <p class="aim-lede">
+      Rent a portfolio-ready face — open her portfolio, check her rate and book the shoot.
+    </p>
+    <div class="aim-meta">
+      <span class="aim-chip"><b>{{ advertisements().length }}</b> rotating</span>
+      <span class="aim-chip aim-chip--live">
+        <i aria-hidden="true"></i>{{ availableCount() }} available
+      </span>
+      <a class="aim-link" routerLink="/ai-models" title="Open the complete NeverBeen AI Models directory">
+        See all <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </header>
+
+  <ul class="aim-list" role="list">
+    @for (advertisement of advertisements(); track advertisement.slug; let index = $index) {
+      <li class="aim-card" [style.--aim-delay]="index * 45 + 'ms'">
+        <span class="aim-card__media">
+          @if (advertisement.photo) {
+            <img
+              [src]="advertisement.photo"
+              [alt]="advertisement.name + ' — NeverBeen AI model portfolio portrait'"
+              loading="lazy"
+              decoding="async"
+            />
+          } @else {
+            <span class="aim-card__pending" aria-hidden="true">
+              <span>✳</span>
+            </span>
+          }
+          <span class="aim-card__ring" aria-hidden="true"></span>
+        </span>
+
+        <span class="aim-card__body">
+          <a
+            class="aim-card__name"
+            [routerLink]="['/ai-models', advertisement.slug]"
+            (click)="openPortfolio(advertisement)"
+            >{{ advertisement.name }}</a
+          >
+          <span class="aim-card__place" [title]="advertisement.location">
+            <span class="aim-pin" aria-hidden="true">📍</span>
+            <span class="aim-card__place-text">
+              {{ advertisement.city }}@if (advertisement.country) {,&nbsp;{{ advertisement.country }}}
+            </span>
+          </span>
+          <span class="aim-card__status" [attr.data-state]="advertisement.availability.state">
+            <i aria-hidden="true"></i>{{ advertisement.availability.label }}
+          </span>
+        </span>
+
+        <a
+          class="aim-card__cta"
+          [routerLink]="['/ai-models', advertisement.slug]"
+          (click)="openPortfolio(advertisement)"
+          [attr.aria-label]="'View the portfolio of ' + advertisement.name"
+        >
+          <span>View Portfolio</span>
+          <span class="aim-card__arrow" aria-hidden="true">→</span>
+        </a>
+      </li>
+    } @empty {
+      <li class="aim-empty">Portfolios are being prepared — please check back shortly.</li>
+    }
+  </ul>
+</section>

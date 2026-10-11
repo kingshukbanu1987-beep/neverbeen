@@ -1,0 +1,433 @@
+/*
+ * NeverBeen AI Models advertisement — the sponsored card that rotates through the Journey feed.
+ *
+ * The card intentionally does not copy the Journey post chrome: ink-dark studio surface, magenta /
+ * violet gradient, an explicit ADVERTISEMENT tag and a photograph mosaic. Members should never
+ * mistake it for a post written by another traveler.
+ */
+:host {
+  display: block;
+  --aim-ink: #f8eef5;
+  --aim-soft: #c6b5c6;
+  --aim-muted: #94869c;
+  --aim-line: rgb(255 255 255 / 12%);
+  --aim-accent: #ef4b8c;
+  --aim-violet: #8b5cf6;
+  --aim-emerald: #34d399;
+  --aim-amber: #fbbf24;
+  --aim-rose: #fb7185;
+}
+
+.aim-ad {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0.9rem 0;
+  border-radius: 22px;
+  color: var(--aim-ink);
+  background:
+    radial-gradient(90% 120% at 108% 0%, rgb(239 75 140 / 22%), transparent 55%),
+    radial-gradient(80% 100% at -12% 110%, rgb(139 92 246 / 22%), transparent 60%),
+    linear-gradient(160deg, #0d0812 0%, #150d1c 55%, #0e0916 100%);
+  border: 1px solid var(--aim-line);
+  box-shadow: 0 24px 50px -30px rgb(8 4 12 / 70%), inset 0 1px 0 rgb(255 255 255 / 7%);
+  animation: aim-ad-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Animated gradient hairline around the whole card. */
+.aim-ad::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, rgb(239 75 140 / 60%), rgb(139 92 246 / 45%), rgb(56 189 248 / 35%), rgb(239 75 140 / 60%));
+  background-size: 220% 220%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.75;
+  animation: aim-ad-border 9s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.aim-ad__glow {
+  position: absolute;
+  inset: -35% -10% auto;
+  height: 65%;
+  z-index: -1;
+  background: conic-gradient(from 200deg, rgb(239 75 140 / 22%), rgb(139 92 246 / 20%), rgb(56 189 248 / 18%), rgb(239 75 140 / 22%));
+  filter: blur(52px);
+  opacity: 0.6;
+  animation: aim-ad-drift 20s ease-in-out infinite alternate;
+}
+
+/* ------------------------------------------------------------------- bar */
+
+.aim-ad__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem 0.15rem;
+}
+
+.aim-ad__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(100deg, rgb(239 75 140 / 85%), rgb(139 92 246 / 80%));
+  box-shadow: 0 10px 22px -14px rgb(239 75 140 / 95%);
+}
+
+.aim-ad__tag i {
+  font-size: 0.6rem;
+  animation: aim-ad-twinkle 3.6s ease-in-out infinite;
+}
+
+.aim-ad__brand {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.aim-ad__brand em {
+  font-style: italic;
+  font-weight: 500;
+  background: linear-gradient(100deg, #ffd9e8, var(--aim-accent) 60%, var(--aim-violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.aim-ad__hint {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aim-muted);
+}
+
+/* ------------------------------------------------------------------ body */
+
+.aim-ad__body {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.92fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.7rem 1rem 1rem;
+  align-items: stretch;
+}
+
+.aim-ad__mosaic {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  min-height: 216px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #1a1120;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
+}
+
+/* Fewer than four photographs in the folder: the one frame she has fills the mosaic. */
+.aim-ad[data-count='1'] .aim-ad__mosaic,
+.aim-ad[data-count='0'] .aim-ad__mosaic {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.aim-ad__photo {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: block;
+  object-fit: cover;
+  animation: aim-ad-photo 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--aim-delay, 0ms);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+}
+
+.aim-ad__mosaic:hover .aim-ad__photo {
+  transform: scale(1.04);
+  filter: saturate(1.06);
+}
+
+.aim-ad__mosaic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(190deg, transparent 55%, rgb(8 3 12 / 72%));
+  pointer-events: none;
+}
+
+.aim-ad__stamp {
+  position: absolute;
+  left: 0.55rem;
+  bottom: 0.5rem;
+  z-index: 1;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: rgb(255 255 255 / 82%);
+  text-shadow: 0 2px 10px rgb(0 0 0 / 60%);
+}
+
+.aim-ad__pending {
+  display: grid;
+  place-content: center;
+  gap: 0.35rem;
+  justify-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--aim-muted);
+  background: linear-gradient(150deg, #241428, #150e1c);
+}
+
+.aim-ad__pending span {
+  font-size: 1.4rem;
+  color: var(--aim-accent);
+}
+
+/* ------------------------------------------------------------------ copy */
+
+.aim-ad__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.aim-ad__kicker {
+  margin: 0;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--aim-accent);
+}
+
+.aim-ad__name {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.1vw, 1.55rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.aim-ad__place {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: var(--aim-soft);
+}
+
+.aim-ad__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  margin: 0.15rem 0 0;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.aim-ad__status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentcolor;
+  flex-shrink: 0;
+}
+
+.aim-ad__status[data-state='available'] {
+  color: var(--aim-emerald);
+  background: rgb(52 211 153 / 14%);
+  border: 1px solid rgb(52 211 153 / 34%);
+}
+
+.aim-ad__status[data-state='available'] i {
+  animation: aim-ad-pulse 2.4s ease-in-out infinite;
+}
+
+.aim-ad__status[data-state='future'] {
+  color: var(--aim-amber);
+  background: rgb(251 191 36 / 14%);
+  border: 1px solid rgb(251 191 36 / 34%);
+}
+
+.aim-ad__status[data-state='unavailable'] {
+  color: var(--aim-rose);
+  background: rgb(251 113 133 / 13%);
+  border: 1px solid rgb(251 113 133 / 32%);
+}
+
+.aim-ad__cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0.55rem 1.35rem;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+  background: linear-gradient(100deg, #c2195f 0%, var(--aim-accent) 45%, var(--aim-violet) 100%);
+  box-shadow: 0 16px 30px -18px rgb(239 75 140 / 95%), inset 0 1px 0 rgb(255 255 255 / 22%);
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+
+.aim-ad__cta::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  transform: skewX(-18deg);
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 45%), transparent);
+  animation: aim-ad-sheen 4.8s ease-in-out infinite;
+}
+
+.aim-ad__cta:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.aim-ad__arrow {
+  transition: transform 0.18s ease;
+}
+
+.aim-ad__cta:hover .aim-ad__arrow {
+  transform: translateX(3px);
+}
+
+/* --------------------------------------------------------------- layouts */
+
+@media (max-width: 720px) {
+  .aim-ad__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aim-ad__mosaic {
+    min-height: 190px;
+  }
+
+  .aim-ad__hint {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------ animations */
+
+@keyframes aim-ad-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aim-ad-photo {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes aim-ad-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 220% 50%;
+  }
+}
+
+@keyframes aim-ad-drift {
+  from {
+    transform: translate3d(-5%, -3%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(5%, 3%, 0) scale(1.07);
+  }
+}
+
+@keyframes aim-ad-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 3px rgb(52 211 153 / 20%);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 5px rgb(52 211 153 / 8%);
+  }
+}
+
+@keyframes aim-ad-twinkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.15) rotate(10deg);
+  }
+}
+
+@keyframes aim-ad-sheen {
+  0%,
+  55% {
+    left: -60%;
+  }
+  75%,
+  100% {
+    left: 120%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aim-ad,
+  .aim-ad::before,
+  .aim-ad__glow,
+  .aim-ad__tag i,
+  .aim-ad__photo,
+  .aim-ad__status[data-state='available'] i,
+  .aim-ad__cta::after {
+    animation: none;
+  }
+}

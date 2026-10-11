@@ -1412,6 +1412,74 @@ describe('CommunityProfile', () => {
     expect(offlineText).toContain('Last seen 40 min ago');
   });
 
+  it('advertises NeverBeen AI Models under “Online Companions” in place of the Circles list', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    const rail = element.querySelector('.right-rail-panel');
+    expect(rail).toBeTruthy();
+    expect(rail!.querySelector('.rail-online-box')).toBeTruthy();
+
+    // The Circles list that used to close the rail is gone; the advertisement took its place.
+    expect(rail!.querySelector('.rail-circles-box')).toBeNull();
+    const panel = rail!.querySelector('app-ai-model-ads-panel');
+    expect(panel).toBeTruthy();
+
+    const advertisement = panel!.querySelector('.aim-panel');
+    expect(advertisement?.textContent).toContain('Advertisement');
+    expect(advertisement?.textContent).toContain('NeverBeen');
+
+    // 15 random portfolios, each with a portrait, her location, availability and a portfolio button.
+    const cards = Array.from(panel!.querySelectorAll<HTMLElement>('.aim-card'));
+    expect(cards).toHaveLength(15);
+    for (const card of cards) {
+      expect(card.querySelector('.aim-card__media img, .aim-card__pending')).toBeTruthy();
+      expect(card.querySelector('.aim-card__name')?.textContent?.trim()).toBeTruthy();
+      expect(card.querySelector('.aim-card__place')?.textContent).toContain(',');
+      expect(card.querySelector('.aim-card__status')?.textContent?.trim()).toBeTruthy();
+      const button = card.querySelector<HTMLAnchorElement>('.aim-card__cta');
+      expect(button?.textContent).toContain('View Portfolio');
+      expect(button?.getAttribute('href')).toMatch(/^\/ai-models\/[a-z0-9-]+$/);
+    }
+  });
+
+  it('rotates sponsored AI Model cards through the Journey feed between the posts', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+
+    const feed = element.querySelector('.journey-feed-list');
+    expect(feed).toBeTruthy();
+    expect(feed!.querySelectorAll('.journey-post-card').length).toBeGreaterThan(0);
+
+    const advertisements = Array.from(feed!.querySelectorAll<HTMLElement>('app-ai-model-ad-card'));
+    expect(advertisements.length).toBeGreaterThan(0);
+
+    for (const advertisement of advertisements) {
+      // It reads as an advertisement, never as a member's post.
+      expect(advertisement.querySelector('.aim-ad__tag')?.textContent).toContain('Advertisement');
+      expect(advertisement.querySelectorAll('.aim-ad__photo').length).toBeGreaterThan(0);
+      expect(advertisement.querySelector('.aim-ad__name')?.textContent?.trim()).toBeTruthy();
+      expect(advertisement.querySelector('.aim-ad__place')?.textContent).toContain(',');
+      expect(advertisement.querySelector('.aim-ad__status')?.textContent?.trim()).toBeTruthy();
+      const button = advertisement.querySelector<HTMLAnchorElement>('.aim-ad__cta');
+      expect(button?.textContent).toContain('View Portfolio');
+      expect(button?.getAttribute('href')).toMatch(/^\/ai-models\/[a-z0-9-]+$/);
+    }
+
+    // The feed still opens with real posts — an advertisement never leads the timeline.
+    const entries = Array.from(feed!.children).filter((child) =>
+      child.matches('.journey-post-card, app-ai-model-ad-card'),
+    );
+    expect(entries[0].matches('.journey-post-card')).toBe(true);
+    expect(entries[1].matches('.journey-post-card')).toBe(true);
+
+    // Every advertisement shows four photographs of her own album, or the single one she has.
+    for (const advertisement of advertisements) {
+      const photos = advertisement.querySelectorAll('.aim-ad__photo').length;
+      expect([1, 4]).toContain(photos);
+    }
+  });
+
   it('seeds 50 profiles from India, 20 from Pakistan, and 20 from Bangladesh into community profiles (Requirement L)', () => {
     const all = service.companions();
     const indianProfiles = all.filter((c) => c.country === 'India');
