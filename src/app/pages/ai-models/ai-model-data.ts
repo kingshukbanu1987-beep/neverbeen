@@ -468,9 +468,11 @@ export const aiModelProfiles: AiModelProfile[] = [
     },
     gallery: [
       '/NeverBeenModels/FiadhDara/_sTof-XqCgAFE9b2cdJ6EDijJx_eHyWEK70Sw6fImIo.png',
+      '/NeverBeenModels/FiadhDara/-pWIKJFpdgSsJ6DbRpRxJGEkOmJKaYbkfw_8YFF3cwo.png',
       '/NeverBeenModels/FiadhDara/0VR1d-kJiSHZGRcf2_5GW_FoRkeONuF9jcNeG-94bq0.png',
       '/NeverBeenModels/FiadhDara/0wn9leIlPMMB6muB2jV0KRowvbKanxCdju2qDQ6u5lk.png',
       '/NeverBeenModels/FiadhDara/1b5zXqHHPrnYC7vc4nyyqF_zrbIpV9mIo7c0cgjZG24.png',
+      '/NeverBeenModels/FiadhDara/2cfVX7y0DUdOFBhJ-DU7FAsmnRG1ZyOVir5w2fWbMwE.png',
       '/NeverBeenModels/FiadhDara/4iWiGw7MFDtLNIsSffbpC6A88o-OJ9gI0Zh-a5QSdB0.png',
       '/NeverBeenModels/FiadhDara/4Ze4Q2aQym5pgfObpUFtrZEp3dd17qNvJ8bIHQ0aN8U.jpg',
       '/NeverBeenModels/FiadhDara/6-a2uYlHMe22S7dog5b9it-Jo0pkqB-rl3Umf6AlQY8.png',
@@ -479,12 +481,14 @@ export const aiModelProfiles: AiModelProfile[] = [
       '/NeverBeenModels/FiadhDara/7nbvqs8rhO5V4yQu01b1hg6yfRQezSqB018vCQ09yjI.png',
       '/NeverBeenModels/FiadhDara/7UEkVDtcWc1awTPYEy1C9IXbxUWu05XDJgpjQCQB71o.png',
       '/NeverBeenModels/FiadhDara/9XNgxlQEMOeuJhfx61H80lWrMoDk3NZ3_hXAWOb9l-4.png',
+      '/NeverBeenModels/FiadhDara/49-RjL7NHsjnLEvOUIt7eD5IKtbZlv5dE9idNfAdoZo.png',
       '/NeverBeenModels/FiadhDara/69AgGuAzTVpTwR5uUfmyaAapdLN5ndV-u5XkXL5h07Q.jpg',
       '/NeverBeenModels/FiadhDara/258gl57L8CWU1h96a_jvB-SQ3HauZxKQ69FQdNz8Wok.png',
       '/NeverBeenModels/FiadhDara/AGPJxuqFAPwfH1f-0nHquVp7Xj-fIPYpIkHJKRkxm1w.png',
       '/NeverBeenModels/FiadhDara/aSPgVNYqD6cpptXNxbprcwN2wsOL0Wayg5MnrNttP3w.png',
       '/NeverBeenModels/FiadhDara/aUva70krPcmfmUTKmhUVY8ornqmDC840bIcIHeZszDs.png',
       '/NeverBeenModels/FiadhDara/awhX8ClijQ-FexZ0owBVoEChqB2oxB0vWk5s9WX-rag.png',
+      '/NeverBeenModels/FiadhDara/BbTwlWeJyPcUJIfbvHDQ3_e8souoSfjNg-6Gu5e_frQ.png',
       '/NeverBeenModels/FiadhDara/bYbYpfHcHQB55-xeXWyLVIK4ZIoaz8k8bRFH9zGjiyQ.jpg',
       '/NeverBeenModels/FiadhDara/dBj8AfD8vMxmHpNYsjLaQFtpV_KB2YnBwEHNqsvo-kY.png',
       '/NeverBeenModels/FiadhDara/DOOtCSiO45agcWANrGij9LU8gx-T5uCGv80vR_APkvc.png',
@@ -493,18 +497,25 @@ export const aiModelProfiles: AiModelProfile[] = [
       '/NeverBeenModels/FiadhDara/eORGYjKp7kC6wm71unWXqYtLVvGpq51NyH_i8j-K9R8.png',
       '/NeverBeenModels/FiadhDara/Ew4_GmzmtkdbJWAB9ZTLDUX0r9irCSnuGGbU5Y6sS7Q.jpg',
       '/NeverBeenModels/FiadhDara/Exrtm3BZuA7w5YYug2VcF67LyR82QHfoy6PsLyB75uY.png',
+      '/NeverBeenModels/FiadhDara/FbUihgGHSyzYLFDr3hN_oXL2y-7fsQUABu0eMvBP8YY.png',
       '/NeverBeenModels/FiadhDara/FlMnB6extloza6xxBi7tnDJJ79xNEYRvZoO2hDuOvvY.png',
       '/NeverBeenModels/FiadhDara/foRmZ1LHeyaCfPBKNSxkSZNGjoAswlO5t4mGkJd-a2Q.png',
       '/NeverBeenModels/FiadhDara/gztcFTUwHczr4E3ka4TVvaya4irz2dAo7rVLh3CfI2Y.png',
+      '/NeverBeenModels/FiadhDara/hGuFVsR6wrhrKYt3WzgCaqlrsoWzrRrffD1AGy2_WNw.png',
+      '/NeverBeenModels/FiadhDara/iGXpigPbrceRsJZt4eHwHlQ6F1o4KsKdlFwV6VvxkK4.png',
+      '/NeverBeenModels/FiadhDara/IJNHbOkT9ZIwsmlr6YzAEUankJZqydokxHzu-QrbbJc.png',
       '/NeverBeenModels/FiadhDara/jdVzEZ-VNq0Ycj73dNa3Dg93VKTgfQ7XSG-n3aIG9kU.jpg',
       '/NeverBeenModels/FiadhDara/KFkuK1I5T9fD3KGc-DVBafG9l1W0jXvG1fKRRrcWIA0.jpg',
       '/NeverBeenModels/FiadhDara/kGLxty7o046T-2W8Db1wFMZSsT4LYQYB50d4KLOyEuc.png',
       '/NeverBeenModels/FiadhDara/KhxRrio1lC-XjK-HkcblaeR6d1BAQGfIu77aBFVmn_s.png',
+      '/NeverBeenModels/FiadhDara/knFquNzgTokrdzMigDkisJ0GT_to1bOymHUzyVa0cBk.png',
       '/NeverBeenModels/FiadhDara/kPTI3G0eL-iwYLQL8402IcmWSbvDSGtAJ3pedsCl-io.png',
       '/NeverBeenModels/FiadhDara/ksQXwOLU9_TH8US-WUa2tiaak-RXnfs3CQ9y8iUD7g8.png',
       '/NeverBeenModels/FiadhDara/kVjBV-5n2zx9GEqGBUFWJMvEgdNniQMnFpJwDJkPI_0.png',
       '/NeverBeenModels/FiadhDara/mRNmTMMnA_sfhttS8EWqj1Oh5gjCAqUcM2E1zkdJK0I.jpg',
+      '/NeverBeenModels/FiadhDara/MzYf6g2Y40xezJCaaYfFyHznWAUUfuk5X7fXIJQTfRA.png',
       '/NeverBeenModels/FiadhDara/NH33M6vP2QhGMfgraxKJ0EJHdX-pwu22CBPs3x6asvo.jpg',
+      '/NeverBeenModels/FiadhDara/NmWQrDLKdkt2uzvUPTtV_JEs2YVryNHx4mzD6sggwiE.png',
       '/NeverBeenModels/FiadhDara/oK2jcqVoadkptRI7pRqzwPJbK1MUWqh_E1hnzYYTLUY.png',
       '/NeverBeenModels/FiadhDara/oLRkqDWZBklyvsnZ12AWBdlnkGNgnhlufZxODkgv6-I.png',
       '/NeverBeenModels/FiadhDara/oQfUb-BiVi9Muuz1ogDYuKXWrxAThRsoB-QXUVoTSwI.jpg',
@@ -518,6 +529,7 @@ export const aiModelProfiles: AiModelProfile[] = [
       '/NeverBeenModels/FiadhDara/Qy72zbugIth6QvJSqLtBMHEnFm6HDOnC0keUC4Jo2gc.png',
       '/NeverBeenModels/FiadhDara/rDueGfk_nVqbK1I-MhvVfcWC4ARvR3N9W7zjFNjdWFA.png',
       '/NeverBeenModels/FiadhDara/RH53aMmZ1MUVkFOHpOCUtw8QP1pWelA6QYYtLvJUjj4.jpg',
+      '/NeverBeenModels/FiadhDara/RSy9TWfigXbUg7Oq2IEEbMbfjcnRk8ouCA8wb0AzffY.png',
       '/NeverBeenModels/FiadhDara/rTcjeKoiBzPVGyaasJJjv8rRBDvlz02ijqKRLjSCaiM.png',
       '/NeverBeenModels/FiadhDara/S6CDeFYcREC6kGO1Z6HbPCJb8n3Zw2W4ueN-YcXXySo.jpg',
       '/NeverBeenModels/FiadhDara/sCRrCyR_69uYw3icE4ewsCg-7mugYRDhpTBsrGROBao.png',
@@ -534,6 +546,8 @@ export const aiModelProfiles: AiModelProfile[] = [
       '/NeverBeenModels/FiadhDara/VYL0DyQCQQeM1P6CEvAH1JELVh6OEGsO93OY69uVZTU.jpg',
       '/NeverBeenModels/FiadhDara/w6lC89AJ5fotFnxcRjbLAqotZ88cTTJwpmkZqv1TMjE.jpg',
       '/NeverBeenModels/FiadhDara/wubcCIq3gZxbusbIIVlRzawbHphEN0lUYp-MtMzCSM8.png',
+      '/NeverBeenModels/FiadhDara/WYAZGIjb3J0fq1PaDLecaAFs6oF8WUAK8yverPuf73c.png',
+      '/NeverBeenModels/FiadhDara/X4Jpl4UwQpRTdXufbQR1___FkGjc0VTvA_bxffeXqj4.png',
       '/NeverBeenModels/FiadhDara/XWmWIPTR3txV-0qH4IhIgfnY-68sUXumm24m9upQ05I.jpg',
       '/NeverBeenModels/FiadhDara/YCKQHOJmJvjVnwyw6XWe1a1VqMlpdTCHnFNgNRBkgkw.png',
       '/NeverBeenModels/FiadhDara/YIUwhg07cJpN-cnSOugD4XeUjeb6ehIR37e_uKYyvps.png',
@@ -542,6 +556,10 @@ export const aiModelProfiles: AiModelProfile[] = [
       { src: '/NeverBeenModels/FiadhDara/Fiadh%20Dara.jpg', caption: '' },
       {
         src: '/NeverBeenModels/FiadhDara/_sTof-XqCgAFE9b2cdJ6EDijJx_eHyWEK70Sw6fImIo.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/-pWIKJFpdgSsJ6DbRpRxJGEkOmJKaYbkfw_8YFF3cwo.png',
         caption: '',
       },
       {
@@ -554,6 +572,10 @@ export const aiModelProfiles: AiModelProfile[] = [
       },
       {
         src: '/NeverBeenModels/FiadhDara/1b5zXqHHPrnYC7vc4nyyqF_zrbIpV9mIo7c0cgjZG24.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/2cfVX7y0DUdOFBhJ-DU7FAsmnRG1ZyOVir5w2fWbMwE.png',
         caption: '',
       },
       {
@@ -589,6 +611,10 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
       {
+        src: '/NeverBeenModels/FiadhDara/49-RjL7NHsjnLEvOUIt7eD5IKtbZlv5dE9idNfAdoZo.png',
+        caption: '',
+      },
+      {
         src: '/NeverBeenModels/FiadhDara/69AgGuAzTVpTwR5uUfmyaAapdLN5ndV-u5XkXL5h07Q.jpg',
         caption: '',
       },
@@ -610,6 +636,10 @@ export const aiModelProfiles: AiModelProfile[] = [
       },
       {
         src: '/NeverBeenModels/FiadhDara/awhX8ClijQ-FexZ0owBVoEChqB2oxB0vWk5s9WX-rag.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/BbTwlWeJyPcUJIfbvHDQ3_e8souoSfjNg-6Gu5e_frQ.png',
         caption: '',
       },
       {
@@ -645,6 +675,10 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
       {
+        src: '/NeverBeenModels/FiadhDara/FbUihgGHSyzYLFDr3hN_oXL2y-7fsQUABu0eMvBP8YY.png',
+        caption: '',
+      },
+      {
         src: '/NeverBeenModels/FiadhDara/FlMnB6extloza6xxBi7tnDJJ79xNEYRvZoO2hDuOvvY.png',
         caption: '',
       },
@@ -654,6 +688,18 @@ export const aiModelProfiles: AiModelProfile[] = [
       },
       {
         src: '/NeverBeenModels/FiadhDara/gztcFTUwHczr4E3ka4TVvaya4irz2dAo7rVLh3CfI2Y.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/hGuFVsR6wrhrKYt3WzgCaqlrsoWzrRrffD1AGy2_WNw.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/iGXpigPbrceRsJZt4eHwHlQ6F1o4KsKdlFwV6VvxkK4.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/IJNHbOkT9ZIwsmlr6YzAEUankJZqydokxHzu-QrbbJc.png',
         caption: '',
       },
       {
@@ -673,6 +719,10 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
       {
+        src: '/NeverBeenModels/FiadhDara/knFquNzgTokrdzMigDkisJ0GT_to1bOymHUzyVa0cBk.png',
+        caption: '',
+      },
+      {
         src: '/NeverBeenModels/FiadhDara/kPTI3G0eL-iwYLQL8402IcmWSbvDSGtAJ3pedsCl-io.png',
         caption: '',
       },
@@ -689,7 +739,15 @@ export const aiModelProfiles: AiModelProfile[] = [
         caption: '',
       },
       {
+        src: '/NeverBeenModels/FiadhDara/MzYf6g2Y40xezJCaaYfFyHznWAUUfuk5X7fXIJQTfRA.png',
+        caption: '',
+      },
+      {
         src: '/NeverBeenModels/FiadhDara/NH33M6vP2QhGMfgraxKJ0EJHdX-pwu22CBPs3x6asvo.jpg',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/NmWQrDLKdkt2uzvUPTtV_JEs2YVryNHx4mzD6sggwiE.png',
         caption: '',
       },
       {
@@ -742,6 +800,10 @@ export const aiModelProfiles: AiModelProfile[] = [
       },
       {
         src: '/NeverBeenModels/FiadhDara/RH53aMmZ1MUVkFOHpOCUtw8QP1pWelA6QYYtLvJUjj4.jpg',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/RSy9TWfigXbUg7Oq2IEEbMbfjcnRk8ouCA8wb0AzffY.png',
         caption: '',
       },
       {
@@ -806,6 +868,14 @@ export const aiModelProfiles: AiModelProfile[] = [
       },
       {
         src: '/NeverBeenModels/FiadhDara/wubcCIq3gZxbusbIIVlRzawbHphEN0lUYp-MtMzCSM8.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/WYAZGIjb3J0fq1PaDLecaAFs6oF8WUAK8yverPuf73c.png',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/FiadhDara/X4Jpl4UwQpRTdXufbQR1___FkGjc0VTvA_bxffeXqj4.png',
         caption: '',
       },
       {
@@ -5037,6 +5107,7 @@ export const aiModelProfiles: AiModelProfile[] = [
       '/NeverBeenModels/PriyankaChatterjee/91kwmgFn8TAGLxrfMFvd02Nio4xyltc_CbalF16RoXY.jpg',
       '/NeverBeenModels/PriyankaChatterjee/0534EoNMFr_FgvPDkWNW7N8xBIQHsfm5dYCiPFagmkA.png',
       '/NeverBeenModels/PriyankaChatterjee/A8jVUR7CBdC6CffNDg753n_IsoJxvkucvosKK7oHjGQ.jpg',
+      '/NeverBeenModels/PriyankaChatterjee/aGYSF0FOzqCGHQ6N0wyI_QDYzDOvvKp71nvrXEErjIc.png',
       '/NeverBeenModels/PriyankaChatterjee/aqgKPIzJ54RDLB-utBu-f_ZCZfSVj2H0cfDfuXlmpdg.png',
       '/NeverBeenModels/PriyankaChatterjee/aTEo8PIkRBIkZtT_8JJBfDRpxuSDvw11Z6Q-7XijGrk.jpg',
       '/NeverBeenModels/PriyankaChatterjee/B11V4XbJXJaWwaq-a4lkpYKv9vFTFFRwsmvz4_hgDSI.jpg',
@@ -5078,6 +5149,7 @@ export const aiModelProfiles: AiModelProfile[] = [
       '/NeverBeenModels/PriyankaChatterjee/LkuYR1ndRciAw50c2fZ0tLxMgduhFdYQA6aYecKzrlo.jpg',
       '/NeverBeenModels/PriyankaChatterjee/mcaBQln3yVE259Ko01oditfuxjg7Hk0OKE8SK9hekFk.jpg',
       '/NeverBeenModels/PriyankaChatterjee/Mf3dFHIw2M1gbPr9pbPr-Sq7ZZktd1zlE0A7W1Y2pLY.jpg',
+      '/NeverBeenModels/PriyankaChatterjee/MjesU1iuQvkJpK9NAjQTLI4DJ4VtjT7H2coMVdJjTyU.png',
       '/NeverBeenModels/PriyankaChatterjee/mSNbRtpttKxx3_LLshVxxvXMiZ0wPhJQrrpEfRtY8h4.png',
       '/NeverBeenModels/PriyankaChatterjee/MTGVrOjU1hMSorBn94938LZBV_M9-Ln29kSHbPYzHBQ.jpg',
       '/NeverBeenModels/PriyankaChatterjee/mw9V_9pBYrIiNqWVGUd-yOwnGK4kYBXLfs5U_9CeB2Y.jpg',
@@ -5195,6 +5267,10 @@ export const aiModelProfiles: AiModelProfile[] = [
       },
       {
         src: '/NeverBeenModels/PriyankaChatterjee/A8jVUR7CBdC6CffNDg753n_IsoJxvkucvosKK7oHjGQ.jpg',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/PriyankaChatterjee/aGYSF0FOzqCGHQ6N0wyI_QDYzDOvvKp71nvrXEErjIc.png',
         caption: '',
       },
       {
@@ -5359,6 +5435,10 @@ export const aiModelProfiles: AiModelProfile[] = [
       },
       {
         src: '/NeverBeenModels/PriyankaChatterjee/Mf3dFHIw2M1gbPr9pbPr-Sq7ZZktd1zlE0A7W1Y2pLY.jpg',
+        caption: '',
+      },
+      {
+        src: '/NeverBeenModels/PriyankaChatterjee/MjesU1iuQvkJpK9NAjQTLI4DJ4VtjT7H2coMVdJjTyU.png',
         caption: '',
       },
       {
@@ -5881,7 +5961,296 @@ export const aiModelProfiles: AiModelProfile[] = [
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
     bio: '“Marhaba, I am Tasneem Al-Rifai, 27 years old, and I am based in Baghdad, Iraq. I am an AI model and I do not exist in reality outside NeverBeen. My clean-lined, modern presence carries a poised and deeply sensual confidence. I am ready for fashion editorials, branding campaigns, lookbooks and exclusive contracts. I thrive on bold direction and fresh creative ideas. Let us make the spotlight yours.”',
     illustrative: true,
-    biography: null,
+    biography: {
+      version: 1,
+      fictional: true,
+      generatedAt: '2026-10-11T22:30:25.542Z',
+      title: 'In the Multiverse of NeverBeen',
+      name: 'Tasneem Al-Rifai',
+      signature: 'Tasneem Al-Rifai',
+      signatureStyle:
+        'Handwritten-style blue ballpoint signature for Tasneem Al-Rifai on white paper; a fictional facsimile.',
+      signatureImage: '',
+      birthDetails: {
+        date: '25 March 1999',
+        time: '18:30',
+        timeZone: 'Asia/Baghdad',
+        facility: 'NeverBeen House of Birth',
+        neighborhood: 'Adhamiyah',
+        city: 'Baghdad',
+        country: 'Iraq',
+        note: 'This venue, date and time are invented for the NeverBeen story; no real address or medical record is represented.',
+      },
+      generalInformation: {
+        fullName: 'Tasneem Al-Rifai',
+        profession: 'Fictional digital model and creative collaborator',
+        born: '25 March 1999',
+        birthTime: '18:30 (Asia/Baghdad)',
+        birthplace: 'NeverBeen House of Birth (fictional), Adhamiyah, Baghdad, Iraq',
+        age: '27 · fictional character detail',
+        education:
+          'Bachelor of Arts in Fashion Communication; Master of Arts in Sustainable Fashion Futures',
+        relationshipStatus: 'Single',
+        universe: 'NeverBeen Multiverse',
+      },
+      summary:
+        'Tasneem Al-Rifai is a fictional NeverBeen digital model and imagined creative professional in an alternate universe. In this version of her story, the city she calls home is Baghdad, Iraq; the neighbourhood and every biographical detail below are invented for this fictional character. After earning a fictional Bachelor of Arts in Fashion Communication and going on to complete a fictional Master of Arts in Sustainable Fashion Futures, she spent her early career in fashion communication and sustainable textiles with Studio Threadline and later Common Ground Editorial, building experience in styling, material research, editorial production. Today she works as an independent model and creative collaborator in the NeverBeen Multiverse, bringing her creative training into editorial, fashion and travel-led stories. Tasneem\'s passions in this fictional timeline include women-led creative businesses and ethical campaigns, among other personal causes, and she enjoys film photography, late-night city walks, making playlists in her time away from sets and studios. Her ambitions in this imagined storyline are to build a thoughtful creative label for emerging artists, to help make fashion and image-making more responsible without losing a sense of play, and to leave every collaboration more generous than she found it. The relationship status recorded for her in this chapter is "single"; the people, places and milestones below are entirely invented and exist only in the NeverBeen Multiverse.',
+      earlyLife: [
+        'In this alternate-universe story, Tasneem Al-Rifai was born on 25 March 1999 at 18:30 Asia/Baghdad at the fictional NeverBeen House of Birth in Adhamiyah, Baghdad, Iraq. The venue, date, time and every childhood episode are invented; no real address or medical record is represented.',
+        'At age four, around 2003, a slow family breakfast and the familiar rooms of home became the first small landmarks in her imagined life. The accompanying mobile-camera scene is a fictional memory, not an archival photograph.',
+        'By age eight, around 2007, she had begun exploring the nearby streets with her fictional mother Amira Al-Rifai, noticing rain-dark pavement, shop shutters and changing light. That curiosity gradually became a habit of observation.',
+        'In secondary school, around age sixteen in 2015, she found confidence in friends and hands-on class projects. These school scenes are fictional snapshots from the character’s timeline, not records of a real school or child.',
+      ],
+      educationalBackground: [
+        {
+          period: 'July 2017 – October 2021',
+          qualification: 'Bachelor of Arts in Fashion Communication',
+          institution:
+            'Common Ground College of Creative Studies · Brightwater University (fictional institutions)',
+          location: 'Baghdad, Iraq',
+          description:
+            'Completed a fictional undergraduate degree in fashion communication and sustainable textiles, with a final project on visual identity, place and the way people read an image.',
+        },
+        {
+          period: 'September 2021 – December 2023',
+          qualification: 'Master of Arts in Sustainable Fashion Futures',
+          institution: 'Brightwater University (fictional institution)',
+          location: 'Baghdad, Iraq',
+          description:
+            'Completed this fictional postgraduate degree, deepening her research in fashion communication and sustainable textiles and connecting creative practice with responsible collaboration.',
+        },
+      ],
+      career: [
+        {
+          period: 'February 2019 – May 2021',
+          role: 'Fashion Desk Assistant',
+          organization: 'Studio Threadline (fictional studio)',
+          location: 'Baghdad, Iraq',
+          employmentType: 'Part-time · while studying',
+          description:
+            'Supported small creative briefs and learned the foundations of styling, material research and feedback-led production.',
+        },
+        {
+          period: 'May 2022 – August 2024',
+          role: 'Editorial Styling Coordinator',
+          organization: 'Common Ground Editorial (fictional collective)',
+          location: 'Baghdad, Iraq',
+          employmentType: 'Full-time · fictional role',
+          description:
+            'Coordinated a compact team across material research and editorial production, building a calm, practical approach to ambitious work.',
+        },
+        {
+          period: 'August 2025 – Present',
+          role: 'Independent model & creative collaborator',
+          organization: 'NeverBeen Multiverse',
+          location: 'Baghdad, Iraq · remote and on location',
+          employmentType: 'Independent · current in this fictional timeline',
+          description:
+            'Brought her education and earlier creative experience into editorial, fashion and travel-led stories, working with fictional teams and setting clear boundaries around each brief.',
+        },
+      ],
+      achievements: [
+        'Completed a fictional Bachelor of Arts in Fashion Communication with a final project rooted in fashion communication and sustainable textiles.',
+        'Led a small, cross-disciplinary brief at Common Ground Editorial, bringing styling and editorial production into one visual story.',
+        'Built an independent portfolio that connects her creative training with her work as a model in the NeverBeen Multiverse.',
+        'Made space for slower, lower-waste production choices on fictional campaign sets.',
+      ],
+      personalLife: {
+        relationshipStatus: 'Single',
+        relationshipType: 'Single (fictional storyline)',
+        narrative:
+          'In this fictional version, Tasneem is single and content to build a life that feels like her own. She shares her time with family and friends, and no current spouse, partner or children are included in this chapter.',
+        partner: null,
+        parents: [
+          {
+            name: 'Amira Al-Rifai',
+            relationship: 'Mother',
+            note: 'A fictional parent character created for this alternate-universe biography.',
+          },
+          {
+            name: 'Youssef Al-Rifai',
+            relationship: 'Father',
+            note: 'A fictional parent character created for this alternate-universe biography.',
+          },
+        ],
+        siblings: [
+          {
+            name: 'Samir Al-Rifai',
+            relationship: 'Brother',
+            age: '28',
+            note: 'A fictional sibling character created for this alternate-universe biography.',
+          },
+          {
+            name: 'Yasmin Al-Rifai',
+            relationship: 'Sister',
+            age: '31',
+            note: 'A fictional sibling character created for this alternate-universe biography.',
+          },
+          {
+            name: 'Ziad Al-Rifai',
+            relationship: 'Brother',
+            age: '25',
+            note: 'A fictional sibling character created for this alternate-universe biography.',
+          },
+        ],
+        formerSpouses: [],
+        children: [],
+        privacyNote:
+          'All names and relationship details in this fictional family roster are invented and are not claims about any real individual.',
+      },
+      hobbies: ['film photography', 'late-night city walks', 'making playlists'],
+      interests: [
+        'film photography',
+        'late-night city walks',
+        'making playlists',
+        'independent magazines',
+        'architecture and street details',
+        'slow travel',
+      ],
+      passions: [
+        'women-led creative businesses',
+        'ethical campaigns',
+        'cross-cultural collaboration',
+      ],
+      ambitions: [
+        'Build a thoughtful creative label that gives emerging artists their first serious commission.',
+        'Make fashion and image-making more responsible without losing the sense of play.',
+        'Keep learning, keep travelling, and leave every collaboration more generous than she found it.',
+      ],
+      finalNotes: [
+        'Tasneem does not treat a single label as a life sentence: designer, collaborator, model and curious traveller can all be true in the same frame.',
+        'Her version of fearlessness is not having no doubts; it is moving forward without letting doubt write the whole story.',
+        'Every school, employer, qualification, relationship, quote, memory and biographical detail on this page is fictional and exists only in the NeverBeen Multiverse.',
+      ],
+      quotes: [
+        {
+          text: 'I can be soft with people and still be absolutely clear about what I want.',
+          by: 'Tasneem Al-Rifai',
+        },
+        {
+          text: 'The best frame is the one where I recognise myself first.',
+          by: 'Tasneem Al-Rifai',
+        },
+        {
+          text: 'A life can be beautifully unfinished and still be going somewhere.',
+          by: 'A fictional mentor in the NeverBeen Multiverse',
+        },
+      ],
+      memories: [
+        {
+          id: 'childhood-home',
+          fileName: '01-childhood-home.jpg',
+          period: 'Early childhood · 2003 · age 4',
+          timestamp: '21 March 2003 · 08:08 Asia/Baghdad',
+          cameraStamp: '03/21/03 08:08',
+          caption: 'A slow morning at home',
+          alt: 'A fictional, family-friendly childhood memory at home with generic parent figures',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/01-childhood-home.jpg',
+          fictional: true,
+        },
+        {
+          id: 'neighbourhood',
+          fileName: '02-neighbourhood.jpg',
+          period: 'Growing up · 2007 · age 8',
+          timestamp: '30 August 2007 · 17:31 Asia/Baghdad',
+          cameraStamp: '08/30/07 17:31',
+          caption: 'The neighbourhood after the rain',
+          alt: 'A fictional childhood memory outdoors in the model’s imagined home neighbourhood',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/02-neighbourhood.jpg',
+          fictional: true,
+        },
+        {
+          id: 'school-days',
+          fileName: '03-school-days.jpg',
+          period: 'School years · 2015 · age 16',
+          timestamp: '23 January 2015 · 16:46 Asia/Baghdad',
+          cameraStamp: '',
+          caption: 'The last bell of the day',
+          alt: 'A fictional, fully clothed school-age memory with anonymous classmates',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/03-school-days.jpg',
+          fictional: true,
+        },
+        {
+          id: 'school-project',
+          fileName: '04-school-project.jpg',
+          period: 'School years · 2013 · age 14',
+          timestamp: '13 July 2013 · 16:33 Asia/Baghdad',
+          cameraStamp: '07/13/13 16:33',
+          caption: 'A project built after class',
+          alt: 'A fictional school project memory around a table with friends',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/04-school-project.jpg',
+          fictional: true,
+        },
+        {
+          id: 'college',
+          fileName: '05-college-studio.jpg',
+          period: 'College · 2019 · age 20',
+          timestamp: '22 August 2019 · 22:50 Asia/Baghdad',
+          cameraStamp: '',
+          caption: 'A studio night before the deadline',
+          alt: 'A fictional college memory in a design studio with anonymous classmates',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/05-college-studio.jpg',
+          fictional: true,
+        },
+        {
+          id: 'first-workplace',
+          fileName: '06-first-workplace.jpg',
+          period: 'First role · 2020 · age 21',
+          timestamp: '20 June 2020 · 14:04 Asia/Baghdad',
+          cameraStamp: '',
+          caption: 'The first day that felt like hers',
+          alt: 'A fictional early-career memory at a creative workplace',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/06-first-workplace.jpg',
+          fictional: true,
+        },
+        {
+          id: 'first-editorial',
+          fileName: '07-first-editorial.jpg',
+          period: 'Creative career · 2021 · age 22',
+          timestamp: '25 July 2021 · 13:14 Asia/Baghdad',
+          cameraStamp: '',
+          caption: 'A small crew, a big idea',
+          alt: 'A fictional behind-the-scenes editorial memory with a small creative team',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/07-first-editorial.jpg',
+          fictional: true,
+        },
+        {
+          id: 'friends',
+          fileName: '08-close-friends.jpg',
+          period: 'Off duty · 2026 · age 27',
+          timestamp: '25 April 2026 · 17:53 Asia/Baghdad',
+          cameraStamp: '',
+          caption: 'The people who know every version of her',
+          alt: 'A fictional casual memory with adult friends',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/08-close-friends.jpg',
+          fictional: true,
+        },
+        {
+          id: 'family-now',
+          fileName: '09-family-table.jpg',
+          period: 'Family · 2026 · age 27',
+          timestamp: '31 August 2026 · 21:44 Asia/Baghdad',
+          cameraStamp: '',
+          caption: 'Everyone talking at once',
+          alt: 'A fictional family gathering with generic, non-identifiable family members',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/09-family-table.jpg',
+          fictional: true,
+        },
+        {
+          id: 'present-day',
+          fileName: '10-present-day.jpg',
+          period: 'Today · 2026 · age 27',
+          timestamp: '17 March 2026 · 17:35 Asia/Baghdad',
+          cameraStamp: '',
+          caption: 'A new frame, on her own terms',
+          alt: 'A fictional present-day outdoor portrait from the model’s creative life',
+          src: '/NeverBeenModels/TasneemAlRifai/Biography/10-present-day.jpg',
+          fictional: true,
+        },
+      ],
+      fictionalNotice:
+        'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
+    },
     gallery: [
       '/NeverBeenModels/TasneemAlRifai/_-Of5Oa382V8BQ-GfWSA0vtwz8HuvdV7LUBAyOLxJ3w.jpg',
       '/NeverBeenModels/TasneemAlRifai/_Cvc9ZiQ3MO2aEBaTRGdpnNEN0CY-hFq1XGKi5eotGU.png',
