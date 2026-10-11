@@ -21,11 +21,68 @@
 }
 
 .lightbox-panel {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.85rem;
   min-height: 0;
   padding: clamp(0.9rem, 2.4vw, 1.6rem) clamp(0.9rem, 3vw, 2.2rem) clamp(0.9rem, 2.6vw, 1.7rem);
+}
+
+/* With the comments thread open, the panel becomes two columns: picture left, thread right. */
+.lightbox-panel.has-comments {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.has-comments .lightbox-bar,
+.has-comments .lightbox-foot {
+  grid-column: 1;
+}
+
+/* ---------------------------------------------------------------------------- comments */
+
+.viewer-comments {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  grid-column: 2;
+  grid-row: 1 / -1;
+  min-height: 0;
+  width: min(21rem, 32vw);
+  margin-left: 0.15rem;
+  animation: viewer-comments-in 320ms cubic-bezier(0.16, 1.02, 0.3, 1) backwards;
+}
+
+.viewer-comments app-model-media-comments {
+  min-height: 0;
+  flex: 1;
+}
+
+/* Phones and tablets: the thread becomes a bottom sheet over the picture. */
+@media (max-width: 1079px) {
+  .lightbox-panel.has-comments {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .viewer-comments {
+    position: absolute;
+    right: clamp(0.9rem, 3vw, 2.2rem);
+    bottom: clamp(0.9rem, 2.6vw, 1.7rem);
+    left: clamp(0.9rem, 3vw, 2.2rem);
+    top: auto;
+    width: auto;
+    max-height: 56%;
+    margin-left: 0;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+}
+
+@keyframes viewer-comments-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
 }
 
 /* ------------------------------------------------------------------------------- top bar */
@@ -362,6 +419,26 @@
   justify-items: center;
   gap: 0.7rem;
   min-width: 0;
+}
+
+/* Caption on the left, engagement strip on the right, under the photograph. */
+.lightbox-foot-row {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem clamp(0.8rem, 3vw, 2rem);
+  min-width: 0;
+}
+
+.lightbox-foot-row .lightbox-caption {
+  flex: 1 1 16rem;
+  text-align: left;
+}
+
+.lightbox-engage {
+  flex: 0 0 auto;
 }
 
 .lightbox-caption {

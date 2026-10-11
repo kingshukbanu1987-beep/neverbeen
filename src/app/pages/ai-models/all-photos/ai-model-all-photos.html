@@ -38,33 +38,41 @@
         <section class="mosaic-shell" [attr.aria-label]="'All photographs of ' + profile.name">
           <div class="mosaic">
             @for (tile of tiles(); track tile.photo.src; let index = $index) {
-              <button
-                type="button"
-                class="mosaic-tile"
-                [class.is-settled]="isSettled(tile.photo.src)"
-                [style]="tile.style"
-                (click)="openViewer(index)"
-                (pointermove)="onTilePointerMove($event)"
-                [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
-              >
-                <img
-                  [src]="tile.photo.src"
-                  [alt]="photoAlt(profile.name, index)"
-                  [attr.loading]="loading(index)"
-                  [attr.fetchpriority]="index === 0 ? 'high' : null"
-                  decoding="async"
-                  draggable="false"
-                  (load)="markSettled(tile.photo.src)"
-                  (error)="markSettled(tile.photo.src)"
+              <div class="mosaic-cell" [style]="tile.style">
+                <button
+                  type="button"
+                  class="mosaic-tile"
+                  [class.is-settled]="isSettled(tile.photo.src)"
+                  (click)="openViewer(index)"
+                  (pointermove)="onTilePointerMove($event)"
+                  [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                >
+                  <img
+                    [src]="tile.photo.src"
+                    [alt]="photoAlt(profile.name, index)"
+                    [attr.loading]="loading(index)"
+                    [attr.fetchpriority]="index === 0 ? 'high' : null"
+                    decoding="async"
+                    draggable="false"
+                    (load)="markSettled(tile.photo.src)"
+                    (error)="markSettled(tile.photo.src)"
+                  />
+                  <span class="mosaic-spot" aria-hidden="true"></span>
+                  <span class="mosaic-meta" aria-hidden="true">
+                    <span class="mosaic-frame"
+                      >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
+                    >
+                    <span class="mosaic-zoom">⤢</span>
+                  </span>
+                </button>
+                <app-model-media-engagement
+                  class="tile-engagement"
+                  [modelSlug]="profile.slug"
+                  mediaType="photo"
+                  [mediaSrc]="tile.photo.src"
+                  (comments)="openComments(tile.photo.src)"
                 />
-                <span class="mosaic-spot" aria-hidden="true"></span>
-                <span class="mosaic-meta" aria-hidden="true">
-                  <span class="mosaic-frame"
-                    >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
-                  >
-                  <span class="mosaic-zoom">⤢</span>
-                </span>
-              </button>
+              </div>
             }
           </div>
         </section>
@@ -141,6 +149,16 @@
     [startIndex]="activeIndex() ?? 0"
     [modelName]="profile.name"
     [modelHandle]="profile.handle"
+    [modelSlug]="profile.slug"
     (closed)="closeViewer()"
+  />
+}
+
+@if (commentsTarget(); as target) {
+  <app-model-media-comments-dialog
+    [modelSlug]="model()?.slug ?? ''"
+    mediaType="photo"
+    [mediaSrc]="target.src"
+    (closed)="closeComments()"
   />
 }

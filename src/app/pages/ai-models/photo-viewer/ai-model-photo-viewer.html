@@ -5,7 +5,10 @@
   [attr.aria-label]="caption()"
   (click)="onBackdropClick($event)"
 >
-  <div class="lightbox-panel">
+  <div
+    class="lightbox-panel"
+    [class.has-comments]="commentsOpen() && !!modelSlug()"
+  >
     <header class="lightbox-bar">
       <span class="lightbox-counter">
         <b>{{ frameNumber() }}</b> / {{ totalNumber() }}
@@ -129,12 +132,28 @@
     </div>
 
     <footer class="lightbox-foot">
-      <p class="lightbox-caption">
-        {{ captionParts().text }}
-        @if (captionParts().frame) {
-          <span class="num">{{ captionParts().frame }}</span>
+      <div class="lightbox-foot-row">
+        <p class="lightbox-caption">
+          {{ captionParts().text }}
+          @if (captionParts().frame) {
+            <span class="num">{{ captionParts().frame }}</span>
+          }
+        </p>
+        @if (modelSlug(); as slug) {
+          @if (photo(); as current) {
+            <div class="lightbox-engage">
+              <app-model-media-engagement
+                layout="row"
+                commentsAction="open"
+                [modelSlug]="slug"
+                [mediaType]="'photo'"
+                [mediaSrc]="current.src"
+                (comments)="toggleComments()"
+              />
+            </div>
+          }
         }
-      </p>
+      </div>
       @if (total() > 1) {
         <div #thumbs class="lightbox-thumbs" role="group" aria-label="Choose a photograph">
           @for (thumb of photos(); track thumb.src; let thumbIndex = $index) {
@@ -152,5 +171,18 @@
         </div>
       }
     </footer>
+
+    @if (commentsOpen() && modelSlug(); as slug) {
+      @if (photo(); as current) {
+        <aside class="viewer-comments" aria-label="Comments on this photograph">
+          <app-model-media-comments
+            [modelSlug]="slug"
+            mediaType="photo"
+            [mediaSrc]="current.src"
+            (closed)="commentsOpen.set(false)"
+          />
+        </aside>
+      }
+    }
   </div>
 </div>

@@ -278,6 +278,21 @@
     <footer class="player-foot">
       <p class="player-caption">{{ caption() }}</p>
 
+      @if (modelSlug(); as slug) {
+        @if (clip(); as current) {
+          <div class="player-engage">
+            <app-model-media-engagement
+              layout="row"
+              commentsAction="open"
+              [modelSlug]="slug"
+              [mediaType]="'video'"
+              [mediaSrc]="current.src"
+              (comments)="toggleComments()"
+            />
+          </div>
+        }
+      }
+
       @if (total() > 1) {
         <div class="player-thumbs" role="group" aria-label="Choose a clip">
           @for (video of videos(); track video.src; let position = $index) {
@@ -304,5 +319,18 @@
         double-click for full screen
       </p>
     </footer>
+
+    @if (commentsOpen() && modelSlug(); as slug) {
+      @if (clip(); as current) {
+        <aside class="player-comments" aria-label="Comments on this clip">
+          <app-model-media-comments
+            [modelSlug]="slug"
+            mediaType="video"
+            [mediaSrc]="current.src"
+            (closed)="commentsOpen.set(false)"
+          />
+        </aside>
+      }
+    }
   </div>
 </div>

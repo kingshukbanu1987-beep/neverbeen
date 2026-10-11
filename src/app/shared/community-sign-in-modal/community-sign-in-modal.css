@@ -1,0 +1,472 @@
+:host {
+  position: fixed;
+  z-index: 460;
+  inset: 0;
+  display: block;
+}
+
+.signin-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2rem);
+  background:
+    radial-gradient(ellipse at 20% 10%, rgb(184 23 31 / 26%), transparent 55%),
+    radial-gradient(ellipse at 84% 86%, rgb(239 106 165 / 20%), transparent 52%),
+    rgb(6 4 8 / 74%);
+  backdrop-filter: blur(18px) saturate(1.15);
+  animation: signin-overlay-in 240ms ease backwards;
+}
+
+.signin-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: min(440px, 100%);
+  max-height: min(92vh, 780px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(1.7rem, 5vw, 2.4rem) clamp(1.4rem, 5vw, 2.2rem) clamp(1.4rem, 4vw, 1.9rem);
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(239 106 165 / 16%), transparent 46%),
+    radial-gradient(circle at 0% 100%, rgb(184 23 31 / 18%), transparent 44%),
+    linear-gradient(160deg, rgb(24 18 26 / 97%), rgb(12 9 14 / 98%));
+  box-shadow:
+    0 40px 110px rgb(0 0 0 / 62%),
+    0 0 0 1px rgb(255 255 255 / 4%) inset,
+    0 1px 0 rgb(255 255 255 / 10%) inset;
+  color: #f7f0f4;
+  text-align: center;
+  animation: signin-card-in 460ms cubic-bezier(0.16, 1.02, 0.3, 1) 40ms backwards;
+}
+
+/* Drifting aurora wash + a faint technical grid: the pop-up's "studio at night" texture. */
+.signin-aurora {
+  position: absolute;
+  z-index: -1;
+  inset: -35% -30% auto;
+  height: 65%;
+  background: conic-gradient(
+    from 120deg at 50% 50%,
+    rgb(239 106 165 / 26%),
+    rgb(184 23 31 / 16%),
+    rgb(243 200 121 / 12%),
+    rgb(239 106 165 / 26%)
+  );
+  filter: blur(46px);
+  opacity: 0.8;
+  animation: signin-aurora-drift 14s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.signin-grid {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 4%) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 55%), transparent 70%);
+  pointer-events: none;
+}
+
+.signin-close {
+  position: absolute;
+  z-index: 2;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  width: 36px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 5%);
+  color: rgb(247 240 244 / 78%);
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 200ms cubic-bezier(0.16, 1.02, 0.3, 1);
+}
+
+.signin-close:hover {
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.signin-close:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 2px;
+}
+
+/* Monogram orb with a slow orbiting ring. */
+.signin-orb {
+  position: relative;
+  display: grid;
+  width: 78px;
+  aspect-ratio: 1;
+  place-items: center;
+  margin-bottom: 1.1rem;
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #f3c879,
+    #ef6aa5,
+    #b8171f,
+    #f3c879,
+    #ef6aa5
+  );
+  animation: signin-orbit 7s linear infinite;
+  mask:
+    radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+}
+
+.orb-core {
+  display: grid;
+  width: 60px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 50%;
+  background: linear-gradient(150deg, #221826, #120d15);
+  box-shadow:
+    0 14px 34px rgb(0 0 0 / 45%),
+    0 0 26px rgb(239 106 165 / 22%);
+  color: #f3c879;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.orb-spark {
+  position: absolute;
+  width: 7px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ef6aa5;
+  box-shadow: 0 0 12px rgb(239 106 165 / 90%);
+}
+
+.orb-spark-a {
+  top: 4px;
+  right: 8px;
+  animation: signin-spark 3.4s ease-in-out infinite;
+}
+
+.orb-spark-b {
+  bottom: 9px;
+  left: 3px;
+  width: 5px;
+  background: #f3c879;
+  box-shadow: 0 0 12px rgb(243 200 121 / 90%);
+  animation: signin-spark 3.4s 1.2s ease-in-out infinite;
+}
+
+.signin-eyebrow {
+  margin: 0 0 0.6rem;
+  color: rgb(247 240 244 / 64%);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.signin-eyebrow b {
+  background: linear-gradient(120deg, #f3c879, #ef6aa5);
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+}
+
+.signin-title {
+  margin: 0;
+  max-width: 330px;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(1.5rem, 5.4vw, 1.85rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.14;
+  text-wrap: balance;
+}
+
+.signin-reason {
+  margin: 0.75rem 0 0;
+  max-width: 330px;
+  color: rgb(247 240 244 / 70%);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.signin-perks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.1rem 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.signin-perks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  color: rgb(247 240 244 / 82%);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.signin-perks li span {
+  color: #ef6aa5;
+  font-size: 0.78rem;
+}
+
+.signin-google {
+  display: inline-flex;
+  width: min(100%, 330px);
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgb(0 0 0 / 32%);
+  color: #23262b;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    transform 220ms cubic-bezier(0.16, 1.02, 0.3, 1),
+    box-shadow 220ms ease;
+}
+
+.signin-google:hover:not(:disabled) {
+  box-shadow: 0 18px 44px rgb(0 0 0 / 42%);
+  transform: translateY(-2px);
+}
+
+.signin-google:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.signin-google:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.signin-google:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 3px;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.google-manual-panel {
+  display: grid;
+  width: min(100%, 330px);
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+  padding: 0.9rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 4%);
+}
+
+.google-manual-panel p {
+  margin: 0;
+  color: rgb(247 240 244 / 74%);
+  font-size: 0.78rem;
+}
+
+.google-cancel {
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 10px;
+  background: transparent;
+  color: rgb(247 240 244 / 80%);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.signin-error {
+  margin: 0.8rem 0 0;
+  color: #ff9d9d;
+  font-size: 0.78rem;
+}
+
+.signin-divider {
+  display: flex;
+  width: min(100%, 330px);
+  align-items: center;
+  gap: 0.8rem;
+  margin: 1.15rem 0 0.95rem;
+  color: rgb(247 240 244 / 44%);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.signin-divider::before,
+.signin-divider::after {
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 18%), transparent);
+  content: '';
+}
+
+.signin-join {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #ffd9ea;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.signin-join span {
+  color: #ef6aa5;
+  transition: transform 200ms cubic-bezier(0.16, 1.02, 0.3, 1);
+}
+
+.signin-join:hover {
+  color: #fff;
+}
+
+.signin-join:hover span {
+  transform: translate(2px, -2px);
+}
+
+.signin-join:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.signin-later {
+  margin-top: 1rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 3%);
+  color: rgb(247 240 244 / 62%);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.signin-later:hover {
+  background: rgb(255 255 255 / 8%);
+  color: rgb(247 240 244 / 92%);
+}
+
+.signin-later:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 2px;
+}
+
+.signin-foot {
+  margin: 1.05rem 0 0;
+  color: rgb(247 240 244 / 44%);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------ entrance keyframes */
+
+@keyframes signin-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes signin-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.96);
+  }
+}
+
+@keyframes signin-aurora-drift {
+  from {
+    transform: translate3d(-6%, -4%, 0) rotate(-4deg);
+  }
+  to {
+    transform: translate3d(8%, 6%, 0) rotate(6deg);
+  }
+}
+
+@keyframes signin-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes signin-spark {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@media (max-width: 420px) {
+  .signin-card {
+    border-radius: 24px;
+  }
+
+  .signin-perks li {
+    padding: 0.34rem 0.6rem;
+    font-size: 0.62rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signin-overlay,
+  .signin-card,
+  .signin-aurora,
+  .orb-ring,
+  .orb-spark {
+    animation: none !important;
+  }
+}

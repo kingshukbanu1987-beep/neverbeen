@@ -1,0 +1,74 @@
+<div class="eng-bar" [class.eng-bar-row]="layout() === 'row'">
+  <span class="eng-item eng-seen" [attr.title]="seenLabel()" [attr.aria-label]="seenLabel()">
+    <svg class="eng-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.7" />
+    </svg>
+    <b class="eng-count">{{ count(stats().seen) }}</b>
+  </span>
+
+  <button
+    type="button"
+    class="eng-item eng-like"
+    [class.is-on]="stats().likedByMe"
+    [attr.aria-pressed]="stats().likedByMe"
+    [attr.aria-label]="likeLabel()"
+    [attr.title]="likeLabel()"
+    [disabled]="busy()"
+    (click)="onLike()"
+  >
+    <svg class="eng-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        class="heart-path"
+        d="M12 20.4C9.6 18.5 4 14.4 4 9.9A4.1 4.1 0 0 1 12 7.6a4.1 4.1 0 0 1 8 2.3c0 4.5-5.6 8.6-8 10.5Z"
+      />
+    </svg>
+    <b class="eng-count">{{ count(stats().likes) }}</b>
+  </button>
+
+  <button
+    type="button"
+    class="eng-item eng-comment"
+    [attr.aria-label]="commentLabel()"
+    [attr.title]="commentLabel()"
+    (click)="onComments()"
+  >
+    <svg class="eng-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M20.5 11.6c0 4-3.8 7.2-8.5 7.2a10 10 0 0 1-2.7-.4L4.5 20l1.3-3.6a6.9 6.9 0 0 1-2.3-5c0-4 3.8-7.2 8.5-7.2s8.5 3.2 8.5 7.2Z"
+      />
+      <path d="M8.8 11.7h.01M12 11.7h.01M15.2 11.7h.01" />
+    </svg>
+    <b class="eng-count">{{ count(stats().comments) }}</b>
+  </button>
+
+  <button
+    type="button"
+    class="eng-item eng-share"
+    [attr.aria-label]="shareLabel()"
+    [attr.title]="shareLabel()"
+    [disabled]="busy()"
+    (click)="onShare()"
+  >
+    <svg class="eng-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3.5v11" />
+      <path d="m8 7.2 4-3.7 4 3.7" />
+      <path d="M5.5 12.5v6.2a1.3 1.3 0 0 0 1.3 1.3h10.4a1.3 1.3 0 0 0 1.3-1.3v-6.2" />
+    </svg>
+    <b class="eng-count">{{ count(stats().shares) }}</b>
+  </button>
+
+  @if (shareFeedback(); as message) {
+    <span class="eng-toast" role="status">{{ message }}</span>
+  } @else if (hint()) {
+    <span class="eng-toast eng-toast-warn" role="status">{{ hint() }}</span>
+  }
+</div>
+
+@if (signInOpen()) {
+  <app-community-sign-in-modal
+    [reason]="signInReason()"
+    [returnTo]="returnToPath()"
+    (dismissed)="closeSignIn()"
+  />
+}

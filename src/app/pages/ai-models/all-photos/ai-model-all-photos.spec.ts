@@ -85,19 +85,21 @@ describe('AiModelAllPhotosPage', () => {
       const shown = tiles.map((tile) => tile.querySelector('img')?.getAttribute('src'));
       expect(shown).toEqual(profile.photos.map((photo) => photo.src));
 
-      // Each tile knows where it sits in every layout, and the tiles come in several sizes.
+      // Each tile's cell knows where it sits in every layout, and the tiles come in several sizes.
+      const cells = Array.from(element.querySelectorAll<HTMLElement>('.mosaic-cell'));
+      expect(cells.length).toBe(20);
       const desktopSpans = new Set(
-        tiles.map(
-          (tile) =>
-            `${tile.style.getPropertyValue('--c4').split('span')[1]}x${
-              tile.style.getPropertyValue('--r4').split('span')[1]
+        cells.map(
+          (cell) =>
+            `${cell.style.getPropertyValue('--c4').split('span')[1]}x${
+              cell.style.getPropertyValue('--r4').split('span')[1]
             }`,
         ),
       );
       expect(desktopSpans.size).toBeGreaterThanOrEqual(3);
-      expect(tiles[0].style.getPropertyValue('--c4')).toBe('1 / span 3');
-      expect(tiles[0].style.getPropertyValue('--c2')).not.toBe('');
-      expect(tiles[0].style.getPropertyValue('--r3')).not.toBe('');
+      expect(cells[0].style.getPropertyValue('--c4')).toBe('1 / span 3');
+      expect(cells[0].style.getPropertyValue('--c2')).not.toBe('');
+      expect(cells[0].style.getPropertyValue('--r3')).not.toBe('');
 
       // Photographs near the top load at once, the rest lazily.
       expect(tiles[0].querySelector('img')?.getAttribute('loading')).toBe('eager');

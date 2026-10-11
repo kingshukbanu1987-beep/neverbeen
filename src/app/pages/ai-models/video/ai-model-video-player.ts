@@ -4,6 +4,7 @@ import {
   ElementRef,
   computed,
   effect,
+  inject,
   linkedSignal,
   input,
   output,
@@ -11,6 +12,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { AiModelVideo } from '../ai-model-data';
+import { ModelMediaEngagementService } from '../../../services/model-media-engagement.service';
+import { ModelMediaComments } from '../../../shared/model-media-comments/model-media-comments';
+import { ModelMediaEngagementBar } from '../../../shared/model-media-engagement/model-media-engagement';
 
 /** Playback speeds offered in the player's speed menu. */
 export const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
@@ -38,6 +42,7 @@ export function formatTime(seconds: number): string {
  */
 @Component({
   selector: 'app-ai-model-video-player',
+  imports: [ModelMediaComments, ModelMediaEngagementBar],
   templateUrl: './ai-model-video-player.html',
   styleUrl: './ai-model-video-player.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +59,8 @@ export class AiModelVideoPlayer {
   readonly startIndex = input(0);
   readonly modelName = input('');
   readonly modelHandle = input('');
+  /** The portfolio slug — enables the engagement strip and the "seen" count of each clip. */
+  readonly modelSlug = input('');
 
   readonly closed = output<void>();
 
@@ -108,6 +115,28 @@ export class AiModelVideoPlayer {
   /** Whether the visitor wants the clip running — playback follows it across clip changes. */
   private readonly shouldPlay = signal(true);
 
+  private readonly engagement = inject(ModelMediaEngagementService);
+
+  /**
+   * The comments thread beside the clip. It opens by itself on wide screens — the conversation
+   * of a clip is part of its pop-up — and starts closed where the screen is too narrow.
+   */
+  protected readonly commentsOpen = signal(
+    typeof matchMedia === 'function' && matchMedia('(min-width: 1080px)').matches,
+  );
+
+  /** Comment count of the current clip, for the engagement strip in the footer. */
+  protected readonly commentCount = computed(() => {
+    const slug = this.modelSlug();
+    const clip = this.clip();
+    if (!slug || !clip) return 0;
+    return this.engagement.statsFor(slug, 'video', clip.src).comments;
+  });
+
+  protected toggleComments(): void {
+    this.commentsOpen.update((open) => !open);
+  }
+
   private readonly videoRef = viewChild<ElementRef<HTMLVideoElement>>('video');
   private readonly panelRef = viewChild<ElementRef<HTMLElement>>('panel');
   private readonly closeRef = viewChild<ElementRef<HTMLButtonElement>>('playerClose');
@@ -131,6 +160,14 @@ export class AiModelVideoPlayer {
     // Move focus into the player as soon as it renders, as the portfolio's photo pop-up does.
     effect(() => {
       this.closeRef()?.nativeElement.focus({ preventScroll: true });
+    });
+
+    // Every opened clip counts as "seen" — no account needed, one count per visitor.
+    effect(() => {
+      const slug = this.modelSlug();
+      const clip = this.clip();
+      if (!slug || !clip) return;
+      void this.engagement.recordView(slug, 'video', clip.src);
     });
   }
 
@@ -410,7 +447,8 @@ export class AiModelVideoPlayer {
   /** Clicking the dark space around the player dismisses it; the picture and controls do not. */
   protected onBackdropClick(event: MouseEvent): void {
     const target = event.target as HTMLElement | null;
-    if (target?.closest('video, button, a, input, select, .player-panel, .player-stage')) return;
+    if (target?.closest('video, button, a, input, select, .player-panel, .player-stage, .player-comments'))
+      return;
     this.close();
   }
 

@@ -1,0 +1,16 @@
+<div class="mcd-overlay" (click)="onBackdropClick($event)">
+  <div
+    class="mcd-card"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Comments"
+    (click)="$event.stopPropagation()"
+  >
+    <app-model-media-comments
+      [modelSlug]="modelSlug()"
+      [mediaType]="mediaType()"
+      [mediaSrc]="mediaSrc()"
+      (closed)="close()"
+    />
+  </div>
+</div>
