@@ -185,43 +185,51 @@
 
           <div class="video-grid">
             @for (clip of videos(); track clip.src; let index = $index) {
-              <button
-                type="button"
-                class="video-tile"
-                (click)="openVideo(index)"
-                [attr.aria-label]="'Play ' + videoTitle(index)"
-                [style.animation-delay.ms]="tileDelay(index)"
-              >
-                @if (clip.poster) {
-                  <img
-                    class="video-poster"
-                    [src]="clip.poster"
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                  />
-                } @else {
-                  <video
-                    class="video-preview"
-                    [src]="previewSrc(clip)"
-                    preload="metadata"
-                    muted
-                    playsinline
-                    disablepictureinpicture
-                    aria-hidden="true"
-                    tabindex="-1"
-                  ></video>
-                }
+              <div class="video-tile-shell" [style.animation-delay.ms]="tileDelay(index)">
+                <button
+                  type="button"
+                  class="video-tile"
+                  (click)="openVideo(index)"
+                  [attr.aria-label]="'Play ' + videoTitle(index)"
+                >
+                  @if (clip.poster) {
+                    <img
+                      class="video-poster"
+                      [src]="clip.poster"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  } @else {
+                    <video
+                      class="video-preview"
+                      [src]="previewSrc(clip)"
+                      preload="metadata"
+                      muted
+                      playsinline
+                      disablepictureinpicture
+                      aria-hidden="true"
+                      tabindex="-1"
+                    ></video>
+                  }
 
-                <span class="video-scrim" aria-hidden="true"></span>
-                <span class="video-play" aria-hidden="true">▶</span>
-                <span class="video-tile-copy" aria-hidden="true">
-                  <span class="video-tile-index"
-                    >CLIP / <span class="num">{{ frameLabel(index) }}</span></span
-                  >
-                  <span class="video-tile-name">{{ videoTitle(index) }}</span>
-                </span>
-              </button>
+                  <span class="video-scrim" aria-hidden="true"></span>
+                  <span class="video-play" aria-hidden="true">▶</span>
+                  <span class="video-tile-copy" aria-hidden="true">
+                    <span class="video-tile-index"
+                      >CLIP / <span class="num">{{ frameLabel(index) }}</span></span
+                    >
+                    <span class="video-tile-name">{{ videoTitle(index) }}</span>
+                  </span>
+                </button>
+                <app-model-media-engagement
+                  class="tile-engagement"
+                  [modelSlug]="profile.slug"
+                  mediaType="video"
+                  [mediaSrc]="clip.src"
+                  (comments)="openComments('video', clip.src)"
+                />
+              </div>
             }
           </div>
         </section>
@@ -311,27 +319,35 @@
                     </span>
                   </a>
                 } @else {
-                  <button
-                    type="button"
-                    class="grid-tile"
-                    (click)="openLightbox(index)"
-                    [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
-                    [style.animation-delay.ms]="tileDelay(index)"
-                  >
-                    <img
-                      [src]="photo.src"
-                      [alt]="photoAlt(profile.name, index)"
-                      loading="lazy"
-                      decoding="async"
+                  <div class="grid-tile-shell" [style.animation-delay.ms]="tileDelay(index)">
+                    <button
+                      type="button"
+                      class="grid-tile"
+                      (click)="openLightbox(index)"
+                      [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                    >
+                      <img
+                        [src]="photo.src"
+                        [alt]="photoAlt(profile.name, index)"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <span class="tile-glow" aria-hidden="true"></span>
+                      <span class="tile-overlay" aria-hidden="true">
+                        <span class="tile-number"
+                          >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
+                        >
+                        <span class="tile-expand">⤢</span>
+                      </span>
+                    </button>
+                    <app-model-media-engagement
+                      class="tile-engagement"
+                      [modelSlug]="profile.slug"
+                      mediaType="photo"
+                      [mediaSrc]="photo.src"
+                      (comments)="openComments('photo', photo.src)"
                     />
-                    <span class="tile-glow" aria-hidden="true"></span>
-                    <span class="tile-overlay" aria-hidden="true">
-                      <span class="tile-number"
-                        >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
-                      >
-                      <span class="tile-expand">⤢</span>
-                    </span>
-                  </button>
+                  </div>
                 }
               }
             </div>
@@ -366,10 +382,12 @@
                       </span>
                     </a>
                     <figcaption>
-                      <span class="feed-index">{{ frameLabel(index) }}</span>
-                      <span class="feed-caption">
-                        The complete album — every one of the
-                        <span class="num">{{ photos().length }}</span> photographs.
+                      <span class="feed-caption-line">
+                        <span class="feed-index">{{ frameLabel(index) }}</span>
+                        <span class="feed-caption">
+                          The complete album — every one of the
+                          <span class="num">{{ photos().length }}</span> photographs.
+                        </span>
                       </span>
                     </figcaption>
                   </figure>
@@ -395,13 +413,22 @@
                       </span>
                     </button>
                     <figcaption>
-                      <span class="feed-index">{{ frameLabel(index) }}</span>
-                      <span class="feed-caption">
-                        {{ captionParts(index).text }}
-                        @if (captionParts(index).frame) {
-                          <span class="num">{{ captionParts(index).frame }}</span>
-                        }
+                      <span class="feed-caption-line">
+                        <span class="feed-index">{{ frameLabel(index) }}</span>
+                        <span class="feed-caption">
+                          {{ captionParts(index).text }}
+                          @if (captionParts(index).frame) {
+                            <span class="num">{{ captionParts(index).frame }}</span>
+                          }
+                        </span>
                       </span>
+                      <app-model-media-engagement
+                        layout="row"
+                        [modelSlug]="profile.slug"
+                        mediaType="photo"
+                        [mediaSrc]="photo.src"
+                        (comments)="openComments('photo', photo.src)"
+                      />
                     </figcaption>
                   </figure>
                 }
@@ -740,6 +767,7 @@
     [startIndex]="activeIndex() ?? 0"
     [modelName]="model()?.name ?? ''"
     [modelHandle]="model()?.handle ?? ''"
+    [modelSlug]="model()?.slug ?? ''"
     [albumLink]="hasMorePhotos() ? allPhotosLink() : null"
     [albumSize]="photos().length"
     (closed)="closeLightbox()"
@@ -752,6 +780,16 @@
     [startIndex]="activeVideoIndex() ?? 0"
     [modelName]="model()?.name ?? ''"
     [modelHandle]="model()?.handle ?? ''"
+    [modelSlug]="model()?.slug ?? ''"
     (closed)="closeVideo()"
+  />
+}
+
+@if (commentsTarget(); as target) {
+  <app-model-media-comments-dialog
+    [modelSlug]="model()?.slug ?? ''"
+    [mediaType]="target.type"
+    [mediaSrc]="target.src"
+    (closed)="closeComments()"
   />
 }

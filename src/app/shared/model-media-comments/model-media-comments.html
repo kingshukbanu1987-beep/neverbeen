@@ -1,0 +1,122 @@
+<section class="mc-panel" aria-label="Comments">
+  <header class="mc-head">
+    <div class="mc-head-copy">
+      <span class="mc-eyebrow">Conversation</span>
+      <h3 class="mc-title">
+        Comments
+        <span class="mc-total num">{{ totalCount() }}</span>
+      </h3>
+    </div>
+    @if (closable()) {
+      <button type="button" class="mc-close" (click)="close()" aria-label="Close comments">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    }
+  </header>
+
+  <div class="mc-list" role="log" aria-label="Comments list">
+    @if (state() === 'loading') {
+      <p class="mc-state" role="status">
+        <span class="mc-pulse" aria-hidden="true"></span>
+        Pulling the conversation…
+      </p>
+    } @else if (state() === 'error') {
+      <div class="mc-state mc-state-error" role="alert">
+        <p>Comments could not be loaded right now.</p>
+        <button type="button" class="mc-retry" (click)="load()">Try again</button>
+      </div>
+    } @else if (items().length === 0) {
+      <div class="mc-empty">
+        <span class="mc-empty-mark" aria-hidden="true">“</span>
+        <p>No comments yet</p>
+        <span>Be the first to say something about this frame.</span>
+      </div>
+    } @else {
+      @for (comment of items(); track comment.id) {
+        <article class="mc-item">
+          <span class="mc-avatar">
+            <span class="mc-initials" aria-hidden="true">{{ authorInitials(comment) }}</span>
+            @if (authorPhotoUrl(comment)) {
+              <img
+                [src]="authorPhotoUrl(comment)"
+                alt=""
+                loading="lazy"
+                (error)="hideBrokenAvatar($event)"
+              />
+            }
+          </span>
+          <div class="mc-body">
+            <p class="mc-meta">
+              <span class="mc-name">
+                {{ authorName(comment) }}
+                @if (comment.author.isVerified) {
+                  <i class="mc-verified" aria-label="Verified member">✓</i>
+                }
+              </span>
+              <time [attr.datetime]="comment.createdAtUtc" [attr.title]="comment.createdAtUtc"
+                >{{ timestamp(comment.createdAtUtc) }}</time
+              >
+            </p>
+            <p class="mc-text">{{ comment.text }}</p>
+          </div>
+        </article>
+      }
+    }
+  </div>
+
+  <footer class="mc-composer">
+    @if (signedIn()) {
+      <label class="mc-field">
+        <span class="visually-hidden">Add a comment</span>
+        <textarea
+          rows="2"
+          maxlength="1000"
+          [value]="draft()"
+          (input)="updateDraft($event)"
+          placeholder="Add to the conversation…"
+          (keydown.control.enter)="post()"
+        ></textarea>
+      </label>
+      <div class="mc-compose-row">
+        <span class="mc-remaining" [class.is-low]="remaining() < 100">
+          {{ remaining() }} left
+        </span>
+        <button
+          type="button"
+          class="mc-post"
+          [disabled]="posting() || draft().trim().length === 0"
+          (click)="post()"
+        >
+          @if (posting()) {
+            Posting…
+          } @else {
+            Post
+          }
+        </button>
+      </div>
+      @if (postError()) {
+        <p class="mc-post-error" role="alert">{{ postError() }}</p>
+      }
+    } @else {
+      <button type="button" class="mc-signin-cta" (click)="openSignIn()">
+        <span class="mc-cta-orb" aria-hidden="true">NB</span>
+        <span>
+          <b>Sign in to comment</b>
+          <i>Join the conversation as a Community member</i>
+        </span>
+        <span class="mc-cta-arrow" aria-hidden="true">↗</span>
+      </button>
+    }
+  </footer>
+</section>
+
+@if (signInOpen()) {
+  <app-community-sign-in-modal
+    title="Join the conversation"
+    reason="Sign in with your Community account to comment on this photograph or clip."
+    [returnTo]="returnToPath()"
+    (dismissed)="closeSignIn()"
+  />
+}

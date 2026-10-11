@@ -1,0 +1,58 @@
+:host {
+  position: fixed;
+  z-index: 440;
+  inset: 0;
+  display: block;
+}
+
+.mcd-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2rem);
+  background: rgb(6 4 8 / 70%);
+  backdrop-filter: blur(16px) saturate(1.1);
+  animation: mcd-overlay-in 200ms ease backwards;
+}
+
+.mcd-card {
+  display: flex;
+  width: min(460px, 100%);
+  max-height: min(80vh, 720px);
+  min-height: min(420px, 80vh);
+  flex-direction: column;
+  animation: mcd-card-in 380ms cubic-bezier(0.16, 1.02, 0.3, 1) 30ms backwards;
+}
+
+.mcd-card app-model-media-comments {
+  min-height: 0;
+  flex: 1;
+}
+
+@keyframes mcd-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes mcd-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+  }
+}
+
+@media (max-width: 520px) {
+  .mcd-card {
+    max-height: 86vh;
+    min-height: min(360px, 86vh);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcd-overlay,
+  .mcd-card {
+    animation: none !important;
+  }
+}

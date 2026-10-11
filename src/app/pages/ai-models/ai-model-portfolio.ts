@@ -14,6 +14,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { CommunityService } from '../../services/community.service';
+import { MediaKind, ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import {
   CreateModelTestimonial,
   ModelTestimonial,
@@ -22,6 +23,8 @@ import {
 } from '../../services/model-testimonials.service';
 import { rememberCommunityReturnPath } from '../../shared/community-return-path';
 import { CommunitySignInCard } from '../../shared/community-sign-in-card/community-sign-in-card';
+import { ModelMediaCommentsDialog } from '../../shared/model-media-comments-dialog/model-media-comments-dialog';
+import { ModelMediaEngagementBar } from '../../shared/model-media-engagement/model-media-engagement';
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
 import { AiModelPhotoViewer } from './photo-viewer/ai-model-photo-viewer';
@@ -65,6 +68,8 @@ export const PREVIEW_LIMIT = 12;
     AiModelPhotoViewer,
     AiModelVideoPlayer,
     CommunitySignInCard,
+    ModelMediaCommentsDialog,
+    ModelMediaEngagementBar,
   ],
   templateUrl: './ai-model-portfolio.html',
   styleUrl: './ai-model-portfolio.css',
@@ -83,6 +88,10 @@ export class AiModelPortfolioPage implements OnDestroy {
 
   protected readonly community = inject(CommunityService);
   private readonly testimonialsApi = inject(ModelTestimonialsService);
+  private readonly engagement = inject(ModelMediaEngagementService);
+
+  /** The photograph or clip whose thread the page-level comments pop-up shows. */
+  protected readonly commentsTarget = signal<{ type: MediaKind; src: string } | null>(null);
 
   /** Only completed, active Community accounts may publish portfolio testimonials. */
   protected readonly canLeaveTestimonial = computed(() => {
@@ -264,6 +273,16 @@ export class AiModelPortfolioPage implements OnDestroy {
       this.testimonialSubmitSuccess.set('');
       this.testimonialLoadState.set(slug ? 'loading' : 'ready');
       if (slug) void this.fetchTestimonials(slug, 1, requestId, false);
+
+      // Register the album so every tile's seen / likes / comments / share strip has numbers.
+      const profile = this.model();
+      if (slug && profile) {
+        this.engagement.registerModel(slug, [
+          ...profile.photos.map((photo) => ({ kind: 'photo' as MediaKind, src: photo.src })),
+          ...profile.videos.map((video) => ({ kind: 'video' as MediaKind, src: video.src })),
+        ]);
+      }
+      this.commentsTarget.set(null);
     });
 
     // Keep the page behind the pop-up from scrolling while it is open.
@@ -634,6 +653,15 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.lastFocusedVideo =
       typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null;
     this.activeVideoIndex.set(index);
+  }
+
+  /** The page-level comments pop-up a tile's Comments icon opens (members only). */
+  protected openComments(type: MediaKind, src: string): void {
+    this.commentsTarget.set({ type, src });
+  }
+
+  protected closeComments(): void {
+    this.commentsTarget.set(null);
   }
 
   protected closeVideo(): void {

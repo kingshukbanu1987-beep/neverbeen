@@ -13,7 +13,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ModelMediaEngagementService } from '../../../services/model-media-engagement.service';
 import { AiModelPhoto } from '../ai-model-data';
+import { ModelMediaComments } from '../../../shared/model-media-comments/model-media-comments';
+import { ModelMediaEngagementBar } from '../../../shared/model-media-engagement/model-media-engagement';
 import {
   DOUBLE_TAP_ZOOM,
   IDENTITY,
@@ -86,7 +89,7 @@ interface SafariGestureEvent extends UIEvent {
  */
 @Component({
   selector: 'app-ai-model-photo-viewer',
-  imports: [RouterLink],
+  imports: [RouterLink, ModelMediaComments, ModelMediaEngagementBar],
   templateUrl: './ai-model-photo-viewer.html',
   styleUrl: './ai-model-photo-viewer.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -102,6 +105,8 @@ export class AiModelPhotoViewer {
   readonly startIndex = input(0);
   readonly modelName = input('');
   readonly modelHandle = input('');
+  /** The portfolio slug — enables the engagement strip and the "seen" count of each frame. */
+  readonly modelSlug = input('');
   /** Router link to the complete album, offered when the viewer only holds part of it. */
   readonly albumLink = input<readonly string[] | null>(null);
   /** How many photographs the complete album holds, shown on the album link. */
@@ -165,6 +170,29 @@ export class AiModelPhotoViewer {
       ? 'Pinch or double-tap to zoom'
       : 'Scroll, pinch or double-click to zoom',
   );
+
+  private readonly engagement = inject(ModelMediaEngagementService);
+
+  /**
+   * The comments thread beside the photograph. It opens by itself on wide screens — the
+   * conversation of a photograph is part of its pop-up — and starts closed where the screen
+   * is too narrow to share with the picture.
+   */
+  protected readonly commentsOpen = signal(
+    typeof matchMedia === 'function' && matchMedia('(min-width: 1080px)').matches,
+  );
+
+  /** Comment count of the current photograph, for the toggle in the footer. */
+  protected readonly commentCount = computed(() => {
+    const slug = this.modelSlug();
+    const photo = this.photo();
+    if (!slug || !photo) return 0;
+    return this.engagement.statsFor(slug, 'photo', photo.src).comments;
+  });
+
+  protected toggleComments(): void {
+    this.commentsOpen.update((open) => !open);
+  }
 
   private readonly stageRef = viewChild<ElementRef<HTMLElement>>('stage');
   private readonly imageRef = viewChild<ElementRef<HTMLImageElement>>('photoImage');
@@ -240,6 +268,14 @@ export class AiModelPhotoViewer {
         image.decoding = 'async';
         image.src = neighbour.src;
       }
+    });
+
+    // Every opened photograph counts as "seen" — no account needed, one count per visitor.
+    effect(() => {
+      const slug = this.modelSlug();
+      const photo = this.photo();
+      if (!slug || !photo) return;
+      void this.engagement.recordView(slug, 'photo', photo.src);
     });
 
     this.hintTimer = setTimeout(() => this.hintVisible.set(false), 4200);
@@ -332,7 +368,8 @@ export class AiModelPhotoViewer {
   protected onBackdropClick(event: MouseEvent): void {
     const target = event.target as Element | null;
     // The stage handles its own taps (see `finishGesture`), and controls do their own thing.
-    if (target?.closest('button, a, img, .lightbox-stage, .lightbox-thumbs')) return;
+    if (target?.closest('button, a, img, .lightbox-stage, .lightbox-thumbs, .viewer-comments'))
+      return;
     this.close();
   }
 

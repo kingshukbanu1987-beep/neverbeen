@@ -11,6 +11,12 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
+import {
+  MediaKind,
+  ModelMediaEngagementService,
+} from '../../../services/model-media-engagement.service';
+import { ModelMediaCommentsDialog } from '../../../shared/model-media-comments-dialog/model-media-comments-dialog';
+import { ModelMediaEngagementBar } from '../../../shared/model-media-engagement/model-media-engagement';
 import { aiModelProfiles } from '../ai-model-data';
 import { AiModelPhotoViewer } from '../photo-viewer/ai-model-photo-viewer';
 import { mosaicTileStyles } from './photo-mosaic';
@@ -26,7 +32,7 @@ const EAGER_TILES = 6;
  */
 @Component({
   selector: 'app-ai-model-all-photos-page',
-  imports: [RouterLink, AiModelPhotoViewer],
+  imports: [RouterLink, AiModelPhotoViewer, ModelMediaCommentsDialog, ModelMediaEngagementBar],
   templateUrl: './ai-model-all-photos.html',
   styleUrl: './ai-model-all-photos.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +43,11 @@ export class AiModelAllPhotosPage implements OnDestroy {
     this.route.paramMap.pipe(map((params) => params.get('slug') ?? '')),
     { initialValue: this.route.snapshot.paramMap.get('slug') ?? '' },
   );
+
+  private readonly engagement = inject(ModelMediaEngagementService);
+
+  /** The photograph whose thread the page-level comments pop-up shows. */
+  protected readonly commentsTarget = signal<{ src: string } | null>(null);
 
   protected readonly model = computed(
     () => aiModelProfiles.find((profile) => profile.slug === this.slug()) ?? null,
@@ -71,6 +82,20 @@ export class AiModelAllPhotosPage implements OnDestroy {
       onCleanup(() => {
         body.style.overflow = previousOverflow;
       });
+    });
+
+    // Register the album so every mosaic tile's seen / likes / comments / share strip has
+    // numbers, and close the page-level comments pop-up when the model changes.
+    effect(() => {
+      const profile = this.model();
+      const slug = profile?.slug;
+      if (slug && profile) {
+        this.engagement.registerModel(
+          slug,
+          profile.photos.map((photo) => ({ kind: 'photo' as MediaKind, src: photo.src })),
+        );
+      }
+      this.commentsTarget.set(null);
     });
 
     // Open the album at its top straight away, rather than gliding up from the scroll position the
@@ -133,6 +158,15 @@ export class AiModelAllPhotosPage implements OnDestroy {
     this.lastFocused =
       typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null;
     this.activeIndex.set(index);
+  }
+
+  /** The page-level comments pop-up a tile's Comments icon opens (members only). */
+  protected openComments(src: string): void {
+    this.commentsTarget.set({ src });
+  }
+
+  protected closeComments(): void {
+    this.commentsTarget.set(null);
   }
 
   protected closeViewer(): void {
