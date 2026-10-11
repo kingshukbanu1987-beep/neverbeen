@@ -40,6 +40,49 @@ export class AiModelBiographyPage {
     }));
   });
 
+  protected readonly generalSummary = computed(() => {
+    const story = this.biography();
+    if (!story) return '';
+    const profile = this.model();
+    const info = story.generalInformation ?? {};
+    const firstName = (profile?.name ?? story.name ?? '').split(/\s+/)[0] ?? '';
+    const city = String(info['birthplace'] ?? '').split(',').slice(-2).join(',').trim() || '';
+    const profession = info['profession'] ? String(info['profession']).replace(/^Fictional\s+/i, '') : 'creative professional';
+    const age = info['age'] ? String(info['age']).replace(/\s*·.*$/, '') : '';
+    const education = info['education'] ? String(info['education']) : '';
+    const relationship = info['relationshipStatus'] ? String(info['relationshipStatus']).toLowerCase() : '';
+
+    const currentCareer = story.career?.[story.career.length - 1];
+    const currentRole = currentCareer?.role ?? 'independent model and creative collaborator';
+    const currentOrg = currentCareer?.organization?.replace(/\s*\(fictional[^)]*\)/g, '').trim() ?? 'NeverBeen Multiverse';
+
+    const passionList = story.passions ?? [];
+    const ambitionList = story.ambitions ?? [];
+    const hobbyList = story.hobbies ?? [];
+
+    const bits: string[] = [];
+    bits.push(
+      `${firstName} is a fictional ${profession} in the NeverBeen Multiverse${city ? `, based in ${city}` : ''}${age ? ` and ${age} years old in this imagined storyline` : ''}.`,
+    );
+    if (education) {
+      bits.push(`She holds a fictional ${education}.`);
+    }
+    bits.push(`In the present chapter of her story she works as ${/^[aeiou]/i.test(currentRole) ? 'an' : 'a'} ${currentRole}${currentOrg && currentOrg !== 'NeverBeen Multiverse' ? ` with ${currentOrg}` : ''}.`);
+    if (relationship) {
+      bits.push(`Her relationship status in this fictional timeline is ${relationship}.`);
+    }
+    if (passionList.length) {
+      bits.push(`She is drawn to ${passionList.slice(0, 2).join(' and ')}${passionList.length > 2 ? ', among other causes' : ''}.`);
+    }
+    if (hobbyList.length) {
+      bits.push(`Outside her work she enjoys ${hobbyList.slice(0, 3).join(', ')}.`);
+    }
+    if (ambitionList.length) {
+      bits.push(`Her ambitions include ${ambitionList[0].replace(/^\w/, (c) => c.toLowerCase())}`);
+    }
+    return bits.join(' ');
+  });
+
   constructor() {
     afterNextRender(() => {
       if (typeof window.scrollTo === 'function') {

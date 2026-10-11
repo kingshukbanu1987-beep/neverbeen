@@ -26,6 +26,12 @@
         <section class="article-lead" aria-label="Article introduction and biographical facts">
           <div class="lead-copy">
             <p class="lead-summary">{{ story.summary }}</p>
+            @if (generalSummary()) {
+              <section class="general-summary" aria-label="General summary">
+                <h2>General summary</h2>
+                <p>{{ generalSummary() }}</p>
+              </section>
+            }
             <p class="fiction-note">
               <strong>Fictional account.</strong>
               This biography describes an imagined character in the Multiverse of NeverBeen; it is
@@ -46,15 +52,14 @@
                   <figcaption>Fictional digital model</figcaption>
                 </figure>
               }
-              <figure class="infobox-signature">
+              <figure class="infobox-signature" aria-label="Signature">
                 @if (story.signatureImage) {
                   <img
                     class="signature-image"
                     [src]="story.signatureImage"
                     [alt]="
-                      'Fictional handwritten signature for ' +
-                      (story.signature || profile.name) +
-                      ' in blue ballpoint on white paper.'
+                      'Signature of ' +
+                      (story.signature || profile.name)
                     "
                     loading="lazy"
                     decoding="async"
@@ -64,7 +69,6 @@
                     story.signature || profile.name
                   }}</span>
                 }
-                <figcaption>Fictional signature facsimile</figcaption>
               </figure>
             </div>
             @if (generalDetails().length > 0) {

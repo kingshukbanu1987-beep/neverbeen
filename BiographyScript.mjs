@@ -902,6 +902,17 @@ function makeBiography(model) {
     `Keep learning, keep travelling, and leave every collaboration more generous than she found it.`,
   ];
 
+  // A rich opening paragraph that summarises the model's fictional profile at a glance, assembled
+  // from the same data used to build the rest of the biography. Newly generated pages will have a
+  // useful General Summary straight out of the script without needing extra API calls.
+  const careerSummary = [
+    `After earning a fictional ${track.degree}${masters ? ` and going on to complete a fictional ${track.postgraduate}` : ''}, she spent her early career in ${track.field} with ${organizations[0]} and later ${organizations[1]}, building experience in ${track.strengths.join(', ')}.`,
+    `Today she works as an independent model and creative collaborator in the NeverBeen Multiverse, bringing her creative training into editorial, fashion and travel-led stories.`,
+    `${firstName}'s passions in this fictional timeline include ${passions.slice(0, 2).join(' and ')}${passions.length > 2 ? ', among other personal causes' : ''}, and she enjoys ${hobbies.join(', ')} in her time away from sets and studios.`,
+    `Her ambitions in this imagined storyline are to build a thoughtful creative label for emerging artists, to help make fashion and image-making more responsible without losing a sense of play, and to leave every collaboration more generous than she found it.`,
+    `The relationship status recorded for her in this chapter is "${personalLife.relationshipStatus.toLowerCase()}"; the people, places and milestones below are entirely invented and exist only in the NeverBeen Multiverse.`,
+  ].join(' ');
+
   const achievements = [
     `Completed a fictional ${track.degree} with a final project rooted in ${track.field}.`,
     `Led a small, cross-disciplinary brief at ${organizations[1]}, bringing ${track.strengths[0]} and ${track.strengths[2]} into one visual story.`,
@@ -981,7 +992,7 @@ function makeBiography(model) {
       relationshipStatus: personalLife.relationshipStatus,
       universe: 'NeverBeen Multiverse',
     },
-    summary: fictionalIntro,
+    summary: `${fictionalIntro} ${careerSummary}`,
     earlyLife: [
       `In this alternate-universe story, ${model.name} was born on ${birthDetails.date} at ${birthDetails.time} ${birthTimeZone} at the fictional ${birthFacility} in ${area}, ${city}, ${country}. The venue, date, time and every childhood episode are invented; no real address or medical record is represented.`,
       `At age four, around ${birthYear + 4}, a slow family breakfast and the familiar rooms of home became the first small landmarks in her imagined life. The accompanying mobile-camera scene is a fictional memory, not an archival photograph.`,
