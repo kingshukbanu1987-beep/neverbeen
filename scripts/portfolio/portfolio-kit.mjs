@@ -111,14 +111,15 @@ export class PortfolioKit {
     const accent2 = meta.accent2 || this.chrome.accent2 || accent;
     const section = meta.section || '';
 
-    // A slim black masthead: the transparent NeverBeen wordmark, a quiet studio
-    // signature, and a precise section marker — never a white banner or logo tile.
+    // A slim black masthead, matching the AI-models site header: a small, white,
+    // transparent NeverBeen wordmark, a quiet studio signature, and a precise
+    // section marker — never a white banner or logo tile, and no underline
+    // border beneath the header.
     this.rect(0, 0, PAGE.W, HEADER_H, '#050608', 1);
-    this.gradientRect(0, HEADER_H - 1.4, PAGE.W, 1.4, accent, accent2, { opacity: 0.9 });
     if (this.chrome.logo) {
-      const logoHeight = Math.min(29, HEADER_H - 8);
+      const logoHeight = Math.min(15, HEADER_H - 12);
       const logoWidth = logoHeight * (this.chrome.logoAspect || 3.1);
-      this.doc.image(this.chrome.logo, MARGIN, (HEADER_H - logoHeight) / 2 - 1, {
+      this.doc.image(this.chrome.logo, MARGIN, (HEADER_H - logoHeight) / 2, {
         width: logoWidth,
         height: logoHeight,
       });

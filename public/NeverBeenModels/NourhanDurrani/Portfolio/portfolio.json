@@ -2,7 +2,6 @@
   "model": "Nourhan Durrani",
   "album": "NourhanDurrani",
   "slug": "nourhan-durrani",
-  "fictional": true,
   "document": "NourhanDurrani_Portfolio.pdf",
   "url": "/NeverBeenModels/NourhanDurrani/Portfolio/NourhanDurrani_Portfolio.pdf",
   "pages": 24,
@@ -19,8 +18,8 @@
     "mood": "sunlit gloss, gold on black",
     "seed": 1590069521
   },
-  "sizeBytes": 5174898,
-  "generatedAt": "2026-10-12T05:44:03.989Z",
+  "sizeBytes": 5028470,
+  "generatedAt": "2026-10-12T10:19:45.284Z",
   "generator": {
     "script": "CreatePortfolio.mjs",
     "version": "1.0.0"
@@ -31,6 +30,5 @@
     "used": 56,
     "folder": "public/NeverBeenModels/NourhanDurrani"
   },
-  "storySource": "Biography/biography.json",
-  "fictionalNotice": "Story pages quote the model’s fictional NeverBeen Multiverse biography; photographs are studio album frames."
+  "storySource": "Biography"
 }
