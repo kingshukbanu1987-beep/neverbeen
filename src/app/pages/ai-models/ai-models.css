@@ -320,12 +320,18 @@
   outline-offset: 4px;
 }
 
-.card-image {
+.card-cover {
   position: relative;
-  display: block;
   flex: 0 0 auto;
   overflow: hidden;
-  aspect-ratio: 0.79 / 1;
+  aspect-ratio: 0.75 / 1;
+}
+
+.card-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
   color: inherit;
   text-decoration: none;
   background:
@@ -429,10 +435,16 @@
 
 .card-copy {
   position: absolute;
+  z-index: 1;
   right: 0;
   bottom: 0;
   left: 0;
   padding: 2.5rem clamp(1rem, 2.2vw, 1.4rem) clamp(1rem, 2vw, 1.3rem);
+  pointer-events: none;
+}
+
+.card-copy a {
+  pointer-events: auto;
 }
 
 .card-location {
@@ -453,6 +465,102 @@
   letter-spacing: -0.025em;
   line-height: 1;
   overflow-wrap: anywhere;
+}
+
+.card-rating-row {
+  display: flex;
+  min-height: 1.45rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-top: 0.42rem;
+}
+
+.card-rating-value {
+  color: #ffe1a0;
+  font-family: var(--numeric-font);
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  text-shadow: 0 0 16px rgb(247 197 98 / 24%);
+}
+
+.card-rating-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.025rem;
+  line-height: 1;
+}
+
+.card-rating-star {
+  position: relative;
+  display: inline-grid;
+  width: 0.91rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  place-items: center;
+  font-family: 'Segoe UI Symbol', 'Apple Symbols', Arial, sans-serif;
+  font-size: 1.04rem;
+  line-height: 1;
+}
+
+.card-rating-star-empty,
+.card-rating-star-filled {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.card-rating-star-empty {
+  color: rgb(255 255 255 / 38%);
+}
+
+.card-rating-star-filled {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: inset(0 calc(100% - var(--star-fill, 0%)) 0 0);
+  color: #f4c65f;
+  text-shadow: 0 0 9px rgb(244 198 95 / 42%);
+}
+
+.card-review-link {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.18rem 0.4rem;
+  border: 1px solid rgb(247 197 98 / 23%);
+  border-radius: 999px;
+  background: rgb(12 9 12 / 64%);
+  color: rgb(255 255 255 / 73%);
+  font-size: 0.54rem;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.card-review-link:hover,
+.card-review-link:focus-visible {
+  border-color: rgb(255 219 144 / 72%);
+  background: rgb(247 197 98 / 13%);
+  color: #ffe9b8;
+  box-shadow: 0 0 18px rgb(247 197 98 / 12%);
+}
+
+.card-review-link:focus-visible {
+  outline: 2px solid #ffe1a0;
+  outline-offset: 3px;
 }
 
 .card-availability {
@@ -1069,8 +1177,8 @@
 }
 
 @media (max-width: 420px) {
-  .card-image {
-    aspect-ratio: 0.92 / 1;
+  .card-cover {
+    aspect-ratio: 0.86 / 1;
   }
 
   .card-copy h3 {

@@ -176,32 +176,69 @@
         <div class="model-grid">
           @for (model of filteredModels(); track model.slug; let index = $index) {
             <article class="model-card">
-              <a
-                class="card-image"
-                [routerLink]="['/ai-models', model.slug]"
-                [attr.aria-label]="'View the portfolio of ' + model.name"
-              >
-                @if (coverFor(model)) {
-                  <img
-                    [src]="coverFor(model)"
-                    [alt]="model.name + ' — NeverBeen AI model portfolio cover'"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                } @else {
-                  <div class="card-portrait-placeholder" aria-hidden="true">
-                    <span class="placeholder-symbol">✳</span>
-                    <span>Original portrait pending</span>
-                  </div>
-                }
-                <span class="card-image-tint" aria-hidden="true"></span>
-                <span class="card-index"
-                  >NB / <span class="num">{{ indexLabel(index) }}</span></span
+              <div class="card-cover">
+                <a
+                  class="card-image"
+                  [routerLink]="['/ai-models', model.slug]"
+                  [attr.aria-label]="'View the portfolio of ' + model.name"
                 >
-                <span class="card-open" aria-hidden="true">↗</span>
+                  @if (coverFor(model)) {
+                    <img
+                      [src]="coverFor(model)"
+                      [alt]="model.name + ' — NeverBeen AI model portfolio cover'"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  } @else {
+                    <div class="card-portrait-placeholder" aria-hidden="true">
+                      <span class="placeholder-symbol">✳</span>
+                      <span>Original portrait pending</span>
+                    </div>
+                  }
+                  <span class="card-image-tint" aria-hidden="true"></span>
+                  <span class="card-index"
+                    >NB / <span class="num">{{ indexLabel(index) }}</span></span
+                  >
+                  <span class="card-open" aria-hidden="true">↗</span>
+                </a>
+
                 <div class="card-copy">
                   <p class="card-location">{{ model.location || 'Location to be announced' }}</p>
                   <h3>{{ model.name }}</h3>
+
+                  <div
+                    class="card-rating-row"
+                    role="group"
+                    [attr.aria-label]="'Rating and reviews for ' + model.name"
+                  >
+                    <b class="card-rating-value">{{ formattedRating(model) }}</b>
+                    <span
+                      class="card-rating-stars"
+                      role="img"
+                      [attr.aria-label]="ratingAccessibleLabel(model)"
+                    >
+                      @for (star of ratingStars; track star) {
+                        <span
+                          class="card-rating-star"
+                          aria-hidden="true"
+                          [style.--star-fill]="starFillPercent(model, star) + '%'"
+                        >
+                          <span class="card-rating-star-empty">☆</span>
+                          <span class="card-rating-star-filled">★</span>
+                        </span>
+                      }
+                    </span>
+                    <a
+                      class="card-review-link"
+                      [routerLink]="['/ai-models', model.slug]"
+                      [fragment]="'testimonials'"
+                      [attr.aria-label]="reviewLinkLabel(model)"
+                    >
+                      (<span>{{ reviewCountLabel(model) }}</span
+                      >)
+                    </a>
+                  </div>
+
                   <p
                     class="card-availability"
                     [class.is-available]="availabilityState(model) === 'available'"
@@ -239,7 +276,7 @@
                     </div>
                   </div>
                 </div>
-              </a>
+              </div>
 
               <dl
                 class="card-engagement-row"

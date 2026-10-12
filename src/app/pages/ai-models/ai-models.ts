@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
+import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
@@ -9,6 +10,21 @@ type AvailabilityFilter = 'all' | AvailabilityState;
 type ModelEngagementTotals = { likes: number; comments: number; shares: number };
 
 const EMPTY_ENGAGEMENT_TOTALS: ModelEngagementTotals = { likes: 0, comments: 0, shares: 0 };
+const TESTIMONIALS_PAGE_SIZE = 100;
+const REVIEW_SUMMARY_CONCURRENCY = 4;
+
+type ReviewSummaryStatus = 'loading' | 'ready' | 'error';
+type ModelReviewSummary = {
+  averageRating: number;
+  reviewCount: number;
+  status: ReviewSummaryStatus;
+};
+
+const INITIAL_REVIEW_SUMMARY: ModelReviewSummary = {
+  averageRating: 0,
+  reviewCount: 0,
+  status: 'loading',
+};
 
 /**
  * Draws one photograph at random from the model's album to use as her card cover, so the directory
@@ -31,6 +47,13 @@ export function drawCover(model: AiModelProfile): string {
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   private readonly engagement = inject(ModelMediaEngagementService);
+  private readonly testimonialsApi = inject(ModelTestimonialsService);
+
+  /** Per-model averages and review counts from the complete public testimonial feeds. */
+  private readonly reviewSummaries = signal<ReadonlyMap<string, ModelReviewSummary>>(
+    new Map(this.models.map((model) => [model.slug, INITIAL_REVIEW_SUMMARY] as const)),
+  );
+  protected readonly ratingStars = [1, 2, 3, 4, 5];
 
   /** Totals across each model's complete photo and video albums. */
   private readonly engagementByModel = computed(() => {
@@ -113,6 +136,10 @@ export class AiModelsPage {
         ...model.videos.map((video) => ({ kind: 'video' as const, src: video.src })),
       ]);
     }
+
+    // Ratings are public, live testimonial data rather than part of the generated model catalog.
+    // Keep these requests bounded rather than fetching every model's reviews at once.
+    void this.loadReviewSummaries();
   }
 
   protected setAvailabilityFilter(value: AvailabilityFilter): void {
@@ -175,6 +202,131 @@ export class AiModelsPage {
 
   protected formatTotal(value: number): string {
     return value.toLocaleString('en-US');
+  }
+
+  protected reviewSummary(model: AiModelProfile): ModelReviewSummary {
+    return this.reviewSummaries().get(model.slug) ?? INITIAL_REVIEW_SUMMARY;
+  }
+
+  protected formattedRating(model: AiModelProfile): string {
+    return this.reviewSummary(model).averageRating.toFixed(1);
+  }
+
+  /** How much of an individual star to fill, including a partial star for fractional averages. */
+  protected starFillPercent(model: AiModelProfile, star: number): number {
+    const rating = Math.max(0, Math.min(5, this.reviewSummary(model).averageRating));
+    return Math.round(Math.max(0, Math.min(1, rating - star + 1)) * 1000) / 10;
+  }
+
+  protected reviewCountLabel(model: AiModelProfile): string {
+    const summary = this.reviewSummary(model);
+    if (summary.status === 'loading') return 'Loading reviews';
+    if (summary.status === 'error') return 'Reviews unavailable';
+    if (summary.reviewCount === 0) return 'No Reviews';
+    return `${this.formatTotal(summary.reviewCount)} ${summary.reviewCount === 1 ? 'review' : 'reviews'}`;
+  }
+
+  protected ratingAccessibleLabel(model: AiModelProfile): string {
+    const summary = this.reviewSummary(model);
+    if (summary.status === 'loading') return 'Ratings are loading';
+    if (summary.status === 'error') return 'Rating is temporarily unavailable';
+    return `${summary.averageRating.toFixed(1)} out of 5 stars from ${summary.reviewCount} ${summary.reviewCount === 1 ? 'review' : 'reviews'}`;
+  }
+
+  protected reviewLinkLabel(model: AiModelProfile): string {
+    const summary = this.reviewSummary(model);
+    if (summary.status === 'error') return `Open the testimonials for ${model.name}`;
+    if (summary.status === 'loading') return `Ratings for ${model.name} are loading`;
+    if (summary.reviewCount === 0)
+      return `No reviews yet for ${model.name}; open the testimonial section`;
+    return `Read ${summary.reviewCount} ${summary.reviewCount === 1 ? 'review' : 'reviews'} for ${model.name}`;
+  }
+
+  private async loadReviewSummaries(): Promise<void> {
+    const queue = [...this.models];
+    const loadNext = async (): Promise<void> => {
+      while (queue.length > 0) {
+        const model = queue.shift();
+        if (!model) return;
+
+        try {
+          const summary = await this.fetchReviewSummary(model.slug);
+          this.setReviewSummary(model.slug, summary);
+        } catch {
+          this.setReviewSummary(model.slug, {
+            averageRating: 0,
+            reviewCount: 0,
+            status: 'error',
+          });
+        }
+      }
+    };
+
+    await Promise.all(
+      Array.from({ length: Math.min(REVIEW_SUMMARY_CONCURRENCY, queue.length) }, () => loadNext()),
+    );
+  }
+
+  private async fetchReviewSummary(modelSlug: string): Promise<ModelReviewSummary> {
+    const ratings: number[] = [];
+    const seenTestimonials = new Set<number>();
+    let page = 1;
+    let totalPages = 1;
+    let reviewCount = 0;
+
+    while (page <= totalPages) {
+      const result = await this.testimonialsApi.list(modelSlug, page, TESTIMONIALS_PAGE_SIZE);
+      const resultCount = Number.isFinite(result.totalCount)
+        ? Math.max(0, Math.floor(result.totalCount))
+        : result.items.length;
+      reviewCount = Math.max(reviewCount, resultCount);
+
+      const actualPageSize =
+        Number.isFinite(result.pageSize) && result.pageSize > 0
+          ? Math.floor(result.pageSize)
+          : TESTIMONIALS_PAGE_SIZE;
+      totalPages = Math.max(
+        totalPages,
+        Number.isFinite(result.totalPages) ? Math.floor(result.totalPages) : 0,
+        Math.ceil(reviewCount / actualPageSize),
+      );
+
+      for (const testimonial of result.items) {
+        if (seenTestimonials.has(testimonial.id)) continue;
+        seenTestimonials.add(testimonial.id);
+        if (
+          Number.isFinite(testimonial.rating) &&
+          testimonial.rating >= 0 &&
+          testimonial.rating <= 5
+        ) {
+          ratings.push(testimonial.rating);
+        }
+      }
+
+      if (page < totalPages && result.items.length === 0) {
+        throw new Error(`Testimonial page ${page} was empty before the end of the feed.`);
+      }
+      page += 1;
+    }
+
+    const averageRating =
+      ratings.length > 0
+        ? Math.round((ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) * 10) / 10
+        : 0;
+
+    return {
+      averageRating: Math.max(0, Math.min(5, averageRating)),
+      reviewCount: Math.max(reviewCount, seenTestimonials.size),
+      status: 'ready',
+    };
+  }
+
+  private setReviewSummary(modelSlug: string, summary: ModelReviewSummary): void {
+    this.reviewSummaries.update((current) => {
+      const next = new Map(current);
+      next.set(modelSlug, summary);
+      return next;
+    });
   }
 
   /**
