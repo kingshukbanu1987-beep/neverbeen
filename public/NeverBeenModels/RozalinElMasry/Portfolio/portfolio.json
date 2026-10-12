@@ -1,0 +1,34 @@
+{
+  "model": "Rozalin ElMasry",
+  "album": "RozalinElMasry",
+  "slug": "rozalin-elmasry",
+  "document": "RozalinElMasry_Portfolio.pdf",
+  "url": "/NeverBeenModels/RozalinElMasry/Portfolio/RozalinElMasry_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "solar-editorial",
+    "name": "Solar Editorial",
+    "mood": "sunlit gloss, gold on black",
+    "seed": 3819031017
+  },
+  "sizeBytes": 5712023,
+  "generatedAt": "2026-10-12T12:00:13.357Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 87,
+    "used": 87,
+    "folder": "public/NeverBeenModels/RozalinElMasry"
+  },
+  "storySource": "Biography"
+}

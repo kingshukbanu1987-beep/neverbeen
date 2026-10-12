@@ -1,0 +1,34 @@
+{
+  "model": "Alisha Bhattacharya",
+  "album": "AlishaBhattacharya",
+  "slug": "alisha-bhattacharya",
+  "document": "AlishaBhattacharya_Portfolio.pdf",
+  "url": "/NeverBeenModels/AlishaBhattacharya/Portfolio/AlishaBhattacharya_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "neon-mango",
+    "name": "Neon Mango",
+    "mood": "tropical voltage, street-gloss shine",
+    "seed": 1552191247
+  },
+  "sizeBytes": 5368542,
+  "generatedAt": "2026-10-12T12:00:02.193Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 130,
+    "used": 130,
+    "folder": "public/NeverBeenModels/AlishaBhattacharya"
+  },
+  "storySource": "Biography"
+}
