@@ -276,9 +276,9 @@ describe('AiModelsPage', () => {
 
     const actions = card.querySelectorAll<HTMLAnchorElement>('.card-actions a');
     expect(actions.length).toBe(2);
-    expect(actions[0].textContent).toContain('View Portfolio');
+    expect(actions[0].textContent).toContain('View Profile');
     expect(actions[0].getAttribute('href')).toBe(`/ai-models/${profile.slug}`);
-    expect(actions[1].textContent).toContain('Read Biography');
+    expect(actions[1].textContent).toContain('Read Bio');
     expect(actions[1].getAttribute('href')).toBe(`/ai-models/${profile.slug}/biography`);
 
     fixture.destroy();

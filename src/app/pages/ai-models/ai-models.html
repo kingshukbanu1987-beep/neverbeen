@@ -180,7 +180,7 @@
                 <a
                   class="card-image"
                   [routerLink]="['/ai-models', model.slug]"
-                  [attr.aria-label]="'View the portfolio of ' + model.name"
+                  [attr.aria-label]="'View the profile of ' + model.name"
                 >
                   @if (coverFor(model)) {
                     <img
@@ -315,16 +315,16 @@
                 <a
                   class="card-action card-action-portfolio"
                   [routerLink]="['/ai-models', model.slug]"
-                  [attr.aria-label]="'View the portfolio of ' + model.name"
+                  [attr.aria-label]="'View the profile of ' + model.name"
                 >
-                  View Portfolio <i aria-hidden="true">↗</i>
+                  View Profile <i aria-hidden="true">↗</i>
                 </a>
                 <a
                   class="card-action card-action-biography"
                   [routerLink]="['/ai-models', model.slug, 'biography']"
-                  [attr.aria-label]="'Read the biography of ' + model.name"
+                  [attr.aria-label]="'Read the bio of ' + model.name"
                 >
-                  Read Biography <i aria-hidden="true">↗</i>
+                  Read Bio <i aria-hidden="true">↗</i>
                 </a>
               </nav>
             </article>
