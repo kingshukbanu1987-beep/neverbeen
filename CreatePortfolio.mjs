@@ -408,20 +408,23 @@ class ImagePreparer {
         aspect: LOGO_ASPECT,
         headerFile: logoFile,
         headerAspect: LOGO_ASPECT,
+        coverFile: logoFile,
+        coverAspect: LOGO_ASPECT,
       };
     }
 
     const full = join(this.workDir, 'neverbeen-logo-transparent.png');
-    const header = join(this.workDir, 'neverbeen-logo-wordmark.png');
-    // Brighten the navy lettering for the black masthead while preserving the
+    const cover = join(this.workDir, 'neverbeen-logo-wordmark.png');
+    const header = join(this.workDir, 'neverbeen-logo-wordmark-white.png');
+    // Brighten the navy lettering for dark backdrops while preserving the
     // PNG alpha channel and the red paper plane; no opaque background is added.
     this.run(
       logoFile,
       ['-trim', '+repage', '-resize', 'x640', '-channel', 'RGB', '-level', '0%,38%', '+channel'],
       full,
     );
-    // The compact masthead uses the transparent wordmark and mark, without the
-    // vacation tagline, so it remains legible at a genuinely small header height.
+    // The back-cover wordmark and mark, without the vacation tagline, kept in
+    // the brand colours (brightened navy lettering and the red paper plane).
     this.run(
       logoFile,
       [
@@ -436,6 +439,30 @@ class ImagePreparer {
         'RGB',
         '-level',
         '0%,38%',
+        '+channel',
+      ],
+      cover,
+    );
+    // The masthead wordmark matches the AI-models site header: small, pure
+    // white and transparent — the PNG alpha channel is preserved and the whole
+    // mark is whitened, exactly like the header's brightness(0) invert(1)
+    // treatment; no opaque background is added.
+    this.run(
+      logoFile,
+      [
+        '-crop',
+        '1408x380+0+100',
+        '+repage',
+        '-trim',
+        '+repage',
+        '-resize',
+        'x180',
+        '-channel',
+        'RGB',
+        '-fill',
+        'white',
+        '-colorize',
+        '100',
         '+channel',
       ],
       header,
@@ -453,6 +480,8 @@ class ImagePreparer {
       aspect: probe(full),
       headerFile: header,
       headerAspect: probe(header),
+      coverFile: cover,
+      coverAspect: probe(cover),
     };
   }
 }
@@ -708,8 +737,8 @@ function createForModel(model, options) {
   const generatedAt = new Date().toISOString();
   const content = buildContent({ model: modelFacts, story, design, photos, preparer });
   content.meta = {
-    logo: logo.headerFile,
-    logoAspect: logo.headerAspect,
+    logo: logo.coverFile,
+    logoAspect: logo.coverAspect,
     year,
     fileName: pdfName,
     generatedAt,
