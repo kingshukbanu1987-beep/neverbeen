@@ -1,10 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
 type SortMode = 'default' | 'price-asc' | 'price-desc';
 type AvailabilityFilter = 'all' | AvailabilityState;
+type ModelEngagementTotals = { likes: number; comments: number; shares: number };
+
+const EMPTY_ENGAGEMENT_TOTALS: ModelEngagementTotals = { likes: 0, comments: 0, shares: 0 };
 
 /**
  * Draws one photograph at random from the model's album to use as her card cover, so the directory
@@ -26,6 +30,31 @@ export function drawCover(model: AiModelProfile): string {
 })
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
+  private readonly engagement = inject(ModelMediaEngagementService);
+
+  /** Totals across each model's complete photo and video albums. */
+  private readonly engagementByModel = computed(() => {
+    const totals = new Map<string, ModelEngagementTotals>();
+
+    for (const model of this.models) {
+      const modelTotals = { ...EMPTY_ENGAGEMENT_TOTALS };
+      for (const photo of model.photos) {
+        const stats = this.engagement.statsFor(model.slug, 'photo', photo.src);
+        modelTotals.likes += stats.likes;
+        modelTotals.comments += stats.comments;
+        modelTotals.shares += stats.shares;
+      }
+      for (const video of model.videos) {
+        const stats = this.engagement.statsFor(model.slug, 'video', video.src);
+        modelTotals.likes += stats.likes;
+        modelTotals.comments += stats.comments;
+        modelTotals.shares += stats.shares;
+      }
+      totals.set(model.slug, modelTotals);
+    }
+
+    return totals;
+  });
 
   /**
    * The cover every card shows, drawn once per visit — reopening the page re-picks each model's
@@ -75,6 +104,16 @@ export class AiModelsPage {
       return (rateA - rateB) * direction;
     });
   });
+
+  constructor() {
+    // Load engagement for both media types so each directory card can show album-wide totals.
+    for (const model of this.models) {
+      this.engagement.registerModel(model.slug, [
+        ...model.photos.map((photo) => ({ kind: 'photo' as const, src: photo.src })),
+        ...model.videos.map((video) => ({ kind: 'video' as const, src: video.src })),
+      ]);
+    }
+  }
 
   protected setAvailabilityFilter(value: AvailabilityFilter): void {
     this.availabilityFilter.set(value);
@@ -128,6 +167,14 @@ export class AiModelsPage {
 
   protected videoLabel(model: AiModelProfile): string {
     return model.videos.length === 1 ? 'video' : 'videos';
+  }
+
+  protected engagementTotals(model: AiModelProfile): ModelEngagementTotals {
+    return this.engagementByModel().get(model.slug) ?? EMPTY_ENGAGEMENT_TOTALS;
+  }
+
+  protected formatTotal(value: number): string {
+    return value.toLocaleString('en-US');
   }
 
   /**

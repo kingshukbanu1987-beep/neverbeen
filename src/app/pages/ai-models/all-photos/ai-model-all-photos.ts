@@ -64,6 +64,29 @@ export class AiModelAllPhotosPage implements OnDestroy {
 
   protected readonly photoTotal = computed(() => String(this.photos().length).padStart(2, '0'));
 
+  /** Album-wide photo engagement totals; these update as the service receives fresh counters. */
+  protected readonly engagementTotals = computed(() => {
+    const photos = this.photos();
+    const slug = this.model()?.slug;
+    const totals = { likes: 0, comments: 0, shares: 0 };
+
+    if (!slug) return totals;
+
+    for (const photo of photos) {
+      const stats = this.engagement.statsFor(slug, 'photo', photo.src);
+      totals.likes += stats.likes;
+      totals.comments += stats.comments;
+      totals.shares += stats.shares;
+    }
+
+    return totals;
+  });
+
+  /** Keep totals exact while grouping longer values for quick scanning. */
+  protected formatTotal(value: number): string {
+    return value.toLocaleString('en-US');
+  }
+
   /** Photographs that have finished loading (or failed to), so their tiles can fade in. */
   protected readonly settled = signal<ReadonlySet<string>>(new Set());
 

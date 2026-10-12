@@ -60,7 +60,8 @@
       <header class="directory-header">
         <div class="directory-heading">
           <p class="eyebrow">
-            Portfolio index <span aria-hidden="true">/</span> <span class="num">{{ currentYear }}</span>
+            Portfolio index <span aria-hidden="true">/</span>
+            <span class="num">{{ currentYear }}</span>
           </p>
           <h2 id="directory-title">The models</h2>
           <p class="directory-intro">
@@ -174,12 +175,12 @@
       } @else {
         <div class="model-grid">
           @for (model of filteredModels(); track model.slug; let index = $index) {
-            <a
-              class="model-card"
-              [routerLink]="['/ai-models', model.slug]"
-              [attr.aria-label]="'View the portfolio of ' + model.name"
-            >
-              <div class="card-image">
+            <article class="model-card">
+              <a
+                class="card-image"
+                [routerLink]="['/ai-models', model.slug]"
+                [attr.aria-label]="'View the portfolio of ' + model.name"
+              >
                 @if (coverFor(model)) {
                   <img
                     [src]="coverFor(model)"
@@ -236,11 +237,60 @@
                         <i aria-hidden="true">{{ videoLabel(model) }}</i>
                       </span>
                     </div>
-                    <span class="card-action">View portfolio <i aria-hidden="true">↗</i></span>
                   </div>
                 </div>
-              </div>
-            </a>
+              </a>
+
+              <dl
+                class="card-engagement-row"
+                [attr.aria-label]="'Total engagement for ' + model.name"
+              >
+                <div class="card-engagement-stat card-stat-likes">
+                  <dt class="card-engagement-label">Likes</dt>
+                  <dd
+                    class="card-engagement-value"
+                    [attr.title]="formatTotal(engagementTotals(model).likes) + ' total likes'"
+                  >
+                    {{ formatTotal(engagementTotals(model).likes) }}
+                  </dd>
+                </div>
+                <div class="card-engagement-stat card-stat-comments">
+                  <dt class="card-engagement-label">Comments</dt>
+                  <dd
+                    class="card-engagement-value"
+                    [attr.title]="formatTotal(engagementTotals(model).comments) + ' total comments'"
+                  >
+                    {{ formatTotal(engagementTotals(model).comments) }}
+                  </dd>
+                </div>
+                <div class="card-engagement-stat card-stat-shares">
+                  <dt class="card-engagement-label">Shares</dt>
+                  <dd
+                    class="card-engagement-value"
+                    [attr.title]="formatTotal(engagementTotals(model).shares) + ' total shares'"
+                  >
+                    {{ formatTotal(engagementTotals(model).shares) }}
+                  </dd>
+                </div>
+              </dl>
+
+              <nav class="card-actions" [attr.aria-label]="'Portfolio links for ' + model.name">
+                <a
+                  class="card-action card-action-portfolio"
+                  [routerLink]="['/ai-models', model.slug]"
+                  [attr.aria-label]="'View the portfolio of ' + model.name"
+                >
+                  View Portfolio <i aria-hidden="true">↗</i>
+                </a>
+                <a
+                  class="card-action card-action-biography"
+                  [routerLink]="['/ai-models', model.slug, 'biography']"
+                  [attr.aria-label]="'Read the biography of ' + model.name"
+                >
+                  Read Biography <i aria-hidden="true">↗</i>
+                </a>
+              </nav>
+            </article>
           }
         </div>
       }
