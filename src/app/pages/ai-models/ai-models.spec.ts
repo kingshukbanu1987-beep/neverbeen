@@ -1,5 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import {
+  MediaEngagementStats,
+  ModelMediaEngagementService,
+} from '../../services/model-media-engagement.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelsPage, drawCover } from './ai-models';
 
@@ -14,7 +18,22 @@ describe('AiModelsPage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AiModelsPage],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        {
+          provide: ModelMediaEngagementService,
+          useValue: {
+            registerModel: vi.fn(),
+            statsFor: vi.fn((): MediaEngagementStats => ({
+              seen: 0,
+              likes: 0,
+              comments: 0,
+              shares: 0,
+              likedByMe: false,
+            })),
+          },
+        },
+      ],
     }).compileComponents();
   });
 
@@ -111,6 +130,57 @@ describe('AiModelsPage', () => {
       );
       expect(videoBadge?.getAttribute('aria-label')).toContain(String(profile.videos.length));
     }
+  });
+
+  it('totals likes, comments and shares across photos and videos, with portfolio and biography links', () => {
+    const engagement = TestBed.inject(ModelMediaEngagementService);
+    const statsFor = vi.spyOn(engagement, 'statsFor').mockImplementation((_slug, kind) => ({
+      seen: 0,
+      likes: kind === 'photo' ? 2 : 11,
+      comments: kind === 'photo' ? 3 : 13,
+      shares: kind === 'photo' ? 5 : 17,
+      likedByMe: false,
+    }));
+    const registerModel = vi.spyOn(engagement, 'registerModel');
+    const profile = aiModelProfiles.find((model) => model.videos.length > 0)!;
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const card = Array.from(element.querySelectorAll<HTMLElement>('.model-card')).find(
+      (modelCard) => modelCard.querySelector('h3')?.textContent?.trim() === profile.name,
+    )!;
+    const values = Array.from(card.querySelectorAll<HTMLElement>('.card-engagement-value')).map(
+      (value) => value.textContent?.trim(),
+    );
+    const expectedTotals = [
+      profile.photos.length * 2 + profile.videos.length * 11,
+      profile.photos.length * 3 + profile.videos.length * 13,
+      profile.photos.length * 5 + profile.videos.length * 17,
+    ];
+
+    expect(card.querySelectorAll('.card-engagement-stat').length).toBe(3);
+    expect(
+      Array.from(card.querySelectorAll('.card-engagement-label')).map((label) =>
+        label.textContent?.trim(),
+      ),
+    ).toEqual(['Likes', 'Comments', 'Shares']);
+    expect(values).toEqual(expectedTotals.map((value) => value.toLocaleString('en-US')));
+    expect(registerModel).toHaveBeenCalledWith(profile.slug, [
+      ...profile.photos.map((photo) => ({ kind: 'photo', src: photo.src })),
+      ...profile.videos.map((video) => ({ kind: 'video', src: video.src })),
+    ]);
+    expect(statsFor).toHaveBeenCalledWith(profile.slug, 'photo', profile.photos[0].src);
+    expect(statsFor).toHaveBeenCalledWith(profile.slug, 'video', profile.videos[0].src);
+
+    const actions = card.querySelectorAll<HTMLAnchorElement>('.card-actions a');
+    expect(actions.length).toBe(2);
+    expect(actions[0].textContent).toContain('View Portfolio');
+    expect(actions[0].getAttribute('href')).toBe(`/ai-models/${profile.slug}`);
+    expect(actions[1].textContent).toContain('Read Biography');
+    expect(actions[1].getAttribute('href')).toBe(`/ai-models/${profile.slug}/biography`);
+
+    fixture.destroy();
   });
 
   it('shows a standard availability status and starting price on each model card', () => {
