@@ -77,6 +77,7 @@ ng test
 | `/ai-models`                  | AI Models       | Dark studio directory and model portfolios at `/ai-models/:slug` (12 random photographs each)        |
 | `/ai-models/:slug/biography`  | Model biography | White encyclopedia-style fictional biography with story-placed images and degree-only education     |
 | `/ai-models/:slug/photos`     | AI Model album  | A model's complete album as a mosaic of differently sized, zoomable photographs                      |
+| `/ai-models/:slug/portfolio`  | Model portfolio document | The generated 24-page portfolio PDF (Watch / Download); a plain white notice page when none exists |
 | `/login`                  | Login          | Sign-in form                                                                                         |
 
 ## NeverBeen AI Models
@@ -186,6 +187,48 @@ The Worker also retains `POST /api/model-booking` for server-side integrations. 
 the WhatsApp Cloud API when configured, and the local development stand-in
 (`scripts/dev-booking-api.mjs`) writes to the gitignored `booking-outbox.log` when those credentials
 are absent. These endpoints are separate from the portfolio form's direct WhatsApp handoff.
+
+### The model portfolio document (Watch & Download)
+
+Every model album carries a `Portfolio/` folder — the home of that model's portfolio document and
+everything belonging to it. `CreatePortfolio.mjs` writes a **24-page, A4-portrait, black-finish
+fashion portfolio PDF** plus its `portfolio.json` receipt into that folder:
+
+```bash
+node CreatePortfolio.mjs --model "Model Name"     # or: npm run portfolio -- --model "Model Name"
+node CreatePortfolio.mjs --model "Model Name" --style obsidian-muse --dry-run
+node CreatePortfolio.mjs --all                    # every album that has photographs
+```
+
+The document is composed from the model's own album photographs (used creatively — full-bleed
+frames, diptychs, triptychs, contact-sheet polaroids, duotone plates, a blurred-echo backdrop
+behind every contained frame), her personal details (age, height, weight, bust, waist, hip, body
+shape, location) in an illustrative ultra-modern treatment, and the personal, educational and
+career chapters of her fictional Multiverse biography. The masthead carries the NeverBeen website
+logo and every page footer repeats the brochure's copyright line and page number. Text lives in
+reserved boxes and framed photographs are never cropped, so nothing overlaps and no face is cut
+out of its frame; background photographs sit at 70% opacity over the black finish.
+
+Each model draws her own style from a seed of her name — one of eight style systems
+(`obsidian-muse`, `solar-editorial`, `aurora-chrome`, `cobalt-velvet`, `ember-rose`,
+`jade-obsidian`, `ultra-violet`, `neon-mango`) with its own palette, type treatment, motifs,
+headlines and page variants — so no two portfolios read alike. `--style` pins one explicitly.
+Image preparation uses ImageMagick when it is on `PATH` (`magick` / `convert`) to keep the PDF
+compact; without it the album files are embedded directly. An existing portfolio is protected —
+pass `--force` to replace it.
+
+On the model's portfolio page the retired portfolio button is replaced by two actions:
+
+- **Watch Portfolio** opens `/ai-models/:slug/portfolio`, a dark studio viewer that embeds the PDF
+  and offers *Open in new tab* and *Download*.
+- **Download Portfolio** saves the PDF (`portfolio.downloadName` from the manifest).
+
+A model whose `Portfolio/` folder holds no document yet sends both actions to the same route, which
+then renders a deliberately plain **white page**: *Portfolio not Available — no portfolio is
+available for this model yet, please check again later or connect with the NeverBeen support team
+to get the Model Portfolio*, with a WhatsApp link to the studio and a way back to the model's page.
+The manifest (`npm run generate:ai-models`) publishes the document as `portfolio` on each model, and
+the album watcher refreshes it the moment a PDF lands in a `Portfolio/` folder.
 
 ### Advertising the models in the Community
 

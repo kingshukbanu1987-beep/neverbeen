@@ -9,6 +9,7 @@ import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelBiographyPage } from './biography/ai-model-biography';
 import { AiModelAllPhotosPage } from './all-photos/ai-model-all-photos';
 import { AiModelPortfolioPage, PREVIEW_LIMIT, shufflePhotos } from './ai-model-portfolio';
+import { AiModelPortfolioDocumentPage } from './portfolio-document/ai-model-portfolio-document';
 import { AiModelVideoPlayer, formatTime } from './video/ai-model-video-player';
 
 const testRoutes = [
@@ -694,6 +695,153 @@ describe('AiModelPortfolioPage', () => {
  * The shuffle is per visit, so these tests render the page component directly — two instances are
  * two visits, where RouterTestingHarness would only allow one visit per test.
  */
+describe('AiModelPortfolioPage portfolio document actions', () => {
+  let session: {
+    authenticated: ReturnType<typeof signal<boolean>>;
+    guest: ReturnType<typeof signal<boolean>>;
+    user: ReturnType<typeof signal<any>>;
+  };
+
+  beforeEach(async () => {
+    session = {
+      authenticated: signal(false),
+      guest: signal(false),
+      user: signal<any>(null),
+    };
+    const communityMock = {
+      isAuthenticated: () => session.authenticated(),
+      guestBrowsing: () => session.guest(),
+      currentUser: () => session.user(),
+      token: () => null,
+      apiLive: false,
+      apiUrl: 'https://neverbeen-api.test',
+      checkApiOnline: vi.fn().mockResolvedValue(false),
+      startOAuthRedirect: vi.fn().mockReturnValue(false),
+      signInWithGoogle: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      completeGoogleSignIn: vi.fn(),
+      awaitGoogleIdentity: vi.fn(),
+      cancelGoogleIdentity: vi.fn(),
+    };
+    await TestBed.configureTestingModule({
+      imports: [AiModelPortfolioPage, AiModelPortfolioDocumentPage],
+      providers: [
+        provideRouter([
+          ...testRoutes,
+          {
+            path: 'ai-models/:slug/portfolio',
+            component: AiModelPortfolioDocumentPage,
+          },
+        ]),
+        { provide: CommunityService, useValue: communityMock },
+        {
+          provide: ModelTestimonialsService,
+          useValue: {
+            list: vi.fn().mockResolvedValue({
+              items: [],
+              totalCount: 0,
+              page: 1,
+              pageSize: 50,
+              totalPages: 0,
+            }),
+            create: vi.fn(),
+          },
+        },
+      ],
+    }).compileComponents();
+  });
+
+  it('offers Watch Portfolio and Download Portfolio where the old portfolio button was', async () => {
+    const profile = withPhotos(2);
+    try {
+      const harness = await openPortfolio(profile.slug);
+      const element = harness.routeNativeElement!;
+      const labels = Array.from(element.querySelectorAll('.profile-actions .action-button')).map(
+        (button) => (button.textContent ?? '').trim(),
+      );
+      const joined = labels.join(' | ');
+      expect(joined).toContain('Watch Portfolio');
+      expect(joined).toContain('Download Portfolio');
+      // The retired portfolio button is gone.
+      expect(labels.join(' ')).not.toMatch(/AI Portfolio|All portfolios/i);
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('opens the portfolio document page from Watch Portfolio', async () => {
+    const profile = withPhotos(2);
+    try {
+      const harness = await openPortfolio(profile.slug);
+      const watch =
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.action-watch-portfolio')!;
+      watch.click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      // The model has no generated document, so the white notice page is shown.
+      expect(harness.routeNativeElement!.querySelector('.portfolio-missing-page')).toBeTruthy();
+      expect(harness.routeNativeElement!.textContent).toContain('Portfolio not Available');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('downloads the PDF when the model has a portfolio document', async () => {
+    const profile = withPhotos(2);
+    profile.portfolio = {
+      url: '/NeverBeenModels/TestStudioModel/Portfolio/TestStudioModel_Portfolio.pdf',
+      fileName: 'TestStudioModel_Portfolio.pdf',
+      downloadName: 'NeverBeen-Portfolio-Test-Studio-Model.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'solar-editorial',
+      styleName: 'Solar Editorial',
+      generatedAt: '2026-02-02T10:00:00.000Z',
+      sizeBytes: 1234567,
+    };
+    const clicks: string[] = [];
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clicks.push(`${this.getAttribute('download')}@${this.getAttribute('href')}`);
+    });
+    try {
+      const harness = await openPortfolio(profile.slug);
+      const download = harness.routeNativeElement!.querySelector<HTMLButtonElement>(
+        '.action-download-portfolio',
+      )!;
+      expect(download.classList.contains('is-missing')).toBe(false);
+      download.click();
+      expect(clicks).toHaveLength(1);
+      expect(clicks[0]).toContain('NeverBeen-Portfolio-Test-Studio-Model.pdf');
+      expect(clicks[0]).toContain('/NeverBeenModels/TestStudioModel/Portfolio/');
+    } finally {
+      clickSpy.mockRestore();
+      release(profile);
+    }
+  });
+
+  it('sends a model without a document to the white notice page from Download Portfolio', async () => {
+    const profile = withPhotos(2);
+    try {
+      const harness = await openPortfolio(profile.slug);
+      const download = harness.routeNativeElement!.querySelector<HTMLButtonElement>(
+        '.action-download-portfolio',
+      )!;
+      expect(download.classList.contains('is-missing')).toBe(true);
+      download.click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+      expect(harness.routeNativeElement!.querySelector('.portfolio-missing-page')).toBeTruthy();
+      expect(harness.routeNativeElement!.textContent).toContain(
+        'connect with the NeverBeen support team',
+      );
+    } finally {
+      release(profile);
+    }
+  });
+});
+
 describe('AiModelPortfolioPage photo shuffle', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({

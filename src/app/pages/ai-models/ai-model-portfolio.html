@@ -88,9 +88,29 @@
                 <button type="button" class="action-button" (click)="shareProfile(profile)">
                   <span aria-hidden="true">↗</span> {{ shareLabel() }}
                 </button>
-                <a routerLink="/ai-models" class="action-button">
-                  <span aria-hidden="true">▦</span> All portfolios
-                </a>
+                <div class="portfolio-document-actions" role="group" aria-label="Model portfolio document">
+                  <button
+                    type="button"
+                    class="action-button action-watch-portfolio"
+                    [attr.aria-label]="'Watch the portfolio document of ' + profile.name"
+                    (click)="watchPortfolio(profile)"
+                  >
+                    <span aria-hidden="true">▶</span> Watch Portfolio
+                  </button>
+                  <button
+                    type="button"
+                    class="action-button action-download-portfolio"
+                    [class.is-missing]="!portfolioDocument()"
+                    [attr.aria-label]="
+                      portfolioDocument()
+                        ? 'Download the portfolio document of ' + profile.name
+                        : 'No portfolio document available for ' + profile.name
+                    "
+                    (click)="downloadPortfolio(profile)"
+                  >
+                    <span aria-hidden="true">⤓</span> Download Portfolio
+                  </button>
+                </div>
               </div>
 
               @if (ratePerPhoto() > 0) {

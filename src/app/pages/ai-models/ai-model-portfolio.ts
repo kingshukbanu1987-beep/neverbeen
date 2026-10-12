@@ -10,11 +10,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { CommunityService } from '../../services/community.service';
-import { MediaKind, ModelMediaEngagementService } from '../../services/model-media-engagement.service';
+import {
+  MediaKind,
+  ModelMediaEngagementService,
+} from '../../services/model-media-engagement.service';
 import {
   CreateModelTestimonial,
   ModelTestimonial,
@@ -85,6 +88,8 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected readonly model = computed(
     () => aiModelProfiles.find((profile) => profile.slug === this.slug()) ?? null,
   );
+
+  private readonly router = inject(Router);
 
   protected readonly community = inject(CommunityService);
   private readonly testimonialsApi = inject(ModelTestimonialsService);
@@ -708,5 +713,38 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.shareState.set(state);
     if (this.shareTimer) clearTimeout(this.shareTimer);
     this.shareTimer = setTimeout(() => this.shareState.set('idle'), 2600);
+  }
+
+  // ------------------------------------------------------------ portfolio document
+
+  /**
+   * The generated portfolio document (`<album>/Portfolio/*.pdf`) published by
+   * CreatePortfolio.mjs, or null while the model has none.
+   */
+  protected readonly portfolioDocument = computed(() => this.model()?.portfolio ?? null);
+
+  /** "Watch Portfolio" opens the model's portfolio document page. */
+  protected watchPortfolio(profile: AiModelProfile): void {
+    void this.router.navigate(['/ai-models', profile.slug, 'portfolio']);
+  }
+
+  /**
+   * "Download Portfolio" saves the PDF. A model without a document is sent to the same
+   * portfolio document page, which explains — on a plain white page — that no portfolio
+   * is available yet and points at the NeverBeen support team.
+   */
+  protected downloadPortfolio(profile: AiModelProfile): void {
+    const file = this.portfolioDocument();
+    if (!file) {
+      this.watchPortfolio(profile);
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.downloadName || file.fileName;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 }

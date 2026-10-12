@@ -406,6 +406,56 @@
   background: linear-gradient(120deg, #ca1a24, #f680b3);
 }
 
+/* Watch / Download the generated portfolio document (CreatePortfolio.mjs). */
+.portfolio-document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.action-watch-portfolio {
+  border-color: rgb(240 112 168 / 45%);
+  background: rgb(255 255 255 / 7%);
+  color: #ffd7e8;
+}
+
+.action-watch-portfolio span {
+  color: #f47ab0;
+  font-size: 0.82rem;
+}
+
+.action-watch-portfolio:hover,
+.action-watch-portfolio:focus-visible {
+  border-color: rgb(240 112 168 / 80%);
+  background: rgb(244 122 176 / 16%);
+  color: #fff;
+}
+
+.action-download-portfolio {
+  color: #ffe9c9;
+}
+
+.action-download-portfolio span {
+  color: #f0b453;
+  font-size: 0.92rem;
+}
+
+.action-download-portfolio:hover,
+.action-download-portfolio:focus-visible {
+  border-color: rgb(240 180 83 / 70%);
+  background: rgb(240 180 83 / 14%);
+  color: #fff;
+}
+
+.action-download-portfolio.is-missing {
+  color: #a897a6;
+}
+
+.action-download-portfolio.is-missing span {
+  color: #8d7d8c;
+}
+
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));

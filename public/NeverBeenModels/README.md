@@ -20,6 +20,10 @@ public/NeverBeenModels/
       biography.json        ← created by BiographyScript.mjs
       photo-prompts.json    ← ten individual AI-image prompts
       01-childhood-home.jpg ← generated memory images (kept out of the portfolio grid)
+    Portfolio/              ← this model's portfolio document and its receipts
+      .gitkeep
+      <Album>_Portfolio.pdf ← created by CreatePortfolio.mjs (kept out of the photo grid)
+      portfolio.json        ← generation receipt: style, pages, size, timestamp
 ```
 
 ## Adding photographs
@@ -80,6 +84,24 @@ nothing has to be run by hand — drop the file into `video/` and it appears.
 Images placed directly in `public/NeverBeenModels` (outside the folders) are still picked up, and
 `public/ai-model-assets/portraits` + `public/ai-model-assets/gallery` remain supported as legacy
 locations.
+
+## The portfolio document
+
+Every album folder carries its own `Portfolio/` directory — create it inside the model's folder if
+it is missing (new albums get one from the studio tooling). The generated portfolio PDF and its
+`portfolio.json` receipt live there and nowhere else; images dropped into `Portfolio/` never enter
+the portfolio photo grid.
+
+```bash
+node CreatePortfolio.mjs --model "Model Name"      # or: npm run portfolio -- --model "Model Name"
+```
+
+The run writes `<Album>_Portfolio.pdf` (24 pages, A4 portrait, black finish) and refreshes the
+manifest, after which the model's page offers **Watch Portfolio** (the embedded viewer at
+`/ai-models/<slug>/portfolio`) and **Download Portfolio**. While the folder holds no PDF, both
+actions open a plain white page that says the portfolio is not available yet and points at the
+NeverBeen support team. Drop a PDF into the folder by hand and the watcher publishes it too — the
+`portfolio.json` receipt is optional but supplies the page count, style name and timestamp.
 
 ## Fictional model biographies
 

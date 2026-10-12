@@ -70,6 +70,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'ai-models/:slug/portfolio',
+    loadComponent: () =>
+      import('./pages/ai-models/portfolio-document/ai-model-portfolio-document').then(
+        (m) => m.AiModelPortfolioDocumentPage,
+      ),
+  },
+  {
     path: 'ai-models/:slug',
     loadComponent: () =>
       import('./pages/ai-models/ai-model-portfolio').then((m) => m.AiModelPortfolioPage),
