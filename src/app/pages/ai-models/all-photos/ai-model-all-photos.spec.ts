@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { ModelMediaEngagementService } from '../../../services/model-media-engagement.service';
 import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { AiModelAllPhotosPage } from './ai-model-all-photos';
 
@@ -104,6 +105,48 @@ describe('AiModelAllPhotosPage', () => {
       // Photographs near the top load at once, the rest lazily.
       expect(tiles[0].querySelector('img')?.getAttribute('loading')).toBe('eager');
       expect(tiles[19].querySelector('img')?.getAttribute('loading')).toBe('lazy');
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('shows the album photo count and summed engagement totals in one four-stat row', async () => {
+    const profile = withPhotos(5);
+    const harness = await openAlbum(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+    const engagement = TestBed.inject(ModelMediaEngagementService);
+
+    try {
+      await engagement.loadStats(profile.slug);
+      harness.detectChanges();
+
+      const albumStats = element.querySelector('.album-count')!;
+      const labels = Array.from(albumStats.querySelectorAll<HTMLElement>('.album-count-label')).map(
+        (label) => label.textContent?.trim(),
+      );
+      expect(labels).toEqual(['Photographs', 'Likes', 'Comments', 'Shares']);
+      expect(albumStats.querySelectorAll('.album-stat').length).toBe(4);
+
+      const expectedTotals = profile.photos.reduce(
+        (totals, photo) => {
+          const stats = engagement.statsFor(profile.slug, 'photo', photo.src);
+          totals.likes += stats.likes;
+          totals.comments += stats.comments;
+          totals.shares += stats.shares;
+          return totals;
+        },
+        { likes: 0, comments: 0, shares: 0 },
+      );
+      const values = Array.from(
+        albumStats.querySelectorAll<HTMLElement>('.album-count-number'),
+      ).map((value) => value.textContent?.trim());
+
+      expect(values).toEqual([
+        String(profile.photos.length).padStart(2, '0'),
+        expectedTotals.likes.toLocaleString('en-US'),
+        expectedTotals.comments.toLocaleString('en-US'),
+        expectedTotals.shares.toLocaleString('en-US'),
+      ]);
     } finally {
       release(profile);
     }

@@ -26,12 +26,38 @@
           </p>
         </div>
 
-        <p class="album-count">
-          <span class="album-count-number num">{{ photoTotal() }}</span>
-          <span class="album-count-label">{{
-            photos().length === 1 ? 'Photograph' : 'Photographs'
-          }}</span>
-        </p>
+        <dl class="album-count" aria-label="Album totals">
+          <div class="album-stat">
+            <dt class="album-count-label">
+              {{ photos().length === 1 ? 'Photograph' : 'Photographs' }}
+            </dt>
+            <dd class="album-count-number num">{{ photoTotal() }}</dd>
+          </div>
+          <div class="album-stat">
+            <dt class="album-count-label">Likes</dt>
+            <dd class="album-count-number num" [attr.title]="formatTotal(engagementTotals().likes)">
+              {{ formatTotal(engagementTotals().likes) }}
+            </dd>
+          </div>
+          <div class="album-stat">
+            <dt class="album-count-label">Comments</dt>
+            <dd
+              class="album-count-number num"
+              [attr.title]="formatTotal(engagementTotals().comments)"
+            >
+              {{ formatTotal(engagementTotals().comments) }}
+            </dd>
+          </div>
+          <div class="album-stat">
+            <dt class="album-count-label">Shares</dt>
+            <dd
+              class="album-count-number num"
+              [attr.title]="formatTotal(engagementTotals().shares)"
+            >
+              {{ formatTotal(engagementTotals().shares) }}
+            </dd>
+          </div>
+        </dl>
       </header>
 
       @if (tiles().length > 0) {
