@@ -1,0 +1,34 @@
+{
+  "model": "Priyanka Chatterjee",
+  "album": "PriyankaChatterjee",
+  "slug": "priyanka-chatterjee",
+  "document": "PriyankaChatterjee_Portfolio.pdf",
+  "url": "/NeverBeenModels/PriyankaChatterjee/Portfolio/PriyankaChatterjee_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "solar-editorial",
+    "name": "Solar Editorial",
+    "mood": "sunlit gloss, gold on black",
+    "seed": 3115666881
+  },
+  "sizeBytes": 5520050,
+  "generatedAt": "2026-10-12T12:17:30.783Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 106,
+    "used": 106,
+    "folder": "public/NeverBeenModels/PriyankaChatterjee"
+  },
+  "storySource": "Biography"
+}

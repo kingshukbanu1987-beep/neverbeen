@@ -5348,7 +5348,17 @@ export const aiModelProfiles: AiModelProfile[] = [
       fictionalNotice:
         'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
     },
-    portfolio: null,
+    portfolio: {
+      url: '/NeverBeenModels/PriyankaChatterjee/Portfolio/PriyankaChatterjee_Portfolio.pdf',
+      fileName: 'PriyankaChatterjee_Portfolio.pdf',
+      downloadName: 'PriyankaChatterjee_Portfolio.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'solar-editorial',
+      styleName: 'Solar Editorial',
+      generatedAt: '2026-10-12T12:17:30.783Z',
+      sizeBytes: 5520050,
+    },
     gallery: [
       '/NeverBeenModels/PriyankaChatterjee/_8OsweaLzVRbWg13pF0TNCyBbYIoMDxWzaVnkohpVL4.jpg',
       '/NeverBeenModels/PriyankaChatterjee/_RHv9DAO6TOAAEqB4A6nnp71Qk35nX4A8Vg7VpmzCaw.jpg',
@@ -6584,7 +6594,17 @@ export const aiModelProfiles: AiModelProfile[] = [
       fictionalNotice:
         'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
     },
-    portfolio: null,
+    portfolio: {
+      url: '/NeverBeenModels/TasneemAlRifai/Portfolio/TasneemAlRifai_Portfolio.pdf',
+      fileName: 'TasneemAlRifai_Portfolio.pdf',
+      downloadName: 'TasneemAlRifai_Portfolio.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'obsidian-muse',
+      styleName: 'Obsidian Muse',
+      generatedAt: '2026-10-12T12:17:44.061Z',
+      sizeBytes: 5293672,
+    },
     gallery: [
       '/NeverBeenModels/TasneemAlRifai/_-Of5Oa382V8BQ-GfWSA0vtwz8HuvdV7LUBAyOLxJ3w.jpg',
       '/NeverBeenModels/TasneemAlRifai/_Cvc9ZiQ3MO2aEBaTRGdpnNEN0CY-hFq1XGKi5eotGU.png',
