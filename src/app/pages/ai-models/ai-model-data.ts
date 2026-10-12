@@ -3930,7 +3930,17 @@ export const aiModelProfiles: AiModelProfile[] = [
       fictionalNotice:
         'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
     },
-    portfolio: null,
+    portfolio: {
+      url: '/NeverBeenModels/ReemaGanguly/Portfolio/ReemaGanguly_Portfolio.pdf',
+      fileName: 'ReemaGanguly_Portfolio.pdf',
+      downloadName: 'ReemaGanguly_Portfolio.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'neon-mango',
+      styleName: 'Neon Mango',
+      generatedAt: '2026-10-12T12:14:28.835Z',
+      sizeBytes: 5611913,
+    },
     gallery: [
       '/NeverBeenModels/ReemaGanguly/_-6AlBavInyojfDZFn3W4kRRVlCQ8jEQ0ngxPNeQoro.png',
       '/NeverBeenModels/ReemaGanguly/_51yWJMLE0XMyf7am2jd6SJifo6glQq0sXEsa4h6Cd4.jpg',
@@ -4471,7 +4481,17 @@ export const aiModelProfiles: AiModelProfile[] = [
     bio: '“Ahlan, I am Nour El-Sherif, 27 years old, and I am based in Cairo, Egypt. I am an AI model and I do not exist in reality outside NeverBeen. My sharp, modern presence carries a cool sensuality and a confident gaze that makes every outfit a bold statement. I am available for fashion editorials, branding campaigns, runway lookbooks and exclusive contracts. Make the moment count. Let us make it count.”',
     illustrative: true,
     biography: null,
-    portfolio: null,
+    portfolio: {
+      url: '/NeverBeenModels/NourElSherif/Portfolio/NourElSherif_Portfolio.pdf',
+      fileName: 'NourElSherif_Portfolio.pdf',
+      downloadName: 'NourElSherif_Portfolio.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'ember-rose',
+      styleName: 'Ember & Rose',
+      generatedAt: '2026-10-12T12:14:45.146Z',
+      sizeBytes: 5785328,
+    },
     gallery: [
       '/NeverBeenModels/NourElSherif/_t0LxCqnW3HdbA9SENWl2GlPv9dMk0K_n-JSRnUO7XU.png',
       '/NeverBeenModels/NourElSherif/-tYaPfLnZjiWjJheVZ2Xfq5Rmtx3hNO92RCu342hW_A.jpg',

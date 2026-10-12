@@ -1,0 +1,34 @@
+{
+  "model": "Reema Ganguly",
+  "album": "ReemaGanguly",
+  "slug": "reema-ganguly",
+  "document": "ReemaGanguly_Portfolio.pdf",
+  "url": "/NeverBeenModels/ReemaGanguly/Portfolio/ReemaGanguly_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "neon-mango",
+    "name": "Neon Mango",
+    "mood": "tropical voltage, street-gloss shine",
+    "seed": 2747629999
+  },
+  "sizeBytes": 5611913,
+  "generatedAt": "2026-10-12T12:14:28.835Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 103,
+    "used": 103,
+    "folder": "public/NeverBeenModels/ReemaGanguly"
+  },
+  "storySource": "Biography"
+}

@@ -1,0 +1,34 @@
+{
+  "model": "Nour El-Sherif",
+  "album": "NourElSherif",
+  "slug": "nour-el-sherif",
+  "document": "NourElSherif_Portfolio.pdf",
+  "url": "/NeverBeenModels/NourElSherif/Portfolio/NourElSherif_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "ember-rose",
+    "name": "Ember & Rose",
+    "mood": "burnt orange romance on black",
+    "seed": 172851780
+  },
+  "sizeBytes": 5785328,
+  "generatedAt": "2026-10-12T12:14:45.146Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 109,
+    "used": 109,
+    "folder": "public/NeverBeenModels/NourElSherif"
+  },
+  "storySource": null
+}
