@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { ModelMediaEngagementService } from '../../../services/model-media-engagement.service';
 import { AiModelPhoto } from '../ai-model-data';
 import { AiModelPhotoViewer } from './ai-model-photo-viewer';
 
@@ -17,6 +18,7 @@ const photos: AiModelPhoto[] = Array.from({ length: 5 }, (_, index) => ({
       [startIndex]="0"
       modelName="Test Studio Model"
       modelHandle="@test.studio.model"
+      modelSlug="test-studio-model"
       [albumLink]="albumLink()"
       [albumSize]="20"
       (closed)="closed = closed + 1"
@@ -39,11 +41,28 @@ const CY = STAGE.top + STAGE.height / 2;
 describe('AiModelPhotoViewer', () => {
   let fixture: ComponentFixture<ViewerHost>;
   let element: HTMLElement;
+  let mediaApi: {
+    statsFor: ReturnType<typeof vi.fn>;
+    recordView: ReturnType<typeof vi.fn>;
+    fetchComments: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
+    mediaApi = {
+      statsFor: vi.fn(() => ({ seen: 0, likes: 0, comments: 0, shares: 0, likedByMe: false })),
+      recordView: vi.fn().mockResolvedValue(undefined),
+      fetchComments: vi.fn().mockResolvedValue({
+        items: [],
+        totalCount: 0,
+        page: 1,
+        pageSize: 50,
+        totalPages: 0,
+      }),
+    };
+
     await TestBed.configureTestingModule({
       imports: [ViewerHost],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: ModelMediaEngagementService, useValue: mediaApi }],
     }).compileComponents();
     fixture = TestBed.createComponent(ViewerHost);
     element = fixture.nativeElement as HTMLElement;
@@ -141,6 +160,21 @@ describe('AiModelPhotoViewer', () => {
     pointer('pointerup', target, 1, x, y, pointerType);
     await settle();
   }
+
+  it('opens the public comments thread directly below the photograph', async () => {
+    const comments = element.querySelector<HTMLElement>('.viewer-comments');
+
+    expect(comments).not.toBeNull();
+    expect(comments?.previousElementSibling?.classList.contains('lightbox-stage')).toBe(true);
+    expect(comments?.nextElementSibling?.classList.contains('lightbox-foot')).toBe(true);
+    expect(mediaApi.fetchComments).toHaveBeenCalledWith(
+      'test-studio-model',
+      'photo',
+      photos[0].src,
+      1,
+      50,
+    );
+  });
 
   it('zooms with the mouse wheel around the cursor and never changes photograph', async () => {
     expect(counter()).toBe('01 / 05');

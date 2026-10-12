@@ -77,23 +77,25 @@
       <p class="signin-error" role="alert">{{ errorMessage() }}</p>
     }
 
-    <div class="signin-divider" aria-hidden="true"><span>or</span></div>
+    @if (!googleOnly()) {
+      <div class="signin-divider" aria-hidden="true"><span>or</span></div>
 
-    <a
-      class="signin-join"
-      routerLink="/community/register"
-      (click)="rememberReturnPath(); dismiss()"
-    >
-      Create your Community account
-      <span aria-hidden="true">↗</span>
-    </a>
+      <a
+        class="signin-join"
+        routerLink="/community/register"
+        (click)="rememberReturnPath(); dismiss()"
+      >
+        Create your Community account
+        <span aria-hidden="true">↗</span>
+      </a>
 
-    <button type="button" class="signin-later" (click)="dismiss()">
-      Continue browsing as a visitor
-    </button>
+      <button type="button" class="signin-later" (click)="dismiss()">
+        Continue browsing as a visitor
+      </button>
 
-    <p class="signin-foot">
-      Guests can explore every portfolio — likes and comments belong to members.
-    </p>
+      <p class="signin-foot">
+        Guests can explore every portfolio — likes and comments belong to members.
+      </p>
+    }
   </div>
 </div>

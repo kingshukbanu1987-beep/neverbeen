@@ -50,6 +50,8 @@ export class CommunitySignInModal {
   readonly title = input('Your moment in the Community starts here.');
   /** Where to return after signing in — defaults to the page the pop-up opened on. */
   readonly returnTo = input<string>(typeof location === 'undefined' ? '/' : location.pathname);
+  /** Restrict flows such as media comments to the Google sign-in action only. */
+  readonly googleOnly = input(false);
 
   readonly dismissed = output<void>();
 
