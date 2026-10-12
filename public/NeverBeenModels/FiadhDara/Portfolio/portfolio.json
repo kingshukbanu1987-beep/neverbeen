@@ -1,0 +1,36 @@
+{
+  "model": "Fiadh Dara",
+  "album": "FiadhDara",
+  "slug": "fiadh-dara",
+  "fictional": true,
+  "document": "FiadhDara_Portfolio.pdf",
+  "url": "/NeverBeenModels/FiadhDara/Portfolio/FiadhDara_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "neon-mango",
+    "name": "Neon Mango",
+    "mood": "tropical voltage, street-gloss shine",
+    "seed": 360452951
+  },
+  "sizeBytes": 5566888,
+  "generatedAt": "2026-10-12T06:27:30.625Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 85,
+    "used": 85,
+    "folder": "public/NeverBeenModels/FiadhDara"
+  },
+  "storySource": "Biography/biography.json",
+  "fictionalNotice": "Story pages quote the model’s fictional NeverBeen Multiverse biography; photographs are studio album frames."
+}

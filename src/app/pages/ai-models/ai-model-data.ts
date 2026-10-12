@@ -489,7 +489,17 @@ export const aiModelProfiles: AiModelProfile[] = [
       fictionalNotice:
         'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
     },
-    portfolio: null,
+    portfolio: {
+      url: '/NeverBeenModels/FiadhDara/Portfolio/FiadhDara_Portfolio.pdf',
+      fileName: 'FiadhDara_Portfolio.pdf',
+      downloadName: 'FiadhDara_Portfolio.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'neon-mango',
+      styleName: 'Neon Mango',
+      generatedAt: '2026-10-12T06:27:30.625Z',
+      sizeBytes: 5566888,
+    },
     gallery: [
       '/NeverBeenModels/FiadhDara/_sTof-XqCgAFE9b2cdJ6EDijJx_eHyWEK70Sw6fImIo.png',
       '/NeverBeenModels/FiadhDara/-pWIKJFpdgSsJ6DbRpRxJGEkOmJKaYbkfw_8YFF3cwo.png',
