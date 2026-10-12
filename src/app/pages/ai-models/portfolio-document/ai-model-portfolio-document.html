@@ -1,0 +1,91 @@
+@if (model(); as profile) {
+  @if (document(); as portfolio) {
+    <!-- The document exists: a dark studio viewer around the embedded PDF. -->
+    <main class="portfolio-document-page">
+      <header class="document-bar">
+        <div class="container document-bar-inner">
+          <a [routerLink]="['/ai-models', profile.slug]" class="back-link">
+            <span aria-hidden="true">←</span> {{ profile.name }}
+          </a>
+          <div class="document-title">
+            <p class="eyebrow">NeverBeen portfolio document</p>
+            <h1>{{ profile.name }}</h1>
+            <p class="document-meta">
+              @if (portfolio.pages > 0) {
+                <span>{{ portfolio.pages }} pages</span>
+              }
+              <span>{{ portfolio.orientation === 'portrait' ? 'Portrait' : portfolio.orientation }}</span>
+              @if (portfolio.styleName) {
+                <span>{{ portfolio.styleName }} style</span>
+              }
+              @if (generatedOn()) {
+                <span>Generated {{ generatedOn() }}</span>
+              }
+              @if (sizeLabel()) {
+                <span>{{ sizeLabel() }}</span>
+              }
+            </p>
+          </div>
+          <div class="document-actions">
+            <a class="document-button" [href]="portfolio.url" target="_blank" rel="noopener">
+              Open in new tab <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              class="document-button document-button-gold"
+              [href]="portfolio.url"
+              [attr.download]="portfolio.downloadName || portfolio.fileName"
+            >
+              Download <span aria-hidden="true">⤓</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <section class="document-stage" aria-label="{{ profile.name }} portfolio document">
+        @if (viewerSrc(); as src) {
+          <iframe
+            class="document-frame"
+            [src]="src"
+            [title]="profile.name + ' — NeverBeen portfolio document'"
+          ></iframe>
+        }
+      </section>
+    </main>
+  } @else {
+    <!-- No document yet: a plain white page, exactly as brief. -->
+    <main class="portfolio-missing-page">
+      <div class="portfolio-missing-card">
+        <p class="missing-kicker">NeverBeen · Model Portfolio</p>
+        <h1>Portfolio not Available</h1>
+        <p class="missing-name">{{ profile.name }}</p>
+        <p class="missing-copy">
+          No portfolio is available for this model yet. Please check again later, or connect with
+          the NeverBeen support team to get the Model Portfolio.
+        </p>
+        <div class="missing-actions">
+          <a class="missing-link" [href]="supportLink(profile.name)" target="_blank" rel="noopener">
+            Contact NeverBeen support <span aria-hidden="true">↗</span>
+          </a>
+          <a routerLink="/help" class="missing-link missing-link-quiet">Visit the Help Centre</a>
+          <a [routerLink]="['/ai-models', profile.slug]" class="missing-link missing-link-quiet">
+            ← Return to {{ profile.name }}’s page
+          </a>
+        </div>
+      </div>
+    </main>
+  }
+} @else {
+  <main class="portfolio-missing-page">
+    <div class="portfolio-missing-card">
+      <p class="missing-kicker">NeverBeen · Model Portfolio</p>
+      <h1>Portfolio not Available</h1>
+      <p class="missing-copy">
+        This model is not in the directory yet. Please check again later, or connect with the
+        NeverBeen support team to get the Model Portfolio.
+      </p>
+      <div class="missing-actions">
+        <a routerLink="/ai-models" class="missing-link">Browse all AI models</a>
+      </div>
+    </div>
+  </main>
+}

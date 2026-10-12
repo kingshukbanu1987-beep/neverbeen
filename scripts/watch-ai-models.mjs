@@ -19,6 +19,8 @@ const albumsDir = join(projectRoot, 'public', 'NeverBeenModels');
 const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
 /** The clip formats the portfolio's video reel can play. */
 const videoExtensions = new Set(['.mp4', '.m4v', '.webm', '.ogv', '.ogg', '.mov']);
+/** Generated portfolio documents (`<album>/Portfolio/*.pdf`) refresh the manifest too. */
+const documentExtensions = new Set(['.pdf']);
 const debounceMs = 300;
 
 let timer = null;
@@ -100,6 +102,7 @@ try {
       fileName &&
       !imageExtensions.has(extension) &&
       !videoExtensions.has(extension) &&
+      !documentExtensions.has(extension) &&
       extension !== '.json'
     ) {
       return;
@@ -115,7 +118,7 @@ try {
 }
 
 console.log(
-  `[ai-models] Watching public/NeverBeenModels (${watchingEvents ? 'filesystem events' : 'scan mode'}) — album media refreshes portfolios; Biography/ JSON and images refresh biographies.`,
+  `[ai-models] Watching public/NeverBeenModels (${watchingEvents ? 'filesystem events' : 'scan mode'}) — album media refreshes portfolios; Biography/ JSON and images refresh biographies; Portfolio/ PDFs publish the Watch & Download document.`,
 );
 
 function shutdown() {

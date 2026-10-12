@@ -1,0 +1,236 @@
+/* The model portfolio document viewer — dark studio frame around the embedded PDF. */
+.portfolio-document-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #0a070d;
+}
+
+.document-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 1rem 0 0.9rem;
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  background: rgb(12 8 15 / 94%);
+  backdrop-filter: blur(14px);
+}
+
+.document-bar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.container {
+  width: min(1180px, 100% - 3rem);
+  margin-inline: auto;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #f28fbd;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.back-link:hover,
+.back-link:focus-visible {
+  color: #fff;
+}
+
+.document-title {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #f0b453;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.document-title h1 {
+  margin: 0.2rem 0 0;
+  color: #fdf6fa;
+  font-family: var(--serif, Georgia, 'Times New Roman', serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.document-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0;
+  color: #9b8d9b;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.document-meta span + span::before {
+  margin-right: 0.5rem;
+  color: rgb(255 255 255 / 25%);
+  content: '·';
+}
+
+.document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.document-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.1rem;
+  border: 1px solid rgb(240 112 168 / 45%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 7%);
+  color: #ffd7e8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.document-button:hover,
+.document-button:focus-visible {
+  border-color: rgb(240 112 168 / 80%);
+  background: rgb(244 122 176 / 16%);
+  color: #fff;
+}
+
+.document-button-gold {
+  border-color: rgb(240 180 83 / 50%);
+  color: #ffe9c9;
+}
+
+.document-button-gold:hover,
+.document-button-gold:focus-visible {
+  border-color: rgb(240 180 83 / 85%);
+  background: rgb(240 180 83 / 15%);
+  color: #fff;
+}
+
+.document-stage {
+  flex: 1;
+  padding: 1.1rem 0 1.4rem;
+  background:
+    radial-gradient(1100px 420px at 50% -80px, rgb(184 23 31 / 16%), transparent 70%), #0a070d;
+}
+
+.document-frame {
+  display: block;
+  width: min(1000px, 100% - 2rem);
+  height: calc(100vh - 150px);
+  min-height: 520px;
+  margin-inline: auto;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 14px;
+  background: #17121b;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 55%);
+}
+
+/* No document: the deliberately plain white notice page from the brief. */
+.portfolio-missing-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 3rem 1.5rem;
+  background: #fff;
+  color: #1c1c1c;
+}
+
+.portfolio-missing-card {
+  max-width: 560px;
+  text-align: center;
+}
+
+.missing-kicker {
+  margin: 0;
+  color: #8a8a8a;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.portfolio-missing-card h1 {
+  margin: 0.9rem 0 0;
+  color: #141414;
+  font-family: var(--serif, Georgia, 'Times New Roman', serif);
+  font-size: 2.1rem;
+  font-weight: 600;
+  line-height: 1.12;
+}
+
+.missing-name {
+  margin: 0.5rem 0 0;
+  color: #6d6d6d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.missing-copy {
+  margin: 1.1rem 0 0;
+  color: #4c4c4c;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.missing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 1.8rem;
+}
+
+.missing-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.15rem;
+  border: 1px solid #d8d8d8;
+  border-radius: 999px;
+  color: #1c1c1c;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.missing-link:hover,
+.missing-link:focus-visible {
+  border-color: #1c1c1c;
+  background: #f4f4f4;
+}
+
+.missing-link-quiet {
+  border-color: transparent;
+  color: #6d6d6d;
+}
+
+.missing-link-quiet:hover,
+.missing-link-quiet:focus-visible {
+  background: #f0f0f0;
+  color: #141414;
+}

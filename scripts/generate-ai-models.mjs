@@ -84,12 +84,16 @@ function listImages(directory) {
   return listFiles(directory, isImage);
 }
 
-/** Biography images belong to the full-biography page and must never leak into the portfolio grid. */
+/**
+ * Biography and Portfolio images belong to their own pages and must never leak into the
+ * portfolio grid: `Biography/` holds the fictional memory images, `Portfolio/` holds the
+ * generated portfolio document and its assets.
+ */
 function listAlbumImages(albumDir) {
   return naturalSort(
     listImages(albumDir).filter((absolutePath) => {
-      const firstDirectory = relative(albumDir, absolutePath).split(sep)[0];
-      return firstDirectory?.toLocaleLowerCase() !== 'biography';
+      const firstDirectory = relative(albumDir, absolutePath).split(sep)[0]?.toLocaleLowerCase();
+      return firstDirectory !== 'biography' && firstDirectory !== 'portfolio';
     }),
   );
 }
@@ -584,6 +588,46 @@ function albumBiography(albumDir) {
   };
 }
 
+/**
+ * The model's generated portfolio document, if her `Portfolio/` folder holds one.
+ * `portfolio.json` (written by CreatePortfolio.mjs) is the source of truth; a bare PDF in the
+ * folder is still published so a hand-placed document shows up too.
+ */
+function albumPortfolio(albumDir) {
+  const portfolioDir = join(albumDir, 'Portfolio');
+  if (!existsSync(portfolioDir)) return null;
+
+  const receipt = readJson(join(portfolioDir, 'portfolio.json'));
+  const pdfFiles = naturalSort(
+    readdirSync(portfolioDir, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.pdf'))
+      .map((entry) => entry.name),
+  );
+  const fileName =
+    text(receipt.document) && pdfFiles.includes(text(receipt.document))
+      ? text(receipt.document)
+      : pdfFiles[0];
+  if (!fileName) return null;
+
+  const absolute = join(portfolioDir, fileName);
+  const style =
+    receipt.style && typeof receipt.style === 'object' && !Array.isArray(receipt.style)
+      ? receipt.style
+      : {};
+  return {
+    url: publicUrl(absolute),
+    fileName,
+    /** Pretty name offered by the Download action. */
+    downloadName: text(receipt.downloadName) || fileName,
+    pages: numberValue(receipt.pages) || 0,
+    orientation: text(receipt.orientation) || 'portrait',
+    style: text(style.id),
+    styleName: text(style.name),
+    generatedAt: text(receipt.generatedAt),
+    sizeBytes: numberValue(receipt.sizeBytes) || statSync(absolute).size,
+  };
+}
+
 function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover = null }) {
   const albumDir = join(albumsDir, folderName);
   const albumData = readJson(join(albumDir, 'profile.json'));
@@ -684,6 +728,8 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     bio: text(merged.bio ?? merged.shortInfo ?? merged.description),
     illustrative: merged.illustrative === true,
     biography: albumBiography(albumDir),
+    /** The generated portfolio document from `<album>/Portfolio/`, when one exists. */
+    portfolio: albumPortfolio(albumDir),
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
     /** Clips from `public/NeverBeenModels/<album>/video/`, played in the portfolio's reel. */
@@ -746,6 +792,7 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     bio: text(profile.bio ?? profile.shortInfo ?? profile.description),
     illustrative: profile.illustrative === true,
     biography: null,
+    portfolio: null,
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
     // Flat (legacy) profiles have no album folder, so they carry no video folder either.
@@ -994,6 +1041,27 @@ export interface AiModelBiography {
   fictionalNotice: string;
 }
 
+export interface AiModelPortfolioDocument {
+  /** Public URL of the portfolio PDF inside the model's Portfolio folder. */
+  url: string;
+  /** File name on disk. */
+  fileName: string;
+  /** File name offered by the Download action. */
+  downloadName: string;
+  /** Page count of the document; 0 when the receipt does not say. */
+  pages: number;
+  /** Page orientation of the document. */
+  orientation: string;
+  /** Style id the document was generated in (e.g. "solar-editorial"). */
+  style: string;
+  /** Human readable style name (e.g. "Solar Editorial"). */
+  styleName: string;
+  /** ISO timestamp of the generation run. */
+  generatedAt: string;
+  /** Size of the PDF in bytes. */
+  sizeBytes: number;
+}
+
 export interface AiModelProfile {
   /** URL-safe path segment derived from the model name. */
   slug: string;
@@ -1033,6 +1101,8 @@ export interface AiModelProfile {
   illustrative: boolean;
   /** Optional fictional multiverse biography stored under the model's Biography/ folder. */
   biography?: AiModelBiography | null;
+  /** The generated portfolio document under the model's Portfolio/ folder, when present. */
+  portfolio?: AiModelPortfolioDocument | null;
   /** Photographs beyond the cover, kept for backwards compatibility. */
   gallery: string[];
   /** Every photograph in the album, cover first — the Instagram-style grid. */
