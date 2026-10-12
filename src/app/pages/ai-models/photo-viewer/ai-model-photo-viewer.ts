@@ -174,13 +174,10 @@ export class AiModelPhotoViewer {
   private readonly engagement = inject(ModelMediaEngagementService);
 
   /**
-   * The comments thread beside the photograph. It opens by itself on wide screens — the
-   * conversation of a photograph is part of its pop-up — and starts closed where the screen
-   * is too narrow to share with the picture.
+   * Keep the public conversation visible as soon as a photograph opens. Wide screens place it
+   * beside the photograph; narrow screens flow it directly underneath so it never covers the image.
    */
-  protected readonly commentsOpen = signal(
-    typeof matchMedia === 'function' && matchMedia('(min-width: 1080px)').matches,
-  );
+  protected readonly commentsOpen = signal(true);
 
   /** Comment count of the current photograph, for the toggle in the footer. */
   protected readonly commentCount = computed(() => {

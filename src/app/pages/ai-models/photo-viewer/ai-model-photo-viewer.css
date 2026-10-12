@@ -12,11 +12,13 @@
   z-index: 200;
   inset: 0;
   display: grid;
+  overflow-y: auto;
   background: rgb(5 4 7 / 90%);
   backdrop-filter: blur(26px);
-  /* Pinching anywhere in the viewer must zoom the photograph, never the page behind it. */
-  touch-action: none;
+  /* Let the thread and narrow-screen layout scroll; the photo stage owns pinch gestures. */
+  touch-action: pan-y;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   animation: viewer-in 240ms ease backwards;
 }
 
@@ -58,21 +60,40 @@
   flex: 1;
 }
 
-/* Phones and tablets: the thread becomes a bottom sheet over the picture. */
+/* Phones and tablets: keep the conversation in the document flow directly below the photograph. */
 @media (max-width: 1079px) {
+  .lightbox {
+    display: block;
+  }
+
+  .lightbox-panel {
+    display: flex;
+    min-height: 100vh;
+    min-height: 100dvh;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
   .lightbox-panel.has-comments {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .lightbox-panel .lightbox-stage {
+    min-height: 150px;
+    flex: 1 1 clamp(170px, 36dvh, 420px);
+  }
+
   .viewer-comments {
-    position: absolute;
-    right: clamp(0.9rem, 3vw, 2.2rem);
-    bottom: clamp(0.9rem, 2.6vw, 1.7rem);
-    left: clamp(0.9rem, 3vw, 2.2rem);
-    top: auto;
-    width: auto;
-    max-height: 56%;
-    margin-left: 0;
+    position: relative;
+    inset: auto;
+    grid-column: auto;
+    grid-row: auto;
+    display: flex;
+    min-height: 190px;
+    flex: 1 1 clamp(205px, 38dvh, 360px);
+    width: 100%;
+    max-height: none;
+    margin: 0;
     border-radius: 20px;
     overflow: hidden;
   }

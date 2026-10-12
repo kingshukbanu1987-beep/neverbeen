@@ -131,6 +131,19 @@
       </div>
     </div>
 
+    @if (commentsOpen() && modelSlug(); as slug) {
+      @if (photo(); as current) {
+        <aside class="viewer-comments" aria-label="Comments on this photograph">
+          <app-model-media-comments
+            [modelSlug]="slug"
+            mediaType="photo"
+            [mediaSrc]="current.src"
+            (closed)="commentsOpen.set(false)"
+          />
+        </aside>
+      }
+    }
+
     <footer class="lightbox-foot">
       <div class="lightbox-foot-row">
         <p class="lightbox-caption">
@@ -171,18 +184,5 @@
         </div>
       }
     </footer>
-
-    @if (commentsOpen() && modelSlug(); as slug) {
-      @if (photo(); as current) {
-        <aside class="viewer-comments" aria-label="Comments on this photograph">
-          <app-model-media-comments
-            [modelSlug]="slug"
-            mediaType="photo"
-            [mediaSrc]="current.src"
-            (closed)="commentsOpen.set(false)"
-          />
-        </aside>
-      }
-    }
   </div>
 </div>
