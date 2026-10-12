@@ -275,11 +275,13 @@ describe('AiModelsPage', () => {
     expect(statsFor).toHaveBeenCalledWith(profile.slug, 'video', profile.videos[0].src);
 
     const actions = card.querySelectorAll<HTMLAnchorElement>('.card-actions a');
-    expect(actions.length).toBe(2);
+    expect(actions.length).toBe(3);
     expect(actions[0].textContent).toContain('View Profile');
     expect(actions[0].getAttribute('href')).toBe(`/ai-models/${profile.slug}`);
-    expect(actions[1].textContent).toContain('Read Bio');
-    expect(actions[1].getAttribute('href')).toBe(`/ai-models/${profile.slug}/biography`);
+    expect(actions[1].textContent).toContain('View Portfolio');
+    expect(actions[1].getAttribute('href')).toBe(`/ai-models/${profile.slug}/portfolio`);
+    expect(actions[2].textContent).toContain('Read Bio');
+    expect(actions[2].getAttribute('href')).toBe(`/ai-models/${profile.slug}/biography`);
 
     fixture.destroy();
   });

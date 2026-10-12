@@ -320,6 +320,13 @@
                   View Profile <i aria-hidden="true">↗</i>
                 </a>
                 <a
+                  class="card-action card-action-view-portfolio"
+                  [routerLink]="['/ai-models', model.slug, 'portfolio']"
+                  [attr.aria-label]="'View the portfolio of ' + model.name"
+                >
+                  View Portfolio <i aria-hidden="true">↗</i>
+                </a>
+                <a
                   class="card-action card-action-biography"
                   [routerLink]="['/ai-models', model.slug, 'biography']"
                   [attr.aria-label]="'Read the bio of ' + model.name"

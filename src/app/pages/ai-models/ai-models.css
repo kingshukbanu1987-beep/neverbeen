@@ -796,6 +796,10 @@
   transition: transform 180ms ease;
 }
 
+.card-action-view-portfolio i {
+  color: #f0c96b;
+}
+
 .card-action-biography i {
   color: #72e1e5;
 }
