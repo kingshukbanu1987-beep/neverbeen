@@ -43,28 +43,10 @@ export class AiModelPortfolioDocumentPage {
     return file ? this.sanitizer.bypassSecurityTrustResourceUrl(file.url) : null;
   });
 
-  protected readonly generatedOn = computed(() => {
-    const stamp = this.document()?.generatedAt;
-    if (!stamp) return '';
-    const date = new Date(stamp);
-    if (Number.isNaN(date.getTime())) return stamp;
-    return date.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  });
-
   /** Prefilled WhatsApp chat with the studio, asking for this model's portfolio. */
   protected supportLink(modelName: string): string {
     return founderWhatsAppLink(
       `Hello NeverBeen, please share the model portfolio of ${modelName}.`,
     );
   }
-
-  protected readonly sizeLabel = computed(() => {
-    const bytes = this.document()?.sizeBytes ?? 0;
-    if (bytes <= 0) return '';
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  });
 }

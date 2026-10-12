@@ -22,7 +22,6 @@ import {
 } from './portfolio-kit.mjs';
 
 const PAGE_COUNT = 24;
-const PAPER_WHITE = '#F4EFE7';
 const PANEL = '#0B0710';
 
 /** The sections listed on the contents page, with their page numbers. */
@@ -45,14 +44,19 @@ function chrome(design, section, index) {
   };
 }
 
-/** Black-finish background bleed: the model's own photograph at 70% opacity. */
+/** Full-page model photography with restrained scrims for readable type. */
 function backgroundBleed(kit, ctx, index, options = {}) {
-  const { opacity = 0.7, scrimTop = 0.5, scrimBottom = 0.9, treatment = 'none' } = options;
-  const shot = ctx.shoot(index, { mode: 'bleed', treatment });
-  kit.photo({ x: 0, y: 0, w: PAGE.W, h: PAGE.H }, shot, { fit: 'bleed', opacity });
-  // Scrims keep every text box readable over the photograph.
-  kit.rect(0, 0, PAGE.W, 190, '#050308', scrimTop * 0.6);
-  kit.rect(0, PAGE.H - 360, PAGE.W, 360, '#050308', scrimBottom * 0.72);
+  const { scrimTop = 0.12, scrimBottom = 0.54 } = options;
+  const shot = ctx.shoot(index, { mode: 'bleed' });
+  kit.photo({ x: 0, y: 0, w: PAGE.W, h: PAGE.H }, shot, {
+    fit: 'bleed',
+    opacity: 0.95,
+    radius: 0,
+    anchor: 'top',
+  });
+  // The photo remains nearly full-strength; localized dark fields hold contrast.
+  kit.rect(0, 0, PAGE.W, 150, '#050608', scrimTop);
+  kit.rect(0, PAGE.H - 330, PAGE.W, 330, '#050608', scrimBottom);
 }
 
 /** A translucent panel that guarantees copy stays readable over a photograph. */
@@ -77,9 +81,9 @@ function heading(kit, design, value, x, y, w, h, options = {}) {
 function copyBlock(kit, value, x, y, w, h, options = {}) {
   return kit.text(value, x, y, {
     font: 'Body',
-    size: 9.6,
-    color: rgba(WHITE, 0.9),
-    lineGap: 3.4,
+    size: 10.2,
+    color: rgba(WHITE, 0.92),
+    lineGap: 3.8,
     fit: true,
     width: w,
     height: h,
@@ -88,18 +92,45 @@ function copyBlock(kit, value, x, y, w, h, options = {}) {
 }
 
 function caption(kit, value, x, y, w, options = {}) {
-  return kit.label(value, x, y, { color: options.color ?? INK_SOFT, size: 6.8, width: w });
+  return kit.label(value, x, y, { color: options.color ?? INK_SOFT, size: 7.2, width: w });
 }
 
-/** A framed photograph card with its caption in its own strip below. */
+/** A crisp, full-frame photograph with optional high-contrast overprint. */
 function photoCard(kit, ctx, index, frame, options = {}) {
   const shot = ctx.shoot(index, {
     mode: 'card',
     w: frame.w,
     h: frame.h,
-    treatment: options.treatment ?? 'none',
   });
-  kit.photo(frame, shot, { radius: options.radius ?? 12, opacity: options.opacity ?? 1 });
+  kit.photo(frame, shot, {
+    fit: options.fit ?? 'cover',
+    radius: options.radius ?? 8,
+    opacity: options.opacity ?? 1,
+    backdrop: false,
+    anchor: options.anchor ?? 'top',
+  });
+  if (options.overlayTitle || options.overlayKicker) {
+    const bandH = Math.min(76, Math.max(56, frame.h * 0.24));
+    kit.rect(frame.x, frame.y + frame.h - bandH, frame.w, bandH, '#050608', 0.62);
+    if (options.overlayKicker) {
+      kit.label(options.overlayKicker, frame.x + 12, frame.y + frame.h - bandH + 10, {
+        color: options.overlayColor ?? WHITE,
+        size: 6.8,
+        width: frame.w - 24,
+      });
+    }
+    if (options.overlayTitle) {
+      kit.text(options.overlayTitle, frame.x + 12, frame.y + frame.h - 36, {
+        font: 'BodyBlack',
+        size: 12,
+        color: WHITE,
+        width: frame.w - 24,
+        height: 20,
+        fit: true,
+        lineGap: 0,
+      });
+    }
+  }
   if (options.caption) {
     caption(kit, options.caption, frame.x, frame.y + frame.h + 7, frame.w, {
       color: options.captionColor,
@@ -112,7 +143,7 @@ function photoCard(kit, ctx, index, frame, options = {}) {
 function pageCover(kit, ctx) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'Portfolio', 1));
-  backgroundBleed(kit, ctx, 0, { opacity: 0.7, scrimBottom: 0.95 });
+  backgroundBleed(kit, ctx, 0, { scrimBottom: 0.64, scrimTop: 0.12 });
 
   const [g1, g2] = design.style.gradient;
   if (design.style.motif === 'arcs') {
@@ -164,25 +195,31 @@ function pageCover(kit, ctx) {
     gradient: [WHITE, design.accent],
   });
   kit.gradientRect(MARGIN, PAGE.H - FOOTER_H - 80, 130, 4, g1, g2);
-  copyBlock(kit, design.introLine, MARGIN, PAGE.H - FOOTER_H - 66, CONTENT_W * 0.62, 40, {
-    size: 10,
-    color: rgba(WHITE, 0.85),
+  copyBlock(kit, model.bio, MARGIN, PAGE.H - FOOTER_H - 66, CONTENT_W * 0.62, 40, {
+    size: 9.6,
+    color: rgba(WHITE, 0.94),
   });
 
-  // Chip row sits on its own line, clear of the intro copy above it.
-  const chipY = PAGE.H - FOOTER_H - 24;
-  const chips = ['24 PAGES', 'PORTRAIT', design.style.name.toLocaleUpperCase()];
+  // Replace production specs with three details drawn from her biography.
+  const chipY = PAGE.H - FOOTER_H - 30;
+  const chips = ctx.highlights.length
+    ? ctx.highlights
+    : [model.city, model.location].filter(Boolean);
   let chipX = PAGE.W - MARGIN;
   for (const chip of [...chips].reverse()) {
-    const width = chip.length * 5.9 + 24;
+    const width = Math.min(chip.length * 5.7 + 24, 186);
     chipX -= width;
-    kit.roundRect(chipX, chipY, width, 19, 9.5, '#140E1E', 0.94);
-    kit.outline(chipX, chipY, width, 19, 9.5, rgba(design.accent, 0.65), 0.9);
-    kit.label(chip, chipX + 11, chipY + 6, { color: design.accent, size: 6.6, width: width - 18 });
+    kit.roundRect(chipX, chipY, width, 19, 9.5, '#111419', 0.92);
+    kit.outline(chipX, chipY, width, 19, 9.5, rgba(design.accent, 0.74), 0.9);
+    kit.label(chip, chipX + 11, chipY + 6, {
+      color: WHITE,
+      size: 6.6,
+      width: width - 18,
+    });
     chipX -= 8;
   }
-  kit.label('NeverBeen studio portfolio', MARGIN, chipY + 6, {
-    color: rgba(WHITE, 0.6),
+  kit.label('THE NEVERBEEN STUDIO', MARGIN, chipY + 6, {
+    color: rgba(WHITE, 0.76),
     size: 6.8,
     width: 220,
   });
@@ -216,22 +253,15 @@ function pageContents(kit, ctx) {
     y += 36;
   }
   kit.gradientRect(MARGIN, y + 4, 90, 3, design.style.gradient[0], design.style.gradient[1]);
-  copyBlock(
-    kit,
-    `A NeverBeen studio portfolio for ${model.name}. Every photograph in this document is drawn from her own album; the story pages quote her fictional Multiverse biography.`,
-    MARGIN,
-    y + 18,
-    280,
-    84,
-    { size: 8.6, color: rgba(WHITE, 0.68) },
-  );
+  copyBlock(kit, model.bio, MARGIN, y + 18, 280, 84, {
+    size: 9.2,
+    color: rgba(WHITE, 0.88),
+  });
 
-  // At-a-glance chips fill the foot of the left column.
-  const chips = [
-    `${ctx.photoCount} FRAMES IN ALBUM`,
-    design.style.name.toLocaleUpperCase(),
-    `${model.city || 'STUDIO'}`.toLocaleUpperCase(),
-  ];
+  // A compact set of biography-led details replaces technical document specs.
+  const chips = (ctx.highlights.length ? ctx.highlights : [model.city, model.country])
+    .filter(Boolean)
+    .map((value) => value.toLocaleUpperCase());
   let chipY = y + 112;
   let chipX = MARGIN;
   for (const chip of chips) {
@@ -251,11 +281,14 @@ function pageContents(kit, ctx) {
   }
 
   const frame = { x: PAGE.W - MARGIN - 196, y: CONTENT_TOP + 8, w: 196, h: 288 };
-  photoCard(kit, ctx, 1, frame, { caption: `${model.name} — album frame` });
+  photoCard(kit, ctx, 1, frame, {
+    overlayKicker: model.location,
+    overlayTitle: model.name,
+  });
   const frame2 = { x: PAGE.W - MARGIN - 196, y: CONTENT_TOP + 322, w: 196, h: 288 };
   photoCard(kit, ctx, 2, frame2, {
-    caption: `Styled for ${design.style.name}`,
-    treatment: ctx.treatmentFor(2),
+    overlayKicker: 'CREATIVE FOCUS',
+    overlayTitle: ctx.highlights[0] || model.bodyShape || 'Editorial work',
   });
 }
 
@@ -264,7 +297,7 @@ function pageContents(kit, ctx) {
 function pageIntro(kit, ctx) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'The Face', 3));
-  backgroundBleed(kit, ctx, 3, { opacity: 0.4, scrimTop: 0.4, scrimBottom: 0.7 });
+  backgroundBleed(kit, ctx, 3, { scrimTop: 0.18, scrimBottom: 0.42 });
 
   const leftFirst = design.variant(11) % 2 === 0;
   const textX = leftFirst ? MARGIN : PAGE.W - MARGIN - 292;
@@ -277,7 +310,7 @@ function pageIntro(kit, ctx) {
   copyBlock(
     kit,
     model.bio ||
-      `${model.name} is a NeverBeen digital talent — photographed, styled and published by the studio.`,
+      `${model.name} is a model and creative collaborator with a distinctive editorial point of view.`,
     textX,
     CONTENT_TOP + 176,
     284,
@@ -314,7 +347,8 @@ function pageIntro(kit, ctx) {
     3,
     { x: photoX, y: CONTENT_TOP + 40, w: 220, h: 304 },
     {
-      caption: `${model.name}, ${model.city || 'NeverBeen studio'}`,
+      overlayKicker: model.city || model.location,
+      overlayTitle: model.name,
     },
   );
 }
@@ -324,100 +358,99 @@ function pageIntro(kit, ctx) {
 function pageStats(kit, ctx) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'Personal Details', 4));
-  kit.glow(PAGE.W - 120, CONTENT_TOP + 90, 160, design.accent2, 0.14);
-  kit.label('The numbers', MARGIN, CONTENT_TOP, { color: design.accent, width: 300 });
-  heading(kit, design, 'Personal details', MARGIN, CONTENT_TOP + 16, 380, 54, { size: 34 });
+  kit.label('Model profile', MARGIN, CONTENT_TOP, { color: design.accent, width: 300 });
+  heading(kit, design, 'Personal details', MARGIN, CONTENT_TOP + 16, 286, 54, { size: 30 });
   copyBlock(
     kit,
-    'Every figure below is published by the model herself and kept current by the studio.',
+    'A concise profile for editorial, fashion and campaign briefs.',
     MARGIN,
     CONTENT_TOP + 76,
-    360,
+    270,
     30,
-    { size: 8.8, color: rgba(WHITE, 0.66) },
+    { size: 9, color: rgba(WHITE, 0.74) },
   );
 
-  // A slim film-strip of the model runs down the right edge of the sheet.
-  const strip = { x: PAGE.W - 92, y: CONTENT_TOP + 4, w: 52, h: 430 };
-  const stripShot = ctx.shoot(4, { mode: 'bleed' });
-  kit.photo(strip, stripShot, { fit: 'bleed', opacity: 0.9 });
-  kit.gradientRect(strip.x, strip.y, strip.w, 60, '#050308', '#050308', {
-    angle: 'vertical',
-    opacity: 0.55,
-  });
-  kit.label('NB', strip.x + 16, strip.y + 12, { color: WHITE, size: 7, width: 24 });
-  const gridW = CONTENT_W - 68;
-
+  const gridW = 270;
   const stats = [
-    ['Age', model.age || 'To be added'],
-    ['Height', model.height || 'To be added'],
-    ['Weight', model.weight || 'To be added'],
-    ['Bust', model.bust || 'To be added'],
-    ['Waist', model.waist || 'To be added'],
-    ['Hip', model.hip || 'To be added'],
+    ['Age', model.age || '—'],
+    ['Height', model.height || '—'],
+    ['Weight', model.weight || '—'],
+    ['Bust', model.bust || '—'],
+    ['Waist', model.waist || '—'],
+    ['Hip', model.hip || '—'],
   ];
-
-  const top = CONTENT_TOP + 122;
+  const top = CONTENT_TOP + 112;
   if (design.style.statsLayout === 'dials') {
     stats.forEach(([label, value], index) => {
-      const col = index % 3;
-      const row = Math.floor(index / 3);
-      const cx = MARGIN + 62 + col * 132;
-      const cy = top + 66 + row * 158;
-      kit.dial(cx, cy, 46, value, label, { accent: design.accent, accent2: design.accent2 });
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const cx = MARGIN + 48 + col * 126;
+      const cy = top + 48 + row * 112;
+      kit.dial(cx, cy, 37, value, label, { accent: design.accent, accent2: design.accent2 });
     });
   } else if (design.style.statsLayout === 'cards') {
     stats.forEach(([label, value], index) => {
       const col = index % 2;
       const row = Math.floor(index / 2);
-      kit.stat(MARGIN + col * (gridW / 2 + 10), top + row * 104, gridW / 2 - 10, 92, value, label, {
+      kit.stat(MARGIN + col * 138, top + row * 91, 130, 80, value, label, {
         accent: index % 2 === 0 ? design.accent : design.accent2,
-        valueSize: 25,
+        valueSize: 22,
+        radius: 10,
       });
     });
   } else {
     stats.forEach(([label, value], index) => {
-      const y = top + index * 62;
-      kit.label(label, MARGIN, y + 8, { color: INK_SOFT, size: 7.6, width: 110 });
-      kit.text(value, MARGIN + 120, y, {
+      const y = top + index * 51;
+      kit.label(label, MARGIN, y + 8, { color: INK_SOFT, size: 7.6, width: 84 });
+      kit.text(value, MARGIN + 92, y, {
         font: design.style.displayFont,
-        size: 22,
+        size: 19,
         color: WHITE,
-        width: 190,
+        width: 134,
         lineGap: 0,
         fit: true,
-        height: 30,
+        height: 27,
       });
-      kit.gradientRect(MARGIN + 330, y + 8, 100, 3, design.accent, design.accent2);
-      kit.line(MARGIN, y + 44, MARGIN + gridW, y + 44, rgba(WHITE, 0.12), 0.8);
+      kit.gradientRect(MARGIN + 210, y + 9, 54, 2.5, design.accent, design.accent2);
+      kit.line(MARGIN, y + 39, MARGIN + gridW, y + 39, rgba(WHITE, 0.12), 0.8);
     });
   }
 
-  const footY = PAGE.H - FOOTER_H - 150;
-  kit.roundRect(MARGIN, footY, gridW, 58, 14, '#140E1E', 1);
-  kit.roundRect(MARGIN, footY, gridW, 58, 14, rgba(design.accent, 0.1), 1);
-  kit.label('Body shape', MARGIN + 18, footY + 10, { color: INK_SOFT, size: 7, width: 110 });
-  kit.text(model.bodyShape || 'To be added', MARGIN + 18, footY + 22, {
+  const portrait = { x: PAGE.W - MARGIN - 230, y: CONTENT_TOP + 100, w: 230, h: 380 };
+  photoCard(kit, ctx, 4, portrait, {
+    overlayKicker: model.location,
+    overlayTitle: model.name,
+  });
+
+  const footY = PAGE.H - FOOTER_H - 128;
+  kit.roundRect(MARGIN, footY, gridW, 58, 12, '#111419', 1);
+  kit.roundRect(MARGIN, footY, gridW, 58, 12, rgba(design.accent, 0.1), 1);
+  kit.label('Profile', MARGIN + 16, footY + 10, { color: INK_SOFT, size: 7, width: 74 });
+  kit.text(model.bodyShape || 'Editorial', MARGIN + 16, footY + 22, {
     font: 'Display',
-    size: 17,
+    size: 15,
     color: design.accent,
-    width: 170,
+    width: 112,
     lineGap: 0,
     fit: true,
-    height: 26,
+    height: 24,
   });
-  kit.line(MARGIN + 208, footY + 10, MARGIN + 208, footY + 48, rgba(WHITE, 0.16), 1);
-  kit.label('Location', MARGIN + 228, footY + 10, { color: INK_SOFT, size: 7, width: 110 });
-  kit.text(model.location || 'To be announced', MARGIN + 228, footY + 22, {
+  kit.line(MARGIN + 145, footY + 10, MARGIN + 145, footY + 48, rgba(WHITE, 0.16), 1);
+  kit.label('Based in', MARGIN + 160, footY + 10, { color: INK_SOFT, size: 7, width: 118 });
+  kit.text(model.location || 'Available on request', MARGIN + 160, footY + 22, {
     font: 'BodySemi',
-    size: 12,
+    size: 9.6,
     color: WHITE,
-    width: gridW - 250,
+    width: gridW - 176,
     lineGap: 0,
     fit: true,
-    height: 26,
+    height: 24,
   });
-  caption(kit, `Published by the NeverBeen studio · ${model.handle}`, MARGIN, footY + 72, gridW);
+  kit.label('THE NEVERBEEN STUDIO', MARGIN, footY + 70, {
+    color: rgba(WHITE, 0.7),
+    size: 6.8,
+    width: gridW,
+  });
 }
 
 // -------------------------------------------------------------- 05 measurements
@@ -425,7 +458,7 @@ function pageStats(kit, ctx) {
 function pageMeasure(kit, ctx) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'The Measure', 5));
-  kit.label('Illustrative sheet', MARGIN, CONTENT_TOP, { color: design.accent, width: 300 });
+  kit.label('Profile reference', MARGIN, CONTENT_TOP, { color: design.accent, width: 300 });
   heading(kit, design, 'The measure of her', MARGIN, CONTENT_TOP + 16, 420, 54, { size: 32 });
 
   // Fashion line-art silhouette drawn with vectors — no photograph is cropped here.
@@ -532,23 +565,14 @@ function pageMeasure(kit, ctx) {
     cy += 70;
   });
 
-  copyBlock(
-    kit,
-    'Measurements are published as supplied by the model and her agency; the silhouette is an illustrative diagram, not a photograph.',
-    rx,
-    cy + 2,
-    CONTENT_W - 268,
-    56,
-    { size: 8, color: rgba(WHITE, 0.6) },
-  );
-
   photoCard(
     kit,
     ctx,
     5,
-    { x: PAGE.W - MARGIN - 176, y: PAGE.H - FOOTER_H - 216, w: 176, h: 190 },
+    { x: PAGE.W - MARGIN - 194, y: PAGE.H - FOOTER_H - 252, w: 194, h: 220 },
     {
-      caption: `${model.name} — figure study`,
+      overlayKicker: model.city || model.location,
+      overlayTitle: 'On camera',
     },
   );
   copyBlock(kit, ctx.editorialNote(5), MARGIN, PAGE.H - FOOTER_H - 190, 232, 120, {
@@ -567,7 +591,7 @@ function pageMeasure(kit, ctx) {
 function editorialFullBleed(kit, ctx, index, photoIndex) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'Editorial', index));
-  backgroundBleed(kit, ctx, photoIndex, { opacity: 0.7, scrimBottom: 0.92 });
+  backgroundBleed(kit, ctx, photoIndex, { scrimBottom: 0.62, scrimTop: 0.08 });
   const title = design.editorialHeadlines[photoIndex % design.editorialHeadlines.length];
   kit.numeral(index, PAGE.W - MARGIN - 90, CONTENT_TOP - 4, 62, design.accent, 0.5);
   const y = PAGE.H - FOOTER_H - 190;
@@ -630,44 +654,41 @@ function editorialTriptych(kit, ctx, index, photoIndex) {
     CONTENT_TOP + 16,
     CONTENT_W,
     64,
-    {
-      size: 28,
-    },
+    { size: 28 },
   );
-  const frameW = (CONTENT_W - 24) / 3;
-  for (let slot = 0; slot < 3; slot += 1) {
-    const x = MARGIN + slot * (frameW + 12);
-    const lift = slot === 1 ? 26 : 0;
-    photoCard(
-      kit,
-      ctx,
-      photoIndex + slot,
-      { x, y: CONTENT_TOP + 104 + lift, w: frameW, h: 380 },
-      {},
-    );
-    caption(
-      kit,
-      `frame ${String(photoIndex + slot + 1).padStart(2, '0')}`,
-      x,
-      CONTENT_TOP + 104 + lift + 386,
-      frameW,
-    );
-  }
-  kit.roundRect(MARGIN, PAGE.H - FOOTER_H - 108, CONTENT_W, 78, 14, '#130D1C', 1);
-  copyBlock(
+
+  const y = CONTENT_TOP + 100;
+  const heroW = 328;
+  const sideX = MARGIN + heroW + 12;
+  const sideW = CONTENT_W - heroW - 12;
+  photoCard(
     kit,
-    ctx.editorialNote(photoIndex + 1),
-    MARGIN + 18,
-    PAGE.H - FOOTER_H - 94,
-    CONTENT_W - 36,
-    50,
-    {
-      size: 9,
-    },
+    ctx,
+    photoIndex,
+    { x: MARGIN, y, w: heroW, h: 414 },
+    { overlayKicker: model.location, overlayTitle: model.name },
   );
-  kit.label(model.handle, MARGIN + 18, PAGE.H - FOOTER_H - 40, {
+  photoCard(
+    kit,
+    ctx,
+    photoIndex + 1,
+    { x: sideX, y, w: sideW, h: 198 },
+    { overlayKicker: 'EDITORIAL', overlayTitle: 'Light & form' },
+  );
+  photoCard(
+    kit,
+    ctx,
+    photoIndex + 2,
+    { x: sideX, y: y + 214, w: sideW, h: 198 },
+    { overlayKicker: 'CAMPAIGN', overlayTitle: 'A clear point of view' },
+  );
+  kit.roundRect(MARGIN, y + 432, CONTENT_W, 86, 12, '#111419', 0.96);
+  copyBlock(kit, ctx.editorialNote(photoIndex + 1), MARGIN + 16, y + 448, CONTENT_W - 32, 54, {
+    size: 9.2,
+  });
+  kit.label(model.handle, MARGIN + 16, y + 504, {
     color: design.accent2,
-    size: 7.4,
+    size: 7.2,
     width: 300,
   });
 }
@@ -681,7 +702,12 @@ function editorialSplit(kit, ctx, index, photoIndex) {
   const photoTop = CONTENT_TOP - 10;
   const photoH = PAGE.H - FOOTER_H - photoTop;
   const shot = ctx.shoot(photoIndex, { mode: 'bleed' });
-  kit.photo({ x: px, y: photoTop, w: photoW, h: photoH }, shot, { fit: 'bleed', opacity: 0.92 });
+  kit.photo({ x: px, y: photoTop, w: photoW, h: photoH }, shot, {
+    fit: 'bleed',
+    opacity: 0.95,
+    radius: 0,
+    anchor: 'top',
+  });
   kit.gradientRect(px, photoTop, photoW, 90, '#050308', '#050308', {
     angle: 'vertical',
     opacity: 0.5,
@@ -690,7 +716,7 @@ function editorialSplit(kit, ctx, index, photoIndex) {
 
   const tx = photoLeft ? photoW + 34 : MARGIN;
   const tw = PAGE.W - photoW - 34 - MARGIN;
-  kit.label('Portrait study', tx, CONTENT_TOP, { color: design.accent, width: tw });
+  kit.label('EDITORIAL STUDY', tx, CONTENT_TOP, { color: design.accent, width: tw });
   heading(
     kit,
     design,
@@ -739,13 +765,18 @@ function editorialSplit(kit, ctx, index, photoIndex) {
 function editorialDuotone(kit, ctx, index, photoIndex) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'Editorial', index));
-  const shot = ctx.shoot(photoIndex, { mode: 'bleed', treatment: 'duotone' });
-  kit.photo({ x: 0, y: 0, w: PAGE.W, h: PAGE.H }, shot, { fit: 'bleed', opacity: 0.66 });
-  kit.rect(0, 0, PAGE.W, PAGE.H, INK, 0.32);
+  const shot = ctx.shoot(photoIndex, { mode: 'bleed' });
+  kit.photo({ x: 0, y: 0, w: PAGE.W, h: PAGE.H }, shot, {
+    fit: 'bleed',
+    opacity: 0.95,
+    radius: 0,
+    anchor: 'top',
+  });
+  kit.rect(0, 0, PAGE.W, PAGE.H, INK, 0.12);
   const bandY = PAGE.H / 2 - 110;
-  kit.rect(0, bandY, PAGE.W, 220, '#050308', 0.78);
-  kit.gradientRect(0, bandY, PAGE.W, 3, design.style.gradient[0], design.style.gradient[1]);
-  kit.gradientRect(0, bandY + 217, PAGE.W, 3, design.style.gradient[1], design.style.gradient[0]);
+  kit.rect(0, bandY, PAGE.W, 220, '#050608', 0.68);
+  kit.gradientRect(0, bandY, PAGE.W, 2, design.style.gradient[0], design.style.gradient[1]);
+  kit.gradientRect(0, bandY + 218, PAGE.W, 2, design.style.gradient[1], design.style.gradient[0]);
   heading(kit, design, `“${design.quote}”`, MARGIN + 12, bandY + 40, CONTENT_W - 24, 110, {
     size: 26,
     gradient: [WHITE, design.accent],
@@ -760,7 +791,7 @@ function editorialDuotone(kit, ctx, index, photoIndex) {
 function editorialPolaroids(kit, ctx, index, photoIndex) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'Editorial', index));
-  kit.label('From the contact sheet', MARGIN, CONTENT_TOP, { color: design.accent, width: 400 });
+  kit.label('Selected frames', MARGIN, CONTENT_TOP, { color: design.accent, width: 400 });
   heading(
     kit,
     design,
@@ -769,42 +800,34 @@ function editorialPolaroids(kit, ctx, index, photoIndex) {
     CONTENT_TOP + 16,
     CONTENT_W,
     60,
-    {
-      size: 28,
-    },
+    { size: 28 },
   );
-  // Five cards, each in its own cell — rotated a little, never overlapping.
-  const placements = [
-    { x: MARGIN + 4, y: CONTENT_TOP + 100, w: 156, h: 190, angle: -3 },
-    { x: MARGIN + 182, y: CONTENT_TOP + 100, w: 156, h: 190, angle: 2 },
-    { x: MARGIN + 360, y: CONTENT_TOP + 100, w: 156, h: 190, angle: -2 },
-    { x: MARGIN + 66, y: CONTENT_TOP + 366, w: 180, h: 210, angle: 2 },
-    { x: MARGIN + 282, y: CONTENT_TOP + 366, w: 180, h: 210, angle: -3 },
+
+  const gap = 14;
+  const frameW = (CONTENT_W - gap) / 2;
+  const frameH = 258;
+  const top = CONTENT_TOP + 98;
+  const moments = [
+    ['CLOSE-UP', 'A confident gaze'],
+    ['EDITORIAL', 'Quiet precision'],
+    ['CAMPAIGN', 'Colour in motion'],
+    ['STYLE', 'A signature presence'],
   ];
-  placements.forEach((place, slot) => {
-    const d = kit.doc;
-    d.save();
-    d.rotate(place.angle, { origin: [place.x + place.w / 2, place.y + place.h / 2] });
-    kit.roundRect(place.x - 9, place.y - 9, place.w + 18, place.h + 38, 5, PAPER_WHITE, 0.98);
+  moments.forEach(([kicker, title], slot) => {
+    const col = slot % 2;
+    const row = Math.floor(slot / 2);
     photoCard(
       kit,
       ctx,
       photoIndex + slot,
-      { x: place.x, y: place.y, w: place.w, h: place.h },
-      {
-        radius: 2,
-        backdrop: false,
-      },
+      { x: MARGIN + col * (frameW + gap), y: top + row * (frameH + 14), w: frameW, h: frameH },
+      { overlayKicker: kicker, overlayTitle: title },
     );
-    caption(
-      kit,
-      `${model.name} · ${String(photoIndex + slot + 1).padStart(2, '0')}`,
-      place.x - 4,
-      place.y + place.h + 8,
-      place.w + 8,
-      { color: '#4A4356' },
-    );
-    d.restore();
+  });
+  kit.label(`${model.name}  ·  ${model.city || model.location}`, MARGIN, top + frameH * 2 + 34, {
+    color: rgba(WHITE, 0.78),
+    size: 7.6,
+    width: CONTENT_W,
   });
 }
 
@@ -817,27 +840,48 @@ function editorialMosaic(kit, ctx, index, photoIndex) {
     design.editorialHeadlines[(photoIndex + 5) % design.editorialHeadlines.length],
     MARGIN,
     CONTENT_TOP,
-    CONTENT_W * 0.7,
+    CONTENT_W * 0.76,
     70,
+    { size: 30 },
+  );
+  kit.numeral(index, PAGE.W - MARGIN - 84, CONTENT_TOP - 6, 58, design.accent, 0.4);
+
+  const top = CONTENT_TOP + 92;
+  const heroW = 292;
+  const sideX = MARGIN + heroW + 14;
+  const sideW = CONTENT_W - heroW - 14;
+  photoCard(
+    kit,
+    ctx,
+    photoIndex,
+    { x: MARGIN, y: top, w: heroW, h: 468 },
     {
-      size: 30,
+      overlayKicker: model.location,
+      overlayTitle: model.name,
     },
   );
-  kit.numeral(index, PAGE.W - MARGIN - 84, CONTENT_TOP - 6, 58, design.accent, 0.55);
-  const wide = { x: MARGIN, y: CONTENT_TOP + 92, w: CONTENT_W, h: 210 };
-  photoCard(kit, ctx, photoIndex, wide, { caption: `${model.name} — wide frame` });
-  const cellW = (CONTENT_W - 24) / 3;
-  for (let slot = 0; slot < 3; slot += 1) {
-    photoCard(
-      kit,
-      ctx,
-      photoIndex + 1 + slot,
-      { x: MARGIN + slot * (cellW + 12), y: CONTENT_TOP + 340, w: cellW, h: 250 },
-      { treatment: slot === 1 ? 'mono' : 'none' },
-    );
-  }
-  copyBlock(kit, ctx.editorialNote(photoIndex + 3), MARGIN, CONTENT_TOP + 614, CONTENT_W, 62, {
-    size: 9,
+  photoCard(
+    kit,
+    ctx,
+    photoIndex + 1,
+    { x: sideX, y: top, w: sideW, h: 226 },
+    {
+      overlayKicker: 'EDITORIAL',
+      overlayTitle: 'Ease and focus',
+    },
+  );
+  photoCard(
+    kit,
+    ctx,
+    photoIndex + 2,
+    { x: sideX, y: top + 242, w: sideW, h: 226 },
+    {
+      overlayKicker: 'CAMPAIGN',
+      overlayTitle: 'In her element',
+    },
+  );
+  copyBlock(kit, ctx.editorialNote(photoIndex + 3), MARGIN, top + 486, CONTENT_W, 68, {
+    size: 9.4,
   });
 }
 
@@ -884,14 +928,18 @@ function editorialDuo(kit, ctx, index, photoIndex) {
   const half = (PAGE.W - 14) / 2;
   const photoH = PAGE.H - FOOTER_H - CONTENT_TOP - 60;
   const shotA = ctx.shoot(photoIndex, { mode: 'bleed' });
-  const shotB = ctx.shoot(photoIndex + 1, { mode: 'bleed', treatment: 'mono' });
+  const shotB = ctx.shoot(photoIndex + 1, { mode: 'bleed' });
   kit.photo({ x: 0, y: CONTENT_TOP - 12, w: half, h: photoH }, shotA, {
     fit: 'bleed',
-    opacity: 0.8,
+    opacity: 0.95,
+    radius: 0,
+    anchor: 'top',
   });
   kit.photo({ x: half + 14, y: CONTENT_TOP - 12, w: half, h: photoH }, shotB, {
     fit: 'bleed',
-    opacity: 0.8,
+    opacity: 0.95,
+    radius: 0,
+    anchor: 'top',
   });
   const bandY = PAGE.H - FOOTER_H - 148;
   kit.rect(0, bandY, PAGE.W, 96, '#050308', 0.88);
@@ -919,79 +967,86 @@ function editorialDuo(kit, ctx, index, photoIndex) {
 function pageStory(kit, ctx) {
   const { design, model, story } = ctx;
   kit.startPage(chrome(design, 'Her Story', 8));
-  backgroundBleed(kit, ctx, 8, { opacity: 0.3, scrimBottom: 0.7 });
+  backgroundBleed(kit, ctx, 8, { scrimBottom: 0.48, scrimTop: 0.16 });
   kit.label('Her story', MARGIN, CONTENT_TOP, { color: design.accent, width: 300 });
-  heading(
-    kit,
-    design,
-    story ? story.title || 'In the Multiverse of NeverBeen' : 'A story still being written',
-    MARGIN,
-    CONTENT_TOP + 16,
-    CONTENT_W * 0.78,
-    70,
-    {
-      size: 30,
-    },
-  );
+  heading(kit, design, 'A life in motion', MARGIN, CONTENT_TOP + 16, CONTENT_W * 0.78, 64, {
+    size: 30,
+  });
 
-  const textW = CONTENT_W * 0.62;
-  textPanel(kit, MARGIN - 12, CONTENT_TOP + 88, textW + 14, 336, 0.8);
-  if (story) {
-    copyBlock(kit, story.summary, MARGIN, CONTENT_TOP + 100, textW, 148, { size: 10 });
-    const early = (story.earlyLife || []).slice(0, 2).join(' ');
-    if (early) {
-      kit.label('Early life', MARGIN, CONTENT_TOP + 258, {
-        color: design.accent2,
-        size: 7.4,
-        width: 200,
-      });
-      copyBlock(kit, early, MARGIN, CONTENT_TOP + 274, textW, 130, { size: 9.2 });
-    }
-    photoCard(
-      kit,
-      ctx,
-      8,
-      { x: PAGE.W - MARGIN - 186, y: CONTENT_TOP + 96, w: 186, h: 246 },
-      {
-        caption: 'From her album',
-      },
-    );
-  } else {
-    copyBlock(
-      kit,
-      `${model.name}'s fictional Multiverse biography has not been written yet. When it is, her story — early life, studies, career and the people she keeps close — will be published on this page and on her biography route.`,
-      MARGIN,
-      CONTENT_TOP + 100,
-      textW,
-      130,
-      { size: 10 },
-    );
-    photoCard(
-      kit,
-      ctx,
-      8,
-      { x: PAGE.W - MARGIN - 206, y: CONTENT_TOP + 90, w: 206, h: 274 },
-      {
-        caption: `${model.name} — album frame`,
-      },
-    );
+  const textW = 292;
+  textPanel(kit, MARGIN - 12, CONTENT_TOP + 82, textW + 24, 502, 0.86);
+  copyBlock(kit, model.bio, MARGIN, CONTENT_TOP + 100, textW, 138, {
+    size: 10,
+    color: rgba(WHITE, 0.95),
+  });
+
+  const ambition = story?.ambitions?.[0];
+  if (ambition) {
+    kit.label('Creative ambition', MARGIN, CONTENT_TOP + 258, {
+      color: design.accent2,
+      size: 7.4,
+      width: 220,
+    });
+    copyBlock(kit, ambition, MARGIN, CONTENT_TOP + 276, textW, 92, {
+      size: 9.6,
+      color: rgba(WHITE, 0.88),
+    });
   }
 
-  kit.roundRect(MARGIN, PAGE.H - FOOTER_H - 96, CONTENT_W, 58, 12, '#130D1C', 1);
-  kit.label('Fiction notice', MARGIN + 16, PAGE.H - FOOTER_H - 84, {
-    color: design.accent,
-    size: 7,
-    width: 200,
-  });
-  copyBlock(
+  const interests = (story?.interests ?? []).slice(0, 4);
+  if (interests.length) {
+    kit.label('Personal interests', MARGIN, CONTENT_TOP + 392, {
+      color: design.accent2,
+      size: 7.4,
+      width: 220,
+    });
+    let x = MARGIN;
+    let y = CONTENT_TOP + 412;
+    for (const interest of interests) {
+      const width = Math.min(interest.length * 5.5 + 22, textW);
+      if (x + width > MARGIN + textW) {
+        x = MARGIN;
+        y += 27;
+      }
+      kit.roundRect(x, y, width, 20, 10, '#111419', 0.94);
+      kit.outline(x, y, width, 20, 10, rgba(design.accent, 0.52), 0.8);
+      kit.text(interest, x + 10, y + 5.5, {
+        font: 'BodySemi',
+        size: 7.2,
+        color: WHITE,
+        width: width - 18,
+        lineGap: 0,
+      });
+      x += width + 7;
+    }
+  }
+
+  const photoX = PAGE.W - MARGIN - 194;
+  photoCard(
     kit,
-    'Biography pages in this portfolio are drawn from the model’s fictional NeverBeen Multiverse story — invented, and never presented as real life.',
-    MARGIN + 16,
-    PAGE.H - FOOTER_H - 72,
-    CONTENT_W - 32,
-    30,
-    { size: 7.8, color: rgba(WHITE, 0.66) },
+    ctx,
+    8,
+    { x: photoX, y: CONTENT_TOP + 86, w: 194, h: 242 },
+    {
+      overlayKicker: 'CREATIVE FOCUS',
+      overlayTitle: ctx.highlights[0] || model.name,
+    },
   );
+  photoCard(
+    kit,
+    ctx,
+    9,
+    { x: photoX, y: CONTENT_TOP + 350, w: 194, h: 228 },
+    {
+      overlayKicker: 'OFF THE SET',
+      overlayTitle: interests[0] || model.city || model.name,
+    },
+  );
+  kit.label('THE NEVERBEEN STUDIO', MARGIN, PAGE.H - FOOTER_H - 56, {
+    color: rgba(WHITE, 0.78),
+    size: 7.2,
+    width: 240,
+  });
 }
 
 // ---------------------------------------------------------------- 09 education
@@ -1005,14 +1060,23 @@ function pageEducation(kit, ctx) {
   if (degrees.length === 0) {
     copyBlock(
       kit,
-      'Her Multiverse biography does not publish a completed qualification yet — this page fills in the moment it does.',
+      `${model.name}'s creative practice is shaped by hands-on work, curiosity and a strong visual point of view.`,
       MARGIN,
       CONTENT_TOP + 96,
       CONTENT_W * 0.62,
       80,
       { size: 10 },
     );
-    photoCard(kit, ctx, 9, { x: PAGE.W - MARGIN - 220, y: CONTENT_TOP + 90, w: 220, h: 290 }, {});
+    photoCard(
+      kit,
+      ctx,
+      9,
+      { x: PAGE.W - MARGIN - 220, y: CONTENT_TOP + 90, w: 220, h: 290 },
+      {
+        overlayKicker: model.location,
+        overlayTitle: model.name,
+      },
+    );
     return;
   }
   let y = CONTENT_TOP + 96;
@@ -1057,17 +1121,19 @@ function pageEducation(kit, ctx) {
     9,
     { x: PAGE.W - MARGIN - 210, y: y + 8, w: 210, h: 210 },
     {
-      caption: `${model.name} — graduation season frame`,
+      overlayKicker: 'FIELD OF STUDY',
+      overlayTitle: degrees[0]?.qualification || model.name,
     },
   );
+  const study = degrees[0]?.qualification || 'Creative practice';
   copyBlock(
     kit,
-    'Completed qualifications only, exactly as her fictional biography publishes them.',
+    `Her studies in ${study} bring together visual identity, strategy and storytelling.`,
     MARGIN,
     y + 16,
     CONTENT_W - 240,
     70,
-    { size: 8.4, color: rgba(WHITE, 0.6) },
+    { size: 9.2, color: rgba(WHITE, 0.82) },
   );
 }
 
@@ -1082,7 +1148,7 @@ function pageCareer(kit, ctx) {
   if (career.length === 0) {
     copyBlock(
       kit,
-      'Her fictional career history is not published yet. The timeline below fills in from her Multiverse biography as soon as it exists.',
+      `${model.name}'s work is shaped by collaboration, editorial storytelling and a thoughtful eye for detail.`,
       MARGIN,
       CONTENT_TOP + 96,
       CONTENT_W * 0.62,
@@ -1154,7 +1220,7 @@ function pageCareer(kit, ctx) {
 function pageAchievements(kit, ctx) {
   const { design, story, model } = ctx;
   kit.startPage(chrome(design, 'Achievements', 11));
-  backgroundBleed(kit, ctx, 11, { opacity: 0.2, scrimBottom: 0.72 });
+  backgroundBleed(kit, ctx, 11, { scrimBottom: 0.48, scrimTop: 0.12 });
   kit.label('Marks she leaves', MARGIN, CONTENT_TOP, { color: design.accent, width: 300 });
   heading(kit, design, 'Achievements', MARGIN, CONTENT_TOP + 16, 400, 54, { size: 34 });
   const achievements = story?.achievements ?? [];
@@ -1209,7 +1275,7 @@ function pageInterests(kit, ctx) {
   if (groups.length === 0) {
     copyBlock(
       kit,
-      `${model.name} keeps her personal pages private for now; her Multiverse biography will publish her interests, hobbies and ambitions here.`,
+      `${model.name} brings a thoughtful eye to her work, guided by curiosity, culture and a love of visual storytelling.`,
       MARGIN,
       CONTENT_TOP + 96,
       CONTENT_W * 0.72,
@@ -1269,9 +1335,9 @@ function pageInterests(kit, ctx) {
 function pageQuote(kit, ctx) {
   const { design, model, story } = ctx;
   kit.startPage(chrome(design, 'Voice', 17));
-  backgroundBleed(kit, ctx, 17, { opacity: 0.4, scrimTop: 0.5, scrimBottom: 0.8 });
+  backgroundBleed(kit, ctx, 17, { scrimTop: 0.18, scrimBottom: 0.44 });
   const quote = story?.quotes?.[0]?.text ?? design.quote;
-  const by = story?.quotes?.[0]?.by ?? model.name;
+  const by = story?.quotes?.[0]?.by || model.name;
   kit.text('“', MARGIN - 6, CONTENT_TOP - 18, {
     font: 'Display',
     size: 150,
@@ -1413,7 +1479,7 @@ function pageRates(kit, ctx) {
 function pageContact(kit, ctx) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'Bookings & Rates', 22));
-  backgroundBleed(kit, ctx, 22, { opacity: 0.32, scrimBottom: 0.8 });
+  backgroundBleed(kit, ctx, 22, { scrimBottom: 0.48, scrimTop: 0.14 });
   kit.label('Work with her', MARGIN, CONTENT_TOP, { color: design.accent, width: 300 });
   heading(
     kit,
@@ -1430,10 +1496,13 @@ function pageContact(kit, ctx) {
   );
 
   const rows = [
-    ['Portfolio', `/ai-models/${model.slug}`],
+    ['Representation', 'THE NEVERBEEN STUDIO'],
     ['Handle', model.handle],
-    ['Based in', model.location || 'To be announced'],
-    ['Studio', 'NeverBeen · neverbeen.com'],
+    ['Based in', model.location || 'Available on request'],
+    [
+      'Rate',
+      model.photoRate > 0 ? `₹${model.photoRate.toLocaleString('en-IN')} / image` : 'On request',
+    ],
   ];
   let y = CONTENT_TOP + 108;
   for (const [label, value] of rows) {
@@ -1460,7 +1529,7 @@ function pageContact(kit, ctx) {
   });
   copyBlock(
     kit,
-    'Rent Me on her portfolio page opens the booking form — delivery date, package, coupon if you hold one — and hands the request to the studio on WhatsApp.',
+    'For campaign and editorial enquiries, share your brief, preferred dates and usage requirements with the studio.',
     MARGIN + 16,
     y + 44,
     324,
@@ -1484,7 +1553,16 @@ function pageContact(kit, ctx) {
     }
   }
 
-  photoCard(kit, ctx, 22, { x: PAGE.W - MARGIN - 150, y: CONTENT_TOP + 120, w: 150, h: 200 }, {});
+  photoCard(
+    kit,
+    ctx,
+    22,
+    { x: PAGE.W - MARGIN - 168, y: CONTENT_TOP + 120, w: 168, h: 230 },
+    {
+      overlayKicker: model.location,
+      overlayTitle: model.name,
+    },
+  );
 }
 
 // ----------------------------------------------------------------- 23 closing
@@ -1492,7 +1570,7 @@ function pageContact(kit, ctx) {
 function pageClosing(kit, ctx) {
   const { design, model } = ctx;
   kit.startPage(chrome(design, 'Editorial', 23));
-  backgroundBleed(kit, ctx, 23, { opacity: 0.72, scrimBottom: 0.94 });
+  backgroundBleed(kit, ctx, 23, { scrimBottom: 0.64, scrimTop: 0.1 });
   const y = PAGE.H - FOOTER_H - 210;
   heading(kit, design, design.closingLine, MARGIN, y, CONTENT_W * 0.85, 130, {
     size: 40,
@@ -1504,7 +1582,7 @@ function pageClosing(kit, ctx) {
     size: 8,
     width: 400,
   });
-  kit.label('NeverBeen studio portfolio', MARGIN, y + 172, {
+  kit.label('THE NEVERBEEN STUDIO', MARGIN, y + 172, {
     color: design.accent,
     size: 7.4,
     width: 400,
@@ -1515,74 +1593,71 @@ function pageClosing(kit, ctx) {
 
 function pageBackCover(kit, ctx) {
   const { design, model, meta } = ctx;
-  kit.startPage(chrome(design, 'Colophon', 24));
-  kit.glow(PAGE.W / 2, CONTENT_TOP + 150, 220, design.accent, 0.14);
+  kit.startPage(chrome(design, 'Final Frame', 24));
+  backgroundBleed(kit, ctx, 24, { scrimTop: 0.26, scrimBottom: 0.64 });
+
   if (meta.logo) {
-    const logoWidth = 250;
-    const logoHeight = logoWidth / (meta.logoAspect || 1408 / 768);
-    kit.roundRect(
-      PAGE.W / 2 - logoWidth / 2 - 18,
-      CONTENT_TOP + 30,
-      logoWidth + 36,
-      logoHeight + 36,
-      18,
-      PAPER_WHITE,
-      0.98,
-    );
-    kit.doc.image(meta.logo, PAGE.W / 2 - logoWidth / 2, CONTENT_TOP + 48, {
+    const logoWidth = 280;
+    const logoHeight = logoWidth / (meta.logoAspect || 3.1);
+    kit.doc.image(meta.logo, PAGE.W / 2 - logoWidth / 2, CONTENT_TOP + 24, {
       width: logoWidth,
       height: logoHeight,
     });
   }
-  heading(kit, design, model.name, MARGIN, CONTENT_TOP + 210, CONTENT_W, 60, {
-    size: 34,
+
+  heading(kit, design, model.name, MARGIN, CONTENT_TOP + 164, CONTENT_W, 62, {
+    size: 38,
     align: 'center',
   });
+  kit.label('MODEL  ·  CREATIVE COLLABORATOR', MARGIN, CONTENT_TOP + 234, {
+    color: design.accent,
+    size: 7.4,
+    align: 'center',
+    width: CONTENT_W,
+  });
   kit.label(
-    `${design.style.name}  ·  24 pages  ·  portrait  ·  black finish`,
+    [model.location, model.handle].filter(Boolean).join('  ·  '),
     MARGIN,
-    CONTENT_TOP + 276,
+    CONTENT_TOP + 254,
     {
-      color: design.accent,
-      size: 8,
+      color: rgba(WHITE, 0.88),
+      size: 7.2,
       align: 'center',
       width: CONTENT_W,
     },
   );
+  copyBlock(kit, model.bio, MARGIN + 56, CONTENT_TOP + 296, CONTENT_W - 112, 94, {
+    size: 10,
+    align: 'center',
+    color: rgba(WHITE, 0.96),
+  });
 
-  const colophon = [
-    ['Document', meta.fileName || 'NeverBeen model portfolio'],
-    ['Generated', meta.generatedAt || '—'],
-    ['Generator', 'CreatePortfolio.mjs'],
-    ['Photography', `${model.album ? `public/NeverBeenModels/${model.album}` : 'studio album'}`],
-    ['Typefaces', 'Playfair Display · Poppins'],
-  ];
-  let y = CONTENT_TOP + 320;
-  for (const [label, value] of colophon) {
-    kit.label(label, MARGIN + 60, y, { color: INK_SOFT, size: 7, width: 110 });
-    kit.text(value, MARGIN + 176, y - 2, {
-      font: 'BodySemi',
-      size: 8.6,
-      color: rgba(WHITE, 0.86),
-      width: CONTENT_W - 240,
-      lineGap: 1,
-      fit: true,
-      height: 22,
+  const highlights = ctx.highlights.slice(0, 3);
+  const gap = 10;
+  const widths = highlights.map((value) => Math.min(value.length * 5.8 + 28, 175));
+  const totalWidth =
+    widths.reduce((sum, width) => sum + width, 0) + gap * Math.max(0, widths.length - 1);
+  let x = (PAGE.W - totalWidth) / 2;
+  highlights.forEach((value, index) => {
+    const width = widths[index];
+    kit.roundRect(x, CONTENT_TOP + 414, width, 24, 12, '#101319', 0.9);
+    kit.outline(x, CONTENT_TOP + 414, width, 24, 12, rgba(design.accent, 0.72), 0.9);
+    kit.label(value, x + 12, CONTENT_TOP + 422, {
+      color: WHITE,
+      size: 6.8,
+      width: width - 20,
+      align: 'center',
     });
-    y += 22;
-  }
+    x += width + gap;
+  });
 
-  kit.roundRect(MARGIN + 30, y + 18, CONTENT_W - 60, 92, 14, '#120C1A', 1);
-  kit.label('Copyright', MARGIN + 46, y + 30, { color: design.accent, size: 7.2, width: 200 });
-  copyBlock(
-    kit,
-    `© ${meta.year || new Date().getFullYear()} NeverBeen. All rights reserved. Unauthorised use of the model’s identity, name, details, photographs and videos is strictly prohibited. This portfolio and its story pages are published inside the fictional NeverBeen Multiverse.`,
-    MARGIN + 46,
-    y + 44,
-    CONTENT_W - 92,
-    56,
-    { size: 7.8, color: rgba(WHITE, 0.74) },
-  );
+  kit.gradientRect(PAGE.W / 2 - 64, CONTENT_TOP + 478, 128, 2.5, design.accent, design.accent2);
+  kit.label('THE NEVERBEEN STUDIO', MARGIN, CONTENT_TOP + 498, {
+    color: WHITE,
+    size: 8,
+    align: 'center',
+    width: CONTENT_W,
+  });
 }
 
 /**

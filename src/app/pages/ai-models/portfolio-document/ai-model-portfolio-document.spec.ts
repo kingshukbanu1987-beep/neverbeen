@@ -83,9 +83,14 @@ describe('AiModelPortfolioDocumentPage', () => {
 
       expect(element.querySelector('.document-frame')).toBeTruthy();
       expect(element.textContent).toContain('Document Studio Model');
-      expect(element.textContent).toContain('24 pages');
-      expect(element.textContent).toContain('Obsidian Muse');
-      expect(element.textContent).toContain('4.6 MB');
+      expect(element.textContent).toContain('THE NEVERBEEN STUDIO');
+      expect(element.textContent).toContain('George Town, Malaysia');
+      expect(element.textContent).toContain('@document.studio.model');
+      expect(element.textContent).not.toContain('24 pages');
+      expect(element.textContent).not.toContain('Portrait');
+      expect(element.textContent).not.toContain('Obsidian Muse');
+      expect(element.textContent).not.toContain('Generated');
+      expect(element.textContent).not.toContain('4.6 MB');
 
       const frame = element.querySelector<HTMLIFrameElement>('.document-frame')!;
       expect(frame.getAttribute('src')).toContain('DocumentStudioModel_Portfolio.pdf');

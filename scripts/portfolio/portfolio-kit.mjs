@@ -2,10 +2,9 @@
 /**
  * NeverBeen model portfolio design kit — A4 portrait (595 × 842 pt).
  *
- * The drawing primitives shared by every style of the 24-page model portfolio:
- * the brochure chrome (white logo masthead + dark copyright footer), vibrant
- * gradients, glass panels, face-safe photo frames, auto-fitting type and the
- * decorative motifs the styles compose.
+ * The drawing primitives shared by every model portfolio: a slim black studio
+ * masthead, restrained editorial accents, face-safe photo frames, modern type,
+ * and the photo-led motifs composed by each style.
  *
  * Two rules are structural, not aspirational:
  *  1. Text and photographs never overlap — every page builder reserves explicit
@@ -18,10 +17,10 @@
  */
 
 export const PAGE = { W: 595.28, H: 841.89 };
-export const HEADER_H = 52;
-export const FOOTER_H = 40;
+export const HEADER_H = 38;
+export const FOOTER_H = 34;
 export const MARGIN = 40;
-export const CONTENT_TOP = HEADER_H + 24;
+export const CONTENT_TOP = HEADER_H + 22;
 export const CONTENT_BOTTOM = PAGE.H - FOOTER_H - 18;
 export const CONTENT_W = PAGE.W - MARGIN * 2;
 
@@ -112,68 +111,70 @@ export class PortfolioKit {
     const accent2 = meta.accent2 || this.chrome.accent2 || accent;
     const section = meta.section || '';
 
-    // Masthead — the NeverBeen website logo on a paper-white band, copied from
-    // the visitor brochure's header (band + accent rule + section label).
-    this.rect(0, 0, PAGE.W, HEADER_H, PAPER, 1);
-    this.gradientRect(0, HEADER_H - 3, PAGE.W, 3, accent, accent2);
+    // A slim black masthead: the transparent NeverBeen wordmark, a quiet studio
+    // signature, and a precise section marker — never a white banner or logo tile.
+    this.rect(0, 0, PAGE.W, HEADER_H, '#050608', 1);
+    this.gradientRect(0, HEADER_H - 1.4, PAGE.W, 1.4, accent, accent2, { opacity: 0.9 });
     if (this.chrome.logo) {
-      const logoHeight = 34;
-      const logoWidth = logoHeight * (this.chrome.logoAspect || 1408 / 768);
-      this.doc.image(this.chrome.logo, MARGIN - 8, (HEADER_H - logoHeight) / 2 - 1, {
+      const logoHeight = Math.min(29, HEADER_H - 8);
+      const logoWidth = logoHeight * (this.chrome.logoAspect || 3.1);
+      this.doc.image(this.chrome.logo, MARGIN, (HEADER_H - logoHeight) / 2 - 1, {
         width: logoWidth,
         height: logoHeight,
       });
     }
+    this.label('THE NEVERBEEN STUDIO', PAGE.W - MARGIN - 250, 5, {
+      color: rgba(WHITE, 0.64),
+      size: 5.8,
+      width: 250,
+      align: 'right',
+    });
     if (section) {
-      this.label(section, PAGE.W - MARGIN - 250, HEADER_H / 2 - 4, {
+      this.label(section, PAGE.W - MARGIN - 250, 20, {
         color: accent,
-        size: 7.6,
+        size: 7.1,
         width: 250,
         align: 'right',
       });
     }
 
-    // Footer — the brochure's dark copyright band: © line, document label, page number.
+    // Footer — a low-profile copyright line, studio signature and folio number.
     const footerY = PAGE.H - FOOTER_H;
-    this.rect(0, footerY, PAGE.W, FOOTER_H, '#070409', 0.94);
-    this.gradientRect(0, footerY, PAGE.W, 2.5, accent, accent2);
+    this.rect(0, footerY, PAGE.W, FOOTER_H, '#050608', 1);
+    this.gradientRect(0, footerY, PAGE.W, 1.5, accent, accent2, { opacity: 0.84 });
     this.text(
       `© ${this.chrome.year || new Date().getFullYear()} NeverBeen. All rights reserved.`,
       MARGIN,
-      footerY + 15,
+      footerY + 12,
       {
         font: 'Body',
-        size: 7.4,
+        size: 7,
         color: WHITE,
-        opacity: 0.82,
+        opacity: 0.72,
         lineGap: 0,
         width: 250,
       },
     );
     if (this.chrome.documentLabel) {
-      this.text(this.chrome.documentLabel, PAGE.W / 2 - 90, footerY + 15, {
-        font: 'Body',
-        size: 7.4,
+      this.text(this.chrome.documentLabel, PAGE.W / 2 - 110, footerY + 12, {
+        font: 'BodySemi',
+        size: 6.8,
         color: WHITE,
-        opacity: 0.6,
+        opacity: 0.78,
         lineGap: 0,
-        width: 180,
+        width: 220,
         align: 'center',
+        characterSpacing: 1.1,
       });
     }
-    this.text(
-      `${String(this.page).padStart(2, '0')} / ${String(this.totalPages).padStart(2, '0')}`,
-      PAGE.W - MARGIN - 70,
-      footerY + 13,
-      {
-        font: 'BodyBlack',
-        size: 9.4,
-        color: accent,
-        width: 70,
-        align: 'right',
-        lineGap: 0,
-      },
-    );
+    this.text(String(this.page).padStart(2, '0'), PAGE.W - MARGIN - 36, footerY + 10, {
+      font: 'BodyBlack',
+      size: 8.2,
+      color: accent,
+      width: 36,
+      align: 'right',
+      lineGap: 0,
+    });
   }
 
   // ------------------------------------------------------------------ primitives
@@ -342,8 +343,8 @@ export class PortfolioKit {
   label(value, x, y, options = {}) {
     return this.text(String(value ?? '').toLocaleUpperCase(), x, y, {
       font: 'BodySemi',
-      size: 7.6,
-      characterSpacing: 1.6,
+      size: 7.4,
+      characterSpacing: 1.15,
       lineGap: 1.5,
       ...options,
     });
@@ -398,20 +399,40 @@ export class PortfolioKit {
    *    stays inside the frame because the crop only ever eats the bottom.
    */
   photo(frame, prepared, options = {}) {
-    const { fit = 'contain', opacity = 1, radius = 10, backdrop = true, scrim = null } = options;
+    const {
+      fit = 'contain',
+      opacity = 1,
+      radius = 10,
+      backdrop = true,
+      scrim = null,
+      anchor = null,
+    } = options;
     const d = this.doc;
     if (!prepared?.file) return;
 
-    if (fit === 'bleed') {
+    // Cover and bleed preserve the photograph's native aspect ratio, clipping
+    // only the excess. A fill-to-box image call would visibly squash portraits.
+    if (fit === 'bleed' || fit === 'cover') {
+      const { width, height } = this.dimensions(prepared);
+      const scale = Math.max(frame.w / width, frame.h / height);
+      const imageW = width * scale;
+      const imageH = height * scale;
+      const imageX = frame.x + (frame.w - imageW) / 2;
+      const alignTop = fit === 'bleed' || anchor === 'top';
+      const imageY = alignTop ? frame.y : frame.y + (frame.h - imageH) / 2;
+
       d.save();
-      d.opacity(opacity);
-      d.image(prepared.file, frame.x, frame.y, { width: frame.w, height: frame.h });
+      if (radius > 0) d.roundedRect(frame.x, frame.y, frame.w, frame.h, radius).clip();
+      else d.rect(frame.x, frame.y, frame.w, frame.h).clip();
+      d.opacity(opacity).image(prepared.file, imageX, imageY, { width: imageW, height: imageH });
       d.restore();
       if (scrim)
         this.gradientRect(frame.x, frame.y, frame.w, frame.h, scrim[0], scrim[1], {
           angle: 'vertical',
           opacity: scrim[2] ?? 0.75,
         });
+      if (radius > 0)
+        this.outline(frame.x, frame.y, frame.w, frame.h, radius, rgba(WHITE, 0.22), 0.9);
       return;
     }
 
