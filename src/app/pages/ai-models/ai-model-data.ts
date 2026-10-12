@@ -1768,7 +1768,17 @@ export const aiModelProfiles: AiModelProfile[] = [
       fictionalNotice:
         'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
     },
-    portfolio: null,
+    portfolio: {
+      url: '/NeverBeenModels/AlishaBhattacharya/Portfolio/AlishaBhattacharya_Portfolio.pdf',
+      fileName: 'AlishaBhattacharya_Portfolio.pdf',
+      downloadName: 'AlishaBhattacharya_Portfolio.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'neon-mango',
+      styleName: 'Neon Mango',
+      generatedAt: '2026-10-12T12:00:02.193Z',
+      sizeBytes: 5368542,
+    },
     gallery: [
       '/NeverBeenModels/AlishaBhattacharya/_2TKSfGsixykE380bajUToZamFFgxR2jFhOjUA_nzjY.jpg',
       '/NeverBeenModels/AlishaBhattacharya/_6Cy6z7SBpBTGBQjSCwgPft9ETuT2bR5mHeuXuAItb8.png',
@@ -2738,7 +2748,17 @@ export const aiModelProfiles: AiModelProfile[] = [
       fictionalNotice:
         'This biography, the model’s exact fictional birth details, every relative name and relationship, all schools, employers, qualifications, quotations, dates and image prompts are invented for the NeverBeen Multiverse. The images are AI-generated archival-style fiction, not documentary photographs or evidence about a real person.',
     },
-    portfolio: null,
+    portfolio: {
+      url: '/NeverBeenModels/RozalinElMasry/Portfolio/RozalinElMasry_Portfolio.pdf',
+      fileName: 'RozalinElMasry_Portfolio.pdf',
+      downloadName: 'RozalinElMasry_Portfolio.pdf',
+      pages: 24,
+      orientation: 'portrait',
+      style: 'solar-editorial',
+      styleName: 'Solar Editorial',
+      generatedAt: '2026-10-12T12:00:13.357Z',
+      sizeBytes: 5712023,
+    },
     gallery: [
       '/NeverBeenModels/RozalinElMasry/_pmXHRtuiKdnbY9kv9Qbqpwx3U8OHRmyGgGAy-VkwOc.png',
       '/NeverBeenModels/RozalinElMasry/-9e4SqJPUTFYGCx0uelYJtQOZDUgj3WUcQBJE318-Jw.png',
