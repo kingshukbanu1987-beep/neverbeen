@@ -1,0 +1,34 @@
+{
+  "model": "Tasneem Al-Rifai",
+  "album": "TasneemAlRifai",
+  "slug": "tasneem-al-rifai",
+  "document": "TasneemAlRifai_Portfolio.pdf",
+  "url": "/NeverBeenModels/TasneemAlRifai/Portfolio/TasneemAlRifai_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "obsidian-muse",
+    "name": "Obsidian Muse",
+    "mood": "couture noir with a magenta pulse",
+    "seed": 3348336120
+  },
+  "sizeBytes": 5293672,
+  "generatedAt": "2026-10-12T12:17:44.061Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 101,
+    "used": 101,
+    "folder": "public/NeverBeenModels/TasneemAlRifai"
+  },
+  "storySource": "Biography"
+}
