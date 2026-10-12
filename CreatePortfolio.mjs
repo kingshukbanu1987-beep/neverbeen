@@ -13,8 +13,8 @@
  *
  * Every model draws her own style (palette, type treatment, motifs, headlines
  * and page variants) from a seed of her name, so no two portfolios read alike.
- * Photographs come from her album, her personal details from the album/shared
- * metadata, and the story pages from her fictional Multiverse biography.
+ * Photographs come from her album, personal details from album/shared metadata,
+ * and the profile narrative from her biography.
  *
  * Image preparation uses ImageMagick when it is on PATH (`magick` or `convert`)
  * to keep the PDF small and to produce the blurred card backdrops; without it
@@ -51,9 +51,9 @@ const FONTS = {
   BodySemi: 'Poppins_600SemiBold.ttf',
   BodyBold: 'Poppins_800ExtraBold.ttf',
   BodyBlack: 'Poppins_900Black.ttf',
-  Display: 'PlayfairDisplay_900Black.ttf',
-  DisplayBold: 'PlayfairDisplay_700Bold.ttf',
-  DisplayItalic: 'PlayfairDisplay_700Bold_Italic.ttf',
+  Display: 'Poppins_800ExtraBold.ttf',
+  DisplayBold: 'Poppins_800ExtraBold.ttf',
+  DisplayItalic: 'Poppins_800ExtraBold.ttf',
   DisplayBlack: 'Poppins_900Black.ttf',
 };
 
@@ -190,6 +190,38 @@ function albumPhotos(model) {
     .map((fileName) => join(model.albumDir, fileName));
 }
 
+const disclosureWords =
+  /\b(?:fictional|fiction|invented|imagined|alternate[\s-]universe|AI-generated|AI model|does not exist in reality|not a real|not presented as real)\b/i;
+
+/** Removes production notes from short biography fields while keeping the profile detail. */
+function portfolioField(value) {
+  return text(value)
+    .replace(/\s*\([^)]*(?:fictional|imagined|invented)[^)]*\)/gi, '')
+    .replace(/\bcurrent in this(?: fictional)? timeline\b/gi, 'Present')
+    .replace(
+      /\s*[·,–—-]?\s*(?:fictional|fiction|imagined|invented)\s+(?:role|timeline|institution|studio|collective|degree|character detail|storyline|profile)\b/gi,
+      '',
+    )
+    .replace(/\bNeverBeen Multiverse\b/gi, 'NeverBeen Studio')
+    .replace(/\bAI model\b/gi, 'model')
+    .replace(/\b(?:fictional|fiction|imagined|invented)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .trim();
+}
+
+/** Keeps only in-world narrative sentences, excluding disclosure/production copy. */
+function portfolioCopy(value) {
+  return String(value ?? '')
+    .split(/(?<=[.!?])\s+/)
+    .filter((sentence) => sentence.trim() && !disclosureWords.test(sentence))
+    .map(portfolioField)
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Completed degrees and the story fields the portfolio's story pages quote. */
 function readStory(albumDir) {
   const source = readJson(join(albumDir, 'Biography', 'biography.json'));
@@ -202,13 +234,24 @@ function readStory(albumDir) {
     Array.isArray(value)
       ? value
           .filter((entry) => entry && typeof entry === 'object' && !Array.isArray(entry))
-          .map((entry) => Object.fromEntries(fields.map((field) => [field, text(entry[field])])))
+          .map((entry) =>
+            Object.fromEntries(
+              fields.map((field) => [
+                field,
+                field === 'description' || field === 'text'
+                  ? portfolioCopy(entry[field])
+                  : portfolioField(entry[field]),
+              ]),
+            ),
+          )
       : [];
 
   return {
-    title: text(source.title),
-    summary: text(source.summary),
-    earlyLife: Array.isArray(source.earlyLife) ? source.earlyLife.map(text).filter(Boolean) : [],
+    title: 'A life in motion',
+    summary: portfolioCopy(source.summary),
+    earlyLife: Array.isArray(source.earlyLife)
+      ? source.earlyLife.map(portfolioCopy).filter(Boolean)
+      : [],
     educationalBackground: list(source.educationalBackground, [
       'period',
       'qualification',
@@ -223,12 +266,20 @@ function readStory(albumDir) {
     ),
     career: list(source.career, ['period', 'role', 'organization', 'location', 'description']),
     achievements: Array.isArray(source.achievements)
-      ? source.achievements.map(text).filter(Boolean)
+      ? source.achievements.map(portfolioCopy).filter(Boolean)
       : [],
-    interests: Array.isArray(source.interests) ? source.interests.map(text).filter(Boolean) : [],
-    passions: Array.isArray(source.passions) ? source.passions.map(text).filter(Boolean) : [],
-    hobbies: Array.isArray(source.hobbies) ? source.hobbies.map(text).filter(Boolean) : [],
-    ambitions: Array.isArray(source.ambitions) ? source.ambitions.map(text).filter(Boolean) : [],
+    interests: Array.isArray(source.interests)
+      ? source.interests.map(portfolioField).filter(Boolean)
+      : [],
+    passions: Array.isArray(source.passions)
+      ? source.passions.map(portfolioField).filter(Boolean)
+      : [],
+    hobbies: Array.isArray(source.hobbies)
+      ? source.hobbies.map(portfolioField).filter(Boolean)
+      : [],
+    ambitions: Array.isArray(source.ambitions)
+      ? source.ambitions.map(portfolioCopy).filter(Boolean)
+      : [],
     quotes: list(source.quotes, ['text', 'by']).filter((entry) => entry.text),
   };
 }
@@ -257,17 +308,10 @@ class ImagePreparer {
     return out;
   }
 
-  treatmentArgs(treatment) {
-    switch (treatment) {
-      case 'mono':
-        return ['-colorspace', 'Gray', '-level', '6%,94%'];
-      case 'duotone':
-        return ['-colorspace', 'Gray', '-fill', this.accent, '-tint', '58'];
-      case 'warm':
-        return ['-modulate', '102,118'];
-      default:
-        return [];
-    }
+  treatmentArgs() {
+    // Keep each model photograph true to its original colour; the editorial
+    // treatments belong in the layout, never on the model's image itself.
+    return [];
   }
 
   /**
@@ -356,20 +400,60 @@ class ImagePreparer {
     return prepared;
   }
 
-  /** The website logo, flattened onto paper white and downsized for the masthead. */
+  /** Prepares transparent logo variants without adding a white backing tile. */
   logo() {
-    if (!this.binary) return { file: logoFile, aspect: LOGO_ASPECT };
-    const out = join(this.workDir, 'neverbeen-logo-masthead.jpg');
-    if (!existsSync(out)) {
-      this.run(
-        logoFile,
-        ['-resize', 'x220', '-background', '#F6F2EC', '-flatten', '-quality', '90', '-strip'],
-        out,
-      );
+    if (!this.binary) {
+      return {
+        file: logoFile,
+        aspect: LOGO_ASPECT,
+        headerFile: logoFile,
+        headerAspect: LOGO_ASPECT,
+      };
     }
-    const probe = spawnSync(this.binary, [out, '-format', '%w %h', 'info:'], { encoding: 'utf8' });
-    const [w, h] = (probe.stdout || '').trim().split(/\s+/).map(Number);
-    return { file: out, aspect: w && h ? w / h : LOGO_ASPECT };
+
+    const full = join(this.workDir, 'neverbeen-logo-transparent.png');
+    const header = join(this.workDir, 'neverbeen-logo-wordmark.png');
+    // Brighten the navy lettering for the black masthead while preserving the
+    // PNG alpha channel and the red paper plane; no opaque background is added.
+    this.run(
+      logoFile,
+      ['-trim', '+repage', '-resize', 'x640', '-channel', 'RGB', '-level', '0%,38%', '+channel'],
+      full,
+    );
+    // The compact masthead uses the transparent wordmark and mark, without the
+    // vacation tagline, so it remains legible at a genuinely small header height.
+    this.run(
+      logoFile,
+      [
+        '-crop',
+        '1408x380+0+100',
+        '+repage',
+        '-trim',
+        '+repage',
+        '-resize',
+        'x180',
+        '-channel',
+        'RGB',
+        '-level',
+        '0%,38%',
+        '+channel',
+      ],
+      header,
+    );
+
+    const probe = (file) => {
+      const result = spawnSync(this.binary, [file, '-format', '%w %h', 'info:'], {
+        encoding: 'utf8',
+      });
+      const [width, height] = (result.stdout || '').trim().split(/\s+/).map(Number);
+      return width && height ? width / height : LOGO_ASPECT;
+    };
+    return {
+      file: full,
+      aspect: probe(full),
+      headerFile: header,
+      headerAspect: probe(header),
+    };
   }
 }
 
@@ -387,6 +471,29 @@ const NOTE_BANK = [
   'The frame the client asked to keep for the campaign wall.',
 ];
 
+function naturalJoin(values) {
+  const items = values.filter(Boolean);
+  if (items.length < 2) return items[0] ?? '';
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+}
+
+function portfolioBio(model, story) {
+  const qualification = story?.educationalBackground?.[0]?.qualification ?? '';
+  const inPosition = qualification.toLowerCase().lastIndexOf(' in ');
+  const field = portfolioField(
+    inPosition >= 0 ? qualification.slice(inPosition + 4) : qualification,
+  );
+  const interests = (story?.interests ?? []).slice(0, 2);
+  const location = model.location || model.city || 'the studio';
+  const introduction = `${model.name} is a model and creative collaborator based in ${location}.`;
+  const work = field
+    ? `Her background in ${field.toLowerCase()} informs an image-led approach to editorial, fashion and brand storytelling.`
+    : 'Her work moves confidently between editorial portraits, fashion and campaign storytelling.';
+  const perspective = interests.length ? `Her eye is shaped by ${naturalJoin(interests)}.` : '';
+  return [introduction, work, perspective].filter(Boolean).join(' ');
+}
+
 function buildContent({ model, story, design, photos, preparer }) {
   const nameParts = model.name.split(/\s+/);
   const city = (model.location.split(',')[0] || '').trim();
@@ -399,22 +506,32 @@ function buildContent({ model, story, design, photos, preparer }) {
     style: design.style.name,
   };
   const sources = photos.length ? photos : [];
+  const qualification = story?.educationalBackground?.[0]?.qualification ?? '';
+  const inPosition = qualification.toLowerCase().lastIndexOf(' in ');
+  const field = portfolioField(
+    inPosition >= 0 ? qualification.slice(inPosition + 4) : qualification,
+  );
+  const highlights = [field, story?.interests?.[0], city, country]
+    .map(portfolioField)
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .slice(0, 3);
 
-  const treatments = ['none', 'none', 'mono', 'duotone'];
+  model.bio = portfolioBio(model, story) || portfolioCopy(model.bio);
+
   const ctx = {
     model,
     story,
     design,
+    highlights,
     pageIndex: 0,
-    /** How many photographs the model's album holds — quoted on the contents page. */
-    photoCount: sources.length,
     shoot(index, spec = {}) {
       if (sources.length === 0) return null;
       const source = sources[((index % sources.length) + sources.length) % sources.length];
       return preparer.prepare(source, spec);
     },
-    treatmentFor(index) {
-      return treatments[design.variant(index + 31) % treatments.length];
+    treatmentFor() {
+      return 'none';
     },
     editorialNote(index) {
       const note = NOTE_BANK[design.variant(index + 41) % NOTE_BANK.length];
@@ -560,7 +677,7 @@ function createForModel(model, options) {
     info: {
       Title: `${model.name} — NeverBeen Model Portfolio`,
       Author: 'NeverBeen',
-      Subject: `24-page portrait-orientation fashion portfolio in the ${design.style.name} style`,
+      Subject: `${model.name} · fashion and editorial model portfolio`,
       Keywords: `NeverBeen, portfolio, ${model.name}, ${design.style.id}, fashion, editorial`,
       Creator: `CreatePortfolio.mjs v${VERSION}`,
     },
@@ -578,12 +695,12 @@ function createForModel(model, options) {
 
   const year = new Date().getFullYear();
   const kit = new PortfolioKit(doc, fonts, {
-    logo: logo.file,
-    logoAspect: logo.aspect,
+    logo: logo.headerFile,
+    logoAspect: logo.headerAspect,
     year,
     accent: design.accent,
     accent2: design.accent2,
-    documentLabel: `${model.name} · NeverBeen portfolio`,
+    documentLabel: 'THE NEVERBEEN STUDIO',
   });
   kit.registerFonts();
   kit.totalPages = PAGE_COUNT;
@@ -591,8 +708,8 @@ function createForModel(model, options) {
   const generatedAt = new Date().toISOString();
   const content = buildContent({ model: modelFacts, story, design, photos, preparer });
   content.meta = {
-    logo: logo.file,
-    logoAspect: logo.aspect,
+    logo: logo.headerFile,
+    logoAspect: logo.headerAspect,
     year,
     fileName: pdfName,
     generatedAt,
@@ -608,7 +725,6 @@ function createForModel(model, options) {
         model: model.name,
         album: model.folder,
         slug: modelFacts.slug,
-        fictional: true,
         document: pdfName,
         url: `/NeverBeenModels/${model.folder}/Portfolio/${encodeURIComponent(pdfName)}`,
         pages: PAGE_COUNT,
@@ -634,9 +750,7 @@ function createForModel(model, options) {
           used: [...new Set(Array.from({ length: photos.length }, (_, i) => i))].length,
           folder: `public/NeverBeenModels/${model.folder}`,
         },
-        storySource: story ? 'Biography/biography.json' : null,
-        fictionalNotice:
-          'Story pages quote the model’s fictional NeverBeen Multiverse biography; photographs are studio album frames.',
+        storySource: story ? 'Biography' : null,
       };
       writeFileSync(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
       console.log(

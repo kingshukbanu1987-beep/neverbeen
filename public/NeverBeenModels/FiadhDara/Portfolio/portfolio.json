@@ -2,7 +2,6 @@
   "model": "Fiadh Dara",
   "album": "FiadhDara",
   "slug": "fiadh-dara",
-  "fictional": true,
   "document": "FiadhDara_Portfolio.pdf",
   "url": "/NeverBeenModels/FiadhDara/Portfolio/FiadhDara_Portfolio.pdf",
   "pages": 24,
@@ -19,8 +18,8 @@
     "mood": "tropical voltage, street-gloss shine",
     "seed": 360452951
   },
-  "sizeBytes": 5566888,
-  "generatedAt": "2026-10-12T06:27:30.625Z",
+  "sizeBytes": 5389808,
+  "generatedAt": "2026-10-12T07:44:07.067Z",
   "generator": {
     "script": "CreatePortfolio.mjs",
     "version": "1.0.0"
@@ -31,6 +30,5 @@
     "used": 85,
     "folder": "public/NeverBeenModels/FiadhDara"
   },
-  "storySource": "Biography/biography.json",
-  "fictionalNotice": "Story pages quote the model’s fictional NeverBeen Multiverse biography; photographs are studio album frames."
+  "storySource": "Biography"
 }

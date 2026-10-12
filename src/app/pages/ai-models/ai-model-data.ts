@@ -497,8 +497,8 @@ export const aiModelProfiles: AiModelProfile[] = [
       orientation: 'portrait',
       style: 'neon-mango',
       styleName: 'Neon Mango',
-      generatedAt: '2026-10-12T06:27:30.625Z',
-      sizeBytes: 5566888,
+      generatedAt: '2026-10-12T07:44:07.067Z',
+      sizeBytes: 5389808,
     },
     gallery: [
       '/NeverBeenModels/FiadhDara/_sTof-XqCgAFE9b2cdJ6EDijJx_eHyWEK70Sw6fImIo.png',

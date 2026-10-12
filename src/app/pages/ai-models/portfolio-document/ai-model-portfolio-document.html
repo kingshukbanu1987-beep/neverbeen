@@ -8,21 +8,14 @@
             <span aria-hidden="true">←</span> {{ profile.name }}
           </a>
           <div class="document-title">
-            <p class="eyebrow">NeverBeen portfolio document</p>
+            <p class="eyebrow">THE NEVERBEEN STUDIO</p>
             <h1>{{ profile.name }}</h1>
             <p class="document-meta">
-              @if (portfolio.pages > 0) {
-                <span>{{ portfolio.pages }} pages</span>
+              @if (profile.location) {
+                <span>{{ profile.location }}</span>
               }
-              <span>{{ portfolio.orientation === 'portrait' ? 'Portrait' : portfolio.orientation }}</span>
-              @if (portfolio.styleName) {
-                <span>{{ portfolio.styleName }} style</span>
-              }
-              @if (generatedOn()) {
-                <span>Generated {{ generatedOn() }}</span>
-              }
-              @if (sizeLabel()) {
-                <span>{{ sizeLabel() }}</span>
+              @if (profile.handle) {
+                <span>{{ profile.handle }}</span>
               }
             </p>
           </div>
