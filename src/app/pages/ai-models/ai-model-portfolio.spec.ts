@@ -356,6 +356,7 @@ describe('AiModelPortfolioPage', () => {
     const element = harness.routeNativeElement as HTMLElement;
 
     try {
+      expect(element.querySelector('#testimonials')).not.toBeNull();
       expect(element.querySelector('.testimonial-headline')?.textContent?.trim()).toBe(
         'A wonderful creative partnership',
       );

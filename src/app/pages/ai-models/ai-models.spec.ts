@@ -4,6 +4,7 @@ import {
   MediaEngagementStats,
   ModelMediaEngagementService,
 } from '../../services/model-media-engagement.service';
+import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelsPage, drawCover } from './ai-models';
 
@@ -15,7 +16,19 @@ function cardCovers(element: HTMLElement): string[] {
 }
 
 describe('AiModelsPage', () => {
+  let testimonialsApi: { list: ReturnType<typeof vi.fn> };
+
   beforeEach(async () => {
+    testimonialsApi = {
+      list: vi.fn().mockResolvedValue({
+        items: [],
+        totalCount: 0,
+        page: 1,
+        pageSize: 100,
+        totalPages: 0,
+      }),
+    };
+
     await TestBed.configureTestingModule({
       imports: [AiModelsPage],
       providers: [
@@ -33,6 +46,7 @@ describe('AiModelsPage', () => {
             })),
           },
         },
+        { provide: ModelTestimonialsService, useValue: testimonialsApi },
       ],
     }).compileComponents();
   });
@@ -102,6 +116,93 @@ describe('AiModelsPage', () => {
       heading.textContent?.trim(),
     );
     expect(cardNames).toEqual(expectedNames);
+  });
+
+  it('averages every testimonial page, fills fractional stars, and links to the portfolio testimonials', async () => {
+    const profile = aiModelProfiles[0];
+    testimonialsApi.list.mockImplementation(async (slug: string, page = 1) => {
+      if (slug !== profile.slug) {
+        return { items: [], totalCount: 0, page, pageSize: 100, totalPages: 0 };
+      }
+
+      return page === 1
+        ? {
+            items: [
+              { id: 1, rating: 5 },
+              { id: 2, rating: 4 },
+            ],
+            totalCount: 4,
+            page,
+            pageSize: 2,
+            totalPages: 2,
+          }
+        : {
+            items: [
+              { id: 3, rating: 4 },
+              { id: 4, rating: 4 },
+            ],
+            totalCount: 4,
+            page,
+            pageSize: 2,
+            totalPages: 2,
+          };
+    });
+
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const card = Array.from(element.querySelectorAll<HTMLElement>('.model-card')).find(
+      (modelCard) => modelCard.querySelector('h3')?.textContent?.trim() === profile.name,
+    )!;
+    const stars = Array.from(card.querySelectorAll<HTMLElement>('.card-rating-star'));
+    const reviewLink = card.querySelector<HTMLAnchorElement>('.card-review-link')!;
+
+    expect(card.querySelector('.card-rating-value')?.textContent?.trim()).toBe('4.3');
+    expect(stars).toHaveLength(5);
+    expect(stars.map((star) => star.style.getPropertyValue('--star-fill'))).toEqual([
+      '100%',
+      '100%',
+      '100%',
+      '100%',
+      '30%',
+    ]);
+    expect(reviewLink.textContent?.replace(/\s+/g, ' ').trim()).toContain('(4 reviews)');
+    expect(reviewLink.getAttribute('href')).toBe(`/ai-models/${profile.slug}#testimonials`);
+    expect(testimonialsApi.list).toHaveBeenCalledWith(profile.slug, 1, 100);
+    expect(testimonialsApi.list).toHaveBeenCalledWith(profile.slug, 2, 100);
+
+    fixture.destroy();
+  });
+
+  it('shows a zero score, five unfilled stars, and a linked No Reviews label when the feed is empty', async () => {
+    const profile = aiModelProfiles[0];
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const card = Array.from(element.querySelectorAll<HTMLElement>('.model-card')).find(
+      (modelCard) => modelCard.querySelector('h3')?.textContent?.trim() === profile.name,
+    )!;
+    const stars = Array.from(card.querySelectorAll<HTMLElement>('.card-rating-star'));
+    const reviewLink = card.querySelector<HTMLAnchorElement>('.card-review-link')!;
+
+    expect(card.querySelector('.card-rating-value')?.textContent?.trim()).toBe('0.0');
+    expect(stars.map((star) => star.style.getPropertyValue('--star-fill'))).toEqual([
+      '0%',
+      '0%',
+      '0%',
+      '0%',
+      '0%',
+    ]);
+    expect(reviewLink.textContent?.replace(/\s+/g, ' ').trim()).toContain('(No Reviews)');
+    expect(reviewLink.getAttribute('href')).toBe(`/ai-models/${profile.slug}#testimonials`);
+
+    fixture.destroy();
   });
 
   it('shows how many photographs each portfolio holds, in large bold type on the cover', () => {
