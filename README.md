@@ -171,9 +171,23 @@ attach a photograph (or take one with the camera) or a document, and can react t
 👍 ❤️ 😂 😮 😢 😡 (a double-click is a ❤️) — and she reacts back on the visitor's own message with
 what the message deserves.
 
-Before any of that, a glass form asks who she is talking to: a name of three to fourteen characters
-(checked as it is typed) and one photograph — uploaded or taken with the front camera and reduced to
-about 100 KB automatically. From then on her photograph stands, circular, beside every answer and the
+On a laptop or a tablet held sideways the window opens landscape and wide (`min(1240px, 95vw)`), with
+her photograph, her name, her city and country and **View Profile** moved into a side panel on the
+left, and the conversation alone on the right; on a phone it is the same portrait column as before.
+
+She reads what people actually type: stretched letters, missing apostrophes, thumb-shortened forms
+(`u`, `ur`, `pls`, `thnx`) and spelling mistakes are repaired before her engine looks at a message —
+*"u r sooooo beutifull!!"* is answered as the compliment it is, warmly and in her own country's words,
+and never with a list of what she can do. Visitors who write their own language in Latin letters
+(Romanised Bengali, Hindi, Urdu, Persian, Arabic, Turkish, Spanish, Malay) are understood through her
+own phrase books and, when they are not enough, through Google Translate — and **she answers in that
+same Romanised language and keeps answering in it** for the rest of the session. Personal questions
+about her life are answered in the first person, with feeling and a question back.
+
+Before any of that, a glass form asks who she is talking to — it has its own **✕** in the corner — a
+name of three to fourteen characters (checked as it is typed, asked for with the words "Write your
+name here") and one photograph — uploaded or taken with the front camera and reduced to about 100 KB
+automatically. From then on her photograph stands, circular, beside every answer and the
 visitor's beside their own messages; she uses their **first name** and opens the conversation herself.
 Her answers are never printed out for the visitor: the window shows her name and **typing** for as
 long as a person needs to type that many characters (about 34 ms a character, never under two and a

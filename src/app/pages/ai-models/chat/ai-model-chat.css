@@ -48,7 +48,9 @@
 .chat-panel {
   position: relative;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  /* The bar and her card come first (they live in `.chat-side`, which is `display: contents` on a
+     phone), then the conversation, which is the only part that scrolls. */
+  grid-template-rows: auto auto minmax(0, 1fr);
   width: min(480px, 100%);
   height: min(94vh, 900px);
   overflow: hidden;
@@ -58,6 +60,28 @@
   box-shadow: var(--chat-shadow);
   color: var(--chat-ink);
   animation: chat-rise 260ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+}
+
+/* ------------------------------------------------------------------ her column */
+
+/*
+ * On a phone the side column does not exist as a box: `display: contents` lifts the bar and her card
+ * into the window's own grid, exactly as they were before. From 900px up — a laptop, a tablet on its
+ * side — the same markup becomes the wide, landscape window: her information in a column on the
+ * left, and on the right the conversation and nothing else.
+ */
+.chat-side {
+  display: contents;
+}
+
+.chat-conversation {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.chat-footer {
+  display: grid;
 }
 
 /* ------------------------------------------------------------------ the bar */
@@ -979,6 +1003,95 @@
 }
 
 /* ------------------------------------------------------------------ small screens */
+
+/*
+ * Wide screens — a laptop or a tablet on its side: the window opens landscape and wide, her card
+ * moves from the top into a side panel, and the right-hand column shows the chat alone.
+ */
+@media (min-width: 900px) {
+  .chat-backdrop {
+    padding: clamp(0.8rem, 1.6vw, 1.6rem);
+  }
+
+  .chat-panel {
+    grid-template-columns: minmax(286px, 336px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    width: min(1240px, 95vw);
+    height: min(88vh, 840px);
+    border-radius: 24px;
+  }
+
+  .chat-side {
+    display: grid;
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--chat-line);
+    background: linear-gradient(180deg, #fbfaff, #f4f2fb 58%, #f8f7fc);
+  }
+
+  .chat-conversation {
+    grid-column: 2;
+    grid-row: 1;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  /* Her card: no bottom border of its own — the whole column is the panel now. */
+  .chat-profile {
+    align-content: start;
+    padding: 1.6rem 1.4rem 1.5rem;
+    border-bottom: 0;
+    background: transparent;
+  }
+
+  .chat-profile-photo {
+    width: clamp(112px, 11vw, 140px);
+  }
+
+  .chat-profile h2 {
+    font-size: 1.4rem;
+  }
+
+  .chat-profile-disclaimer {
+    max-width: 30ch;
+  }
+
+  /* The bar heads the column: her identity on the first line, the clock and the ✕ under it. */
+  .chat-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.55rem;
+    padding: 0.85rem 0.9rem 0.9rem;
+    border-bottom: 1px solid var(--chat-line);
+  }
+
+  .chat-bar-identity {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .chat-clock {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    text-align: left;
+  }
+
+  .chat-close {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+  }
+
+  .chat-messages {
+    padding: 1.1rem 1.4rem 1.3rem;
+  }
+
+  .chat-composer {
+    padding-inline: 1.2rem;
+  }
+}
 
 @media (max-width: 560px) {
   .chat-backdrop {

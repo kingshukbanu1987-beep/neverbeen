@@ -5,6 +5,7 @@
  * (`src/app/services/ai-model-chat.service.ts`).
  */
 import { ChatIdentity } from './chat-identity';
+import type { RomanisedLanguageCode } from './chat-language';
 
 /** Who wrote a message: the model, the visitor, or NeverBeen itself (reminders and notices). */
 export type AiChatAuthor = 'model' | 'user' | 'system';
@@ -141,6 +142,13 @@ export interface AiChatSession {
   pitches: number;
   /** When the session ended, for the summary card (requirement K). */
   closedAt: number;
+  /**
+   * The Romanised language the visitor writes in (`chat-language.ts`), once it has been read from
+   * their own words: `bn`, `hi`, `ur`, `fa`, `ar`, `tr`, `es` or `ms`, and `''` while the
+   * conversation is in English. She keeps answering in it for the rest of the session — the way a
+   * person does once the other side has switched.
+   */
+  language: RomanisedLanguageCode | '';
 }
 
 /** The two-hour maximum of one chat session. */

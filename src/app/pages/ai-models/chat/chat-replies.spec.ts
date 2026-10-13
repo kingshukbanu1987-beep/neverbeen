@@ -268,4 +268,122 @@ describe('attachments and small talk', () => {
     expect(reply('Who are you?').text).toBe(reply('Who are you?').text);
     expect(CHAT_WELCOME_LINE).toContain('AI-generated');
   });
+
+  it('answers a compliment like a woman, not like a machine (the studio’s own example)', () => {
+    const answer = reply('you are very beautiful');
+    expect(answer.intent).not.toBe('unknown');
+    // Nothing about capitals, currencies or what she is good at — she blushes and asks something.
+    expect(answer.text.toLowerCase()).not.toContain('capital');
+    expect(answer.text.toLowerCase()).not.toContain('currency');
+    expect(answer.text.toLowerCase()).not.toContain('i will shine');
+    expect(answer.text.split('\n').length).toBeGreaterThan(1);
+    // Warm, in her own words, and with a question of her own at the end.
+    expect(answer.text).toMatch(
+      /thank|blush|pink|smil|charming|insufferable|kind|lovely|pretty|beautiful/i,
+    );
+    expect(answer.text).toMatch(/\?/);
+  });
+
+  it('reads a compliment through spelling mistakes and stretched letters', () => {
+    const straight = reply('you are very beautiful');
+    const typed = reply('u r sooooo beutifull!!');
+    expect(typed.intent).not.toBe('unknown');
+    expect(typed.text).not.toContain('i am not sure i follow you');
+    expect(straight.intent).toBe(typed.intent);
+  });
+
+  it('answers a personal question as herself, never with “it is on the website”', () => {
+    for (const question of [
+      'do you have a boyfriend?',
+      'tell me about your studies',
+      'how did your career start?',
+      'what is your dream?',
+    ]) {
+      const answer = reply(question);
+      expect(answer.intent).toBe('biography');
+      expect(answer.text.toLowerCase()).not.toContain('would rather quote it');
+      expect(answer.text.toLowerCase()).not.toContain('on the website');
+      expect(answer.text).toMatch(/\?/);
+    }
+  });
+
+  it('never repeats the same sentence twice in one conversation', () => {
+    const said = 'achha — you say that very easily. thank you, i have gone a little pink.';
+    const historyHome: AiChatMessage[] = [
+      {
+        id: 'm1',
+        author: 'model',
+        text: said,
+        at: Date.now(),
+        kind: 'message',
+        attachment: null,
+        reaction: null,
+        reactionBy: null,
+        pending: false,
+        revealedChars: said.length,
+        sources: [],
+        intent: 'affection',
+      },
+    ];
+    const answer = composeChatReply({
+      model: alisha,
+      message: message('you are very beautiful'),
+      history: historyHome,
+      session: { strikes: 0, introduced: true },
+      now: new Date('2026-10-13T09:30:00'),
+    });
+    expect(answer.text).not.toContain('you say that very easily');
+  });
+
+  it('asks again instead of listing what she knows when a message makes no sense', () => {
+    const answer = reply('zzz qqq wwww');
+    expect(answer.intent).toBe('unknown');
+    expect(answer.text.toLowerCase()).not.toContain('capital');
+    expect(answer.text.toLowerCase()).not.toContain('currenc');
+    expect(answer.text.toLowerCase()).not.toContain('i do not know that one');
+    expect(answer.text).toMatch(/\?/);
+  });
+
+  it('answers a Romanised message in that language and nowhere else', () => {
+    const answer = composeChatReply({
+      model: alisha,
+      message: message('ami tomake bhalobashi'),
+      history: [],
+      session: { strikes: 0, introduced: true },
+      language: {
+        code: 'bn',
+        label: 'Bengali',
+        english: 'i love you',
+        romanised: true,
+        source: 'books',
+        fresh: true,
+      },
+      now: new Date('2026-10-13T09:30:00'),
+    });
+    expect(answer.intent).toBe('language:bn:affection');
+    expect(answer.text).toMatch(/[A-Za-z]/);
+    expect(answer.text.toLowerCase()).not.toContain('thank you');
+    expect(answer.text).not.toContain('I ');
+  });
+
+  it('introduces herself in the visitor’s language on the first Bengali message', () => {
+    const answer = composeChatReply({
+      model: alisha,
+      message: message('kemon acho?'),
+      history: [],
+      session: { strikes: 0, introduced: false },
+      language: {
+        code: 'bn',
+        label: 'Bengali',
+        english: 'how are you',
+        romanised: true,
+        source: 'books',
+        fresh: true,
+      },
+      now: new Date('2026-10-13T09:30:00'),
+    });
+    expect(answer.intent).toBe('language:bn:intro');
+    expect(answer.introduced).toBe(true);
+    expect(answer.text).toContain('Alisha Bhattacharya');
+  });
 });

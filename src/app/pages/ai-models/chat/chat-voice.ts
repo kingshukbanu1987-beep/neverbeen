@@ -790,8 +790,8 @@ function interestQuestion(interests: readonly string[], seed: string): string {
       'Tell me the last place you travelled to. I want to picture it.',
     ],
     'the world': [
-      'Ask me about anywhere in the world. I am surprisingly good at capitals.',
-      'Give me a country and I will tell you something about it.',
+      'Where are you writing from? I like knowing which window you are looking out of.',
+      'Tell me about a place you have been that you still think about.',
     ],
     'films and music': [
       'What are you listening to right now? I am in a soft-songs mood.',
@@ -850,10 +850,10 @@ export function idleChatOpener(options: {
     `If you are reading and not typing, that is fine. I am here when you are.`,
   ];
   const world = [
-    `Something I read and cannot stop thinking about: the Nile runs through eleven countries. Eleven. Ask me anything like that and I will probably know it.`,
-    `Did you know Nepal is nearly an hour ahead of India, and the whole country runs on one time zone? It fascinates me, being partly made of facts like that.`,
-    `The world outside is loud today. What is it like where you are — warm, grey, raining?`,
-    `Ask me a capital city. Any of them. I never miss.`,
+    `Something I cannot stop thinking about today: the way a city smells after rain. It is different in every single one.`,
+    `It is late where I am and I am still awake, which is when I get sentimental about places I have never actually been. What is it like where you are?`,
+    `The world outside is loud today. What is it like on your side — warm, grey, raining?`,
+    `Tell me what you can see from where you are sitting. Not the big view — the small one.`,
   ];
   const interests = behaviour.interests.length
     ? [interestQuestion(behaviour.interests, `${seed}|interest-${behaviorSeedKey(behaviour)}`)]
@@ -880,7 +880,8 @@ function behaviorSeedKey(behaviour: ChatUserBehaviour): string {
 
 function askInterest(behaviour: ChatUserBehaviour, seed: string): string {
   const first = behaviour.interests[0];
-  if (!first) return 'Ask me something — anything at all. I am bored of my own thoughts.';
+  if (!first)
+    return 'Ask me something — anything at all. I am sitting here with my thoughts and they are not entertaining me.';
   return interestQuestion([first], `${seed}|ask`);
 }
 

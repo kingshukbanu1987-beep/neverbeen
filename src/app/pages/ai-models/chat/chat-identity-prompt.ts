@@ -38,6 +38,8 @@ import {
 export class ChatIdentityPrompt {
   readonly model = input.required<AiModelProfile>();
   readonly confirmed = output<ChatIdentity>();
+  /** The visitor closed the form: the chat window goes with it. */
+  readonly cancelled = output<void>();
 
   protected readonly minLength = CHAT_NAME_MIN_LENGTH;
   protected readonly maxLength = CHAT_NAME_MAX_LENGTH;
@@ -67,6 +69,11 @@ export class ChatIdentityPrompt {
     this.touched.set(true);
     const value = (event.target as HTMLInputElement).value.slice(0, CHAT_NAME_MAX_LENGTH + 6);
     this.name.set(value);
+  }
+
+  /** The ✕ of the form: nothing is confirmed, the window simply closes. */
+  protected cancel(): void {
+    this.cancelled.emit();
   }
 
   protected pickPhoto(): void {

@@ -56,6 +56,39 @@
   animation: gate-spin 9s linear infinite;
 }
 
+/* The ✕ of the form, in the same place as the window's own close button. */
+.gate-close {
+  position: absolute;
+  z-index: 2;
+  top: clamp(0.6rem, 2vw, 0.9rem);
+  right: clamp(0.6rem, 2vw, 0.9rem);
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(11 11 15 / 10%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 82%);
+  color: #0b0b0f;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.gate-close:hover,
+.gate-close:focus-visible {
+  background: #ececf1;
+  transform: scale(1.05);
+}
+
+.gate-close:focus-visible {
+  outline: 2px solid var(--gate-violet);
+  outline-offset: 2px;
+}
+
 .gate-head {
   display: grid;
   justify-items: center;

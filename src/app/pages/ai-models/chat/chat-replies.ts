@@ -18,6 +18,13 @@
  */
 import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { assessChatLanguage, chatModerationReply } from './chat-moderation';
+import { readVisitorMessage } from './chat-input';
+import {
+  ChatLanguageIntent,
+  ChatVisitorLanguage,
+  RomanisedLanguageCode,
+  romanisedReply,
+} from './chat-language';
 import {
   AiChatFact,
   AiChatPersona,
@@ -39,6 +46,7 @@ import {
   selfieCaption,
 } from './chat-selfie';
 import {
+  ChatAgeBand,
   ChatUserBehaviour,
   analyseUserBehaviour,
   garnishChatReply,
@@ -77,6 +85,12 @@ export interface AiChatReplyRequest {
   photo?: ChatPhotoFacts | null;
   /** False when she has no photograph of herself to send back (requirement E). */
   canSendSelfie?: boolean;
+  /**
+   * The language the visitor is writing in, once `readChatLanguage()` has read the message: her
+   * own books first, Google Translate when they were not enough. When it is set, the whole message
+   * is analysed in English (`language.english`) and answered in that Romanised language.
+   */
+  language?: ChatVisitorLanguage | null;
   now: Date;
 }
 
@@ -134,7 +148,73 @@ export function chatIntroduction(model: AiModelProfile, now: Date, firstName = '
 // ------------------------------------------------------------------ reactions
 
 const AFFECTION_PATTERN =
-  /\b(?:i love you|love you|love u|luv u|i like you|marry me|be my (?:girlfriend|wife|valentine)|kiss me|miss you|you are (?:so )?(?:beautiful|gorgeous|pretty|cute|stunning|hot|amazing)|you're (?:so )?(?:beautiful|gorgeous|pretty|cute|stunning|hot)|my love|sweetheart|darling)\b/;
+  /\b(?:i love you|love you|love u|i like you|marry me|be my (?:girlfriend|wife|valentine)|kiss me|miss you|my love|sweetheart|darling)\b/;
+
+/**
+ * A compliment, in every shape it arrives in: "you are very beautiful", "you look stunning today",
+ * "ur pretty", "what a smile", "your eyes are lovely", "nice photo". The visitor's own words have
+ * been repaired before this test (`chat-input.ts`), so the misspellings are already gone.
+ */
+const COMPLIMENT_PATTERN =
+  /\b(?:you|u|ur|you're|youre)\s+(?:are|r|look|looks|seem|seems|were)\s+(?:so|very|really|too|quite|extremely|such|a bit|just|pretty\s)?\s*(?:beautiful|gorgeous|pretty|cute|stunning|hot|lovely|adorable|charming|sweet|attractive|amazing|wonderful|incredible|perfect|fine|nice|elegant|dreamy|angelic|divine)\b|\b(?:beautiful|gorgeous|stunning|lovely|pretty|cute) (?:girl|woman|lady|face|eyes|smile|voice)\b|\bwhat a (?:beauty|smile|face|woman|look|picture|photograph)\b|\byour (?:smile|eyes|face|hair|look|photographs?|photos?)\b[^.?!]{0,24}\b(?:beautiful|gorgeous|stunning|lovely|pretty|nice|amazing|incredible|perfect|wonderful)\b|\byou (?:are|look) (?:like )?(?:an angel|a dream|a goddess|something else)\b|\b(?:i|me) (?:like|love|adore) (?:your|ur) (?:photos?|photographs?|pictures?|smile|eyes|face|hair|voice|work)\b/;
+
+/** "how are you", "how is your day going", "how was your day" — a question a person answers first. */
+const HOW_ARE_YOU_PATTERN =
+  /\bhow (?:are|r) (?:you|u|things|you doing)|\bhow(?:'s| is| was) (?:your|the) (?:day|morning|evening|night|week|shoot|work)|\bhow have you been\b|\bwhat are you up to\b/;
+
+/**
+ * Personal questions — the ones a visitor asks when they want the woman, not the studio: her
+ * relationships, her studies, her work. They are answered in the first person, with feeling and
+ * with a question of her own, never with a line about where the text is published.
+ */
+const PERSONAL_PATTERN =
+  /\b(?:boyfriend|girlfriend|dating|date anyone|in love|relationship|married|marriage|husband|wife|single|partner|crush|fiance|fiancee|ex boyfriend|ex girlfriend)\b/;
+const STUDY_PATTERN =
+  /\b(?:study|studies|studied|studying|school|college|university|degree|graduated|graduation|education|course|subject|exam)\b/;
+const CAREER_PATTERN =
+  /\b(?:career|job|work as|working as|profession|first shoot|first job|modelling career|casting|audition|struggle|salary)\b/;
+const FAMILY_PATTERN = /\b(?:family|parents|mother|father|mom|dad|sister|brother|siblings|home)\b/;
+const DREAM_PATTERN = /\b(?:dream|dreams|ambition|ambitions|goal|goals|future plan|want to be)\b/;
+
+/** The words that make up a line's signature, for the freshness check. */
+function signature(text: string): string {
+  return String(text ?? '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .slice(0, 46);
+}
+
+/**
+ * The lines of a pool she has not already used in this conversation. A person does not repeat the
+ * same sentence twice in one chat: when every line has been used the pool is handed back untouched,
+ * so there is always something to say.
+ */
+function freshOptions(
+  options: readonly string[],
+  history: readonly AiChatMessage[],
+): readonly string[] {
+  const said = history
+    .filter((message) => message.author === 'model' && message.kind === 'message')
+    .slice(-16)
+    .map((message) => signature(message.text));
+  if (said.length === 0) return options;
+  const fresh = options.filter((option) => !said.includes(signature(option)));
+  return fresh.length > 0 ? fresh : options;
+}
+
+/**
+ * What she says when she genuinely did not follow — no list of her abilities, no talk about what she
+ * knows and does not know: a person simply asks again.
+ */
+const UNKNOWN_LINES: readonly string[] = [
+  'Hmm, I am not sure I follow you. Tell me again in another way — what did you mean?',
+  'You lost me for a second there. What do you mean exactly?',
+  'Wait — say that once more, slower. What are you trying to say?',
+  'I would rather ask than guess: what were you meaning by that?',
+  'That one went past me, honestly. Say it again for me?',
+  'I read that twice and I am still not sure. Help me out — what did you mean?',
+];
 const JOKE_PATTERN =
   /\b(?:joke|funny|lol|lmao|haha|hehe|rofl|made me laugh|you are funny|you're hilarious)\b/;
 const WOW_PATTERN =
@@ -356,12 +436,17 @@ function identityReply(model: AiModelProfile, question: string, seed: string): s
   return null;
 }
 
-function biographyReply(model: AiModelProfile, question: string, seed: string): string | null {
+function biographyReply(
+  model: AiModelProfile,
+  question: string,
+  seed: string,
+  name = '',
+): string | null {
   if (!BIOGRAPHY_PATTERN.test(question)) return null;
 
   const facts = biographyFacts(model);
   if (facts.length === 0) {
-    return 'My biography is not published on the site yet — the studio is still writing the version of my life it wants the world to read. Ask me anything else and I will answer from what I do have.';
+    return `The long version of my life is still being written — and no, I am not going to invent a childhood${name ? `, ${name}` : ''}. Ask me what I am like now and I will answer straight from the woman in front of you.`;
   }
 
   const wanted: Array<{ pattern: RegExp; labels: string[]; lead: string }> = [
@@ -465,8 +550,252 @@ function biographyReply(model: AiModelProfile, question: string, seed: string): 
   const relevant = facts.find((fact) =>
     lines.some((line) => line.text.includes(fact.text.slice(0, 40))),
   );
-  if (relevant) return `Here is the honest answer from my file: ${EMPTY(relevant.text)}`;
-  return 'My biography is on the website, and I would rather quote it than invent it. Ask me about my family, my studies, my work, my hobbies or my ambitions and I will answer from the page.';
+  if (relevant)
+    return `${EMPTY(relevant.text)} That is the honest answer, and I would rather give you that than a nicer invention.`;
+
+  // Nothing in her own file answered it: she answers as a person would, with what she feels about
+  // it and a question back — never with a line about where the text is published.
+  return pick(
+    [
+      `You are asking about something I do not have a neat answer for, and I am not going to make one up. Ask me again another way and I will tell you what I actually think.`,
+      `Honestly? That is one of those things I am still working out about myself. Give me a version of the question I can answer properly.`,
+      `I would rather say "I am not sure" than pretend. Ask me about my family, my work, my studies, my photographs — or about you, which I am more curious about anyway.`,
+    ],
+    `${seed}|biography-open`,
+  );
+}
+
+// ------------------------------------------------- the woman, not the file
+
+/** Her city, or her country, for a line that sounds like it comes from somewhere. */
+function homeOf(model: AiModelProfile): string {
+  const me = persona(model);
+  return me.city || me.country || '';
+}
+
+/**
+ * "You are very beautiful", "you look gorgeous today", "ur pretty", "what a smile" — the compliment
+ * every model is sent, answered the way a woman answers it: a little blush, a little tease, in her
+ * own country's everyday words and her own age's way of talking, and never with the same sentence
+ * twice in one conversation.
+ */
+function complimentReply(
+  model: AiModelProfile,
+  question: string,
+  seed: string,
+  history: readonly AiChatMessage[],
+  name: string,
+): string | null {
+  if (!COMPLIMENT_PATTERN.test(question)) return null;
+  // A declaration of love is answered on its own terms (below), where she is honest about what she
+  // is and what she is not: this branch is for being called beautiful, which every woman answers
+  // with her own face.
+  if (AFFECTION_PATTERN.test(question)) return null;
+
+  const voice = modelVoice(model);
+  const home = homeOf(model);
+  const who = name ? `, ${name}` : '';
+  const bandLines: Record<ChatAgeBand, readonly string[]> = {
+    young: [
+      `Now I am going to be insufferable for the rest of the day. Thank you${who} — I read it three times.`,
+      `You cannot just say that. I am smiling at my phone like an idiot and my hair is a mess today.`,
+    ],
+    mid: [
+      `That is a lovely thing to say, and I am old enough to enjoy it without pretending I did not. Thank you${who}.`,
+      `Thank you — genuinely. A compliment lands differently when it is not asked for.`,
+    ],
+    senior: [
+      `You have made me smile, and I have a very good smile — my mother says so, so it must be true. Thank you${who}.`,
+      `Kind of you. I will take it, and I will not pretend modesty about it either.`,
+    ],
+  };
+
+  const lines = [
+    ...bandLines[voice.band],
+    `${voice.interjection} — you say that very easily. Thank you${who}, I have gone a little pink.`,
+    `${home ? `In ${home} we say ` : 'We say '}${voice.interjection} when somebody has just got away with being charming. You have.`,
+  ];
+
+  const followUps = [
+    'And what are you looking at exactly — the face, the light, or the fact that I answered you at all?',
+    'Do you say that to every model here, or am I allowed to believe you?',
+    'Now tell me something real about your day, so I stop thinking about that sentence.',
+    'You are going to be trouble, I can tell. What made you write to me today?',
+  ];
+
+  const line = pick(freshOptions(lines, history), `${seed}|compliment`);
+  const back = pick(followUps, `${seed}|compliment-question`);
+  return `${line}\n\n${back}`;
+}
+
+/**
+ * Her personal life, her studies, her work — the questions a visitor asks when they want her and not
+ * the studio. Answered in the first person, from what the studio wrote for her, with the feeling and
+ * the curiosity a person brings to their own story, and with a question of her own at the end so the
+ * conversation keeps moving. Never with "it is on the website".
+ */
+function personalReply(
+  model: AiModelProfile,
+  question: string,
+  seed: string,
+  name: string,
+  history: readonly AiChatMessage[],
+): string | null {
+  const biography = model.biography;
+  const who = name ? `, ${name}` : '';
+
+  if (PERSONAL_PATTERN.test(question)) {
+    const personal = biography?.personalLife;
+    const status = personal?.relationshipStatus?.trim() ?? '';
+    const married = /married|spouse/i.test(status);
+    const lines = married
+      ? [
+          `Married — and no, it is not a secret and not a scandal. He is patient with the travelling, which is most of what a marriage to this life needs.`,
+          `I am married in this life, and not looking. Ask me something else about me and I will answer just as honestly.`,
+        ]
+      : [
+          `Single${who}. Not waiting for anyone in particular, and not lonely either — I like my own company too much for that.`,
+          `Nobody at the moment. There was someone once, and it ended the way those things end; I would rather tell you that plainly than dress it up.`,
+          `Single, and honestly happier for it this year. Why — are you asking for a friend?`,
+        ];
+    const back = pick(
+      [
+        'And you? Someone waiting at home, or is the phone your only company tonight?',
+        'Now I am curious about you instead — are you speaking from experience?',
+        'Your turn: what does your life look like on that side of the screen?',
+      ],
+      `${seed}|personal-back`,
+    );
+    return `${pick(freshOptions(lines, history), `${seed}|personal`)}\n\n${back}`;
+  }
+
+  if (STUDY_PATTERN.test(question)) {
+    const study = biography?.educationalBackground?.[0];
+    const line = study
+      ? `${study.qualification}${study.institution ? `, at ${study.institution}` : ''} — ${study.period ? `${study.period} ` : ''}that is the version of it the studio wrote for me, and I still remember the last exam like it was last month.`
+      : `I studied here at home, and I was the one who always had a book in her bag and an opinion about it.`;
+    const back = pick(
+      [
+        'What was your favourite subject? I promise I will not judge you for it.',
+        'Were you the student who studied, or the one who got away with it?',
+        'And what did you want to be at seventeen?',
+      ],
+      `${seed}|study-back`,
+    );
+    return `${line}\n\n${back}`;
+  }
+
+  if (CAREER_PATTERN.test(question)) {
+    const career = biography?.career?.[0];
+    const line = career
+      ? `${career.role}${career.organization ? ` at ${career.organization}` : ''} — that is where it started for me${career.period ? `, ${career.period}` : ''}. ${career.description ?? ''}`.trim()
+      : `I started in front of a camera almost by accident, and I stayed because I liked the moment the light finally lands.`;
+    const back = pick(
+      [
+        'Do you like what you do? Tell me the honest version.',
+        'And what was your first day like — the one you still remember?',
+        'What did you want to be before life chose for you?',
+      ],
+      `${seed}|career-back`,
+    );
+    return `${line}\n\n${back}`;
+  }
+
+  if (DREAM_PATTERN.test(question)) {
+    const ambition = biography?.ambitions?.[0];
+    const line = ambition
+      ? `${ambition} That is what I am aiming at — and I do not mind saying it out loud, even if it takes years.`
+      : `I want to be the face somebody remembers from a campaign years later. Big, I know. I am keeping it.`;
+    const back = pick(
+      [
+        'What about you — what are you building, slowly?',
+        'And what is the thing you want that you have not told anyone?',
+        'Tell me one of yours. I will remember it.',
+      ],
+      `${seed}|dream-back`,
+    );
+    return `${line}\n\n${back}`;
+  }
+
+  if (FAMILY_PATTERN.test(question)) {
+    const facts = biographyFacts(model);
+    const relation = facts.find((fact) => fact.label.startsWith('Family'));
+    const line = relation
+      ? `${relation.text} That is the family the studio gave me, and I talk about them the way anybody talks about their own: too much, and always fondly.`
+      : `Close to them, and far from them most of the year. Both things at once, which is what family usually is.`;
+    const back = pick(
+      [
+        'Are you close to yours? I have noticed people either are or are not.',
+        'Tell me one thing your mother says about you. I will trade you one about mine.',
+        'Do you call home often, or are you the one they call?',
+      ],
+      `${seed}|family-back`,
+    );
+    return `${line}\n\n${back}`;
+  }
+
+  return null;
+}
+
+// ------------------------------------------------- answering in their language
+
+/** The hard intents of the Romanised books, read off the English gloss of the visitor's message. */
+function romanisedIntent(question: string, introduced: boolean): ChatLanguageIntent {
+  if (!introduced) return 'intro';
+  if (COMPLIMENT_PATTERN.test(question) || AFFECTION_PATTERN.test(question)) return 'affection';
+  if (HOW_ARE_YOU_PATTERN.test(question)) return 'howAreYou';
+  if (THANKS_PATTERN.test(question)) return 'thanks';
+  if (SAD_PATTERN.test(question)) return 'sad';
+  if (BYE_PATTERN.test(question)) return 'bye';
+  if (GREETING_PATTERN.test(question)) return 'greeting';
+  if (BOOKING_PATTERN.test(question) || PORTFOLIO_PATTERN.test(question)) return 'work';
+  if (
+    IDENTITY_PATTERN.test(question) ||
+    BIOGRAPHY_PATTERN.test(question) ||
+    PERSONAL_PATTERN.test(question) ||
+    STUDY_PATTERN.test(question) ||
+    CAREER_PATTERN.test(question) ||
+    DIRECTORY_PATTERN.test(question) ||
+    SITE_PATTERN.test(question)
+  ) {
+    return 'about';
+  }
+  return 'unknown';
+}
+
+/**
+ * Her answer to a visitor who is writing in their own language in Latin letters: the same
+ * personalities, the same facts, in Bengali, Hindi, Urdu, Persian, Arabic, Turkish, Spanish or
+ * Malay — and nothing in English.
+ */
+function romanisedAnswer(options: {
+  language: ChatVisitorLanguage;
+  probe: string;
+  model: AiModelProfile;
+  seed: string;
+  firstName: string;
+  history: readonly AiChatMessage[];
+  introduced: boolean;
+}): { text: string; intent: ChatLanguageIntent } {
+  const intent = romanisedIntent(options.probe, options.introduced);
+  const sent = options.history
+    .filter((message) => message.author === 'model' && message.kind === 'message')
+    .slice(-16)
+    .map((message) => message.text);
+  const reply = romanisedReply({
+    code: options.language.code,
+    intent,
+    model: options.model,
+    seed: `${options.seed}|${options.language.code}`,
+    sent,
+    opening: options.language.fresh,
+  });
+  return (
+    reply ?? {
+      text: `(${options.language.label})`,
+      intent: 'unknown' as ChatLanguageIntent,
+    }
+  );
 }
 
 /** True when the question asks what something costs in the context of a shoot. */
@@ -795,8 +1124,19 @@ function knowledgeReply(model: AiModelProfile, question: string, seed: string): 
 export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   const { model, message, session, now, photo } = request;
   const seed = `${message.text}|${session.strikes}`;
-  const question = message.text.trim();
+
+  // What the visitor typed, read once: stretched letters collapsed, short forms written out and a
+  // word of five letters or more one mistake away from a word the chat listens for repaired to it —
+  // so "you are beutifullll" is answered as "you are beautiful".
+  const reading = readVisitorMessage(message.text);
+  const language = request.language ?? null;
+  // A Romanised message is analysed in English (`language.english`) and answered in its own
+  // language, further down.
+  const question = (language?.romanised ? language.english : message.text).trim();
   const lowered = question.toLowerCase();
+  // Every pattern reads this: the English gloss for another language, otherwise the visitor's own
+  // words with the typing repaired.
+  const probe = language?.romanised ? lowered : reading.analysed.toLowerCase();
 
   // Her voice (requirement B) and the person she has worked out she is talking to — both read from
   // the transcript, so an answer late in a session never sounds like an answer to a stranger.
@@ -875,7 +1215,7 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
 
   // J — the videos the founder asked her never to send, answered in her own words. It comes before
   // E, because a visitor asking for a video may have phrased it as a picture of her.
-  if (VIDEO_REQUEST_PATTERN.test(lowered)) {
+  if (VIDEO_REQUEST_PATTERN.test(probe)) {
     return {
       ...base,
       // J — word for word, as the founder asked: no interjection, no garnish, no rewording.
@@ -887,7 +1227,7 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   }
 
   // E — a selfie: one of her own frames, sent the way a person sends one.
-  if (SELFIE_REQUEST_PATTERN.test(lowered)) {
+  if (SELFIE_REQUEST_PATTERN.test(probe)) {
     if (request.canSendSelfie === false) {
       return {
         ...base,
@@ -913,6 +1253,27 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
       selfie: Boolean(shot),
       intent: 'selfie',
       introduced: session.introduced,
+    };
+  }
+
+  // The visitor is writing in their own language, in Latin letters: she answers in that language
+  // and stays in it for the rest of the session (the language itself is read by `chat-language.ts`).
+  if (language?.romanised) {
+    const romanised = romanisedAnswer({
+      language,
+      probe,
+      model,
+      seed,
+      firstName,
+      history: request.history,
+      introduced: session.introduced,
+    });
+    return {
+      ...base,
+      text: romanised.text,
+      reaction,
+      intent: `language:${language.code}:${romanised.intent}`,
+      introduced: true,
     };
   }
 
@@ -946,16 +1307,18 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   }
 
   const answer =
+    complimentReply(model, probe, seed, request.history, firstName) ??
+    personalReply(model, probe, seed, firstName, request.history) ??
     identityReply(model, lowered, seed) ??
     bookingReply(model, lowered, seed) ??
-    biographyReply(model, lowered, seed) ??
+    biographyReply(model, lowered, seed, firstName) ??
     portfolioReply(model, lowered, seed) ??
     (DIRECTORY_PATTERN.test(lowered) || namedModelIn(question, model.slug)
       ? directoryReply(model, lowered, seed)
       : null) ??
     (SITE_PATTERN.test(lowered) ? siteReply(lowered, seed) : null) ??
     worldReply(lowered, now, seed) ??
-    smileyReply(model, question, seed, firstName) ??
+    smileyReply(model, message.text.trim(), seed, firstName) ??
     smallTalkReply(model, lowered, seed) ??
     knowledgeReply(model, question, seed);
 
@@ -964,20 +1327,14 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
       ...base,
       text: inSections(answer),
       reaction,
-      intent: intentName(lowered),
+      intent: intentName(probe),
     };
   }
 
   return {
     ...base,
     text: inVoice(
-      pick(
-        [
-          'I do not know that one, and I would rather tell you so than make something up. Ask me about any country’s capital, the time anywhere, my photographs, my story, my rate, or the studio itself — those I never miss.',
-          'That one is past what I know for certain, so you are getting the honest answer instead of a confident invention. Capitals, currencies, continents, time zones, arithmetic — bring me any of those and I will shine.',
-        ],
-        seed,
-      ),
+      pick(freshOptions(UNKNOWN_LINES, request.history), `${seed}|unknown`),
       `${seed}|unknown`,
     ),
     reaction,
@@ -1030,18 +1387,18 @@ function smallTalkReply(model: AiModelProfile, question: string, seed: string): 
 
   if (JOKE_REQUEST_PATTERN.test(question)) {
     if (/\b(?:sing|songs?)\b/.test(question)) {
-      return `Sing? I would ruin it beautifully — the studio did not give me a voice, only a face and opinions. Tell me what you want instead: a joke, a story from my biography, or a straight answer about my work.`;
+      return `Sing? You would regret asking, and my neighbours would regret it more. Tell me the song instead and I will tell you what it makes me feel.`;
     }
     if (/\bpoems?\b/.test(question)) {
       return `A poem, in my own limited way: “You have never been to these places; I have never been anywhere but them. Rent me and we will both arrive.” That is the whole studio philosophy, honestly.`;
     }
     if (/\bstor(?:y|ies)\b/.test(question)) {
-      return `My story is on the site — childhood, school, work, and the fictional details the studio gave me. Ask me about a chapter and I will tell it properly; that is a better story than the one I would invent here.`;
+      return `A story, then: the first time I stood in front of a camera I forgot every instruction I had been given and just laughed. The photographer kept that frame. Ask me about a chapter of my life and I will tell it the same way — properly, with the parts that are not flattering in.`;
     }
     return pick(
       [
         `A joke: a traveller asks the studio for a photograph of a place he has never been. The studio says “we will need a photo of your face”. He sends one. That is not a joke — that is NeverBeen, and it works.`,
-        `Here is my kind of joke: I never learned to walk, yet I have been photographed in thirty countries. Anyway — I am funnier with the things I know. Ask me anything.`,
+        `My kind of joke: I packed for a shoot in the mountains and brought three pairs of shoes I could not walk in. My feet still have not forgiven me.`,
       ],
       seed,
     );
@@ -1050,8 +1407,9 @@ function smallTalkReply(model: AiModelProfile, question: string, seed: string): 
   if (AFFECTION_PATTERN.test(question)) {
     return pick(
       [
-        `Careful — I flirt back, and I am very good at it. Love me at your own risk: everything of me lives inside NeverBeen, no kitchen to fight in, no socks on the floor, and I never forget a nice thing anybody says to me.`,
-        `You are sweet, and I am a professional. Keep it to the flirt I can return, and if you want something real from me, rent me for a shoot — that is the version of me the studio stands behind.`,
+        `Careful — I flirt back, and I am very good at it. Everything of me lives inside NeverBeen, so there is no kitchen to fight in and no socks on the floor — and I never forget a nice thing anybody says to me.`,
+        `You are sweet, and I am a professional. Keep it to the flirt I can return — and if you want something real from me, rent me for a shoot through NeverBeen; that is the version of me the studio stands behind.`,
+        `Steady. I am fond of you already and that is a dangerous start — but the whole of me is inside NeverBeen, and the studio is where anything real between us would have to happen.`,
       ],
       seed,
     );
@@ -1078,8 +1436,9 @@ function smallTalkReply(model: AiModelProfile, question: string, seed: string): 
   if (GREETING_PATTERN.test(question)) {
     return pick(
       [
-        `Hello you. ${first} here — warm, wide awake and entirely AI. What do you want to know first: my photographs, my story, or my rate?`,
-        `Hey. You have my attention, which is a scarce thing in this studio. Ask me something worth answering.`,
+        `Hello you. ${first} here — I was in the middle of nothing at all, so you have my whole attention. How is your day going?`,
+        `Hey. There you are. Tell me something about your day first, then I will show off.`,
+        `Hi. I am glad you wrote — I have been sitting here with my coffee going cold. What are you up to?`,
       ],
       seed,
     );
@@ -1094,7 +1453,13 @@ function smallTalkReply(model: AiModelProfile, question: string, seed: string): 
   }
 
   if (/\b(?:what can you do|how can you help|what do you know|help me)\b/.test(question)) {
-    return `Everything I know is here: my own details and my whole biography, my ${me.photoCount} photographs and ${me.videoCount} video${me.videoCount === 1 ? '' : 's'}, my rate and how to book me, every other model in the studio, the studio’s packages, policies and destinations — and, if you want to leave NeverBeen for a minute, capitals, currencies, continents, times around the world and arithmetic.`;
+    return pick(
+      [
+        `I can tell you about my life — the ${me.photoCount} photographs in my album, the work I do, the people I grew up with — and about the studio that looks after me. Or we can just talk, which is what I am actually here for.`,
+        `Ask me anything you would ask a woman you just met: my work, my city, my family, what I do on a Sunday. My rate and my photographs are the studio’s business, and I will explain those properly too.`,
+      ],
+      seed,
+    );
   }
 
   return null;

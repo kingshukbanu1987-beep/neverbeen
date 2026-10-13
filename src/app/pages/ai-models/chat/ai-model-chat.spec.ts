@@ -112,6 +112,37 @@ describe('AiModelChatDialog', () => {
     expect(element.querySelector('.chat-clock')?.getAttribute('aria-label')).toContain('02:00:00');
   });
 
+  it('puts her information in a side column and keeps the chat alone on the right (wide screens)', async () => {
+    const harness = await openChat();
+    const element = harness.element;
+
+    // The markup the wide, landscape layout is built from: her column, then the conversation.
+    const side = element.querySelector('.chat-side');
+    expect(side).toBeTruthy();
+    expect(side?.querySelector('.chat-bar')).toBeTruthy();
+    expect(side?.querySelector('.chat-profile')).toBeTruthy();
+
+    const conversation = element.querySelector('.chat-conversation');
+    expect(conversation).toBeTruthy();
+    // The right-hand column is the conversation and nothing else — no copy of her card, no bar.
+    expect(conversation?.querySelector('.chat-messages')).toBeTruthy();
+    expect(conversation?.querySelector('.chat-footer .chat-composer')).toBeTruthy();
+    expect(conversation?.querySelector('.chat-profile')).toBeNull();
+    expect(conversation?.querySelector('.chat-bar')).toBeNull();
+  });
+
+  it('closes the whole window from the ✕ of the “Before we start” form', async () => {
+    const harness = await openChat(alisha, { identify: false });
+    const closed: number[] = [];
+    harness.fixture.componentInstance.closed.subscribe(() => closed.push(1));
+
+    const close = harness.element.querySelector<HTMLButtonElement>('.gate-close')!;
+    expect(close).toBeTruthy();
+    close.click();
+    harness.fixture.detectChanges();
+    expect(closed.length).toBe(1);
+  });
+
   it('offers the camera, a photograph and a document next to the composer', async () => {
     const harness = await openChat();
     const labels = Array.from(harness.element.querySelectorAll('.chat-composer-tools button')).map(

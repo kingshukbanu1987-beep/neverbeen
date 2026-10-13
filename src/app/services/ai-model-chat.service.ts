@@ -70,6 +70,12 @@ import {
 } from '../pages/ai-models/chat/chat-voice';
 import { seededBetween } from '../pages/ai-models/chat/chat-random';
 import { buildModelDossier } from '../pages/ai-models/chat/chat-knowledge';
+import {
+  ChatVisitorLanguage,
+  ROMANISED_LANGUAGE_BOOKS,
+  readChatLanguage,
+  romanisedIdleLine,
+} from '../pages/ai-models/chat/chat-language';
 
 /** Where a session is kept between visits: one browser tab, and gone when it closes. */
 export const AI_CHAT_STORAGE_KEY = 'nb.ai-model-chat.v1';
@@ -476,7 +482,11 @@ export class AiModelChatService {
 
     // She speaks up on her own: the pause that makes it feel like a message from her rather than an
     // answer is the away pause of requirement D, and here it is always on.
-    void this.deliver(session, [text], { intent: 'idle' });
+    const localised =
+      session.language && ROMANISED_LANGUAGE_BOOKS[session.language]
+        ? romanisedIdleLine(session.language, `${session.slug}|idle|${session.nudges}`)
+        : null;
+    void this.deliver(session, [localised ?? text], { intent: 'idle' });
   }
 
   /** The model of the open window — the one every session change is applied to. */
@@ -556,6 +566,11 @@ export class AiModelChatService {
     const identity = session.identity;
     const user = identity ? { name: identity.name, firstName: firstNameOf(identity.name) } : null;
 
+    // The visitor's own language (Romanised): read from their words by the studio's books first and
+    // by Google Translate when the books were not enough. Once read, she keeps answering in it for
+    // the rest of the session, the way a person does once the other side has switched.
+    const language = await this.readVisitorLanguage(model, session, userMessage.text);
+
     const local = composeChatReply({
       model,
       message: userMessage,
@@ -564,6 +579,7 @@ export class AiModelChatService {
       user,
       photo,
       canSendSelfie: model.photos.length > 0 || Boolean(model.cover),
+      language,
       now: new Date(),
     });
     session.strikes = local.strikes;
@@ -573,7 +589,12 @@ export class AiModelChatService {
     // Safety and identity come first and are never delegated: a warning must not be reworded, and
     // the first answer of the session is always her scripted introduction (requirement D).
     const mustBeLocal =
-      local.intent.startsWith('moderation:') || !wasIntroduced || userMessage.attachment !== null;
+      local.intent.startsWith('moderation:') ||
+      // Her answer in the visitor's own Romanised language is written by her own books: an English
+      // answer from the studio's OpenAI model would break the language she has settled into.
+      local.intent.startsWith('language:') ||
+      !wasIntroduced ||
+      userMessage.attachment !== null;
 
     this.touch(session);
 
@@ -771,6 +792,45 @@ export class AiModelChatService {
     this.touch(session);
   }
 
+  /**
+   * The language of one visitor message. The studio's own books answer first and instantly; Google
+   * Translate is asked only when they could not read enough of the message, and its answer is
+   * remembered on the session, so she speaks the visitor's language from then on — including for the
+   * lines she writes on her own when they go quiet.
+   */
+  private async readVisitorLanguage(
+    model: AiModelProfile,
+    session: AiChatSession,
+    text: string,
+  ): Promise<ChatVisitorLanguage | null> {
+    const reading = await readChatLanguage(text, model, session.language, {
+      allowNetwork: this.languageNetworkAllowed(),
+    });
+    if (reading?.romanised) {
+      session.language = reading.code;
+      return reading;
+    }
+    // Nothing new was read: if she is already speaking their language, she stays in it and reads
+    // this message as it is.
+    if (session.language && ROMANISED_LANGUAGE_BOOKS[session.language]) {
+      return {
+        code: session.language,
+        label: ROMANISED_LANGUAGE_BOOKS[session.language].english,
+        english: text,
+        romanised: true,
+        source: 'books',
+        fresh: false,
+      };
+    }
+    return null;
+  }
+
+  /** True when asking Google for a reading is reasonable (a browser, online, not in a test). */
+  private languageNetworkAllowed(): boolean {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+    return typeof fetch === 'function';
+  }
+
   /** Takes a message that has not arrived yet back out of the transcript, and counts the change. */
   private removeMessage(session: AiChatSession, message: AiChatMessage): void {
     const at = session.messages.indexOf(message);
@@ -962,6 +1022,7 @@ export class AiModelChatService {
       nudges: 0,
       pitches: 0,
       closedAt: 0,
+      language: '',
     };
   }
 
@@ -1069,6 +1130,7 @@ export class AiModelChatService {
           nudges: session.nudges ?? 0,
           pitches: session.pitches ?? 0,
           closedAt: session.closedAt ?? 0,
+          language: session.language ?? '',
         });
       }
     } catch {

@@ -60,6 +60,39 @@ describe('AiModelChatService', () => {
     sessionStorage.clear();
   });
 
+  it('answers a Romanised Bengali message in Bengali, and keeps the language (the studio’s example)', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'ami tomake bhalobashi');
+
+    const answer = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.text.length > 0,
+    );
+    const last = answer[answer.length - 1];
+    expect(last?.intent).toContain('language:bn');
+    // Not English: her language is on the session, and the next message stays in it too.
+    expect(last?.text).toMatch(/[A-Za-z]/);
+    expect(last?.text).not.toContain('thank you');
+    expect(chat.session()?.language).toBe('bn');
+
+    await chat.sendMessage(alisha, 'kemon acho?');
+    const again = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.text.length > 0,
+    );
+    expect(again[again.length - 1]?.intent).toContain('language:bn');
+  });
+
+  it('leaves an English conversation in English', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'what is your rate for a shoot?');
+    expect(chat.session()?.language).toBe('');
+    const answer = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.text.length > 0,
+    );
+    expect(answer[answer.length - 1]?.intent).not.toContain('language:');
+  });
+
   it('counts the two hours down in the top-right corner format', () => {
     expect(formatRemaining(7_200_000)).toBe('02:00:00');
     expect(formatRemaining(3_599_000)).toBe('59:59');
