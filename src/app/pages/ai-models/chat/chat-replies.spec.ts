@@ -3,7 +3,6 @@ import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import {
   CHAT_WELCOME_LINE,
   chatIntroduction,
-  chatSuggestedQuestions,
   composeChatReply,
   greetingFor,
   reactionAcknowledgement,
@@ -241,9 +240,8 @@ describe('attachments and small talk', () => {
     expect(reply('   ').intent).toBe('empty');
   });
 
-  it('gives the same answer twice for the same question, and offers starter questions', () => {
+  it('gives the same answer twice for the same question', () => {
     expect(reply('Who are you?').text).toBe(reply('Who are you?').text);
-    expect(chatSuggestedQuestions(alisha).length).toBeGreaterThan(2);
     expect(CHAT_WELCOME_LINE).toContain('AI-generated');
   });
 });

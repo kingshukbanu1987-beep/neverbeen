@@ -959,19 +959,8 @@ function intentName(question: string): string {
   return 'knowledge';
 }
 
-/** The studio's own words about what NeverBeen is, for the window's welcome card. */
+/** The studio's own words about what NeverBeen is, shown under the window's View Profile button. */
 export const CHAT_WELCOME_LINE =
   'Every NeverBeen model is AI-generated and exists only inside the NeverBeen Multiverse.';
-
-/** Her quick-reply suggestions, offered under the composer while the chat is empty. */
-export function chatSuggestedQuestions(model: AiModelProfile): string[] {
-  const me = persona(model);
-  return [
-    'Tell me about yourself',
-    me.photoRate > 0 ? `What is your rate for a shoot?` : 'How does booking work?',
-    'Show me your story',
-    'What is the capital of India?',
-  ];
-}
 
 export { NEVERBEEN_SITE_FACTS };

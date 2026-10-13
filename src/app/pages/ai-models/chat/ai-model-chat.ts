@@ -20,7 +20,7 @@ import {
 } from '../../../shared/community-image-compression';
 import { ChatAutoScroll } from '../../../shared/chat-auto-scroll/chat-auto-scroll';
 import { AiModelProfile } from '../ai-model-data';
-import { CHAT_WELCOME_LINE, chatSuggestedQuestions } from './chat-replies';
+import { CHAT_WELCOME_LINE } from './chat-replies';
 import { splitLocation } from './chat-knowledge';
 import {
   AI_CHAT_DOCUMENT_LIMIT_BYTES,
@@ -46,7 +46,8 @@ const DATE_FORMAT = new Intl.DateTimeFormat('en-GB', {
 const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' });
 
 /**
- * The live chat with one AI model (requirements A–H) — an Instagram-shaped window on a white page:
+ * The live chat with one AI model (requirements A–H) — an Instagram-shaped window on a white page,
+ * which opens on the conversation itself: no welcome copy, no canned questions, only her answers.
  * her round photograph, her name, her model id, her city and country and a grey **View Profile**
  * button above the conversation, her answers in light grey bubbles and the visitor's own in dark
  * violet, the two-hour countdown in the top-right corner, date-and-time stamps on every message,
@@ -101,13 +102,6 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
 
   protected readonly country = computed(() => splitLocation(this.model().location).country);
   protected readonly city = computed(() => splitLocation(this.model().location).city);
-  protected readonly suggestions = computed(() => chatSuggestedQuestions(this.model()));
-
-  /** Her answers are only shown once she has introduced herself — before that, the welcome card. */
-  protected readonly showWelcome = computed(
-    () => this.messages().filter((message) => message.kind === 'message').length === 0,
-  );
-
   protected readonly canSend = computed(
     () =>
       !this.sessionOver() &&
@@ -187,11 +181,6 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
       this.sending.set(false);
       this.focusComposer();
     }
-  }
-
-  protected useSuggestion(question: string): void {
-    this.draft.set(question);
-    void this.submit();
   }
 
   // ------------------------------------------------------------------ attachments

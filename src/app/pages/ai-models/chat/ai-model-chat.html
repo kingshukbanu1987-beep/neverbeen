@@ -83,23 +83,6 @@
       aria-label="Chat with the model"
       [nbChatAutoScroll]="messages()"
     >
-      @if (showWelcome()) {
-        <div class="chat-welcome">
-          <span class="chat-welcome-mark" aria-hidden="true">✦</span>
-          <p>
-            Say hello to <b>{{ model().name }}</b> — she answers instantly, from her own portfolio,
-            her biography and the whole NeverBeen website.
-          </p>
-          <ul class="chat-suggestions">
-            @for (question of suggestions(); track question) {
-              <li>
-                <button type="button" (click)="useSuggestion(question)">{{ question }}</button>
-              </li>
-            }
-          </ul>
-        </div>
-      }
-
       @for (message of messages(); track message.id; let index = $index) {
         @if (daySeparatorFor(index); as separator) {
           <p class="chat-day">{{ separator }}</p>

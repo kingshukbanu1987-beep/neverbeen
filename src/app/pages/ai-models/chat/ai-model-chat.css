@@ -335,66 +335,6 @@
   scrollbar-width: thin;
 }
 
-.chat-welcome {
-  display: grid;
-  justify-items: center;
-  gap: 0.5rem;
-  margin: 1rem auto 0.6rem;
-  padding: 1rem 1rem 0.9rem;
-  border: 1px solid var(--chat-line);
-  border-radius: 20px;
-  background: var(--chat-surface);
-  text-align: center;
-}
-
-.chat-welcome-mark {
-  color: var(--chat-violet);
-  font-size: 1.3rem;
-}
-
-.chat-welcome p {
-  margin: 0;
-  max-width: 32ch;
-  color: var(--chat-muted);
-  font-size: 0.76rem;
-  line-height: 1.6;
-}
-
-.chat-welcome b {
-  color: var(--chat-ink);
-}
-
-.chat-suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.chat-suggestions button {
-  padding: 0.36rem 0.7rem;
-  border: 1px solid rgb(104 41 255 / 28%);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--chat-violet-deep);
-  font-family: inherit;
-  font-size: 0.68rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    transform 160ms ease;
-}
-
-.chat-suggestions button:hover,
-.chat-suggestions button:focus-visible {
-  background: #f4efff;
-  transform: translateY(-1px);
-}
-
 .chat-day {
   align-self: center;
   margin: 0.4rem 0 0.2rem;

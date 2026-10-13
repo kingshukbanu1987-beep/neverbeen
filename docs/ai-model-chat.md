@@ -27,7 +27,8 @@ chat (requirement B).
   (`@alisha.bhattacharya` for **Alisha Bhattacharya**) — `model.name` and `model.handle`;
 - her country and city in normal small black type, split out of `model.location`;
 - **View Profile** — grey `#e6e6ea` background, black text, `routerLink` to `/ai-models/:slug`;
-- the conversation, then the composer.
+- the conversation, then the composer. The window opens on the conversation itself: no welcome copy
+  and no canned starter questions, so the first thing her visitor reads is what she has to say.
 
 The page behind the window is white; her bubbles are rounded light grey `#ebebeb` with black text,
 the visitor's are the same shape in the NeverBeen violet `#4b128f` with white text. Every message

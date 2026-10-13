@@ -124,9 +124,24 @@ describe('AiModelChatDialog', () => {
     // Her bubble is the light grey one, the visitor's the dark violet one.
     expect(incoming[0].classList.contains('is-incoming')).toBe(true);
     expect(outgoing[0].classList.contains('is-outgoing')).toBe(true);
+  });
 
-    // The welcome card and its starter questions are gone once the conversation has started.
+  it('opens on the conversation itself — no welcome copy and no static questions', async () => {
+    const harness = await openChat();
+    const text = harness.element.textContent ?? '';
+
     expect(harness.element.querySelector('.chat-welcome')).toBeNull();
+    expect(harness.element.querySelector('.chat-suggestions')).toBeNull();
+    expect(harness.element.querySelectorAll('.chat-messages button').length).toBe(0);
+    expect(text).not.toContain('from her own portfolio');
+    expect(text).not.toContain('Tell me about yourself');
+    expect(text).not.toContain('What is the capital of India?');
+
+    // The composer is ready the moment the window opens.
+    expect(harness.element.querySelector('.chat-composer')).not.toBeNull();
+    expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
+      '02:00:00',
+    );
   });
 
   it('stamps every message with its time and shows the day it was written', async () => {
@@ -314,6 +329,7 @@ describe('AiModelChatDialog', () => {
     expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
       '02:00:00',
     );
-    expect(harness.element.querySelector('.chat-welcome')).not.toBeNull();
+    // A fresh session starts on an empty conversation.
+    expect(harness.element.querySelectorAll('.chat-bubble').length).toBe(0);
   });
 });
