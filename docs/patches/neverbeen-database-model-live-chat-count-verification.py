@@ -3,8 +3,10 @@
 
   A  the patch applies to an empty schema.sql (git apply --unidiff-zero) and
      the result equals the .sql file
-  B  the script is idempotent: every CREATE is guarded by IF NOT EXISTS
-  C  the table keeps the same slug rule as the API (CHECK on "ModelSlug")
+  B  the script is idempotent: every CREATE is guarded by IF NOT EXISTS and
+     every ALTER TABLE ... ADD COLUMN by IF NOT EXISTS (upgrades in place)
+  C  the table keeps the same slug rule as the API (CHECK on "ModelSlug"),
+     and carries the live/past split columns ("SessionKey", "EndedAtUtc")
 
 Run:  python3 neverbeen-database-model-live-chat-count-verification.py
 """
@@ -43,7 +45,11 @@ check('A  applied schema equals the .sql', applied == script)
 
 creates = re.findall(r'CREATE\s+(TABLE|INDEX|UNIQUE INDEX)\s+(IF NOT EXISTS\s+)?', script)
 check('B  every CREATE is idempotent', creates and all(guard for _, guard in creates))
+alters = re.findall(r'ADD\s+COLUMN\s+(IF NOT EXISTS\s+)?', script)
+check('B  every ADD COLUMN is idempotent', alters and all(alters))
 check('C  slug CHECK matches the API rule', "'^[a-z0-9]+(-[a-z0-9]+)*$'" in script)
+check('C  "SessionKey" column present', '"SessionKey"   varchar(64)' in script)
+check('C  "EndedAtUtc" column present', '"EndedAtUtc"   timestamptz' in script)
 
 print('\nALL CHECKS PASSED' if not failures else f'\n{len(failures)} CHECK(S) FAILED')
 sys.exit(1 if failures else 0)

@@ -459,11 +459,67 @@
   font-weight: 700;
 }
 
-/* --- the one way out ------------------------------------------------------- */
+/* --- the history, and the one way out -------------------------------------- */
+
+.feedback-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+  margin-top: 1.15rem;
+}
+
+/* The whole transcript, one tap away: a quiet glassy twin beside the Close button. */
+.feedback-history {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 8%);
+  color: #efe9ff;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.feedback-history svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.feedback-history:hover,
+.feedback-history:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgb(255 255 255 / 42%);
+  background: rgb(255 255 255 / 13%);
+}
+
+.feedback-history:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 65%);
+  outline-offset: 3px;
+}
 
 .feedback-close {
   width: 100%;
-  margin-top: 1.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  margin-top: 0;
   padding: 0.9rem 1rem;
   border: 0;
   border-radius: 18px;

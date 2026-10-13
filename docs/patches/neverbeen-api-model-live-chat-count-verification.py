@@ -6,6 +6,8 @@
   C  the routes are the ones the website calls:
        GET  api/models/live-chats
        POST api/models/{modelSlug}/live-chats
+       POST api/models/{modelSlug}/live-chats/end
+     and the counts are split into LiveNowCount / PastChatCount
 
 Dependencies: git, and the tree_sitter / tree_sitter_c_sharp packages
 (pip install tree-sitter tree-sitter-c-sharp).
@@ -64,6 +66,10 @@ with open(os.path.join(tmp, 'Controllers/ModelLiveChatController.cs'), encoding=
     controller = fh.read()
 check('C  GET live-chats route', '[HttpGet("live-chats")]' in controller)
 check('C  POST {modelSlug}/live-chats route', '[HttpPost("{modelSlug}/live-chats")]' in controller)
+check('C  POST {modelSlug}/live-chats/end route',
+      '[HttpPost("{modelSlug}/live-chats/end")]' in controller)
+check('C  counts split into live now and past', 'LiveNowCount' in controller and 'PastChatCount' in controller)
+check('C  two-hour session expiry', 'TimeSpan.FromHours(2)' in controller)
 
 print('\nALL CHECKS PASSED' if not failures else f'\n{len(failures)} CHECK(S) FAILED')
 sys.exit(1 if failures else 0)

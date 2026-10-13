@@ -302,6 +302,8 @@ export class AiModelChatService {
     if (this.openSlug() === model.slug && !previous?.closed) return;
     // A completed or expired conversation must never reuse its identity or personal memory.
     if (previous && (previous.closed || (previous.endsAt > 0 && previous.endsAt <= Date.now()))) {
+      // A session that expired while its window was shut still comes off the Live Now counter.
+      this.recordLiveChatEnd(previous);
       this.sessions.set(model.slug, this.createSession(model.slug));
     }
     this.feedbackOpen.set(false);
@@ -346,10 +348,12 @@ export class AiModelChatService {
     // Her introduction (requirement F of the second brief) is her opening, so the first question the
     // visitor asks is answered as a question and not with a second introduction.
     session.introduced = true;
-    // The Live Chat counter on the model's card: one count per session, recorded as it starts.
+    // The Live Now counter on the model's card: one count per session, recorded as it starts,
+    // under the session's own key so the very same session can be taken off when it ends.
     if (!session.liveChatCounted) {
       session.liveChatCounted = true;
-      void this.liveChats.recordStart(model.slug);
+      session.liveChatKey = newLiveChatSessionKey();
+      void this.liveChats.recordStart(model.slug, session.liveChatKey);
     }
     this.remainingMs.set(AI_CHAT_SESSION_MS);
     this.feedbackOpen.set(false);
@@ -406,6 +410,9 @@ export class AiModelChatService {
    * name and photograph are asked for again — a new session is a new introduction.
    */
   startNewSession(model: AiModelProfile): void {
+    // The session being replaced comes off the model's Live Now counter if it never did.
+    const previous = this.sessions.get(model.slug);
+    if (previous) this.recordLiveChatEnd(previous);
     const session = this.createSession(model.slug);
     this.sessions.set(model.slug, session);
     this.openSlug.set(model.slug);
@@ -736,6 +743,9 @@ export class AiModelChatService {
     if (session.closed) return;
     session.closed = reason;
     session.closedAt = Date.now();
+    // Every ending — her goodbye, the visitor's ✕, the two hours — comes off the model's Live Now
+    // counter the moment it happens, so every open directory sees the number come down.
+    this.recordLiveChatEnd(session);
     // The photographs `livechatselfiesandphotos` generated were never stored anywhere: they lived
     // only in this browser, and the moment the session ends — by her, by the visitor, or by the
     // two hours — their bytes are dropped from the transcript for good.
@@ -756,6 +766,16 @@ export class AiModelChatService {
     // about the chat, and the visitor's stars and words. It stays there until they close it.
     this.feedbackOpen.set(true);
     this.syncClock();
+  }
+
+  /**
+   * Takes a finished session off its model's Live Now counter, exactly once. A session recorded
+   * before the start/end split carries no key; the server's own two-hour expiry retires it.
+   */
+  private recordLiveChatEnd(session: AiChatSession): void {
+    if (!session.liveChatCounted || session.liveChatEnded) return;
+    session.liveChatEnded = true;
+    if (session.liveChatKey) void this.liveChats.recordEnd(session.slug, session.liveChatKey);
   }
 
   /**
@@ -1654,6 +1674,8 @@ export class AiModelChatService {
           feedback: session.feedback ?? null,
           language: session.language ?? '',
           liveChatCounted: session.liveChatCounted === true,
+          liveChatKey: typeof session.liveChatKey === 'string' ? session.liveChatKey : undefined,
+          liveChatEnded: session.liveChatEnded === true,
         });
       }
     } catch {
@@ -1674,4 +1696,11 @@ export function formatRemaining(milliseconds: number): string {
 
 function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+/** The key one Live Chat session is counted under — unguessable, and unique to the session. */
+function newLiveChatSessionKey(): string {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi && typeof cryptoApi.randomUUID === 'function') return cryptoApi.randomUUID();
+  return `lc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }

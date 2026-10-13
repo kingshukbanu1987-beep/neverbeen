@@ -48,6 +48,9 @@ export class ChatFeedbackCard {
   /** The visitor's feedback, or `null` when they closed the form without giving any. */
   readonly closed = output<AiChatFeedback | null>();
 
+  /** The Chat history button: the window opens the whole transcript over this form. */
+  readonly historyRequested = output<void>();
+
   protected readonly stars = CHAT_FEEDBACK_STARS;
   protected readonly ratingLabels = CHAT_FEEDBACK_RATING_LABELS;
   protected readonly commentLimit = AI_CHAT_FEEDBACK_COMMENT_LIMIT;
@@ -117,6 +120,14 @@ export class ChatFeedbackCard {
 
   protected updateComments(event: Event): void {
     this.comments.set((event.target as HTMLTextAreaElement).value.slice(0, this.commentLimit));
+  }
+
+  /**
+   * The Chat history button beside Close: the whole transcript of the session — every message,
+   * photograph and document — opens over the form, and Escape brings the form back.
+   */
+  protected openHistory(): void {
+    this.historyRequested.emit();
   }
 
   /**

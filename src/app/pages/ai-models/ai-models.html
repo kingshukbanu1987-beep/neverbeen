@@ -220,28 +220,28 @@
                       Live Chat
                     </button>
 
-                    <!-- How many Live Chats this model has started, from the API, beside the button. -->
-                    @if (liveChatCountLabel(model); as liveCount) {
-                      <span
-                        class="card-live-count"
-                        [class.is-loading]="liveCount === '—'"
-                        role="status"
-                        [attr.aria-label]="liveChatAccessibleLabel(model)"
-                      >
-                        <span class="card-live-count-icon" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" focusable="false">
-                            <path
-                              d="M4 5.5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5V16.5H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"
-                            />
-                            <path d="M8 10h8M8 13h5" />
-                          </svg>
-                        </span>
-                        <b class="card-live-count-value" aria-hidden="true">{{ liveCount }}</b>
-                        <i class="card-live-count-word" aria-hidden="true">{{
-                          liveChatWord(model)
+                    <!-- The split pill beside the button: the chats live with her right now (a
+                         green pulse while there are any, a quiet grey dot while there are none)
+                         and her whole past-chat total, polled live from the API. -->
+                    <span
+                      class="card-live-pill"
+                      [class.is-live]="hasLiveNow(model)"
+                      role="status"
+                      [attr.aria-label]="liveChatAccessibleLabel(model)"
+                    >
+                      <span class="card-live-pill-seg is-now" aria-hidden="true">
+                        <span class="card-live-pill-dot"></span>
+                        <b class="card-live-pill-value">{{ formatTotal(liveNowCount(model)) }}</b>
+                        <i class="card-live-pill-word">Live Now</i>
+                      </span>
+                      <span class="card-live-pill-divider" aria-hidden="true"></span>
+                      <span class="card-live-pill-seg is-past" aria-hidden="true">
+                        <b class="card-live-pill-value">{{ formatTotal(pastChatCount(model)) }}</b>
+                        <i class="card-live-pill-word">{{
+                          pastChatCount(model) === 1 ? 'past chat' : 'past chats'
                         }}</i>
                       </span>
-                    }
+                    </span>
                   </div>
 
                   <div

@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { environment } from '../../../environments/environment';
+import { ModelLiveChatService } from '../../services/model-live-chat.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { aiModelProfiles } from './ai-model-data';
@@ -21,7 +22,15 @@ function cardFor(element: HTMLElement, name: string): HTMLElement {
   )!;
 }
 
-describe('AiModelsPage — Live Chat counter and review wording', () => {
+function pillTextOf(pill: HTMLElement, segment: string): { value: string; word: string } {
+  const seg = pill.querySelector<HTMLElement>(`.card-live-pill-seg.${segment}`)!;
+  return {
+    value: seg.querySelector('.card-live-pill-value')?.textContent?.trim() ?? '',
+    word: seg.querySelector('.card-live-pill-word')?.textContent?.trim() ?? '',
+  };
+}
+
+describe('AiModelsPage — Live Now / past-chat pill and review wording', () => {
   let testimonialsApi: { list: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
@@ -63,56 +72,120 @@ describe('AiModelsPage — Live Chat counter and review wording', () => {
     TestBed.inject(HttpTestingController).verify();
   });
 
-  it('shows the Live Chat count beside the Live Chat button, from one directory request', async () => {
+  it('shows the split pill beside the Live Chat button: Live Now with a pulse, and the past chats', async () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
 
     http
       .expectOne(`${API}/api/models/live-chats`)
-      .flush([{ modelSlug: profile.slug, liveChatCount: 1284 }]);
+      .flush([{ modelSlug: profile.slug, liveNowCount: 3, pastChatCount: 1284 }]);
     await settle();
     fixture.detectChanges();
 
     const card = cardFor(fixture.nativeElement, profile.name);
-    const pill = card.querySelector<HTMLElement>('.card-live-count')!;
+    const pill = card.querySelector<HTMLElement>('.card-live-pill')!;
     expect(pill).not.toBeNull();
     expect(pill.previousElementSibling?.classList.contains('card-action-chat')).toBe(true);
-    expect(pill.querySelector('.card-live-count-value')?.textContent?.trim()).toBe('1,284');
-    expect(pill.querySelector('.card-live-count-word')?.textContent?.trim()).toBe('Live Chats');
-    expect(pill.querySelector('svg')).not.toBeNull();
-    expect(pill.getAttribute('aria-label')).toBe(`1,284 Live Chats with ${profile.name}`);
+    expect(pill.classList.contains('is-live')).toBe(true);
+    expect(pill.querySelector('.card-live-pill-dot')).not.toBeNull();
+    expect(pill.querySelector('.card-live-pill-divider')).not.toBeNull();
 
-    // A model the API did not list has no counter at all, rather than a made-up one.
-    const other = cardFor(fixture.nativeElement, aiModelProfiles[1].name);
-    expect(other.querySelector('.card-live-count')).toBeNull();
+    const now = pillTextOf(pill, 'is-now');
+    expect(now.value).toBe('3');
+    expect(now.word).toBe('Live Now');
 
+    const past = pillTextOf(pill, 'is-past');
+    expect(past.value).toBe('1,284');
+    expect(past.word).toBe('past chats');
+
+    expect(pill.getAttribute('aria-label')).toBe(
+      `3 live now and 1,284 past chats with ${profile.name}`,
+    );
     fixture.destroy();
   });
 
-  it('uses the singular for one Live Chat', async () => {
+  it('shows the quiet default — 0 live now, grey dot, 0 past chats — for a model the API did not list', async () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     TestBed.inject(HttpTestingController)
       .expectOne(`${API}/api/models/live-chats`)
-      .flush([{ modelSlug: profile.slug, liveChatCount: 1 }]);
+      .flush([{ modelSlug: profile.slug, liveNowCount: 2, pastChatCount: 5 }]);
     await settle();
     fixture.detectChanges();
 
-    const pill = cardFor(fixture.nativeElement, profile.name).querySelector('.card-live-count')!;
-    expect(pill.querySelector('.card-live-count-word')?.textContent?.trim()).toBe('Live Chat');
+    const other = cardFor(fixture.nativeElement, aiModelProfiles[1].name);
+    const pill = other.querySelector<HTMLElement>('.card-live-pill')!;
+    expect(pill).not.toBeNull();
+    expect(pill.classList.contains('is-live')).toBe(false);
+
+    const now = pillTextOf(pill, 'is-now');
+    expect(now.value).toBe('0');
+    const past = pillTextOf(pill, 'is-past');
+    expect(past.value).toBe('0');
+    expect(past.word).toBe('past chats');
     fixture.destroy();
   });
 
-  it('shows a dash while the counts load and hides the counter when the API is unavailable', async () => {
+  it('uses the singular for one past chat', async () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    TestBed.inject(HttpTestingController)
+      .expectOne(`${API}/api/models/live-chats`)
+      .flush([{ modelSlug: profile.slug, liveNowCount: 0, pastChatCount: 1 }]);
+    await settle();
+    fixture.detectChanges();
+
+    const pill = cardFor(fixture.nativeElement, profile.name).querySelector<HTMLElement>(
+      '.card-live-pill',
+    )!;
+    const past = pillTextOf(pill, 'is-past');
+    expect(past.value).toBe('1');
+    expect(past.word).toBe('past chat');
+    expect(pill.classList.contains('is-live')).toBe(false);
+    fixture.destroy();
+  });
+
+  it('moves the Live Now count when a fresh poll answers with different numbers', async () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
 
-    const loading = cardFor(fixture.nativeElement, profile.name).querySelector<HTMLElement>(
-      '.card-live-count',
-    );
-    expect(loading?.querySelector('.card-live-count-value')?.textContent?.trim()).toBe('—');
-    expect(loading?.classList.contains('is-loading')).toBe(true);
+    http
+      .expectOne(`${API}/api/models/live-chats`)
+      .flush([{ modelSlug: profile.slug, liveNowCount: 1, pastChatCount: 10 }]);
+    await settle();
+    fixture.detectChanges();
+
+    let pill = cardFor(fixture.nativeElement, profile.name).querySelector<HTMLElement>(
+      '.card-live-pill',
+    )!;
+    let now = pillTextOf(pill, 'is-now');
+    expect(now.value).toBe('1');
+
+    // A chat ends somewhere else in the world: the next poll brings the smaller number, and the
+    // pill shows it without any reload of the page.
+    const service = TestBed.inject(ModelLiveChatService);
+    const refreshing = service.load();
+    http
+      .expectOne(`${API}/api/models/live-chats`)
+      .flush([{ modelSlug: profile.slug, liveNowCount: 0, pastChatCount: 11 }]);
+    await refreshing;
+    fixture.detectChanges();
+
+    pill = cardFor(fixture.nativeElement, profile.name).querySelector<HTMLElement>(
+      '.card-live-pill',
+    )!;
+    now = pillTextOf(pill, 'is-now');
+    expect(now.value).toBe('0');
+    expect(pill.classList.contains('is-live')).toBe(false);
+    const past = pillTextOf(pill, 'is-past');
+    expect(past.value).toBe('11');
+    fixture.destroy();
+  });
+
+  it('keeps the quiet default on every card when the API is unavailable', async () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
 
     http
       .expectOne(`${API}/api/models/live-chats`)
@@ -120,9 +193,14 @@ describe('AiModelsPage — Live Chat counter and review wording', () => {
     await settle();
     fixture.detectChanges();
 
-    expect(
-      cardFor(fixture.nativeElement, profile.name).querySelector('.card-live-count'),
-    ).toBeNull();
+    const pill = cardFor(fixture.nativeElement, profile.name).querySelector<HTMLElement>(
+      '.card-live-pill',
+    )!;
+    expect(pill).not.toBeNull();
+    expect(pill.classList.contains('is-live')).toBe(false);
+    const now = pillTextOf(pill, 'is-now');
+    expect(now.value).toBe('0');
+    expect(now.word).toBe('Live Now');
     fixture.destroy();
   });
 

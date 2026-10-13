@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ModelLiveChatService } from '../../services/model-live-chat.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
@@ -55,8 +62,9 @@ export function drawCover(model: AiModelProfile): string {
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   private readonly engagement = inject(ModelMediaEngagementService);
-  /** Each model's Live Chat count, shown on her card beside the Live Chat button. */
+  /** Each model's Live Now and past-chat counts, in the split pill beside her Live Chat button. */
   private readonly liveChats = inject(ModelLiveChatService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** The model whose live chat window is open, or null. The session lives in the chat service. */
   protected readonly chatModel = signal<AiModelProfile | null>(null);
@@ -158,7 +166,10 @@ export class AiModelsPage {
     // Ratings are public, live testimonial data rather than part of the generated model catalog.
     // Keep these requests bounded rather than fetching every model's reviews at once.
     void this.loadReviewSummaries();
+    // The Live Now pill is live data: load the counts now, then keep polling while the directory
+    // is on screen, so a chat started or ended on any other device moves the counters by itself.
     void this.liveChats.load();
+    this.destroyRef.onDestroy(this.liveChats.startPolling());
   }
 
   protected setAvailabilityFilter(value: AvailabilityFilter): void {
@@ -281,24 +292,31 @@ export class AiModelsPage {
   }
 
   /**
-   * The Live Chat count of a model, as the card shows it: the number once it is known, a dash while
-   * the directory is still loading it, and `null` (no counter at all) when the count cannot be had.
+   * How many chat sessions are live with this model right now, anywhere. The quiet default — no
+   * session live, a grey dot — is `0`, until the API says otherwise.
    */
-  protected liveChatCountLabel(model: AiModelProfile): string | null {
-    const count = this.liveChats.countFor(model.slug);
-    if (count !== null) return this.formatTotal(count);
-    const status = this.liveChats.status();
-    return status === 'idle' || status === 'loading' ? '—' : null;
+  protected liveNowCount(model: AiModelProfile): number {
+    return this.liveChats.countsFor(model.slug)?.liveNow ?? 0;
   }
 
-  protected liveChatWord(model: AiModelProfile): string {
-    return this.liveChats.countFor(model.slug) === 1 ? 'Live Chat' : 'Live Chats';
+  /** True while at least one chat is live with her — the pill's dot turns green and pulses. */
+  protected hasLiveNow(model: AiModelProfile): boolean {
+    return this.liveNowCount(model) > 0;
+  }
+
+  /** How many of her chats are already over — the other half of the split pill. */
+  protected pastChatCount(model: AiModelProfile): number {
+    return this.liveChats.countsFor(model.slug)?.pastChats ?? 0;
+  }
+
+  /** `0 past chats`, `1 past chat`, `12 past chats` — the past half of the pill, written out. */
+  protected pastChatLabel(model: AiModelProfile): string {
+    const count = this.pastChatCount(model);
+    return `${this.formatTotal(count)} past ${count === 1 ? 'chat' : 'chats'}`;
   }
 
   protected liveChatAccessibleLabel(model: AiModelProfile): string {
-    const count = this.liveChats.countFor(model.slug);
-    if (count === null) return `Live Chat counter for ${model.name} is loading`;
-    return `${this.formatTotal(count)} ${count === 1 ? 'Live Chat' : 'Live Chats'} with ${model.name}`;
+    return `${this.formatTotal(this.liveNowCount(model))} live now and ${this.pastChatLabel(model)} with ${model.name}`;
   }
 
   private async loadReviewSummaries(): Promise<void> {
