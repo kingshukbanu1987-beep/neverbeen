@@ -687,7 +687,7 @@
 
 .card-engagement-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0.95rem clamp(0.75rem, 2vw, 1.25rem) 0;
   padding: 0.7rem 0.45rem;
   overflow: hidden;
@@ -721,12 +721,18 @@
   max-width: 100%;
   margin: 0;
   font-family: var(--numeric-font);
-  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  /* Four statistics share the row, so the readouts stay a touch smaller than a three-stat row. */
+  font-size: clamp(1.15rem, 1.75vw, 1.6rem);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.07em;
   line-height: 1;
   white-space: nowrap;
+}
+
+.card-stat-seen .card-engagement-value {
+  color: #ffcf93;
+  text-shadow: 0 0 22px rgb(255 187 112 / 30%);
 }
 
 .card-stat-likes .card-engagement-value {
@@ -1105,7 +1111,7 @@
   }
 
   .card-engagement-value {
-    font-size: clamp(1.2rem, 5.2vw, 1.65rem);
+    font-size: clamp(1rem, 4.4vw, 1.4rem);
   }
 
   .card-engagement-label {

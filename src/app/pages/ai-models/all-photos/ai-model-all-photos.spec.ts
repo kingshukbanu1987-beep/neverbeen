@@ -3,17 +3,28 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ModelMediaEngagementService } from '../../../services/model-media-engagement.service';
+import { compactCount, exactCount } from '../../../shared/exact-count-popover';
 import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { AiModelAllPhotosPage } from './ai-model-all-photos';
 
 @Component({ template: '<p class="portfolio-stub">Portfolio</p>' })
 class PortfolioStub {}
 
-/** Builds a temporary model so the album page can be exercised with any number of photographs. */
-function withPhotos(count: number): AiModelProfile {
+/**
+ * Builds a temporary model so the album page can be exercised with any number of photographs —
+ * and, when asked, with clips too, because the seen total covers the whole model's media.
+ */
+function withPhotos(count: number, videoCount = 0): AiModelProfile {
   const photos = Array.from({ length: count }, (_, index) => ({
     src: `/NeverBeenModels/TestAlbumModel/frame-${index + 1}.jpg`,
     caption: `Frame ${index + 1} caption`,
+  }));
+  const videos = Array.from({ length: videoCount }, (_, index) => ({
+    src: `/NeverBeenModels/TestAlbumModel/video/clip-${index + 1}.mp4`,
+    fileName: `clip-${index + 1}.mp4`,
+    caption: `Clip ${index + 1} caption`,
+    poster: '',
+    type: 'video/mp4',
   }));
   const profile: AiModelProfile = {
     slug: 'test-album-model',
@@ -38,7 +49,7 @@ function withPhotos(count: number): AiModelProfile {
     illustrative: true,
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
-    videos: [],
+    videos,
   };
   aiModelProfiles.push(profile);
   return profile;
@@ -76,8 +87,14 @@ describe('AiModelAllPhotosPage', () => {
 
     try {
       expect(element.querySelector('h1')?.textContent?.trim()).toBe('Test Album Model');
-      expect(element.querySelector('.album-count')?.textContent).toContain('20');
-      expect(element.querySelector('.album-count')?.textContent).toContain('Photographs');
+
+      // The headline row counts how often the model's media has been seen, not her photographs.
+      const albumStats = element.querySelector('.album-count')!;
+      const labels = Array.from(albumStats.querySelectorAll<HTMLElement>('.album-count-label')).map(
+        (label) => label.textContent?.trim(),
+      );
+      expect(labels).toEqual(['Seen', 'Likes', 'Comments', 'Shares']);
+      expect(albumStats.textContent).not.toContain('Photograph');
 
       const tiles = Array.from(element.querySelectorAll<HTMLElement>('.mosaic-tile'));
       expect(tiles.length).toBe(20);
@@ -110,8 +127,8 @@ describe('AiModelAllPhotosPage', () => {
     }
   });
 
-  it('shows the album photo count and summed engagement totals in one four-stat row', async () => {
-    const profile = withPhotos(5);
+  it('shows seen, likes, comments and shares across the whole model in one four-stat row', async () => {
+    const profile = withPhotos(5, 2);
     const harness = await openAlbum(profile.slug);
     const element = harness.routeNativeElement as HTMLElement;
     const engagement = TestBed.inject(ModelMediaEngagementService);
@@ -124,29 +141,45 @@ describe('AiModelAllPhotosPage', () => {
       const labels = Array.from(albumStats.querySelectorAll<HTMLElement>('.album-count-label')).map(
         (label) => label.textContent?.trim(),
       );
-      expect(labels).toEqual(['Photographs', 'Likes', 'Comments', 'Shares']);
+      expect(labels).toEqual(['Seen', 'Likes', 'Comments', 'Shares']);
       expect(albumStats.querySelectorAll('.album-stat').length).toBe(4);
 
-      const expectedTotals = profile.photos.reduce(
-        (totals, photo) => {
-          const stats = engagement.statsFor(profile.slug, 'photo', photo.src);
-          totals.likes += stats.likes;
-          totals.comments += stats.comments;
-          totals.shares += stats.shares;
-          return totals;
-        },
-        { likes: 0, comments: 0, shares: 0 },
-      );
+      // The seen figure covers the album's photographs *and* the model's clips.
+      const expectedTotals = { seen: 0, likes: 0, comments: 0, shares: 0 };
+      for (const photo of profile.photos) {
+        const stats = engagement.statsFor(profile.slug, 'photo', photo.src);
+        expectedTotals.seen += stats.seen;
+        expectedTotals.likes += stats.likes;
+        expectedTotals.comments += stats.comments;
+        expectedTotals.shares += stats.shares;
+      }
+      for (const video of profile.videos) {
+        const stats = engagement.statsFor(profile.slug, 'video', video.src);
+        expectedTotals.seen += stats.seen;
+        expectedTotals.likes += stats.likes;
+        expectedTotals.comments += stats.comments;
+        expectedTotals.shares += stats.shares;
+      }
+      expect(expectedTotals.seen).toBeGreaterThan(0);
+
+      // Long totals read compactly (21.4K) and open their exact figure on a click.
       const values = Array.from(
         albumStats.querySelectorAll<HTMLElement>('.album-count-number'),
       ).map((value) => value.textContent?.trim());
 
       expect(values).toEqual([
-        String(profile.photos.length).padStart(2, '0'),
-        expectedTotals.likes.toLocaleString('en-US'),
-        expectedTotals.comments.toLocaleString('en-US'),
-        expectedTotals.shares.toLocaleString('en-US'),
+        compactCount(expectedTotals.seen),
+        compactCount(expectedTotals.likes),
+        compactCount(expectedTotals.comments),
+        compactCount(expectedTotals.shares),
       ]);
+
+      const seen = albumStats.querySelector<HTMLButtonElement>('.album-stat-seen .compact-count')!;
+      seen.click();
+      harness.detectChanges();
+      expect(element.querySelector('.ecp-card')?.textContent?.trim()).toBe(
+        exactCount(expectedTotals.seen),
+      );
     } finally {
       release(profile);
     }

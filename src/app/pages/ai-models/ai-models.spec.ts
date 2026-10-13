@@ -5,6 +5,7 @@ import {
   ModelMediaEngagementService,
 } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
+import { compactCount, exactCount } from '../../shared/exact-count-popover';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelsPage, drawCover } from './ai-models';
 
@@ -233,10 +234,10 @@ describe('AiModelsPage', () => {
     }
   });
 
-  it('totals likes, comments and shares across photos and videos, with portfolio and biography links', () => {
+  it('totals seen, likes, comments and shares across photos and videos, with portfolio and biography links', () => {
     const engagement = TestBed.inject(ModelMediaEngagementService);
     const statsFor = vi.spyOn(engagement, 'statsFor').mockImplementation((_slug, kind) => ({
-      seen: 0,
+      seen: kind === 'photo' ? 1004 : 1400,
       likes: kind === 'photo' ? 2 : 11,
       comments: kind === 'photo' ? 3 : 13,
       shares: kind === 'photo' ? 5 : 17,
@@ -255,18 +256,21 @@ describe('AiModelsPage', () => {
       (value) => value.textContent?.trim(),
     );
     const expectedTotals = [
+      profile.photos.length * 1004 + profile.videos.length * 1400,
       profile.photos.length * 2 + profile.videos.length * 11,
       profile.photos.length * 3 + profile.videos.length * 13,
       profile.photos.length * 5 + profile.videos.length * 17,
     ];
 
-    expect(card.querySelectorAll('.card-engagement-stat').length).toBe(3);
+    // Seen leads the row, before likes, comments and shares.
+    expect(card.querySelectorAll('.card-engagement-stat').length).toBe(4);
     expect(
       Array.from(card.querySelectorAll('.card-engagement-label')).map((label) =>
         label.textContent?.trim(),
       ),
-    ).toEqual(['Likes', 'Comments', 'Shares']);
-    expect(values).toEqual(expectedTotals.map((value) => value.toLocaleString('en-US')));
+    ).toEqual(['Seen', 'Likes', 'Comments', 'Shares']);
+    // Long totals are written compactly (21.4K), never as a full figure (21,400).
+    expect(values).toEqual(expectedTotals.map((value) => compactCount(value)));
     expect(registerModel).toHaveBeenCalledWith(profile.slug, [
       ...profile.photos.map((photo) => ({ kind: 'photo', src: photo.src })),
       ...profile.videos.map((video) => ({ kind: 'video', src: video.src })),
@@ -282,6 +286,48 @@ describe('AiModelsPage', () => {
     expect(actions[1].getAttribute('href')).toBe(`/ai-models/${profile.slug}/portfolio`);
     expect(actions[2].textContent).toContain('Read Bio');
     expect(actions[2].getAttribute('href')).toBe(`/ai-models/${profile.slug}/biography`);
+
+    fixture.destroy();
+  });
+
+  it('reveals the exact figure of a card counter in the pop-up, then closes it again', () => {
+    const engagement = TestBed.inject(ModelMediaEngagementService);
+    vi.spyOn(engagement, 'statsFor').mockImplementation((_slug, kind) => ({
+      seen: kind === 'photo' ? 1004 : 1400,
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      likedByMe: false,
+    }));
+    const profile = aiModelProfiles.find((model) => model.videos.length > 0)!;
+    const seenTotal = profile.photos.length * 1004 + profile.videos.length * 1400;
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const card = Array.from(element.querySelectorAll<HTMLElement>('.model-card')).find(
+      (modelCard) => modelCard.querySelector('h3')?.textContent?.trim() === profile.name,
+    )!;
+    const seen = card.querySelector<HTMLButtonElement>('.compact-count')!;
+
+    expect(element.querySelector('.ecp-card')).toBeNull();
+    expect(seen.textContent?.trim()).toBe(compactCount(seenTotal));
+
+    seen.click();
+    fixture.detectChanges();
+
+    // The pop-up holds the exact figure — and only the figure.
+    expect(element.querySelector('.ecp-card')?.textContent?.trim()).toBe(exactCount(seenTotal));
+    expect(element.querySelector('.ecp-card')?.getAttribute('aria-label')).toBe(
+      `Seen for ${profile.name}: ${exactCount(seenTotal)}`,
+    );
+
+    // Clicking anywhere else on the page closes it again.
+    element
+      .querySelector('.studio-hero')!
+      .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(element.querySelector('.ecp-card')).toBeNull();
 
     fixture.destroy();
   });

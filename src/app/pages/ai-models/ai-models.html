@@ -282,13 +282,30 @@
                 class="card-engagement-row"
                 [attr.aria-label]="'Total engagement for ' + model.name"
               >
+                <div class="card-engagement-stat card-stat-seen">
+                  <dt class="card-engagement-label">Seen</dt>
+                  <dd
+                    class="card-engagement-value"
+                    [attr.title]="formatTotal(engagementTotals(model).seen) + ' total views'"
+                  >
+                    <app-compact-count
+                      [value]="engagementTotals(model).seen"
+                      label="Seen"
+                      [subject]="model.name"
+                    />
+                  </dd>
+                </div>
                 <div class="card-engagement-stat card-stat-likes">
                   <dt class="card-engagement-label">Likes</dt>
                   <dd
                     class="card-engagement-value"
                     [attr.title]="formatTotal(engagementTotals(model).likes) + ' total likes'"
                   >
-                    {{ formatTotal(engagementTotals(model).likes) }}
+                    <app-compact-count
+                      [value]="engagementTotals(model).likes"
+                      label="Likes"
+                      [subject]="model.name"
+                    />
                   </dd>
                 </div>
                 <div class="card-engagement-stat card-stat-comments">
@@ -297,7 +314,11 @@
                     class="card-engagement-value"
                     [attr.title]="formatTotal(engagementTotals(model).comments) + ' total comments'"
                   >
-                    {{ formatTotal(engagementTotals(model).comments) }}
+                    <app-compact-count
+                      [value]="engagementTotals(model).comments"
+                      label="Comments"
+                      [subject]="model.name"
+                    />
                   </dd>
                 </div>
                 <div class="card-engagement-stat card-stat-shares">
@@ -306,7 +327,11 @@
                     class="card-engagement-value"
                     [attr.title]="formatTotal(engagementTotals(model).shares) + ' total shares'"
                   >
-                    {{ formatTotal(engagementTotals(model).shares) }}
+                    <app-compact-count
+                      [value]="engagementTotals(model).shares"
+                      label="Shares"
+                      [subject]="model.name"
+                    />
                   </dd>
                 </div>
               </dl>
@@ -346,3 +371,6 @@
     </div>
   </section>
 </main>
+
+<!-- The exact-count pop-up: a big counter opens it to reveal its exact figure. -->
+<app-exact-count-popover />

@@ -1,0 +1,42 @@
+/* The counter keeps the exact look of the statistic it replaces — it only becomes clickable. */
+:host {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.compact-count {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.05em 0.1em;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: center;
+  text-shadow: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.compact-count:hover {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.compact-count.is-open {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+
+.compact-count:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 3px;
+}
