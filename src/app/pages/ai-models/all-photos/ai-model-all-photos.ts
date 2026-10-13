@@ -64,16 +64,27 @@ export class AiModelAllPhotosPage implements OnDestroy {
 
   protected readonly photoTotal = computed(() => String(this.photos().length).padStart(2, '0'));
 
-  /** Album-wide photo engagement totals; these update as the service receives fresh counters. */
+  /**
+   * Album-wide engagement totals for the whole model — every photograph of this album **and** every
+   * clip of her reel, so the "Seen" figure counts the opens of all her media. The numbers update as
+   * the service receives fresh counters.
+   */
   protected readonly engagementTotals = computed(() => {
-    const photos = this.photos();
-    const slug = this.model()?.slug;
-    const totals = { likes: 0, comments: 0, shares: 0 };
+    const profile = this.model();
+    const totals = { seen: 0, likes: 0, comments: 0, shares: 0 };
 
-    if (!slug) return totals;
+    if (!profile) return totals;
 
-    for (const photo of photos) {
-      const stats = this.engagement.statsFor(slug, 'photo', photo.src);
+    for (const photo of profile.photos) {
+      const stats = this.engagement.statsFor(profile.slug, 'photo', photo.src);
+      totals.seen += stats.seen;
+      totals.likes += stats.likes;
+      totals.comments += stats.comments;
+      totals.shares += stats.shares;
+    }
+    for (const video of profile.videos) {
+      const stats = this.engagement.statsFor(profile.slug, 'video', video.src);
+      totals.seen += stats.seen;
       totals.likes += stats.likes;
       totals.comments += stats.comments;
       totals.shares += stats.shares;
@@ -108,15 +119,16 @@ export class AiModelAllPhotosPage implements OnDestroy {
     });
 
     // Register the album so every mosaic tile's seen / likes / comments / share strip has
-    // numbers, and close the page-level comments pop-up when the model changes.
+    // numbers — her clips are registered too, because the album's totals cover all her media —
+    // and close the page-level comments pop-up when the model changes.
     effect(() => {
       const profile = this.model();
       const slug = profile?.slug;
       if (slug && profile) {
-        this.engagement.registerModel(
-          slug,
-          profile.photos.map((photo) => ({ kind: 'photo' as MediaKind, src: photo.src })),
-        );
+        this.engagement.registerModel(slug, [
+          ...profile.photos.map((photo) => ({ kind: 'photo' as MediaKind, src: photo.src })),
+          ...profile.videos.map((video) => ({ kind: 'video' as MediaKind, src: video.src })),
+        ]);
       }
       this.commentsTarget.set(null);
     });

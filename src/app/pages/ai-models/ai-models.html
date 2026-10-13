@@ -282,6 +282,15 @@
                 class="card-engagement-row"
                 [attr.aria-label]="'Total engagement for ' + model.name"
               >
+                <div class="card-engagement-stat card-stat-seen">
+                  <dt class="card-engagement-label">Seen</dt>
+                  <dd
+                    class="card-engagement-value"
+                    [attr.title]="formatTotal(engagementTotals(model).seen) + ' total views'"
+                  >
+                    {{ formatTotal(engagementTotals(model).seen) }}
+                  </dd>
+                </div>
                 <div class="card-engagement-stat card-stat-likes">
                   <dt class="card-engagement-label">Likes</dt>
                   <dd

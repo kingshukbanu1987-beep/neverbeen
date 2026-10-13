@@ -309,6 +309,50 @@
           </div>
         </header>
 
+        <!-- Seen · Likes · Comments · Shares for the whole portfolio, just above the photographs. -->
+        <dl class="gallery-engagement" aria-label="Total engagement for the portfolio">
+          <div class="gallery-engagement-stat gallery-stat-seen">
+            <dt class="gallery-engagement-label">Seen</dt>
+            <dd
+              class="gallery-engagement-value num"
+              [attr.title]="
+                'Seen ' +
+                formatTotal(engagementTotals().seen) +
+                ' times across every photograph and clip'
+              "
+            >
+              {{ formatTotal(engagementTotals().seen) }}
+            </dd>
+          </div>
+          <div class="gallery-engagement-stat gallery-stat-likes">
+            <dt class="gallery-engagement-label">Likes</dt>
+            <dd
+              class="gallery-engagement-value num"
+              [attr.title]="formatTotal(engagementTotals().likes) + ' total likes'"
+            >
+              {{ formatTotal(engagementTotals().likes) }}
+            </dd>
+          </div>
+          <div class="gallery-engagement-stat gallery-stat-comments">
+            <dt class="gallery-engagement-label">Comments</dt>
+            <dd
+              class="gallery-engagement-value num"
+              [attr.title]="formatTotal(engagementTotals().comments) + ' total comments'"
+            >
+              {{ formatTotal(engagementTotals().comments) }}
+            </dd>
+          </div>
+          <div class="gallery-engagement-stat gallery-stat-shares">
+            <dt class="gallery-engagement-label">Shares</dt>
+            <dd
+              class="gallery-engagement-value num"
+              [attr.title]="formatTotal(engagementTotals().shares) + ' total shares'"
+            >
+              {{ formatTotal(engagementTotals().shares) }}
+            </dd>
+          </div>
+        </dl>
+
         @if (photos().length > 0) {
           @if (view() === 'grid') {
             <div class="portfolio-grid">

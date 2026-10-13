@@ -183,6 +183,39 @@ export class AiModelPortfolioPage implements OnDestroy {
   /** Position of the View All tile — the twelfth — or -1 when the whole album is on show. */
   protected readonly viewAllIndex = computed(() => (this.hasMorePhotos() ? PREVIEW_LIMIT - 1 : -1));
 
+  /**
+   * Seen · Likes · Comments · Shares across every photograph and clip of the model — the row shown
+   * just above the photographs, kept in step with the counters the service receives.
+   */
+  protected readonly engagementTotals = computed(() => {
+    const profile = this.model();
+    const totals = { seen: 0, likes: 0, comments: 0, shares: 0 };
+
+    if (!profile) return totals;
+
+    for (const photo of profile.photos) {
+      const stats = this.engagement.statsFor(profile.slug, 'photo', photo.src);
+      totals.seen += stats.seen;
+      totals.likes += stats.likes;
+      totals.comments += stats.comments;
+      totals.shares += stats.shares;
+    }
+    for (const video of profile.videos) {
+      const stats = this.engagement.statsFor(profile.slug, 'video', video.src);
+      totals.seen += stats.seen;
+      totals.likes += stats.likes;
+      totals.comments += stats.comments;
+      totals.shares += stats.shares;
+    }
+
+    return totals;
+  });
+
+  /** Keep totals exact while grouping longer values for quick scanning. */
+  protected formatTotal(value: number): string {
+    return value.toLocaleString('en-US');
+  }
+
   /** Router link to the model's complete album. */
   protected readonly allPhotosLink = computed(() => {
     const slug = this.model()?.slug;

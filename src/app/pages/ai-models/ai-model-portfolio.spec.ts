@@ -4,6 +4,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
 import { CommunityService } from '../../services/community.service';
+import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelBiographyPage } from './biography/ai-model-biography';
@@ -520,6 +521,62 @@ describe('AiModelPortfolioPage', () => {
       element.querySelector<HTMLButtonElement>('.feed-photo')?.click();
       harness.detectChanges();
       expect(element.querySelector('.lightbox')).not.toBeNull();
+    } finally {
+      release(profile);
+    }
+  });
+
+  it('shows seen, likes, comments and shares in one row just above the photographs', async () => {
+    const profile = withPhotos(3, 2);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+    const engagement = TestBed.inject(ModelMediaEngagementService);
+
+    try {
+      await engagement.loadStats(profile.slug);
+      harness.detectChanges();
+
+      const row = element.querySelector('.gallery-engagement')!;
+      expect(row).not.toBeNull();
+      expect(
+        Array.from(row.querySelectorAll<HTMLElement>('.gallery-engagement-label')).map((label) =>
+          label.textContent?.trim(),
+        ),
+      ).toEqual(['Seen', 'Likes', 'Comments', 'Shares']);
+
+      // The row reads after the gallery heading and before the first photograph.
+      const heading = element.querySelector('.gallery-heading')!;
+      const grid = element.querySelector('.portfolio-grid')!;
+      expect(heading.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(row.compareDocumentPosition(grid) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+      // Seen, likes, comments and shares cover every photograph and every clip.
+      const expectedTotals = { seen: 0, likes: 0, comments: 0, shares: 0 };
+      for (const photo of profile.photos) {
+        const stats = engagement.statsFor(profile.slug, 'photo', photo.src);
+        expectedTotals.seen += stats.seen;
+        expectedTotals.likes += stats.likes;
+        expectedTotals.comments += stats.comments;
+        expectedTotals.shares += stats.shares;
+      }
+      for (const video of profile.videos) {
+        const stats = engagement.statsFor(profile.slug, 'video', video.src);
+        expectedTotals.seen += stats.seen;
+        expectedTotals.likes += stats.likes;
+        expectedTotals.comments += stats.comments;
+        expectedTotals.shares += stats.shares;
+      }
+      expect(expectedTotals.seen).toBeGreaterThan(0);
+
+      const values = Array.from(row.querySelectorAll<HTMLElement>('.gallery-engagement-value')).map(
+        (value) => value.textContent?.trim(),
+      );
+      expect(values).toEqual([
+        expectedTotals.seen.toLocaleString('en-US'),
+        expectedTotals.likes.toLocaleString('en-US'),
+        expectedTotals.comments.toLocaleString('en-US'),
+        expectedTotals.shares.toLocaleString('en-US'),
+      ]);
     } finally {
       release(profile);
     }

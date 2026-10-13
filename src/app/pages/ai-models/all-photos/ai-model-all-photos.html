@@ -27,19 +27,26 @@
         </div>
 
         <dl class="album-count" aria-label="Album totals">
-          <div class="album-stat">
-            <dt class="album-count-label">
-              {{ photos().length === 1 ? 'Photograph' : 'Photographs' }}
-            </dt>
-            <dd class="album-count-number num">{{ photoTotal() }}</dd>
+          <div class="album-stat album-stat-seen">
+            <dt class="album-count-label">Seen</dt>
+            <dd
+              class="album-count-number num"
+              [attr.title]="
+                'Seen ' +
+                formatTotal(engagementTotals().seen) +
+                ' times across every photograph and clip'
+              "
+            >
+              {{ formatTotal(engagementTotals().seen) }}
+            </dd>
           </div>
-          <div class="album-stat">
+          <div class="album-stat album-stat-likes">
             <dt class="album-count-label">Likes</dt>
             <dd class="album-count-number num" [attr.title]="formatTotal(engagementTotals().likes)">
               {{ formatTotal(engagementTotals().likes) }}
             </dd>
           </div>
-          <div class="album-stat">
+          <div class="album-stat album-stat-comments">
             <dt class="album-count-label">Comments</dt>
             <dd
               class="album-count-number num"
@@ -48,7 +55,7 @@
               {{ formatTotal(engagementTotals().comments) }}
             </dd>
           </div>
-          <div class="album-stat">
+          <div class="album-stat album-stat-shares">
             <dt class="album-count-label">Shares</dt>
             <dd
               class="album-count-number num"

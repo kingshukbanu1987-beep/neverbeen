@@ -7,9 +7,14 @@ import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 type AvailabilityState = 'available' | 'unavailable' | 'future';
 type SortMode = 'default' | 'price-asc' | 'price-desc';
 type AvailabilityFilter = 'all' | AvailabilityState;
-type ModelEngagementTotals = { likes: number; comments: number; shares: number };
+type ModelEngagementTotals = { seen: number; likes: number; comments: number; shares: number };
 
-const EMPTY_ENGAGEMENT_TOTALS: ModelEngagementTotals = { likes: 0, comments: 0, shares: 0 };
+const EMPTY_ENGAGEMENT_TOTALS: ModelEngagementTotals = {
+  seen: 0,
+  likes: 0,
+  comments: 0,
+  shares: 0,
+};
 const TESTIMONIALS_PAGE_SIZE = 100;
 const REVIEW_SUMMARY_CONCURRENCY = 4;
 
@@ -55,7 +60,10 @@ export class AiModelsPage {
   );
   protected readonly ratingStars = [1, 2, 3, 4, 5];
 
-  /** Totals across each model's complete photo and video albums. */
+  /**
+   * Totals across each model's complete photo and video albums — the seen, likes, comments and
+   * shares every card shows together in one row.
+   */
   private readonly engagementByModel = computed(() => {
     const totals = new Map<string, ModelEngagementTotals>();
 
@@ -63,12 +71,14 @@ export class AiModelsPage {
       const modelTotals = { ...EMPTY_ENGAGEMENT_TOTALS };
       for (const photo of model.photos) {
         const stats = this.engagement.statsFor(model.slug, 'photo', photo.src);
+        modelTotals.seen += stats.seen;
         modelTotals.likes += stats.likes;
         modelTotals.comments += stats.comments;
         modelTotals.shares += stats.shares;
       }
       for (const video of model.videos) {
         const stats = this.engagement.statsFor(model.slug, 'video', video.src);
+        modelTotals.seen += stats.seen;
         modelTotals.likes += stats.likes;
         modelTotals.comments += stats.comments;
         modelTotals.shares += stats.shares;

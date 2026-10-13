@@ -233,10 +233,10 @@ describe('AiModelsPage', () => {
     }
   });
 
-  it('totals likes, comments and shares across photos and videos, with portfolio and biography links', () => {
+  it('totals seen, likes, comments and shares across photos and videos, with portfolio and biography links', () => {
     const engagement = TestBed.inject(ModelMediaEngagementService);
     const statsFor = vi.spyOn(engagement, 'statsFor').mockImplementation((_slug, kind) => ({
-      seen: 0,
+      seen: kind === 'photo' ? 1 : 7,
       likes: kind === 'photo' ? 2 : 11,
       comments: kind === 'photo' ? 3 : 13,
       shares: kind === 'photo' ? 5 : 17,
@@ -255,17 +255,19 @@ describe('AiModelsPage', () => {
       (value) => value.textContent?.trim(),
     );
     const expectedTotals = [
+      profile.photos.length * 1 + profile.videos.length * 7,
       profile.photos.length * 2 + profile.videos.length * 11,
       profile.photos.length * 3 + profile.videos.length * 13,
       profile.photos.length * 5 + profile.videos.length * 17,
     ];
 
-    expect(card.querySelectorAll('.card-engagement-stat').length).toBe(3);
+    // Seen leads the row, before likes, comments and shares.
+    expect(card.querySelectorAll('.card-engagement-stat').length).toBe(4);
     expect(
       Array.from(card.querySelectorAll('.card-engagement-label')).map((label) =>
         label.textContent?.trim(),
       ),
-    ).toEqual(['Likes', 'Comments', 'Shares']);
+    ).toEqual(['Seen', 'Likes', 'Comments', 'Shares']);
     expect(values).toEqual(expectedTotals.map((value) => value.toLocaleString('en-US')));
     expect(registerModel).toHaveBeenCalledWith(profile.slug, [
       ...profile.photos.map((photo) => ({ kind: 'photo', src: photo.src })),
