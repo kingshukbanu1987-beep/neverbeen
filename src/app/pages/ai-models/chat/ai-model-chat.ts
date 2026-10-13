@@ -22,6 +22,10 @@ import { ChatAutoScroll } from '../../../shared/chat-auto-scroll/chat-auto-scrol
 import { AiModelProfile } from '../ai-model-data';
 import { CHAT_WELCOME_LINE } from './chat-replies';
 import { splitLocation } from './chat-knowledge';
+import { buildChatSessionSummary } from './chat-summary';
+import { ChatIdentity } from './chat-identity';
+import { ChatIdentityPrompt } from './chat-identity-prompt';
+import { ChatSessionSummaryCard } from './chat-session-summary';
 import {
   AI_CHAT_DOCUMENT_LIMIT_BYTES,
   AI_CHAT_PHOTO_LIMIT_BYTES,
@@ -55,7 +59,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
  */
 @Component({
   selector: 'app-ai-model-chat',
-  imports: [RouterLink, ChatAutoScroll],
+  imports: [RouterLink, ChatAutoScroll, ChatIdentityPrompt, ChatSessionSummaryCard],
   templateUrl: './ai-model-chat.html',
   styleUrl: './ai-model-chat.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,6 +103,24 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
   protected readonly remaining = computed(() => this.chat.remainingMs());
   protected readonly urgent = computed(() => this.remaining() <= 5 * 60 * 1000);
   protected readonly warning = computed(() => this.remaining() <= 15 * 60 * 1000);
+
+  /** A — the form in front of the window, until the visitor has introduced themselves. */
+  protected readonly needsIdentity = computed(() => !this.chat.identified());
+
+  /** The visitor: their photograph beside their messages and their name in the header. */
+  protected readonly identity = computed<ChatIdentity | null>(
+    () => this.session()?.identity ?? null,
+  );
+
+  protected readonly visitorFirstName = computed(() => {
+    const name = this.identity()?.name ?? '';
+    return name ? name.split(' ')[0] : '';
+  });
+
+  /** K — her report on the finished session. */
+  protected readonly summary = computed(() =>
+    buildChatSessionSummary({ model: this.model(), session: this.chat.session()! }),
+  );
 
   protected readonly country = computed(() => splitLocation(this.model().location).country);
   protected readonly city = computed(() => splitLocation(this.model().location).city);
@@ -149,6 +171,17 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
     this.draft.set('');
     this.readError.set('');
     this.focusComposer();
+  }
+
+  /** A — the visitor's name and photograph, handed to the session by the form. */
+  protected confirmIdentity(identity: ChatIdentity): void {
+    this.chat.setIdentity(this.model(), identity);
+    this.focusComposer();
+  }
+
+  /** K — the summary card is put away; the window behind it stays closed. */
+  protected closeSummary(): void {
+    this.chat.dismissSummary();
   }
 
   protected onBackdropClick(event: MouseEvent): void {
@@ -277,6 +310,11 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
   protected bubbleText(message: AiChatMessage): string {
     if (!message.pending) return message.text;
     return message.text.slice(0, Math.max(0, message.revealedChars));
+  }
+
+  /** I — the name she types under while her answer is still on its way. */
+  protected typingLabel(): string {
+    return `${this.model().name.split(' ')[0]} is typing`;
   }
 
   protected isTypingBubble(message: AiChatMessage): boolean {

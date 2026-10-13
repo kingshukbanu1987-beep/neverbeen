@@ -62,7 +62,7 @@ describe('greeting and introduction (requirement D)', () => {
     expect(greetingFor(new Date('2026-10-13T19:00:00'))).toBe('Good evening');
   });
 
-  it('introduces her full name, model id, home, age and AI nature', () => {
+  it('introduces her full name, model id, home, age and where the whole of her lives', () => {
     const introduction = chatIntroduction(alisha, new Date('2026-10-13T09:30:00'));
     expect(introduction).toContain('Good morning');
     expect(introduction).toContain('Alisha Bhattacharya');
@@ -70,7 +70,9 @@ describe('greeting and introduction (requirement D)', () => {
     expect(introduction).toContain('Darjeeling');
     expect(introduction).toContain('India');
     expect(introduction).toContain('25');
-    expect(introduction).toContain('AI model agent');
+    // L — no bot line: she says the same thing the way a woman would say it.
+    expect(introduction).not.toContain('I am an AI model');
+    expect(introduction).toContain('not pretending otherwise');
     expect(introduction).toContain('NeverBeen Multiverse');
   });
 
@@ -138,7 +140,10 @@ describe('the world outside NeverBeen (requirement C)', () => {
   });
 
   it('knows capitals, currencies and continents from its own country file', () => {
-    expect(reply('What is the capital of France?').text).toBe('The capital of France is Paris.');
+    // Her answers carry her own mood on top of the fact (requirement C).
+    expect(reply('What is the capital of France?').text).toContain(
+      'The capital of France is Paris.',
+    );
     expect(reply('What is the capital of Japan?').text).toContain('Tokyo');
     expect(reply('What currency does Japan use?').text).toContain('Yen');
     expect(reply('Which continent is Brazil in?').text).toContain('South America');
@@ -167,10 +172,26 @@ describe('the world outside NeverBeen (requirement C)', () => {
 });
 
 describe('her expression and reactions (requirements B and H)', () => {
+  it('answers a smiley sent on its own, and sends one when it is asked for (requirement D)', () => {
+    const bare = reply('😊');
+    expect(bare.text.length).toBeGreaterThan(20);
+    expect(bare.text).toMatch(/[\u{1F300}-\u{1FAFF}]/u);
+    expect(bare.text).not.toContain('I do not know that one');
+
+    const hearts = reply('❤️❤️');
+    expect(hearts.text).not.toContain('I do not know that one');
+
+    const asked = reply('send me a smiley');
+    expect(asked.text).toMatch(/[\u{1F300}-\u{1FAFF}]/u);
+    expect(asked.text).not.toContain('I do not know that one');
+  });
+
   it('flirts back instead of pretending to be a person', () => {
     const answer = reply('I love you, you are beautiful');
     expect(answer.reaction).toBe('love');
-    expect(answer.text.toLowerCase()).toContain('ai model');
+    // She never claims to be a woman living down the road, and never says "I am an AI model".
+    expect(answer.text.toLowerCase()).toContain('neverbeen');
+    expect(answer.text.toLowerCase()).not.toContain('i am an ai model');
     expect(reactionForUserMessage('I love you')).toBe('love');
     expect(reactionForUserMessage('that is a bad day for me')).toBe('sad');
     expect(reactionForUserMessage('haha that is funny')).toBe('haha');

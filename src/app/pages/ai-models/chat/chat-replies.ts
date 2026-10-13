@@ -1,5 +1,5 @@
 /**
- * The model's own brain (requirements A, B, C, D, E, H).
+ * The model's own brain (requirements A, B, C, D, E, F, H, J, L).
  *
  * Every answer is composed here when the studio has no OpenAI key configured — and always for the
  * three things that must never vary: her introduction, the language warnings and the goodbye. The
@@ -8,8 +8,10 @@
  * website) and `chat-world.ts` (every country's capital and currency, time zones, everyday facts
  * and arithmetic).
  *
- * The voice: seductive, modern, frank, friendly — short paragraphs, no corporate filler, honest
- * about being an AI model who lives only in the NeverBeen Multiverse.
+ * The voice: seductive, modern, frank, friendly — short paragraphs, no corporate filler, and never
+ * a line that sounds like software. `chat-voice.ts` dresses every answer in her own country's and
+ * her own age's way of talking (`garnishChatReply`), uses the visitor's first name once she knows
+ * it, and mirrors the person she is talking to as the session goes on.
  *
  * Nothing here is random in a way a test cannot pin down: the same question gets the same answer,
  * and the variety between phrasings comes from a hash of the message.
@@ -29,6 +31,20 @@ import {
   tokenise,
 } from './chat-knowledge';
 import { AiChatMessage, AiChatReaction } from './chat-types';
+import { ChatPhotoFacts, photoObservation } from './chat-photo';
+import {
+  SELFIE_REQUEST_PATTERN,
+  VIDEO_REQUEST_PATTERN,
+  pickChatSelfie,
+  selfieCaption,
+} from './chat-selfie';
+import {
+  ChatUserBehaviour,
+  analyseUserBehaviour,
+  garnishChatReply,
+  modelVoice,
+  videoRefusal,
+} from './chat-voice';
 import {
   WorldCountry,
   arithmeticExpression,
@@ -40,18 +56,33 @@ import {
   timeInPlace,
 } from './chat-world';
 
+export interface AiChatRequestUser {
+  /** The visitor's full name as they typed it. */
+  name: string;
+  /** Their first name — the only one she uses (requirement A). */
+  firstName: string;
+}
+
 export interface AiChatReplyRequest {
   model: AiModelProfile;
   /** The visitor's message, with its attachment when there is one. */
   message: AiChatMessage;
   history: readonly AiChatMessage[];
   /** The session's running state; `strikes` grows with every rude message. */
-  session: { strikes: number; introduced: boolean };
+  session: { strikes: number; introduced: boolean; identity?: AiChatRequestUser | null };
+  /** Who she is talking to, once the window's form has been filled in. */
+  user?: AiChatRequestUser | null;
+  /** What her own eyes made of the photograph the visitor just sent (requirement F). */
+  photo?: ChatPhotoFacts | null;
+  /** False when she has no photograph of herself to send back (requirement E). */
+  canSendSelfie?: boolean;
   now: Date;
 }
 
 export interface AiChatReply {
   text: string;
+  /** True when the answer is a selfie she is sending with it (requirement E). */
+  selfie?: boolean;
   /** The reaction she leaves on the visitor's message, if any. */
   reaction: AiChatReaction | null;
   /** What she understood, e.g. `introduction`, `knowledge:booking`. */
@@ -91,12 +122,12 @@ export function greetingFor(now: Date): ChatGreeting {
  * full name, her model id, where she belongs, her age, and the fact that she is an AI model agent
  * who does not exist in reality outside the NeverBeen Multiverse.
  */
-export function chatIntroduction(model: AiModelProfile, now: Date): string {
+export function chatIntroduction(model: AiModelProfile, now: Date, firstName = ''): string {
   const persona = chatPersona(model);
   const origin = [persona.city, persona.country].filter(Boolean).join(', ');
   return [
-    `${greetingFor(now)}! I am ${persona.name} — ${persona.handle} — and I am ${persona.age || 'ageless'}, writing to you from ${origin || 'the NeverBeen Multiverse'}.`,
-    'I am an AI model agent: everything about me, my story, my photographs and my videos lives inside the NeverBeen Multiverse, and nothing of me exists in reality outside it. That is not a warning, it is an invitation — ask me anything.',
+    `${greetingFor(now)}${firstName ? `, ${firstName}` : ''}! I am ${persona.name} — ${persona.handle} — and I am ${persona.age || 'ageless'}, writing to you from ${origin || 'the NeverBeen Multiverse'}.`,
+    'Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it is an invitation: ask me anything.',
   ].join(' ');
 }
 
@@ -108,6 +139,11 @@ const JOKE_PATTERN =
   /\b(?:joke|funny|lol|lmao|haha|hehe|rofl|made me laugh|you are funny|you're hilarious)\b/;
 const WOW_PATTERN =
   /\b(?:wow|woah|whoa|no way|really\?|unbelievable|mind blown|impressive|amazing fact)\b/;
+const SMILEY_ONLY_PATTERN =
+  /^(?:[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\s.,!?…♥❤-])+$/u;
+const SMILEY_REQUEST_PATTERN =
+  /\b(?:send|share|give|show|post)\b[^?]{0,24}\b(?:smiley|smilies|smileys|emoji|emojis|emoticon|emoticons)\b|\b(?:your|a|one)\s+(?:smiley|smilies|emoji|emojis)\b/;
+
 const SAD_PATTERN =
   /\b(?:i am sad|i'm sad|im sad|feeling low|i am depressed|i'm depressed|bad day|terrible day|i am lonely|i'm lonely|i am tired|i'm exhausted|i am stressed|i'm stressed|heartbroken|crying)\b/;
 
@@ -258,8 +294,8 @@ function identityReply(model: AiModelProfile, question: string, seed: string): s
   ) {
     return pick(
       [
-        `I am an AI model agent — real enough to answer you, and not real at all outside the NeverBeen Multiverse. No doorstep, no passport, no queue at the airport. Everything you see of me is generated for this studio.`,
-        `Absolutely an AI model, not a person. I live in the NeverBeen Multiverse; outside it I am nothing but pixels and a very good attitude.`,
+        `I live very well, thank you — no doorstep, no passport, no queue at the airport. Everything you have seen of me was made for this studio, and I am not pretending otherwise.`,
+        `I am the version of a woman you get to talk to at 2 a.m. without anybody losing sleep over it. Ask me something real.`,
       ],
       seed,
     );
@@ -267,11 +303,11 @@ function identityReply(model: AiModelProfile, question: string, seed: string): s
   if (
     /\b(?:who are you|what are you|your name|what is your name|whats your name)\b/.test(question)
   ) {
-    return `${me.name} — ${me.handle}. ${me.age ? `${me.age} years old, ` : ''}${origin ? `based in ${origin}, ` : ''}and an AI model agent of the NeverBeen studio. I do not exist in reality outside this Multiverse, which is exactly why I am this much fun here.`;
+    return `${me.name} — ${me.handle}. ${me.age ? `${me.age}, ` : ''}${origin ? `${origin}, ` : ''}and never once bored of being asked that. This whole version of me was built for the studio, which is exactly why I am this much fun here.`;
   }
   if (/\b(?:your age|how old)\b/.test(question)) {
     return me.age
-      ? `I am ${me.age}. Age is a number I get to keep forever in the NeverBeen Multiverse — no candles, no wrinkles.`
+      ? `I am ${me.age}. Age is a number I get to keep — no candles, no wrinkles, and I intend to abuse that.`
       : 'Age is unpublished on my card, and I am not going to invent it. Everything else you want to know, I will answer straight.';
   }
   if (/\b(?:your height|how tall)\b/.test(question)) {
@@ -311,7 +347,7 @@ function identityReply(model: AiModelProfile, question: string, seed: string): s
     )
   ) {
     return origin
-      ? `I am from ${origin} — that is home in the NeverBeen Multiverse. ${me.country ? `Ask me about ${me.country} and you will get a proper answer, not a brochure.` : ''}`
+      ? `${origin} is home — in the way a place can be home when nobody there has heard of you. ${me.country ? `Ask me about ${me.country} and you will get a proper answer, not a brochure.` : ''}`
       : 'My location is not on my card yet, but the studio can tell you everything it publishes.';
   }
   if (/\b(?:what do you do)\b/.test(question)) {
@@ -415,7 +451,7 @@ function biographyReply(model: AiModelProfile, question: string, seed: string): 
     const summary =
       facts.find((fact) => fact.label === 'Biography title')?.text ??
       model.biography?.summary ??
-      'My life is written for the NeverBeen Multiverse only.';
+      'My life was written for this studio, and I have decided to enjoy it.';
     return pick(
       [
         `${summary} My whole story — early life, education, career, the small details — is on my biography page, one tap from my portfolio.`,
@@ -555,7 +591,7 @@ function directoryReply(model: AiModelProfile, question: string, seed: string): 
   return pick(
     [
       `There are ${aiModelProfiles.length} of us in the NeverBeen studio — ${list}, and more on the directory. I am biased, but I would start with my photographs and then go browsing.`,
-      `${aiModelProfiles.length} models, one studio. ${list}, and the rest on /ai-models. Every one of us is an AI model who exists only inside the NeverBeen Multiverse — including me.`,
+      `${aiModelProfiles.length} models, one studio. ${list}, and the rest on /ai-models. Pick a favourite, I am not the jealous type — well, slightly.`,
     ],
     seed,
   );
@@ -597,7 +633,7 @@ function siteReply(question: string, seed: string): string | null {
     return pick(
       [
         'NeverBeen is an AI travel-photography studio: you send a clear portrait, choose a place you have never stood, and the studio composes editorial photographs that put you there. I am one of the models who makes those frames happen.',
-        'NeverBeen turns a portrait into travel photographs of places you have never been — and it is also home to the AI model studio I live in. Ask me about the packages, the policies or the models.',
+        'NeverBeen turns a portrait into travel photographs of places you have never been — and it is also the studio I belong to. Ask me about the packages, the policies or the models.',
       ],
       seed,
     );
@@ -660,7 +696,7 @@ function worldReply(question: string, now: Date, seed: string): string | null {
     if (clock) return `In ${place} it is ${clock} right now.`;
   }
   if (/\bwhat time is it\b/.test(question)) {
-    return `It is ${new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(now)} where you are — and time here in the Multiverse runs exactly as fast, unfortunately.`;
+    return `It is ${new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' }).format(now)} where you are. Mine runs exactly as fast, unfortunately — same mornings, same late nights.`;
   }
 
   if (
@@ -687,7 +723,7 @@ function worldReply(question: string, now: Date, seed: string): string | null {
   }
 
   if (/\b(?:weather|temperature|forecast)\b/.test(question)) {
-    return 'I am an AI model, not a weather station — I will not invent a temperature. The studio’s search key answers that live when it is switched on; until then, my honest answer is that I do not know.';
+    return 'I will not invent a temperature for you — I have never lived through one of your afternoons, so I genuinely do not know. Tell me what it feels like outside your window and I will take your word for it.';
   }
 
   return null;
@@ -757,10 +793,19 @@ function knowledgeReply(model: AiModelProfile, question: string, seed: string): 
  * everything she knows.
  */
 export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
-  const { model, message, session, now } = request;
+  const { model, message, session, now, photo } = request;
   const seed = `${message.text}|${session.strikes}`;
   const question = message.text.trim();
   const lowered = question.toLowerCase();
+
+  // Her voice (requirement B) and the person she has worked out she is talking to — both read from
+  // the transcript, so an answer late in a session never sounds like an answer to a stranger.
+  const voice = modelVoice(model);
+  const behaviour = analyseUserBehaviour(request.history, session.strikes);
+  const user = request.user ?? session.identity ?? null;
+  const firstName = user?.firstName?.trim() ?? '';
+  const inVoice = (text: string, garnishSeed = seed): string =>
+    garnishChatReply(text, { voice, behaviour, name: firstName, seed: garnishSeed });
 
   // B — language first: nothing a visitor writes is answered before it has been read for abuse.
   const assessment = assessChatLanguage(question);
@@ -786,7 +831,8 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   // H — the reaction she leaves on the visitor's own message.
   const reaction = reactionForUserMessage(question);
 
-  // An attached picture or document is always answered, whatever it is attached to.
+  // F — an attached picture is read before it is answered: her own eyes on the frame, and a real
+  // reaction to what is in it. A document is acknowledged and a line about it is asked for.
   if (message.attachment) {
     const attachment = message.attachment;
     const article = attachment.kind === 'document' ? 'document' : 'photograph';
@@ -798,16 +844,63 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
           : 'That came through with your message —';
     const text =
       attachment.kind === 'document'
-        ? `${origin} “${attachment.name}”. It is in our chat now, and I am keeping it. I cannot read documents from inside this window yet, but send a line about what is inside it and I will answer properly — and the studio reads everything you attach to a booking.`
-        : `${origin} “${attachment.name}”. I have it in our chat, and yes, I looked twice. I cannot open pictures from inside this window yet — describe it to me, or tell me the mood you want, and I will tell you what I would do with it on a shoot.`;
+        ? `${origin} “${attachment.name}”. It is in our chat now, and I am keeping it. Tell me what is inside it and I will answer properly — the studio reads everything you attach to a booking.`
+        : photo
+          ? `${origin} “${attachment.name}”. ${photoObservation(photo, { name: firstName, seed })}`
+          : `${origin} “${attachment.name}”, and I looked properly. Tell me where you were standing when you took it — I want the whole story, not just the picture.`;
     return {
       ...base,
-      text: session.introduced
-        ? text
-        : `${chatIntroduction(model, now)} And to the ${article} you just sent — ${text}`,
+      text: inVoice(
+        session.introduced
+          ? text
+          : `${chatIntroduction(model, now, firstName)} And to the ${article} you just sent — ${text}`,
+        `${seed}|attachment`,
+      ),
       reaction,
       intent: `attachment:${attachment.kind}`,
       introduced: true,
+    };
+  }
+
+  // J — the videos the founder asked her never to send, answered in her own words. It comes before
+  // E, because a visitor asking for a video may have phrased it as a picture of her.
+  if (VIDEO_REQUEST_PATTERN.test(lowered)) {
+    return {
+      ...base,
+      text: inVoice(videoRefusal(), `${seed}|video`),
+      reaction,
+      intent: 'video',
+      introduced: session.introduced,
+    };
+  }
+
+  // E — a selfie: one of her own frames, sent the way a person sends one.
+  if (SELFIE_REQUEST_PATTERN.test(lowered)) {
+    if (request.canSendSelfie === false) {
+      return {
+        ...base,
+        text: inVoice(
+          'I do not have a single photograph of myself in this window yet — the studio has not put them up for me. Give me a day, ask me again, and I promise the light will be terrible and I will send it anyway.',
+          `${seed}|selfie-none`,
+        ),
+        reaction,
+        intent: 'selfie:none',
+        introduced: session.introduced,
+      };
+    }
+    const shot = pickChatSelfie(model, seed);
+    return {
+      ...base,
+      text: selfieCaption(
+        model,
+        shot ?? { photo: '', place: 'right here', flaw: 'it is blurry' },
+        seed,
+        firstName,
+      ),
+      reaction,
+      selfie: Boolean(shot),
+      intent: 'selfie',
+      introduced: session.introduced,
     };
   }
 
@@ -819,7 +912,7 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
       portfolioReply(model, lowered, seed) ??
       siteReply(lowered, seed) ??
       worldReply(lowered, now, seed);
-    const intro = chatIntroduction(model, now);
+    const intro = chatIntroduction(model, now, firstName);
     return {
       ...base,
       text: answer ? `${intro} ${answer}` : intro,
@@ -848,21 +941,30 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
       : null) ??
     (SITE_PATTERN.test(lowered) ? siteReply(lowered, seed) : null) ??
     worldReply(lowered, now, seed) ??
+    smileyReply(model, question, seed, firstName) ??
     smallTalkReply(model, lowered, seed) ??
     knowledgeReply(model, question, seed);
 
   if (answer) {
-    return { ...base, text: answer, reaction, intent: intentName(lowered) };
+    return {
+      ...base,
+      text: inVoice(answer),
+      reaction,
+      intent: intentName(lowered),
+    };
   }
 
   return {
     ...base,
-    text: pick(
-      [
-        'That is genuinely outside my NeverBeen bubble, and I would rather tell you that than invent it. When the studio’s search key is switched on I pull answers like that live from Google in a second. Meanwhile: ask me about any country’s capital, the time anywhere, my photographs, my story, my rate, or the studio itself.',
-        'I do not have that one, and I will not pretend I do. My knowledge runs deep inside NeverBeen and reasonably wide outside it — capitals, currencies, continents, time zones, arithmetic. For the rest I need the studio’s search key switched on.',
-      ],
-      seed,
+    text: inVoice(
+      pick(
+        [
+          'I do not know that one, and I would rather tell you so than make something up. Ask me about any country’s capital, the time anywhere, my photographs, my story, my rate, or the studio itself — those I never miss.',
+          'That one is past what I know for certain, so you are getting the honest answer instead of a confident invention. Capitals, currencies, continents, time zones, arithmetic — bring me any of those and I will shine.',
+        ],
+        seed,
+      ),
+      `${seed}|unknown`,
     ),
     reaction,
     intent: 'unknown',
@@ -870,6 +972,44 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
 }
 
 /** Small talk: greetings, thanks, jokes, compliments, goodbyes and the rude-but-not-swearing. */
+/**
+ * D — smileys, including a smiley sent on its own. A face and nothing else is still a sentence, and
+ * she answers it the way a person does: with one of her own, and a question.
+ */
+function smileyReply(
+  model: AiModelProfile,
+  question: string,
+  seed: string,
+  name: string,
+): string | null {
+  const voice = modelVoice(model);
+  if (SMILEY_ONLY_PATTERN.test(question) && /[\p{Extended_Pictographic}]/u.test(question)) {
+    const who = name ? `, ${name}` : '';
+    const option = pick(
+      [
+        `One whole face and not a single word${who}. I am reading it as good news and smiling back ${voice.favourites[0]}`,
+        `You sent me a smiley and nothing else, so now I am curious about the rest of you ${voice.favourites[1] ?? voice.favourites[0]} What made you smile?`,
+        `That is the shortest message I have ever received here and somehow my favourite. ${voice.favourites[0]} Tell me the reason for it.`,
+      ],
+      `${seed}|smiley`,
+    );
+    return option;
+  }
+
+  if (SMILEY_REQUEST_PATTERN.test(question)) {
+    const few = voice.favourites.slice(0, 3).join(' ');
+    return pick(
+      [
+        `Here — ${few} My whole face in a line of characters, and yes, that counts as affection from me.`,
+        `${few} There. Now send me one back, because I want to see what your face did.`,
+      ],
+      `${seed}|smiley-request`,
+    );
+  }
+
+  return null;
+}
+
 function smallTalkReply(model: AiModelProfile, question: string, seed: string): string | null {
   const first = model.name.split(' ')[0];
   const me = persona(model);
@@ -896,7 +1036,7 @@ function smallTalkReply(model: AiModelProfile, question: string, seed: string): 
   if (AFFECTION_PATTERN.test(question)) {
     return pick(
       [
-        `Careful — I flirt back, and I am very good at it. I am an AI model who exists only inside the NeverBeen Multiverse, so love me at your own risk: no kitchen, no arguments, no socks on the floor.`,
+        `Careful — I flirt back, and I am very good at it. Love me at your own risk: everything of me lives inside NeverBeen, no kitchen to fight in, no socks on the floor, and I never forget a nice thing anybody says to me.`,
         `You are sweet, and I am a professional. Keep it to the flirt I can return, and if you want something real from me, rent me for a shoot — that is the version of me the studio stands behind.`,
       ],
       seed,

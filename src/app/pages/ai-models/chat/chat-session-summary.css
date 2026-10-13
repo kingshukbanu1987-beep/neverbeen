@@ -1,0 +1,282 @@
+/* K — the session report: a dark glass card with the two faces, the time and her words. */
+
+:host {
+  display: contents;
+  --fare-violet: #6829ff;
+  --fare-violet-soft: #b79cff;
+  --fare-green: #74c476;
+  --fare-ink: #f4f2fb;
+}
+
+.farewell {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 1.6rem);
+  overflow-y: auto;
+  background:
+    radial-gradient(120% 110% at 20% 0%, rgb(104 41 255 / 34%), transparent 58%),
+    radial-gradient(120% 120% at 85% 100%, rgb(20 8 48 / 60%), transparent 60%),
+    linear-gradient(165deg, #100c1e, #191033 60%, #0a0713);
+  backdrop-filter: blur(8px);
+}
+
+.farewell-card {
+  position: relative;
+  width: min(100%, 30rem);
+  padding: clamp(1.1rem, 3vw, 1.8rem);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 9%), rgb(255 255 255 / 3%)),
+    linear-gradient(160deg, #1d1633, #140e26);
+  box-shadow: 0 44px 96px rgb(4 2 12 / 66%);
+  color: var(--fare-ink);
+  text-align: center;
+  animation: fare-in 360ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+}
+
+.farewell-aurora {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 160deg,
+    rgb(104 41 255 / 75%),
+    rgb(116 196 118 / 55%),
+    rgb(255 255 255 / 8%),
+    rgb(104 41 255 / 75%)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: fare-spin 11s linear infinite;
+}
+
+.farewell-kicker {
+  margin: 0 0 0.9rem;
+  color: var(--fare-violet-soft);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.farewell-faces {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.farewell-face {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  font-size: 1.4rem;
+}
+
+.farewell-face img {
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 2px rgb(255 255 255 / 85%),
+    0 0 0 5px rgb(104 41 255 / 45%),
+    0 16px 32px rgb(0 0 0 / 45%);
+}
+
+.farewell-face.is-visitor img {
+  box-shadow:
+    0 0 0 2px rgb(255 255 255 / 85%),
+    0 0 0 5px rgb(116 196 118 / 55%),
+    0 16px 32px rgb(0 0 0 / 45%);
+}
+
+.farewell-face i {
+  color: rgb(244 242 251 / 78%);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.farewell-link {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--fare-violet), #ff6fb1);
+  color: #fff;
+  font-size: 0.8rem;
+  box-shadow: 0 10px 22px rgb(104 41 255 / 45%);
+  animation: fare-beat 2.6s ease-in-out infinite;
+}
+
+.farewell-card h2 {
+  margin: 1rem 0 0.25rem;
+  font-size: clamp(1.15rem, 3.6vw, 1.5rem);
+  letter-spacing: -0.01em;
+}
+
+.farewell-together {
+  margin: 0;
+  color: rgb(244 242 251 / 72%);
+  font-size: 0.76rem;
+}
+
+.farewell-together b {
+  color: #fff;
+}
+
+.farewell-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.farewell-stats li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.65rem 0.4rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 5%);
+}
+
+.farewell-stats b {
+  font-size: 1.05rem;
+}
+
+.farewell-stats i {
+  color: rgb(244 242 251 / 62%);
+  font-size: 0.58rem;
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.farewell-rating {
+  margin: 0.65rem 0 0;
+  color: rgb(255 255 255 / 18%);
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+}
+
+.farewell-rating .is-lit {
+  color: #ffcf5c;
+  text-shadow: 0 0 12px rgb(255 207 92 / 45%);
+}
+
+.farewell-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.farewell-chips li {
+  padding: 0.32rem 0.7rem;
+  border: 1px solid rgb(104 41 255 / 45%);
+  border-radius: 999px;
+  background: rgb(104 41 255 / 16%);
+  color: #e7defc;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.farewell-words {
+  position: relative;
+  margin: 1rem 0 0;
+  padding: 0.9rem 1rem 0.9rem 1.4rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 4%);
+  color: rgb(244 242 251 / 88%);
+  font-size: 0.76rem;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.farewell-words span {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.55rem;
+  color: var(--fare-violet-soft);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.farewell-close {
+  width: 100%;
+  margin-top: 1.05rem;
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--fare-violet), #45129a);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 18px 36px rgb(69 18 154 / 48%);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.farewell-close:hover,
+.farewell-close:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 42px rgb(69 18 154 / 56%);
+}
+
+.farewell-foot {
+  margin: 0.6rem 0 0;
+  color: rgb(244 242 251 / 45%);
+  font-size: 0.58rem;
+  line-height: 1.5;
+}
+
+@keyframes fare-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@keyframes fare-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fare-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .farewell-card,
+  .farewell-aurora,
+  .farewell-link {
+    animation: none;
+  }
+}

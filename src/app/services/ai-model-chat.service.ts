@@ -9,18 +9,29 @@
  * - **The two-hour limit (requirement F).** `endsAt` is fixed when the session starts. The clock
  *   lives here rather than in the window, so closing and reopening the chat never restarts it, and
  *   the reminders are announced exactly once each, in the middle of the transcript.
- * - **The answer (requirements A, B, C, D).** The model's own engine (`chat-replies.ts`) answers
+ * - **The answer (requirements A, B, C, D, F).** The model's own engine (`chat-replies.ts`) answers
  *   instantly. When the studio has configured its OpenAI key, `POST /api/ai-chat` answers instead —
  *   streamed, word by word, with live Google results when a search key is configured — and every
  *   failure lands back on the local engine, so the chat always answers.
+ * - **The person on the other side (requirement A).** The window's form hands over a name and a
+ *   photograph before the two hours start; both live on the session, her answers use the first name,
+ *   and their photograph stands beside every message they send.
+ * - **Her own initiative (requirements G, H).** She greets the visitor the moment the form is
+ *   filled, she speaks up again when they go quiet for eleven to nineteen seconds, and once the
+ *   conversation has warmed up she asks them herself for a shoot.
  */
 import { Injectable, computed, signal } from '@angular/core';
-import { AiModelProfile } from '../pages/ai-models/ai-model-data';
+import { AiModelProfile, aiModelProfiles } from '../pages/ai-models/ai-model-data';
 import { composeChatReply, reactionAcknowledgement } from '../pages/ai-models/chat/chat-replies';
 import {
+  AI_CHAT_IDLE_MAX_MS,
+  AI_CHAT_IDLE_MIN_MS,
   AI_CHAT_MESSAGE_LIMIT,
+  AI_CHAT_NUDGE_LIMIT,
   AI_CHAT_REMINDER_MARKS,
   AI_CHAT_SESSION_MS,
+  AI_CHAT_TYPING_JITTER_MS,
+  AI_CHAT_TYPING_MS,
   AiChatAttachment,
   AiChatClosedReason,
   AiChatMessage,
@@ -28,6 +39,17 @@ import {
   AiChatSession,
   AiChatSource,
 } from '../pages/ai-models/chat/chat-types';
+import { ChatIdentity, firstNameOf } from '../pages/ai-models/chat/chat-identity';
+import { readChatPhotoFacts } from '../pages/ai-models/chat/chat-photo';
+import { pickChatSelfie } from '../pages/ai-models/chat/chat-selfie';
+import {
+  analyseUserBehaviour,
+  contractPitch,
+  idleChatOpener,
+  modelVoice,
+  openingLine,
+} from '../pages/ai-models/chat/chat-voice';
+import { seededBetween } from '../pages/ai-models/chat/chat-random';
 import { buildModelDossier } from '../pages/ai-models/chat/chat-knowledge';
 
 /** Where a session is kept between visits: one browser tab, and gone when it closes. */
@@ -100,10 +122,27 @@ export class AiModelChatService {
   readonly notice = signal('');
 
   /**
-   * The cosmetic timing of an answer: how long she "thinks" before the first word, and how fast the
-   * words then arrive. The window keeps these values; the tests set them to zero.
+   * True once the visitor has introduced themselves (requirement A) — before that the window shows
+   * the form instead of the conversation, and the two hours have not started.
    */
-  readonly pacing = { thinkingMs: 620, revealMs: 22 };
+  readonly identified = computed(() => Boolean(this.session()?.identity));
+
+  /** True while the summary card of a finished session is on screen (requirement K). */
+  readonly summaryOpen = signal(false);
+
+  /** The visitor's first name, for the window's chips and its header. */
+  readonly visitorName = computed(() => this.session()?.identity?.name ?? '');
+
+  /**
+   * The cosmetic timing of an answer (requirement I): she types for four to five seconds before the
+   * first word arrives, then the words themselves land quickly. The window keeps these values; the
+   * tests set them to zero.
+   */
+  readonly pacing = {
+    thinkingMs: AI_CHAT_TYPING_MS,
+    jitterMs: AI_CHAT_TYPING_JITTER_MS,
+    revealMs: 22,
+  };
 
   /** `01:59:31`-style countdown for the top-right corner of the chat window. */
   readonly timeLeftLabel = computed(() => formatRemaining(this.remainingMs()));
@@ -145,10 +184,53 @@ export class AiModelChatService {
     this.openSlug.set(null);
     this.session.set(null);
     this.draftAttachment.set(null);
+    this.summaryOpen.set(false);
     this.stopClock();
   }
 
-  /** Starts a fresh two-hour session for a model, from the "start a new chat" button. */
+  /**
+   * A — the visitor's name and photograph, from the form in front of the window. This is the moment
+   * the two hours start, and the moment she says something first: a woman opening a chat does not
+   * wait to be spoken to.
+   */
+  setIdentity(model: AiModelProfile, identity: ChatIdentity): void {
+    const session = this.sessionFor(model);
+    if (session.identity) return;
+
+    const now = Date.now();
+    session.identity = { name: identity.name, avatar: identity.avatar };
+    session.startedAt = now;
+    session.endsAt = now + AI_CHAT_SESSION_MS;
+    session.nudgeAt = now + this.idleDelay(1);
+    // She has introduced herself in the opening line, so her first answer to the visitor's first
+    // question is an answer, not a second introduction.
+    session.introduced = true;
+    this.remainingMs.set(AI_CHAT_SESSION_MS);
+    this.summaryOpen.set(false);
+    this.touch(session);
+    this.startClock();
+
+    const greeting = openingLine(
+      model,
+      modelVoice(model),
+      firstNameOf(identity.name),
+      identity.name,
+    );
+    const message = newMessage({
+      author: 'model',
+      text: greeting,
+      pending: true,
+      revealedChars: 0,
+      intent: 'opening',
+    });
+    this.appendMessage(session, message);
+    void this.reveal(message, session, greeting);
+  }
+
+  /**
+   * Starts a fresh two-hour session for a model, from the "start a new chat" button. The visitor's
+   * name and photograph are asked for again — a new session is a new introduction.
+   */
   startNewSession(model: AiModelProfile): void {
     const session = this.createSession(model.slug);
     this.sessions.set(model.slug, session);
@@ -156,9 +238,15 @@ export class AiModelChatService {
     this.view(session);
     this.draftAttachment.set(null);
     this.notice.set('');
+    this.summaryOpen.set(false);
     this.remainingMs.set(AI_CHAT_SESSION_MS);
     this.startClock();
     this.persist();
+  }
+
+  /** K — closes the summary card, leaving the ended window behind it. */
+  dismissSummary(): void {
+    this.summaryOpen.set(false);
   }
 
   /** The transcript of a model's session, whether or not her window is open. */
@@ -178,10 +266,20 @@ export class AiModelChatService {
   async sendMessage(model: AiModelProfile, rawText: string): Promise<void> {
     const session = this.sessionFor(model);
     if (this.openSlug() !== model.slug || session.closed) return;
+    if (!session.identity) {
+      this.notice.set('Your name and one photograph first — then I am all yours.');
+      return;
+    }
 
     const attachment = this.draftAttachment();
     const text = rawText.trim();
     if (!text && !attachment) return;
+
+    // F — a photograph is read before it is answered: the frame, the light and what is in it.
+    const photo =
+      attachment?.kind === 'photo' && attachment.preview
+        ? await readChatPhotoFacts(attachment.preview)
+        : null;
 
     const userMessage = newMessage({
       author: 'user',
@@ -192,10 +290,12 @@ export class AiModelChatService {
     this.draftAttachment.set(null);
     this.notice.set('');
     this.thinking.set(true);
+    // She is listening again: the silence that makes her speak up starts from this message.
+    session.nudgeAt = Date.now() + this.idleDelay(session.nudges + 1);
     this.persist();
 
     try {
-      await this.answer(model, session, userMessage);
+      await this.answer(model, session, userMessage, photo);
     } finally {
       this.thinking.set(false);
       this.syncClock();
@@ -253,6 +353,13 @@ export class AiModelChatService {
     const session = this.sessions.get(slug);
     if (!session) return;
 
+    // The two hours have not started: the visitor is still filling in the form in front of the
+    // window, and there is nothing for her to do but wait for them.
+    if (session.endsAt === 0) {
+      this.remainingMs.set(AI_CHAT_SESSION_MS);
+      return;
+    }
+
     const remaining = session.endsAt - Date.now();
     this.remainingMs.set(Math.max(0, remaining));
 
@@ -275,12 +382,69 @@ export class AiModelChatService {
       );
     }
     if (due.length > 0) this.syncClock();
+
+    this.nudge(session);
+  }
+
+  /**
+   * H — the visitor has gone quiet, so she says something herself: about her, about them, about the
+   * world, or a question of her own. She waits a little longer every time, and stops after a few.
+   */
+  private nudge(session: AiChatSession): void {
+    if (!session.identity || session.nudges >= AI_CHAT_NUDGE_LIMIT) return;
+    if (this.thinking() || session.messages.some((message) => message.pending)) return;
+    if (Date.now() < session.nudgeAt) return;
+
+    const last = [...session.messages].reverse().find((message) => message.kind === 'message');
+    if (!last || last.author !== 'model') return;
+
+    session.nudges += 1;
+    session.nudgeAt = Date.now() + this.idleDelay(session.nudges + 1);
+
+    const model = this.openModel();
+    const text = idleChatOpener({
+      model,
+      voice: modelVoice(model),
+      behaviour: analyseUserBehaviour(session.messages, session.strikes),
+      name: firstNameOf(session.identity.name),
+      step: session.nudges,
+      seed: `${session.slug}|nudge|${session.nudges}|${session.messages.length}`,
+    });
+
+    const message = newMessage({
+      author: 'model',
+      text,
+      pending: true,
+      revealedChars: 0,
+      intent: 'idle',
+    });
+    this.appendMessage(session, message);
+    void this.reveal(message, session, text);
+  }
+
+  /** The model of the open window — the one every session change is applied to. */
+  private openModel(): AiModelProfile {
+    const slug = this.openSlug();
+    const model = aiModelProfiles.find((candidate) => candidate.slug === slug);
+    if (!model) throw new Error('No model is open in the chat window.');
+    return model;
+  }
+
+  /** Eleven to nineteen seconds of silence before she speaks up, a little longer each time. */
+  private idleDelay(step: number): number {
+    const window = Math.min(60_000, (step - 1) * 9_000);
+    return seededBetween(
+      `${this.openSlug()}|idle|${step}|${Math.round(Math.random() * 1e6)}`,
+      AI_CHAT_IDLE_MIN_MS + window,
+      AI_CHAT_IDLE_MAX_MS + window,
+    );
   }
 
   /** Ends a session — the two hours are up, or she has said goodbye for good. */
   private endSession(session: AiChatSession, reason: AiChatClosedReason, message?: string): void {
     if (session.closed) return;
     session.closed = reason;
+    session.closedAt = Date.now();
     if (message) {
       this.appendMessage(
         session,
@@ -288,6 +452,9 @@ export class AiModelChatService {
       );
     }
     this.thinking.set(false);
+    // K — a session that ends is a session she reports on: the summary card comes up over the
+    // window, with the two faces, the time they spent and her own paragraph about it.
+    this.summaryOpen.set(true);
     this.syncClock();
   }
 
@@ -327,12 +494,19 @@ export class AiModelChatService {
     model: AiModelProfile,
     session: AiChatSession,
     userMessage: AiChatMessage,
+    photo: Awaited<ReturnType<typeof readChatPhotoFacts>> = null,
   ): Promise<void> {
+    const identity = session.identity;
+    const user = identity ? { name: identity.name, firstName: firstNameOf(identity.name) } : null;
+
     const local = composeChatReply({
       model,
       message: userMessage,
       history: session.messages,
-      session: { strikes: session.strikes, introduced: session.introduced },
+      session: { strikes: session.strikes, introduced: session.introduced, identity: user },
+      user,
+      photo,
+      canSendSelfie: model.photos.length > 0 || Boolean(model.cover),
       now: new Date(),
     });
     session.strikes = local.strikes;
@@ -364,6 +538,29 @@ export class AiModelChatService {
     if (!spoken) {
       herMessage.text = local.text;
       herMessage.intent = local.intent;
+      // E — a selfie goes out as a photograph, not as a promise of one.
+      if (local.selfie) {
+        const alreadySent = session.messages
+          .map((message) => message.attachment)
+          .filter((attachment) => attachment?.selfie === true)
+          .map((attachment) => attachment?.preview ?? '');
+        const shot = pickChatSelfie(
+          model,
+          `${userMessage.id}|${session.messages.length}`,
+          alreadySent,
+        );
+        if (shot) {
+          herMessage.attachment = {
+            kind: 'photo',
+            name: `${model.slug}-selfie.jpg`,
+            type: 'image/jpeg',
+            size: 0,
+            source: 'camera',
+            preview: shot.photo,
+            selfie: true,
+          };
+        }
+      }
       if (userMessage && local.reaction) {
         userMessage.reaction = local.reaction;
         userMessage.reactionBy = 'model';
@@ -383,9 +580,37 @@ export class AiModelChatService {
         'blocked',
         '🚪 She has closed the chat. Start a new session whenever you are ready to be polite.',
       );
-    } else {
-      this.syncClock();
+      return;
     }
+
+    this.syncClock();
+    await this.maybePitch(model, session);
+  }
+
+  /**
+   * G — once the conversation has warmed up she asks for work herself: a brand promotion or an
+   * editorial set, priced from her own card. Twice at most in one session, and never after the
+   * visitor has been rude.
+   */
+  private async maybePitch(model: AiModelProfile, session: AiChatSession): Promise<void> {
+    if (session.closed || session.strikes > 0 || session.pitches >= 2) return;
+
+    const theirs = session.messages.filter(
+      (message) => message.author === 'user' && message.kind === 'message',
+    ).length;
+    if (![5, 13].includes(theirs)) return;
+
+    session.pitches += 1;
+    const text = contractPitch(model, `${session.slug}|pitch|${theirs}`);
+    const message = newMessage({
+      author: 'model',
+      text,
+      pending: true,
+      revealedChars: 0,
+      intent: 'contract',
+    });
+    this.appendMessage(session, message);
+    await this.reveal(message, session, text);
   }
 
   /** Reveals a finished answer word by word — the Messenger-style "typing" (requirement H's realism). */
@@ -401,7 +626,12 @@ export class AiModelChatService {
 
     this.touch(session);
 
-    if (this.pacing.thinkingMs > 0) await delay(this.pacing.thinkingMs);
+    // I — she types for four to five seconds — the window shows her name and "typing…" — and only
+    // then does the answer start arriving.
+    if (this.pacing.thinkingMs > 0) {
+      const jitter = Math.round(Math.random() * Math.max(0, this.pacing.jitterMs));
+      await delay(this.pacing.thinkingMs + jitter);
+    }
 
     const step = Math.max(4, Math.round(text.length / 90));
     while (message.revealedChars < text.length) {
@@ -429,7 +659,12 @@ export class AiModelChatService {
     if (this.remoteUnavailable() || typeof fetch !== 'function') return null;
 
     const attachment = userMessage.attachment;
+    const identity = session.identity;
     const body = {
+      // A — the visitor travels with every turn, so the answer comes back addressed to them.
+      user: identity
+        ? { name: identity.name, firstName: firstNameOf(identity.name) }
+        : { name: '', firstName: '' },
       model: {
         slug: model.slug,
         name: model.name,
@@ -530,11 +765,13 @@ export class AiModelChatService {
   // ------------------------------------------------------------------ sessions
 
   private createSession(slug: string): AiChatSession {
-    const startedAt = Date.now();
+    // The clock does not start here: it starts when the visitor has introduced themselves
+    // (requirement A), so nobody loses their two hours to a form.
     return {
       slug,
-      startedAt,
-      endsAt: startedAt + AI_CHAT_SESSION_MS,
+      identity: null,
+      startedAt: 0,
+      endsAt: 0,
       messages: [
         newMessage({
           author: 'system',
@@ -546,6 +783,10 @@ export class AiModelChatService {
       closed: '',
       reminders: [],
       introduced: false,
+      nudgeAt: 0,
+      nudges: 0,
+      pitches: 0,
+      closedAt: 0,
     };
   }
 
@@ -636,6 +877,7 @@ export class AiModelChatService {
           continue;
         this.sessions.set(slug, {
           slug,
+          identity: session.identity ?? null,
           startedAt: session.startedAt ?? Date.now(),
           endsAt: session.endsAt,
           messages: session.messages.map((message) => ({
@@ -648,6 +890,10 @@ export class AiModelChatService {
           closed: session.closed ?? '',
           reminders: Array.isArray(session.reminders) ? session.reminders : [],
           introduced: Boolean(session.introduced),
+          nudgeAt: session.nudgeAt ?? 0,
+          nudges: session.nudges ?? 0,
+          pitches: session.pitches ?? 0,
+          closedAt: session.closedAt ?? 0,
         });
       }
     } catch {

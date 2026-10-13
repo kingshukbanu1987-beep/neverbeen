@@ -167,14 +167,31 @@ attach a photograph (or take one with the camera) or a document, and can react t
 👍 ❤️ 😂 😮 😢 😡 (a double-click is a ❤️) — and she reacts back on the visitor's own message with
 what the message deserves.
 
+Before any of that, a glass form asks who she is talking to: a name of three to fourteen characters
+(checked as it is typed) and one photograph — uploaded or taken with the front camera and reduced to
+about 100 KB automatically. From then on her photograph stands, circular, beside every answer and the
+visitor's beside their own messages; she uses their **first name** and opens the conversation herself.
+Her answers show her name and **typing** first and arrive four to five seconds later; she talks the
+way a woman of her own age and country talks (an Indian of 25 does not sound like an Iranian of 40),
+reads the visitor's humour and emoji as the session goes on and settles into their way of writing. A
+selfie request brings back one of her own frames as a phone photograph — the room behind her, the bad
+light, the flaw she admits to — a picture the visitor sends is looked at and answered in words, a
+video request is refused with the Founder's own wording, and once the chat has warmed up she asks for
+work herself: a brand promotion or an editorial set, priced from her card. When the visitor goes quiet
+for ten to twenty seconds she keeps the conversation going on her own — about her, about them, about
+the world, or with a question. When the two hours end, or when she ends the chat, an ultra-modern
+session report appears: both faces, the time they spent together, her honest paragraph about it and
+her rating out of five.
+
 She is grounded in everything NeverBeen knows: her own card, her complete biography, her photographs
 and videos, every other model, the website's prices, packages, coupons, policies and destinations,
 and the studio's own facts — so "how does the booking work?" and "tell me about Nourhan Durrani" are
-answered as well as "who are you?". The first message is answered with her introduction: the
+answered as well as "who are you?". The first answer of a session is her introduction: the
 good-morning/good-afternoon/good-evening greeting for the visitor's clock, her full name, her model
-id, her country and city, her age, and the plain statement that she is an AI model agent who does not
-exist in reality outside the NeverBeen Multiverse. She remembers the whole conversation, and a
-refresh keeps it.
+id, her country and city, her age, and the plain statement that everything of her lives inside the
+NeverBeen Multiverse and nowhere else — said in her own voice, never as a bot line ("I am an AI
+model", "I am replying from my biography" and their like are rewritten out of her answers). She
+remembers the whole conversation, and a refresh keeps it.
 
 Her tone is seductive, modern, frank and friendly. A swear word is a strike and a warning; sexual
 harassment counts double, and after three strikes she says goodbye and the chat window closes for

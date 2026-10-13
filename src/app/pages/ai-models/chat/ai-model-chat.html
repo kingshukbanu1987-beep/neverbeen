@@ -18,7 +18,9 @@
         <span class="chat-bar-copy">
           <b>{{ model().name }}</b>
           @if (thinking()) {
-            <i class="is-typing" role="status">typing…</i>
+            <i class="is-typing" role="status">{{ typingLabel() }}…</i>
+          } @else if (visitorFirstName()) {
+            <i>Chatting with {{ visitorFirstName() }} · active now</i>
           } @else {
             <i>Active now</i>
           }
@@ -105,6 +107,10 @@
                   <span aria-hidden="true">✳</span>
                 }
               </span>
+            } @else if (identity()?.avatar) {
+              <span class="chat-row-photo is-visitor">
+                <img [src]="identity()!.avatar" [alt]="identity()!.name" loading="lazy" />
+              </span>
             }
 
             <div class="chat-bubble-column">
@@ -113,12 +119,16 @@
                 [class.is-incoming]="message.author === 'model'"
                 [class.is-outgoing]="message.author === 'user'"
                 [class.is-document]="message.attachment?.kind === 'document'"
+                [class.is-selfie]="message.attachment?.selfie === true"
                 (dblclick)="onBubbleDoubleClick(message)"
               >
                 @if (message.attachment; as attachment) {
                   @if (attachment.kind === 'photo' && attachment.preview) {
                     <span class="chat-bubble-photo">
                       <img [src]="attachment.preview" [alt]="attachment.name" />
+                      @if (attachment.selfie) {
+                        <i class="chat-selfie-tag" aria-hidden="true">📱 just now</i>
+                      }
                     </span>
                   } @else {
                     <span class="chat-bubble-file">
@@ -130,9 +140,10 @@
                 }
 
                 @if (isTypingBubble(message)) {
-                  <span class="chat-typing" role="status" aria-label="She is typing">
-                    <i></i><i></i><i></i>
-                  </span>
+                  <!-- I — her name and "typing" land first, and the answer follows four to five
+                       seconds later, the way a person typing in front of you does it. -->
+                  <span class="chat-typing-copy" role="status">{{ typingLabel() }}</span>
+                  <span class="chat-typing" aria-hidden="true"><i></i><i></i><i></i></span>
                 } @else if (bubbleText(message)) {
                   <span class="chat-bubble-text">{{ bubbleText(message) }}</span>
                 }
@@ -194,21 +205,6 @@
             </div>
           </div>
         }
-      }
-
-      @if (thinking() && messages()[messages().length - 1]?.author === 'user') {
-        <div class="chat-row is-typing-row">
-          <span class="chat-row-photo">
-            @if (model().cover) {
-              <img [src]="model().cover" [alt]="model().name" loading="lazy" />
-            }
-          </span>
-          <div class="chat-bubble is-incoming">
-            <span class="chat-typing" role="status" aria-label="She is typing"
-              ><i></i><i></i><i></i
-            ></span>
-          </div>
-        </div>
       }
     </div>
 
@@ -321,6 +317,19 @@
           <span aria-hidden="true">➤</span>
         </button>
       </form>
+    }
+
+    @if (needsIdentity()) {
+      <app-chat-identity-prompt [model]="model()" (confirmed)="confirmIdentity($event)" />
+    }
+
+    @if (chat.summaryOpen() && session()) {
+      <app-chat-session-summary
+        [model]="model()"
+        [summary]="summary()"
+        [visitor]="identity()"
+        (closed)="closeSummary()"
+      />
     }
   </section>
 </div>

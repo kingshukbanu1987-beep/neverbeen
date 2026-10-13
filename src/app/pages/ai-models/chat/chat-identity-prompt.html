@@ -1,0 +1,109 @@
+<section class="gate" aria-labelledby="chat-gate-title">
+  <div class="gate-card">
+    <span class="gate-aurora" aria-hidden="true"></span>
+
+    <header class="gate-head">
+      <span class="gate-portrait">
+        @if (model().cover) {
+          <img [src]="model().cover" [alt]="model().name" />
+        } @else {
+          <span aria-hidden="true">✳</span>
+        }
+        <i class="gate-live" aria-hidden="true"></i>
+      </span>
+      <p class="gate-kicker">Live chat · 2 hours</p>
+      <h2 id="chat-gate-title">Before we start</h2>
+      <p class="gate-lede">
+        <b>{{ model().name }}</b> would like to know who she is talking to. Your name and one
+        photograph, and the window is yours.
+      </p>
+    </header>
+
+    <div class="gate-photo">
+      <span class="gate-photo-frame" [class.is-filled]="avatar()">
+        @if (avatar()) {
+          <img [src]="avatar()" alt="Your photograph" />
+        } @else if (working()) {
+          <span class="gate-spinner" aria-hidden="true"></span>
+        } @else {
+          <span class="gate-photo-hint" aria-hidden="true">
+            <b>+</b>
+            <i>Your photo</i>
+          </span>
+        }
+      </span>
+
+      <div class="gate-photo-actions">
+        <button type="button" class="gate-action is-primary" (click)="takePhoto()">
+          <span aria-hidden="true">📷</span> Take a photo
+        </button>
+        <button type="button" class="gate-action" (click)="pickPhoto()">
+          <span aria-hidden="true">🖼</span> Upload
+        </button>
+        @if (avatar()) {
+          <button type="button" class="gate-action is-quiet" (click)="clearPhoto()">Remove</button>
+        }
+      </div>
+
+      <p class="gate-note">
+        Reduced to {{ avatarLimit / 1024 }} KB automatically. It stays in this browser, and it is
+        used only beside your own messages.
+      </p>
+
+      <input
+        #photoInput
+        class="gate-file"
+        type="file"
+        accept="image/*"
+        (change)="onPhotoPicked($event)"
+      />
+      <input
+        #cameraInput
+        class="gate-file"
+        type="file"
+        accept="image/*"
+        capture="user"
+        (change)="onPhotoPicked($event)"
+      />
+    </div>
+
+    <div class="gate-field" [class.has-error]="nameError()">
+      <label for="chat-gate-name">Your name</label>
+      <input
+        id="chat-gate-name"
+        type="text"
+        name="chat-gate-name"
+        autocomplete="given-name"
+        inputmode="text"
+        placeholder="Alisha"
+        [value]="name()"
+        [attr.aria-invalid]="nameError() ? 'true' : 'false'"
+        aria-describedby="chat-gate-name-help"
+        (input)="onName($event)"
+        (keydown.enter)="confirm()"
+      />
+      <span class="gate-counter" aria-hidden="true"
+        >{{ name().trim().length }}/{{ maxLength }}</span
+      >
+      <p id="chat-gate-name-help" class="gate-help" role="status">
+        @if (nameError()) {
+          {{ nameError() }}
+        } @else if (firstName()) {
+          She will call you <b>{{ firstName() }}</b
+          >.
+        } @else {
+          {{ minLength }} to {{ maxLength }} letters. Two words are fine — she will use the first.
+        }
+      </p>
+    </div>
+
+    @if (problem()) {
+      <p class="gate-problem" role="alert">{{ problem() }}</p>
+    }
+
+    <button type="button" class="gate-start" [disabled]="!ready()" (click)="confirm()">
+      Start chatting
+      <span aria-hidden="true">→</span>
+    </button>
+  </div>
+</section>

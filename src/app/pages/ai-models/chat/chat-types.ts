@@ -4,6 +4,7 @@
  * moderation layer (`chat-moderation.ts`) and the session service
  * (`src/app/services/ai-model-chat.service.ts`).
  */
+import { ChatIdentity } from './chat-identity';
 
 /** Who wrote a message: the model, the visitor, or NeverBeen itself (reminders and notices). */
 export type AiChatAuthor = 'model' | 'user' | 'system';
@@ -58,6 +59,11 @@ export interface AiChatAttachment {
   size: number;
   source: AiChatAttachmentSource;
   /**
+   * Set on her messages: the frame she says she has just taken on her phone (requirement E), drawn
+   * like a phone photograph rather than like a studio frame.
+   */
+  selfie?: boolean;
+  /**
    * Data URL used to preview a picture inside its bubble. Empty for documents, and dropped when a
    * session is restored without room for it (see `compactSessions` in the chat service).
    */
@@ -101,6 +107,12 @@ export type AiChatClosedReason = '' | 'timeout' | 'blocked' | 'restarted';
 /** One visit's chat with one model: at most two hours, and never more than one at a time. */
 export interface AiChatSession {
   slug: string;
+  /**
+   * Who she is talking to (requirement A) — their name and the photograph beside their messages.
+   * `null` until the form in front of the window is filled in, and the two hours do not start
+   * before it is: `startedAt`/`endsAt` stay 0 while the visitor is still introducing themselves.
+   */
+  identity: ChatIdentity | null;
   startedAt: number;
   /** `startedAt` + `AI_CHAT_SESSION_MS` — the two-hour limit. */
   endsAt: number;
@@ -115,6 +127,16 @@ export interface AiChatSession {
   reminders: number[];
   /** True once she has introduced herself — the first message of the session. */
   introduced: boolean;
+  /**
+   * When she is due to say something on her own if the visitor stays quiet (requirement H), and how
+   * many times she already has — she waits a little longer every time.
+   */
+  nudgeAt: number;
+  nudges: number;
+  /** How many times she has asked for a shoot in this session (requirement G). */
+  pitches: number;
+  /** When the session ended, for the summary card (requirement K). */
+  closedAt: number;
 }
 
 /** The two-hour maximum of one chat session. */
@@ -128,6 +150,17 @@ export const AI_CHAT_REMINDER_MARKS: readonly number[] = [15, 10, 5, 1];
 
 /** How many messages one session keeps in memory and in the transcript. */
 export const AI_CHAT_MESSAGE_LIMIT = 400;
+
+/** How long she stays quiet before she says something herself (requirement H). */
+export const AI_CHAT_IDLE_MIN_MS = 11_000;
+export const AI_CHAT_IDLE_MAX_MS = 19_000;
+
+/** How many times she will reach out on her own in one session before she lets the window rest. */
+export const AI_CHAT_NUDGE_LIMIT = 6;
+
+/** How long she "types" before her answer starts arriving (requirement I): four to five seconds. */
+export const AI_CHAT_TYPING_MS = 4_400;
+export const AI_CHAT_TYPING_JITTER_MS = 600;
 
 /** Boundaries of one attachment: 8 MB for a picture, 16 MB for a document. */
 export const AI_CHAT_PHOTO_LIMIT_BYTES = 8 * 1024 * 1024;

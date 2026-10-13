@@ -1,9 +1,15 @@
 # AI Chat: talking to a model
 
-Requirements A–H of the AI model chat, and where each one lives. Everything runs in the website —
+Requirements A–L of the AI model chat, and where each one lives. Everything runs in the website —
 the Cloudflare Worker only adds the live OpenAI answer and the Google results for questions from
 outside NeverBeen. Without those secrets the chat still works: her own engine answers from the whole
 website and from a built-in world fact file.
+
+The requirement letters below are the brief's: **A** who the visitor is, **B** her voice and how she
+reads them, **C**/ **D** expression and smileys, **E** selfies, **F** photographs they send,
+**G** the contract she asks for, **H** her own initiative, **I** four to five seconds of typing,
+**J** the video rule, **K** the session report, **L** never a bot line. The sections further down
+that are labelled A–H are the window's own topics from the first delivery and keep their letters.
 
 ## Where to open it
 
@@ -29,6 +35,25 @@ chat (requirement B).
 - **View Profile** — grey `#e6e6ea` background, black text, `routerLink` to `/ai-models/:slug`;
 - the conversation, then the composer. The window opens on the conversation itself: no welcome copy
   and no canned starter questions, so the first thing her visitor reads is what she has to say.
+
+In front of it, until the visitor has introduced themselves, the window is covered by the form of
+requirement **A** (`chat-identity-prompt.{ts,html,css}`, `.gate`): her portrait with a live dot, a
+kicker, **Before we start**, a circular photograph slot (upload or `capture="user"` camera, both
+through the shared compressor at `CHAT_IDENTITY_AVATAR_BYTES` — about 100 KB) and a name field that
+is checked as it is typed (`chatNameError`: three to fourteen characters, letters required, whitespace
+collapsed) with the sentence "She will call you **Rahul**" as soon as the name is good. **Start
+chatting** stays disabled until both are there; `(confirmed)` hands `{ name, avatar }` to
+`AiModelChatService.setIdentity()`.
+
+Once she knows them:
+
+- their photograph stands, circular, beside every one of their messages
+  (`.chat-row-photo.is-visitor`), hers beside hers;
+- the header under her name reads `Chatting with Rahul · active now`, and while she is writing it
+  reads `Alisha is typing…`;
+- her pending bubble carries `Alisha is typing` above the three dots (requirement **I**), and the
+  answer starts arriving four to five seconds after the visitor sent theirs
+  (`pacing.thinkingMs` 4400 + `pacing.jitterMs` up to 600, revealed at `pacing.revealMs`).
 
 The page behind the window is white; her bubbles are rounded light grey `#ebebeb` with black text,
 the visitor's are the same shape in the NeverBeen violet `#4b128f` with white text. Every message
@@ -101,6 +126,9 @@ Two paths, in this order:
    question is searched on Google first (`num=3`) and the top results are handed to the model and
    shown under her answer. The system prompt carries her rules, her card and the dossier the window
    sent (her portfolio, her biography, the other models and the website).
+   Every turn carries `user: { name, firstName }` and, on the turn that opens the window,
+   `opening: true`, and the worker adds both to the system prompt and to the turn it builds.
+
 2. **Her own engine** — without keys the endpoint answers `503 { error: 'ai-unavailable' }` and the
    window says so once, then answers from `chat-replies.ts` and the built-in world file. The capital
    of India is Delhi on both paths.
@@ -110,16 +138,31 @@ messages of ≤ 800 characters, image data URL ≤ 4 MB, body ≤ 6 MB), throttl
 requests a minute, and answers `400`, `405`, `413`, `429`, `502` and `503` without ever leaking a
 key.
 
-## D. The first message: her introduction
+## D. Who speaks first, and her introduction
 
-The first thing the visitor sends is answered by `chatIntroduction()` — never by the model:
+The two hours start when the form is filled in, and she speaks first: `setIdentity()` appends the
+line `openingLine()` writes (guarded against a second call, and it sets `introduced` so the visitor's
+first question is answered rather than answered with a second introduction).
 
-> Good evening! I am Alisha Bhattacharya — @alisha.bhattacharya, 24, from Darjeeling, India…
+> Hey Rahul — I saw your photograph come through and I have been waiting for you to say something
+> ever since. I am Alisha.
+
+`openingLine` picks from a warm pool for a young or bubbly voice, a measured one for a senior voice,
+and adds one of her country's emoji when the roll falls that way. The name is the visitor's **first
+name only** — `firstNameOf`, so "Rahul Verma" is Rahul everywhere in the window and in her answers.
+
+The first answer of a _session_ is her introduction, written by `chatIntroduction()` — never by the
+model:
+
+> Good evening, Rahul! I am Alisha Bhattacharya — @alisha.bhattacharya — and I am 25, writing to you
+> from Darjeeling, India. Everything of me — my story, my photographs, my videos — lives inside the
+> NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it
+> is an invitation: ask me anything.
 
 The greeting follows the clock (`greetingFor`: Good morning before noon, Good afternoon before 17:00,
 Good evening after), and the introduction states her full name, her model id, her country and city,
-her age, and that she is an **AI model agent** who does not exist in reality outside the NeverBeen
-Multiverse.
+her age, and where the whole of her lives — in her own voice (requirement **L**: the older "I am an
+AI model agent" line is gone, the disclosure is not).
 
 ## E. She remembers the session
 
@@ -158,11 +201,128 @@ message — `reactionForUserMessage()` picks hers from what the visitor wrote, s
 a ❤️ and a rude one an 😡. Both stamps are shown under the bubble (`You reacted ❤️`,
 `Alisha reacted ❤️`), and pressing the same emoji again takes the reaction off.
 
+## The form's rules (requirement A)
+
+`chat-identity.ts` owns the three numbers the whole feature agrees on: `CHAT_NAME_MIN_LENGTH` (3),
+`CHAT_NAME_MAX_LENGTH` (14) and `CHAT_IDENTITY_AVATAR_BYTES` (100 KB), plus `cleanChatName`,
+`chatNameError`, `isValidChatName`, `firstNameOf` and `shortNameOf`. The form, the window, the
+service and the reply engine all import from it, so a name that is too short is refused in the same
+words wherever it is typed.
+
+`AiModelChatSession.identity` (`{ name, avatar }`) is the visitor: their photograph is the avatar
+beside their messages and in the session report, and their name travels with every turn — to her own
+engine as `request.user`, and to the live endpoint as `user: { name, firstName }` in the POST body,
+where `worker/ai-chat-core.mjs` turns it into a line of the system prompt ("You are talking to Rahul
+Verma. Call them Rahul — their first name only"). Without an identity `sendMessage()` refuses with
+"Your name and one photograph first — then I am all yours."
+
+## B. Her voice: her age, her country, and the person she is talking to
+
+`chat-voice.ts` is where her manner comes from:
+
+- `modelVoice(model)` → `{ country, city, band, age, emojiRate, interjection, endearment,
+expressiveness, cadence, favourites }`. `COUNTRY_VOICES` has an entry per country she comes from —
+  India (`achha`, `yaar`, 😄🥰), Iran (`khob`, `azizam`, 😌🌷), Syria (`yalla`, `habibti`, 😊😂☕🌙),
+  Lebanon, Egypt, the Gulf, Türkiye, Georgia, Ireland, the UK, Malaysia, Argentina, Uruguay, Bosnia,
+  Morocco and a neutral fallback — so an Indian, an Iranian and a Syrian woman do not sound alike;
+  the age bands (young ≤ 25, mid ≤ 32, senior) bend the same country: 23 is bubbly with many emoji,
+  40 is measured with few.
+- `analyseUserBehaviour(messages, strikes)` → what she has worked out about the visitor: warmth,
+  humour, curiosity, emoji, brevity, whether they sent a photograph, whether they talked about
+  booking, whether they were rude, and what they keep coming back to (her photographs, her story,
+  travel, food, films, the studio…).
+- `garnishChatReply()` dresses an answer in that voice: the country's interjection ("achha, …" —
+  without eating the capital of a name), a line of feeling, the visitor's name, a warm aside and the
+  country's emoji. A one-line writer gets a one-line answer.
+
+## C and D. Expression, and smileys
+
+Every answer she composes is dressed before it is sent: `inVoice()` runs it through
+`garnishChatReply`, so even a plain fact arrives with her interjection, a line of feeling, the
+visitor's name, a warm aside and one of her own emoji. A message that is nothing but a smiley is a
+sentence like any other: `smileyReply()` in `chat-replies.ts` matches a face-only message
+(`SMILEY_ONLY_PATTERN`) and answers with one of hers and a question, and a request for a smiley
+(`SMILEY_REQUEST_PATTERN` — "send me a smiley") gets three of her country's favourites back. Nothing
+about a smiley ever reaches the "I do not know that one" fallback.
+
+## E and F. Selfies, and the pictures they send
+
+`chat-selfie.ts` answers a selfie request (`SELFIE_REQUEST_PATTERN`) with a frame **from her own
+album** (`pickChatSelfie`, never the same one twice in a session) plus the moment and the flaw from
+`SELFIE_MOMENTS` — "in my room, the lamp is on and it is too warm in here", "no filter, no makeup,
+this is the real thing". The window dresses it like a phone photograph (`.chat-bubble.is-selfie`:
+portrait crop, a one-degree tilt, grain and a soft-light wash, a `just now` tag) and `selfieCaption()`
+writes the caption a person would send with it.
+
+A picture the visitor sends is read first: `chat-photo.ts` draws it into a 96-pixel canvas and turns
+the pixels into facts — orientation, brightness, saturation, warmth, dominant colour and the share of
+skin-toned pixels (`readChatPhotoFacts`, with a 1.5 s guard so a picture that never loads cannot
+freeze her answer). `photoObservation()` then writes what she can see in it ("That came out really
+dark — I can just about make you out", "Phone held up over your head too — very flattering angle"),
+and the answer goes out with the intent `attachment:photo`.
+
+## G and H. Her own initiative
+
+- **The contract** — `contractPitch()` in `chat-voice.ts` asks the visitor for work in her own words:
+  a brand promotion or an editorial set, priced from her own card ("It starts at ₹545 a
+  photograph"). `maybePitch()` in the service offers it on the visitor's fifth and thirteenth
+  message, at most twice a session, and never after a rudeness strike.
+- **The silence** — after `AI_CHAT_IDLE_MIN_MS` (11 s) plus a step (`AI_CHAT_IDLE_MAX_MS` 19 s, +9 s
+  each time, capped at a minute) of quiet, `nudge()` appends an `idleChatOpener()`: something about
+  her, something about the visitor, something from the world file, or a question — never the same
+  topic twice, at most `AI_CHAT_NUDGE_LIMIT` (6) times, and never while she is already writing.
+
+## J. Videos
+
+`videoRefusal()` in `chat-voice.ts` holds the founder's sentence, word for word:
+
+> Sorry actually, NeverBeen Founder Mr. Kingshuk asked me not to send my videos or any videos while I
+> am chatting with someone. So, you take his permission next time and show me his permission, then I
+> will send. Please don't mind.
+
+`VIDEO_REQUEST_PATTERN` catches "send me a video", "do you have any reels?", "your videos please" and
+answers with that sentence and nothing else; it is also the first house rule in the live system
+prompt, so the same rule survives on the OpenAI path.
+
+## L. Never a bot line
+
+Her engine is written so that no answer sounds like software: those three lines are the ones the code
+never produces, and the same rule is stated to the live model ("Never sound like software: do not say
+that you are an AI model, do not mention a dossier, a database, a biography or a knowledge base, and
+do not offer to search anything"). The tests assert the absence of the phrases wherever they used to
+appear.
+
+## K. The session report
+
+When a session ends — the two hours running out, the third strike, or the visitor starting a new one
+over an ended chat — `endSession()` stamps `closedAt` and raises `summaryOpen`, and the window shows
+`chat-session-summary.{ts,html,css}` (`.farewell`) over the closed conversation:
+
+- both faces, hers and the visitor's, in circles joined by a heart;
+- the headline and the time they spent together (`formatTogether`: "40 seconds", "48 minutes",
+  "1 hour 12 minutes") from `buildChatSessionSummary()`;
+- three numbers — their messages, the photographs that went back and forth, her rating out of five —
+  with the five stars lit to match;
+- up to three chips for what the chat was about, and the paragraph she writes about it, derived from
+  the session itself: how they wrote, what they kept asking about, whether they sent a photo, whether
+  they were rude, whether they talked about booking. A conversation she ended is rated 1 and written
+  about in the same breath.
+
+**Close** puts the card away (`dismissSummary()`), leaving the ended window behind it.
+
 ## Files
 
 | File                                                               | What it holds                                                                                                         |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `src/app/pages/ai-models/chat/ai-model-chat.{ts,html,css}`         | the window: layout, composer, attachments, reactions, the centred reminder, the closed state                          |
+| `src/app/pages/ai-models/chat/ai-model-chat.{ts,html,css}`         | the window: layout, composer, attachments, reactions, the centred reminder, the closed state, both overlays           |
+| `src/app/pages/ai-models/chat/chat-identity-prompt.{ts,html,css}`  | the form in front of the window: the photograph and the name (requirement A)                                          |
+| `src/app/pages/ai-models/chat/chat-identity.ts`                    | the name rules and the visitor's photograph: 3–14 characters, 100 KB, first name only                                 |
+| `src/app/pages/ai-models/chat/chat-session-summary.{ts,html,css}`  | the report card that closes a session (requirement K)                                                                 |
+| `src/app/pages/ai-models/chat/chat-summary.ts`                     | what that card says: the minutes, the counts, her rating and her paragraph about the chat                             |
+| `src/app/pages/ai-models/chat/chat-voice.ts`                       | her voice by country and age, the visitor's behaviour, the opening line, the idle opener, the pitch, the video line   |
+| `src/app/pages/ai-models/chat/chat-selfie.ts`                      | the frames she sends as selfies, their moments and their flaws, and the video-request pattern                         |
+| `src/app/pages/ai-models/chat/chat-photo.ts`                       | what she can see in a picture the visitor sends (requirement F)                                                       |
+| `src/app/pages/ai-models/chat/chat-random.ts`                      | the seeded pick/roll helpers, so every random choice is still testable                                                |
 | `src/app/pages/ai-models/chat/chat-types.ts`                       | the session shape and the numbers: 2 h, 400 messages, 8 MB / 16 MB attachments, the six reactions, the reminder marks |
 | `src/app/pages/ai-models/chat/chat-moderation.ts`                  | profanity and harassment levels, the strikes, her warning and goodbye texts                                           |
 | `src/app/pages/ai-models/chat/chat-knowledge.ts`                   | her persona, the fact lines and the dossier index that answers use                                                    |
@@ -209,6 +369,17 @@ npx ng test --no-watch --include "src/app/services/ai-model-chat.service.spec.ts
 - `ai-model-chat.spec.ts` — the window itself: her photograph, name, model id, city and country,
   **View Profile**, the countdown, the composer with its camera and attachments, Enter/Shift+Enter,
   both reactions, the centred 15-minute reminder, Escape and the closed state after three strikes;
-- `ai-model-chat.service.spec.ts` — the session store: two hours, the clock labels, the reminder
-  marks and the timeout, the strikes, the reactions, the live endpoint with its sources, the
-  fallback to her own engine, the storage mirror and the closed-window guards.
+- `ai-model-chat.service.spec.ts` — the session store: two hours, the identity gate that starts the
+  clock and speaks first, the silence she fills, the four to five seconds of typing, the selfie and
+  the photograph, the contract she asks for, the clock labels, the reminder marks and the timeout,
+  the strikes and the report card, the reactions, the live endpoint with its sources, the fallback to
+  her own engine, the storage mirror and the closed-window guards;
+- `chat-identity.spec.ts`, `chat-identity-prompt.spec.ts` — the form and its rules: 3–14 characters,
+  the errors, the camera and the gallery, the 100 KB reduction, the refusal of a file that is not a
+  picture, and the `{ name, avatar }` it confirms;
+- `chat-voice.spec.ts` — her country and her age, what she works out about the visitor, the opening
+  line, the idle opener, the pitch, and the video sentence word for word;
+- `chat-selfie.spec.ts`, `chat-photo.spec.ts` — her selfies, the requests that trigger them, and what
+  she sees in a picture the visitor sends;
+- `chat-summary.spec.ts`, `chat-session-summary.spec.ts` — the report card: the time together, the
+  counts, her rating, her paragraph and the Close button.

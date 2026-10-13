@@ -7,13 +7,24 @@ import { AiModelChatDialog } from './ai-model-chat';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
 
+/** The visitor of the form in front of the window: two words, so she uses the first one only. */
+const VISITOR_NAME = 'Rahul Verma';
+
 interface Harness {
   fixture: ComponentFixture<AiModelChatDialog>;
   element: HTMLElement;
   chat: AiModelChatService;
 }
 
-async function openChat(model = alisha): Promise<Harness> {
+/** A one-pixel visitor photograph — what the form would have reduced to about 100 KB. */
+const VISITOR_PHOTO =
+  'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwcJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AmwA/9k=';
+
+/**
+ * Opens the window the way a page does, and — unless asked otherwise — fills in the form in front
+ * of it, so the two hours start and she opens the conversation.
+ */
+async function openChat(model = alisha, { identify = true } = {}): Promise<Harness> {
   const chat = TestBed.inject(AiModelChatService);
   chat.pacing.thinkingMs = 0;
   chat.pacing.revealMs = 0;
@@ -22,7 +33,18 @@ async function openChat(model = alisha): Promise<Harness> {
   const fixture = TestBed.createComponent(AiModelChatDialog);
   fixture.componentRef.setInput('model', model);
   fixture.detectChanges();
-  return { fixture, element: fixture.nativeElement as HTMLElement, chat };
+  const harness: Harness = { fixture, element: fixture.nativeElement as HTMLElement, chat };
+
+  if (identify) {
+    chat.setIdentity(model, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(chat.thinking()).toBe(false);
+    });
+    fixture.detectChanges();
+  }
+  return harness;
 }
 
 /** Types into the composer and submits the form, the way a visitor does. */
@@ -114,16 +136,68 @@ describe('AiModelChatDialog', () => {
     expect(text).toContain('Alisha Bhattacharya');
     expect(text).toContain('NeverBeen Multiverse');
 
+    // She greeted the visitor first (requirement H), so her introduction is the second bubble.
     const outgoing = harness.element.querySelectorAll('.chat-bubble.is-outgoing');
     const incoming = harness.element.querySelectorAll('.chat-bubble.is-incoming');
     expect(outgoing.length).toBe(1);
     expect(outgoing[0].textContent).toContain('Hello, who are you?');
-    expect(incoming.length).toBe(1);
-    expect(incoming[0].textContent).toContain('AI model agent');
+    expect(incoming.length).toBe(2);
+    // A — she opened with their first name, and only their first name.
+    expect(incoming[0].textContent).toContain('Rahul');
+    expect(incoming[0].textContent).not.toContain('Verma');
+    // Her own answer carries her name and model id, with no bot line anywhere in the window.
+    expect(incoming[1].textContent).toContain('@alisha.bhattacharya');
+    expect(text).not.toContain('I am an AI model');
+    expect(text).not.toContain('from my biography');
 
     // Her bubble is the light grey one, the visitor's the dark violet one.
     expect(incoming[0].classList.contains('is-incoming')).toBe(true);
     expect(outgoing[0].classList.contains('is-outgoing')).toBe(true);
+  });
+
+  it('shows her name and “typing” for four to five seconds before the answer appears (requirement I)', async () => {
+    const harness = await openChat();
+    // The real pacing, with the jitter pinned down so the wait is exactly four and a half seconds.
+    harness.chat.pacing.thinkingMs = 4_500;
+    harness.chat.pacing.jitterMs = 0;
+    harness.chat.pacing.revealMs = 0;
+
+    const textarea = harness.element.querySelector<HTMLTextAreaElement>('.chat-input')!;
+    textarea.value = 'Tell me about Darjeeling';
+    textarea.dispatchEvent(new Event('input'));
+    harness.fixture.detectChanges();
+    harness.element
+      .querySelector<HTMLFormElement>('.chat-composer')!
+      .dispatchEvent(new Event('submit'));
+    harness.fixture.detectChanges();
+
+    // Her name is in the window and she is typing — the visitor's own name is in the bar, hers on
+    // the typing bubble, so nobody is guessing who is about to speak.
+    const typing = harness.element.querySelector('.chat-typing-copy')?.textContent ?? '';
+    expect(typing).toBe('Alisha is typing');
+    expect(harness.element.querySelector('.chat-bubble.is-incoming .chat-typing')).not.toBeNull();
+    const bar = harness.element.querySelector('.chat-bar-copy i')?.textContent ?? '';
+    expect(bar).toContain('Alisha is typing');
+    expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
+      '02:00:00',
+    );
+
+    // She takes her four to five seconds, and only then does the answer arrive.
+    await vi.waitFor(
+      () => {
+        harness.fixture.detectChanges();
+        expect(harness.chat.thinking()).toBe(false);
+      },
+      { timeout: 8_000, interval: 100 },
+    );
+    harness.fixture.detectChanges();
+
+    expect(harness.element.querySelector('.chat-typing-copy')).toBeNull();
+    const bubbles = harness.element.querySelectorAll('.chat-bubble.is-incoming');
+    expect(bubbles.length).toBe(2);
+    expect(bubbles[bubbles.length - 1].textContent?.trim().length ?? 0).toBeGreaterThan(0);
+    expect(harness.element.textContent).toContain('Chatting with Rahul · active now');
+    expect(harness.chat.remainingMs()).toBeLessThanOrEqual(2 * 60 * 60 * 1000);
   });
 
   it('opens on the conversation itself — no welcome copy and no static questions', async () => {
@@ -132,7 +206,8 @@ describe('AiModelChatDialog', () => {
 
     expect(harness.element.querySelector('.chat-welcome')).toBeNull();
     expect(harness.element.querySelector('.chat-suggestions')).toBeNull();
-    expect(harness.element.querySelectorAll('.chat-messages button').length).toBe(0);
+    // The only button in the transcript is her reaction control — no canned question in sight.
+    expect(harness.element.querySelectorAll('.chat-messages .chat-suggestions')).toHaveLength(0);
     expect(text).not.toContain('from her own portfolio');
     expect(text).not.toContain('Tell me about yourself');
     expect(text).not.toContain('What is the capital of India?');
@@ -259,29 +334,63 @@ describe('AiModelChatDialog', () => {
     expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('14:59');
   });
 
-  it('opens her two-hour session by itself and starts the clock, with no help from the page', async () => {
-    vi.useFakeTimers();
-    const chat = TestBed.inject(AiModelChatService);
-    chat.pacing.thinkingMs = 0;
-    chat.pacing.revealMs = 0;
+  it('opens her own session and asks who she is talking to before anything else', async () => {
+    const harness = await openChat(alisha, { identify: false });
+    const element = harness.element;
 
-    // A page only mounts the window; the session, the clock and the reminders are its own job.
-    const fixture = TestBed.createComponent(AiModelChatDialog);
-    fixture.componentRef.setInput('model', alisha);
-    fixture.detectChanges();
-    const element = fixture.nativeElement as HTMLElement;
+    expect(harness.chat.openSlug()).toBe(alisha.slug);
+    expect(harness.chat.session()?.slug).toBe(alisha.slug);
+    expect(harness.chat.identified()).toBe(false);
 
-    expect(chat.openSlug()).toBe(alisha.slug);
-    expect(chat.session()?.slug).toBe(alisha.slug);
+    // A — the form comes first: her photograph and name are asked for before the conversation.
+    const gate = element.querySelector('.gate');
+    expect(gate).not.toBeNull();
+    expect(gate?.textContent).toContain('Before we start');
+    expect(element.querySelector('.gate-start')).not.toBeNull();
+    expect(harness.chat.session()?.messages.length).toBe(1);
+
+    // The window is not listening yet, and the clock has not started.
+    await harness.chat.sendMessage(alisha, 'Hello?');
+    expect(harness.chat.session()?.messages.length).toBe(1);
+
+    // Once the form is filled in, the two hours start and she speaks first (requirement H).
+    harness.chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    harness.fixture.detectChanges();
+    await vi.waitFor(() => {
+      harness.fixture.detectChanges();
+      expect(harness.chat.thinking()).toBe(false);
+    });
+    harness.fixture.detectChanges();
+
+    expect(harness.chat.identified()).toBe(true);
+    expect(element.querySelector('.gate')).toBeNull();
+    expect(harness.chat.session()?.messages.length).toBe(2);
+    expect(element.querySelector('.chat-bubble.is-incoming')?.textContent).toContain('Alisha');
     expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('02:00:00');
+  });
+
+  it('counts the two hours down once the visitor has introduced themselves', async () => {
+    vi.useFakeTimers();
+    const harness = await openChat(alisha, { identify: false });
+    harness.chat.pacing.thinkingMs = 0;
+    harness.chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    harness.fixture.detectChanges();
+
+    expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
+      '02:00:00',
+    );
 
     vi.advanceTimersByTime(1000);
-    fixture.detectChanges();
-    expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('01:59:59');
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
+      '01:59:59',
+    );
 
     vi.advanceTimersByTime(30_000);
-    fixture.detectChanges();
-    expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('01:59:29');
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
+      '01:59:29',
+    );
   });
 
   it('answers a visitor who opened the window from the page, without a session being prepared for it', async () => {
@@ -296,12 +405,30 @@ describe('AiModelChatDialog', () => {
     fixture.detectChanges();
     const harness: Harness = { fixture, element: fixture.nativeElement as HTMLElement, chat };
 
+    // The window asked who she is talking to; the visitor answered the form.
+    chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(chat.thinking()).toBe(false);
+    });
+    fixture.detectChanges();
+
     await send(harness, 'Are you really there?');
 
     expect(harness.element.querySelectorAll('.chat-bubble.is-outgoing').length).toBe(1);
-    expect(harness.element.querySelectorAll('.chat-bubble.is-incoming').length).toBe(1);
+    expect(harness.element.querySelectorAll('.chat-bubble.is-incoming').length).toBe(2);
     expect(harness.element.textContent).toContain('Alisha Bhattacharya');
     expect(harness.element.textContent).toContain('NeverBeen Multiverse');
+
+    // A — their photograph is beside their own messages, hers beside hers.
+    const visitorPhoto = harness.element.querySelector('.chat-row.is-outgoing .chat-row-photo img');
+    expect(visitorPhoto?.getAttribute('src')).toBe(VISITOR_PHOTO);
+    expect(
+      harness.element
+        .querySelector('.chat-row:not(.is-outgoing) .chat-row-photo img')
+        ?.getAttribute('src'),
+    ).toBe(alisha.cover);
 
     // She keeps the session she opened, so the countdown carries on from where it was.
     expect(chat.canSend()).toBe(true);
@@ -321,7 +448,20 @@ describe('AiModelChatDialog', () => {
     );
     expect(harness.element.querySelector('.chat-composer')).toBeNull();
 
+    // K — the session report comes up over the window, and it can be put away.
+    expect(harness.element.querySelector('app-chat-session-summary')).not.toBeNull();
+    expect(harness.element.textContent).toContain('spent');
+    harness.element.querySelector<HTMLButtonElement>('.farewell-close')!.click();
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-session-summary')).toBeNull();
+
     harness.element.querySelector<HTMLButtonElement>('.chat-ended-button')!.click();
+    await vi.waitFor(() => {
+      harness.fixture.detectChanges();
+      // A new session is a new introduction: the form comes back before the composer does.
+      expect(harness.element.querySelector('.gate')).not.toBeNull();
+    });
+    harness.chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
     await vi.waitFor(() => {
       harness.fixture.detectChanges();
       expect(harness.element.querySelector('.chat-composer')).not.toBeNull();
@@ -329,7 +469,8 @@ describe('AiModelChatDialog', () => {
     expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
       '02:00:00',
     );
-    // A fresh session starts on an empty conversation.
-    expect(harness.element.querySelectorAll('.chat-bubble').length).toBe(0);
+    // A fresh session starts on nothing but her own opening line.
+    expect(harness.element.querySelectorAll('.chat-bubble').length).toBe(1);
+    expect(harness.element.querySelector('.chat-bubble')?.textContent).toContain('Alisha');
   });
 });

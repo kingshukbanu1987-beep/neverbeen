@@ -18,6 +18,10 @@ export interface ChatSearchResult {
 
 /** What the chat window posts to the endpoint. */
 export interface ChatRequestPayload {
+  /** The visitor she is talking to (requirement A) — her answers use the first name. */
+  user?: { name?: string; firstName?: string };
+  /** True on the turn that opens the window, so she greets them first (requirement H). */
+  opening?: boolean;
   model?: { slug?: string; name?: string; handle?: string; location?: string; age?: string };
   dossier?: string;
   question?: string;
@@ -26,6 +30,8 @@ export interface ChatRequestPayload {
 }
 
 export interface ChatTurn {
+  user: { name: string; firstName: string };
+  opening: boolean;
   question: string;
   dossier: string;
   model: { slug: string; name: string; handle: string; location: string; age: string };

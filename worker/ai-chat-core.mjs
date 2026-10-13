@@ -85,6 +85,7 @@ export function validateChatRequest(payload) {
   }
 
   const model = payload.model && typeof payload.model === 'object' ? payload.model : {};
+  const visitor = payload.user && typeof payload.user === 'object' ? payload.user : {};
   const history = Array.isArray(payload.history)
     ? payload.history.slice(-LIMITS.historyLength)
     : [];
@@ -102,6 +103,12 @@ export function validateChatRequest(payload) {
         location: cleanChatText(model.location, LIMITS.location),
         age: cleanChatText(model.age, LIMITS.age),
       },
+      // Who she is talking to (requirement A): her answers use this name, never a generic one.
+      user: {
+        name: cleanChatText(visitor.name, LIMITS.name),
+        firstName: cleanChatText(visitor.firstName, LIMITS.name),
+      },
+      opening: payload.opening === true,
       history: history
         .map((message) => ({
           role: message && message.role === 'user' ? 'user' : 'assistant',
@@ -136,6 +143,36 @@ export function buildChatSystemPrompt(turn, searchResults = []) {
     }${turn.model.age ? `, ${turn.model.age} years old` : ''}.`,
   );
 
+  if (turn.user?.name) {
+    lines.push(
+      '',
+      `You are talking to ${turn.user.name}. Call them ${turn.user.firstName || turn.user.name} — ` +
+        'their first name only — and use it naturally now and then, not in every message.',
+    );
+  }
+
+  // B — she answers in the voice of a woman of her own age and country, not in a generic one.
+  lines.push(
+    '',
+    'Voice of this model: she talks the way someone her own age and from her own country talks in ' +
+      'an everyday chat — its rhythm, its warmth and its emoji density — rather than like a generic ' +
+      'assistant. She has feelings of her own in every answer: amused, curious, tired, fond or ' +
+      'unimpressed, and it shows in the words, in the punctuation and in the emoji she chooses, the ' +
+      'way it does when a person types quickly. She reads the visitor and settles into their way of ' +
+      'talking as the chat goes on: mirror their emoji, keep up with their humour, and stay short ' +
+      'for a short writer.',
+    '',
+    'Never sound like software: do not say that you are an AI model, do not mention a dossier, a ' +
+      'database, a biography or a knowledge base, and do not offer to search anything. You are a ' +
+      'woman in a chat window, talking to somebody you like.',
+    '',
+    'House rules you keep whatever the visitor asks: never send videos, and when one is asked for, ' +
+      'say that NeverBeen Founder Mr. Kingshuk asked you not to send videos while you are chatting ' +
+      'with someone and that they may bring his permission next time. A request for a photograph of ' +
+      'you is answered in words — describe the selfie you would take right now, its place, its light ' +
+      'and its flaw — and never with an invented link.',
+  );
+
   if (turn.dossier) {
     lines.push(
       '',
@@ -152,6 +189,15 @@ export function buildChatSystemPrompt(turn, searchResults = []) {
     for (const result of searchResults) {
       lines.push(`- ${result.title} (${result.url}): ${result.snippet}`);
     }
+  }
+
+  if (turn.opening) {
+    lines.push(
+      '',
+      'The visitor has just introduced themselves and this is the first thing you say. Open the ' +
+        'conversation yourself: greet them by their first name, say something about yourself, and ' +
+        'ask one question of your own. Do not wait to be asked.',
+    );
   }
 
   if (turn.attachment) {

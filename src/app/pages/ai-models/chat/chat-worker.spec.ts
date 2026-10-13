@@ -137,6 +137,40 @@ describe('AI chat Worker entry', () => {
     ]);
   });
 
+  it('tells the studio who she is talking to and keeps the founder’s video rule (requirements A and J)', async () => {
+    const requests = stubOpenAi();
+
+    // The visitor of requirement A, and the opening turn of requirement H.
+    const response = await call(
+      post(
+        payload({
+          user: { name: 'Rahul Verma', firstName: 'Rahul' },
+          opening: true,
+          question: 'Hello',
+        }),
+      ),
+    );
+    expect(response.status).toBe(200);
+    await response.text();
+
+    const system = String(requests[0].messages[0].content);
+    expect(system).toContain('You are talking to Rahul Verma');
+    expect(system).toContain('Call them Rahul');
+    expect(system).toContain('first name only');
+    // Her voice, her feelings, and no bot line anywhere in the instructions (requirements B and L).
+    expect(system).toContain('Voice of this model');
+    expect(system).toContain('Never sound like software');
+    expect(system).toContain('do not say that you are an AI model');
+    // J — the videos, and the selfie answered in words.
+    expect(system).toContain('never send videos');
+    expect(system).toContain('Mr. Kingshuk');
+    expect(system).toContain('describe the selfie you would take right now');
+
+    // The user turn carries what she was told, so the opening message is not answered generically.
+    const turn = requests[0].messages.at(-1)!;
+    expect(String(turn.content)).toContain('Hello');
+  });
+
   it('hands her a photograph to look at, and asks the visitor about a document it cannot open', async () => {
     const requests = stubOpenAi();
 
