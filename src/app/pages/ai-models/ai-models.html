@@ -365,7 +365,7 @@
                   [attr.aria-label]="'Chat live with ' + model.name"
                   (click)="openChat(model)"
                 >
-                  Chat with me <i aria-hidden="true">💬</i>
+                  Live Chat
                 </button>
               </nav>
             </article>
@@ -381,7 +381,7 @@
   </section>
 </main>
 
-<!-- The real-time AI chat opened from a card's "Chat with me". -->
+<!-- The real-time AI chat opened from a card's "Live Chat". -->
 @if (chatModel(); as chatting) {
   <app-ai-model-chat [model]="chatting" (closed)="closeChat()" />
 }

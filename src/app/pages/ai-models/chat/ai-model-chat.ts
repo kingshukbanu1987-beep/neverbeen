@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   OnDestroy,
+  OnInit,
   computed,
   effect,
   inject,
@@ -61,7 +62,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
     '(document:keydown)': 'onDocumentKeydown($event)',
   },
 })
-export class AiModelChatDialog implements OnDestroy {
+export class AiModelChatDialog implements OnInit, OnDestroy {
   protected readonly chat = inject(AiModelChatService);
 
   readonly model = input.required<AiModelProfile>();
@@ -123,6 +124,16 @@ export class AiModelChatDialog implements OnDestroy {
       if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
       this.autoCloseTimer = setTimeout(() => this.close(), CHAT_AUTO_CLOSE_MS);
     });
+  }
+
+  /**
+   * The window opens its own two-hour session the moment it is mounted: a page only has to render
+   * `<app-ai-model-chat [model]>` and everything else — the clock, the reminders, her answers —
+   * follows. `openChat()` is idempotent per model, so closing and reopening the window continues the
+   * same session instead of starting a second one.
+   */
+  ngOnInit(): void {
+    this.chat.openChat(this.model());
   }
 
   ngOnDestroy(): void {

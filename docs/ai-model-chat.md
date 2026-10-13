@@ -7,12 +7,13 @@ website and from a built-in world fact file.
 
 ## Where to open it
 
-| Entry point                        | What the visitor presses                                                                      |
-| ---------------------------------- | --------------------------------------------------------------------------------------------- |
-| `/ai-models/:slug` (model profile) | **Chat with me** — a `#74C476` button in `.rent-action-stack`, immediately before **Rent Me** |
-| `/ai-models` (studio directory)    | **Chat with me** in the `.card-actions` row of every model card                               |
+| Entry point                        | What the visitor presses                                                                                   |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `/ai-models/:slug` (model profile) | **Live Chat** — a `#74C476` button with white text in `.rent-action-stack`, immediately before **Rent Me** |
+| `/ai-models` (studio directory)    | **Live Chat** in the `.card-actions` row of every model card                                               |
 
-Both mount the same window: `<app-ai-model-chat [model]="…" (closed)="closeChat()" />`
+Both mount the same window: `<app-ai-model-chat [model]="…" (closed)="closeChat()" />`, which opens
+the two-hour session itself in `ngOnInit` — the pages only render it
 (`src/app/pages/ai-models/chat/ai-model-chat.{ts,html,css}`, selector `app-ai-model-chat`). The
 window is the booking dialog's own pattern — a `.chat-backdrop` with `role="dialog"`, `z-index` 240, `:host { display: contents }` — no CDK overlay. It closes on the backdrop, on
 Escape, on ✕, on **View Profile**, and by itself with `CHAT_AUTO_CLOSE_MS` (7 s) after she ends a

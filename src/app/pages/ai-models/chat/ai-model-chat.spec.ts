@@ -244,6 +244,57 @@ describe('AiModelChatDialog', () => {
     expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('14:59');
   });
 
+  it('opens her two-hour session by itself and starts the clock, with no help from the page', async () => {
+    vi.useFakeTimers();
+    const chat = TestBed.inject(AiModelChatService);
+    chat.pacing.thinkingMs = 0;
+    chat.pacing.revealMs = 0;
+
+    // A page only mounts the window; the session, the clock and the reminders are its own job.
+    const fixture = TestBed.createComponent(AiModelChatDialog);
+    fixture.componentRef.setInput('model', alisha);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(chat.openSlug()).toBe(alisha.slug);
+    expect(chat.session()?.slug).toBe(alisha.slug);
+    expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('02:00:00');
+
+    vi.advanceTimersByTime(1000);
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('01:59:59');
+
+    vi.advanceTimersByTime(30_000);
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('01:59:29');
+  });
+
+  it('answers a visitor who opened the window from the page, without a session being prepared for it', async () => {
+    // Regression: the pages only set their own signal, so the window has to open its own session —
+    // otherwise nothing could be sent and she never answered.
+    const chat = TestBed.inject(AiModelChatService);
+    chat.pacing.thinkingMs = 0;
+    chat.pacing.revealMs = 0;
+
+    const fixture = TestBed.createComponent(AiModelChatDialog);
+    fixture.componentRef.setInput('model', alisha);
+    fixture.detectChanges();
+    const harness: Harness = { fixture, element: fixture.nativeElement as HTMLElement, chat };
+
+    await send(harness, 'Are you really there?');
+
+    expect(harness.element.querySelectorAll('.chat-bubble.is-outgoing').length).toBe(1);
+    expect(harness.element.querySelectorAll('.chat-bubble.is-incoming').length).toBe(1);
+    expect(harness.element.textContent).toContain('Alisha Bhattacharya');
+    expect(harness.element.textContent).toContain('NeverBeen Multiverse');
+
+    // She keeps the session she opened, so the countdown carries on from where it was.
+    expect(chat.canSend()).toBe(true);
+    expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).not.toBe(
+      '0:00',
+    );
+  });
+
   it('closes the conversation for good after the third rude message, and can start a new one', async () => {
     const harness = await openChat();
     await send(harness, 'You are an idiot');

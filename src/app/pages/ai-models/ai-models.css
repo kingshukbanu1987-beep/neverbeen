@@ -796,13 +796,13 @@
   color: #fff;
 }
 
-/* Chat with me — the live chat with the model, in the studio's green (#74C476). */
+/* Live Chat — the real-time chat with the model, in the studio's green (#74C476). */
 .card-action-chat {
   padding: 0.3rem 0.6rem;
   border: 0;
   border-radius: 999px;
   background: #74c476;
-  color: #062a0c;
+  color: #ffffff;
   font-family: inherit;
   font-size: 0.68rem;
   font-weight: 700;
@@ -813,15 +813,10 @@
     color 180ms ease;
 }
 
-.card-action-chat i {
-  color: #062a0c;
-  font-size: 0.78rem;
-}
-
 .card-action-chat:hover,
 .card-action-chat:focus-visible {
   background: #86d187;
-  color: #03210a;
+  color: #ffffff;
   transform: translateY(-1px);
 }
 

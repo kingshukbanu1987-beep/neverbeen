@@ -173,7 +173,7 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
-  it('offers Read full Biography above Chat with me, directly above Rent Me', async () => {
+  it('offers Read full Biography above Live Chat, directly above Rent Me', async () => {
     const profile = withPhotos(1);
     const harness = await openPortfolio(profile.slug);
     const element = harness.routeNativeElement as HTMLElement;
@@ -188,7 +188,7 @@ describe('AiModelPortfolioPage', () => {
       expect(link?.parentElement?.classList.contains('rent-action-stack')).toBe(true);
       // The live chat sits between the biography link and Rent Me, as the feature asks.
       expect(link?.nextElementSibling).toBe(chat);
-      expect(chat?.textContent).toContain('Chat with me');
+      expect(chat?.textContent?.trim()).toBe('Live Chat');
       expect(chat?.nextElementSibling).toBe(rent);
     } finally {
       release(profile);

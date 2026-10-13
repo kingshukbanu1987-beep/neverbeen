@@ -155,15 +155,16 @@ by an upload is renamed in place.
 
 ### Chatting with a model
 
-A green **Chat with me** button sits immediately before **Rent Me** in every model profile — and in
-the `.card-actions` row of every card on the `/ai-models` directory — and opens an Instagram-style
-chat window on a white page: her round photograph, her name in bold black type, her model id in small
-italic type (`@alisha.bhattacharya`), her city and country, a grey **View Profile** button, then the
-conversation and the composer. Her messages are rounded light grey bubbles with black text, the
-visitor's the same shape in violet with white text, each with an Instagram-style date-and-time stamp
-and a `Today, 14:32` separator between days. The visitor can attach a photograph (or take one with
-the camera) or a document, and can react to her answers with 👍 ❤️ 😂 😮 😢 😡 (a double-click is a
-❤️) — she reacts back on the visitor's own message with what the message deserves.
+A green **Live Chat** button (white text, `#74C476`) sits immediately before **Rent Me** in every
+model profile — and in the `.card-actions` row of every card on the `/ai-models` directory — and
+opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
+her model id in small italic type (`@alisha.bhattacharya`), her city and country, a grey
+**View Profile** button, then the conversation and the composer. Her messages are rounded light grey
+bubbles with black text, the visitor's the same shape in violet with white text, each with an
+Instagram-style date-and-time stamp and a `Today, 14:32` separator between days. The visitor can
+attach a photograph (or take one with the camera) or a document, and can react to her answers with
+👍 ❤️ 😂 😮 😢 😡 (a double-click is a ❤️) — and she reacts back on the visitor's own message with
+what the message deserves.
 
 She is grounded in everything NeverBeen knows: her own card, her complete biography, her photographs
 and videos, every other model, the website's prices, packages, coupons, policies and destinations,
