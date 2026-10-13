@@ -103,7 +103,7 @@ describe('AiModelChatService', () => {
     const chat = service();
     open(chat);
     await chat.sendMessage(alisha, 'My city is Kolkata');
-    const restored = new AiModelChatService();
+    const restored = TestBed.runInInjectionContext(() => new AiModelChatService());
     silenceChatPacing(restored);
     restored.openChat(alisha);
     expect(restored.session()?.personalMemory?.answers.city).toBe('Kolkata');

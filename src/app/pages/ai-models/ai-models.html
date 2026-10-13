@@ -219,6 +219,29 @@
                       <span class="card-chat-dot" aria-hidden="true"></span>
                       Live Chat
                     </button>
+
+                    <!-- How many Live Chats this model has started, from the API, beside the button. -->
+                    @if (liveChatCountLabel(model); as liveCount) {
+                      <span
+                        class="card-live-count"
+                        [class.is-loading]="liveCount === '—'"
+                        role="status"
+                        [attr.aria-label]="liveChatAccessibleLabel(model)"
+                      >
+                        <span class="card-live-count-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" focusable="false">
+                            <path
+                              d="M4 5.5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4.5 3.5V16.5H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"
+                            />
+                            <path d="M8 10h8M8 13h5" />
+                          </svg>
+                        </span>
+                        <b class="card-live-count-value" aria-hidden="true">{{ liveCount }}</b>
+                        <i class="card-live-count-word" aria-hidden="true">{{
+                          liveChatWord(model)
+                        }}</i>
+                      </span>
+                    }
                   </div>
 
                   <div
@@ -249,7 +272,13 @@
                       [fragment]="'testimonials'"
                       [attr.aria-label]="reviewLinkLabel(model)"
                     >
-                      (<span>{{ reviewCountLabel(model) }}</span
+                      (<span class="card-review-text">
+                        @if (reviewCountNumber(model); as countText) {
+                          <b class="card-review-number">{{ countText }}</b
+                          ><span class="card-review-word"> reviews</span>
+                        } @else {
+                          <span>{{ reviewCountLabel(model) }}</span>
+                        }</span
                       >)
                     </a>
                   </div>

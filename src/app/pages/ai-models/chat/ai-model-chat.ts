@@ -25,6 +25,7 @@ import { buildChatFeedbackFacts } from './chat-summary';
 import { ChatIdentity } from './chat-identity';
 import { ChatIdentityPrompt } from './chat-identity-prompt';
 import { ChatFeedbackCard } from './chat-feedback';
+import { ChatHistory } from './chat-history';
 import {
   AI_CHAT_DOCUMENT_LIMIT_BYTES,
   AI_CHAT_PHOTO_LIMIT_BYTES,
@@ -58,7 +59,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
  */
 @Component({
   selector: 'app-ai-model-chat',
-  imports: [RouterLink, ChatAutoScroll, ChatIdentityPrompt, ChatFeedbackCard],
+  imports: [RouterLink, ChatAutoScroll, ChatIdentityPrompt, ChatFeedbackCard, ChatHistory],
   templateUrl: './ai-model-chat.html',
   styleUrl: './ai-model-chat.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,6 +87,8 @@ export class AiModelChatDialog implements OnInit {
   private readonly feedbackCard = viewChild(ChatFeedbackCard);
 
   protected readonly draft = signal('');
+  /** The whole chat history sheet, open over the window. */
+  protected readonly historyOpen = signal(false);
   protected readonly pickerFor = signal<string | null>(null);
   /** The message the visitor has chosen to reply over — the quote the composer will send. */
   protected readonly replyingTo = signal<AiChatReplyQuote | null>(null);
@@ -191,6 +194,15 @@ export class AiModelChatDialog implements OnInit {
     this.feedbackCard()?.close();
   }
 
+  /** Opens the whole chat history over the window. */
+  protected openHistory(): void {
+    if (this.session()) this.historyOpen.set(true);
+  }
+
+  protected closeHistory(): void {
+    this.historyOpen.set(false);
+  }
+
   protected startNewSession(): void {
     this.chat.startNewSession(this.model());
     this.draft.set('');
@@ -210,6 +222,11 @@ export class AiModelChatDialog implements OnInit {
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
+    // The history sheet is the top layer: Escape takes the visitor back to the conversation.
+    if (this.historyOpen()) {
+      this.closeHistory();
+      return;
+    }
     // F — the form is never dismissed by itself, but a visitor who presses Escape has answered it
     // the same way they answer the Close button: what they gave is sent, and then the form goes.
     if (this.chat.feedbackOpen()) {

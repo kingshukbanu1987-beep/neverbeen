@@ -1275,3 +1275,44 @@
     max-width: 84%;
   }
 }
+
+/* The whole chat history: the entry point sits beside View Profile in the chat window. */
+.chat-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.chat-profile-actions .chat-view-profile {
+  margin-top: 0.65rem;
+}
+
+.chat-history-open {
+  margin-top: 0.65rem;
+  padding: 0.5rem 1.15rem;
+  border: 1px solid rgb(104 41 255 / 22%);
+  border-radius: 999px;
+  background: #f1ecff;
+  color: var(--chat-violet-deep, #4b128f);
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.chat-history-open:hover,
+.chat-history-open:focus-visible {
+  background: #e4dafc;
+  transform: translateY(-1px);
+}
+
+.chat-history-open:focus-visible {
+  outline: 2px solid var(--chat-violet, #6829ff);
+  outline-offset: 2px;
+}
