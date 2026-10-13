@@ -1,6 +1,6 @@
 /**
  * Types for `model-booking-core.mjs`, the booking logic shared by the Cloudflare Worker
- * (`worker/index.ts`), the local development API (`scripts/dev-booking-api.mjs`) and the tests.
+ * (`worker/index.ts`), the local development API (`scripts/dev-api.mjs`) and the tests.
  */
 
 export declare const BOOKING_ENDPOINT: string;

@@ -8,7 +8,7 @@
  *
  * The module is plain ESM so it can run unchanged in three places:
  *   - the Cloudflare Worker (worker/index.ts) that serves production traffic,
- *   - the local development API (scripts/dev-booking-api.mjs),
+ *   - the local development API (scripts/dev-api.mjs),
  *   - the unit tests (src/app/pages/ai-models/booking/booking-core.spec.ts).
  */
 

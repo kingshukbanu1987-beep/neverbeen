@@ -358,6 +358,15 @@
                 >
                   Read Bio <i aria-hidden="true">↗</i>
                 </a>
+                <!-- The live chat, straight from the directory (green, like the profile button). -->
+                <button
+                  type="button"
+                  class="card-action card-action-chat"
+                  [attr.aria-label]="'Chat live with ' + model.name"
+                  (click)="openChat(model)"
+                >
+                  Chat with me <i aria-hidden="true">💬</i>
+                </button>
               </nav>
             </article>
           }
@@ -371,6 +380,11 @@
     </div>
   </section>
 </main>
+
+<!-- The real-time AI chat opened from a card's "Chat with me". -->
+@if (chatModel(); as chatting) {
+  <app-ai-model-chat [model]="chatting" (closed)="closeChat()" />
+}
 
 <!-- The exact-count pop-up: a big counter opens it to reveal its exact figure. -->
 <app-exact-count-popover />

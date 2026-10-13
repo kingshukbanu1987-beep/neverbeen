@@ -9,10 +9,10 @@ import {
   input,
   runInInjectionContext,
 } from '@angular/core';
-import type { ChatMessage } from '../../models/community';
-
 /**
- * Keeps a chat window on its latest message (Messenger requirement B):
+ * Keeps a chat window on its latest message (Messenger requirement B). It is shared by the
+ * Community Messenger and by the AI model chat, so it takes any message list — all it needs from a
+ * message is that a new one arrives as a new array:
  *
  *  - when the chat pop-up opens (or comes back from "minimized"), the list starts at the
  *    newest message instead of the top of the history;
@@ -33,7 +33,7 @@ export class ChatAutoScroll {
    * The input carries the directive's own name so one attribute both applies the directive
    * and hands it the conversation: `[nbChatAutoScroll]="box.messages"`.
    */
-  readonly messages = input<readonly ChatMessage[]>([], { alias: 'nbChatAutoScroll' });
+  readonly messages = input<readonly unknown[]>([], { alias: 'nbChatAutoScroll' });
 
   private readonly container = inject(ElementRef<HTMLElement>).nativeElement;
   private readonly destroyRef = inject(DestroyRef);
@@ -50,7 +50,9 @@ export class ChatAutoScroll {
 
     // Avatars load asynchronously and grow the list below the scroll position.
     this.container.addEventListener('load', this.onMediaLoaded, true);
-    this.destroyRef.onDestroy(() => this.container.removeEventListener('load', this.onMediaLoaded, true));
+    this.destroyRef.onDestroy(() =>
+      this.container.removeEventListener('load', this.onMediaLoaded, true),
+    );
   }
 
   /** The newest message at the bottom of the window. */

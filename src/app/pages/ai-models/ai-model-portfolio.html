@@ -68,6 +68,16 @@
                   <a [routerLink]="['/ai-models', profile.slug, 'biography']" class="biography-link"
                     ><span aria-hidden="true">↗</span> Read full Biography</a
                   >
+                  <!-- Real-time chat with the model: the green button directly above Rent Me. -->
+                  <button
+                    #chatButton
+                    type="button"
+                    class="action-button action-chat"
+                    [attr.aria-label]="'Chat live with ' + profile.name"
+                    (click)="openChat()"
+                  >
+                    <span aria-hidden="true">💬</span> Chat with me
+                  </button>
                   <button
                     #rentButton
                     type="button"
@@ -843,6 +853,10 @@
 
 @if (bookingOpen() && model(); as bookable) {
   <app-ai-model-booking [model]="bookable" (closed)="closeBooking()" />
+}
+
+@if (chatOpen() && model(); as chatting) {
+  <app-ai-model-chat [model]="chatting" (closed)="closeChat()" />
 }
 
 @if (lightboxOpen()) {

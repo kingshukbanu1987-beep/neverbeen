@@ -4,6 +4,7 @@ import { ModelMediaEngagementService } from '../../services/model-media-engageme
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
+import { AiModelChatDialog } from './chat/ai-model-chat';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
 type SortMode = 'default' | 'price-asc' | 'price-desc';
@@ -45,7 +46,7 @@ export function drawCover(model: AiModelProfile): string {
 
 @Component({
   selector: 'app-ai-models-page',
-  imports: [RouterLink, CompactCount, ExactCountPopover],
+  imports: [RouterLink, CompactCount, ExactCountPopover, AiModelChatDialog],
   templateUrl: './ai-models.html',
   styleUrl: './ai-models.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +54,9 @@ export function drawCover(model: AiModelProfile): string {
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   private readonly engagement = inject(ModelMediaEngagementService);
+
+  /** The model whose live chat window is open, or null. The session lives in the chat service. */
+  protected readonly chatModel = signal<AiModelProfile | null>(null);
   private readonly testimonialsApi = inject(ModelTestimonialsService);
 
   /** Per-model averages and review counts from the complete public testimonial feeds. */
@@ -178,6 +182,15 @@ export class AiModelsPage {
 
   protected clearSearch(): void {
     this.search.set('');
+  }
+
+  /** Opens the live chat with a model straight from her card in the directory. */
+  protected openChat(model: AiModelProfile): void {
+    this.chatModel.set(model);
+  }
+
+  protected closeChat(): void {
+    this.chatModel.set(null);
   }
 
   protected indexLabel(index: number): string {

@@ -26,8 +26,9 @@ const watcher = spawn(process.execPath, ['scripts/watch-ai-models.mjs'], {
   stdio: 'inherit',
 });
 
-// Local stand-in for the Worker's booking endpoint; the dev server proxies /api/* to it.
-const bookingApi = spawn(process.execPath, ['scripts/dev-booking-api.mjs'], {
+// Local stand-in for the Worker's /api/* endpoints (AI chat + booking); the dev server proxies
+// /api/* to it.
+const apiServer = spawn(process.execPath, ['scripts/dev-api.mjs'], {
   cwd: projectRoot,
   stdio: 'inherit',
 });
@@ -42,7 +43,7 @@ function shutdown(code) {
   if (stopping) return;
   stopping = true;
   watcher.kill('SIGTERM');
-  bookingApi.kill('SIGTERM');
+  apiServer.kill('SIGTERM');
   server.kill('SIGTERM');
   process.exitCode = code;
 }
@@ -52,8 +53,8 @@ server.on('error', (error) => {
   console.error(`[dev] Could not start the dev server: ${error.message}`);
   shutdown(1);
 });
-bookingApi.on('exit', (code) => {
-  if (!stopping && code) console.warn(`[ai-models] The local booking API stopped (exit ${code}).`);
+apiServer.on('exit', (code) => {
+  if (!stopping && code) console.warn(`[ai-models] The local /api server stopped (exit ${code}).`);
 });
 watcher.on('exit', (code) => {
   if (!stopping && code) console.warn(`[ai-models] The album watcher stopped (exit ${code}).`);
