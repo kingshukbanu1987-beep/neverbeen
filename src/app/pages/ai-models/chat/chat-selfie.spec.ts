@@ -1,10 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { aiModelProfiles } from '../ai-model-data';
 import {
+  AI_SELFIE_ENDPOINT,
   SELFIE_REQUEST_PATTERN,
+  SELFIE_WORD_PATTERN,
   VIDEO_REQUEST_PATTERN,
+  generateChatSelfie,
   pickChatSelfie,
+  pickSelfieMoment,
   selfieCaption,
+  selfieLook,
+  selfieReference,
 } from './chat-selfie';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
@@ -58,5 +64,111 @@ describe('the request patterns', () => {
     expect(VIDEO_REQUEST_PATTERN.test('do you have any reels?')).toBe(true);
     expect(VIDEO_REQUEST_PATTERN.test('your videos please')).toBe(true);
     expect(VIDEO_REQUEST_PATTERN.test('I like your portraits')).toBe(false);
+  });
+});
+
+describe('her camera (she takes the selfie now)', () => {
+  it('photographs her from her own profile photograph', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+      expect(url).toBe(AI_SELFIE_ENDPOINT);
+      return new Response(
+        JSON.stringify({ ok: true, provider: 'gemini', image: 'data:image/png;base64,QUJD' }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }) as unknown as typeof fetch;
+
+    const moment = pickSelfieMoment('alisha|selfie');
+    const taken = await generateChatSelfie({
+      model: alisha,
+      moment,
+      reference: 'data:image/jpeg;base64,AAAA',
+      fetchImpl,
+    });
+
+    expect(taken).not.toBeNull();
+    expect(taken!.image).toBe('data:image/png;base64,QUJD');
+    expect(taken!.provider).toBe('gemini');
+    // Her card, the moment she is in, and the likeness the photograph is taken from.
+    expect((bodies[0]['moment'] as Record<string, unknown>)['place']).toBe(moment.place);
+    expect((bodies[0]['moment'] as Record<string, unknown>)['flaw']).toBe(moment.flaw);
+    expect(bodies[0]['reference']).toBe('data:image/jpeg;base64,AAAA');
+    expect(String(bodies[0]['look'])).toContain(alisha.age);
+  });
+
+  it('never asks the camera without her photograph, and never sends what is not a picture', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('the camera must not be called without a photograph');
+    }) as unknown as typeof fetch;
+
+    const withoutReference = await generateChatSelfie({
+      model: alisha,
+      moment: pickSelfieMoment('alisha|selfie'),
+      reference: '',
+      fetchImpl,
+    });
+    expect(withoutReference).toBeNull();
+    expect(fetchImpl).not.toHaveBeenCalled();
+
+    const words = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ ok: true, image: 'nope' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+    ) as unknown as typeof fetch;
+    const notAPicture = await generateChatSelfie({
+      model: alisha,
+      moment: pickSelfieMoment('alisha|selfie'),
+      reference: 'data:image/jpeg;base64,AAAA',
+      fetchImpl: words,
+    });
+    expect(notAPicture).toBeNull();
+  });
+
+  it('falls back to her album when the studio has no camera at all', async () => {
+    const refused = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ ok: false, error: 'selfie-unavailable' }), {
+          status: 503,
+          headers: { 'content-type': 'application/json' },
+        }),
+    ) as unknown as typeof fetch;
+
+    const taken = await generateChatSelfie({
+      model: alisha,
+      moment: pickSelfieMoment('alisha|selfie'),
+      reference: 'data:image/jpeg;base64,AAAA',
+      fetchImpl: refused,
+    });
+
+    expect(taken).toBeNull();
+    // …and the frame she sends is still one of her own, so a visitor who asks always gets one.
+    expect(pickChatSelfie(alisha, 'alisha|selfie')).not.toBeNull();
+  });
+
+  it('takes the likeness from her profile card, and describes only her age and her city', () => {
+    expect(selfieReference(alisha)).toBe(alisha.cover);
+    expect(selfieLook(alisha)).toContain(alisha.age);
+    expect(selfieLook(alisha)).toContain('Darjeeling');
+    // Nothing about her body: her own photograph already holds the likeness.
+    expect(selfieLook(alisha)).not.toMatch(/bust|waist|hip|cm/i);
+  });
+
+  it('hears the word “selfie” as a request to take one, and “photos” as a request for the album', () => {
+    expect(SELFIE_WORD_PATTERN.test('send me a selfie')).toBe(true);
+    expect(SELFIE_WORD_PATTERN.test('can i have a selfie please')).toBe(true);
+    expect(SELFIE_WORD_PATTERN.test('can I see your photos?')).toBe(false);
+    // The wider pattern — the one that decides she sends a picture at all — hears both.
+    expect(SELFIE_REQUEST_PATTERN.test('can I see your photos?')).toBe(true);
+  });
+
+  it('keeps two selfies of one session in different moments', () => {
+    const first = pickSelfieMoment('alisha|selfie|1');
+    const second = pickSelfieMoment('alisha|selfie|2');
+    expect(first.place).not.toBe(second.place);
+    // The same seed is the same moment: she does not change her mind about where she is.
+    expect(pickSelfieMoment('alisha|selfie|1')).toEqual(first);
   });
 });

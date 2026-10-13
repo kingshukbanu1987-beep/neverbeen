@@ -195,19 +195,21 @@ The messages are written by `voiceIntroduction()` in `chat-voice.ts`, and they a
 > NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it
 > is an invitation: ask me anything.
 >
-> I am younger than I sound in my photographs and faster than I sound in general, so keep up.
+> I am younger than I sound in my photographs and faster than I sound in general, so keep up. 🙈
 >
-> Where I come from it is biryani on Sundays and half of my street turning up for it, and here it is
-> the aunties next door have opinions about everything I do.
+> Home: the pressure cooker going off at eight every morning. My day: the aunties next door have
+> opinions about everything I do. There are 227 photographs of me on NeverBeen, and my favourite is
+> never the one everybody keeps.
 >
-> What is your chai count for the day?, Rahul
+> Rahul, what do you eat when nobody is watching?
 
 The greeting follows the clock (`greetingFor`), the first message is `openingLine()` (a warm pool for
 a young or bubbly voice, a measured one for a senior voice, plus one of her country's emoji when the
 roll falls that way), and the visitor is the **first name only** everywhere in the window
 (`firstNameOf` — "Rahul Verma" is Rahul). The introduction states her full name, her model id, her
 country and city, her age, and where the whole of her lives: her own voice, with the disclosure kept
-and the bot line gone (requirement **L**).
+and the bot line gone (requirement **L**). **No two welcomes are the same** — see
+[A welcome that is never the same twice](#a-welcome-that-is-never-the-same-twice).
 
 `chatIntroduction()` still exists for the one case the window cannot script — a session whose first
 answer comes in before the introduction did — and simply joins those same messages with a blank line,
@@ -309,12 +311,19 @@ about a smiley ever reaches the "I do not know that one" fallback.
 
 ## E and F. Selfies, and the pictures they send
 
-`chat-selfie.ts` answers a selfie request (`SELFIE_REQUEST_PATTERN`) with a frame **from her own
-album** (`pickChatSelfie`, never the same one twice in a session) plus the moment and the flaw from
-`SELFIE_MOMENTS` — "in my room, the lamp is on and it is too warm in here", "no filter, no makeup,
-this is the real thing". The window dresses it like a phone photograph (`.chat-bubble.is-selfie`:
-portrait crop, a one-degree tilt, grain and a soft-light wash, a `just now` tag) and `selfieCaption()`
-writes the caption a person would send with it.
+When the visitor asks for a **selfie by name**, she **takes one now**: `chat-selfie.ts` fetches her
+own profile photograph, reduces it to a likeness (`readSelfieReference`) and hands it, with the
+moment and the flaw from `SELFIE_MOMENTS` — "in my room, the lamp is on and it is too warm in here",
+"no filter, no makeup, this is the real thing" — to `POST /api/ai-selfie`, where Google Gemini's
+image model photographs her (`worker/ai-selfie-core.mjs`). She is quiet for `pacing.selfieMinMs` to
+`selfieMaxMs` (4–9 s) while it is taken, the way a person is quiet while she aims a phone at herself,
+and the picture that comes back is what the visitor sees. Asking for her **photos** instead
+(`SELFIE_REQUEST_PATTERN` without the word itself) is answered with a frame from her own album
+(`pickChatSelfie`, never the same one twice in a session). Either way the window dresses the frame
+like a phone photograph (`.chat-bubble.is-selfie`: portrait crop, a one-degree tilt, grain and a
+soft-light wash, a `just now` tag) and `selfieCaption()` writes the caption a person would send with
+it. With no `GEMINI_API_KEY` — or when the image model refuses — the album frame goes out instead: a
+visitor who asks for a photograph always gets one.
 
 A picture the visitor sends is read first: `chat-photo.ts` draws it into a 96-pixel canvas and turns
 the pixels into facts — orientation, brightness, saturation, warmth, dominant colour and the share of
@@ -450,6 +459,84 @@ Rules the second brief settled, all of them in `chat-replies.ts` and `chat-voice
 The same rules are written into the server-side persona (`worker/ai-chat-core.mjs`,
 `CHAT_PERSONA_RULES`), so the OpenAI path answers in the same voice.
 
+## Reading the turn before she answers
+
+Nothing a visitor sends is answered before it has been read — their words, their photograph, their
+document. `chat-analysis.ts` **is** that reading, and it happens in two passes:
+
+1. **The window's own reading**, instantly and offline: `chat-input.ts` repairs the typing (stretched
+   letters, short forms, spelling mistakes), `chat-language.ts` reads the language from the studio's
+   eight books, `chat-photo.ts` looks at the frame of an attached photograph. It always produces a
+   reading, with no network at all.
+2. **The studio's reading desk** — `POST /api/ai-read` (`worker/ai-read-core.mjs`) — when the studio
+   has the keys. The desk puts the words through **Google Translate** (the Cloud Translation API when
+   `GOOGLE_TRANSLATE_API_KEY` is set, the same public Google endpoint the window already uses
+   otherwise) and then the whole turn through **Google Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`) or
+   **OpenAI** (`OPENAI_API_KEY`, `OPENAI_MODEL`): what the visitor _meant_ in plain English, the
+   language they wrote in (and whether it was Romanised), their intent, their feeling, their tone,
+   what they seem to want, how to answer it — and, when something was attached, **what the photograph
+   shows or what the document contains**. Gemini reads images and PDFs directly, so a brief or an
+   invoice is read rather than thanked for; OpenAI reads an attached photograph with its vision model.
+   The bytes of an attached document travel with the message in `attachment.fileData` for exactly
+   this.
+
+The two readings are merged: the desk's findings win where it has them, the window's own reading fills
+the rest, and a language the studio has no book for is never switched to. The finished reading goes to
+her own engine (`composeChatReply`, which then answers the meaning and not the letters) and to
+`POST /api/ai-chat` as `reading`, so the studio's model is told what the visitor meant and what was
+inside anything they attached — with one house rule repeated in both places: no answer ever says
+anything was read, translated, searched or analysed.
+
+If the desk answers "not configured", refuses, or cannot be reached, `readDeskUnavailable` is set and
+she stops asking it for the rest of the visit: the window's own reading stands, and the chat behaves
+exactly as it did before the desk existed. Which reader answered a message is kept on the transcript
+as `message.analysedBy` (`gemini`, `openai`, `google-translate` or `studio`).
+
+## A welcome that is never the same twice
+
+`voiceIntroduction()` is seeded by the moment the visitor's form was filled in — `welcomeSeed()` in
+the service, the epoch millisecond plus a breath of chance — so the same model opens the same chat
+differently on every visit: a different hello (`openingLine`), a different way of saying who she is
+(five card shapes), a different sentence about where the whole of her lives, a different line about
+her age, a different shape for home (her country's own kitchen, street and weather, sometimes with
+her album's own count in it — 227 photographs for Alisha, 56 for Nourhan), the two middle messages in
+either order, and a different question back, in her country's idiom, with the visitor's first name in
+front of it. Her own album's number makes even two birthdays of the same age sound different.
+
+Without a seed — the studio's transcripts and the tests — the introduction is her model's own,
+unchanged from session to session, so a welcome can always be read back word for word.
+`chatIntroduction()` (the one case the window cannot script) uses those same messages.
+
+## The selfie she takes now
+
+`POST /api/ai-selfie` (`worker/ai-selfie-core.mjs`) is her camera:
+
+```json
+{
+  "model": { "name": "Alisha Bhattacharya", "location": "Darjeeling, India", "age": "25" },
+  "moment": {
+    "place": "in my room, the lamp is on and it is too warm in here",
+    "flaw": "no filter, no makeup, this is the real thing"
+  },
+  "look": "25 years old, living in Darjeeling, in the middle of an ordinary evening at home",
+  "reference": "data:image/jpeg;base64,…"
+}
+```
+
+The reference is **her own profile photograph** (`selfieReference()` — the cover of her card), reduced
+to at most 768 pixels on its longest side in the window and sent with the request. Gemini's image
+model (`GEMINI_IMAGE_MODEL`, `gemini-2.5-flash-image` by default) is asked for one new phone selfie of
+the woman in that photograph, taken in that moment, with `responseModalities: ["IMAGE"]`, and answers
+with the picture as base64 — which is returned as `{ ok: true, provider: "gemini", image: "data:…" }`
+and shown in a selfie bubble. Nothing is stored, and no visitor photograph is ever part of it: the
+likeness is the model's own card.
+
+Three refusals are all handled the same way: no key (`503 selfie-unavailable`), the model answering
+with words instead of a picture (`502 selfie-refused`), or the camera being unreachable
+(`502 selfie-failed`). In every case `selfieCameraUnavailable` is set and an album frame goes out
+instead, so nobody asking for a photograph is left with an empty bubble. The endpoint has its own,
+tighter throttle (12 requests a minute) because an image is the most expensive request on the site.
+
 ## Files
 
 | File                                                               | What it holds                                                                                                                                                                                                                                                |
@@ -460,7 +547,8 @@ The same rules are written into the server-side persona (`worker/ai-chat-core.mj
 | `src/app/pages/ai-models/chat/chat-session-summary.{ts,html,css}`  | the report card that closes a session (requirement K)                                                                                                                                                                                                        |
 | `src/app/pages/ai-models/chat/chat-summary.ts`                     | what that card says: the minutes, the counts, her rating and her paragraph about the chat                                                                                                                                                                    |
 | `src/app/pages/ai-models/chat/chat-voice.ts`                       | her voice by country and age, the visitor's behaviour, the opening line, the idle opener, the pitch, the video line                                                                                                                                          |
-| `src/app/pages/ai-models/chat/chat-selfie.ts`                      | the frames she sends as selfies, their moments and their flaws, and the video-request pattern                                                                                                                                                                |
+| `src/app/pages/ai-models/chat/chat-selfie.ts`                      | her camera and her album: the moments and flaws, the likeness (`readSelfieReference`), Gemini's selfie (`generateChatSelfie`), the album frame she falls back on, and the video-request pattern                                                              |
+| `src/app/pages/ai-models/chat/chat-analysis.ts`                    | the reading before the answer: the window's own reading, the studio's reading desk, the merge, and the document bytes that travel with a message                                                                                                             |
 | `src/app/pages/ai-models/chat/chat-photo.ts`                       | what she can see in a picture the visitor sends (requirement F)                                                                                                                                                                                              |
 | `src/app/pages/ai-models/chat/chat-random.ts`                      | the seeded pick/roll helpers, so every random choice is still testable                                                                                                                                                                                       |
 | `src/app/pages/ai-models/chat/chat-types.ts`                       | the session shape and the numbers: 2 h, 400 messages, 8 MB / 16 MB attachments, the six reactions, the reminder marks, and the pacing of a typed answer (`typingTimeFor`, the away pause, the mid-thought pause, the gap between messages, her introduction) |
@@ -472,9 +560,11 @@ The same rules are written into the server-side persona (`worker/ai-chat-core.mj
 | `src/app/pages/ai-models/chat/chat-language.ts`                    | the eight Romanised language books, the detection, the English gloss, Google Translate as the second reader, and her answer in the visitor's own language                                                                                                    |
 | `src/app/services/ai-model-chat.service.ts`                        | the session store, the clock, the sent messages, the typing, the messages of one answer, the storage mirror                                                                                                                                                  |
 | `src/app/services/ai-model-chat.testing.ts`                        | `silenceChatPacing()` — switches every wait off for the tests, which then delivers her messages in one go                                                                                                                                                    |
-| `worker/ai-chat-core.mjs` (+ `.d.mts`)                             | the live endpoint: validation, persona, Google search, OpenAI streaming                                                                                                                                                                                      |
-| `worker/index.ts`                                                  | `POST /api/ai-chat`, its own throttle, and the optional secrets                                                                                                                                                                                              |
-| `scripts/dev-api.mjs`                                              | the local stand-in for `/api/ai-chat` on port 8787                                                                                                                                                                                                           |
+| `worker/ai-chat-core.mjs` (+ `.d.mts`)                             | the live endpoint: validation, persona, Google search, OpenAI streaming, and the reading of the turn in her instructions                                                                                                                                     |
+| `worker/ai-read-core.mjs` (+ `.d.mts`)                             | the reading desk: Google Translate, the Gemini reading, the OpenAI reading, the JSON contract and the fallbacks                                                                                                                                              |
+| `worker/ai-selfie-core.mjs` (+ `.d.mts`)                           | her camera: the selfie prompt, the Gemini image call, the picture out of the answer, and every refusal                                                                                                                                                       |
+| `worker/index.ts`                                                  | `POST /api/ai-chat`, `POST /api/ai-read` and `POST /api/ai-selfie`, their throttles, and the optional secrets                                                                                                                                                |
+| `scripts/dev-api.mjs`                                              | the local stand-in for `/api/ai-chat`, `/api/ai-read` and `/api/ai-selfie` on port 8787                                                                                                                                                                      |
 
 ## Running it locally
 
@@ -482,20 +572,29 @@ The same rules are written into the server-side persona (`worker/ai-chat-core.mj
 npm start                     # ng serve + the API stand-in on :8787, /api proxied (proxy.conf.json)
 ```
 
-Without `OPENAI_API_KEY` the window answers from her own engine. To exercise the live path:
+Without any key the window answers from her own engine, reads the turns itself and sends a frame from
+her album when a selfie is asked for. To exercise the live paths:
 
 ```bash
-OPENAI_API_KEY=sk-… GOOGLE_SEARCH_API_KEY=… GOOGLE_SEARCH_CX=… npm start
+OPENAI_API_KEY=sk-… GOOGLE_SEARCH_API_KEY=… GOOGLE_SEARCH_CX=… \
+GEMINI_API_KEY=… GEMINI_MODEL=gemini-2.5-flash GEMINI_IMAGE_MODEL=gemini-2.5-flash-image \
+GOOGLE_TRANSLATE_API_KEY=… npm start
 ```
 
-In production the same three values are Worker secrets, with `OPENAI_MODEL` as an optional variable
-(`gpt-4o-mini` by default):
+In production the same values are Worker secrets, with `OPENAI_MODEL`, `GEMINI_MODEL` and
+`GEMINI_IMAGE_MODEL` as optional variables (`gpt-4o-mini`, `gemini-2.5-flash` and
+`gemini-2.5-flash-image` by default):
 
 ```bash
-npx wrangler secret put OPENAI_API_KEY
-npx wrangler secret put GOOGLE_SEARCH_API_KEY
+npx wrangler secret put OPENAI_API_KEY            # the answer, and the reading when Gemini is absent
+npx wrangler secret put GOOGLE_SEARCH_API_KEY     # live results for questions about the world
 npx wrangler secret put GOOGLE_SEARCH_CX
+npx wrangler secret put GEMINI_API_KEY            # the reading desk, and the camera that takes her selfie
+npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # optional: the Cloud Translation API
 ```
+
+`npm start` prints a line for each of the three endpoints and says what is configured: the chat, the
+reading desk, and her camera.
 
 ## Tests
 
@@ -504,14 +603,17 @@ npx ng test --no-watch --include "src/app/pages/ai-models/chat/*.spec.ts"
 npx ng test --no-watch --include "src/app/services/ai-model-chat.service.spec.ts"
 ```
 
-The chat suite is 13 files and 111 tests: 10 files under `src/app/pages/ai-models/chat/`,
-`chat-types.spec.ts` among them, plus the service's own spec.
+The chat suite is the files under `src/app/pages/ai-models/chat/` plus the service's own spec — 16
+files and 172 tests at the time of writing.
 
 - `chat-replies.spec.ts` — the engine: the introduction, her card, her biography, the other models,
   the website, the world file, arithmetic, the small talk and the "outside my bubble" fallback;
 - `chat-moderation.spec.ts` — the levels, the strikes, masked words and her goodbye;
-- `chat-worker.spec.ts` — the Worker endpoint: the SSE stream with its sources, the persona that
-  cannot be rewritten by the caller, photographs and documents, every error status and the throttle;
+- `chat-worker.spec.ts` — the Worker endpoints: the SSE stream with its sources, the persona that
+  cannot be rewritten by the caller, the reading of the turn in her instructions, photographs and
+  documents, the reading desk (Google Translate into Gemini, into OpenAI, a picture or a PDF inline,
+  and the 503 / 502 / 405 / 400 answers), her camera (the selfie, the likeness, the refusal), every
+  error status and the throttle;
 - `ai-model-chat.spec.ts` — the window itself: her photograph, name, model id, city and country,
   **View Profile**, the countdown, the composer with its camera and attachments, Enter/Shift+Enter,
   both reactions, the centred 15-minute reminder, Escape and the closed state after three strikes;
@@ -533,7 +635,11 @@ The chat suite is 13 files and 111 tests: 10 files under `src/app/pages/ai-model
   line, the idle opener, the pitch, the video sentence word for word, the four or five messages of her
   introduction (an Indian and an Iranian woman do not sound alike, and neither do 23 and 30), and the
   splitter that turns one long answer into several messages;
-- `chat-selfie.spec.ts`, `chat-photo.spec.ts` — her selfies, the requests that trigger them, and what
-  she sees in a picture the visitor sends;
+- `chat-selfie.spec.ts`, `chat-photo.spec.ts` — her selfies, the moments and flaws, her camera (her
+  own photograph as the likeness, the request it sends, a refusal answered with an album frame), the
+  requests that trigger them, and what she sees in a picture the visitor sends;
+- `chat-analysis.spec.ts` — the reading before the answer: the window's own reading of a typo'd
+  message and of a Romanised one, the desk's reading of a turn and of an attached document, the merge
+  that fills the desk's gaps, and the fallbacks when the desk is off or unreachable;
 - `chat-summary.spec.ts`, `chat-session-summary.spec.ts` — the report card: the time together, the
   counts, her rating, her paragraph and the Close button.

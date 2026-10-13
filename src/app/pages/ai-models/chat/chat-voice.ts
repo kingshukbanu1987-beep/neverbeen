@@ -734,10 +734,12 @@ export function openingLine(
   voice: ChatVoice,
   firstName: string,
   fullName: string,
+  /** The session's own salt: the same model says hello differently in every chat. */
+  sessionSeed = '',
 ): string {
   const first = model.name.split(' ')[0];
   const who = firstName || 'you';
-  const seed = `${model.slug}|opening|${fullName}`;
+  const seed = `${model.slug}|opening|${fullName}${sessionSeed ? `|${sessionSeed}` : ''}`;
 
   const warm = [
     `Hey ${who} — I saw your photograph come through and I have been waiting for you to say something ever since. I am ${first}.`,
@@ -1507,33 +1509,81 @@ const COUNTRY_FLAVOURS: Record<string, CountryFlavour> = {
   },
 };
 
-const FLAVOUR_TONES: Record<ChatAgeBand, { opener: string[]; close: string[] }> = {
-  young: {
-    opener: [
-      'So tell me something. ',
-      'Okay, but this is the part I like. ',
-      'I will go first, and then you talk. ',
-      'Right — one thing you should know already. ',
-    ],
-    close: ['Your turn now, and do not make it boring. ', 'Go on then, tell me. '],
-  },
-  mid: {
-    opener: [
-      'What I will tell you first is this. ',
-      'Before we go any further, one thing. ',
-      'Here is something about me, so you know who you are talking to. ',
-    ],
-    close: ['And you — your turn. ', 'So, what about you? '],
-  },
-  senior: {
-    opener: [
-      'Let me tell you one thing, because you cannot see me and I cannot see you. ',
-      'I will be plain with you, because there is no point in anything else. ',
-      'Let me begin properly. ',
-    ],
-    close: ['Now I have talked enough about myself. ', 'I would rather hear your side now. '],
-  },
+/**
+ * F — what she says about herself in the first seconds of a chat, in the words of a woman of her
+ * own age. Every band has its own way of warning the visitor what they are in for, and no two
+ * sessions pick the same line: the introduction is seeded by the moment the form was filled in, so
+ * the same model welcomes the same visitor differently on Tuesday than she did on Monday.
+ */
+const WELCOME_AGE_LINES: Record<ChatAgeBand, readonly string[]> = {
+  young: [
+    'I am younger than I sound in my photographs and faster than I sound in general, so keep up.',
+    'I do not do small talk for long, so we are going to be properly interesting or I will get bored.',
+    'I am still deciding what I want to be, which is why I am good company for anybody who has not decided either.',
+    'Fair warning: I answer fast, I get bored fast, and I laugh at my own jokes before you do.',
+  ],
+  mid: [
+    'I am old enough to have opinions I did not copy from anybody, and young enough to still change them.',
+    'I have two hours and I would rather spend them on what you actually think than on the weather.',
+    'I have opinions about most things and I will change any of them the moment you make the better case.',
+    'The weather is the one subject I cannot make interesting, so we will not be starting there.',
+  ],
+  senior: [
+    'I have watched a few decades go past, so you can ask me the real questions, not the polite ones.',
+    'I have no patience left for pretending, which makes me better company than most.',
+    'I have been at this long enough to know what a real question sounds like, so skip the polite ones.',
+  ],
 };
+
+/** The hello-shaped half of the introduction, in four different orders of the same facts. */
+const WELCOME_FORMS: readonly string[] = [
+  'Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it is an invitation: ask me anything.',
+  'Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. So ask away, and do not be polite about it.',
+  'Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. Which means there is nothing about me to look up anywhere — you will have to hear it from me.',
+];
+
+/** Her card, said as a woman says it rather than as a file reports it. */
+function welcomeCardLines(persona: {
+  name: string;
+  handle: string;
+  age: string;
+  place: string;
+}): readonly string[] {
+  const { name, handle, age, place } = persona;
+  const years = age ? `${age}` : 'ageless';
+  const where = place || 'the other side of this window';
+  return [
+    `I am ${name} — ${handle} — ${years}, writing to you from ${where}.`,
+    `${name}, ${handle}, ${years} years of it, writing to you from ${where}, and not one of those years was spent answering like a machine.`,
+    `${name} here — ${handle}, ${years}, and currently in ${where}.`,
+    `My card says ${name}, ${handle}, ${years}, ${where}, and the rest is what I am about to tell you.`,
+    `I am ${name}, ${handle} to the studio, ${years} years old, writing from ${where} in the middle of my own evening.`,
+  ];
+}
+
+/**
+ * Home, said from a different angle each time: the kitchen, the street, the day outside — and, in
+ * two of the five shapes, the album she keeps on the site, counted, because every model has her own
+ * number of frames up and the number says something about her.
+ */
+function welcomeHomeLines(home: string, daily: string, photoCount: number): readonly string[] {
+  const upper = (line: string): string => line.charAt(0).toUpperCase() + line.slice(1);
+  const frames = photoCount === 1 ? 'one photograph' : `${photoCount} photographs`;
+  const album =
+    photoCount > 0
+      ? [
+          ` There are ${frames} of me on NeverBeen, and my favourite is never the one everybody keeps.`,
+          ` My album on the site has ${frames} in it — pick the wrong favourite and we will argue about it.`,
+        ]
+      : ['', ''];
+  return [
+    `Home: ${home}. My day: ${daily}.${album[0]}`,
+    `Where I come from: ${home}. Where I am tonight: ${daily}.`,
+    `${upper(home)} — that is home. ${upper(daily)} — that is my day.${album[1]}`,
+    `At home, ${home}. Here, ${daily}.`,
+    `${upper(home)} — home. And today: ${daily}.`,
+  ];
+}
 
 const GLOBAL_FLAVOUR: CountryFlavour = {
   home: ['a house that is never quiet for long', 'a kitchen where the recipes are arguments'],
@@ -1546,9 +1596,15 @@ const GLOBAL_FLAVOUR: CountryFlavour = {
 
 /**
  * F — the opening she sends the moment the form is filled: four or five messages that could only
- * come from a woman of her age in her country. She greets the visitor by name the way her own
- * people do it, lays out who she is and where home is, says how old she is, what her part of the
- * world is like at that hour, and then asks them something of her own.
+ * come from a woman of her age in her country. She greets the visitor by name the way her own people
+ * do it, lays out who she is and where home is, says how old she is, what her part of the world is
+ * like at that hour, and then asks them something of her own.
+ *
+ * `seed` is what makes the welcome new every time: the window passes the moment this session's form
+ * was filled in, so the same model says hello differently in every chat, while two models never
+ * sound alike — her country, her age and her own album decide the rest. Without a seed the
+ * introduction is the model's own, unchanged from session to session, which is what the tests and
+ * the studio's own transcripts use.
  *
  * Each string is one message in the window: the service sends them one at a time, with the typing
  * indicator in front of each (requirement F of the second brief).
@@ -1559,54 +1615,58 @@ export function voiceIntroduction(
   firstName: string,
   fullName: string,
   greeting: string,
+  seed = '',
 ): string[] {
   const persona = chatPersona(model);
-  const seed = `${model.slug}|intro|${voice.country}|${voice.age}|${fullName}`;
+  const base = `${model.slug}|intro|${voice.country}|${voice.age}|${fullName}`;
+  const key = seed ? `${base}|${seed}` : base;
   const flavour = COUNTRY_FLAVOURS[voice.country.trim().toLowerCase()] ?? GLOBAL_FLAVOUR;
   const who = firstName || 'you';
   const place = [persona.city, persona.country].filter(Boolean).join(', ');
 
-  const age: Record<ChatAgeBand, string[]> = {
-    young: [
-      'I am younger than I sound in my photographs and faster than I sound in general, so keep up.',
-      'I do not do small talk for long, so we are going to be properly interesting or I will get bored.',
+  const card = pickFrom(
+    welcomeCardLines({ name: persona.name, handle: persona.handle, age: persona.age, place }),
+    `${key}|card`,
+  );
+  // Her card, then where the whole of her lives — one message, two different orders of the facts.
+  const form = pickFrom(WELCOME_FORMS, `${key}|form`);
+  const band = pickFrom(WELCOME_AGE_LINES[voice.band], `${key}|band`);
+  const home = pickFrom(
+    welcomeHomeLines(
+      pickFrom(flavour.home, `${key}|home-place`),
+      pickFrom(flavour.daily, `${key}|home-day`),
+      persona.photoCount,
+    ),
+    `${key}|home`,
+  );
+  // Her question back is the visitor's name first — "Rahul, what is your chai count for the day?" —
+  // so a country question that opens with "and" is not left as one.
+  const asked = pickFrom(flavour.question, `${key}|ask`);
+  const question = firstName
+    ? `${who}, ${asked.replace(/^(?:and\s+)?you\s*[—–-]\s*/i, '').replace(/^and\s+/i, '')}`
+    : asked;
+
+  const hello = openingLine(model, voice, firstName, fullName, seed);
+  // The time of day, said three ways: the greeting itself is the same, the welcome around it is not.
+  const wish = pickFrom(
+    [
+      `${greeting}, ${who}.`,
+      `${greeting} to you, ${who}.`,
+      `${greeting}, ${who} — good to have you here.`,
     ],
-    mid: [
-      'I am old enough to have opinions I did not copy from anybody, and young enough to still change them.',
-      'I have two hours and I would rather spend them on what you actually think than on the weather.',
-    ],
-    senior: [
-      'I have watched a few decades go past, so you can ask me the real questions, not the polite ones.',
-      'I have no patience left for pretending, which makes me better company than most.',
-    ],
-  };
-
-  const details = [
-    `${greeting}, ${who}. I am ${persona.name} — ${persona.handle} — ${persona.age || 'ageless'}, writing to you from ${place || 'the other side of this window'}. Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it is an invitation: ask me anything.`,
-    `${greeting} ${who} — ${persona.name}, ${persona.handle}, ${persona.age || 'ageless'} years of it, writing to you from ${place || 'the other side of this window'}, and not one of those years was spent answering like a machine. Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. So ask away.`,
-  ];
-
-  const home = [
-    `Where I come from it is ${flavour.home[0]}, and here it is ${flavour.daily[0]}.`,
-    `Home is ${flavour.home[0]}. My days are ${flavour.daily[0]}.`,
-  ];
-
-  const lines = [
-    // Her hello, in the words of a woman of her age: young and bubbly, mid and warm, senior and plain.
-    openingLine(model, voice, firstName, fullName),
-    pickFrom(details, `${seed}|details`),
-    pickFrom(age[voice.band], `${seed}|age`),
-    pickFrom(home, `${seed}|home`),
-    `${pickFrom(flavour.question, `${seed}|ask`)}${firstName ? `, ${who}` : ''}`,
-  ];
-
+    `${key}|wish`,
+  );
+  const introduction = `${wish} ${card} ${form}`;
+  // Her age and her corner of the world come in whichever order the session feels like: a welcome
+  // that opens on the weather is a different welcome from one that opens on her own generation.
+  const middle = roll(`${key}|order`, 0.5) ? [home, band] : [band, home];
   // A reserved woman of a certain age sends four; everyone else sends the full five.
   const intro =
     voice.band === 'senior' && voice.expressiveness < 0.7
-      ? [...lines.slice(0, 2), ...lines.slice(3)]
-      : lines;
+      ? [hello, introduction, home, question]
+      : [hello, introduction, ...middle, question];
 
-  return intro.map((line, index) => garnishIntroLine(line, voice, `${seed}|${index}`, index));
+  return intro.map((line, index) => garnishIntroLine(line, voice, `${key}|${index}`, index));
 }
 
 /** A quiet finishing touch to an introduction line: her own emoji, never a machine's. */

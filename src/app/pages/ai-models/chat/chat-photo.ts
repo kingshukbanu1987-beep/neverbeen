@@ -241,7 +241,13 @@ export function photoObservation(
   }
 
   const lead = observations.length > 0 ? observations.join(' ') : 'I looked at it properly.';
-  const ask = seededPick(
+  const address = name && facts.skin > SKIN_HIGH ? ` ${name},` : '';
+  return `${lead}${address} ${photoQuestion(seed)}`;
+}
+
+/** The one thing she wants to know about a picture the visitor sent, whoever described it. */
+export function photoQuestion(seed: string): string {
+  return seededPick(
     [
       'Where was that taken?',
       'What were you doing right before you took it?',
@@ -250,6 +256,4 @@ export function photoObservation(
     ],
     `${seed}|ask`,
   );
-  const address = name && facts.skin > SKIN_HIGH ? ` ${name},` : '';
-  return `${lead}${address} ${ask}`;
 }

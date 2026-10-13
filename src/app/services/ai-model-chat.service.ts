@@ -9,10 +9,19 @@
  * - **The two-hour limit (requirement F).** `endsAt` is fixed when the session starts. The clock
  *   lives here rather than in the window, so closing and reopening the chat never restarts it, and
  *   the reminders are announced exactly once each, in the middle of the transcript.
+ * - **The reading before the answer.** Nothing the visitor sends is answered before it has been
+ *   read: `chat-analysis.ts` reads the words (the studio's own books, and `POST /api/ai-read` —
+ *   Google Translate, Gemini, OpenAI — when the studio has those keys), the frame of an attached
+ *   photograph and the bytes of an attached document. The reading is what her answer is built from.
  * - **The answer (requirements A, B, C, D, F).** The model's own engine (`chat-replies.ts`) answers
  *   instantly. When the studio has configured its OpenAI key, `POST /api/ai-chat` answers instead —
  *   streamed, word by word, with live Google results when a search key is configured — and every
  *   failure lands back on the local engine, so the chat always answers.
+ * - **Her selfie (requirement E).** When the visitor asks for a selfie by name, she takes one:
+ *   `POST /api/ai-selfie` photographs her from her own profile photograph, with Gemini, in the
+ *   moment the chat put her in. Without an image key her album frame goes out instead.
+ * - **A new welcome every time.** Her introduction is seeded by the moment the visitor's form was
+ *   filled in, so the same model opens the same chat differently on every visit.
  * - **The person on the other side (requirement A).** The window's form hands over a name and a
  *   photograph before the two hours start; both live on the session, her answers use the first name,
  *   and their photograph stands beside every message they send.
@@ -30,6 +39,8 @@ import {
 import {
   AI_CHAT_IDLE_MAX_MS,
   AI_CHAT_IDLE_MIN_MS,
+  AI_CHAT_SELFIE_MAX_MS,
+  AI_CHAT_SELFIE_MIN_MS,
   AI_CHAT_MESSAGE_LIMIT,
   AI_CHAT_NUDGE_LIMIT,
   AI_CHAT_REMINDER_MARKS,
@@ -59,7 +70,20 @@ import {
 } from '../pages/ai-models/chat/chat-types';
 import { ChatIdentity, firstNameOf } from '../pages/ai-models/chat/chat-identity';
 import { readChatPhotoFacts } from '../pages/ai-models/chat/chat-photo';
-import { pickChatSelfie } from '../pages/ai-models/chat/chat-selfie';
+import {
+  analyseVisitorTurn,
+  localTurnReading,
+  readingForAnswer,
+  readingFromStudio,
+  ChatTurnReading,
+} from '../pages/ai-models/chat/chat-analysis';
+import {
+  generateChatSelfie,
+  pickChatSelfie,
+  pickSelfieMoment,
+  readSelfieReference,
+  selfieReference,
+} from '../pages/ai-models/chat/chat-selfie';
 import {
   analyseUserBehaviour,
   contractPitch,
@@ -73,6 +97,7 @@ import { buildModelDossier } from '../pages/ai-models/chat/chat-knowledge';
 import {
   ChatVisitorLanguage,
   ROMANISED_LANGUAGE_BOOKS,
+  RomanisedLanguageCode,
   readChatLanguage,
   romanisedIdleLine,
 } from '../pages/ai-models/chat/chat-language';
@@ -147,6 +172,15 @@ export class AiModelChatService {
   /** True once `POST /api/ai-chat` has answered "no key configured" — the local engine takes over. */
   readonly remoteUnavailable = signal(false);
 
+  /**
+   * True once the reading desk has said it cannot read a turn (no key, refused, offline) — the
+   * window reads the turns itself from then on, exactly as it did before there was a desk.
+   */
+  readonly readDeskUnavailable = signal(false);
+
+  /** True once her camera has said it cannot take a selfie — her album answers after that. */
+  readonly selfieCameraUnavailable = signal(false);
+
   /** A picture or document waiting in the composer. */
   readonly draftAttachment = signal<AiChatAttachment | null>(null);
 
@@ -190,6 +224,9 @@ export class AiModelChatService {
     /** The gap between two messages of the same answer. */
     gapMinMs: AI_CHAT_GAP_MIN_MS,
     gapMaxMs: AI_CHAT_GAP_MAX_MS,
+    /** How long she is quiet while she takes a selfie — a photograph is not typed. */
+    selfieMinMs: AI_CHAT_SELFIE_MIN_MS,
+    selfieMaxMs: AI_CHAT_SELFIE_MAX_MS,
     /** When her introduction starts after the visitor filled in the form. */
     introMinMs: AI_CHAT_INTRO_MIN_MS,
     introMaxMs: AI_CHAT_INTRO_MAX_MS,
@@ -272,8 +309,18 @@ export class AiModelChatService {
       firstName,
       identity.name,
       greetingFor(new Date(now)),
+      // The welcome is never the same twice: the moment this chat started, and a breath of chance,
+      // decide how she says hello, which of her lines she uses and which of her album's numbers she
+      // mentions. A model who opened the window in the morning does not open it the same way at
+      // night, and never the same way twice in a row.
+      this.welcomeSeed(now),
     );
     void this.introduceFirst(session, parts);
+  }
+
+  /** The salt on one session's welcome, so no two chats are opened with the same words. */
+  private welcomeSeed(now: number): string {
+    return `${now}|${Math.round(Math.random() * 1e9)}`;
   }
 
   /**
@@ -566,10 +613,21 @@ export class AiModelChatService {
     const identity = session.identity;
     const user = identity ? { name: identity.name, firstName: firstNameOf(identity.name) } : null;
 
-    // The visitor's own language (Romanised): read from their words by the studio's books first and
-    // by Google Translate when the books were not enough. Once read, she keeps answering in it for
-    // the rest of the session, the way a person does once the other side has switched.
-    const language = await this.readVisitorLanguage(model, session, userMessage.text);
+    // B — nothing is answered before it has been read. The studio's own books read the message
+    // instantly, the reading desk reads it properly (Google Translate, then Gemini or OpenAI, when
+    // the studio has those keys) together with the frame of an attached photograph and the bytes of
+    // an attached document, and the whole answer is built from that reading.
+    const books = await readChatLanguage(userMessage.text, model, session.language, {
+      allowNetwork: false,
+    });
+    const reading = await this.readVisitorTurn(model, session, userMessage, user, photo, books);
+    const language = await this.readVisitorLanguage(
+      model,
+      session,
+      userMessage.text,
+      reading,
+      books,
+    );
 
     const local = composeChatReply({
       model,
@@ -578,6 +636,7 @@ export class AiModelChatService {
       session: { strikes: session.strikes, introduced: session.introduced, identity: user },
       user,
       photo,
+      reading,
       canSendSelfie: model.photos.length > 0 || Boolean(model.cover),
       language,
       now: new Date(),
@@ -605,7 +664,7 @@ export class AiModelChatService {
     let answerSources: readonly AiChatSource[] = [];
     let intent = local.intent;
     if (!mustBeLocal) {
-      const remote = await this.streamRemoteReply(model, session, userMessage);
+      const remote = await this.streamRemoteReply(model, session, userMessage, reading);
       if (remote) {
         answerText = remote.text;
         answerSources = remote.sources;
@@ -620,19 +679,21 @@ export class AiModelChatService {
         .map((message) => message.attachment)
         .filter((attachment) => attachment?.selfie === true)
         .map((attachment) => attachment?.preview ?? '');
-      const shot = pickChatSelfie(
-        model,
-        `${userMessage.id}|${session.messages.length}`,
-        alreadySent,
-      );
-      if (shot) {
+      const seed = `${userMessage.id}|${session.messages.length}`;
+      // The word "selfie" means she takes one now, with her camera and her own photograph; asking
+      // for her photographs means her album, and the album frame is the answer.
+      const moment = local.selfieMoment ?? pickSelfieMoment(seed);
+      const taken = local.selfieMoment ? await this.takeSelfie(model, moment) : null;
+      const shot = pickChatSelfie(model, seed, alreadySent);
+      const preview = taken ?? shot?.photo ?? '';
+      if (preview) {
         selfie = {
           kind: 'photo',
-          name: `${model.slug}-selfie.jpg`,
-          type: 'image/jpeg',
+          name: `${model.slug}-selfie.${taken ? 'png' : 'jpg'}`,
+          type: taken ? 'image/png' : 'image/jpeg',
           size: 0,
           source: 'camera',
-          preview: shot.photo,
+          preview,
           selfie: true,
         };
       }
@@ -646,7 +707,14 @@ export class AiModelChatService {
     // C — the answer arrives as one message or as several, each one typed in front of the visitor
     // and landing whole. A selfie is one message: a photograph is not split in two.
     const parts = selfie ? [answerText] : splitChatMessages(answerText, this.pacing.bubbleMaxChars);
-    await this.deliver(session, parts, { intent, sources: answerSources, attachment: selfie });
+    await this.deliver(session, parts, {
+      intent,
+      sources: answerSources,
+      attachment: selfie,
+      // Who read the visitor's message before she answered it — the studio's reading desk, or the
+      // window's own reader. Part of the transcript, so the studio can see the desk at work.
+      analysedBy: reading.provider,
+    });
 
     if (local.closes) {
       this.endSession(
@@ -700,6 +768,8 @@ export class AiModelChatService {
       attachment?: AiChatAttachment | null;
       /** False for her own scripted openings, where a random away pause would only be a delay. */
       away?: boolean;
+      /** Who read the visitor's message before this answer was written. */
+      analysedBy?: string;
     } = {},
   ): Promise<AiChatMessage | null> {
     let first: AiChatMessage | null = null;
@@ -733,6 +803,7 @@ export class AiModelChatService {
         pending: true,
         revealedChars: 0,
         intent: options.intent ?? '',
+        analysedBy: options.analysedBy ?? '',
         sources: index === 0 ? [...(options.sources ?? [])] : [],
         attachment: index === 0 ? (options.attachment ?? null) : null,
       });
@@ -793,22 +864,134 @@ export class AiModelChatService {
   }
 
   /**
-   * The language of one visitor message. The studio's own books answer first and instantly; Google
-   * Translate is asked only when they could not read enough of the message, and its answer is
-   * remembered on the session, so she speaks the visitor's language from then on — including for the
-   * lines she writes on her own when they go quiet.
+   * The reading desk's own reading of the language, as the chat's language layer wants it: only for
+   * a language the studio keeps a book for, and only when the visitor wrote it in Latin letters —
+   * a message in its own script is answered in English, exactly as it is today.
+   */
+  private deskLanguage(
+    reading: ChatTurnReading | null,
+    session: AiChatSession,
+  ): ChatVisitorLanguage | null {
+    if (!readingFromStudio(reading) || !reading?.romanised) return null;
+    const code = reading.language as RomanisedLanguageCode | '';
+    if (!code || !ROMANISED_LANGUAGE_BOOKS[code]) return null;
+
+    return {
+      code,
+      label: ROMANISED_LANGUAGE_BOOKS[code].english,
+      english: reading.english || '',
+      romanised: true,
+      source: reading.provider === 'google-translate' ? 'google' : 'books+google',
+      fresh: code !== session.language,
+    };
+  }
+
+  /**
+   * B — one turn read before it is answered: the window's own reading of it, then the studio's
+   * reading desk, which puts the words through Google Translate and the turn through Gemini or
+   * OpenAI, and looks at an attached photograph or document while it is there. When the studio has
+   * no key — or the desk cannot be reached — the window's own reading stands and is used exactly as
+   * it always was.
+   */
+  private async readVisitorTurn(
+    model: AiModelProfile,
+    session: AiChatSession,
+    message: AiChatMessage,
+    user: { name: string; firstName: string } | null,
+    photo: Awaited<ReturnType<typeof readChatPhotoFacts>>,
+    books: ChatVisitorLanguage | null,
+  ): Promise<ChatTurnReading> {
+    const reading = await analyseVisitorTurn({
+      text: message.text,
+      attachment: message.attachment,
+      model,
+      user,
+      history: session.messages,
+      language: books,
+      photo,
+      allowNetwork: this.readingDeskAllowed(),
+    });
+    if (!readingFromStudio(reading)) {
+      // The desk has nothing to say: no key configured, or it is not answering. She does not ask it
+      // again for every message of the conversation.
+      this.readDeskUnavailable.set(true);
+    }
+    return reading;
+  }
+
+  /**
+   * E — she takes the selfie now. Her own profile photograph is fetched, downscaled and handed to
+   * the studio's camera together with the moment she is in, and the photograph that comes back is
+   * what the visitor sees. She is quiet for a few seconds while it is taken — a photograph is not
+   * typed. When the studio has no image key, or the camera refuses, `null` comes back and one of her
+   * album frames goes out instead.
+   */
+  private async takeSelfie(
+    model: AiModelProfile,
+    moment: { place: string; flaw: string },
+  ): Promise<string | null> {
+    // Her camera is its own service: whether the reading desk answered has nothing to do with
+    // whether she can take a photograph.
+    if (this.selfieCameraUnavailable()) return null;
+
+    const reference = await readSelfieReference(selfieReference(model));
+    if (!reference) {
+      this.selfieCameraUnavailable.set(true);
+      return null;
+    }
+
+    const started = Date.now();
+    const taken = await generateChatSelfie({ model, moment, reference });
+    if (!taken) {
+      this.selfieCameraUnavailable.set(true);
+      return null;
+    }
+
+    // The wait a person needs to aim a phone at herself, when the camera answered faster than that.
+    if (!this.silent) {
+      const wanted = this.between(this.pacing.selfieMinMs, this.pacing.selfieMaxMs);
+      const remaining = wanted - (Date.now() - started);
+      if (remaining > 0) await delay(remaining);
+    }
+    return taken.image;
+  }
+
+  /** True when the reading desk may be asked for a reading (a browser, online, and not refused yet). */
+  private readingDeskAllowed(): boolean {
+    if (this.readDeskUnavailable()) return false;
+    return this.languageNetworkAllowed();
+  }
+
+  /**
+   * The language of one visitor message. The reading desk's own reading of it comes first — Google
+   * Translate has already named the language and written the message out in English — then the
+   * studio's books, and Google is asked from the window only when neither could read enough of the
+   * message. Whichever read it, the answer is remembered on the session, so she speaks the visitor's
+   * language from then on — including for the lines she writes on her own when they go quiet.
    */
   private async readVisitorLanguage(
     model: AiModelProfile,
     session: AiChatSession,
     text: string,
+    reading: ChatTurnReading | null = null,
+    books: ChatVisitorLanguage | null = null,
   ): Promise<ChatVisitorLanguage | null> {
-    const reading = await readChatLanguage(text, model, session.language, {
-      allowNetwork: this.languageNetworkAllowed(),
-    });
-    if (reading?.romanised) {
-      session.language = reading.code;
-      return reading;
+    const fromDesk = this.deskLanguage(reading, session);
+    if (fromDesk) {
+      session.language = fromDesk.code;
+      return fromDesk;
+    }
+
+    const local =
+      books ?? (await readChatLanguage(text, model, session.language, { allowNetwork: false }));
+    const read = local?.romanised
+      ? local
+      : await readChatLanguage(text, model, session.language, {
+          allowNetwork: this.languageNetworkAllowed(),
+        });
+    if (read?.romanised) {
+      session.language = read.code;
+      return read;
     }
     // Nothing new was read: if she is already speaking their language, she stays in it and reads
     // this message as it is.
@@ -858,6 +1041,7 @@ export class AiModelChatService {
       p.floorMs <= 0 &&
       p.ceilingMs <= 0 &&
       p.gapMaxMs <= 0 &&
+      p.selfieMaxMs <= 0 &&
       p.awayChance <= 0 &&
       p.midPauseChance <= 0 &&
       p.introMaxMs <= 0
@@ -893,6 +1077,7 @@ export class AiModelChatService {
     model: AiModelProfile,
     session: AiChatSession,
     userMessage: AiChatMessage,
+    reading: ChatTurnReading | null = null,
   ): Promise<AiChatRemoteReply | null> {
     if (this.remoteUnavailable() || typeof fetch !== 'function') return null;
 
@@ -912,6 +1097,9 @@ export class AiModelChatService {
       },
       dossier: this.dossierFor(model),
       question: userMessage.text,
+      // What the reading desk made of this turn: the studio's model answers the meaning rather than
+      // the letters, and it is told what an attached picture or document actually contained.
+      reading: reading ? readingForAnswer(reading) : null,
       history: session.messages
         .filter(
           (message) =>
@@ -1071,12 +1259,21 @@ export class AiModelChatService {
           ...session,
           messages: session.messages.map((message) => {
             if (!message.attachment) return { ...message, pending: false };
+            // A picture's preview and a document's own bytes are both far too large for the tab's
+            // storage, so either of them is dropped (and the bubble keeps the file's name) as soon
+            // as it would not fit.
             const keepPreview =
               !stripPreviews && message.attachment.preview.length <= PREVIEW_PERSIST_LIMIT;
+            const keepFileData =
+              !stripPreviews && (message.attachment.fileData?.length ?? 0) <= PREVIEW_PERSIST_LIMIT;
             return {
               ...message,
               pending: false,
-              attachment: keepPreview ? message.attachment : { ...message.attachment, preview: '' },
+              attachment: {
+                ...message.attachment,
+                preview: keepPreview ? message.attachment.preview : '',
+                fileData: keepFileData ? message.attachment.fileData : '',
+              },
             };
           }),
         };

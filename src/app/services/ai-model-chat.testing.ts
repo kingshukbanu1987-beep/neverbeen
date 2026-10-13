@@ -23,6 +23,8 @@ export function silenceChatPacing(chat: AiModelChatService): void {
     midPauseMaxMs: 0,
     gapMinMs: 0,
     gapMaxMs: 0,
+    selfieMinMs: 0,
+    selfieMaxMs: 0,
     introMinMs: 0,
     introMaxMs: 0,
     // Long enough that no test answer is split unless the test asks for it.

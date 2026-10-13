@@ -38,11 +38,14 @@ import {
   tokenise,
 } from './chat-knowledge';
 import { AiChatMessage, AiChatReaction } from './chat-types';
-import { ChatPhotoFacts, photoObservation } from './chat-photo';
+import { ChatPhotoFacts, photoObservation, photoQuestion } from './chat-photo';
+import { ChatTurnReading } from './chat-analysis';
 import {
   SELFIE_REQUEST_PATTERN,
+  SELFIE_WORD_PATTERN,
   VIDEO_REQUEST_PATTERN,
   pickChatSelfie,
+  pickSelfieMoment,
   selfieCaption,
 } from './chat-selfie';
 import {
@@ -83,6 +86,13 @@ export interface AiChatReplyRequest {
   user?: AiChatRequestUser | null;
   /** What her own eyes made of the photograph the visitor just sent (requirement F). */
   photo?: ChatPhotoFacts | null;
+  /**
+   * What the reading desk made of this turn — the visitor's words in English, the language they
+   * wrote in, their intent and feeling, and what an attached photograph or document actually
+   * contained (`chat-analysis.ts`). The window's own reading when the desk was not configured, so
+   * this is never null in a live chat.
+   */
+  reading?: ChatTurnReading | null;
   /** False when she has no photograph of herself to send back (requirement E). */
   canSendSelfie?: boolean;
   /**
@@ -98,6 +108,12 @@ export interface AiChatReply {
   text: string;
   /** True when the answer is a selfie she is sending with it (requirement E). */
   selfie?: boolean;
+  /**
+   * The moment the selfie is taken in, when the visitor asked for a **selfie** by name: her camera
+   * photographs her from her own profile photograph in exactly this moment. Absent for a request for
+   * her album, which is answered with the frame the visitor asked for.
+   */
+  selfieMoment?: { place: string; flaw: string };
   /** The reaction she leaves on the visitor's message, if any. */
   reaction: AiChatReaction | null;
   /** What she understood, e.g. `introduction`, `knowledge:booking`. */
@@ -619,7 +635,7 @@ function complimentReply(
   const followUps = [
     'And what are you looking at exactly — the face, the light, or the fact that I answered you at all?',
     'Do you say that to every model here, or am I allowed to believe you?',
-    'Now tell me something real about your day, so I stop thinking about that sentence.',
+    'Now tell me something real about your day — what actually happened in it?',
     'You are going to be trouble, I can tell. What made you write to me today?',
   ];
 
@@ -1128,15 +1144,22 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   // What the visitor typed, read once: stretched letters collapsed, short forms written out and a
   // word of five letters or more one mistake away from a word the chat listens for repaired to it —
   // so "you are beutifullll" is answered as "you are beautiful".
-  const reading = readVisitorMessage(message.text);
+  const typed = readVisitorMessage(message.text);
   const language = request.language ?? null;
+  // What the turn means: the reading desk's reading of it when the desk answered (`chat-analysis.ts`
+  // — Google Translate, Gemini or OpenAI read it before she did), and otherwise the window's own
+  // reading, which repairs the typing and keeps the visitor's own words.
+  const desk = request.reading ?? null;
+  const analysed = (desk?.english?.trim() || typed.analysed).trim();
   // A Romanised message is analysed in English (`language.english`) and answered in its own
   // language, further down.
-  const question = (language?.romanised ? language.english : message.text).trim();
+  const question = (language?.romanised ? language.english : analysed).trim();
   const lowered = question.toLowerCase();
-  // Every pattern reads this: the English gloss for another language, otherwise the visitor's own
-  // words with the typing repaired.
-  const probe = language?.romanised ? lowered : reading.analysed.toLowerCase();
+  // Every pattern reads this: the English gloss for another language, otherwise the meaning of what
+  // the visitor wrote — the reading desk's English where there is one, with the typing repaired.
+  const probe = language?.romanised ? lowered : analysed.toLowerCase();
+  /** What the reading desk saw inside the attachment, when it read one. */
+  const deskAttachment = desk?.attachment?.trim() ?? '';
 
   // Her voice (requirement B) and the person she has worked out she is talking to — both read from
   // the transcript, so an answer late in a session never sounds like an answer to a stranger.
@@ -1195,10 +1218,14 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
           : 'That came through with your message —';
     const text =
       attachment.kind === 'document'
-        ? `${origin} “${attachment.name}”. It is in our chat now, and I am keeping it. Tell me what is inside it and I will answer properly — the studio reads everything you attach to a booking.`
-        : photo
-          ? `${origin} “${attachment.name}”. ${photoObservation(photo, { name: firstName, seed })}`
-          : `${origin} “${attachment.name}”, and I looked properly. Tell me where you were standing when you took it — I want the whole story, not just the picture.`;
+        ? deskAttachment
+          ? `${origin} “${attachment.name}”, and I have been through it: ${deskAttachment} Tell me what you want me to do with it and I will answer properly.`
+          : `${origin} “${attachment.name}”. It is in our chat now, and I am keeping it. Tell me what is inside it and I will answer properly — the studio reads everything you attach to a booking.`
+        : deskAttachment
+          ? `${origin} “${attachment.name}”. ${deskAttachment} ${photoQuestion(`${seed}|desk`)}`
+          : photo
+            ? `${origin} “${attachment.name}”. ${photoObservation(photo, { name: firstName, seed })}`
+            : `${origin} “${attachment.name}”, and I looked properly. Tell me where you were standing when you took it — I want the whole story, not just the picture.`;
     return {
       ...base,
       text: inVoice(
@@ -1241,16 +1268,21 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
       };
     }
     const shot = pickChatSelfie(model, seed);
+    const moment = pickSelfieMoment(seed);
     return {
       ...base,
       text: selfieCaption(
         model,
-        shot ?? { photo: '', place: 'right here', flaw: 'it is blurry' },
+        shot ?? { photo: '', place: moment.place, flaw: moment.flaw },
         seed,
         firstName,
       ),
       reaction,
-      selfie: Boolean(shot),
+      selfie: Boolean(shot) || Boolean(model.cover) || model.photos.length > 0,
+      // E — she takes it now: the moment travels back to the window so her camera can photograph her
+      // in exactly this place, with exactly this flaw. Only for the word "selfie": somebody asking
+      // for her album is asking for the album.
+      selfieMoment: SELFIE_WORD_PATTERN.test(probe) ? moment : undefined,
       intent: 'selfie',
       introduced: session.introduced,
     };

@@ -347,11 +347,15 @@ describe('AiModelChatDialog', () => {
 
     Object.defineProperty(input, 'files', { value: [file], configurable: true });
     input.dispatchEvent(new Event('change'));
-    harness.fixture.detectChanges();
 
-    expect(harness.element.querySelector('.chat-draft')?.textContent).toContain(
-      'creative-brief.pdf',
-    );
+    // The document is read into bytes before it becomes a draft, so the reading desk can open it
+    // before she answers it — the draft appears as soon as that read is done.
+    await vi.waitFor(() => {
+      harness.fixture.detectChanges();
+      expect(harness.element.querySelector('.chat-draft')?.textContent).toContain(
+        'creative-brief.pdf',
+      );
+    });
 
     await send(harness, 'Here is the brief');
     const bubble = harness.element.querySelector('.chat-bubble.is-outgoing')!;
