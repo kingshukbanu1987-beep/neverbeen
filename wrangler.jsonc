@@ -9,6 +9,11 @@
   "vars": {
     // Base URL of the NeverBeen Web API. Change it when the API moves to another host.
     "NEVERBEEN_API_URL": "https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net",
+    // Gemini key for Live Chat: the reading desk, her camera and the live-chat selfie service.
+    "GEMINI_API_KEY": "AQ.Ab8RN6KgRLob-Xayx7PZvngvN9jeC1l49PDD1kPWMzwiNVEbCA",
+    // Live Chat runs on gemini-2.5-flash — the reading and the live selfies both use it.
+    "GEMINI_MODEL": "gemini-2.5-flash",
+    "GEMINI_IMAGE_MODEL": "gemini-2.5-flash",
   },
   "assets": {
     "directory": "./dist/neverbeen/browser",

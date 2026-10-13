@@ -255,8 +255,10 @@ typed. Without a key the endpoint answers `503 ai-unavailable` and the window an
 engine and a built-in world file instead, so the chat always works. `GEMINI_API_KEY` adds the reading
 desk and her camera, `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the Cloud Translation API, and
 `OPENAI_MODEL`, `GEMINI_MODEL` and `GEMINI_IMAGE_MODEL` pick the models (`gpt-4o-mini`,
-`gemini-2.5-flash`, `gemini-2.5-flash-image` by default). Locally the same three endpoints run from
-`scripts/dev-api.mjs` on port 8787 behind the `/api` dev proxy. Full notes and the
+`gemini-2.5-flash`, `gemini-2.5-flash-image` by default). Live Chat currently runs on
+`gemini-2.5-flash` — the Gemini key and both model variables are set in `wrangler.jsonc`'s
+`vars`. Locally the same three endpoints run from `scripts/dev-api.mjs` on port 8787 behind the
+`/api` dev proxy. Full notes and the
 requirements-to-code map: [`docs/ai-model-chat.md`](docs/ai-model-chat.md).
 
 ### Renting a model
