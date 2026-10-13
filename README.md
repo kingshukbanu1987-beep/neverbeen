@@ -156,10 +156,12 @@ by an upload is renamed in place.
 ### Chatting with a model
 
 A green **Live Chat** button (white text, `#74C476`) stands **directly under the model's name** in
-every model profile, at two and a half times the size of the studio's standard button — a slow
-breathing glow, a band of light crossing it every few seconds and a small lift on hover, all of it
-switched off for `prefers-reduced-motion`. The same button sits in the `.card-actions` row of every
-card on the `/ai-models` directory. It opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
+every model profile — a quiet pill, 1.7× smaller than the two-and-a-half-times button of the first
+brief, with a slow breathing glow, a band of light crossing it every few seconds and a small lift on
+hover, all of it switched off for `prefers-reduced-motion`. On the `/ai-models` directory the same
+button stands **directly under the name of the model** in every card — no longer in the
+`.card-actions` link row — at 1.5× the studio's standard button, with its own motion: a breathing
+glow, a band of light crossing the pill and a small white dot pulsing beside the words. It opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
 her model id in small italic type (`@alisha.bhattacharya`), her city and country, a grey
 **View Profile** button, then straight into the conversation and the composer. Her messages are
 rounded light grey

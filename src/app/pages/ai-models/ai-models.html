@@ -206,6 +206,21 @@
                   <p class="card-location">{{ model.location || 'Location to be announced' }}</p>
                   <h3>{{ model.name }}</h3>
 
+                  <!-- The live chat, straight from the directory: right under the name of the model
+                       and no longer down in the row of links, 1.5× the studio's standard button and
+                       with a quiet pulse of its own. -->
+                  <div class="card-chat-row">
+                    <button
+                      type="button"
+                      class="card-action-chat"
+                      [attr.aria-label]="'Chat live with ' + model.name"
+                      (click)="openChat(model)"
+                    >
+                      <span class="card-chat-dot" aria-hidden="true"></span>
+                      Live Chat
+                    </button>
+                  </div>
+
                   <div
                     class="card-rating-row"
                     role="group"
@@ -358,15 +373,6 @@
                 >
                   Read Bio <i aria-hidden="true">↗</i>
                 </a>
-                <!-- The live chat, straight from the directory (green, like the profile button). -->
-                <button
-                  type="button"
-                  class="card-action card-action-chat"
-                  [attr.aria-label]="'Chat live with ' + model.name"
-                  (click)="openChat(model)"
-                >
-                  Live Chat
-                </button>
               </nav>
             </article>
           }
