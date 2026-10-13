@@ -1,0 +1,336 @@
+<div class="chat-backdrop" (click)="onBackdropClick($event)">
+  <section
+    class="chat-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="chat-model-name"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="chat-bar">
+      <div class="chat-bar-identity">
+        <span class="chat-bar-photo">
+          @if (model().cover) {
+            <img [src]="model().cover" [alt]="model().name" />
+          } @else {
+            <span aria-hidden="true">✳</span>
+          }
+        </span>
+        <span class="chat-bar-copy">
+          <b>{{ model().name }}</b>
+          @if (typingNow()) {
+            <i class="is-typing" role="status">{{ typingLabel() }}…</i>
+          } @else if (visitorFirstName()) {
+            <i>Chatting with {{ visitorFirstName() }} · active now</i>
+          } @else {
+            <i>Active now</i>
+          }
+        </span>
+      </div>
+
+      <!-- The two-hour limit, right where the requirement puts it: the top-right corner. -->
+      <div
+        class="chat-clock"
+        role="timer"
+        [class.is-warning]="warning()"
+        [class.is-urgent]="urgent()"
+        [attr.aria-label]="'Chat session time remaining: ' + chat.timeLeftLabel()"
+      >
+        <span class="chat-clock-dot" aria-hidden="true"></span>
+        <span class="chat-clock-label">{{ sessionOver() ? 'Session ended' : 'Time left' }}</span>
+        <b class="chat-clock-value">{{ chat.timeLeftLabel() }}</b>
+        <span
+          class="chat-clock-bar"
+          aria-hidden="true"
+          [style.--left]="(remaining() / 7200000) * 100 + '%'"
+        ></span>
+      </div>
+
+      <button type="button" class="chat-close" (click)="close()" aria-label="Close the chat">
+        ✕
+      </button>
+    </header>
+
+    <div class="chat-profile">
+      <span class="chat-profile-photo">
+        @if (model().cover) {
+          <img [src]="model().cover" [alt]="model().name + ' — AI model of the NeverBeen studio'" />
+        } @else {
+          <span aria-hidden="true">✳</span>
+        }
+      </span>
+      <h2 id="chat-model-name">{{ model().name }}</h2>
+      <p class="chat-profile-handle">{{ model().handle }}</p>
+      <p class="chat-profile-place">
+        <span aria-hidden="true">⌖</span>
+        {{ country() }}
+        @if (country() && city()) {
+          <i aria-hidden="true">·</i>
+        }
+        {{ city() }}
+      </p>
+      <a
+        class="chat-view-profile"
+        [routerLink]="['/ai-models', model().slug]"
+        (click)="close()"
+        [attr.aria-label]="'View the full profile of ' + model().name"
+        >View Profile</a
+      >
+      <p class="chat-profile-disclaimer">{{ welcomeLine }}</p>
+    </div>
+
+    <div
+      class="chat-messages"
+      role="log"
+      aria-live="polite"
+      aria-label="Chat with the model"
+      [nbChatAutoScroll]="messages()"
+    >
+      @for (message of messages(); track message.id; let index = $index) {
+        @if (daySeparatorFor(index); as separator) {
+          <p class="chat-day">{{ separator }}</p>
+        }
+
+        @if (message.kind === 'reminder') {
+          <div class="chat-reminder" role="status">
+            <span class="chat-reminder-glow" aria-hidden="true"></span>
+            <span class="chat-reminder-text">{{ message.text }}</span>
+          </div>
+        } @else if (message.kind === 'notice') {
+          <p class="chat-notice">{{ message.text }}</p>
+        } @else {
+          <div class="chat-row" [class.is-outgoing]="message.author === 'user'">
+            @if (message.author === 'model') {
+              <span class="chat-row-photo">
+                @if (model().cover) {
+                  <img [src]="model().cover" [alt]="model().name" loading="lazy" />
+                } @else {
+                  <span aria-hidden="true">✳</span>
+                }
+              </span>
+            } @else if (identity()?.avatar) {
+              <span class="chat-row-photo is-visitor">
+                <img [src]="identity()!.avatar" [alt]="identity()!.name" loading="lazy" />
+              </span>
+            }
+
+            <div class="chat-bubble-column">
+              <div
+                class="chat-bubble"
+                [class.is-incoming]="message.author === 'model'"
+                [class.is-outgoing]="message.author === 'user'"
+                [class.is-document]="message.attachment?.kind === 'document'"
+                [class.is-selfie]="message.attachment?.selfie === true"
+                (dblclick)="onBubbleDoubleClick(message)"
+              >
+                @if (message.attachment; as attachment) {
+                  @if (attachment.kind === 'photo' && attachment.preview) {
+                    <span class="chat-bubble-photo">
+                      <img [src]="attachment.preview" [alt]="attachment.name" />
+                      @if (attachment.selfie) {
+                        <i class="chat-selfie-tag" aria-hidden="true">📱 just now</i>
+                      }
+                    </span>
+                  } @else {
+                    <span class="chat-bubble-file">
+                      <span aria-hidden="true">📄</span>
+                      <b>{{ attachment.name }}</b>
+                      <i>{{ sizeLabel(attachment.size) }}</i>
+                    </span>
+                  }
+                }
+
+                @if (isTypingBubble(message)) {
+                  <!-- A, I — her name and "typing" land first, and the whole message follows once
+                       she has had the time a person needs to type it. It is never printed out a
+                       letter at a time. -->
+                  <span class="chat-typing-copy" role="status">{{ typingLabel() }}</span>
+                  <span class="chat-typing" aria-hidden="true"><i></i><i></i><i></i></span>
+                } @else if (bubbleText(message)) {
+                  <span class="chat-bubble-text">{{ bubbleText(message) }}</span>
+                }
+
+                @if (message.reaction) {
+                  <span class="chat-bubble-reaction" [title]="reactionLabel(message)">{{
+                    reactionEmoji(message.reaction)
+                  }}</span>
+                }
+              </div>
+
+              @if (message.sources.length > 0) {
+                <ul class="chat-sources" aria-label="Sources of this answer">
+                  @for (source of message.sources; track source.url) {
+                    <li>
+                      <a [href]="source.url" target="_blank" rel="noopener noreferrer">{{
+                        source.title
+                      }}</a>
+                    </li>
+                  }
+                </ul>
+              }
+
+              <div class="chat-meta">
+                <span class="chat-time" [attr.title]="stampOf(message)">{{ timeOf(message) }}</span>
+                @if (message.reactionBy === 'model') {
+                  <span class="chat-reaction-note">{{ reactionLabel(message) }}</span>
+                }
+                @if (message.author === 'model' && !message.pending) {
+                  <button
+                    type="button"
+                    class="chat-react-button"
+                    [attr.aria-expanded]="pickerFor() === message.id"
+                    [attr.aria-label]="'React to ' + model().name + '’s message'"
+                    (click)="toggleReactionPicker(message.id)"
+                  >
+                    ☺+
+                  </button>
+                }
+              </div>
+
+              @if (pickerFor() === message.id) {
+                <div class="chat-reaction-tray" role="group" aria-label="Choose a reaction">
+                  @for (option of reactions; track option.id) {
+                    <button
+                      type="button"
+                      class="chat-reaction-option"
+                      [class.is-active]="
+                        message.reaction === option.id && message.reactionBy === 'user'
+                      "
+                      [attr.aria-label]="option.label"
+                      (click)="react(message, option.id)"
+                    >
+                      {{ option.emoji }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    @if (sessionOver()) {
+      <div class="chat-ended" role="status">
+        <span class="chat-ended-mark" aria-hidden="true">⌛</span>
+        <p>
+          @if (closedReason() === 'blocked') {
+            She ended this session. Rude and sexual messages close a chat for good.
+          } @else {
+            Your two hours with {{ model().name }} are over, so this window is closed to new
+            messages.
+          }
+        </p>
+        <button type="button" class="chat-ended-button" (click)="startNewSession()">
+          Start a new 2-hour chat
+        </button>
+      </div>
+    } @else {
+      @if (chat.draftAttachment(); as attachment) {
+        <div class="chat-draft" role="status">
+          @if (attachment.kind === 'photo' && attachment.preview) {
+            <img [src]="attachment.preview" [alt]="attachment.name" />
+          } @else {
+            <span aria-hidden="true">📄</span>
+          }
+          <span class="chat-draft-copy">
+            <b>{{ attachment.name }}</b>
+            <i>{{ sizeLabel(attachment.size) }} · ready to send</i>
+          </span>
+          <button type="button" (click)="clearAttachment()" aria-label="Remove the attachment">
+            ✕
+          </button>
+        </div>
+      }
+
+      @if (readError() || chat.notice()) {
+        <p class="chat-error" role="alert">{{ readError() || chat.notice() }}</p>
+      }
+
+      <form class="chat-composer" (submit)="submit(); $event.preventDefault()">
+        <input
+          #photoInput
+          class="chat-file"
+          type="file"
+          accept="image/*"
+          (change)="onPhotoPicked($event, 'upload')"
+        />
+        <input
+          #cameraInput
+          class="chat-file"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          (change)="onPhotoPicked($event, 'camera')"
+        />
+        <input
+          #documentInput
+          class="chat-file"
+          type="file"
+          accept=".pdf,.doc,.docx,.txt,.rtf,.csv,.xls,.xlsx,.ppt,.pptx,.zip"
+          (change)="onDocumentPicked($event)"
+        />
+
+        <div class="chat-composer-tools">
+          <button
+            type="button"
+            (click)="takePhoto()"
+            aria-label="Take a photo with the camera"
+            title="Camera"
+          >
+            📷
+          </button>
+          <button
+            type="button"
+            (click)="pickPhoto()"
+            aria-label="Attach a photograph"
+            title="Photo"
+          >
+            🖼
+          </button>
+          <button
+            type="button"
+            (click)="pickDocument()"
+            aria-label="Attach a document"
+            title="Document"
+          >
+            📎
+          </button>
+        </div>
+
+        <textarea
+          #composer
+          class="chat-input"
+          rows="1"
+          [value]="draft()"
+          (input)="updateDraft($event)"
+          (keydown)="onComposerKeydown($event)"
+          [attr.placeholder]="'Message ' + model().name + '…'"
+          [attr.aria-label]="'Message ' + model().name"
+          maxlength="2000"
+        ></textarea>
+
+        <button
+          type="submit"
+          class="chat-send"
+          [disabled]="!canSend()"
+          aria-label="Send the message"
+        >
+          <span aria-hidden="true">➤</span>
+        </button>
+      </form>
+    }
+
+    @if (needsIdentity()) {
+      <app-chat-identity-prompt [model]="model()" (confirmed)="confirmIdentity($event)" />
+    }
+
+    @if (chat.summaryOpen() && session()) {
+      <app-chat-session-summary
+        [model]="model()"
+        [summary]="summary()"
+        [visitor]="identity()"
+        (closed)="closeSummary()"
+      />
+    }
+  </section>
+</div>

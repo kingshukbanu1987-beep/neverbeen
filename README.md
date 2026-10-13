@@ -153,6 +153,79 @@ the album's frame order in its `profile.json` and regenerates the manifest in on
 run repeatedly: a photograph already in the album is never copied twice, and a UUID-named file left
 by an upload is renamed in place.
 
+### Chatting with a model
+
+A green **Live Chat** button (white text, `#74C476`) stands **directly under the model's name** in
+every model profile, at two and a half times the size of the studio's standard button — a slow
+breathing glow, a band of light crossing it every few seconds and a small lift on hover, all of it
+switched off for `prefers-reduced-motion`. The same button sits in the `.card-actions` row of every
+card on the `/ai-models` directory. It opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
+her model id in small italic type (`@alisha.bhattacharya`), her city and country, a grey
+**View Profile** button, then straight into the conversation and the composer. Her messages are
+rounded light grey
+bubbles with black text, the visitor's the same shape in violet with white text, each with an
+Instagram-style date-and-time stamp and a `Today, 14:32` separator between days. The visitor can
+attach a photograph (or take one with the camera) or a document, and can react to her answers with
+👍 ❤️ 😂 😮 😢 😡 (a double-click is a ❤️) — and she reacts back on the visitor's own message with
+what the message deserves.
+
+Before any of that, a glass form asks who she is talking to: a name of three to fourteen characters
+(checked as it is typed) and one photograph — uploaded or taken with the front camera and reduced to
+about 100 KB automatically. From then on her photograph stands, circular, beside every answer and the
+visitor's beside their own messages; she uses their **first name** and opens the conversation herself.
+Her answers are never printed out for the visitor: the window shows her name and **typing** for as
+long as a person needs to type that many characters (about 34 ms a character, never under two and a
+half seconds and never over seven), and then the message arrives **whole**, in one piece — no
+word-by-word reveal anywhere. Sometimes the first sign of her is three to seven seconds of nothing at
+all (she was not at her phone), and sometimes she stops mid-thought: the typing bubble goes with her
+and comes back before the message lands. A long answer arrives as two, three or four **separate
+messages**, two to four seconds apart, each one typed in front of the visitor. She talks the way a
+woman of her own age and country talks (an Indian of 25 does not sound like an Iranian of 40),
+reads the visitor's humour and emoji as the session goes on and settles into their way of writing. A
+selfie request brings back one of her own frames as a phone photograph — the room behind her, the bad
+light, the flaw she admits to — a picture the visitor sends is looked at and answered in words, a
+video request is refused with the Founder's own wording, and once the chat has warmed up she asks for
+work herself: a brand promotion or an editorial set, priced from her card. When the visitor goes quiet
+for ten to twenty seconds she keeps the conversation going on her own — about her, about them, about
+the world, or with a question. When the two hours end, or when she ends the chat, an ultra-modern
+session report appears: both faces, the time they spent together, her honest paragraph about it and
+her rating out of five.
+
+She is grounded in everything NeverBeen knows: her own card, her complete biography, her photographs
+and videos, every other model, the website's prices, packages, coupons, policies and destinations,
+and the studio's own facts — so "how does the booking work?" and "tell me about Nourhan Durrani" are
+answered as well as "who are you?". When the studio has configured its OpenAI and Google keys she
+reaches both for any question, and never says so: no "Google", no "OpenAI", no "I searched", no
+"I found it" — she knows it, or she remembers it, with an opinion attached.
+
+The opening of a session is her introduction, and it is not one paragraph. Three to five seconds
+after the form is filled in she sends **four or five messages**, two to four seconds apart, each one
+typed in front of the visitor, and they are written for her own age and country: a woman of 23 in
+Shiraz and a woman of 30 in Sarajevo do not open the same conversation, and neither do an Indian of 25
+and an Iranian of 25 — in the introduction, or in any answer that follows it. The first message
+carries the visitor's name, the second the good-morning/good-afternoon/good-evening greeting for their
+clock, her full name, her model id, her city and country and her age, and with them the plain
+statement that everything of her lives inside the NeverBeen Multiverse and nowhere else — said in her
+own voice, never as a bot line ("I am an AI model", "I am replying from my biography" and their like
+are rewritten out of her answers). She remembers the whole conversation, and a refresh keeps it.
+
+Her tone is seductive, modern, frank and friendly. A swear word is a strike and a warning; sexual
+harassment counts double, and after three strikes she says goodbye and the chat window closes for
+good — **Start a new 2-hour chat** opens a fresh session. A chat lasts at most two hours, the
+remaining time sits in the top-right corner of the window, and reminders appear **in the middle of
+the conversation** at fifteen, ten, five and one minutes left as a glowing violet glass pill. At zero
+the two hours are up and the window closes.
+
+Questions from outside NeverBeen — "what is the capital of India?" — are answered by the live
+endpoint `POST /api/ai-chat` (`worker/ai-chat-core.mjs`): with an `OPENAI_API_KEY` the answer streams
+from OpenAI and, when `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_CX` are set too, the question is
+searched on Google first and the top links are shown under her answer. Without those secrets the
+endpoint answers `503 ai-unavailable` and the window answers from her own engine and a built-in world
+file instead, so the chat always works. The three values are Worker secrets, `OPENAI_MODEL` picks the
+model (`gpt-4o-mini` by default), and locally the same endpoint runs from `scripts/dev-api.mjs` on
+port 8787 behind the `/api` dev proxy. Full notes and the requirements-to-code map:
+[`docs/ai-model-chat.md`](docs/ai-model-chat.md).
+
 ### Renting a model
 
 Every portfolio carries a **Rent this model** button with a `From ₹550 per photograph` hint. It opens
@@ -185,7 +258,7 @@ direct link. No WhatsApp Cloud API credentials are needed for this browser flow.
 
 The Worker also retains `POST /api/model-booking` for server-side integrations. That endpoint uses
 the WhatsApp Cloud API when configured, and the local development stand-in
-(`scripts/dev-booking-api.mjs`) writes to the gitignored `booking-outbox.log` when those credentials
+(`scripts/dev-api.mjs`) writes to the gitignored `booking-outbox.log` when those credentials
 are absent. These endpoints are separate from the portfolio form's direct WhatsApp handoff.
 
 ### The model portfolio document (Watch & Download)

@@ -173,18 +173,31 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
-  it('offers Read full Biography as a text link directly above Rent Me', async () => {
+  it('puts Live Chat under her name, and Read full Biography directly above Rent Me (requirement E)', async () => {
     const profile = withPhotos(1);
     const harness = await openPortfolio(profile.slug);
     const element = harness.routeNativeElement as HTMLElement;
 
     try {
+      const chat = element.querySelector<HTMLButtonElement>('.action-chat');
+      const name = element.querySelector<HTMLElement>('#portfolio-title');
+      expect(chat?.textContent?.trim()).toBe('Live Chat');
+      // E — two and a half times the studio's standard button, with its own quiet animation.
+      expect(chat?.classList.contains('is-hero')).toBe(true);
+
+      // It stands directly under the model's name, and no longer down among the action buttons.
+      const cta = chat?.closest('.chat-cta');
+      expect(cta?.parentElement?.classList.contains('identity-copy')).toBe(true);
+      expect(name?.nextElementSibling).toBe(cta);
+      expect(chat?.closest('.rent-action-stack')).toBeNull();
+
       const link = element.querySelector<HTMLAnchorElement>('.biography-link');
       const rent = element.querySelector<HTMLButtonElement>('.action-rent');
       expect(link?.tagName).toBe('A');
       expect(link?.textContent).toContain('Read full Biography');
       expect(link?.getAttribute('href')).toBe(`/ai-models/${profile.slug}/biography`);
       expect(link?.parentElement?.classList.contains('rent-action-stack')).toBe(true);
+      // With the chat button out of the stack, the biography link sits directly above Rent Me.
       expect(link?.nextElementSibling).toBe(rent);
     } finally {
       release(profile);

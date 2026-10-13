@@ -16,12 +16,23 @@
  *   npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID   # sender phone number id
  *   npx wrangler secret put FOUNDER_WHATSAPP_NUMBER    # where the bookings go
  *
+ * `/api/ai-chat` is the AI model chat: her answers to questions from outside NeverBeen stream from
+ * OpenAI with live Google results. It needs its own optional secrets — without them the website
+ * answers from the model's own engine, so the chat always works:
+ *
+ *   npx wrangler secret put OPENAI_API_KEY         # OpenAI key
+ *   npx wrangler secret put GOOGLE_SEARCH_API_KEY  # Google Custom Search JSON API key
+ *   npx wrangler secret put GOOGLE_SEARCH_CX       # programmable search engine id
+ *
+ * See `worker/ai-chat-core.mjs` and `docs/ai-model-chat.md`.
+ *
  * The API target can be overridden with the NEVERBEEN_API_URL variable (see wrangler.jsonc).
  *
  * Until the WhatsApp secrets are set the booking endpoint answers 503 and no message is sent. The
  * optional endpoint never returns the founder's number to its caller.
  */
 import { BOOKING_ENDPOINT, handleModelBookingRequest } from './model-booking-core.mjs';
+import { AI_CHAT_ENDPOINT, MAX_CHAT_BODY_BYTES, createAiChatResponse } from './ai-chat-core.mjs';
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -30,6 +41,13 @@ interface Env {
   FOUNDER_WHATSAPP_NUMBER?: string;
   /** Base URL of the NeverBeen Web API (defaults to the deployed Azure App Service). */
   NEVERBEEN_API_URL?: string;
+  /** OpenAI key for the AI model chat; without it the chat answers from its own engine. */
+  OPENAI_API_KEY?: string;
+  /** OpenAI model used by the chat (defaults to `gpt-4o-mini`). */
+  OPENAI_MODEL?: string;
+  /** Google Custom Search credentials — live search results for the chat (both optional). */
+  GOOGLE_SEARCH_API_KEY?: string;
+  GOOGLE_SEARCH_CX?: string;
 }
 
 /** Same-origin path the Angular app uses for the NeverBeen Web API. */
@@ -51,6 +69,10 @@ const MAX_BODY_BYTES = 32 * 1024;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_REQUESTS = 6;
 
+/** A chat turn carries the dossier and possibly a picture, so it gets its own, larger budget. */
+const RATE_LIMIT_CHAT_REQUESTS = 30;
+const chatRequests = new Map<string, number[]>();
+
 /** Best-effort per-isolate throttle: enough to stop a single client hammering the endpoint. */
 const recentRequests = new Map<string, number[]>();
 
@@ -66,6 +88,21 @@ function isRateLimited(key: string, now: number): boolean {
   }
 
   return hits.length > RATE_LIMIT_REQUESTS;
+}
+
+/** The chat endpoint's own throttle: a conversation is fast, but not free. */
+function isChatRateLimited(key: string, now: number): boolean {
+  const hits = (chatRequests.get(key) ?? []).filter((time) => now - time < RATE_LIMIT_WINDOW_MS);
+  hits.push(now);
+  chatRequests.set(key, hits);
+
+  if (chatRequests.size > 500) {
+    for (const [entry, times] of chatRequests) {
+      if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) chatRequests.delete(entry);
+    }
+  }
+
+  return hits.length > RATE_LIMIT_CHAT_REQUESTS;
 }
 
 function json(status: number, body: unknown): Response {
@@ -149,6 +186,40 @@ export default {
         env: bookingEnv(env),
       });
       return json(result.status, result.body);
+    }
+
+    if (url.pathname === AI_CHAT_ENDPOINT) {
+      const clientKey = request.headers.get('cf-connecting-ip') ?? 'unknown';
+      if (isChatRateLimited(clientKey, Date.now())) {
+        return json(429, { ok: false, error: 'too-many-requests' });
+      }
+
+      if (request.method !== 'POST') return json(405, { ok: false, error: 'method-not-allowed' });
+
+      const declared = Number(request.headers.get('content-length') ?? '0');
+      const text =
+        Number.isFinite(declared) && declared > MAX_CHAT_BODY_BYTES ? null : await request.text();
+      if (text === null || text.length > MAX_CHAT_BODY_BYTES) {
+        return json(413, { ok: false, error: 'payload-too-large' });
+      }
+
+      let payload: unknown;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        return json(400, { ok: false, error: 'invalid-json' });
+      }
+
+      // The chat reads its own secrets; the booking core never sees them.
+      return createAiChatResponse({
+        payload,
+        env: {
+          OPENAI_API_KEY: env.OPENAI_API_KEY,
+          OPENAI_MODEL: env.OPENAI_MODEL,
+          GOOGLE_SEARCH_API_KEY: env.GOOGLE_SEARCH_API_KEY,
+          GOOGLE_SEARCH_CX: env.GOOGLE_SEARCH_CX,
+        },
+      });
     }
 
     if (url.pathname.startsWith('/api/')) {

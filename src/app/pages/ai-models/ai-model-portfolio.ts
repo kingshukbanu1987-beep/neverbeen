@@ -31,6 +31,7 @@ import { ModelMediaCommentsDialog } from '../../shared/model-media-comments-dial
 import { ModelMediaEngagementBar } from '../../shared/model-media-engagement/model-media-engagement';
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
+import { AiModelChatDialog } from './chat/ai-model-chat';
 import { AiModelPhotoViewer } from './photo-viewer/ai-model-photo-viewer';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
 
@@ -69,6 +70,7 @@ export const PREVIEW_LIMIT = 12;
   imports: [
     RouterLink,
     AiModelBookingDialog,
+    AiModelChatDialog,
     AiModelPhotoViewer,
     AiModelVideoPlayer,
     CompactCount,
@@ -250,6 +252,13 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected readonly bookingOpen = signal(false);
 
   /**
+   * The live AI chat window — the **Chat with me** button above **Rent Me**. The session itself
+   * (its two hours, its transcript and its strikes) lives in `AiModelChatService`, so closing the
+   * window and opening it again continues the same conversation.
+   */
+  protected readonly chatOpen = signal(false);
+
+  /**
    * Normalised availability for this model — kept in step with the directory listing so a
    * profile reads the same in both places.
    */
@@ -291,6 +300,8 @@ export class AiModelPortfolioPage implements OnDestroy {
   });
 
   private readonly rentButton = viewChild<ElementRef<HTMLButtonElement>>('rentButton');
+  /** Returned to focus when the chat window closes, so the keyboard flow never breaks. */
+  private readonly chatButton = viewChild<ElementRef<HTMLButtonElement>>('chatButton');
   private lastFocused: HTMLElement | null = null;
   private lastFocusedVideo: HTMLElement | null = null;
   private shareTimer: ReturnType<typeof setTimeout> | null = null;
@@ -672,6 +683,17 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected closeBooking(): void {
     this.bookingOpen.set(false);
     this.rentButton()?.nativeElement.focus({ preventScroll: true });
+  }
+
+  /** Opens the real-time chat with this model. */
+  protected openChat(): void {
+    if (!this.model()) return;
+    this.chatOpen.set(true);
+  }
+
+  protected closeChat(): void {
+    this.chatOpen.set(false);
+    this.chatButton()?.nativeElement.focus({ preventScroll: true });
   }
 
   /** Another arrangement of the same album, without leaving the page. */

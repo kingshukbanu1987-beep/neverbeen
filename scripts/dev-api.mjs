@@ -1,11 +1,20 @@
 #!/usr/bin/env node
 /**
- * Local stand-in for the production Worker's booking endpoint.
+ * Local stand-in for the production Worker's `/api/*` endpoints: the AI model chat and the model
+ * booking.
  *
- * The Angular dev server proxies `/api/*` here (see `proxy.conf.json`) for exercising the optional
- * model-booking API locally. The portfolio form itself hands off directly to WhatsApp. This server
- * uses the same shared logic as production (`worker/model-booking-core.mjs`); the only difference is
- * delivery:
+ * The Angular dev server proxies `/api/*` here (see `proxy.conf.json`), so `npm start` exercises the
+ * same server-side logic production runs — `worker/ai-chat-core.mjs` and
+ * `worker/model-booking-core.mjs` — without deploying anything.
+ *
+ *   - `POST /api/ai-chat` — the live chat with a model. With `OPENAI_API_KEY` in the environment the
+ *     answer is streamed from OpenAI (and Google results are added when `GOOGLE_SEARCH_API_KEY` and
+ *     `GOOGLE_SEARCH_CX` are set). Without the key it answers `503 ai-unavailable`, which is exactly
+ *     what production does unmapped, and the website answers from the model's own engine instead —
+ *     so the chat works either way.
+ *   - `POST /api/model-booking` — the booking endpoint. The portfolio form itself hands off directly
+ *     to WhatsApp, so this is only for server-side integrations; the shared logic is
+ *     `worker/model-booking-core.mjs` and the only difference is delivery:
  *
  *   - with WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID and FOUNDER_WHATSAPP_NUMBER set in the
  *     environment, the message is sent to the founder's WhatsApp exactly as in production;
@@ -19,6 +28,11 @@ import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  AI_CHAT_ENDPOINT,
+  MAX_CHAT_BODY_BYTES,
+  createAiChatResponse,
+} from '../worker/ai-chat-core.mjs';
+import {
   BOOKING_ENDPOINT,
   MAX_BODY_BYTES,
   handleModelBookingRequest,
@@ -28,13 +42,13 @@ const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.env['BOOKING_API_PORT'] ?? 8787);
 const outboxFile = join(projectRoot, 'booking-outbox.log');
 
-function readBody(request) {
+function readBody(request, maxBytes = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     request.on('data', (chunk) => {
       size += chunk.length;
-      if (size > MAX_BODY_BYTES) {
+      if (size > maxBytes) {
         reject(new Error('payload-too-large'));
         request.destroy();
         return;
@@ -48,6 +62,31 @@ function readBody(request) {
 
 const server = createServer(async (request, response) => {
   const path = new URL(request.url ?? '/', 'http://localhost').pathname;
+
+  if (path === AI_CHAT_ENDPOINT) {
+    if ((request.method ?? 'GET').toUpperCase() !== 'POST') {
+      response.writeHead(405, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ ok: false, error: 'method-not-allowed' }));
+      return;
+    }
+
+    let chatPayload;
+    try {
+      chatPayload = JSON.parse(await readBody(request, MAX_CHAT_BODY_BYTES));
+    } catch (error) {
+      const tooLarge = error.message === 'payload-too-large';
+      response.writeHead(tooLarge ? 413 : 400, { 'content-type': 'application/json' });
+      response.end(
+        JSON.stringify({ ok: false, error: tooLarge ? 'payload-too-large' : 'invalid-json' }),
+      );
+      return;
+    }
+
+    const chatResponse = await createAiChatResponse({ payload: chatPayload, env: process.env });
+    response.writeHead(chatResponse.status, Object.fromEntries(chatResponse.headers.entries()));
+    response.end(Buffer.from(await chatResponse.arrayBuffer()));
+    return;
+  }
 
   if (path !== BOOKING_ENDPOINT) {
     response.writeHead(404, { 'content-type': 'application/json' });
@@ -105,6 +144,12 @@ server.listen(port, '127.0.0.1', () => {
       (configured
         ? 'WhatsApp delivery configured'
         : 'no WhatsApp credentials, writing to booking-outbox.log'),
+  );
+  console.log(
+    `[ai-models] AI chat API on http://127.0.0.1:${port}${AI_CHAT_ENDPOINT} — ` +
+      (process.env['OPENAI_API_KEY']
+        ? 'OpenAI answers configured'
+        : 'no OPENAI_API_KEY, the website answers from the model’s own engine'),
   );
 });
 

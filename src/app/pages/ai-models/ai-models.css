@@ -769,6 +769,7 @@
 
 .card-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
@@ -793,6 +794,35 @@
 .card-action:hover,
 .card-action:focus-visible {
   color: #fff;
+}
+
+/* Live Chat — the real-time chat with the model, in the studio's green (#74C476). */
+.card-action-chat {
+  padding: 0.3rem 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: #74c476;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.card-action-chat:hover,
+.card-action-chat:focus-visible {
+  background: #86d187;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.card-action-chat:focus-visible {
+  outline: 2px solid #74c476;
+  outline-offset: 2px;
 }
 
 .card-action i {
