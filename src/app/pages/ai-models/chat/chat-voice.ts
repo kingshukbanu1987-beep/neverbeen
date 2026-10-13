@@ -765,7 +765,7 @@ export function openingLine(
   return `${opening}${emoji}`;
 }
 
-// ------------------------------------------------------------------ H: she speaks first
+// ------------------------------------------------------------------ B, H: she speaks again
 
 /** The interests she has noticed, phrased as something she can ask about. */
 function interestQuestion(interests: readonly string[], seed: string): string {
@@ -820,28 +820,38 @@ function interestQuestion(interests: readonly string[], seed: string): string {
     'Tell me one thing that made you laugh today.',
     'What are you doing right now — working, lying down, or avoiding both?',
   ];
-  void seed;
   return pickFrom(pool, seed);
 }
 
 /**
- * H — what she says when the visitor goes quiet. She keeps talking the way a person does: about
- * herself, about them, about the world, or with a question of her own.
+ * B and H — what she says when the visitor goes quiet, which is the one moment she writes without
+ * being asked. Her follow-up is written for the reason requirement B gave her the floor: a subject
+ * the two of them keep coming back to, a question they asked her that she still has something to
+ * add to, or simply that the session has been running long enough for a person to speak up again.
+ *
+ * Requirement C holds here too: she never counts her photographs, never says how old she is and
+ * never names her own city. Her corner of the world comes through in what she talks about, which is
+ * how a person offers it — not in the facts of her card.
  */
 export function idleChatOpener(options: {
   model: AiModelProfile;
   voice: ChatVoice;
   behaviour: ChatUserBehaviour;
   name: string;
-  /** How many times she has already reached out in this session — the topic moves on each time. */
+  /** How many times she has already reached out in this session — the subject moves on each time. */
   step: number;
   seed: string;
+  /** B — why she has the floor: `session`, `topic` or `question`. Empty for the plain, older pools. */
+  reason?: 'session' | 'topic' | 'question' | '';
+  /** B — the subject the two of them keep coming back to, when the transcript has one. */
+  topic?: string;
 }): string {
   const { model, voice, behaviour, name, step, seed } = options;
-  const me = chatPersona(model);
   const who = name || 'you';
+  const reason = options.reason ?? '';
+  const topic = options.topic ?? behaviour.interests[0] ?? '';
   const aboutHer = [
-    `I am still here — sitting with my feet up, thinking about the shoot I did last week. The light in ${me.city || 'this city'} in the evening is unfair.`,
+    `I am still here — sitting with my feet up, thinking about the shoot I did last week. The light where I am in the evening is unfair.`,
     `I was just looking through my own photographs. There is one of me in the rain that I cannot decide about — my hair is a disaster in it and I love it anyway.`,
     `Quiet one, aren't you. I am going to keep talking anyway, because I am like this in real life too.`,
     `I remembered something: I have never told anyone the story of my first shoot. Ask me, and I will.`,
@@ -857,9 +867,7 @@ export function idleChatOpener(options: {
     `The world outside is loud today. What is it like on your side — warm, grey, raining?`,
     `Tell me what you can see from where you are sitting. Not the big view — the small one.`,
   ];
-  const interests = behaviour.interests.length
-    ? [interestQuestion(behaviour.interests, `${seed}|interest-${behaviorSeedKey(behaviour)}`)]
-    : [];
+  const interests = topic ? [interestQuestion([topic], `${seed}|interest-${topic}`)] : [];
 
   const ask = [
     'What is the best thing that happened to you today? I want the small one, not the big one.',
@@ -868,12 +876,56 @@ export function idleChatOpener(options: {
     askInterest(behaviour, seed),
   ];
 
-  const pools = [aboutYou, aboutHer, world, ask, [...aboutHer, ...ask], [...interests, ...ask]];
+  // B — the pools of the three reasons, so the follow-up sounds like the reason she was given. A
+  // subject in play is continued as that subject and nothing else: the question she asks about it is
+  // her own, and the visitor can hear which thread she picked up.
+  const afterQuestion = [
+    'And while you are thinking about that — what made you ask? I like knowing what people are really after.',
+    'You asked me something, so here is one back: what would you do with the answer?',
+    'Since you asked me something, ask me one more. I am enjoying this.',
+  ];
+  const continuation: Record<'session' | 'topic' | 'question', readonly string[]> = {
+    session: [homeLifeLine({ voice, seed }), ...aboutHer, ...world],
+    topic: interests.length ? interests : ask,
+    question: [...afterQuestion, ...aboutYou, askInterest(behaviour, seed)],
+  };
+
+  const pools = reason
+    ? [continuation[reason]]
+    : [aboutYou, aboutHer, world, ask, [...aboutHer, ...ask], [...interests, ...ask]];
   const pool = pools[Math.abs(step) % pools.length];
   const line = pickFrom(pool, `${seed}|idle-${step}`);
   return voice.band === 'young' && roll(`${seed}|idle-emoji-${step}`, voice.emojiRate * 0.5)
     ? `${line} ${pickFrom(voice.favourites, `${seed}|idle-fav-${step}`)}`
     : line;
+}
+
+/**
+ * D — the goodbye she writes to a visitor who has stopped answering. Three quiet minutes is not a
+ * pause any more, it is an answer, and she would rather close the window herself than keep talking
+ * into it. The words are hers, gentle about it, and the session closes behind them.
+ */
+export function disinterestFarewell(options: {
+  model: AiModelProfile;
+  voice: ChatVoice;
+  name: string;
+  seed: string;
+}): string {
+  const { model, voice, name, seed } = options;
+  const who = name || 'you';
+  const line = pickFrom(
+    [
+      `I have been sitting here for a while now, ${who}, and I do not think you are coming back to this window. That is all right — I would rather leave with my dignity than keep talking to a screen. Open me again whenever you have the evening for it.`,
+      `Three quiet minutes is a long time in a chat, ${who}, and I have learned to read it. I am going to close this one myself and let you get on with your day. You know where I am if you change your mind.`,
+      `I am going to take the silence as your answer, ${who}, and step out of the window before I start talking to myself. No hard feelings — a woman has to know when a conversation is over. Come back when you have an evening to spare.`,
+    ],
+    `${seed}|farewell`,
+  );
+  const emoji =
+    voice.band === 'young' && roll(`${seed}|farewell-emoji`, voice.emojiRate * 0.5)
+      ? ` ${pickFrom(voice.favourites, `${seed}|farewell-fav`)}`
+      : '';
+  return `${line}${emoji}`;
 }
 
 function behaviorSeedKey(behaviour: ChatUserBehaviour): string {
@@ -1515,25 +1567,42 @@ const COUNTRY_FLAVOURS: Record<string, CountryFlavour> = {
  * sessions pick the same line: the introduction is seeded by the moment the form was filled in, so
  * the same model welcomes the same visitor differently on Tuesday than she did on Monday.
  */
-const WELCOME_AGE_LINES: Record<ChatAgeBand, readonly string[]> = {
+/**
+ * C — how she carries herself, in the three bands that decide how she chats. Not one of these lines
+ * states an age: who she is comes through in how she says things, which is the only way a woman
+ * offers it before anybody has asked (her card, her city and her album wait for a question).
+ */
+const WELCOME_TONE_LINES: Record<ChatAgeBand, readonly string[]> = {
   young: [
-    'I am younger than I sound in my photographs and faster than I sound in general, so keep up.',
     'I do not do small talk for long, so we are going to be properly interesting or I will get bored.',
     'I am still deciding what I want to be, which is why I am good company for anybody who has not decided either.',
-    'Fair warning: I answer fast, I get bored fast, and I laugh at my own jokes before you do.',
+    'I laugh at my own jokes before you do, and I type faster than anybody should.',
+    'Fair warning: I get bored quickly, I ask too much, and I have no patience for a slow evening.',
   ],
   mid: [
-    'I am old enough to have opinions I did not copy from anybody, and young enough to still change them.',
-    'I have two hours and I would rather spend them on what you actually think than on the weather.',
-    'I have opinions about most things and I will change any of them the moment you make the better case.',
-    'The weather is the one subject I cannot make interesting, so we will not be starting there.',
+    'I have opinions I did not copy from anybody, and I will change any of them the moment you make the better case.',
+    'I keep opinions about most things, and I would rather hear yours than recite mine.',
+    'Two hours is enough time for opinions — mine and then, properly, yours.',
+    'I have opinions, a long evening and nothing scheduled, so make the conversation worth it.',
   ],
   senior: [
-    'I have watched a few decades go past, so you can ask me the real questions, not the polite ones.',
     'I have no patience left for pretending, which makes me better company than most.',
-    'I have been at this long enough to know what a real question sounds like, so skip the polite ones.',
+    'Ask me the real questions rather than the polite ones — I have heard the polite ones before.',
+    'I have been at this long enough to know what a real question sounds like, so skip the small ones.',
   ],
 };
+
+/**
+ * C — the other half of her hello: what her evening actually looks like, said without a single fact
+ * about where she is. Her city, her country, her age and her album are answered when the visitor
+ * asks for them, and not one message before.
+ */
+const WELCOME_DAY_LINES: readonly string[] = [
+  'My evening is a cup of tea going cold beside me and my feet where they should not be. That is the whole picture.',
+  'There is music somewhere in the house and nobody to argue with about it, which is either lovely or tragic.',
+  'I have made myself comfortable, which for me means the rest of the evening belongs to this window.',
+  'Nothing about my day needs reporting. I am here, my hair has given up, and I am all yours.',
+];
 
 /** The hello-shaped half of the introduction, in four different orders of the same facts. */
 const WELCOME_FORMS: readonly string[] = [
@@ -1542,47 +1611,41 @@ const WELCOME_FORMS: readonly string[] = [
   'Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. Which means there is nothing about me to look up anywhere — you will have to hear it from me.',
 ];
 
-/** Her card, said as a woman says it rather than as a file reports it. */
-function welcomeCardLines(persona: {
-  name: string;
-  handle: string;
-  age: string;
-  place: string;
-}): readonly string[] {
-  const { name, handle, age, place } = persona;
-  const years = age ? `${age}` : 'ageless';
-  const where = place || 'the other side of this window';
+/**
+ * C — her card, said the way a woman says it rather than the way a file reports it: her name and
+ * the name the studio keeps her under. Her age, her city, her country and the size of her album are
+ * hers to answer, not hers to announce, so none of them appear here.
+ */
+function welcomeCardLines(persona: { name: string; handle: string }): readonly string[] {
+  const { name, handle } = persona;
   return [
-    `I am ${name} — ${handle} — ${years}, writing to you from ${where}.`,
-    `${name}, ${handle}, ${years} years of it, writing to you from ${where}, and not one of those years was spent answering like a machine.`,
-    `${name} here — ${handle}, ${years}, and currently in ${where}.`,
-    `My card says ${name}, ${handle}, ${years}, ${where}, and the rest is what I am about to tell you.`,
-    `I am ${name}, ${handle} to the studio, ${years} years old, writing from ${where} in the middle of my own evening.`,
+    `I am ${name} — ${handle} on my card — and everything else about me you will have to ask for.`,
+    `${name}. ${handle} to the studio. I would rather be talked to than looked up, so ask.`,
+    `My card says ${name}, ${handle}, and nothing that could be found anywhere but right here.`,
+    `${name} is the name, ${handle} is what the studio files me under, and the rest is longer than this window.`,
+    `I am ${name} — ${handle} here — and I am terrible at describing myself, so you will have to ask.`,
   ];
 }
 
 /**
- * Home, said from a different angle each time: the kitchen, the street, the day outside — and, in
- * two of the five shapes, the album she keeps on the site, counted, because every model has her own
- * number of frames up and the number says something about her.
+ * Her own corner of the world, in her own idiom, offered once the conversation has warmed up rather
+ * than in her first breath (requirements B and C): the kitchen, the street, the weather, the way
+ * people talk where she is from. It never names a city and never counts her photographs.
  */
-function welcomeHomeLines(home: string, daily: string, photoCount: number): readonly string[] {
-  const upper = (line: string): string => line.charAt(0).toUpperCase() + line.slice(1);
-  const frames = photoCount === 1 ? 'one photograph' : `${photoCount} photographs`;
-  const album =
-    photoCount > 0
-      ? [
-          ` There are ${frames} of me on NeverBeen, and my favourite is never the one everybody keeps.`,
-          ` My album on the site has ${frames} in it — pick the wrong favourite and we will argue about it.`,
-        ]
-      : ['', ''];
-  return [
-    `Home: ${home}. My day: ${daily}.${album[0]}`,
-    `Where I come from: ${home}. Where I am tonight: ${daily}.`,
-    `${upper(home)} — that is home. ${upper(daily)} — that is my day.${album[1]}`,
-    `At home, ${home}. Here, ${daily}.`,
-    `${upper(home)} — home. And today: ${daily}.`,
-  ];
+export function homeLifeLine(options: { voice: ChatVoice; seed: string }): string {
+  const flavour = COUNTRY_FLAVOURS[options.voice.country.trim().toLowerCase()] ?? GLOBAL_FLAVOUR;
+  const everyday = pickFrom(
+    [...flavour.home, ...flavour.daily],
+    `${options.seed}|everyday`,
+  );
+  return pickFrom(
+    [
+      `Something I was thinking about just now: ${everyday}. It is the small things that make a place, isn't it.`,
+      `Home is what I miss at odd hours — ${everyday}. You would have to be there for a week to understand it.`,
+      `One small thing about my ordinary life, since you are still here: ${everyday}. That is what an evening looks like on my side.`,
+    ],
+    `${options.seed}|home-life`,
+  );
 }
 
 const GLOBAL_FLAVOUR: CountryFlavour = {
@@ -1595,14 +1658,19 @@ const GLOBAL_FLAVOUR: CountryFlavour = {
 };
 
 /**
- * F — the opening she sends the moment the form is filled: four or five messages that could only
- * come from a woman of her age in her country. She greets the visitor by name the way her own people
- * do it, lays out who she is and where home is, says how old she is, what her part of the world is
- * like at that hour, and then asks them something of her own.
+ * F — the opening she sends the moment the form is filled: four or five messages of a woman who
+ * would rather be talked to than described. She greets the visitor by first name, says who she is
+ * and that the whole of her lives inside NeverBeen, lets her own way of talking stand in for a
+ * description of herself, and asks them something of her own.
+ *
+ * C — nothing she was not asked for is volunteered: not her age, not her city, not her country, and
+ * certainly not how many photographs or videos she has. Those are answers, and they arrive when the
+ * visitor asks a question; her introduction keeps the hello, her name, her voice and her question
+ * back, and nothing more.
  *
  * `seed` is what makes the welcome new every time: the window passes the moment this session's form
  * was filled in, so the same model says hello differently in every chat, while two models never
- * sound alike — her country, her age and her own album decide the rest. Without a seed the
+ * sound alike — her cadence, her emoji and her own idiom decide the rest. Without a seed the
  * introduction is the model's own, unchanged from session to session, which is what the tests and
  * the studio's own transcripts use.
  *
@@ -1622,23 +1690,18 @@ export function voiceIntroduction(
   const key = seed ? `${base}|${seed}` : base;
   const flavour = COUNTRY_FLAVOURS[voice.country.trim().toLowerCase()] ?? GLOBAL_FLAVOUR;
   const who = firstName || 'you';
-  const place = [persona.city, persona.country].filter(Boolean).join(', ');
 
+  // C — her card carries her name and the name the studio files her under, and stops there. Forming
+  // a sentence around her city, her age and the size of her album is the visitor's to ask for.
   const card = pickFrom(
-    welcomeCardLines({ name: persona.name, handle: persona.handle, age: persona.age, place }),
+    welcomeCardLines({ name: persona.name, handle: persona.handle }),
     `${key}|card`,
   );
   // Her card, then where the whole of her lives — one message, two different orders of the facts.
   const form = pickFrom(WELCOME_FORMS, `${key}|form`);
-  const band = pickFrom(WELCOME_AGE_LINES[voice.band], `${key}|band`);
-  const home = pickFrom(
-    welcomeHomeLines(
-      pickFrom(flavour.home, `${key}|home-place`),
-      pickFrom(flavour.daily, `${key}|home-day`),
-      persona.photoCount,
-    ),
-    `${key}|home`,
-  );
+  // Who she is comes through in how she talks, never in a number she has not been asked about.
+  const tone = pickFrom(WELCOME_TONE_LINES[voice.band], `${key}|tone`);
+  const day = pickFrom(WELCOME_DAY_LINES, `${key}|day`);
   // Her question back is the visitor's name first — "Rahul, what is your chai count for the day?" —
   // so a country question that opens with "and" is not left as one.
   const asked = pickFrom(flavour.question, `${key}|ask`);
@@ -1657,14 +1720,12 @@ export function voiceIntroduction(
     `${key}|wish`,
   );
   const introduction = `${wish} ${card} ${form}`;
-  // Her age and her corner of the world come in whichever order the session feels like: a welcome
-  // that opens on the weather is a different welcome from one that opens on her own generation.
-  const middle = roll(`${key}|order`, 0.5) ? [home, band] : [band, home];
-  // A reserved woman of a certain age sends four; everyone else sends the full five.
+  // A reserved woman of a certain age says her four and stops; everybody else takes one more breath
+  // about her own evening. Nothing in either list is a fact about where she is or how old she is.
   const intro =
     voice.band === 'senior' && voice.expressiveness < 0.7
-      ? [hello, introduction, home, question]
-      : [hello, introduction, ...middle, question];
+      ? [hello, introduction, tone, question]
+      : [hello, introduction, tone, day, question];
 
   return intro.map((line, index) => garnishIntroLine(line, voice, `${key}|${index}`, index));
 }

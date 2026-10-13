@@ -1,10 +1,11 @@
 /**
- * K — the card that closes a chat: how long the two of them spent together, what they did with the
- * time, and what she honestly thought of it.
+ * K — the report that closes a chat: how long the two of them spent together, what they did with the
+ * time, and what she honestly thought of it — with, in `buildChatFeedbackFacts()`, the numbers the
+ * visitor's own side of the close form needs (requirement E).
  *
  * Everything here is derived from the session itself — its length, its transcript, the language
  * warnings, the photographs that were exchanged, what they kept talking about — so no two sessions
- * end with the same card. `chat-session-summary.*` draws it.
+ * close with the same card. `chat-feedback.*` draws it.
  */
 import { AiModelProfile } from '../ai-model-data';
 import { chatPersona } from './chat-knowledge';
@@ -50,9 +51,19 @@ function headlineFor(options: {
   messages: number;
   rating: number;
   sheEnded: boolean;
+  closed: AiChatSession['closed'];
   seed: string;
 }): string {
-  const { messages, rating, sheEnded, seed } = options;
+  const { messages, rating, sheEnded, closed, seed } = options;
+  if (closed === 'inactive') {
+    return seededPick(
+      [
+        'You went quiet, so I closed the window myself.',
+        'I ended this one — three silent minutes is a long time in a chat.',
+      ],
+      seed,
+    );
+  }
   if (sheEnded) {
     return seededPick(
       ['I ended that one early.', 'That conversation did not deserve more of my evening.'],
@@ -87,14 +98,20 @@ function experienceFor(options: {
   minutes: number;
   photos: number;
   sheEnded: boolean;
+  /** Why the session closed, when it closed: `blocked`, `inactive` or the two-hour timeout. */
+  closed: AiChatSession['closed'];
   strikes: number;
   seed: string;
 }): string {
-  const { behaviour, model, minutes, photos, sheEnded, strikes, seed } = options;
+  const { behaviour, model, minutes, photos, sheEnded, closed, strikes, seed } = options;
   const first = model.name.split(' ')[0];
   const parts: string[] = [];
 
-  if (sheEnded) {
+  if (closed === 'inactive') {
+    parts.push(
+      'I closed this one myself. Three quiet minutes is an answer, and I would rather end a chat politely than keep talking at a window nobody is standing at — no offence taken, and none meant.',
+    );
+  } else if (sheEnded) {
     parts.push(
       'You came in sharp and I closed the door — I do that, and I do not apologise for it. That is the rule of my window and it stays.',
     );
@@ -145,6 +162,57 @@ function experienceFor(options: {
   return parts.join(' ');
 }
 
+/**
+ * E — the numbers the close form is built on: how long the two of them had together, how many
+ * messages went back and forth and how many of them were whose, and the photographs that were
+ * shared between them. Everything is counted from the transcript itself, so the form can never
+ * disagree with what the visitor just read.
+ */
+export interface ChatFeedbackFacts {
+  /** The phrase the form shows: `42 minutes`, `1 hour 12 minutes`. */
+  together: string;
+  /** Every message the two of them exchanged — the studio's notices are not messages. */
+  total: number;
+  /** Their messages, and hers. */
+  yours: number;
+  hers: number;
+  /** Photographs shared between the two of them, and the split across the two sides. */
+  photos: number;
+  herPhotos: number;
+  yourPhotos: number;
+  /** K — her own report of the session, kept inside the form as her note. */
+  summary: ChatSessionSummary;
+}
+
+/** E — the counts and the duration of one finished session, from the session itself. */
+export function buildChatFeedbackFacts(options: {
+  model: AiModelProfile;
+  session: AiChatSession;
+  now?: number;
+}): ChatFeedbackFacts {
+  const summary = buildChatSessionSummary(options);
+  const messages = options.session.messages.filter((message) => message.kind === 'message');
+  const yours = messages.filter((message) => message.author === 'user').length;
+  const hers = messages.filter((message) => message.author === 'model').length;
+  const photosOf = (author: 'user' | 'model'): number =>
+    messages.filter(
+      (message) => message.author === author && message.attachment?.kind === 'photo',
+    ).length;
+  const herPhotos = photosOf('model');
+  const yourPhotos = photosOf('user');
+
+  return {
+    together: summary.together,
+    total: yours + hers,
+    yours,
+    hers,
+    photos: herPhotos + yourPhotos,
+    herPhotos,
+    yourPhotos,
+    summary,
+  };
+}
+
 /** K — her card about the session, from the session itself. */
 export function buildChatSessionSummary(options: {
   model: AiModelProfile;
@@ -160,7 +228,9 @@ export function buildChatSessionSummary(options: {
   const photos = session.messages.filter(
     (message: AiChatMessage) => message.attachment?.kind === 'photo',
   ).length;
-  const sheEnded = session.closed === 'blocked';
+  // She is the one who ended it when she closed it herself — for a rude visitor, or for a visitor
+  // who stopped answering (requirement D). The two-hour timeout is the clock, not her.
+  const sheEnded = session.closed === 'blocked' || session.closed === 'inactive';
 
   const rating = sheEnded
     ? 1
@@ -192,13 +262,20 @@ export function buildChatSessionSummary(options: {
     together: formatTogether(elapsed),
     messages: behaviour.messages,
     photos,
-    headline: headlineFor({ messages: behaviour.messages, rating, sheEnded, seed }),
+    headline: headlineFor({
+      messages: behaviour.messages,
+      rating,
+      sheEnded,
+      closed: session.closed,
+      seed,
+    }),
     experience: experienceFor({
       behaviour,
       model,
       minutes,
       photos,
       sheEnded,
+      closed: session.closed,
       strikes: session.strikes,
       seed,
     }),

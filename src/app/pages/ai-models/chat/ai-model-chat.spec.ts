@@ -141,6 +141,9 @@ describe('AiModelChatDialog', () => {
     close.click();
     harness.fixture.detectChanges();
     expect(closed.length).toBe(1);
+    // E — nothing has been said yet, so there is no chat to ask about: the window simply goes.
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
+    expect(harness.chat.openSlug()).toBeNull();
   });
 
   it('offers the camera, a photograph and a document next to the composer', async () => {
@@ -362,27 +365,56 @@ describe('AiModelChatDialog', () => {
     expect(bubble.querySelector('.chat-bubble-file')?.textContent).toContain('creative-brief.pdf');
   });
 
-  it('closes the window on Escape and on the backdrop', async () => {
+  it('asks before a window that has started goes: Escape, the backdrop and ✕ all open the close form (requirement E)', async () => {
     const harness = await openChat();
     const closes: number[] = [];
     harness.fixture.componentInstance.closed.subscribe(() => closes.push(1));
 
+    // Escape — a chat that has started is asked about before the window goes.
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
+    expect(closes.length).toBe(0);
+    expect(harness.chat.openSlug()).toBe(alisha.slug);
+
+    // The Close button at the end of the form is the way out — for the form and the window with it.
+    harness.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
     harness.fixture.detectChanges();
     expect(closes.length).toBe(1);
     expect(harness.chat.openSlug()).toBeNull();
 
+    // ✕ — the same question, the same answer.
     const second = await openChat();
-    const backdrop = second.element.querySelector('.chat-backdrop')!;
-    backdrop.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    second.element.querySelector<HTMLButtonElement>('.chat-close')!.click();
+    second.fixture.detectChanges();
+    expect(second.element.querySelector('app-chat-feedback')).not.toBeNull();
+    second.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
     second.fixture.detectChanges();
     expect(second.chat.openSlug()).toBeNull();
+
+    // The backdrop — and there is nothing to answer with, so the form closes on its Close button
+    // and the window behind it closes too.
+    const third = await openChat();
+    third.element
+      .querySelector('.chat-backdrop')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    third.fixture.detectChanges();
+    expect(third.element.querySelector('app-chat-feedback')).not.toBeNull();
+    third.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
+    third.fixture.detectChanges();
+    expect(third.chat.openSlug()).toBeNull();
   });
 
   it('shows the ultra-modern reminder in the middle of the chat when fifteen minutes are left', async () => {
     vi.useFakeTimers();
     const harness = await openChat();
-    vi.advanceTimersByTime(105 * 60 * 1000 + 1000);
+    // D — the visitor is still in the window, writing every couple of minutes, so the session keeps
+    // its two hours and the reminders come round as they always did.
+    for (let passed = 0; passed < 104; passed += 2) {
+      vi.advanceTimersByTime(2 * 60 * 1000);
+      await harness.chat.sendMessage(alisha, 'Still here, tell me something');
+    }
+    vi.advanceTimersByTime(60 * 1000 + 1000);
     harness.fixture.detectChanges();
 
     const reminder = harness.element.querySelector('.chat-reminder');
@@ -450,6 +482,103 @@ describe('AiModelChatDialog', () => {
     );
   });
 
+  it('asks for feedback when the visitor closes the window, and waits for their Close button (requirements E and F)', async () => {
+    vi.useFakeTimers();
+    const harness = await openChat(alisha, { identify: false });
+    harness.chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    harness.fixture.detectChanges();
+    await harness.chat.sendMessage(alisha, 'Hello there');
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
+
+    // ✕ — the visitor is leaving a chat that has started, so the form comes up first and the window
+    // waits behind it.
+    harness.element.querySelector<HTMLButtonElement>('.chat-close')!.click();
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
+    expect(harness.chat.openSlug()).toBe(alisha.slug);
+
+    // F — the form is a form, not a toast: seven seconds used to close the whole window, and a
+    // minute of clock now changes nothing at all.
+    vi.advanceTimersByTime(60_000);
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
+    expect(harness.chat.openSlug()).toBe(alisha.slug);
+
+    // E — both of them in one frame, and the numbers of the session underneath.
+    const form = harness.element.querySelector('app-chat-feedback')!;
+    expect(form.querySelectorAll('.feedback-face img')).toHaveLength(2);
+    const copy = form.textContent ?? '';
+    expect(copy).toContain('Alisha Bhattacharya');
+    expect(copy).toContain(VISITOR_NAME);
+    expect(copy).toContain('together');
+    expect(copy).not.toContain('02:00:00');
+    const stats = Array.from(form.querySelectorAll('.feedback-stats li')).map(
+      (tile) => tile.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+    );
+    expect(stats).toHaveLength(4);
+    expect(stats[0]).toContain('messages exchanged');
+    expect(stats[1]).toContain('your messages');
+    expect(stats[2]).toContain('her messages');
+    expect(stats[3]).toContain('photographs shared');
+    expect(form.querySelectorAll('.feedback-star')).toHaveLength(5);
+
+    // E — four stars and a sentence, then the Close button at the end of the form.
+    form.querySelectorAll<HTMLButtonElement>('.feedback-star')[3].click();
+    harness.fixture.detectChanges();
+    expect(form.querySelectorAll('.feedback-star.is-lit')).toHaveLength(4);
+    const box = form.querySelector<HTMLTextAreaElement>('.feedback-comments-box')!;
+    box.value = 'A lovely chat — she was kind.';
+    box.dispatchEvent(new Event('input'));
+    form.querySelector<HTMLButtonElement>('.feedback-close')!.click();
+    harness.fixture.detectChanges();
+
+    expect(harness.chat.feedbackFor(alisha.slug)).toMatchObject({
+      rating: 4,
+      comments: 'A lovely chat — she was kind.',
+    });
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
+    expect(harness.chat.openSlug()).toBeNull();
+  });
+
+  it('brings the same form up when she ends the chat herself, and leaves the ended window behind it (requirements D, E and F)', async () => {
+    vi.useFakeTimers();
+    const harness = await openChat(alisha, { identify: false });
+    harness.chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
+
+    // Three quiet minutes: the visitor is not coming back, and she says so and closes the session.
+    vi.advanceTimersByTime(3 * 60 * 1000 + 1_000);
+    harness.fixture.detectChanges();
+
+    expect(harness.chat.session()?.closed).toBe('inactive');
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
+    const copy = harness.element.textContent ?? '';
+    expect(copy).toContain('three quiet minutes');
+    // Her goodbye is in the conversation behind the form: her own words, in her own bubble.
+    const goodbye = harness.chat
+      .session()!
+      .messages.find((message) => message.intent === 'goodbye');
+    expect(goodbye?.text.length ?? 0).toBeGreaterThan(40);
+    expect(harness.element.querySelector('.chat-messages')?.textContent).toContain(
+      goodbye!.text.slice(0, 24),
+    );
+
+    // F — and it is still there a minute later: only the Close button ends it.
+    vi.advanceTimersByTime(60_000);
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
+
+    harness.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
+    harness.fixture.detectChanges();
+    // The window she ended stays where it is, with her goodbye and the way to start again.
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
+    expect(harness.chat.openSlug()).toBe(alisha.slug);
+    expect(harness.element.querySelector('.chat-ended')?.textContent).toContain('gone quiet');
+    expect(harness.element.querySelector('.chat-ended-button')).not.toBeNull();
+  });
+
   it('answers a visitor who opened the window from the page, without a session being prepared for it', async () => {
     // Regression: the pages only set their own signal, so the window has to open its own session —
     // otherwise nothing could be sent and she never answered.
@@ -506,12 +635,16 @@ describe('AiModelChatDialog', () => {
     );
     expect(harness.element.querySelector('.chat-composer')).toBeNull();
 
-    // K — the session report comes up over the window, and it can be put away.
-    expect(harness.element.querySelector('app-chat-session-summary')).not.toBeNull();
+    // E, F and K — the close form comes up over the window with her own note folded inside it, and
+    // the visitor's Close button is what puts it away.
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
     expect(harness.element.textContent).toContain('spent');
-    harness.element.querySelector<HTMLButtonElement>('.farewell-close')!.click();
+    expect(harness.element.querySelector('.feedback-note blockquote')?.textContent?.length).toBeGreaterThan(
+      40,
+    );
+    harness.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
     harness.fixture.detectChanges();
-    expect(harness.element.querySelector('app-chat-session-summary')).toBeNull();
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
 
     harness.element.querySelector<HTMLButtonElement>('.chat-ended-button')!.click();
     await vi.waitFor(() => {
