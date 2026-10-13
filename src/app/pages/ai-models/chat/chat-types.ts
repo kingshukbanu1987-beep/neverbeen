@@ -4,6 +4,7 @@
  * moderation layer (`chat-moderation.ts`) and the session service
  * (`src/app/services/ai-model-chat.service.ts`).
  */
+import type { ChatPersonalMemory } from './chat-personal-memory';
 import { ChatIdentity } from './chat-identity';
 import type { RomanisedLanguageCode } from './chat-language';
 
@@ -119,7 +120,7 @@ export interface AiChatMessage {
 }
 
 /** Why a chat session can no longer be written to. */
-export type AiChatClosedReason = '' | 'timeout' | 'blocked' | 'inactive' | 'restarted';
+export type AiChatClosedReason = '' | 'timeout' | 'blocked' | 'inactive' | 'restarted' | 'visitor';
 
 /** What the visitor thought of the chat, given in the close form (requirement E). */
 export interface AiChatFeedback {
@@ -133,6 +134,8 @@ export interface AiChatFeedback {
 
 /** One visit's chat with one model: at most two hours, and never more than one at a time. */
 export interface AiChatSession {
+  /** Personal answers remembered only for this conversation. */
+  personalMemory?: ChatPersonalMemory;
   slug: string;
   /**
    * Who she is talking to (requirement A) — their name and the photograph beside their messages.

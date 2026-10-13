@@ -20,6 +20,7 @@ export interface ChatSearchResult {
 /** What the chat window posts to the endpoint. */
 export interface ChatRequestPayload {
   /** The visitor she is talking to (requirement A) — her answers use the first name. */
+  personal?: { answers?: Record<string, string>; nextTopic?: string };
   user?: { name?: string; firstName?: string };
   /** True on the turn that opens the window, so she greets them first (requirement H). */
   opening?: boolean;
@@ -49,6 +50,7 @@ export interface ChatTurnReading {
 }
 
 export interface ChatTurn {
+  personal?: { answers: Record<string, string>; nextTopic: string };
   user: { name: string; firstName: string };
   opening: boolean;
   reading: ChatTurnReading | null;
@@ -84,3 +86,8 @@ export declare function createAiChatResponse(options: {
   env: Record<string, string | undefined>;
   fetchImpl?: typeof fetch;
 }): Promise<Response>;
+
+export declare function cleanPersonalMemory(value: unknown): {
+  answers: Record<string, string>;
+  nextTopic: string;
+};

@@ -1,8 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { aiModelProfiles } from '../ai-model-data';
+import {
+  CHAT_FACE_DETECTOR,
+  CHAT_NO_FACE_ERROR,
+  CHAT_FACE_CHECK_ERROR,
+} from './chat-face-detection';
 import { ChatIdentity } from './chat-identity';
 import { ChatIdentityPrompt } from './chat-identity-prompt';
+
+const detectFace = vi.fn<(dataUrl: string) => Promise<boolean>>();
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
 
@@ -52,7 +59,11 @@ function start(harness: Harness): HTMLButtonElement {
 
 describe('ChatIdentityPrompt', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [ChatIdentityPrompt] }).compileComponents();
+    detectFace.mockReset().mockResolvedValue(true);
+    await TestBed.configureTestingModule({
+      imports: [ChatIdentityPrompt],
+      providers: [{ provide: CHAT_FACE_DETECTOR, useValue: detectFace }],
+    }).compileComponents();
   });
 
   it('has a ✕ that closes the form without confirming anything', async () => {
@@ -128,6 +139,68 @@ describe('ChatIdentityPrompt', () => {
 
     await pickPhoto(harness, PHOTO, 1);
     expect(harness.element.querySelector('.gate-photo img')).not.toBeNull();
+  });
+
+  it('rejects a faceless replacement and removes the previously valid avatar', async () => {
+    const harness = await form();
+    typeName(harness, 'Rahul Verma');
+    await pickPhoto(harness, PHOTO);
+    expect(start(harness).disabled).toBe(false);
+    detectFace.mockResolvedValueOnce(false);
+    await pickPhoto(harness, PHOTO);
+    expect(harness.element.querySelector('.gate-problem')?.textContent).toBe(CHAT_NO_FACE_ERROR);
+    expect(harness.element.querySelector('.gate-photo img')).toBeNull();
+    expect(start(harness).disabled).toBe(true);
+    expect(harness.confirmed).toEqual([]);
+    await pickPhoto(harness, PHOTO, 1);
+    expect(start(harness).disabled).toBe(false);
+  });
+
+  it('fails closed when detection is unavailable and permits a retry', async () => {
+    const harness = await form();
+    typeName(harness, 'Rahul Verma');
+    detectFace.mockRejectedValueOnce(new Error('offline'));
+    await pickPhoto(harness, PHOTO);
+    expect(harness.element.querySelector('.gate-problem')?.textContent).toBe(CHAT_FACE_CHECK_ERROR);
+    expect(start(harness).disabled).toBe(true);
+    await pickPhoto(harness, PHOTO);
+    expect(start(harness).disabled).toBe(false);
+  });
+
+  it('blocks Enter while verification is pending', async () => {
+    const harness = await form();
+    typeName(harness, 'Rahul Verma');
+    let resolve!: (value: boolean) => void;
+    detectFace.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done;
+        }),
+    );
+    const input = harness.element.querySelector<HTMLInputElement>('.gate-file')!;
+    Object.defineProperty(input, 'files', { value: [PHOTO], configurable: true });
+    input.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(resolve).toBeDefined());
+    harness.element
+      .querySelector<HTMLInputElement>('.gate-field input')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    harness.fixture.detectChanges();
+    expect(start(harness).disabled).toBe(true);
+    expect(harness.confirmed).toEqual([]);
+    resolve(true);
+    await vi.waitFor(() => {
+      harness.fixture.detectChanges();
+      expect(start(harness).disabled).toBe(false);
+    });
+  });
+
+  it('shows a relative error for offensive or sexual names', async () => {
+    const harness = await form();
+    typeName(harness, 'f*ck');
+    expect(harness.element.querySelector('.gate-help')?.textContent).toContain('offensive');
+    typeName(harness, 'porn');
+    expect(harness.element.querySelector('.gate-help')?.textContent).toContain('sexual');
+    expect(start(harness).disabled).toBe(true);
   });
 
   it('refuses anything that is not a picture, and asks again for one it does not have', async () => {

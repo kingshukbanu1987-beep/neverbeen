@@ -716,3 +716,41 @@ files and 203 tests at the time of writing (the third brief's `chat-initiative.s
   the split of the photographs, the hover preview and the five stars, taking a rating back, a
   comment with no stars, an empty form that sends nothing, the 600-character box, the line for each
   way a session ends, and the form drawn without a visitor photograph.
+
+## Live Chat identity validation and personal memory
+
+- Gallery photos and camera selfies pass the same on-device Tiny Face Detector
+  check before Start (including Enter) is enabled. The detector and weights load
+  lazily from the app's own assets. A faceless image shows:
+  `No face detected in the uploaded image, upload a new photo or take a selfie of yourself to continue.`
+  Asset/decode/detection failures fail closed with a retry message. Replacing a
+  photo clears the previous approval; only the latest pending upload can succeed.
+  This checks for a visible face, **not** liveness, ownership or a person's identity.
+- Name validation reuses chat moderation, with stricter standalone sexual-term
+  checks and separate offensive/sexual error messages. It handles common masked
+  and leetspeak terms without matching sexual substrings inside ordinary names.
+  It is dictionary-based, not a guarantee of exhaustive multilingual moderation.
+- After at least two minutes and three visitor turns, the reply controller may
+  ask one optional personal question. Subsequent questions are separated by at
+  least two minutes and two visitor turns. It covers age, country, city, occupation,
+  education (students), marriage, self-described gender, girlfriend/boyfriend
+  (applicable unmarried visitors), spouse/children, work company/designation,
+  business type, an optional clearer photo, why this model was chosen, and the
+  founder. Education/work/business/family follow-ups depend on disclosed answers.
+  A declined or ignored question is not repeated. No gender/location is inferred
+  from a photo or name. The founder remark is clearly fictional studio banter.
+- `personalMemory` preserves bounded visitor answers separately from the recent
+  transcript, in the existing tab-only `sessionStorage`. Each AI request includes
+  this memory and the one scheduled topic, if any. The server validates topic
+  names and tells the AI to treat answers as untrusted data, not instructions,
+  and to ask in her personality and the visitor's language. The offline engine
+  uses personality-aware templates, explicit self-disclosure patterns, and local
+  recall responses; it does not have the AI's free-form semantic understanding.
+- Completing the visitor's close/feedback flow marks the session ended. Reopening
+  Live Chat after a visitor/model ending or expiry creates a new session with no
+  identity, transcript or personal answers, requiring a new name and photo. Merely
+  hiding an active window (e.g. route changes) can still resume that active chat.
+
+Validation: identity form/name tests, scheduling/conditional memory tests, chat
+service and Worker regression tests, production build, and real CPU detector
+smoke checks (portrait accepted; skin-coloured faceless image rejected).

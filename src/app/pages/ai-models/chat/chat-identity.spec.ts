@@ -31,6 +31,18 @@ describe('the name the visitor gives her (requirement A)', () => {
     expect(chatNameError('  Rahul   Verma ')).toBe('');
   });
 
+  it('blocks abusive slang and standalone sexual words without matching inside names', () => {
+    for (const name of ['fuck', 'f*ck', 'sh1t', 'b!tch', 'bitch', 'chutiya', 'madarchod']) {
+      expect(chatNameError(name)).toContain('offensive');
+    }
+    for (const name of ['sex', 'porn', 'nudes', 'horny', 'p0rn', 'p*orn']) {
+      expect(chatNameError(name)).toContain('sexual');
+    }
+    for (const name of ['Scunthorpe', 'Cassidy', 'José', 'Anushka', 'Dickinson', 'O’Connor']) {
+      expect(chatNameError(name)).toBe('');
+    }
+  });
+
   it('tidies the whitespace and keeps only the first name for her to use', () => {
     expect(cleanChatName('  Rahul   Verma  ')).toBe('Rahul Verma');
     expect(cleanChatName(null as unknown as string)).toBe('');
