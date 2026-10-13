@@ -477,6 +477,171 @@ describe('her camera Worker entry', () => {
   });
 });
 
+describe('the livechatselfiesandphotos Worker entry', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const LIVE_BODY = {
+    model: {
+      slug: 'alisha-bhattacharya',
+      name: 'Alisha Bhattacharya',
+      handle: '@alisha.bhattacharya',
+      location: 'Darjeeling, India',
+      age: '24',
+    },
+    moment: { place: 'in my room, the lamp is on', flaw: 'no filter, this is the real thing' },
+    look: '24 years old, living in Darjeeling, in the middle of an ordinary evening at home',
+    timezone: 'Asia/Kolkata',
+    seed: 'msg-1|5',
+    reference: 'data:image/jpeg;base64,AAAA',
+  };
+
+  /** Stubs Gemini's image model: one small PNG per call, and the bodies it was sent. */
+  function stubGeminiImages() {
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(String(input)).toContain(
+        `${GEMINI_URL}/${GEMINI_DEFAULT_IMAGE_MODEL}:generateContent`,
+      );
+      bodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            { content: { parts: [{ inlineData: { mimeType: 'image/png', data: 'QUJD' } }] } },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+    return bodies;
+  }
+
+  it('generates two fresh photographs of her, stamped with her own hour and the watermark', async () => {
+    const bodies = stubGeminiImages();
+
+    const response = await call(postLiveSelfies(LIVE_BODY), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+      LIVECHAT_PHONE_WATERMARK: 'Shot on Pixel 12 Pro',
+    });
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as Record<string, unknown>;
+    expect(payload['ok']).toBe(true);
+    expect(payload['provider']).toBe('gemini');
+    expect(payload['images']).toEqual(['data:image/png;base64,QUJD', 'data:image/png;base64,QUJD']);
+    expect(payload['count']).toBe(2);
+    expect(payload['watermark']).toBe('Shot on Pixel 12 Pro');
+    // Her own clock: the stamp is read in the model's time zone, not the visitor's.
+    expect(payload['timezone']).toBe('Asia/Kolkata');
+    expect(String(payload['timestamp'])).toMatch(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/);
+    expect(String(payload['place']).length).toBeGreaterThan(10);
+
+    // One Gemini call per pose — two photographs, same outfit and ambience, different poses.
+    expect(bodies).toHaveLength(2);
+    const prompts = bodies.map((body) =>
+      String((body['contents'] as Record<string, unknown>[])[0]['text'] ?? '') +
+      JSON.stringify((body['contents'] as Record<string, unknown>[])[0]['parts']),
+    );
+    for (const prompt of prompts) {
+      expect(prompt).toContain('Alisha Bhattacharya');
+      expect(prompt).toContain('Darjeeling');
+      expect(prompt).toContain('Shot on Pixel 12 Pro');
+      expect(prompt).toContain('AAAA');
+    }
+    expect(prompts[0]).not.toBe(prompts[1]);
+  });
+
+  it('says so when the studio has no key, when the request has no likeness, and for GET', async () => {
+    vi.stubGlobal('fetch', async () => {
+      throw new Error('nothing may be called out without a key');
+    });
+
+    const unconfigured = await call(postLiveSelfies(LIVE_BODY, '2030:db8::61'), {
+      ASSETS: ENV.ASSETS,
+    });
+    expect(unconfigured.status).toBe(503);
+    expect(((await unconfigured.json()) as Record<string, unknown>)['error']).toBe(
+      'selfies-unavailable',
+    );
+
+    const noReference = await call(postLiveSelfies({ ...LIVE_BODY, reference: '' }, '2030:db8::62'), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+    });
+    expect(noReference.status).toBe(400);
+    expect(((await noReference.json()) as Record<string, unknown>)['error']).toBe(
+      'reference-required',
+    );
+
+    const wrongMethod = await call(new Request(`${ORIGIN}/api/livechatselfiesandphotos`));
+    expect(wrongMethod.status).toBe(405);
+  });
+
+  it('answers 502 when the image model refuses with words, or when it cannot be reached', async () => {
+    vi.stubGlobal('fetch', async () =>
+      new Response(
+        JSON.stringify({ candidates: [{ content: { parts: [{ text: 'I cannot do that.' }] } }] }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
+    const refused = await call(postLiveSelfies(LIVE_BODY, '2030:db8::63'), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+    });
+    expect(refused.status).toBe(502);
+    expect(((await refused.json()) as Record<string, unknown>)['error']).toBe('selfies-refused');
+
+    vi.stubGlobal('fetch', async () => new Response('nope', { status: 500 }));
+    const failed = await call(postLiveSelfies(LIVE_BODY, '2030:db8::64'), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+    });
+    expect(failed.status).toBe(502);
+    expect(((await failed.json()) as Record<string, unknown>)['error']).toBe('selfies-failed');
+  });
+
+  it('still answers with the photographs that arrived when one of the two poses fails', async () => {
+    let calls = 0;
+    vi.stubGlobal('fetch', async () => {
+      calls += 1;
+      if (calls === 1) return new Response('nope', { status: 500 });
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            { content: { parts: [{ inlineData: { mimeType: 'image/png', data: 'QUJD' } }] } },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+
+    const response = await call(postLiveSelfies(LIVE_BODY, '2030:db8::65'), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+    });
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as Record<string, unknown>;
+    expect(payload['images']).toEqual(['data:image/png;base64,QUJD']);
+    expect(payload['count']).toBe(1);
+  });
+
+  it('throttles a single client that hammers the service — two images make it the strictest', async () => {
+    stubGeminiImages();
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 9; attempt += 1) {
+      const response = await call(postLiveSelfies(LIVE_BODY, '198.51.100.77'), {
+        ASSETS: ENV.ASSETS,
+        GEMINI_API_KEY: 'k',
+      });
+      statuses.push(response.status);
+      await response.arrayBuffer();
+    }
+    expect(statuses.slice(0, 8)).toEqual(Array(8).fill(200));
+    expect(statuses.at(-1)).toBe(429);
+  });
+});
+
 describe('AI chat Worker entry', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

@@ -253,12 +253,19 @@ searched on Google first and the top links are shown under her answer. The same 
 reading of the visitor's message, so the studio's model answers what they meant rather than what they
 typed. Without a key the endpoint answers `503 ai-unavailable` and the window answers from her own
 engine and a built-in world file instead, so the chat always works. `GEMINI_API_KEY` adds the reading
-desk and her camera, `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the Cloud Translation API, and
+desk and her camera, and the live endpoint `POST /api/livechatselfiesandphotos`
+(`worker/livechatselfiesandphotos.mjs`) generates **two fresh photographs of her** whenever the
+visitor says "selfie" — same outfit and ambience, different poses, stamped with her own local hour
+and phone watermark, sent as browser-only bubbles. A camera that fails once only rests briefly and
+is asked again on a later request; while it rests, one of her own album frames goes out instead, so
+a visitor who asks always gets a photograph. `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the Cloud Translation API, and
 `OPENAI_MODEL`, `GEMINI_MODEL` and `GEMINI_IMAGE_MODEL` pick the models (`gpt-4o-mini`,
 `gemini-2.5-flash`, `gemini-2.5-flash-image` by default). Live Chat currently runs on
 `gemini-2.5-flash` — the Gemini key and both model variables are set in `wrangler.jsonc`'s
-`vars`. Locally the same three endpoints run from `scripts/dev-api.mjs` on port 8787 behind the
-`/api` dev proxy. Full notes and the
+`vars`, where `GEMINI_IMAGE_MODEL` must stay an **image-generation** model
+(`gemini-2.5-flash-image`): the plain flash model cannot return pictures, and every selfie would
+fall back to the album. Locally the same four endpoints run from `scripts/dev-api.mjs` on port 8787
+behind the `/api` dev proxy. Full notes and the
 requirements-to-code map: [`docs/ai-model-chat.md`](docs/ai-model-chat.md).
 
 ### Renting a model

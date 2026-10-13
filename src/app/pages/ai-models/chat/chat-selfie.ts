@@ -253,10 +253,45 @@ export interface GeneratedSelfie {
 }
 
 /**
+ * Why a camera could not answer — the reason decides how the chat service retries. A failure is a
+ * fact about **one request**, never a verdict on the whole visit: the window rests the camera that
+ * failed for a little while, sends one of her album frames for now, and asks the service again on
+ * a later request.
+ */
+export type ChatSelfieFailure =
+  /** Her likeness could not be read, or the window cannot ask at all: nothing was sent. */
+  | 'no-reference'
+  /** `503` — the studio has no image key: definitive, and both cameras share the verdict. */
+  | 'unavailable'
+  /** A timeout, a throttle, a network blip, a bad answer or a refusal: worth asking again soon. */
+  | 'transient';
+
+/** Either the photograph she took, or the reason there is none. */
+export type ChatSelfieOutcome =
+  | { ok: true; selfie: GeneratedSelfie }
+  | { ok: false; reason: ChatSelfieFailure };
+
+/**
+ * How long a camera rests after a **transient** failure — a timeout, a throttle, a network blip,
+ * a refusal — before the window asks it again. Short, so one hiccup never downgrades the rest of
+ * the visit to album frames.
+ */
+export const SELFIE_CAMERA_TRANSIENT_RETRY_MS = 30_000;
+
+/**
+ * How long **both** cameras rest after the studio has definitively said there is no image key
+ * (`503`): they read the one key, so asking the second camera right after the first would only
+ * waste a round trip. Long, so an unconfigured studio is not hammered — and short enough that a
+ * key configured mid-visit is picked up without a page reload.
+ */
+export const SELFIE_CAMERA_UNAVAILABLE_RETRY_MS = 10 * 60_000;
+
+/**
  * E — she takes the selfie now: her own photograph and the moment she is in go to the studio's
- * camera, and a new photograph comes back. Returns `null` when the studio has no image key, the
- * camera is unreachable, or the model answered with words instead of a picture — and the caller
- * then sends one of her own album frames, so the visitor always gets a photograph.
+ * camera, and a new photograph comes back. When the studio has no image key, the camera is
+ * unreachable, or the model answered with words instead of a picture, the outcome says **why**
+ * (`unavailable` or `transient`) — and the caller then sends one of her own album frames, so the
+ * visitor always gets a photograph, and asks the camera again once its short rest is over.
  */
 export async function generateChatSelfie(input: {
   model: AiModelProfile;
@@ -265,9 +300,11 @@ export async function generateChatSelfie(input: {
   /** Her profile photograph, as a data URL. Without it the camera is not asked. */
   reference: string;
   fetchImpl?: typeof fetch | null;
-}): Promise<GeneratedSelfie | null> {
+}): Promise<ChatSelfieOutcome> {
   const fetchImpl = input.fetchImpl ?? (typeof fetch === 'function' ? fetch : null);
-  if (!fetchImpl || !input.reference.startsWith('data:image/')) return null;
+  if (!fetchImpl || !input.reference.startsWith('data:image/')) {
+    return { ok: false, reason: 'no-reference' };
+  }
 
   const controller = typeof AbortController === 'function' ? new AbortController() : null;
   const timeout = controller ? setTimeout(() => controller.abort(), AI_SELFIE_TIMEOUT_MS) : null;
@@ -290,14 +327,24 @@ export async function generateChatSelfie(input: {
       }),
       signal: controller?.signal,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      // `503 selfie-unavailable` is the studio saying "no image key" — definitive. Everything
+      // else (a throttle, an upstream failure, a refusal) is transient: worth asking again soon.
+      return { ok: false, reason: response.status === 503 ? 'unavailable' : 'transient' };
+    }
 
     const payload = (await response.json()) as { image?: unknown; provider?: unknown } | null;
     const image = typeof payload?.image === 'string' ? payload.image : '';
-    if (!image.startsWith('data:image/')) return null;
-    return { image, provider: typeof payload?.provider === 'string' ? payload.provider : 'gemini' };
+    if (!image.startsWith('data:image/')) return { ok: false, reason: 'transient' };
+    return {
+      ok: true,
+      selfie: {
+        image,
+        provider: typeof payload?.provider === 'string' ? payload.provider : 'gemini',
+      },
+    };
   } catch {
-    return null;
+    return { ok: false, reason: 'transient' };
   } finally {
     if (timeout !== null) clearTimeout(timeout);
   }

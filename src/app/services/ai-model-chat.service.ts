@@ -107,6 +107,9 @@ import {
   ChatTurnReading,
 } from '../pages/ai-models/chat/chat-analysis';
 import {
+  ChatSelfieFailure,
+  SELFIE_CAMERA_TRANSIENT_RETRY_MS,
+  SELFIE_CAMERA_UNAVAILABLE_RETRY_MS,
   generateChatSelfie,
   pickChatSelfie,
   pickSelfieMoment,
@@ -214,8 +217,21 @@ export class AiModelChatService {
    */
   readonly readDeskUnavailable = signal(false);
 
-  /** True once her camera has said it cannot take a selfie — her album answers after that. */
+  /**
+   * True while **both** of her cameras are resting after a failure — for that while her album
+   * answers instead. A failed request rests the camera that failed for a little while; it never
+   * decides the rest of the visit (see `restCameras`).
+   */
   readonly selfieCameraUnavailable = signal(false);
+
+  /**
+   * When each camera may next be asked — `0` when it may be asked now. The two are separate
+   * services with separate throttles, so the failure of one is not a verdict on the other; they
+   * share only the studio's one image key, and a definitive "there is none" (`503`) rests them
+   * both together.
+   */
+  private liveSelfiesDownUntil = 0;
+  private selfieCameraDownUntil = 0;
 
   /** A picture or document waiting in the composer. */
   readonly draftAttachment = signal<AiChatAttachment | null>(null);
@@ -1195,8 +1211,9 @@ export class AiModelChatService {
    * E — she takes the selfie now. Her own profile photograph is fetched, downscaled and handed to
    * the studio's camera together with the moment she is in, and the photograph that comes back is
    * what the visitor sees. She is quiet for a few seconds while it is taken — a photograph is not
-   * typed. When the studio has no image key, or the camera refuses, `null` comes back and one of her
-   * album frames goes out instead.
+   * typed. When the camera is resting after a failure, or the studio has no image key, `null`
+   * comes back and one of her album frames goes out instead — and the camera is asked again once
+   * its rest is over, so a single hiccup never decides the rest of the visit.
    */
   private async takeSelfie(
     model: AiModelProfile,
@@ -1204,24 +1221,29 @@ export class AiModelChatService {
   ): Promise<string | null> {
     // Her camera is its own service: whether the reading desk answered has nothing to do with
     // whether she can take a photograph.
-    if (this.selfieCameraUnavailable()) return null;
+    this.syncSelfieCameraSignal();
+    if (this.cameraResting(this.selfieCameraDownUntil)) return null;
 
     const reference = await readSelfieReference(selfieReference(model));
     if (!reference) {
-      this.selfieCameraUnavailable.set(true);
+      // Her cover could not be read *right now* — a fetch that failed, not a camera that did:
+      // the cameras stay awake and the next request reads it again.
       return null;
     }
 
     const started = Date.now();
-    const taken = await generateChatSelfie({ model, moment, reference });
-    if (!taken) {
-      this.selfieCameraUnavailable.set(true);
+    const outcome = await generateChatSelfie({ model, moment, reference });
+    if (!outcome.ok) {
+      this.restCameras(outcome.reason, 'old');
+      this.syncSelfieCameraSignal();
       return null;
     }
 
     // The wait a person needs to aim a phone at herself, when the camera answered faster than that.
     await this.waitOutSelfiePace(started);
-    return taken.image;
+    this.selfieCameraDownUntil = 0;
+    this.syncSelfieCameraSignal();
+    return outcome.selfie.image;
   }
 
   /**
@@ -1229,29 +1251,84 @@ export class AiModelChatService {
    * is fetched as the likeness and handed to the service with the moment she is in, and two fresh
    * frames come back — same outfit, same ambience, different poses, stamped with her local
    * timestamp and the phone watermark. They live only in the browser. Returns `null` when the
-   * studio has no image key or the service cannot answer, and the chat then falls back to her old
-   * camera and finally to her album, so a visitor who asks always gets a photograph.
+   * service is resting after a failure or the studio has no image key, and the chat then falls
+   * back to her old camera and finally to her album, so a visitor who asks always gets a
+   * photograph — and the service is asked again once its short rest is over.
    */
   private async takeLiveSelfies(
     model: AiModelProfile,
     moment: { place: string; flaw: string },
     seed: string,
   ): Promise<GeneratedLiveChatSelfies | null> {
-    if (this.selfieCameraUnavailable()) return null;
+    this.syncSelfieCameraSignal();
+    if (this.cameraResting(this.liveSelfiesDownUntil)) return null;
 
     const reference = await readSelfieReference(selfieReference(model));
     if (!reference) {
-      this.selfieCameraUnavailable.set(true);
+      // Her cover could not be read *right now* — a fetch that failed, not a camera that did:
+      // the cameras stay awake and the next request reads it again.
       return null;
     }
 
     const started = Date.now();
-    const live = await generateLiveChatSelfies({ model, moment, reference, seed });
-    if (!live) return null;
+    const outcome = await generateLiveChatSelfies({ model, moment, reference, seed });
+    if (!outcome.ok) {
+      this.restCameras(outcome.reason, 'live');
+      this.syncSelfieCameraSignal();
+      return null;
+    }
 
     // The wait two frames deserve — she held the phone up twice and checked them both.
     await this.waitOutSelfiePace(started);
-    return live;
+    this.liveSelfiesDownUntil = 0;
+    this.syncSelfieCameraSignal();
+    return outcome.selfies;
+  }
+
+  /** True while a camera rests after a failure — it may be asked again once the rest is over. */
+  private cameraResting(downUntil: number): boolean {
+    return Date.now() < downUntil;
+  }
+
+  /**
+   * Rests the cameras after a failed request, by **why** it failed:
+   *
+   *   - `transient` — a timeout, a throttle, a network blip, a refusal — rests only the camera
+   *     that failed, briefly, and the very next request after the rest tries the service again;
+   *   - `unavailable` (`503`) is the studio saying there is no image key at all: both cameras
+   *     read that one key, so both rest — the second is not asked just to fail the same way —
+   *     until a key could plausibly have appeared;
+   *   - `no-reference` was her cover photograph failing to load, which is no verdict on either
+   *     camera: nothing rests, and the next request reads it again.
+   *
+   * The rest replaces the old, permanent latch: one failed request used to switch the whole
+   * visit — every model, until a page reload — over to frames from her folder.
+   */
+  private restCameras(reason: ChatSelfieFailure, which: 'live' | 'old'): void {
+    if (reason === 'no-reference') return;
+    if (reason === 'unavailable') {
+      const until = Date.now() + SELFIE_CAMERA_UNAVAILABLE_RETRY_MS;
+      this.liveSelfiesDownUntil = until;
+      this.selfieCameraDownUntil = until;
+      // Say so once, where the studio can see it: an album frame going out for a selfie is the
+      // visible half of this, and the missing key is the half that used to be invisible.
+      console.warn(
+        '[neverbeen] The selfie cameras answered "no image key" — set GEMINI_API_KEY so ' +
+          'livechatselfiesandphotos can generate photographs; album frames go out meanwhile.',
+      );
+      return;
+    }
+    const until = Date.now() + SELFIE_CAMERA_TRANSIENT_RETRY_MS;
+    if (which === 'live') this.liveSelfiesDownUntil = until;
+    else this.selfieCameraDownUntil = until;
+  }
+
+  /** Keeps `selfieCameraUnavailable` honest: true only while both cameras are resting. */
+  private syncSelfieCameraSignal(): void {
+    this.selfieCameraUnavailable.set(
+      this.cameraResting(this.liveSelfiesDownUntil) &&
+        this.cameraResting(this.selfieCameraDownUntil),
+    );
   }
 
   /** The wait a person needs to take a photograph, when it was taken faster than that. */
