@@ -46,7 +46,12 @@
           ></span>
         </div>
 
-        <button type="button" class="chat-close" (click)="requestClose()" aria-label="Close the chat">
+        <button
+          type="button"
+          class="chat-close"
+          (click)="requestClose()"
+          aria-label="Close the chat"
+        >
           ✕
         </button>
       </header>
@@ -105,7 +110,11 @@
           } @else if (message.kind === 'notice') {
             <p class="chat-notice">{{ message.text }}</p>
           } @else {
-            <div class="chat-row" [class.is-outgoing]="message.author === 'user'">
+            <div
+              class="chat-row"
+              [class.is-outgoing]="message.author === 'user'"
+              [attr.data-message-id]="message.id"
+            >
               @if (message.author === 'model') {
                 <span class="chat-row-photo">
                   @if (model().cover) {
@@ -129,6 +138,22 @@
                   [class.is-selfie]="message.attachment?.selfie === true"
                   (dblclick)="onBubbleDoubleClick(message)"
                 >
+                  <!-- The Instagram reply: the message this one answers, quoted at the top. -->
+                  @if (message.replyTo; as quoted) {
+                    <button
+                      type="button"
+                      class="chat-reply-quote"
+                      (click)="scrollToMessage(quoted.id); $event.stopPropagation()"
+                      [attr.aria-label]="'Go to the message replied from: ' + quoteAuthor(quoted)"
+                    >
+                      <span class="chat-reply-quote-bar" aria-hidden="true"></span>
+                      <span class="chat-reply-quote-copy">
+                        <b>{{ quoteAuthor(quoted) }}</b>
+                        <i>{{ quoted.text || (quoted.photo ? '📷 Photograph' : 'Message') }}</i>
+                      </span>
+                    </button>
+                  }
+
                   @if (message.attachment; as attachment) {
                     @if (attachment.kind === 'photo' && attachment.preview) {
                       <span class="chat-bubble-photo">
@@ -136,6 +161,13 @@
                         @if (attachment.selfie) {
                           <i class="chat-selfie-tag" aria-hidden="true">📱 just now</i>
                         }
+                      </span>
+                    } @else if (attachment.kind === 'photo') {
+                      <!-- A generated selfie after its session ended: the bytes are gone and the
+                           bubble stays with a quiet placeholder where the photograph was. -->
+                      <span class="chat-bubble-photo is-gone" role="status">
+                        <span aria-hidden="true">📷</span>
+                        <i>Photograph — deleted when this chat session ended</i>
                       </span>
                     } @else {
                       <span class="chat-bubble-file">
@@ -182,12 +214,21 @@
                   @if (message.reactionBy === 'model') {
                     <span class="chat-reaction-note">{{ reactionLabel(message) }}</span>
                   }
-                  @if (message.author === 'model' && !message.pending) {
+                  @if (!message.pending) {
+                    <button
+                      type="button"
+                      class="chat-reply-button"
+                      [attr.aria-expanded]="replyingTo()?.id === message.id"
+                      [attr.aria-label]="'Reply over this message'"
+                      (click)="startReply(message)"
+                    >
+                      ↩
+                    </button>
                     <button
                       type="button"
                       class="chat-react-button"
                       [attr.aria-expanded]="pickerFor() === message.id"
-                      [attr.aria-label]="'React to ' + model().name + '’s message'"
+                      [attr.aria-label]="'React to this message'"
                       (click)="toggleReactionPicker(message.id)"
                     >
                       ☺+
@@ -238,6 +279,17 @@
             </button>
           </div>
         } @else {
+          @if (replyingTo(); as quoted) {
+            <div class="chat-reply-strip" role="status">
+              <span class="chat-reply-strip-bar" aria-hidden="true"></span>
+              <span class="chat-reply-strip-copy">
+                <b>Replying to {{ quoteAuthor(quoted) }}</b>
+                <i>{{ quoted.text || (quoted.photo ? '📷 Photograph' : 'Message') }}</i>
+              </span>
+              <button type="button" (click)="cancelReply()" aria-label="Cancel the reply">✕</button>
+            </div>
+          }
+
           @if (chat.draftAttachment(); as attachment) {
             <div class="chat-draft" role="status">
               @if (attachment.kind === 'photo' && attachment.preview) {

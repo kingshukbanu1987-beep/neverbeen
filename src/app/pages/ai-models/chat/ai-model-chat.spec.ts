@@ -311,9 +311,10 @@ describe('AiModelChatDialog', () => {
     harness.element.querySelector<HTMLButtonElement>('.chat-react-button')!.click();
     harness.fixture.detectChanges();
     const tray = harness.element.querySelectorAll('.chat-reaction-option');
-    expect(tray.length).toBe(6);
+    // The seven expressions: like, dislike, love, smile, angry, cry, happy.
+    expect(tray.length).toBe(7);
 
-    harness.element.querySelectorAll<HTMLButtonElement>('.chat-reaction-option')[1].click();
+    harness.element.querySelectorAll<HTMLButtonElement>('.chat-reaction-option')[2].click();
     await vi.waitFor(() => {
       harness.fixture.detectChanges();
       const badge = harness.element.querySelector('.chat-bubble.is-incoming .chat-bubble-reaction');
@@ -341,6 +342,85 @@ describe('AiModelChatDialog', () => {
         .querySelector('.chat-bubble.is-outgoing .chat-bubble-reaction')
         ?.getAttribute('title'),
     ).toBe('Alisha reacted ❤️');
+  });
+
+  it('lets the visitor react to their own message too, and she answers with an expression', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+
+    const outgoingRow = harness.element.querySelector('.chat-row.is-outgoing')!;
+    outgoingRow.querySelector<HTMLButtonElement>('.chat-react-button')!.click();
+    harness.fixture.detectChanges();
+    const tray = outgoingRow.querySelectorAll<HTMLButtonElement>('.chat-reaction-option');
+    expect(tray.length).toBe(7);
+
+    // Smile — the fourth of the seven expressions.
+    tray[3].click();
+    await vi.waitFor(() => {
+      harness.fixture.detectChanges();
+      const badge = outgoingRow.querySelector('.chat-bubble-reaction');
+      expect(badge?.textContent?.trim()).toBe('😊');
+      expect(badge?.getAttribute('title')).toBe('You reacted 😊');
+    });
+
+    // Her answer carries the same expression back, on her most recent message.
+    const incomingBadges = Array.from(
+      harness.element.querySelectorAll('.chat-bubble.is-incoming .chat-bubble-reaction'),
+    );
+    expect(
+      incomingBadges.some((badge) => badge.getAttribute('title') === 'Alisha reacted 😊'),
+    ).toBe(true);
+  });
+
+  it('replies over a chosen message, Instagram style, and she replies over theirs', async () => {
+    const harness = await openChat();
+    await send(harness, 'Tell me about your city');
+
+    const herRow = Array.from(harness.element.querySelectorAll('.chat-row')).find(
+      (row) => !row.classList.contains('is-outgoing'),
+    )!;
+    herRow.querySelector<HTMLButtonElement>('.chat-reply-button')!.click();
+    harness.fixture.detectChanges();
+
+    const strip = harness.element.querySelector('.chat-reply-strip');
+    expect(strip?.textContent).toContain('Replying to Alisha');
+    expect(strip?.textContent?.trim().length ?? 0).toBeGreaterThan(20);
+
+    await send(harness, 'Tell me more about that');
+
+    // The visitor's bubble carries the quote of her message at its top.
+    const outgoingQuotes = Array.from(
+      harness.element.querySelectorAll('.chat-bubble.is-outgoing .chat-reply-quote'),
+    );
+    expect(outgoingQuotes.length).toBeGreaterThan(0);
+    expect(outgoingQuotes.at(-1)?.textContent).toContain('Alisha');
+
+    // …and her answer quotes the visitor's message right back.
+    const incomingQuotes = Array.from(
+      harness.element.querySelectorAll('.chat-bubble.is-incoming .chat-reply-quote'),
+    );
+    expect(incomingQuotes.length).toBeGreaterThan(0);
+    expect(incomingQuotes.at(-1)?.textContent).toContain('You');
+    expect(incomingQuotes.at(-1)?.textContent).toContain('Tell me more about that');
+  });
+
+  it('shows a quiet placeholder where a generated photograph was, once the session has ended', async () => {
+    const harness = await openChat();
+    await send(harness, 'send me a selfie please');
+
+    const session = harness.chat.sessionOf(alisha.slug)!;
+    const shot = session.messages.find((message) => message.attachment?.selfie === true)!;
+    expect(shot).toBeTruthy();
+    // As the live service's photographs are: browser-only, and dropped with the session.
+    shot.attachment = { ...shot.attachment!, ephemeral: true };
+
+    harness.chat.endVisitorSession();
+    harness.fixture.detectChanges();
+
+    expect(shot.attachment?.preview).toBe('');
+    expect(harness.element.querySelector('.chat-bubble-photo.is-gone')?.textContent).toContain(
+      'deleted when this chat session ended',
+    );
   });
 
   it('attaches a document to a message and shows it in the bubble', async () => {
@@ -645,9 +725,9 @@ describe('AiModelChatDialog', () => {
     // the visitor's Close button is what puts it away.
     expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
     expect(harness.element.textContent).toContain('spent');
-    expect(harness.element.querySelector('.feedback-note blockquote')?.textContent?.length).toBeGreaterThan(
-      40,
-    );
+    expect(
+      harness.element.querySelector('.feedback-note blockquote')?.textContent?.length,
+    ).toBeGreaterThan(40);
     harness.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
     harness.fixture.detectChanges();
     expect(harness.element.querySelector('app-chat-feedback')).toBeNull();

@@ -167,6 +167,14 @@ function postSelfie(body: unknown, ip = '2030:db8::50') {
   });
 }
 
+function postLiveSelfies(body: unknown, ip = '2030:db8::60') {
+  return new Request(`${ORIGIN}/api/livechatselfiesandphotos`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip },
+    body: JSON.stringify(body),
+  });
+}
+
 describe('the reading desk Worker entry', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

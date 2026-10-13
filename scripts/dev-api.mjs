@@ -19,6 +19,10 @@
  *   - `POST /api/ai-selfie` — her camera: Gemini's image model takes a selfie from her own profile
  *     photograph, at the moment the chat has put her in. Without a key the window sends one of her
  *     album frames instead.
+ *   - `POST /api/livechatselfiesandphotos` — the live-chat selfie and photo service: two fresh
+ *     photographs of the model (same outfit, same ambience, different poses), by her own country,
+ *     city and current local hour, stamped with her timestamp and the phone watermark. Nothing is
+ *     stored; without a key the window falls back to her album.
  *   - `POST /api/model-booking` — the booking endpoint. The portfolio form itself hands off directly
  *     to WhatsApp, so this is only for server-side integrations; the shared logic is
  *     `worker/model-booking-core.mjs` and the only difference is delivery:
@@ -54,6 +58,11 @@ import {
   MAX_SELFIE_BODY_BYTES,
   createAiSelfieResponse,
 } from '../worker/ai-selfie-core.mjs';
+import {
+  LIVE_CHAT_SELFIES_ENDPOINT,
+  MAX_LIVE_CHAT_BODY_BYTES,
+  createLiveChatSelfiesResponse,
+} from '../worker/livechatselfiesandphotos.mjs';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.env['BOOKING_API_PORT'] ?? 8787);
@@ -102,6 +111,32 @@ const server = createServer(async (request, response) => {
     const chatResponse = await createAiChatResponse({ payload: chatPayload, env: process.env });
     response.writeHead(chatResponse.status, Object.fromEntries(chatResponse.headers.entries()));
     response.end(Buffer.from(await chatResponse.arrayBuffer()));
+    return;
+  }
+
+  if (path === LIVE_CHAT_SELFIES_ENDPOINT) {
+    if ((request.method ?? 'GET').toUpperCase() !== 'POST') {
+      response.writeHead(405, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ ok: false, error: 'method-not-allowed' }));
+      return;
+    }
+
+    let body;
+    try {
+      body = JSON.parse(await readBody(request, MAX_LIVE_CHAT_BODY_BYTES));
+    } catch (error) {
+      const tooLarge = error.message === 'payload-too-large';
+      response.writeHead(tooLarge ? 413 : 400, { 'content-type': 'application/json' });
+      response.end(
+        JSON.stringify({ ok: false, error: tooLarge ? 'payload-too-large' : 'invalid-json' }),
+      );
+      return;
+    }
+
+    const liveResponse = await createLiveChatSelfiesResponse({ payload: body, env: process.env });
+    response.writeHead(liveResponse.status, Object.fromEntries(liveResponse.headers.entries()));
+    response.end(Buffer.from(await liveResponse.arrayBuffer()));
+    console.log(`[ai-models] ${LIVE_CHAT_SELFIES_ENDPOINT} → ${liveResponse.status}`);
     return;
   }
 
@@ -214,6 +249,12 @@ server.listen(port, '127.0.0.1', () => {
       (process.env['GEMINI_API_KEY']
         ? 'selfies are taken with Gemini'
         : 'no GEMINI_API_KEY, a selfie is one of her own album frames'),
+  );
+  console.log(
+    `[ai-models] Live selfies on http://127.0.0.1:${port}${LIVE_CHAT_SELFIES_ENDPOINT} — ` +
+      (process.env['GEMINI_API_KEY']
+        ? 'two fresh photographs per request (livechatselfiesandphotos)'
+        : 'no GEMINI_API_KEY, live photographs are one of her own album frames'),
   );
 });
 

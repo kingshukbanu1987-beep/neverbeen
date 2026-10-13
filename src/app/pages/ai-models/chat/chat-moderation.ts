@@ -237,7 +237,7 @@ export function chatModerationReply(
       text:
         'Careful with the language. I am happy to talk about anything, but I will not be spoken to ' +
         'like that. Ask me again properly and we will get along beautifully.',
-      reaction: 'sad',
+      reaction: 'cry',
       closes: false,
     };
   }

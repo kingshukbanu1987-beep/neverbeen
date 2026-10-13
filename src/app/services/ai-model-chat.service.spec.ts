@@ -7,6 +7,7 @@ import {
   AI_CHAT_FOLLOWUP_LIMIT,
   AI_CHAT_INTEREST_MS,
   AI_CHAT_SESSION_MS,
+  replyQuoteOf,
 } from '../pages/ai-models/chat/chat-types';
 import {
   AI_CHAT_STORAGE_KEY,
@@ -220,8 +221,8 @@ describe('AiModelChatService', () => {
     expect(last?.analysedBy).toBe('gemini');
   });
 
-  it('takes the selfie with her own photograph when the visitor asks for a selfie', async () => {
-    const selfieBodies: Record<string, unknown>[] = [];
+  it('takes two live photographs through livechatselfiesandphotos when a selfie is asked for', async () => {
+    const liveBodies: Record<string, unknown>[] = [];
     const cover = alisha.cover;
     vi.stubGlobal(
       'fetch',
@@ -231,10 +232,18 @@ describe('AiModelChatService', () => {
             status: 503,
           });
         }
-        if (url === '/api/ai-selfie') {
-          selfieBodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+        if (url === '/api/livechatselfiesandphotos') {
+          liveBodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
           return new Response(
-            JSON.stringify({ ok: true, provider: 'gemini', image: 'data:image/png;base64,QUJD' }),
+            JSON.stringify({
+              ok: true,
+              provider: 'gemini',
+              images: ['data:image/png;base64,QUJD', 'data:image/png;base64,QUJDMA=='],
+              place: 'on the terrace in the evening light in Darjeeling',
+              flaw: 'the horizon is crooked and I left it that way',
+              timestamp: '13/10/2026 18:42',
+              watermark: 'Shot on iPhone 18 Pro',
+            }),
             { status: 200, headers: { 'content-type': 'application/json' } },
           );
         }
@@ -254,23 +263,155 @@ describe('AiModelChatService', () => {
     const messages = (chat.session()?.messages ?? []).filter(
       (message) => message.author === 'model' && message.attachment?.selfie === true,
     );
-    const selfie = messages[messages.length - 1];
-    // The photograph the visitor sees is the one her camera took, not a frame from her album.
-    expect(selfie?.attachment?.preview).toBe('data:image/png;base64,QUJD');
-    expect(selfie?.attachment?.source).toBe('camera');
-    expect(selfie?.intent).toBe('selfie');
+    // Two photographs, same outfit and ambience, different poses — her response to a selfie.
+    expect(messages).toHaveLength(2);
+    expect(messages[0].attachment?.preview).toBe('data:image/png;base64,QUJD');
+    expect(messages[1].attachment?.preview).toBe('data:image/png;base64,QUJDMA==');
+    expect(messages[0].attachment?.source).toBe('camera');
+    expect(messages[0].intent).toBe('selfie');
+    // The caption says where the service actually photographed her — her own hour, her own city.
+    expect(messages[0].text).toContain('terrace in the evening light in Darjeeling');
 
-    // Her camera was given her own photograph as the likeness, and the moment she is in.
-    expect(selfieBodies.length).toBe(1);
-    expect(String(selfieBodies[0]['reference'])).toMatch(/^data:image\/jpeg;base64,/);
-    expect(
-      String((selfieBodies[0]['moment'] as Record<string, unknown>)['place']).length,
-    ).toBeGreaterThan(5);
-    expect(String(selfieBodies[0]['look'])).toContain(alisha.age);
-    // The caption says where and how it was taken — the same moment the photograph was taken in.
-    expect(selfie?.text).toContain(
-      String((selfieBodies[0]['moment'] as Record<string, unknown>)['place']),
+    // Her own photograph travelled as the likeness, together with her own time zone.
+    expect(liveBodies).toHaveLength(1);
+    expect(String(liveBodies[0]['reference'])).toMatch(/^data:image\/jpeg;base64,/);
+    expect(String(liveBodies[0]['timezone'])).toBe('Asia/Kolkata');
+    expect(String((liveBodies[0]['model'] as Record<string, unknown>)['location'])).toContain(
+      'Darjeeling',
     );
+    expect(String(liveBodies[0]['look'])).toContain(alisha.age);
+  });
+
+  it('keeps generated photographs in the browser only, and drops them when the session ends', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/ai-read') {
+          return new Response(JSON.stringify({ ok: false, error: 'analysis-unavailable' }), {
+            status: 503,
+          });
+        }
+        if (url === '/api/livechatselfiesandphotos') {
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              provider: 'gemini',
+              images: ['data:image/png;base64,LIVEONE', 'data:image/png;base64,LIVETWO'],
+              place: 'in my room, one lamp on',
+              flaw: 'grainy, my phone is old',
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        return new Response('her-photograph', {
+          status: 200,
+          headers: { 'content-type': 'image/jpeg' },
+        });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'send me a selfie');
+
+    const generated = (chat.session()?.messages ?? []).filter(
+      (message) => message.attachment?.ephemeral === true,
+    );
+    expect(generated).toHaveLength(2);
+
+    // Nothing of the photographs is ever written to storage — they live only in this browser.
+    const stored = sessionStorage.getItem(AI_CHAT_STORAGE_KEY) ?? '';
+    expect(stored).not.toContain('LIVEONE');
+    expect(stored).not.toContain('LIVETWO');
+    expect(stored).toContain('"ephemeral":true');
+    // While the session lives, the photographs are on screen as they came back.
+    expect(
+      (chat.session()?.messages ?? []).some(
+        (message) => message.attachment?.preview === 'data:image/png;base64,LIVEONE',
+      ),
+    ).toBe(true);
+
+    // The moment the visitor ends the chat, their bytes are gone from the transcript for good.
+    chat.endVisitorSession();
+    expect(
+      (chat.session()?.messages ?? []).some((message) =>
+        message.attachment?.preview.startsWith('data:image/png;base64,LIVE'),
+      ),
+    ).toBe(false);
+    const after = sessionStorage.getItem(AI_CHAT_STORAGE_KEY) ?? '';
+    expect(after).not.toContain('LIVEONE');
+    expect(after).not.toContain('LIVETWO');
+  });
+
+  it('asks “a photo, or a current selfie?” and sends whichever the visitor chooses', async () => {
+    const chat = service();
+    open(chat);
+
+    await chat.sendMessage(alisha, 'send me a photo');
+    const asked = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model')
+      .at(-1)!;
+    expect(asked.intent).toBe('photo:ask');
+    expect(asked.text).toMatch(/photo/i);
+    expect(asked.text).toMatch(/selfie/i);
+    expect(chat.session()!.pendingPhotoAsk).toBe(true);
+
+    // "Just a photo" — a random frame from her album goes out.
+    await chat.sendMessage(alisha, 'just a photo please');
+    const album = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model')
+      .at(-1)!;
+    expect(album.attachment?.selfie).toBe(true);
+    expect(alisha.photos.map((photo) => photo.src)).toContain(album.attachment?.preview);
+    expect(chat.session()!.pendingPhotoAsk).toBe(false);
+
+    // Asked again, "selfie" takes the live path — with no image key the album answers instead,
+    // but the question is closed the same way.
+    await chat.sendMessage(alisha, 'send me a photo');
+    expect(chat.session()!.pendingPhotoAsk).toBe(true);
+    await chat.sendMessage(alisha, 'selfie');
+    const fresh = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model')
+      .at(-1)!;
+    expect(fresh.attachment?.selfie).toBe(true);
+    expect(fresh.intent).toBe('selfie');
+    expect(chat.session()!.pendingPhotoAsk).toBe(false);
+  });
+
+  it('answers over the message the visitor replied to, the way Instagram chat does', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'Tell me about your city');
+
+    const herMessage = chat
+      .session()!
+      .messages.filter(
+        (message) => message.author === 'model' && message.kind === 'message' && message.text,
+      )
+      .at(-1)!;
+    const quote = replyQuoteOf(herMessage);
+    await chat.sendMessage(alisha, 'Tell me more about that', quote);
+
+    const theirs = chat
+      .session()!
+      .messages.filter((message) => message.author === 'user')
+      .at(-1)!;
+    expect(theirs.replyTo?.id).toBe(herMessage.id);
+    expect(theirs.replyTo?.author).toBe('model');
+
+    // Her answer replies over their message — the quote rides at the top of her bubble.
+    const answered = chat
+      .session()!
+      .messages.filter(
+        (message) => message.author === 'model' && message.kind === 'message' && message.replyTo,
+      )
+      .at(-1)!;
+    expect(answered.replyTo?.id).toBe(theirs.id);
+    expect(answered.replyTo?.author).toBe('user');
+    expect(answered.replyTo?.text).toContain('Tell me more about that');
   });
 
   it('sends one of her own album frames instead when the studio has no camera', async () => {

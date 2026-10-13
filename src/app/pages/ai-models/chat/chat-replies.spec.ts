@@ -7,6 +7,7 @@ import {
   greetingFor,
   reactionAcknowledgement,
   reactionForUserMessage,
+  resolvePhotoChoice,
 } from './chat-replies';
 import { AiChatMessage } from './chat-types';
 import { ChatTurnReading } from './chat-analysis';
@@ -42,7 +43,11 @@ function message(text: string, attachment: AiChatMessage['attachment'] = null): 
 
 function reply(
   question: string,
-  session: { strikes: number; introduced: boolean } = { strikes: 0, introduced: true },
+  session: {
+    strikes: number;
+    introduced: boolean;
+    pendingPhotoAsk?: boolean;
+  } = { strikes: 0, introduced: true },
   now = new Date('2026-10-13T09:30:00'),
   profile: AiModelProfile = alisha,
   attachment: AiChatMessage['attachment'] = null,
@@ -202,17 +207,24 @@ describe('her expression and reactions (requirements B and H)', () => {
     expect(answer.text.toLowerCase()).toContain('neverbeen');
     expect(answer.text.toLowerCase()).not.toContain('i am an ai model');
     expect(reactionForUserMessage('I love you')).toBe('love');
-    expect(reactionForUserMessage('that is a bad day for me')).toBe('sad');
-    expect(reactionForUserMessage('haha that is funny')).toBe('haha');
+    expect(reactionForUserMessage('that is a bad day for me')).toBe('cry');
+    expect(reactionForUserMessage('haha that is funny')).toBe('smile');
+    expect(reactionForUserMessage('wow, that is an amazing fact')).toBe('happy');
     expect(reactionForUserMessage('what is your rate?')).toBeNull();
   });
 
-  it('answers a reaction with the same feeling, and reacts back', () => {
+  it('answers every one of the seven expressions with the same feeling, and reacts back', () => {
     const loved = reactionAcknowledgement(alisha, 'love', 'seed');
     expect(loved.text).toContain('❤️');
     expect(loved.reactionBack).toBe('love');
+    expect(reactionAcknowledgement(alisha, 'like', 'seed').reactionBack).toBe('like');
+    expect(reactionAcknowledgement(alisha, 'dislike', 'seed').reactionBack).toBe('dislike');
+    expect(reactionAcknowledgement(alisha, 'smile', 'seed').reactionBack).toBe('smile');
+    expect(reactionAcknowledgement(alisha, 'happy', 'seed').reactionBack).toBe('happy');
+    expect(reactionAcknowledgement(alisha, 'cry', 'seed').reactionBack).toBe('cry');
     const angry = reactionAcknowledgement(alisha, 'angry', 'seed');
-    expect(angry.reactionBack).toBe('sad');
+    expect(angry.text).toContain('😡');
+    expect(angry.reactionBack).toBe('cry');
   });
 
   it('warns and then closes the session when the language keeps going', () => {
@@ -419,12 +431,17 @@ describe('the reading comes before the answer (nothing is answered before it is 
     text: string,
     turnReading: ChatTurnReading,
     attachment: AiChatMessage['attachment'] = null,
+    session: {
+      strikes: number;
+      introduced: boolean;
+      pendingPhotoAsk?: boolean;
+    } = { strikes: 0, introduced: true },
   ) {
     return composeChatReply({
       model: alisha,
       message: message(text, attachment),
       history: [],
-      session: { strikes: 0, introduced: true },
+      session,
       reading: turnReading,
       now: new Date('2026-10-13T09:30:00'),
     });
@@ -511,23 +528,63 @@ describe('the reading comes before the answer (nothing is answered before it is 
     expect(answer.text).not.toContain('tell me what is inside it');
   });
 
-  it('takes the selfie for the word “selfie”, and sends the album for “photos”', () => {
+  it('takes two live selfies for the word “selfie”, and asks first for “photos”', () => {
     const posed = replyWith(
       'send me a selfie',
       reading({ english: 'Send me a selfie.', intent: 'selfie' }),
     );
     expect(posed.selfie).toBe(true);
+    // The word "selfie" means `livechatselfiesandphotos`: two fresh photographs, generated now.
+    expect(posed.liveSelfie).toBe(true);
+    expect(posed.photoAsk).toBeFalsy();
+    expect(posed.intent).toBe('selfie');
     expect(posed.selfieMoment?.place.length).toBeGreaterThan(5);
     expect(posed.selfieMoment?.flaw.length).toBeGreaterThan(5);
     // The caption says where and how it was taken, in the same moment.
     expect(posed.text).toContain(posed.selfieMoment!.place);
     expect(posed.text).toContain(posed.selfieMoment!.flaw);
 
-    const album = replyWith(
+    // A plain request for "a photo": she asks which one before anything is sent.
+    const asked = replyWith(
       'can I see your photos?',
       reading({ english: 'Show me your photos.', intent: 'selfie' }),
     );
+    expect(asked.photoAsk).toBe(true);
+    expect(asked.intent).toBe('photo:ask');
+    expect(asked.selfie).toBeUndefined();
+    expect(asked.text).toMatch(/photo/i);
+    expect(asked.text).toMatch(/selfie/i);
+
+    // …and a bare "send me a photo" is heard as a photo request too.
+    expect(reply('send me a photo').photoAsk).toBe(true);
+    expect(reply('send me a photo').intent).toBe('photo:ask');
+  });
+
+  it('answers her open photo question: “photo” from the album, “selfie” freshly generated', () => {
+    const open = { strikes: 0, introduced: true, pendingPhotoAsk: true };
+
+    const album = reply('just a photo', open);
     expect(album.selfie).toBe(true);
+    expect(album.liveSelfie).toBeUndefined();
     expect(album.selfieMoment).toBeUndefined();
+    expect(album.intent).toBe('selfie');
+
+    const fresh = reply('selfie please', open);
+    expect(fresh.selfie).toBe(true);
+    expect(fresh.liveSelfie).toBe(true);
+    expect(fresh.intent).toBe('selfie');
+
+    // A money question is not an answer: it is answered as money and the question stays open.
+    const price = reply('what is your photo rate?', open);
+    expect(price.photoAsk).toBeUndefined();
+    expect(price.selfie).toBeUndefined();
+
+    // The choice reads the visitor's own words, in every shape they arrive in.
+    expect(resolvePhotoChoice('selfie')).toBe('selfie');
+    expect(resolvePhotoChoice('a current photo')).toBe('selfie');
+    expect(resolvePhotoChoice('photo')).toBe('album');
+    expect(resolvePhotoChoice('either of them')).toBe('album');
+    expect(resolvePhotoChoice('how much for a photo?')).toBeNull();
+    expect(resolvePhotoChoice('tell me about your city')).toBeNull();
   });
 });
