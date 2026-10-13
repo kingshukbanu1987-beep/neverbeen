@@ -2,7 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { aiModelProfiles } from '../pages/ai-models/ai-model-data';
 import { ChatIdentity } from '../pages/ai-models/chat/chat-identity';
-import { AI_CHAT_NUDGE_LIMIT, AI_CHAT_SESSION_MS } from '../pages/ai-models/chat/chat-types';
+import {
+  AI_CHAT_FEEDBACK_COMMENT_LIMIT,
+  AI_CHAT_FOLLOWUP_LIMIT,
+  AI_CHAT_INTEREST_MS,
+  AI_CHAT_SESSION_MS,
+} from '../pages/ai-models/chat/chat-types';
 import {
   AI_CHAT_STORAGE_KEY,
   AiModelChatService,
@@ -290,32 +295,99 @@ describe('AiModelChatService', () => {
     expect(chat.session()!.messages).toHaveLength(messages.length);
   });
 
-  it('keeps the conversation going when the visitor goes quiet (requirement H)', async () => {
+  it('says her hello and then waits for the visitor instead of filling the silence (requirement A)', async () => {
     vi.useFakeTimers();
     const chat = service();
     open(chat);
 
-    await chat.sendMessage(alisha, 'Tell me about your day');
-    const before = chat.session()!.messages.length;
-
-    // Ten seconds is not enough; somewhere inside the next ten she says something else herself.
-    vi.advanceTimersByTime(10_000);
-    expect(chat.session()!.nudges).toBe(0);
-
-    vi.advanceTimersByTime(10_000);
-    const nudges = chat.session()!.messages.filter((message) => message.intent === 'idle');
-    expect(nudges.length).toBeGreaterThan(0);
-    expect(chat.session()!.messages.length).toBeGreaterThan(before);
-    expect(nudges[0].text).toMatch(/\?|I /);
-    expect(nudges[0].pending).toBe(false);
-
-    // She never becomes a machine gun: the session caps how many times she reaches out.
-    vi.advanceTimersByTime(10 * 60 * 1000);
-    expect(chat.session()!.nudges).toBeLessThanOrEqual(AI_CHAT_NUDGE_LIMIT);
+    // She speaks first — four or five messages of her own — and then nothing of hers is written
+    // while she waits to be answered.
     expect(
-      chat.session()!.messages.filter((message) => message.intent === 'idle').length,
-    ).toBeLessThanOrEqual(AI_CHAT_NUDGE_LIMIT);
+      chat.session()!.messages.filter((message) => message.intent === 'opening').length,
+    ).toBeGreaterThanOrEqual(4);
+
+    await vi.advanceTimersByTimeAsync(2 * 60 * 1000);
+    expect(chat.session()!.messages.filter((message) => message.intent === 'idle')).toHaveLength(0);
+    expect(chat.session()!.followUps).toBe(0);
   });
+
+  it('reads three silent minutes as an answer and closes the session herself (requirement D)', async () => {
+    vi.useFakeTimers();
+    const chat = service();
+    open(chat);
+
+    await vi.advanceTimersByTimeAsync(AI_CHAT_INTEREST_MS - 1_000);
+    expect(chat.session()!.closed).toBe('');
+
+    await vi.advanceTimersByTimeAsync(2_000);
+    const session = chat.session()!;
+    expect(session.closed).toBe('inactive');
+    expect(chat.canSend()).toBe(false);
+
+    // She says goodbye in her own words, and then the close form of requirement E comes up with it.
+    const goodbye = session.messages.filter((message) => message.intent === 'goodbye');
+    expect(goodbye).toHaveLength(1);
+    expect(goodbye[0].text.length).toBeGreaterThan(40);
+    expect(goodbye[0].text).not.toMatch(/\b(?:google|openai|gpt|api)\b/i);
+    expect(chat.feedbackOpen()).toBe(true);
+
+    // Nothing else is written into a window she has closed.
+    const written = session.messages.length;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(chat.session()!.messages.length).toBe(written);
+  });
+
+  it('does not fill a silence the conversation has not earned (requirements A and B)', async () => {
+    vi.useFakeTimers();
+    const chat = service();
+    open(chat);
+
+    // The visitor has written — so she is allowed to have the floor — but the session is young and
+    // there is no subject and no question on the table: she waits instead of talking to herself.
+    await chat.sendMessage(alisha, 'Hello');
+    await vi.advanceTimersByTimeAsync(2 * 60 * 1000);
+
+    expect(chat.session()!.messages.filter((message) => message.intent === 'idle')).toHaveLength(0);
+    expect(chat.session()!.followUps).toBe(0);
+  });
+
+  it('keeps a conversation going when there is a subject in play (requirement B)', async () => {
+    vi.useFakeTimers();
+    const chat = service();
+    open(chat);
+
+    await chat.sendMessage(alisha, 'I love to travel — I am always somewhere new');
+    await vi.advanceTimersByTimeAsync(2 * 60 * 1000);
+
+    const idle = chat.session()!.messages.filter((message) => message.intent === 'idle');
+    expect(idle.length).toBeGreaterThan(0);
+    expect(idle[0].pending).toBe(false);
+    // She continues the subject the visitor brought up rather than changing it.
+    expect(idle[0].text).toMatch(/\?|travel|place|trip|somewhere/i);
+    expect(chat.session()!.followUps).toBeGreaterThan(0);
+    // The session is still open: she kept it going, she did not end it.
+    expect(chat.session()!.closed).toBe('');
+  });
+
+  it('says something of her own in a long conversation, and only a few times (requirements B and H)', async () => {
+    vi.useFakeTimers();
+    const chat = service();
+    open(chat);
+
+    // Six minutes of a real conversation: a message every two minutes, each one answered.
+    for (let sent = 0; sent < 3; sent += 1) {
+      await chat.sendMessage(alisha, 'Nothing much, a quiet evening here');
+      await vi.advanceTimersByTimeAsync(2 * 60 * 1000);
+    }
+
+    const idle = chat.session()!.messages.filter((message) => message.intent === 'idle');
+    expect(idle.length).toBeGreaterThan(0);
+    expect(idle.every((message) => !message.pending)).toBe(true);
+    // She never becomes a machine gun: the session caps how many times she reaches out.
+    expect(chat.session()!.followUps).toBeLessThanOrEqual(AI_CHAT_FOLLOWUP_LIMIT);
+    expect(idle.length).toBeLessThanOrEqual(AI_CHAT_FOLLOWUP_LIMIT);
+  });
+
 
   it('holds the typing indicator for the time a person needs, then lands the answer whole (requirement A)', async () => {
     vi.useFakeTimers();
@@ -559,16 +631,32 @@ describe('AiModelChatService', () => {
     const chat = service();
     open(chat);
 
-    vi.advanceTimersByTime(105 * 60 * 1000 + 1000); // 1 h 45 min in: fifteen minutes left
+    /**
+     * Requirement D — a visitor who is still in the window keeps the session alive: this stands in
+     * for them and writes something well inside the three quiet minutes she allows, so the two-hour
+     * clock is what the test is really measuring.
+     */
+    const keepThemHere = async (minutes: number): Promise<void> => {
+      let left = minutes * 60 * 1000;
+      while (left > 0) {
+        const slice = Math.min(2 * 60 * 1000, left);
+        await vi.advanceTimersByTimeAsync(slice);
+        left -= slice;
+        await chat.sendMessage(alisha, 'Still here, tell me something');
+      }
+    };
+
+    await keepThemHere(105);
+    await vi.advanceTimersByTimeAsync(1_000); // 1 h 45 min in: fifteen minutes left
     let reminders = chat.session()!.messages.filter((message) => message.kind === 'reminder');
     expect(reminders).toHaveLength(1);
     expect(reminders[0].text).toContain('15 minutes remaining');
     expect(chat.session()!.reminders).toEqual([15]);
     expect(chat.timeLeftLabel()).toBe('14:59');
 
-    vi.advanceTimersByTime(5 * 60 * 1000);
-    vi.advanceTimersByTime(5 * 60 * 1000);
-    vi.advanceTimersByTime(4 * 60 * 1000);
+    await keepThemHere(5);
+    await keepThemHere(5);
+    await keepThemHere(4);
     reminders = chat.session()!.messages.filter((message) => message.kind === 'reminder');
     expect(reminders.map((message) => message.text)).toEqual([
       chatReminderText(15),
@@ -578,10 +666,12 @@ describe('AiModelChatService', () => {
     ]);
     expect(chat.session()!.reminders).toEqual([15, 10, 5, 1]);
 
-    vi.advanceTimersByTime(61 * 1000);
+    await vi.advanceTimersByTimeAsync(61 * 1000);
     expect(chat.session()!.closed).toBe('timeout');
     expect(chat.canSend()).toBe(false);
     expect(transcript(chat)).toContain('Our two hours are up');
+    // E and F — the close form comes up with the ending, and waits there for the visitor.
+    expect(chat.feedbackOpen()).toBe(true);
   });
 
   it('warns once, twice, and then says goodbye and closes the chat (requirement B)', async () => {
@@ -603,11 +693,12 @@ describe('AiModelChatService', () => {
     expect(transcript(chat)).toContain('Goodbye');
     expect(chat.canSend()).toBe(false);
 
-    // K — the session report comes up over the window, and the Close button puts it away.
+    // E, F and K — the close form comes up over the window, and the visitor's Close button puts it
+    // away: nothing on that form closes itself.
     expect(chat.session()!.closedAt).toBeGreaterThan(0);
-    expect(chat.summaryOpen()).toBe(true);
-    chat.dismissSummary();
-    expect(chat.summaryOpen()).toBe(false);
+    expect(chat.feedbackOpen()).toBe(true);
+    chat.dismissFeedback();
+    expect(chat.feedbackOpen()).toBe(false);
 
     // A fresh session starts clean, with a new two-hour clock.
     chat.startNewSession(alisha);
@@ -713,6 +804,58 @@ describe('AiModelChatService', () => {
     expect(parsed.sessions[alisha.slug].messages.length).toBeGreaterThan(3);
     // The preview itself is dropped: a session must never fill the tab's storage.
     expect(stored!.length).toBeLessThan(200_000);
+  });
+
+  it('opens the close form on a session that has started, and keeps what the visitor gave it (requirements E and K)', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'Hello there');
+
+    expect(chat.feedbackOpen()).toBe(false);
+    chat.openFeedback();
+    expect(chat.feedbackOpen()).toBe(true);
+
+    chat.recordFeedback(alisha, { rating: 4, comments: '  She was lovely to talk to.  ' });
+    expect(chat.feedbackFor(alisha.slug)).toMatchObject({
+      rating: 4,
+      comments: 'She was lovely to talk to.',
+    });
+    // The feedback travels with the session into this tab's storage, so a refresh keeps it.
+    expect(sessionStorage.getItem(AI_CHAT_STORAGE_KEY)).toContain('She was lovely to talk to.');
+
+    chat.dismissFeedback();
+    expect(chat.feedbackOpen()).toBe(false);
+    // Closing the form never throws the session away: the conversation is still there.
+    expect(chat.sessionOf(alisha.slug)!.messages.length).toBeGreaterThan(2);
+  });
+
+  it('keeps a rating with no comment, a comment with no rating, and ignores an empty form', async () => {
+    const chat = service();
+    open(chat);
+
+    chat.recordFeedback(alisha, { rating: 5, comments: '   ' });
+    expect(chat.feedbackFor(alisha.slug)).toMatchObject({ rating: 5, comments: '' });
+
+    chat.recordFeedback(alisha, { rating: 0, comments: 'Just here for the photographs.' });
+    expect(chat.feedbackFor(alisha.slug)).toMatchObject({
+      rating: 0,
+      comments: 'Just here for the photographs.',
+    });
+
+    chat.recordFeedback(alisha, { rating: 0, comments: '   ' });
+    // The empty second form changed nothing: the first answer is the one that stands.
+    expect(chat.feedbackFor(alisha.slug)!.comments).toBe('Just here for the photographs.');
+  });
+
+  it('bounds the stars to five and the comment to what the form can take', async () => {
+    const chat = service();
+    open(chat);
+
+    chat.recordFeedback(alisha, { rating: 9, comments: 'x'.repeat(5000) });
+    const kept = chat.feedbackFor(alisha.slug)!;
+    expect(kept.rating).toBe(5);
+    expect(kept.comments).toHaveLength(AI_CHAT_FEEDBACK_COMMENT_LIMIT);
+    expect(kept.at).toBeGreaterThan(0);
   });
 
   it('ignores a send when no window is open or the session has ended', async () => {

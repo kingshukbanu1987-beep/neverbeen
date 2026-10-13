@@ -46,7 +46,7 @@
           ></span>
         </div>
 
-        <button type="button" class="chat-close" (click)="close()" aria-label="Close the chat">
+        <button type="button" class="chat-close" (click)="requestClose()" aria-label="Close the chat">
           ✕
         </button>
       </header>
@@ -225,6 +225,9 @@
             <p>
               @if (closedReason() === 'blocked') {
                 She ended this session. Rude and sexual messages close a chat for good.
+              } @else if (closedReason() === 'inactive') {
+                You had gone quiet for a while, so {{ model().name.split(' ')[0] }} closed this one
+                herself. Her goodbye is in the conversation above.
               } @else {
                 Your two hours with {{ model().name }} are over, so this window is closed to new
                 messages.
@@ -340,12 +343,16 @@
       />
     }
 
-    @if (chat.summaryOpen() && session()) {
-      <app-chat-session-summary
+    <!-- E and F — the close form: both faces, the time together, the counts, the stars and the
+         comments box. It comes up when she ends the session and when the visitor presses ✕, and it
+         waits for their Close button instead of closing itself. -->
+    @if (chat.feedbackOpen() && session()) {
+      <app-chat-feedback
         [model]="model()"
-        [summary]="summary()"
+        [facts]="facts()"
         [visitor]="identity()"
-        (closed)="closeSummary()"
+        [reason]="closedReason()"
+        (closed)="onFeedbackClosed($event)"
       />
     }
   </section>

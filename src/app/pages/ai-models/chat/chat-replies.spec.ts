@@ -64,18 +64,23 @@ describe('greeting and introduction (requirement D)', () => {
     expect(greetingFor(new Date('2026-10-13T19:00:00'))).toBe('Good evening');
   });
 
-  it('introduces her full name, model id, home, age and where the whole of her lives', () => {
+  it('introduces her name, her model id and where the whole of her lives — and nothing she was not asked for (requirement C)', () => {
     const introduction = chatIntroduction(alisha, new Date('2026-10-13T09:30:00'));
     expect(introduction).toContain('Good morning');
     expect(introduction).toContain('Alisha Bhattacharya');
     expect(introduction).toContain('@alisha.bhattacharya');
-    expect(introduction).toContain('Darjeeling');
-    expect(introduction).toContain('India');
-    expect(introduction).toContain('25');
     // L — no bot line: she says the same thing the way a woman would say it.
     expect(introduction).not.toContain('I am an AI model');
     expect(introduction).toContain('not pretending otherwise');
     expect(introduction).toContain('NeverBeen Multiverse');
+    // C — her home, her age and her album are answers, not an introduction: she keeps them for the
+    // visitor who asks for them (see "her own knowledge" below).
+    expect(introduction).not.toContain('Darjeeling');
+    expect(introduction).not.toContain('India');
+    expect(introduction).not.toMatch(/\b25\b/);
+    expect(introduction).not.toMatch(
+      /\b\d+\s+(?:photographs?|photos?|pictures?|videos?|frames?)\b/i,
+    );
   });
 
   it('makes the first answer of a session that introduction, and still answers the question', () => {
@@ -86,7 +91,7 @@ describe('greeting and introduction (requirement D)', () => {
     expect(first.text).toContain('₹545');
     // Every later answer skips the introduction.
     const second = reply('and what is your rate for ten photographs?');
-    expect(second.text).not.toContain('I am Alisha Bhattacharya — ');
+    expect(second.text).not.toContain('Alisha Bhattacharya');
     expect(second.text).toContain('₹');
   });
 });

@@ -2,10 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  OnDestroy,
   OnInit,
   computed,
-  effect,
   inject,
   input,
   output,
@@ -23,22 +21,20 @@ import { AiModelProfile } from '../ai-model-data';
 import { CHAT_WELCOME_LINE } from './chat-replies';
 import { readDocumentBytes } from './chat-analysis';
 import { splitLocation } from './chat-knowledge';
-import { buildChatSessionSummary } from './chat-summary';
+import { buildChatFeedbackFacts } from './chat-summary';
 import { ChatIdentity } from './chat-identity';
 import { ChatIdentityPrompt } from './chat-identity-prompt';
-import { ChatSessionSummaryCard } from './chat-session-summary';
+import { ChatFeedbackCard } from './chat-feedback';
 import {
   AI_CHAT_DOCUMENT_LIMIT_BYTES,
   AI_CHAT_PHOTO_LIMIT_BYTES,
   AI_CHAT_REACTIONS,
   AiChatAttachment,
+  AiChatFeedback,
   AiChatMessage,
   AiChatReaction,
   reactionEmoji,
 } from './chat-types';
-
-/** How long her goodbye stays on screen before the window closes itself (requirement B). */
-export const CHAT_AUTO_CLOSE_MS = 7000;
 
 /** The largest picture kept in a session: big enough to look sharp in the bubble. */
 const CHAT_PREVIEW_BYTES = 320 * 1024;
@@ -60,7 +56,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
  */
 @Component({
   selector: 'app-ai-model-chat',
-  imports: [RouterLink, ChatAutoScroll, ChatIdentityPrompt, ChatSessionSummaryCard],
+  imports: [RouterLink, ChatAutoScroll, ChatIdentityPrompt, ChatFeedbackCard],
   templateUrl: './ai-model-chat.html',
   styleUrl: './ai-model-chat.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,7 +64,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
     '(document:keydown)': 'onDocumentKeydown($event)',
   },
 })
-export class AiModelChatDialog implements OnInit, OnDestroy {
+export class AiModelChatDialog implements OnInit {
   protected readonly chat = inject(AiModelChatService);
 
   readonly model = input.required<AiModelProfile>();
@@ -82,6 +78,8 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
   private readonly photoInput = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private readonly cameraInput = viewChild<ElementRef<HTMLInputElement>>('cameraInput');
   private readonly documentInput = viewChild<ElementRef<HTMLInputElement>>('documentInput');
+  /** E and F — the close form itself, so Escape can be handed to its Close button. */
+  private readonly feedbackCard = viewChild(ChatFeedbackCard);
 
   protected readonly draft = signal('');
   protected readonly pickerFor = signal<string | null>(null);
@@ -118,9 +116,12 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
     return name ? name.split(' ')[0] : '';
   });
 
-  /** K — her report on the finished session. */
-  protected readonly summary = computed(() =>
-    buildChatSessionSummary({ model: this.model(), session: this.chat.session()! }),
+  /**
+   * E and K — the numbers and her note behind the close form: the time together, the messages both
+   * of them sent and the photographs that went between them.
+   */
+  protected readonly facts = computed(() =>
+    buildChatFeedbackFacts({ model: this.model(), session: this.chat.session()! }),
   );
 
   protected readonly country = computed(() => splitLocation(this.model().location).country);
@@ -132,17 +133,6 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
       (this.draft().trim().length > 0 || Boolean(this.chat.draftAttachment())),
   );
 
-  private autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
-
-  constructor() {
-    // Requirement B: after her goodbye the window closes itself.
-    effect(() => {
-      if (this.closedReason() !== 'blocked') return;
-      if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
-      this.autoCloseTimer = setTimeout(() => this.close(), CHAT_AUTO_CLOSE_MS);
-    });
-  }
-
   /**
    * The window opens its own two-hour session the moment it is mounted: a page only has to render
    * `<app-ai-model-chat [model]>` and everything else — the clock, the reminders, her answers —
@@ -153,10 +143,6 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
     this.chat.openChat(this.model());
   }
 
-  ngOnDestroy(): void {
-    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
-  }
-
   /** Focus the composer when the window opens, so typing starts straight away. */
   protected focusComposer(): void {
     this.composer()?.nativeElement.focus();
@@ -165,6 +151,37 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
   protected close(): void {
     this.chat.closeChat();
     this.closed.emit();
+  }
+
+  /**
+   * E — the ✕, the backdrop and Escape all ask the same question before the window goes: has this
+   * visitor been in a chat that has started? Then the close form comes up first, with the two faces,
+   * the counts, the stars and the comments box, and the window closes when they close it.
+   */
+  protected requestClose(): void {
+    const session = this.session();
+    if (session?.identity && !session.closed && !this.chat.feedbackOpen()) {
+      this.chat.openFeedback();
+      return;
+    }
+    this.close();
+  }
+
+  /**
+   * E, F and K — the Close button of the form: what the visitor gave is kept with the session, the
+   * form is put away, and a window they were leaving closes with it. A window that ended by itself
+   * stays where it is, with her goodbye and the transcript still in it.
+   */
+  protected onFeedbackClosed(feedback: AiChatFeedback | null): void {
+    if (feedback) this.chat.recordFeedback(this.model(), feedback);
+    const ended = this.sessionOver();
+    this.chat.dismissFeedback();
+    if (!ended) this.close();
+  }
+
+  /** Escape, handed to the form: the visitor's rating and words are still theirs to send. */
+  protected closeFeedback(): void {
+    this.feedbackCard()?.close();
   }
 
   protected startNewSession(): void {
@@ -180,17 +197,19 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
     this.focusComposer();
   }
 
-  /** K — the summary card is put away; the window behind it stays closed. */
-  protected closeSummary(): void {
-    this.chat.dismissSummary();
-  }
-
   protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.close();
+    if (event.target === event.currentTarget) this.requestClose();
   }
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && !event.defaultPrevented) this.close();
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+    // F — the form is never dismissed by itself, but a visitor who presses Escape has answered it
+    // the same way they answer the Close button: what they gave is sent, and then the form goes.
+    if (this.chat.feedbackOpen()) {
+      this.closeFeedback();
+      return;
+    }
+    this.requestClose();
   }
 
   protected updateDraft(event: Event): void {

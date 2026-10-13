@@ -1,0 +1,582 @@
+/**
+ * E and F — the close form of the chat window, drawn as one piece of dark glass over the chat.
+ *
+ * It is deliberately the most modern surface in the window: a blurred translucent card floating on
+ * an aurora of violet and pink, gradient hairlines, glass tiles for the numbers, a five-star picker
+ * that lights up under the pointer, and one wide gradient button at the end that is the only way out
+ * of it. Nothing here animates anything away on its own — the form waits (requirement F).
+ */
+:host {
+  display: contents;
+  --fb-violet: #7c3aed;
+  --fb-violet-deep: #4b128f;
+  --fb-pink: #ff6fb1;
+  --fb-gold: #ffc94a;
+  --fb-ink: #f6f3ff;
+  --fb-muted: rgb(246 243 255 / 66%);
+  --fb-faint: rgb(246 243 255 / 44%);
+  --fb-line: rgb(255 255 255 / 12%);
+  --fb-glass: rgb(255 255 255 / 6%);
+}
+
+.feedback {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.6rem, 2.6vw, 1.5rem);
+  overflow-y: auto;
+  background:
+    radial-gradient(120% 100% at 12% 0%, rgb(124 58 237 / 46%), transparent 58%),
+    radial-gradient(120% 120% at 88% 104%, rgb(255 111 177 / 26%), transparent 62%),
+    linear-gradient(168deg, #0c0918, #17102e 58%, #090614);
+  backdrop-filter: blur(10px);
+  font-family:
+    'Segoe UI',
+    'Inter',
+    system-ui,
+    -apple-system,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  color: var(--fb-ink);
+  animation: fb-fade 200ms ease backwards;
+}
+
+/* The aurora behind the card: two soft lights that drift, and never touch the text. */
+.feedback-aurora {
+  position: absolute;
+  inset: -20% -10%;
+  background:
+    radial-gradient(38% 32% at 22% 26%, rgb(124 58 237 / 45%), transparent 70%),
+    radial-gradient(34% 30% at 78% 68%, rgb(255 111 177 / 34%), transparent 72%),
+    radial-gradient(30% 26% at 62% 18%, rgb(56 189 248 / 22%), transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+  animation: fb-drift 18s ease-in-out infinite alternate;
+}
+
+.feedback-card {
+  position: relative;
+  width: min(100%, 34rem);
+  margin: auto;
+  padding: clamp(1.1rem, 3.4vw, 1.75rem);
+  border: 1px solid var(--fb-line);
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 4%)),
+    linear-gradient(158deg, #1e1740, #130d28 62%, #0d0920);
+  box-shadow:
+    0 40px 90px rgb(3 1 10 / 62%),
+    inset 0 1px 0 rgb(255 255 255 / 14%);
+  text-align: center;
+  animation: fb-rise 380ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+}
+
+.feedback-card::before {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(140deg, rgb(124 58 237 / 70%), transparent 42%, rgb(255 111 177 / 55%));
+  content: '';
+  opacity: 0.55;
+  pointer-events: none;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  padding: 1px;
+}
+
+/* --- the kicker ------------------------------------------------------------ */
+
+.feedback-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.32rem 0.75rem;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+  color: var(--fb-muted);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.feedback-kicker-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--fb-pink);
+  box-shadow: 0 0 12px rgb(255 111 177 / 85%);
+  animation: fb-pulse 2.4s ease-in-out infinite;
+}
+
+/* --- the two of them ------------------------------------------------------- */
+
+.feedback-faces {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.45rem, 2.4vw, 1.1rem);
+  margin: 1.1rem 0 0;
+}
+
+.feedback-face {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  width: min(9rem, 40%);
+  margin: 0;
+}
+
+.feedback-photo {
+  display: grid;
+  place-items: center;
+  width: clamp(3.4rem, 13vw, 4.4rem);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(150deg, rgb(124 58 237 / 60%), rgb(255 111 177 / 40%));
+  box-shadow:
+    0 0 0 2px rgb(255 255 255 / 12%),
+    0 12px 26px rgb(4 2 12 / 45%);
+  font-size: 1.3rem;
+}
+
+.feedback-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feedback-face.is-visitor .feedback-photo {
+  background: linear-gradient(150deg, #2fb5a8, #5fd0a4);
+}
+
+.feedback-face figcaption {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.feedback-face b {
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feedback-face i {
+  color: var(--fb-faint);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.feedback-link {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--fb-violet), var(--fb-pink));
+  color: #fff;
+  font-size: 0.85rem;
+  box-shadow: 0 12px 26px rgb(124 58 237 / 48%);
+  animation: fb-beat 2.6s ease-in-out infinite;
+}
+
+/* --- what they did with the time ------------------------------------------- */
+
+.feedback-card h2 {
+  margin: 1.1rem 0 0.3rem;
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  letter-spacing: -0.015em;
+}
+
+.feedback-together {
+  margin: 0;
+  color: var(--fb-muted);
+  font-size: 0.8rem;
+}
+
+.feedback-together b {
+  color: #fff;
+}
+
+.feedback-ending {
+  margin: 0.45rem auto 0;
+  max-width: 26rem;
+  color: var(--fb-faint);
+  font-size: 0.68rem;
+  line-height: 1.6;
+}
+
+.feedback-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 1.15rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feedback-stats li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem 0.35rem;
+  border: 1px solid var(--fb-line);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 8%), rgb(255 255 255 / 2%)),
+    rgb(255 255 255 / 3%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+.feedback-stats b {
+  font-size: clamp(1.05rem, 3.6vw, 1.3rem);
+  letter-spacing: -0.02em;
+}
+
+.feedback-stats i {
+  color: var(--fb-faint);
+  font-size: 0.54rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.feedback-photo-line {
+  margin: 0.6rem 0 0;
+  color: var(--fb-faint);
+  font-size: 0.64rem;
+}
+
+/* --- the stars ------------------------------------------------------------- */
+
+.feedback-rate {
+  margin: 1.35rem 0 0;
+  padding: 1rem 0.75rem 0.85rem;
+  border: 1px solid var(--fb-line);
+  border-radius: 22px;
+  background: linear-gradient(170deg, rgb(124 58 237 / 16%), rgb(255 255 255 / 3%));
+}
+
+.feedback-rate h3 {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.feedback-stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin: 0.7rem 0 0;
+}
+
+.feedback-star {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgb(255 255 255 / 20%);
+  font-size: clamp(1.9rem, 8vw, 2.5rem);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 140ms cubic-bezier(0.3, 1.4, 0.5, 1),
+    color 140ms ease,
+    text-shadow 140ms ease;
+}
+
+.feedback-star.is-lit {
+  color: var(--fb-gold);
+  text-shadow: 0 0 18px rgb(255 201 74 / 55%);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.feedback-star.is-picked {
+  animation: fb-pop 320ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.feedback-star:hover,
+.feedback-star:focus-visible {
+  transform: translateY(-4px) scale(1.12);
+}
+
+.feedback-star:focus-visible {
+  outline: 2px solid rgb(255 201 74 / 70%);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.feedback-rating-label {
+  margin: 0.6rem 0 0;
+  color: var(--fb-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* --- the comments ---------------------------------------------------------- */
+
+.feedback-comments {
+  display: grid;
+  gap: 0.45rem;
+  margin: 1.15rem 0 0;
+  text-align: left;
+}
+
+.feedback-comments-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.feedback-comments-box {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--fb-line);
+  border-radius: 18px;
+  background: rgb(9 6 20 / 55%);
+  color: var(--fb-ink);
+  font-family: inherit;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  resize: vertical;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.feedback-comments-box::placeholder {
+  color: rgb(246 243 255 / 32%);
+}
+
+.feedback-comments-box:focus-visible {
+  border-color: rgb(124 58 237 / 75%);
+  outline: none;
+  box-shadow: 0 0 0 4px rgb(124 58 237 / 22%);
+}
+
+.feedback-comments-count {
+  justify-self: end;
+  color: var(--fb-faint);
+  font-size: 0.58rem;
+  font-style: normal;
+}
+
+/* --- her note -------------------------------------------------------------- */
+
+.feedback-note {
+  margin: 1.05rem 0 0;
+  border: 1px solid var(--fb-line);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 4%);
+  text-align: left;
+}
+
+.feedback-note summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.feedback-note summary::-webkit-details-marker {
+  display: none;
+}
+
+.feedback-note summary::before {
+  color: var(--fb-pink);
+  content: '▸';
+  font-size: 0.7rem;
+  transition: transform 160ms ease;
+}
+
+.feedback-note[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.feedback-note-stars {
+  color: rgb(255 255 255 / 18%);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+
+.feedback-note-stars b {
+  font-weight: 400;
+}
+
+.feedback-note-stars .is-lit {
+  color: var(--fb-gold);
+}
+
+.feedback-note-rating {
+  color: var(--fb-faint);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.feedback-note blockquote {
+  margin: 0;
+  padding: 0 0.9rem 0.85rem;
+  color: rgb(246 243 255 / 86%);
+  font-size: 0.72rem;
+  line-height: 1.7;
+}
+
+.feedback-note-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0 0.9rem 0.9rem;
+  list-style: none;
+}
+
+.feedback-note-chips li {
+  padding: 0.28rem 0.6rem;
+  border: 1px solid rgb(124 58 237 / 45%);
+  border-radius: 999px;
+  background: rgb(124 58 237 / 18%);
+  color: #e9dfff;
+  font-size: 0.58rem;
+  font-weight: 700;
+}
+
+/* --- the one way out ------------------------------------------------------- */
+
+.feedback-close {
+  width: 100%;
+  margin-top: 1.15rem;
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(120deg, var(--fb-violet), var(--fb-violet-deep) 55%, var(--fb-pink));
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 20px 40px rgb(75 18 143 / 48%);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.feedback-close:hover,
+.feedback-close:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 26px 48px rgb(75 18 143 / 58%);
+}
+
+.feedback-close:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 65%);
+  outline-offset: 3px;
+}
+
+.feedback-foot {
+  margin: 0.65rem 0 0;
+  color: var(--fb-faint);
+  font-size: 0.58rem;
+  line-height: 1.55;
+}
+
+/* --- animation ------------------------------------------------------------- */
+
+@keyframes fb-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+}
+
+@keyframes fb-drift {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, 2%, 0) scale(1.06);
+  }
+}
+
+@keyframes fb-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes fb-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes fb-pop {
+  0% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* --- smaller windows ------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .feedback-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feedback-face b {
+    font-size: 0.74rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feedback,
+  .feedback-card,
+  .feedback-aurora,
+  .feedback-link,
+  .feedback-kicker-dot,
+  .feedback-star,
+  .feedback-star.is-picked {
+    animation: none;
+    transition: none;
+  }
+}

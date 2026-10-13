@@ -119,7 +119,17 @@ export interface AiChatMessage {
 }
 
 /** Why a chat session can no longer be written to. */
-export type AiChatClosedReason = '' | 'timeout' | 'blocked' | 'restarted';
+export type AiChatClosedReason = '' | 'timeout' | 'blocked' | 'inactive' | 'restarted';
+
+/** What the visitor thought of the chat, given in the close form (requirement E). */
+export interface AiChatFeedback {
+  /** The stars they chose, 1…5; 0 when they closed the form without choosing any. */
+  rating: number;
+  /** What they wrote in the comments box, in their own words. */
+  comments: string;
+  /** When they sent it. */
+  at: number;
+}
 
 /** One visit's chat with one model: at most two hours, and never more than one at a time. */
 export interface AiChatSession {
@@ -145,15 +155,23 @@ export interface AiChatSession {
   /** True once she has introduced herself — the first message of the session. */
   introduced: boolean;
   /**
-   * When she is due to say something on her own if the visitor stays quiet (requirement H), and how
-   * many times she already has — she waits a little longer every time.
+   * When she is due to say something on her own if the visitor stays quiet (requirements B and H),
+   * and how many times she already has — she waits a little longer every time.
    */
-  nudgeAt: number;
-  nudges: number;
+  followUpAt: number;
+  followUps: number;
+  /**
+   * When the visitor last wrote to her, or the moment she opened the window on them (requirement D):
+   * the silence she measures her own patience against. A visitor who has said nothing for
+   * `AI_CHAT_INTEREST_MS` has answered her with their silence, and she closes the session.
+   */
+  lastVisitorAt: number;
   /** How many times she has asked for a shoot in this session (requirement G). */
   pitches: number;
-  /** When the session ended, for the summary card (requirement K). */
+  /** When the session ended, for the close form (requirements E, F and K). */
   closedAt: number;
+  /** What the visitor thought of the chat, once they have said it in the close form (requirement E). */
+  feedback: AiChatFeedback | null;
   /**
    * The Romanised language the visitor writes in (`chat-language.ts`), once it has been read from
    * their own words: `bn`, `hi`, `ur`, `fa`, `ar`, `tr`, `es` or `ms`, and `''` while the
@@ -175,12 +193,30 @@ export const AI_CHAT_REMINDER_MARKS: readonly number[] = [15, 10, 5, 1];
 /** How many messages one session keeps in memory and in the transcript. */
 export const AI_CHAT_MESSAGE_LIMIT = 400;
 
-/** How long she stays quiet before she says something herself (requirement H). */
-export const AI_CHAT_IDLE_MIN_MS = 11_000;
-export const AI_CHAT_IDLE_MAX_MS = 19_000;
+/**
+ * B — after this much time together she keeps the conversation going by herself: a chat that has
+ * already lasted five minutes is a chat, and a woman in a chat says something of her own now and
+ * then instead of waiting to be asked (requirements A and B).
+ */
+export const AI_CHAT_ENGAGED_MS = 5 * 60 * 1000;
+
+/**
+ * D — this much silence from the visitor and she reads it for what it is: they are not coming back
+ * to this window. She says her goodbye and closes the session herself, and the close form of
+ * requirement E comes up with it.
+ */
+export const AI_CHAT_INTEREST_MS = 3 * 60 * 1000;
+
+/**
+ * B and H — how long she stays quiet before she writes something the visitor did not ask for, and
+ * the little extra she adds to the wait every time she has reached out in the same session.
+ */
+export const AI_CHAT_FOLLOWUP_MIN_MS = 45_000;
+export const AI_CHAT_FOLLOWUP_MAX_MS = 75_000;
+export const AI_CHAT_FOLLOWUP_STEP_MS = 20_000;
 
 /** How many times she will reach out on her own in one session before she lets the window rest. */
-export const AI_CHAT_NUDGE_LIMIT = 6;
+export const AI_CHAT_FOLLOWUP_LIMIT = 6;
 
 /**
  * How long a person needs to type a message (requirement A of the second brief): she is not a
@@ -242,6 +278,12 @@ export const AI_CHAT_BUBBLE_MAX_CHARS = 240;
 /** Requirement F: her introduction takes three to five seconds before it starts. */
 export const AI_CHAT_INTRO_MIN_MS = 3_000;
 export const AI_CHAT_INTRO_MAX_MS = 5_000;
+
+/**
+ * E — the longest comment the close form takes. It is a thought about a chat, not an essay, and the
+ * session mirror in `sessionStorage` has to hold it with everything else.
+ */
+export const AI_CHAT_FEEDBACK_COMMENT_LIMIT = 600;
 
 /** Boundaries of one attachment: 8 MB for a picture, 16 MB for a document. */
 export const AI_CHAT_PHOTO_LIMIT_BYTES = 8 * 1024 * 1024;

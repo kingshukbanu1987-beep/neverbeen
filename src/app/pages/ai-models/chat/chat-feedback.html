@@ -1,0 +1,146 @@
+<section
+  class="feedback"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="chat-feedback-title"
+  aria-describedby="chat-feedback-ending"
+>
+  <span class="feedback-aurora" aria-hidden="true"></span>
+
+  <div class="feedback-card">
+    <p class="feedback-kicker">
+      <span class="feedback-kicker-dot" aria-hidden="true"></span>
+      Chat ended · your feedback
+    </p>
+
+    <!-- E — both of them in one frame: her photograph and name, the visitor's photograph and name. -->
+    <div class="feedback-faces">
+      <figure class="feedback-face">
+        <span class="feedback-photo">
+          @if (model().cover) {
+            <img [src]="model().cover" [alt]="model().name" />
+          } @else {
+            <span aria-hidden="true">✳</span>
+          }
+        </span>
+        <figcaption>
+          <b>{{ model().name }}</b>
+          <i>{{ model().handle }}</i>
+        </figcaption>
+      </figure>
+
+      <span class="feedback-link" aria-hidden="true">❤</span>
+
+      <figure class="feedback-face is-visitor">
+        <span class="feedback-photo">
+          @if (visitorPhoto()) {
+            <img [src]="visitorPhoto()" [alt]="visitorName()" />
+          } @else {
+            <span aria-hidden="true">🙂</span>
+          }
+        </span>
+        <figcaption>
+          <b>{{ visitorName() }}</b>
+          <i>you</i>
+        </figcaption>
+      </figure>
+    </div>
+
+    <h2 id="chat-feedback-title">{{ title() }}</h2>
+    <p class="feedback-together">
+      You and {{ modelFirstName() }} spent
+      <b>{{ facts().together }}</b>
+      together
+    </p>
+    <p id="chat-feedback-ending" class="feedback-ending">{{ endingNote() }}</p>
+
+    <!-- E — the counts of the session: the total, both sides of it, and the photographs. -->
+    <ul class="feedback-stats">
+      <li>
+        <b>{{ facts().total }}</b>
+        <i>messages exchanged</i>
+      </li>
+      <li>
+        <b>{{ facts().yours }}</b>
+        <i>your messages</i>
+      </li>
+      <li>
+        <b>{{ facts().hers }}</b>
+        <i>her messages</i>
+      </li>
+      <li>
+        <b>{{ facts().photos }}</b>
+        <i>photographs shared</i>
+      </li>
+    </ul>
+    <p class="feedback-photo-line">{{ photoLine() }}</p>
+
+    <!-- E — the stars, chosen by the visitor, out of five. -->
+    <section class="feedback-rate" aria-labelledby="chat-feedback-rate-title">
+      <h3 id="chat-feedback-rate-title">How did it feel talking to {{ modelFirstName() }}?</h3>
+      <div class="feedback-stars" role="radiogroup" [attr.aria-label]="'Rate the chat out of five'">
+        @for (star of stars; track star) {
+          <button
+            type="button"
+            class="feedback-star"
+            role="radio"
+            [class.is-lit]="litStar(star)"
+            [class.is-picked]="rating() === star"
+            [attr.aria-checked]="rating() === star"
+            [attr.aria-label]="star + ' out of 5 — ' + ratingLabels[star]"
+            (mouseenter)="preview.set(star)"
+            (mouseleave)="preview.set(0)"
+            (focus)="preview.set(star)"
+            (blur)="preview.set(0)"
+            (click)="choose(star)"
+          >
+            ★
+          </button>
+        }
+      </div>
+      <p class="feedback-rating-label" aria-live="polite">{{ ratingLabel() }}</p>
+    </section>
+
+    <!-- E — the comments box: the overall experience, in the visitor's own words. -->
+    <label class="feedback-comments">
+      <span class="feedback-comments-title">Your overall experience</span>
+      <textarea
+        class="feedback-comments-box"
+        rows="3"
+        [value]="comments()"
+        [attr.maxlength]="commentLimit"
+        placeholder="Tell her how the chat felt — what you liked, what you would change, what stayed with you."
+        (input)="updateComments($event)"
+      ></textarea>
+      <i class="feedback-comments-count">{{ comments().length }}/{{ commentLimit }}</i>
+    </label>
+
+    <!-- K — her own note about the chat, folded away under the visitor's rating. -->
+    <details class="feedback-note">
+      <summary>
+        <span>A note from {{ modelFirstName() }}</span>
+        <span class="feedback-note-stars" aria-hidden="true">
+          @for (star of stars; track star) {
+            <b [class.is-lit]="star <= herStars()">★</b>
+          }
+        </span>
+        <span class="feedback-note-rating">she rated this chat {{ herStars() }}/5</span>
+      </summary>
+      <blockquote>{{ facts().summary.experience }}</blockquote>
+      @if (facts().summary.highlights.length > 0) {
+        <ul class="feedback-note-chips">
+          @for (highlight of facts().summary.highlights; track highlight) {
+            <li>{{ highlight }}</li>
+          }
+        </ul>
+      }
+    </details>
+
+    <!-- F — the end of the form, and the only thing that closes it. -->
+    <button type="button" class="feedback-close" (click)="close()">Close</button>
+    <p class="feedback-foot">
+      Your stars and your words are kept with this chat. Everything here is invented, kind and yours
+      to forget.
+    </p>
+  </div>
+</section>

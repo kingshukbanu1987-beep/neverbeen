@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { aiModelProfiles } from '../ai-model-data';
 import { AiChatAttachment, AiChatMessage, AiChatSession } from './chat-types';
-import { buildChatSessionSummary, formatTogether } from './chat-summary';
+import {
+  buildChatFeedbackFacts,
+  buildChatSessionSummary,
+  formatTogether,
+} from './chat-summary';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
 const startedAt = Date.UTC(2026, 0, 1, 20, 0, 0);
@@ -41,10 +45,12 @@ function session(overrides: Partial<AiChatSession> = {}): AiChatSession {
     closed: '',
     reminders: [],
     introduced: true,
-    nudgeAt: 0,
-    nudges: 0,
+    followUpAt: 0,
+    followUps: 0,
+    lastVisitorAt: startedAt,
     pitches: 0,
     closedAt: 0,
+    feedback: null,
     language: '',
     ...overrides,
   };
@@ -131,6 +137,26 @@ describe('buildChatSessionSummary', () => {
     expect(report.experience).toMatch(/closed the door|sharp/i);
   });
 
+  it('reads a session she ended because the visitor went quiet as one she ended (requirement D)', () => {
+    const report = buildChatSessionSummary({
+      model: alisha,
+      session: session({
+        closed: 'inactive',
+        closedAt: startedAt + 9 * 60_000,
+        messages: [
+          message('model', 'Good evening, Rahul.'),
+          message('user', 'Hello'),
+          message('model', 'There you are.'),
+        ],
+      }),
+    });
+
+    expect(report.sheEnded).toBe(true);
+    expect(report.headline).toMatch(/quiet|silent|window/i);
+    expect(report.experience).toMatch(/three quiet minutes|closed this one myself/i);
+    expect(report.experience).not.toMatch(/closed the door — I do that/i);
+  });
+
   it('still finds something to say about a visit that never said a word', () => {
     const report = buildChatSessionSummary({
       model: alisha,
@@ -140,5 +166,64 @@ describe('buildChatSessionSummary', () => {
     expect(report.messages).toBe(0);
     expect(report.experience).toMatch(/never said a word/i);
     expect(report.highlights).toContain('a very quiet visit');
+  });
+});
+
+describe('buildChatFeedbackFacts (requirement E)', () => {
+  it('counts the messages, both sides of them, and the photographs that were shared', () => {
+    const photo: AiChatAttachment = {
+      kind: 'photo',
+      name: 'me.jpg',
+      type: 'image/jpeg',
+      size: 1_024,
+      source: 'upload',
+      preview: 'data:image/jpeg;base64,AA',
+    };
+    const facts = buildChatFeedbackFacts({
+      model: alisha,
+      session: session({
+        closedAt: startedAt + 45 * 60_000,
+        messages: [
+          message('model', 'Hey Rahul — I saw your photograph come through.'),
+          message('user', 'Hello there'),
+          message('user', 'Look at this', photo),
+          message('model', 'You look kind', { ...photo, selfie: true }),
+          message('model', 'Tell me about your day.', null),
+        ],
+      }),
+    });
+
+    expect(facts.together).toBe('45 minutes');
+    expect(facts.yours).toBe(2);
+    expect(facts.hers).toBe(3);
+    expect(facts.total).toBe(5);
+    expect(facts.photos).toBe(2);
+    expect(facts.yourPhotos).toBe(1);
+    expect(facts.herPhotos).toBe(1);
+    // Her own note travels with the numbers, so the form can show it without a second pass.
+    expect(facts.summary.messages).toBe(2);
+    expect(facts.summary.experience.length).toBeGreaterThan(40);
+  });
+
+  it('leaves the studio’s own notices and reminders out of the count', () => {
+    const facts = buildChatFeedbackFacts({
+      model: alisha,
+      session: session({
+        closedAt: startedAt + 3 * 60_000,
+        messages: [
+          {
+            ...message('system', 'This is a private two-hour chat.'),
+            kind: 'notice' as const,
+          },
+          { ...message('system', 'One minute left.'), kind: 'reminder' as const },
+          message('user', 'Hello'),
+        ],
+      }),
+    });
+
+    expect(facts.total).toBe(1);
+    expect(facts.yours).toBe(1);
+    expect(facts.hers).toBe(0);
+    expect(facts.photos).toBe(0);
   });
 });

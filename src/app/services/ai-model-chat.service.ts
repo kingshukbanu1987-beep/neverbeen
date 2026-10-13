@@ -25,9 +25,15 @@
  * - **The person on the other side (requirement A).** The window's form hands over a name and a
  *   photograph before the two hours start; both live on the session, her answers use the first name,
  *   and their photograph stands beside every message they send.
- * - **Her own initiative (requirements G, H).** She greets the visitor the moment the form is
- *   filled, she speaks up again when they go quiet for eleven to nineteen seconds, and once the
- *   conversation has warmed up she asks them herself for a shoot.
+ * - **Her own initiative (requirements A, B, D, G).** She greets the visitor the moment the form is
+ *   filled and then waits: nothing of her own goes out again until they have written to her. After
+ *   that she keeps the conversation going exactly when `chat-initiative.ts` gives her the floor —
+ *   the session has run past five minutes, a subject is in play, or they asked her something — and
+ *   three quiet minutes after their last message she reads the silence for what it is, says goodbye
+ *   and closes the session herself. Once the conversation has warmed up she asks them for a shoot.
+ * - **The close form (requirements E, F, K).** A session that ends — the two hours, her goodbye, or
+ *   the visitor pressing ✕ — brings up `chat-feedback.*`: the two faces, the time together, the
+ *   counts and the visitor's own stars and words. It stays until they close it.
  */
 import { Injectable, computed, signal } from '@angular/core';
 import { AiModelProfile, aiModelProfiles } from '../pages/ai-models/ai-model-data';
@@ -37,12 +43,15 @@ import {
   reactionAcknowledgement,
 } from '../pages/ai-models/chat/chat-replies';
 import {
-  AI_CHAT_IDLE_MAX_MS,
-  AI_CHAT_IDLE_MIN_MS,
   AI_CHAT_SELFIE_MAX_MS,
   AI_CHAT_SELFIE_MIN_MS,
   AI_CHAT_MESSAGE_LIMIT,
-  AI_CHAT_NUDGE_LIMIT,
+  AI_CHAT_FOLLOWUP_LIMIT,
+  AI_CHAT_FOLLOWUP_MAX_MS,
+  AI_CHAT_FOLLOWUP_MIN_MS,
+  AI_CHAT_FOLLOWUP_STEP_MS,
+  AI_CHAT_FEEDBACK_COMMENT_LIMIT,
+  AI_CHAT_INTEREST_MS,
   AI_CHAT_REMINDER_MARKS,
   AI_CHAT_SESSION_MS,
   AI_CHAT_AWAY_CHANCE,
@@ -63,11 +72,13 @@ import {
   typingTimeFor,
   AiChatAttachment,
   AiChatClosedReason,
+  AiChatFeedback,
   AiChatMessage,
   AiChatReaction,
   AiChatSession,
   AiChatSource,
 } from '../pages/ai-models/chat/chat-types';
+import { ChatInitiative, chatInitiative } from '../pages/ai-models/chat/chat-initiative';
 import { ChatIdentity, firstNameOf } from '../pages/ai-models/chat/chat-identity';
 import { readChatPhotoFacts } from '../pages/ai-models/chat/chat-photo';
 import {
@@ -87,6 +98,7 @@ import {
 import {
   analyseUserBehaviour,
   contractPitch,
+  disinterestFarewell,
   idleChatOpener,
   modelVoice,
   splitChatMessages,
@@ -193,8 +205,12 @@ export class AiModelChatService {
    */
   readonly identified = computed(() => Boolean(this.session()?.identity));
 
-  /** True while the summary card of a finished session is on screen (requirement K). */
-  readonly summaryOpen = signal(false);
+  /**
+   * True while the close form is on screen: her own report of the session and the visitor's stars
+   * and words (requirements E, F and K). It comes up when she ends the chat, and when the visitor
+   * presses ✕ on a session that has started — and it stays there until they close it.
+   */
+  readonly feedbackOpen = signal(false);
 
   /** The visitor's first name, for the window's chips and its header. */
   readonly visitorName = computed(() => this.session()?.identity?.name ?? '');
@@ -274,7 +290,7 @@ export class AiModelChatService {
     this.openSlug.set(null);
     this.session.set(null);
     this.draftAttachment.set(null);
-    this.summaryOpen.set(false);
+    this.feedbackOpen.set(false);
     this.stopClock();
   }
 
@@ -291,12 +307,14 @@ export class AiModelChatService {
     session.identity = { name: identity.name, avatar: identity.avatar };
     session.startedAt = now;
     session.endsAt = now + AI_CHAT_SESSION_MS;
-    session.nudgeAt = now + this.idleDelay(1);
+    // A and D — the three minutes she gives the visitor to answer her hello start now.
+    session.lastVisitorAt = now;
+    session.followUpAt = now + this.followUpDelay(1);
     // Her introduction (requirement F of the second brief) is her opening, so the first question the
     // visitor asks is answered as a question and not with a second introduction.
     session.introduced = true;
     this.remainingMs.set(AI_CHAT_SESSION_MS);
-    this.summaryOpen.set(false);
+    this.feedbackOpen.set(false);
     this.touch(session);
     this.startClock();
 
@@ -356,15 +374,43 @@ export class AiModelChatService {
     this.view(session);
     this.draftAttachment.set(null);
     this.notice.set('');
-    this.summaryOpen.set(false);
+    this.feedbackOpen.set(false);
     this.remainingMs.set(AI_CHAT_SESSION_MS);
     this.startClock();
     this.persist();
   }
 
-  /** K — closes the summary card, leaving the ended window behind it. */
-  dismissSummary(): void {
-    this.summaryOpen.set(false);
+  /**
+   * E — the visitor pressed ✕ on a window they have been chatting in: the close form comes up in
+   * front of it instead of the window simply disappearing, and the window itself is closed by the
+   * window's Close button (or by the code that called this, see `AiModelChatDialog`).
+   */
+  openFeedback(): void {
+    this.feedbackOpen.set(true);
+  }
+
+  /** E and K — puts the close form away, leaving the session behind it exactly as it was. */
+  dismissFeedback(): void {
+    this.feedbackOpen.set(false);
+  }
+
+  /**
+   * E — what the visitor thought of the chat, kept on the session and mirrored into this tab's
+   * storage with the rest of it, so the studio keeps their stars and their words with the
+   * transcript they belong to.
+   */
+  recordFeedback(model: AiModelProfile, feedback: { rating: number; comments: string }): void {
+    const session = this.sessionFor(model);
+    const rating = Math.max(0, Math.min(5, Math.round(feedback.rating)));
+    const comments = feedback.comments.trim().slice(0, AI_CHAT_FEEDBACK_COMMENT_LIMIT);
+    if (rating <= 0 && comments.length === 0) return;
+    session.feedback = { rating, comments, at: Date.now() } satisfies AiChatFeedback;
+    this.touch(session);
+  }
+
+  /** The feedback of a model's session, whether or not her window is open. */
+  feedbackFor(slug: string): AiChatFeedback | null {
+    return this.sessions.get(slug)?.feedback ?? null;
   }
 
   /** The transcript of a model's session, whether or not her window is open. */
@@ -408,8 +454,11 @@ export class AiModelChatService {
     this.draftAttachment.set(null);
     this.notice.set('');
     this.thinking.set(true);
-    // She is listening again: the silence that makes her speak up starts from this message.
-    session.nudgeAt = Date.now() + this.idleDelay(session.nudges + 1);
+    // D — the three quiet minutes are measured from the visitor's own last word, and B — hearing
+    // from them gives her the floor again, a while from now.
+    session.lastVisitorAt = Date.now();
+    session.followUps = 0;
+    session.followUpAt = Date.now() + this.followUpDelay(1);
     // The visitor's own message is on screen at once — the wait before her answer belongs to her
     // (requirement D), not to their own message.
     this.syncClock();
@@ -499,23 +548,76 @@ export class AiModelChatService {
     }
     if (due.length > 0) this.syncClock();
 
-    this.nudge(session);
+    // The close form is over the window: nothing of hers is written behind it.
+    if (this.feedbackOpen()) return;
+
+    const initiative = chatInitiative({
+      messages: session.messages,
+      startedAt: session.startedAt,
+      lastVisitorAt: session.lastVisitorAt,
+      now: Date.now(),
+    });
+
+    // D — the silence has lasted long enough to be an answer: she closes it herself.
+    if (this.mayEndForSilence(session, initiative)) {
+      this.endForDisinterest(session);
+      return;
+    }
+
+    // B — a conversation worth continuing: she says the next thing herself.
+    this.speakUp(session, initiative);
   }
 
   /**
-   * H — the visitor has gone quiet, so she says something herself: about her, about them, about the
-   * world, or a question of her own. She waits a little longer every time, and stops after a few.
+   * D — true when nothing is in flight and the visitor's silence has become long enough to read:
+   * she only ends a session she is not in the middle of answering, and never one that has ended
+   * already.
    */
-  private nudge(session: AiChatSession): void {
-    if (!session.identity || session.nudges >= AI_CHAT_NUDGE_LIMIT) return;
+  private mayEndForSilence(session: AiChatSession, initiative: ChatInitiative): boolean {
+    if (!initiative.disinterested || !session.identity || session.closed) return false;
+    if (this.thinking()) return false;
+    return !session.messages.some((message) => message.pending);
+  }
+
+  /**
+   * D — she has waited three minutes for an answer that is not coming. She says so in her own words
+   * and closes the session with it: the window stops taking messages, and the close form of
+   * requirement E comes up over it.
+   */
+  private endForDisinterest(session: AiChatSession): void {
+    const model = this.openModel();
+    const text = disinterestFarewell({
+      model,
+      voice: modelVoice(model),
+      name: session.identity ? firstNameOf(session.identity.name) : '',
+      seed: `${session.slug}|${session.startedAt}|farewell`,
+    });
+    this.appendMessage(
+      session,
+      newMessage({ author: 'model', text, intent: 'goodbye' }),
+    );
+    this.endSession(session, 'inactive');
+  }
+
+  /**
+   * A, B and H — she says something the visitor did not ask for, which happens only when
+   * `chat-initiative.ts` says she has the floor: they have written to her at least once (A), and
+   * the session has run past five minutes, a subject is in play, or they asked her something (B).
+   * She waits a little longer every time and stops after a few, so a silent window never turns into
+   * a woman talking to herself.
+   */
+  private speakUp(session: AiChatSession, initiative: ChatInitiative): void {
+    if (!initiative.reason) return;
+    if (!session.identity) return;
+    if (session.followUps >= AI_CHAT_FOLLOWUP_LIMIT) return;
     if (this.thinking() || session.messages.some((message) => message.pending)) return;
-    if (Date.now() < session.nudgeAt) return;
+    if (Date.now() < session.followUpAt) return;
 
     const last = [...session.messages].reverse().find((message) => message.kind === 'message');
     if (!last || last.author !== 'model') return;
 
-    session.nudges += 1;
-    session.nudgeAt = Date.now() + this.idleDelay(session.nudges + 1);
+    session.followUps += 1;
+    session.followUpAt = Date.now() + this.followUpDelay(session.followUps + 1);
 
     const model = this.openModel();
     const text = idleChatOpener({
@@ -523,15 +625,17 @@ export class AiModelChatService {
       voice: modelVoice(model),
       behaviour: analyseUserBehaviour(session.messages, session.strikes),
       name: firstNameOf(session.identity.name),
-      step: session.nudges,
-      seed: `${session.slug}|nudge|${session.nudges}|${session.messages.length}`,
+      step: session.followUps,
+      reason: initiative.reason,
+      topic: initiative.topic,
+      seed: `${session.slug}|nudge|${session.followUps}|${session.messages.length}`,
     });
 
     // She speaks up on her own: the pause that makes it feel like a message from her rather than an
     // answer is the away pause of requirement D, and here it is always on.
     const localised =
       session.language && ROMANISED_LANGUAGE_BOOKS[session.language]
-        ? romanisedIdleLine(session.language, `${session.slug}|idle|${session.nudges}`)
+        ? romanisedIdleLine(session.language, `${session.slug}|idle|${session.followUps}`)
         : null;
     void this.deliver(session, [localised ?? text], { intent: 'idle' });
   }
@@ -544,13 +648,17 @@ export class AiModelChatService {
     return model;
   }
 
-  /** Eleven to nineteen seconds of silence before she speaks up, a little longer each time. */
-  private idleDelay(step: number): number {
-    const window = Math.min(60_000, (step - 1) * 9_000);
+  /**
+   * B — how long she waits before saying something of her own: forty-five to seventy-five seconds,
+   * and a little longer every time she has already spoken in this session, so a long silence is
+   * never filled twice at the same rhythm.
+   */
+  private followUpDelay(step: number): number {
+    const window = Math.min(AI_CHAT_INTEREST_MS, Math.max(0, step - 1) * AI_CHAT_FOLLOWUP_STEP_MS);
     return seededBetween(
-      `${this.openSlug()}|idle|${step}|${Math.round(Math.random() * 1e6)}`,
-      AI_CHAT_IDLE_MIN_MS + window,
-      AI_CHAT_IDLE_MAX_MS + window,
+      `${this.openSlug()}|follow-up|${step}|${Math.round(Math.random() * 1e6)}`,
+      AI_CHAT_FOLLOWUP_MIN_MS + window,
+      AI_CHAT_FOLLOWUP_MAX_MS + window,
     );
   }
 
@@ -566,9 +674,10 @@ export class AiModelChatService {
       );
     }
     this.thinking.set(false);
-    // K — a session that ends is a session she reports on: the summary card comes up over the
-    // window, with the two faces, the time they spent and her own paragraph about it.
-    this.summaryOpen.set(true);
+    // E, F and K — a session that ends is a session the visitor is asked about: the close form
+    // comes up over the window with the two faces, the time they spent and the counts, her own note
+    // about the chat, and the visitor's stars and words. It stays there until they close it.
+    this.feedbackOpen.set(true);
     this.syncClock();
   }
 
@@ -1206,10 +1315,12 @@ export class AiModelChatService {
       closed: '',
       reminders: [],
       introduced: false,
-      nudgeAt: 0,
-      nudges: 0,
+      followUpAt: 0,
+      followUps: 0,
+      lastVisitorAt: 0,
       pitches: 0,
       closedAt: 0,
+      feedback: null,
       language: '',
     };
   }
@@ -1323,10 +1434,14 @@ export class AiModelChatService {
           closed: session.closed ?? '',
           reminders: Array.isArray(session.reminders) ? session.reminders : [],
           introduced: Boolean(session.introduced),
-          nudgeAt: session.nudgeAt ?? 0,
-          nudges: session.nudges ?? 0,
+          followUpAt: session.followUpAt ?? 0,
+          followUps: session.followUps ?? 0,
+          // A session stored before her own initiative changed shape is measured from the moment it
+          // started: the visitor's silence is the same silence, whichever version wrote it.
+          lastVisitorAt: session.lastVisitorAt ?? session.startedAt ?? 0,
           pitches: session.pitches ?? 0,
           closedAt: session.closedAt ?? 0,
+          feedback: session.feedback ?? null,
           language: session.language ?? '',
         });
       }
