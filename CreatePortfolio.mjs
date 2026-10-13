@@ -62,7 +62,7 @@ const VERSION = '1.0.0';
 const PAGE_COUNT = 24;
 const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif']);
 /** Folders inside an album that never feed the portfolio's photograph pool. */
-const reservedFolders = new Set(['biography', 'portfolio', 'video', 'videos']);
+const reservedFolders = new Set(['biography', 'portfolio', 'video', 'videos', 'personality']);
 
 // --------------------------------------------------------------------- helpers
 

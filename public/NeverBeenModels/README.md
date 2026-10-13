@@ -24,6 +24,8 @@ public/NeverBeenModels/
       .gitkeep
       <Album>_Portfolio.pdf ← created by CreatePortfolio.mjs (kept out of the photo grid)
       portfolio.json        ← generation receipt: style, pages, size, timestamp
+    personality/            ← this model's static character database for Live Chat
+      characterdatabase.json ← created by CharacterDatabaseScript.mjs (see below)
 ```
 
 ## Adding photographs
@@ -137,6 +139,33 @@ The ten files should be visibly synthetic illustrations and must never be repres
 or factual photos. An optional `signature.jpg` in the same folder is rendered as the signature-on-paper
 photo; without one, the page uses its blue-ink handwritten-style fallback. The biography page repeats
 the fictional notice in its footer.
+
+## Personality: the model's character database
+
+Every album folder carries its own `personality/` directory with one file,
+`personality/characterdatabase.json` — the model's **static character database** and the main rule
+engine of her Live Chat (AI Chat). It holds every minute detail of her personality, attitude and
+conversational behaviour — her nature, how she responds, what she likes and dislikes in a
+conversation, how much flirting she tolerates, whether adult chat is allowed, how many emojis she
+uses, how long her answers are, whether she laughs, whether she asks questions — and none of her
+personal facts (age, city, body, career), which the chat reads from her profile and Biography.
+
+```bash
+node CharacterDatabaseScript.mjs                     # every album that has no file yet
+node CharacterDatabaseScript.mjs --model "Fiadh Dara" # one model (name, album folder or slug)
+node CharacterDatabaseScript.mjs --force              # rewrite every file from the template
+# or: npm run personality
+```
+
+New albums start from the same **generic joyful** template. A file that exists is never overwritten
+without `--force`, so a character database that has been tuned by hand for one model is safe. When a
+value in the file conflicts with a generic studio constraint of the chat, the file wins — except the
+`hardLimits` block, which is absolute. The website reads the file through
+`src/app/pages/ai-models/chat/character-database.ts`, which deep-merges it over a built-in copy of
+the same template, so a missing or partially edited file still yields a complete personality.
+Nothing in the folder ever enters the photo grid or the portfolio document.
+
+`docs/ai-model-characterdatabase.md` documents the structure field by field.
 
 ## Photographs attached in Arena chat
 
