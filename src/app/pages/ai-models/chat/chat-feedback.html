@@ -136,8 +136,19 @@
       }
     </details>
 
-    <!-- F — the end of the form, and the only thing that closes it. -->
-    <button type="button" class="feedback-close" (click)="close()">Close</button>
+    <!-- F — the end of the form: the whole transcript one tap away, and the Close button, which
+         is still the only thing that closes it. -->
+    <div class="feedback-actions">
+      <button type="button" class="feedback-history" (click)="openHistory()">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 7v5l3.2 1.9" />
+          <path d="M4.5 12a7.5 7.5 0 1 1 2.2 5.3" />
+          <path d="M4.2 13.8 4.5 12l1.8.4" />
+        </svg>
+        Chat history
+      </button>
+      <button type="button" class="feedback-close" (click)="close()">Close</button>
+    </div>
     <p class="feedback-foot">
       Your stars and your words are kept with this chat. Everything here is invented, kind and yours
       to forget.

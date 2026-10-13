@@ -208,6 +208,16 @@ export interface AiChatSession {
    */
   liveChatCounted?: boolean;
   /**
+   * The key this session's Live Chat start was recorded under, so the same session's end can be
+   * recorded against the model's Live Now counter when the chat is over.
+   */
+  liveChatKey?: string;
+  /**
+   * True once this session's end has been recorded against the Live Now counter — however the
+   * chat ended, and however often the window is opened on the finished transcript afterwards.
+   */
+  liveChatEnded?: boolean;
+  /**
    * True while her "just a photo of mine, or a current selfie?" question is still open
    * (`photo:ask` in `chat-replies.ts`): the visitor's next message about a photograph answers it —
    * *selfie* sends two freshly generated ones, *photo* sends a frame from her album.

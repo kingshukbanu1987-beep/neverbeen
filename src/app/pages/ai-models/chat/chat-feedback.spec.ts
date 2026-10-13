@@ -207,6 +207,22 @@ describe('ChatFeedbackCard', () => {
     expect(visitor.element.querySelector('#chat-feedback-title')?.textContent).toContain('Rahul');
   });
 
+  it('offers the whole chat history beside Close, without closing the form', () => {
+    const harness = card();
+    const requests: void[] = [];
+    harness.fixture.componentInstance.historyRequested.subscribe(() => requests.push(undefined));
+
+    const history = harness.element.querySelector<HTMLButtonElement>('.feedback-history')!;
+    expect(history).not.toBeNull();
+    expect(history.textContent).toContain('Chat history');
+    // The Close button still ends the form; the history button sits beside it in the same row.
+    expect(history.closest('.feedback-actions')?.querySelector('.feedback-close')).not.toBeNull();
+
+    history.click();
+    expect(requests).toHaveLength(1);
+    expect(harness.closed).toHaveLength(0);
+  });
+
   it('draws itself without a visitor photograph, and without a name to use', () => {
     const harness = card('inactive', false);
     const element = harness.element;

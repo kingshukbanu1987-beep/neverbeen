@@ -424,6 +424,7 @@
         [visitor]="identity()"
         [reason]="closedReason()"
         (closed)="onFeedbackClosed($event)"
+        (historyRequested)="openHistory()"
       />
     }
   </section>
