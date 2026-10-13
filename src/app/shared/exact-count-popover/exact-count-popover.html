@@ -1,0 +1,15 @@
+@if (state(); as popover) {
+  <div class="ecp-layer">
+    <div
+      class="ecp-card"
+      [class.is-below]="popover.below"
+      [style.left.px]="popover.x"
+      [style.top.px]="popover.y"
+      role="tooltip"
+      [attr.aria-label]="popover.description + ': ' + popover.exact"
+    >
+      <b class="ecp-value">{{ popover.exact }}</b>
+      <span class="ecp-meter" aria-hidden="true"></span>
+    </div>
+  </div>
+}

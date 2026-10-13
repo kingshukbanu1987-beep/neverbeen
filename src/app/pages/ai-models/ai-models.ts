@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
+import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
@@ -44,7 +45,7 @@ export function drawCover(model: AiModelProfile): string {
 
 @Component({
   selector: 'app-ai-models-page',
-  imports: [RouterLink],
+  imports: [RouterLink, CompactCount, ExactCountPopover],
   templateUrl: './ai-models.html',
   styleUrl: './ai-models.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

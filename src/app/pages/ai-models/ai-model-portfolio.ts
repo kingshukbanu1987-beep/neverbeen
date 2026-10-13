@@ -26,6 +26,7 @@ import {
 } from '../../services/model-testimonials.service';
 import { rememberCommunityReturnPath } from '../../shared/community-return-path';
 import { CommunitySignInCard } from '../../shared/community-sign-in-card/community-sign-in-card';
+import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
 import { ModelMediaCommentsDialog } from '../../shared/model-media-comments-dialog/model-media-comments-dialog';
 import { ModelMediaEngagementBar } from '../../shared/model-media-engagement/model-media-engagement';
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
@@ -70,7 +71,9 @@ export const PREVIEW_LIMIT = 12;
     AiModelBookingDialog,
     AiModelPhotoViewer,
     AiModelVideoPlayer,
+    CompactCount,
     CommunitySignInCard,
+    ExactCountPopover,
     ModelMediaCommentsDialog,
     ModelMediaEngagementBar,
   ],

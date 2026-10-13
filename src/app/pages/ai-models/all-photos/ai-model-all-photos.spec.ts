@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ModelMediaEngagementService } from '../../../services/model-media-engagement.service';
+import { compactCount, exactCount } from '../../../shared/exact-count-popover';
 import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { AiModelAllPhotosPage } from './ai-model-all-photos';
 
@@ -161,16 +162,24 @@ describe('AiModelAllPhotosPage', () => {
       }
       expect(expectedTotals.seen).toBeGreaterThan(0);
 
+      // Long totals read compactly (21.4K) and open their exact figure on a click.
       const values = Array.from(
         albumStats.querySelectorAll<HTMLElement>('.album-count-number'),
       ).map((value) => value.textContent?.trim());
 
       expect(values).toEqual([
-        expectedTotals.seen.toLocaleString('en-US'),
-        expectedTotals.likes.toLocaleString('en-US'),
-        expectedTotals.comments.toLocaleString('en-US'),
-        expectedTotals.shares.toLocaleString('en-US'),
+        compactCount(expectedTotals.seen),
+        compactCount(expectedTotals.likes),
+        compactCount(expectedTotals.comments),
+        compactCount(expectedTotals.shares),
       ]);
+
+      const seen = albumStats.querySelector<HTMLButtonElement>('.album-stat-seen .compact-count')!;
+      seen.click();
+      harness.detectChanges();
+      expect(element.querySelector('.ecp-card')?.textContent?.trim()).toBe(
+        exactCount(expectedTotals.seen),
+      );
     } finally {
       release(profile);
     }

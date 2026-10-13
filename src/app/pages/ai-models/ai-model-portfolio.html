@@ -88,7 +88,11 @@
                 <button type="button" class="action-button" (click)="shareProfile(profile)">
                   <span aria-hidden="true">↗</span> {{ shareLabel() }}
                 </button>
-                <div class="portfolio-document-actions" role="group" aria-label="Model portfolio document">
+                <div
+                  class="portfolio-document-actions"
+                  role="group"
+                  aria-label="Model portfolio document"
+                >
                   <button
                     type="button"
                     class="action-button action-watch-portfolio"
@@ -321,7 +325,11 @@
                 ' times across every photograph and clip'
               "
             >
-              {{ formatTotal(engagementTotals().seen) }}
+              <app-compact-count
+                [value]="engagementTotals().seen"
+                label="Seen"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
           <div class="gallery-engagement-stat gallery-stat-likes">
@@ -330,7 +338,11 @@
               class="gallery-engagement-value num"
               [attr.title]="formatTotal(engagementTotals().likes) + ' total likes'"
             >
-              {{ formatTotal(engagementTotals().likes) }}
+              <app-compact-count
+                [value]="engagementTotals().likes"
+                label="Likes"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
           <div class="gallery-engagement-stat gallery-stat-comments">
@@ -339,7 +351,11 @@
               class="gallery-engagement-value num"
               [attr.title]="formatTotal(engagementTotals().comments) + ' total comments'"
             >
-              {{ formatTotal(engagementTotals().comments) }}
+              <app-compact-count
+                [value]="engagementTotals().comments"
+                label="Comments"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
           <div class="gallery-engagement-stat gallery-stat-shares">
@@ -348,7 +364,11 @@
               class="gallery-engagement-value num"
               [attr.title]="formatTotal(engagementTotals().shares) + ' total shares'"
             >
-              {{ formatTotal(engagementTotals().shares) }}
+              <app-compact-count
+                [value]="engagementTotals().shares"
+                label="Shares"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
         </dl>
@@ -857,3 +877,6 @@
     (closed)="closeComments()"
   />
 }
+
+<!-- The exact-count pop-up: a big counter opens it to reveal its exact figure. -->
+<app-exact-count-popover />

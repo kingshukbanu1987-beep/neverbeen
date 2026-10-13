@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import { CommunityService } from '../../services/community.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
+import { compactCount, exactCount } from '../../shared/exact-count-popover';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelBiographyPage } from './biography/ai-model-biography';
 import { AiModelAllPhotosPage } from './all-photos/ai-model-all-photos';
@@ -568,15 +569,23 @@ describe('AiModelPortfolioPage', () => {
       }
       expect(expectedTotals.seen).toBeGreaterThan(0);
 
+      // Long totals read compactly (21.4K) and open their exact figure on a click.
       const values = Array.from(row.querySelectorAll<HTMLElement>('.gallery-engagement-value')).map(
         (value) => value.textContent?.trim(),
       );
       expect(values).toEqual([
-        expectedTotals.seen.toLocaleString('en-US'),
-        expectedTotals.likes.toLocaleString('en-US'),
-        expectedTotals.comments.toLocaleString('en-US'),
-        expectedTotals.shares.toLocaleString('en-US'),
+        compactCount(expectedTotals.seen),
+        compactCount(expectedTotals.likes),
+        compactCount(expectedTotals.comments),
+        compactCount(expectedTotals.shares),
       ]);
+
+      const seen = row.querySelector<HTMLButtonElement>('.gallery-stat-seen .compact-count')!;
+      seen.click();
+      harness.detectChanges();
+      expect(element.querySelector('.ecp-card')?.textContent?.trim()).toBe(
+        exactCount(expectedTotals.seen),
+      );
     } finally {
       release(profile);
     }

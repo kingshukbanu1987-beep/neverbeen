@@ -37,13 +37,21 @@
                 ' times across every photograph and clip'
               "
             >
-              {{ formatTotal(engagementTotals().seen) }}
+              <app-compact-count
+                [value]="engagementTotals().seen"
+                label="Seen"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
           <div class="album-stat album-stat-likes">
             <dt class="album-count-label">Likes</dt>
             <dd class="album-count-number num" [attr.title]="formatTotal(engagementTotals().likes)">
-              {{ formatTotal(engagementTotals().likes) }}
+              <app-compact-count
+                [value]="engagementTotals().likes"
+                label="Likes"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
           <div class="album-stat album-stat-comments">
@@ -52,7 +60,11 @@
               class="album-count-number num"
               [attr.title]="formatTotal(engagementTotals().comments)"
             >
-              {{ formatTotal(engagementTotals().comments) }}
+              <app-compact-count
+                [value]="engagementTotals().comments"
+                label="Comments"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
           <div class="album-stat album-stat-shares">
@@ -61,7 +73,11 @@
               class="album-count-number num"
               [attr.title]="formatTotal(engagementTotals().shares)"
             >
-              {{ formatTotal(engagementTotals().shares) }}
+              <app-compact-count
+                [value]="engagementTotals().shares"
+                label="Shares"
+                [subject]="profile.name"
+              />
             </dd>
           </div>
         </dl>
@@ -195,3 +211,6 @@
     (closed)="closeComments()"
   />
 }
+
+<!-- The exact-count pop-up: a big counter opens it to reveal its exact figure. -->
+<app-exact-count-popover />

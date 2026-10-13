@@ -15,6 +15,7 @@ import {
   MediaKind,
   ModelMediaEngagementService,
 } from '../../../services/model-media-engagement.service';
+import { CompactCount, ExactCountPopover } from '../../../shared/exact-count-popover';
 import { ModelMediaCommentsDialog } from '../../../shared/model-media-comments-dialog/model-media-comments-dialog';
 import { ModelMediaEngagementBar } from '../../../shared/model-media-engagement/model-media-engagement';
 import { aiModelProfiles } from '../ai-model-data';
@@ -32,7 +33,14 @@ const EAGER_TILES = 6;
  */
 @Component({
   selector: 'app-ai-model-all-photos-page',
-  imports: [RouterLink, AiModelPhotoViewer, ModelMediaCommentsDialog, ModelMediaEngagementBar],
+  imports: [
+    RouterLink,
+    AiModelPhotoViewer,
+    CompactCount,
+    ExactCountPopover,
+    ModelMediaCommentsDialog,
+    ModelMediaEngagementBar,
+  ],
   templateUrl: './ai-model-all-photos.html',
   styleUrl: './ai-model-all-photos.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
