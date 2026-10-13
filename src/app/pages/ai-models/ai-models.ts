@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ModelLiveChatService } from '../../services/model-live-chat.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
@@ -54,6 +55,8 @@ export function drawCover(model: AiModelProfile): string {
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   private readonly engagement = inject(ModelMediaEngagementService);
+  /** Each model's Live Chat count, shown on her card beside the Live Chat button. */
+  private readonly liveChats = inject(ModelLiveChatService);
 
   /** The model whose live chat window is open, or null. The session lives in the chat service. */
   protected readonly chatModel = signal<AiModelProfile | null>(null);
@@ -155,6 +158,7 @@ export class AiModelsPage {
     // Ratings are public, live testimonial data rather than part of the generated model catalog.
     // Keep these requests bounded rather than fetching every model's reviews at once.
     void this.loadReviewSummaries();
+    void this.liveChats.load();
   }
 
   protected setAvailabilityFilter(value: AvailabilityFilter): void {
@@ -242,19 +246,29 @@ export class AiModelsPage {
     return Math.round(Math.max(0, Math.min(1, rating - star + 1)) * 1000) / 10;
   }
 
+  /**
+   * The review count as the card writes it: the number, then the word "reviews". Only a feed
+   * with reviews in it has a number — `null` while loading, on error, or when there are none.
+   */
+  protected reviewCountNumber(model: AiModelProfile): string | null {
+    const summary = this.reviewSummary(model);
+    if (summary.status !== 'ready' || summary.reviewCount === 0) return null;
+    return this.formatTotal(summary.reviewCount);
+  }
+
   protected reviewCountLabel(model: AiModelProfile): string {
     const summary = this.reviewSummary(model);
     if (summary.status === 'loading') return 'Loading reviews';
     if (summary.status === 'error') return 'Reviews unavailable';
     if (summary.reviewCount === 0) return 'No Reviews';
-    return `${this.formatTotal(summary.reviewCount)} ${summary.reviewCount === 1 ? 'review' : 'reviews'}`;
+    return `${this.formatTotal(summary.reviewCount)} reviews`;
   }
 
   protected ratingAccessibleLabel(model: AiModelProfile): string {
     const summary = this.reviewSummary(model);
     if (summary.status === 'loading') return 'Ratings are loading';
     if (summary.status === 'error') return 'Rating is temporarily unavailable';
-    return `${summary.averageRating.toFixed(1)} out of 5 stars from ${summary.reviewCount} ${summary.reviewCount === 1 ? 'review' : 'reviews'}`;
+    return `${summary.averageRating.toFixed(1)} out of 5 stars from ${summary.reviewCount} reviews`;
   }
 
   protected reviewLinkLabel(model: AiModelProfile): string {
@@ -263,7 +277,28 @@ export class AiModelsPage {
     if (summary.status === 'loading') return `Ratings for ${model.name} are loading`;
     if (summary.reviewCount === 0)
       return `No reviews yet for ${model.name}; open the testimonial section`;
-    return `Read ${summary.reviewCount} ${summary.reviewCount === 1 ? 'review' : 'reviews'} for ${model.name}`;
+    return `Read ${summary.reviewCount} reviews for ${model.name}`;
+  }
+
+  /**
+   * The Live Chat count of a model, as the card shows it: the number once it is known, a dash while
+   * the directory is still loading it, and `null` (no counter at all) when the count cannot be had.
+   */
+  protected liveChatCountLabel(model: AiModelProfile): string | null {
+    const count = this.liveChats.countFor(model.slug);
+    if (count !== null) return this.formatTotal(count);
+    const status = this.liveChats.status();
+    return status === 'idle' || status === 'loading' ? '—' : null;
+  }
+
+  protected liveChatWord(model: AiModelProfile): string {
+    return this.liveChats.countFor(model.slug) === 1 ? 'Live Chat' : 'Live Chats';
+  }
+
+  protected liveChatAccessibleLabel(model: AiModelProfile): string {
+    const count = this.liveChats.countFor(model.slug);
+    if (count === null) return `Live Chat counter for ${model.name} is loading`;
+    return `${this.formatTotal(count)} ${count === 1 ? 'Live Chat' : 'Live Chats'} with ${model.name}`;
   }
 
   private async loadReviewSummaries(): Promise<void> {

@@ -1,0 +1,131 @@
+<section class="chat-history" role="dialog" aria-modal="true" aria-labelledby="chat-history-title">
+  <header class="chat-history-bar">
+    <button
+      type="button"
+      class="chat-history-back"
+      (click)="closed.emit()"
+      aria-label="Back to the chat"
+    >
+      ‹
+    </button>
+    <div class="chat-history-heading">
+      <h2 id="chat-history-title">Whole chat history</h2>
+      <p>
+        {{ model().name }} · {{ messageCount() }}
+        {{ messageCount() === 1 ? 'message' : 'messages' }}
+      </p>
+    </div>
+  </header>
+
+  <div class="chat-history-tools">
+    <button type="button" class="chat-history-tool" (click)="print()">
+      <span aria-hidden="true">🖨</span> Print
+    </button>
+    <button
+      type="button"
+      class="chat-history-tool is-primary"
+      (click)="print()"
+      title="Opens the print dialog — choose Save as PDF as the destination"
+    >
+      <span aria-hidden="true">⬇</span> Save as PDF
+    </button>
+    <p class="chat-history-note">
+      Print or save opens your device's print dialog. Choose <b>Save as PDF</b> to keep a copy on
+      your device.
+    </p>
+  </div>
+
+  <div class="chat-history-body" role="log" aria-label="Every message in this chat">
+    @for (entry of entries(); track entry.id) {
+      @if (entry.dayLabel) {
+        <p class="chat-history-day">{{ entry.dayLabel }}</p>
+      }
+
+      @if (entry.kind === 'reminder') {
+        <p class="chat-history-reminder">{{ entry.text }}</p>
+      } @else if (entry.kind === 'notice') {
+        <p class="chat-history-notice">{{ entry.text }}</p>
+      } @else {
+        <article class="chat-history-line" [class.is-outgoing]="entry.author === 'user'">
+          <p class="chat-history-who">
+            <b>{{ entry.authorName }}</b>
+            <time>{{ entry.stampLabel }}</time>
+          </p>
+
+          <div class="chat-history-bubble" [class.is-outgoing]="entry.author === 'user'">
+            @if (entry.quote; as quoted) {
+              <p class="chat-history-quote">
+                <b>{{ quoted.author }}</b>
+                <span>{{ quoted.text }}</span>
+              </p>
+            }
+
+            @if (entry.photo; as photo) {
+              @if (photo.src) {
+                <img
+                  class="chat-history-photo"
+                  [src]="photo.src"
+                  [alt]="photo.name"
+                  loading="lazy"
+                />
+                @if (photo.selfie) {
+                  <p class="chat-history-tag">📱 Selfie, taken just now</p>
+                }
+              } @else {
+                <p class="chat-history-gone" role="status">
+                  <span aria-hidden="true">📷</span> Photograph — deleted when this chat session
+                  ended
+                </p>
+              }
+            }
+
+            @if (entry.document; as file) {
+              <div class="chat-history-file">
+                <span aria-hidden="true">📄</span>
+                <span class="chat-history-file-copy">
+                  <b>{{ file.name }}</b>
+                  <i>{{ file.size }}</i>
+                </span>
+                @if (file.href) {
+                  <button
+                    type="button"
+                    class="chat-history-download"
+                    (click)="download(file.href, file.name)"
+                    [attr.aria-label]="'Save ' + file.name + ' to this device'"
+                  >
+                    Save
+                  </button>
+                } @else {
+                  <i class="chat-history-file-gone">No longer kept in this tab</i>
+                }
+              </div>
+            }
+
+            @if (entry.text) {
+              <p class="chat-history-text">{{ entry.text }}</p>
+            }
+
+            @if (entry.sources.length > 0) {
+              <ul class="chat-history-sources" aria-label="Sources of this answer">
+                @for (source of entry.sources; track source.url) {
+                  <li>
+                    <a [href]="source.url" target="_blank" rel="noopener noreferrer">{{
+                      source.title
+                    }}</a>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          @if (entry.reaction) {
+            <p class="chat-history-reaction">
+              <span aria-hidden="true">{{ entry.reaction }}</span>
+              {{ entry.reactionBy }} reacted
+            </p>
+          }
+        </article>
+      }
+    }
+  </div>
+</section>

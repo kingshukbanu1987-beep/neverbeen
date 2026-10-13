@@ -50,7 +50,7 @@ import {
   personalRecall,
   PersonalTopic,
 } from '../pages/ai-models/chat/chat-personal-memory';
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { AiModelProfile, aiModelProfiles } from '../pages/ai-models/ai-model-data';
 import {
   composeChatReply,
@@ -96,6 +96,7 @@ import {
   replyQuoteOf,
 } from '../pages/ai-models/chat/chat-types';
 import { ChatInitiative, chatInitiative } from '../pages/ai-models/chat/chat-initiative';
+import { ModelLiveChatService } from './model-live-chat.service';
 import { ChatIdentity, firstNameOf, isValidChatName } from '../pages/ai-models/chat/chat-identity';
 import { readChatPhotoFacts } from '../pages/ai-models/chat/chat-photo';
 import {
@@ -282,6 +283,8 @@ export class AiModelChatService {
     return Boolean(session && !session.closed);
   });
 
+  /** The model cards' Live Chat counter: each new two-hour session is recorded here once. */
+  private readonly liveChats = inject(ModelLiveChatService);
   private readonly sessions = new Map<string, AiChatSession>();
   private readonly dossiers = new Map<string, string>();
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -343,6 +346,11 @@ export class AiModelChatService {
     // Her introduction (requirement F of the second brief) is her opening, so the first question the
     // visitor asks is answered as a question and not with a second introduction.
     session.introduced = true;
+    // The Live Chat counter on the model's card: one count per session, recorded as it starts.
+    if (!session.liveChatCounted) {
+      session.liveChatCounted = true;
+      void this.liveChats.recordStart(model.slug);
+    }
     this.remainingMs.set(AI_CHAT_SESSION_MS);
     this.feedbackOpen.set(false);
     this.touch(session);
@@ -1645,6 +1653,7 @@ export class AiModelChatService {
           closedAt: session.closedAt ?? 0,
           feedback: session.feedback ?? null,
           language: session.language ?? '',
+          liveChatCounted: session.liveChatCounted === true,
         });
       }
     } catch {

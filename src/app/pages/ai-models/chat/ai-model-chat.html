@@ -77,13 +77,25 @@
           }
           {{ city() }}
         </p>
-        <a
-          class="chat-view-profile"
-          [routerLink]="['/ai-models', model().slug]"
-          (click)="close()"
-          [attr.aria-label]="'View the full profile of ' + model().name"
-          >View Profile</a
-        >
+        <div class="chat-profile-actions">
+          <a
+            class="chat-view-profile"
+            [routerLink]="['/ai-models', model().slug]"
+            (click)="close()"
+            [attr.aria-label]="'View the full profile of ' + model().name"
+            >View Profile</a
+          >
+          <button
+            type="button"
+            class="chat-history-open"
+            (click)="openHistory()"
+            [disabled]="!session()"
+            aria-label="View the whole chat history"
+            title="See every message, photograph and document of this chat"
+          >
+            <span aria-hidden="true">🕘</span> Chat history
+          </button>
+        </div>
         <p class="chat-profile-disclaimer">{{ welcomeLine }}</p>
       </div>
     </div>
@@ -386,6 +398,13 @@
         }
       </div>
     </div>
+
+    <!-- The whole chat history: every line of this session, with Print and Save as PDF. -->
+    @if (historyOpen()) {
+      @if (session(); as current) {
+        <app-chat-history [model]="model()" [session]="current" (closed)="closeHistory()" />
+      }
+    }
 
     @if (needsIdentity()) {
       <app-chat-identity-prompt

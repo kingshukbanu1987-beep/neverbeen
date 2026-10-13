@@ -203,6 +203,11 @@ export interface AiChatSession {
   /** True once she has introduced herself — the first message of the session. */
   introduced: boolean;
   /**
+   * True once this session has been counted as a Live Chat on the model's card. A session is
+   * counted once, when the two hours start, however often the window is closed and reopened.
+   */
+  liveChatCounted?: boolean;
+  /**
    * True while her "just a photo of mine, or a current selfie?" question is still open
    * (`photo:ask` in `chat-replies.ts`): the visitor's next message about a photograph answers it —
    * *selfie* sends two freshly generated ones, *photo* sends a frame from her album.

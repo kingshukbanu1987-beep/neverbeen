@@ -451,8 +451,122 @@
 /* The live chat stands directly under the model's name, not down in the row of links. */
 .card-chat-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 0.5rem 0.6rem;
   margin-top: 0.62rem;
+}
+
+/*
+ * How many Live Chats the model has started: a frosted pill beside the Live Chat button, with a
+ * chat glyph, the count in tabular figures and a small green beacon for the live word.
+ */
+.card-live-count {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 2.05rem;
+  padding: 0.22rem 0.8rem 0.22rem 0.24rem;
+  overflow: hidden;
+  border: 1px solid rgb(116 196 118 / 34%);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgb(116 196 118 / 18%), rgb(255 255 255 / 3%)), rgb(12 9 12 / 70%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 8px 22px rgb(28 88 40 / 18%);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  white-space: nowrap;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.card-live-count:hover {
+  border-color: rgb(116 196 118 / 58%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 12%),
+    0 10px 26px rgb(28 88 40 / 30%);
+}
+
+.card-live-count-icon {
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #8fd992, #3f9d47);
+  box-shadow: 0 0 14px rgb(116 196 118 / 45%);
+  color: #ffffff;
+}
+
+.card-live-count-icon svg {
+  width: 0.92rem;
+  height: 0.92rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.card-live-count-value {
+  font-family: var(--numeric-font);
+  font-size: 0.98rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: 0 0 16px rgb(116 196 118 / 38%);
+}
+
+.card-live-count-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.36rem;
+  color: rgb(255 255 255 / 70%);
+  font-family: inherit;
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.card-live-count-word::before {
+  content: '';
+  width: 0.36rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #74c476;
+  box-shadow: 0 0 0 0 rgb(116 196 118 / 60%);
+  animation: card-live-count-beacon 2.4s ease-out infinite;
+}
+
+.card-live-count.is-loading .card-live-count-value {
+  opacity: 0.55;
+}
+
+@keyframes card-live-count-beacon {
+  0% {
+    box-shadow: 0 0 0 0 rgb(116 196 118 / 60%);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.4rem rgb(116 196 118 / 0%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-live-count-word::before {
+    animation: none;
+  }
 }
 
 .card-location {
@@ -539,7 +653,7 @@
   display: inline-flex;
   min-width: 0;
   align-items: center;
-  gap: 0.12rem;
+  gap: 0;
   padding: 0.18rem 0.4rem;
   border: 1px solid rgb(247 197 98 / 23%);
   border-radius: 999px;
@@ -569,6 +683,21 @@
 .card-review-link:focus-visible {
   outline: 2px solid #ffe1a0;
   outline-offset: 3px;
+}
+
+/* "4 reviews": the count and the word sit a clear gap apart, so they never run together. */
+.card-review-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.32em;
+  min-width: 0;
+}
+
+.card-review-number {
+  color: #ffe1a0;
+  font-family: var(--numeric-font);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
 }
 
 .card-availability {
