@@ -323,7 +323,13 @@ export class AiModelVideoPlayer {
     }
   }
 
-  /** True full screen: the player panel expands, so its controls stay on screen. */
+  /**
+   * True full screen: the browser takes the player panel over the whole screen, so its controls
+   * stay on screen. The `fullscreen` state follows what the browser actually does — a refused
+   * request (a sandboxed frame, a locked screen) must not flip the player into its full-screen
+   * looks, or the bar and foot would hide with no way to bring them back. The panel already
+   * covers the whole window without the API, so a refusal still leaves a full-screen player.
+   */
   protected toggleFullscreen(): void {
     if (typeof document === 'undefined') return;
 
@@ -340,8 +346,20 @@ export class AiModelVideoPlayer {
     const request = target?.requestFullscreen ?? target?.webkitRequestFullscreen;
     if (!target || typeof request !== 'function') return;
 
-    this.callSafely(() => request.call(target, { navigationUI: 'hide' }));
-    this.fullscreen.set(true);
+    try {
+      const result = request.call(target, { navigationUI: 'hide' }) as unknown;
+      if (result && typeof (result as Promise<void>).then === 'function') {
+        (result as Promise<void>).then(
+          () => this.fullscreen.set(true),
+          () => this.fullscreen.set(false),
+        );
+      } else {
+        // A webkit prefix that answers synchronously: the fullscreenchange event confirms it.
+        this.fullscreen.set(true);
+      }
+    } catch {
+      this.fullscreen.set(false);
+    }
   }
 
   protected syncFullscreen(): void {
@@ -447,7 +465,11 @@ export class AiModelVideoPlayer {
   /** Clicking the dark space around the player dismisses it; the picture and controls do not. */
   protected onBackdropClick(event: MouseEvent): void {
     const target = event.target as HTMLElement | null;
-    if (target?.closest('video, button, a, input, select, .player-panel, .player-stage, .player-comments'))
+    if (
+      target?.closest(
+        'video, button, a, input, select, .player-panel, .player-stage, .player-comments',
+      )
+    )
       return;
     this.close();
   }

@@ -1253,6 +1253,29 @@ describe('AiModelVideoPlayer', () => {
     expect(closed).toHaveBeenCalledTimes(2);
   });
 
+  it('only puts on its full-screen looks when the browser grants full screen', async () => {
+    const { fixture, element } = open();
+    const panel = element.querySelector('.player-panel') as HTMLElement;
+    const button = element.querySelector('.player-fullscreen') as HTMLButtonElement;
+
+    // A browser that refuses the request (a sandboxed frame, a locked screen) must not flip the
+    // player into its immersive looks — the bar and the foot have to stay reachable.
+    Object.assign(panel, { requestFullscreen: () => Promise.reject(new Error('denied')) });
+    button.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(panel.classList.contains('is-fullscreen')).toBe(false);
+
+    // A browser that grants it flips the player, hiding the bar and foot around the picture.
+    Object.assign(panel, { requestFullscreen: () => Promise.resolve() });
+    button.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    fixture.detectChanges();
+    expect(panel.classList.contains('is-fullscreen')).toBe(true);
+  });
+
   it('formats the readouts for short and long clips', () => {
     expect(formatTime(0)).toBe('0:00');
     expect(formatTime(5.4)).toBe('0:05');

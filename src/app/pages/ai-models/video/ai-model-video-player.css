@@ -10,14 +10,14 @@
   --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
+/* The player covers the whole screen of every device — phone, tablet or laptop — so the clip
+   opens as large as the device allows and every control travels with it. */
 .video-player {
   position: fixed;
   z-index: 60;
   inset: 0;
   display: grid;
-  place-items: center;
-  padding: clamp(0.75rem, 2vw, 2rem);
-  background: rgb(4 3 5 / 88%);
+  background: rgb(4 3 5 / 96%);
   backdrop-filter: blur(14px);
   animation: player-in 220ms ease backwards;
 }
@@ -26,27 +26,18 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  width: min(1160px, 100%);
-  max-height: 100%;
-  overflow: hidden auto;
-  border: 1px solid var(--player-line);
-  border-radius: 26px;
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   background: linear-gradient(160deg, #1b1320, #0b080e 76%);
-  box-shadow: 0 44px 120px rgb(0 0 0 / 62%);
-  animation: player-panel-in 260ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+  animation: player-panel-in 260ms ease backwards;
 }
 
 /* The panel is what goes full screen, so the controls travel with the picture. */
 .player-panel:fullscreen,
 .player-panel.is-fullscreen {
-  width: 100%;
-  height: 100%;
-  max-height: none;
   gap: 0;
-  border: 0;
-  border-radius: 0;
-  overflow: hidden;
   background: #000;
   animation: none;
 }
@@ -137,15 +128,17 @@
 
 /* -------------------------------------------------------------------------- stage */
 
+/* The stage takes every pixel between the top bar, the controls and the foot. The clip inside
+   keeps its own aspect ratio — portrait reels grow into the height, landscape reels into the
+   width — and `object-fit: contain` shows the whole picture at the largest size that fits,
+   so nothing is ever cropped whatever the source dimensions are. */
 .player-stage {
   position: relative;
   display: grid;
-  aspect-ratio: 16 / 9;
-  margin-inline: 1rem;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   place-items: center;
-  border: 1px solid var(--player-line);
-  border-radius: 18px;
   background: #000;
 }
 
@@ -155,15 +148,6 @@
   background: #000;
   cursor: pointer;
   object-fit: contain;
-}
-
-.player-panel:fullscreen .player-stage,
-.player-panel.is-fullscreen .player-stage {
-  flex: 1;
-  min-height: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
 }
 
 .player-panel:fullscreen .player-bar,
@@ -610,29 +594,18 @@
 @keyframes player-panel-in {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.985);
   }
 }
 
 @media (max-width: 860px) {
-  .video-player {
-    padding: 0;
-  }
-
+  /* The player already covers the whole screen; phones only tighten the chrome around the
+     picture so the clip itself keeps every pixel it can get. */
   .player-panel {
-    width: 100%;
-    height: 100%;
-    max-height: none;
-    justify-content: center;
-    border: 0;
-    border-radius: 0;
-    background: rgb(5 4 7 / 94%);
+    gap: 0.35rem;
   }
 
-  .player-stage {
-    margin-inline: 0;
-    border: 0;
-    border-radius: 0;
+  .player-bar {
+    padding: 0.65rem 0.85rem;
   }
 
   .player-hint,
@@ -642,6 +615,11 @@
 
   .player-controls {
     padding: 0.4rem 0.85rem 0;
+  }
+
+  .player-foot {
+    gap: 0.6rem;
+    padding: 0.7rem 0.85rem 0.9rem;
   }
 
   .player-download {
