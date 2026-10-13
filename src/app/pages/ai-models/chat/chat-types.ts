@@ -18,8 +18,11 @@ export type AiChatAuthor = 'model' | 'user' | 'system';
  */
 export type AiChatMessageKind = 'message' | 'reminder' | 'notice';
 
-/** The six reactions of the Instagram-style tray, in tray order. */
-export type AiChatReaction = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
+/**
+ * The seven expressions of the Instagram-style tray, in tray order — given on the photographs and
+ * the text messages that pass between the visitor and the model, by either of them.
+ */
+export type AiChatReaction = 'like' | 'dislike' | 'love' | 'smile' | 'angry' | 'cry' | 'happy';
 
 export interface AiChatReactionOption {
   id: AiChatReaction;
@@ -30,11 +33,12 @@ export interface AiChatReactionOption {
 
 export const AI_CHAT_REACTIONS: readonly AiChatReactionOption[] = [
   { id: 'like', emoji: '👍', label: 'Like' },
+  { id: 'dislike', emoji: '👎', label: 'Dislike' },
   { id: 'love', emoji: '❤️', label: 'Love' },
-  { id: 'haha', emoji: '😂', label: 'Haha' },
-  { id: 'wow', emoji: '😮', label: 'Wow' },
-  { id: 'sad', emoji: '😢', label: 'Sad' },
+  { id: 'smile', emoji: '😊', label: 'Smile' },
   { id: 'angry', emoji: '😡', label: 'Angry' },
+  { id: 'cry', emoji: '😭', label: 'Cry' },
+  { id: 'happy', emoji: '😄', label: 'Happy' },
 ];
 
 export function reactionOption(reaction: AiChatReaction): AiChatReactionOption {
@@ -66,6 +70,12 @@ export interface AiChatAttachment {
    */
   selfie?: boolean;
   /**
+   * Set on the photographs `livechatselfiesandphotos` generates for a live chat: they are never
+   * written to storage, they live only in the browser, and their bytes are dropped from the
+   * transcript the moment the chat session ends (see `AiModelChatService.endSession`).
+   */
+  ephemeral?: boolean;
+  /**
    * Data URL used to preview a picture inside its bubble. Empty for documents, and dropped when a
    * session is restored without room for it (see `compactSessions` in the chat service).
    */
@@ -82,6 +92,36 @@ export interface AiChatAttachment {
 export interface AiChatSource {
   title: string;
   url: string;
+}
+
+/**
+ * The message somebody chose to reply over — the quote that sits at the top of a reply bubble,
+ * the way an answer in Instagram chat carries the message it answers. A snapshot, so the quote
+ * survives even when the original message later scrolls out of the window's memory.
+ */
+export interface AiChatReplyQuote {
+  /** The id of the quoted message, so a click on the quote can jump back to it. */
+  id: string;
+  author: AiChatAuthor;
+  /** A short excerpt of the quoted text — `''` when the message was only a photograph. */
+  text: string;
+  /** When the quoted message was written. */
+  at: number;
+  /** True when the quoted message carried a photograph rather than words. */
+  photo?: boolean;
+}
+
+/** The longest excerpt of a message that a reply quote carries. */
+export const AI_CHAT_REPLY_QUOTE_CHARS = 160;
+
+/** The snapshot of a message that a reply quote holds. */
+export function replyQuoteOf(message: AiChatMessage): AiChatReplyQuote {
+  const photo = message.attachment?.kind === 'photo';
+  const text =
+    !message.text.trim() || (photo && message.text.startsWith('Sent a '))
+      ? ''
+      : message.text.replace(/\s+/g, ' ').trim().slice(0, AI_CHAT_REPLY_QUOTE_CHARS);
+  return { id: message.id, author: message.author, text, at: message.at, photo };
 }
 
 export interface AiChatMessage {
@@ -109,6 +149,11 @@ export interface AiChatMessage {
   revealedChars: number;
   /** Google results behind the answer, shown beneath her bubble. */
   sources: AiChatSource[];
+  /**
+   * The message this one replies over (the Instagram reply): a snapshot of the quoted message,
+   * shown at the top of this bubble. Absent — `null` — on an ordinary message.
+   */
+  replyTo?: AiChatReplyQuote | null;
   /** Set on her messages: the intent the reply engine recognised. */
   intent: string;
   /**
@@ -157,6 +202,12 @@ export interface AiChatSession {
   reminders: number[];
   /** True once she has introduced herself — the first message of the session. */
   introduced: boolean;
+  /**
+   * True while her "just a photo of mine, or a current selfie?" question is still open
+   * (`photo:ask` in `chat-replies.ts`): the visitor's next message about a photograph answers it —
+   * *selfie* sends two freshly generated ones, *photo* sends a frame from her album.
+   */
+  pendingPhotoAsk?: boolean;
   /**
    * When she is due to say something on her own if the visitor stays quiet (requirements B and H),
    * and how many times she already has — she waits a little longer every time.

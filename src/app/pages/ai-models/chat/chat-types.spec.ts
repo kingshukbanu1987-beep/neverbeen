@@ -9,9 +9,13 @@ import {
   AI_CHAT_INTRO_MIN_MS,
   AI_CHAT_MID_PAUSE_MAX_MS,
   AI_CHAT_MID_PAUSE_MIN_MS,
+  AI_CHAT_REACTIONS,
+  AI_CHAT_REPLY_QUOTE_CHARS,
   AI_CHAT_TYPING_MAX_MS,
   AI_CHAT_TYPING_MIN_MS,
   AI_CHAT_TYPING_PER_CHAR_MS,
+  reactionEmoji,
+  replyQuoteOf,
   typingTimeFor,
 } from './chat-types';
 
@@ -39,6 +43,83 @@ describe('the shape of a message (requirements A and C of the second brief)', ()
     message.pending = false;
     message.revealedChars = message.text.length;
     expect(message.revealedChars).toBe(17);
+  });
+});
+
+describe('the seven expressions and the reply quote', () => {
+  it('offers exactly the seven expressions, in tray order', () => {
+    expect(AI_CHAT_REACTIONS.map((option) => option.id)).toEqual([
+      'like',
+      'dislike',
+      'love',
+      'smile',
+      'angry',
+      'cry',
+      'happy',
+    ]);
+    expect(AI_CHAT_REACTIONS.map((option) => option.emoji)).toEqual([
+      '👍',
+      '👎',
+      '❤️',
+      '😊',
+      '😡',
+      '😭',
+      '😄',
+    ]);
+    expect(reactionEmoji('dislike')).toBe('👎');
+    expect(reactionEmoji('cry')).toBe('😭');
+    expect(reactionEmoji(null)).toBe('');
+  });
+
+  it('snapshots the message a reply answers, text trimmed to the quote length', () => {
+    const long = 'word '.repeat(80).trim();
+    const message: AiChatMessage = {
+      id: 'user-9',
+      author: 'user',
+      text: long,
+      at: 42,
+      kind: 'message',
+      attachment: null,
+      reaction: null,
+      reactionBy: null,
+      pending: false,
+      revealedChars: long.length,
+      sources: [],
+      intent: '',
+    };
+    const quote = replyQuoteOf(message);
+    expect(quote.id).toBe('user-9');
+    expect(quote.author).toBe('user');
+    expect(quote.at).toBe(42);
+    expect(quote.text.length).toBe(AI_CHAT_REPLY_QUOTE_CHARS);
+    expect(quote.photo).toBe(false);
+  });
+
+  it('quotes a photograph as a photograph, not as the words “Sent a photograph”', () => {
+    const message: AiChatMessage = {
+      id: 'user-10',
+      author: 'user',
+      text: 'Sent a photograph',
+      at: 43,
+      kind: 'message',
+      attachment: {
+        kind: 'photo',
+        name: 'me.jpg',
+        type: 'image/jpeg',
+        size: 1024,
+        source: 'upload',
+        preview: 'data:image/jpeg;base64,AAAA',
+      },
+      reaction: null,
+      reactionBy: null,
+      pending: false,
+      revealedChars: 17,
+      sources: [],
+      intent: '',
+    };
+    const quote = replyQuoteOf(message);
+    expect(quote.text).toBe('');
+    expect(quote.photo).toBe(true);
   });
 });
 

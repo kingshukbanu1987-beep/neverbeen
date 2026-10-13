@@ -662,6 +662,168 @@
   color: var(--chat-violet);
 }
 
+/* The reply control sits beside the reaction control on every bubble — theirs or hers. */
+.chat-reply-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--chat-faint);
+  font-family: inherit;
+  font-size: 0.68rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 160ms ease,
+    color 160ms ease;
+}
+
+.chat-row:hover .chat-reply-button,
+.chat-row:focus-within .chat-reply-button,
+.chat-reply-button[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.chat-reply-button:hover,
+.chat-reply-button:focus-visible {
+  color: var(--chat-violet);
+}
+
+/* The quote at the top of a reply bubble: the message it answers, in Instagram's own shape. */
+.chat-reply-quote {
+  display: flex;
+  align-items: stretch;
+  gap: 0.45rem;
+  width: 100%;
+  margin: 0 0 0.4rem;
+  padding: 0.25rem 0.4rem;
+  border: 0;
+  border-radius: 10px;
+  background: rgb(11 11 15 / 5%);
+  font-family: inherit;
+  text-align: left;
+  white-space: normal;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.chat-reply-quote:hover,
+.chat-reply-quote:focus-visible {
+  background: rgb(11 11 15 / 9%);
+}
+
+.chat-reply-quote-bar {
+  flex: 0 0 3px;
+  border-radius: 999px;
+  background: var(--chat-violet, #6d4bd8);
+}
+
+.chat-reply-quote-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.05rem;
+}
+
+.chat-reply-quote-copy b {
+  color: var(--chat-violet, #6d4bd8);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.chat-reply-quote-copy i {
+  overflow: hidden;
+  color: var(--chat-faint, #8a8798);
+  font-size: 0.66rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The photograph above stops bleeding into the bubble once a quote has gone in front of it. */
+.chat-reply-quote ~ .chat-bubble-photo {
+  margin-top: 0;
+}
+
+/* A photograph whose bytes are gone — the session ended and the generated selfie with it. */
+.chat-bubble-photo.is-gone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 92px;
+  margin: 0 -0.35rem 0.4rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--chat-line, #e4e0f2);
+  border-radius: 14px;
+  background: #f7f5fd;
+  color: var(--chat-faint, #8a8798);
+  text-align: center;
+}
+
+.chat-bubble-photo.is-gone span {
+  font-size: 1.1rem;
+}
+
+.chat-bubble-photo.is-gone i {
+  font-size: 0.64rem;
+  font-style: normal;
+}
+
+/* The reply strip above the composer: what is being replied to, and the way out of it. */
+.chat-reply-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--chat-line);
+  background: #f4efff;
+}
+
+.chat-reply-strip-bar {
+  flex: 0 0 3px;
+  align-self: stretch;
+  border-radius: 999px;
+  background: var(--chat-violet, #6d4bd8);
+}
+
+.chat-reply-strip-copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 0.05rem;
+}
+
+.chat-reply-strip-copy b {
+  color: var(--chat-violet, #6d4bd8);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.chat-reply-strip-copy i {
+  overflow: hidden;
+  color: var(--chat-faint, #8a8798);
+  font-size: 0.7rem;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-reply-strip button {
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--chat-line, #e4e0f2);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--chat-faint, #8a8798);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.chat-reply-strip button:hover,
+.chat-reply-strip button:focus-visible {
+  color: var(--chat-violet, #6d4bd8);
+}
+
 .chat-reaction-tray {
   display: flex;
   gap: 0.1rem;

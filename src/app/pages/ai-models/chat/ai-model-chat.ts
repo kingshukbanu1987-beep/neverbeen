@@ -33,7 +33,9 @@ import {
   AiChatFeedback,
   AiChatMessage,
   AiChatReaction,
+  AiChatReplyQuote,
   reactionEmoji,
+  replyQuoteOf,
 } from './chat-types';
 
 /** The largest picture kept in a session: big enough to look sharp in the bubble. */
@@ -66,6 +68,8 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
 })
 export class AiModelChatDialog implements OnInit {
   protected readonly chat = inject(AiModelChatService);
+  /** The window itself, so a click on a reply quote can jump back to the quoted bubble. */
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   readonly model = input.required<AiModelProfile>();
   readonly closed = output<void>();
@@ -83,6 +87,8 @@ export class AiModelChatDialog implements OnInit {
 
   protected readonly draft = signal('');
   protected readonly pickerFor = signal<string | null>(null);
+  /** The message the visitor has chosen to reply over — the quote the composer will send. */
+  protected readonly replyingTo = signal<AiChatReplyQuote | null>(null);
   protected readonly readError = signal('');
   protected readonly sending = signal(false);
 
@@ -227,10 +233,12 @@ export class AiModelChatDialog implements OnInit {
   protected async submit(): Promise<void> {
     if (!this.canSend()) return;
     const text = this.draft();
+    const replyTo = this.replyingTo();
     this.draft.set('');
+    this.replyingTo.set(null);
     this.sending.set(true);
     try {
-      await this.chat.sendMessage(this.model(), text);
+      await this.chat.sendMessage(this.model(), text, replyTo);
     } finally {
       this.sending.set(false);
       this.focusComposer();
@@ -314,18 +322,45 @@ export class AiModelChatDialog implements OnInit {
 
   protected toggleReactionPicker(messageId: string): void {
     this.pickerFor.set(this.pickerFor() === messageId ? null : messageId);
+    this.replyingTo.set(null);
   }
 
-  /** The Instagram habit: a double click on her bubble loves the message. */
+  /** The Instagram habit: a double click on a bubble loves the message — theirs or hers. */
   protected onBubbleDoubleClick(message: AiChatMessage): void {
-    if (message.author !== 'model' || message.pending) return;
+    if (message.pending) return;
     this.chat.reactToMessage(this.model(), message.id, 'love');
   }
 
+  /** One of the seven expressions, on a photograph or a text message, from either side. */
   protected react(message: AiChatMessage, reaction: AiChatReaction): void {
     this.pickerFor.set(null);
-    if (message.author !== 'model') return;
     this.chat.reactToMessage(this.model(), message.id, reaction);
+  }
+
+  // ------------------------------------------------------------------ replies
+
+  /** Choosing a message to reply over — the Instagram reply, quote and all. */
+  protected startReply(message: AiChatMessage): void {
+    this.pickerFor.set(null);
+    this.replyingTo.set(this.replyingTo()?.id === message.id ? null : replyQuoteOf(message));
+    this.focusComposer();
+  }
+
+  protected cancelReply(): void {
+    this.replyingTo.set(null);
+  }
+
+  /** Who the quoted message was written by, as the reply strip and the quote head say it. */
+  protected quoteAuthor(quote: AiChatReplyQuote): string {
+    if (quote.author === 'user') return 'You';
+    if (quote.author === 'model') return this.model().name.split(' ')[0];
+    return 'NeverBeen';
+  }
+
+  /** A click on the quote jumps back to the message it quotes, the way it does in Instagram. */
+  protected scrollToMessage(messageId: string): void {
+    const bubble = this.host.nativeElement.querySelector(`[data-message-id="${messageId}"]`);
+    bubble?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   // ------------------------------------------------------------------ rendering helpers

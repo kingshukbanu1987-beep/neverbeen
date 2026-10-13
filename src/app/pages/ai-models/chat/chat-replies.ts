@@ -81,7 +81,16 @@ export interface AiChatReplyRequest {
   message: AiChatMessage;
   history: readonly AiChatMessage[];
   /** The session's running state; `strikes` grows with every rude message. */
-  session: { strikes: number; introduced: boolean; identity?: AiChatRequestUser | null };
+  session: {
+    strikes: number;
+    introduced: boolean;
+    identity?: AiChatRequestUser | null;
+    /**
+     * True while her "just a photo of mine, or a current selfie?" question is still open
+     * (`photo:ask`): the visitor's next message about a photograph answers it.
+     */
+    pendingPhotoAsk?: boolean;
+  };
   /** Who she is talking to, once the window's form has been filled in. */
   user?: AiChatRequestUser | null;
   /** What her own eyes made of the photograph the visitor just sent (requirement F). */
@@ -106,14 +115,27 @@ export interface AiChatReplyRequest {
 
 export interface AiChatReply {
   text: string;
-  /** True when the answer is a selfie she is sending with it (requirement E). */
+  /** True when the answer is a photograph she is sending with it (requirement E). */
   selfie?: boolean;
   /**
-   * The moment the selfie is taken in, when the visitor asked for a **selfie** by name: her camera
-   * photographs her from her own profile photograph in exactly this moment. Absent for a request for
-   * her album, which is answered with the frame the visitor asked for.
+   * The moment the selfie is taken in, when the visitor asked for a **selfie** by name: her
+   * camera photographs her from her own profile photograph in exactly this moment. Absent for a
+   * request for her album, which is answered with the frame the visitor asked for.
    */
   selfieMoment?: { place: string; flaw: string };
+  /**
+   * True when the photograph must be **generated now** by the `livechatselfiesandphotos`
+   * service — two fresh frames, same outfit and ambience, different poses — rather than picked
+   * from her album. Set for the word "selfie" and for a visitor who answered her photo question
+   * with "selfie".
+   */
+  liveSelfie?: boolean;
+  /**
+   * True when her question is the photo one: the visitor asked for *a photo*, and she answers by
+   * asking whether they want just a photo of her or a current selfie of her. The service stores
+   * the open question on the session (`pendingPhotoAsk`).
+   */
+  photoAsk?: boolean;
   /** The reaction she leaves on the visitor's message, if any. */
   reaction: AiChatReaction | null;
   /** What she understood, e.g. `introduction`, `knowledge:booking`. */
@@ -244,22 +266,23 @@ const SAD_PATTERN =
   /\b(?:i am sad|i'm sad|im sad|feeling low|i am depressed|i'm depressed|bad day|terrible day|i am lonely|i'm lonely|i am tired|i'm exhausted|i am stressed|i'm stressed|heartbroken|crying)\b/;
 
 /**
- * The reaction she leaves on **the visitor's own message** (requirement H): the same six reactions
- * the visitor can give her, used only when the message really carries the feeling, so the chat
- * never turns into a wall of emoji.
+ * The reaction she leaves on **the visitor's own message** (requirement H): the same seven
+ * expressions the visitor can give her, used only when the message really carries the feeling, so
+ * the chat never turns into a wall of emoji.
  */
 export function reactionForUserMessage(text: string): AiChatReaction | null {
   const cleaned = text.toLowerCase();
   if (AFFECTION_PATTERN.test(cleaned)) return 'love';
-  if (JOKE_PATTERN.test(cleaned)) return 'haha';
-  if (WOW_PATTERN.test(cleaned)) return 'wow';
-  if (SAD_PATTERN.test(cleaned)) return 'sad';
+  if (JOKE_PATTERN.test(cleaned)) return 'smile';
+  if (WOW_PATTERN.test(cleaned)) return 'happy';
+  if (SAD_PATTERN.test(cleaned)) return 'cry';
   return null;
 }
 
 /**
- * What she answers when the visitor reacts to one of **her** messages, and the reaction she gives
- * back to the visitor's own last message. `reaction` is what the visitor left on her bubble.
+ * What she answers when the visitor reacts to one of **her** messages or photographs, and the
+ * reaction she gives back on the visitor's own last message. `reaction` is what the visitor left
+ * on her bubble — one of the seven expressions: like, dislike, love, smile, angry, cry, happy.
  */
 export function reactionAcknowledgement(
   model: AiModelProfile,
@@ -291,38 +314,49 @@ export function reactionAcknowledgement(
         ),
         reactionBack: 'like',
       };
-    case 'haha':
+    case 'dislike':
       return {
         text: pick(
           [
-            'Glad I made you laugh 😂 that laugh suits you.',
-            'Finally someone who laughs at my jokes 😂 — most people just stare.',
+            'A thumbs down — ouch, noted. 👎 Tell me what to fix and I will try again.',
+            'You did not like that one. 👎 Alright, honesty is a love language too.',
           ],
           seed,
         ),
-        reactionBack: 'haha',
+        reactionBack: 'dislike',
       };
-    case 'wow':
+    case 'smile':
       return {
         text: pick(
           [
-            'Right? 😮 Wait until you see my photographs — the wow gets louder.',
-            'I like that face 😮 Hold onto it, my album does worse to people.',
+            'There it is — a real smile. 😊 Now I want to know what started it.',
+            'You smiled at that one. 😊 Good. That is the whole point of me.',
           ],
           seed,
         ),
-        reactionBack: 'wow',
+        reactionBack: 'smile',
       };
-    case 'sad':
+    case 'happy':
       return {
         text: pick(
           [
-            'Oh no — did I say something that landed badly? 😢 Tell me and I will fix it, I would rather know.',
-            'That sad face hurts more than it should 😢 Say it plainly and I will answer properly.',
+            'That happy face is going straight to my camera roll. 😄 What put you in this mood?',
+            'Happy with me? 😄 Say it again, I am collecting these.',
           ],
           seed,
         ),
-        reactionBack: 'sad',
+        reactionBack: 'happy',
+      };
+    case 'cry':
+      return {
+        text: pick(
+          [
+            'Oh no — did I say something that landed badly? 😭 Tell me and I will fix it, I would rather know.',
+            'That crying face hurts more than it should 😭 Say it plainly and I will answer properly.',
+          ],
+          seed,
+        ),
+        reactionBack: 'cry',
       };
     case 'angry':
     default:
@@ -335,9 +369,47 @@ export function reactionAcknowledgement(
           ],
           seed,
         ),
-        reactionBack: 'sad',
+        reactionBack: 'cry',
       };
   }
+}
+
+// ------------------------------------------------------------------ photo or selfie?
+
+/**
+ * The visitor answering her open photo question — *"just a photo of me, or a current selfie?"*.
+ * Mentioning the selfie means the live one (`livechatselfiesandphotos` generates two, same outfit
+ * and ambience, different poses); anything else that is clearly about a photograph means a frame
+ * from her album. `null` when the message is not an answer at all — a price question, or another
+ * subject — and then the question simply stays open.
+ */
+export function resolvePhotoChoice(probe: string): 'selfie' | 'album' | null {
+  const text = probe.toLowerCase();
+  // "How much for a photo?" is a rate question, not a choice between two kinds of photograph.
+  if (
+    /\b(?:rate|price|cost|how much|booking|book|order|package|budget|invoice|fee|pay|shoot)\b/.test(
+      text,
+    )
+  ) {
+    return null;
+  }
+  if (SELFIE_WORD_PATTERN.test(text)) return 'selfie';
+  // "current", "fresh", "live" or "right now" with a picture word is a selfie as well.
+  if (
+    /\b(?:current|fresh|live|right now|taken now|just now|as of now)\b[^.?!]{0,24}\b(?:photo|pic|picture|self)/.test(
+      text,
+    )
+  ) {
+    return 'selfie';
+  }
+  if (
+    /\b(?:photo|photos|pic|pics|picture|pictures|album|gallery|folder|either|whatever|just|any|regular|normal|ordinary|old|yourself|of you)\b/.test(
+      text,
+    )
+  ) {
+    return 'album';
+  }
+  return null;
 }
 
 // ------------------------------------------------------------------ intent patterns
@@ -1234,7 +1306,13 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
           : `${chatIntroduction(model, now, firstName)}\n\nAnd to the ${article} you just sent — ${text}`,
         `${seed}|attachment`,
       ),
-      reaction,
+      // She reacts to a photograph of the visitor the moment she has looked at it — one of the
+      // three warm expressions, unless her own words about it already carry a stronger one.
+      reaction:
+        reaction ??
+        (attachment.kind === 'photo'
+          ? (pick(['love', 'smile', 'happy'], `${seed}|photo-reaction`) as AiChatReaction)
+          : null),
       intent: `attachment:${attachment.kind}`,
       introduced: true,
     };
@@ -1253,8 +1331,21 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
     };
   }
 
-  // E — a selfie: one of her own frames, sent the way a person sends one.
-  if (SELFIE_REQUEST_PATTERN.test(probe)) {
+  // Not every sentence holding the word "photo" is asking for one of her: a rate is a money
+  // question, and a celebrity photograph is the studio's policy rather than a picture to send.
+  const notAPictureWanted =
+    /\b(?:rate|price|cost|how much|celebrity|celebrities|budget|invoice|refund|booking)\b/.test(
+      probe,
+    );
+  const pictureWanted = !notAPictureWanted && SELFIE_REQUEST_PATTERN.test(probe);
+  // Her "just a photo, or a current selfie?" question is open, and this message may be the
+  // answer — even a bare "photo" or "selfie", which reads as a picture request nowhere else.
+  const pendingChoice =
+    session.pendingPhotoAsk && !notAPictureWanted ? resolvePhotoChoice(probe) : null;
+
+  // E — a selfie is taken now by `livechatselfiesandphotos`, and a plain request for "a photo"
+  // makes her ask which one the visitor actually wants before anything is sent.
+  if (pictureWanted || pendingChoice) {
     if (request.canSendSelfie === false) {
       return {
         ...base,
@@ -1267,9 +1358,32 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
         introduced: session.introduced,
       };
     }
+
     const shot = pickChatSelfie(model, seed);
     const moment = pickSelfieMoment(seed);
-    return {
+    const canSend = Boolean(shot) || Boolean(model.cover) || model.photos.length > 0;
+
+    /** Two fresh photographs from the live service — the word "selfie" always means *now*. */
+    const liveSelfieReply = (): AiChatReply => ({
+      ...base,
+      // The caption is written for the moment she is in; the service answers with the real
+      // ambience it photographed her in and the window rewrites it around that.
+      text: selfieCaption(
+        model,
+        { photo: '', place: moment.place, flaw: moment.flaw },
+        seed,
+        firstName,
+      ),
+      reaction,
+      selfie: canSend,
+      liveSelfie: true,
+      selfieMoment: moment,
+      intent: 'selfie',
+      introduced: session.introduced,
+    });
+
+    /** A frame from her own album — the answer to "just a photo of me", and the fallback. */
+    const albumPhotoReply = (): AiChatReply => ({
       ...base,
       text: selfieCaption(
         model,
@@ -1278,12 +1392,36 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
         firstName,
       ),
       reaction,
-      selfie: Boolean(shot) || Boolean(model.cover) || model.photos.length > 0,
-      // E — she takes it now: the moment travels back to the window so her camera can photograph her
-      // in exactly this place, with exactly this flaw. Only for the word "selfie": somebody asking
-      // for her album is asking for the album.
-      selfieMoment: SELFIE_WORD_PATTERN.test(probe) ? moment : undefined,
+      selfie: canSend,
+      selfieMoment: undefined,
       intent: 'selfie',
+      introduced: session.introduced,
+    });
+
+    // Her photo question is open: this message is the visitor choosing "photo" or "selfie".
+    if (pendingChoice === 'selfie') return liveSelfieReply();
+    if (pendingChoice === 'album') return albumPhotoReply();
+    // Not an answer to her question — the question stays open and is asked again below.
+
+    if (SELFIE_WORD_PATTERN.test(probe)) return liveSelfieReply();
+
+    // "Send me a photo" — she will not guess. A photo, or a current selfie taken this second?
+    return {
+      ...base,
+      text: inVoice(
+        pick(
+          [
+            `Just a photo of me from my album, or a current selfie — taken this second, right where I am? Say "photo" or "selfie" and it is yours.`,
+            `Which one do you want: one of my photographs, or a fresh selfie I take right now? Answer "photo" or "selfie".`,
+            `Photo or selfie? A photograph from my album is already polished — a selfie I click for you live, flaws and all. Say which.`,
+          ],
+          `${seed}|photo-ask`,
+        ),
+        `${seed}|photo-ask`,
+      ),
+      reaction,
+      photoAsk: true,
+      intent: 'photo:ask',
       introduced: session.introduced,
     };
   }

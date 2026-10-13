@@ -34,7 +34,14 @@
  * `/api/ai-selfie` takes her selfie: Gemini's image model photographs her from her own profile
  * photograph at the moment the chat has put her in, instead of her sending an album frame.
  *
- * See `worker/ai-chat-core.mjs` and `docs/ai-model-chat.md`.
+ * `/api/livechatselfiesandphotos` is the live-chat selfie and photo service: it generates **two
+ * fresh photographs of the model** (same outfit, same ambience, different poses) by her own
+ * country, city and current local hour, stamped with her timestamp and the phone watermark.
+ * Nothing is stored — the photographs travel as `data:` URLs and are dropped when the chat
+ * session ends.
+ *
+ * See `worker/ai-chat-core.mjs`, `worker/livechatselfiesandphotos.mjs` and
+ * `docs/ai-model-chat.md`.
  *
  * The API target can be overridden with the NEVERBEEN_API_URL variable (see wrangler.jsonc).
  *
@@ -49,6 +56,11 @@ import {
   MAX_SELFIE_BODY_BYTES,
   createAiSelfieResponse,
 } from './ai-selfie-core.mjs';
+import {
+  LIVE_CHAT_SELFIES_ENDPOINT,
+  MAX_LIVE_CHAT_BODY_BYTES,
+  createLiveChatSelfiesResponse,
+} from './livechatselfiesandphotos.mjs';
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -70,6 +82,8 @@ interface Env {
   GEMINI_MODEL?: string;
   /** Gemini image model used for her selfies (defaults to `gemini-2.5-flash-image`). */
   GEMINI_IMAGE_MODEL?: string;
+  /** The camera watermark `livechatselfiesandphotos` stamps into the corner of every photo. */
+  LIVECHAT_PHONE_WATERMARK?: string;
   /** Cloud Translation key; without it the same public Google translator the site uses answers. */
   GOOGLE_TRANSLATE_API_KEY?: string;
 }
@@ -104,8 +118,10 @@ const chatRequests = new Map<string, number[]>();
  */
 const RATE_LIMIT_READ_REQUESTS = 40;
 const RATE_LIMIT_SELFIE_REQUESTS = 12;
+const RATE_LIMIT_LIVE_CHAT_SELFIES_REQUESTS = 8;
 const readRequests = new Map<string, number[]>();
 const selfieRequests = new Map<string, number[]>();
+const liveChatSelfiesRequests = new Map<string, number[]>();
 
 /** Best-effort per-isolate throttle: enough to stop a single client hammering the endpoint. */
 const recentRequests = new Map<string, number[]>();
@@ -167,6 +183,25 @@ function isSelfieRateLimited(key: string, now: number): boolean {
   }
 
   return hits.length > RATE_LIMIT_SELFIE_REQUESTS;
+}
+
+/** The live selfie service's own throttle: every request is two images, so it is the strictest. */
+function isLiveChatSelfiesRateLimited(key: string, now: number): boolean {
+  const hits = (liveChatSelfiesRequests.get(key) ?? []).filter(
+    (time) => now - time < RATE_LIMIT_WINDOW_MS,
+  );
+  hits.push(now);
+  liveChatSelfiesRequests.set(key, hits);
+
+  if (liveChatSelfiesRequests.size > 500) {
+    for (const [entry, times] of liveChatSelfiesRequests) {
+      if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) {
+        liveChatSelfiesRequests.delete(entry);
+      }
+    }
+  }
+
+  return hits.length > RATE_LIMIT_LIVE_CHAT_SELFIES_REQUESTS;
 }
 
 function json(status: number, body: unknown): Response {
@@ -347,6 +382,40 @@ export default {
         env: {
           GEMINI_API_KEY: env.GEMINI_API_KEY,
           GEMINI_IMAGE_MODEL: env.GEMINI_IMAGE_MODEL,
+        },
+      });
+    }
+
+    if (url.pathname === LIVE_CHAT_SELFIES_ENDPOINT) {
+      const clientKey = request.headers.get('cf-connecting-ip') ?? 'unknown';
+      if (isLiveChatSelfiesRateLimited(clientKey, Date.now())) {
+        return json(429, { ok: false, error: 'too-many-requests' });
+      }
+
+      if (request.method !== 'POST') return json(405, { ok: false, error: 'method-not-allowed' });
+
+      const declared = Number(request.headers.get('content-length') ?? '0');
+      const text =
+        Number.isFinite(declared) && declared > MAX_LIVE_CHAT_BODY_BYTES
+          ? null
+          : await request.text();
+      if (text === null || text.length > MAX_LIVE_CHAT_BODY_BYTES) {
+        return json(413, { ok: false, error: 'payload-too-large' });
+      }
+
+      let payload: unknown;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        return json(400, { ok: false, error: 'invalid-json' });
+      }
+
+      return createLiveChatSelfiesResponse({
+        payload,
+        env: {
+          GEMINI_API_KEY: env.GEMINI_API_KEY,
+          GEMINI_IMAGE_MODEL: env.GEMINI_IMAGE_MODEL,
+          LIVECHAT_PHONE_WATERMARK: env.LIVECHAT_PHONE_WATERMARK,
         },
       });
     }

@@ -17,9 +17,14 @@
  *   instantly. When the studio has configured its OpenAI key, `POST /api/ai-chat` answers instead —
  *   streamed, word by word, with live Google results when a search key is configured — and every
  *   failure lands back on the local engine, so the chat always answers.
- * - **Her selfie (requirement E).** When the visitor asks for a selfie by name, she takes one:
- *   `POST /api/ai-selfie` photographs her from her own profile photograph, with Gemini, in the
- *   moment the chat put her in. Without an image key her album frame goes out instead.
+ * - **Her selfies (requirement E).** When the visitor asks for a selfie by name, the window calls
+ *   the **`livechatselfiesandphotos`** service (`POST /api/livechatselfiesandphotos`) and it
+ *   generates **two fresh photographs of her**: same
+ *   outfit, same ambience, different poses and styles, light chosen from her own country, city
+ *   and current hour, stamped with her timestamp and the phone watermark. They are never stored —
+ *   browser memory only, flagged `ephemeral`, and scrubbed from the transcript the moment the
+ *   session ends. A plain request for *a photo* makes her ask first: just a photo of her from the
+ *   album, or a current selfie? Without an image key her album frame goes out instead.
  * - **A new welcome every time.** Her introduction is seeded by the moment the visitor's form was
  *   filled in, so the same model opens the same chat differently on every visit.
  * - **The person on the other side (requirement A).** The window's form hands over a name and a
@@ -85,8 +90,10 @@ import {
   AiChatFeedback,
   AiChatMessage,
   AiChatReaction,
+  AiChatReplyQuote,
   AiChatSession,
   AiChatSource,
+  replyQuoteOf,
 } from '../pages/ai-models/chat/chat-types';
 import { ChatInitiative, chatInitiative } from '../pages/ai-models/chat/chat-initiative';
 import { ChatIdentity, firstNameOf, isValidChatName } from '../pages/ai-models/chat/chat-identity';
@@ -103,8 +110,13 @@ import {
   pickChatSelfie,
   pickSelfieMoment,
   readSelfieReference,
+  selfieCaption,
   selfieReference,
 } from '../pages/ai-models/chat/chat-selfie';
+import {
+  GeneratedLiveChatSelfies,
+  generateLiveChatSelfies,
+} from '../pages/ai-models/chat/chat-live-selfies';
 import {
   analyseUserBehaviour,
   contractPitch,
@@ -162,6 +174,7 @@ function newMessage(
     attachment: null,
     reaction: null,
     reactionBy: null,
+    replyTo: null,
     pending: false,
     revealedChars: partial.text.length,
     sources: [],
@@ -450,8 +463,14 @@ export class AiModelChatService {
     if (attachment) this.notice.set('');
   }
 
-  /** Sends whatever is in the composer: the text, the attached picture or document, or both. */
-  async sendMessage(model: AiModelProfile, rawText: string): Promise<void> {
+  /** Sends whatever is in the composer: the text, the attached picture or document, or both.
+   *  `replyTo` is the message the visitor chose to reply over — the Instagram reply quote that
+   *  rides at the top of their bubble. */
+  async sendMessage(
+    model: AiModelProfile,
+    rawText: string,
+    replyTo: AiChatReplyQuote | null = null,
+  ): Promise<void> {
     const session = this.sessionFor(model);
     if (this.openSlug() !== model.slug || session.closed) return;
     if (!session.identity) {
@@ -473,6 +492,7 @@ export class AiModelChatService {
       author: 'user',
       text: text || `Sent a ${attachment?.kind === 'document' ? 'document' : 'photograph'}`,
       attachment,
+      replyTo,
     });
     this.appendMessage(session, userMessage);
     this.draftAttachment.set(null);
@@ -498,8 +518,11 @@ export class AiModelChatService {
   // ------------------------------------------------------------------ reactions
 
   /**
-   * The visitor reacts to one of her messages (requirement H). She answers the reaction in words and
-   * gives the same reaction back to the visitor's last message, the way a person would.
+   * The visitor reacts to a message or a photograph with one of the seven expressions — hers or
+   * theirs (requirement H). She answers a reaction on **her** message in words, replying over the
+   * very message it was about, and gives the same feeling back on the visitor's own last message,
+   * the way a person would. A reaction on the visitor's own message is simply seen: her expression
+   * lands on her most recent message, with nothing to say about it.
    */
   reactToMessage(model: AiModelProfile, messageId: string, reaction: AiChatReaction): void {
     const session = this.sessionFor(model);
@@ -513,24 +536,41 @@ export class AiModelChatService {
 
     if (replaced) return;
 
-    const lastUserMessage = [...session.messages]
-      .reverse()
-      .find((message) => message.author === 'user');
     const acknowledgement = reactionAcknowledgement(
       model,
       reaction,
       `${messageId}-${reaction}-${session.messages.length}`,
     );
-    if (lastUserMessage && acknowledgement.reactionBack) {
-      lastUserMessage.reaction = acknowledgement.reactionBack;
-      lastUserMessage.reactionBy = 'model';
+
+    if (target.author === 'model') {
+      const lastUserMessage = [...session.messages]
+        .reverse()
+        .find((message) => message.author === 'user');
+      if (lastUserMessage && acknowledgement.reactionBack) {
+        lastUserMessage.reaction = acknowledgement.reactionBack;
+        lastUserMessage.reactionBy = 'model';
+      }
+
+      this.touch(session);
+      // Her words over the message the visitor reacted to — she replies *to* it, Instagram style.
+      void this.deliver(session, [acknowledgement.text], {
+        intent: `reaction:${reaction}`,
+        away: false,
+        replyTo: replyQuoteOf(target),
+      });
+      return;
     }
 
-    this.touch(session);
-    void this.deliver(session, [acknowledgement.text], {
-      intent: `reaction:${reaction}`,
-      away: false,
-    });
+    // Their own message or photograph: she does not write about it, she only answers with an
+    // expression of her own on her last message.
+    const lastModelMessage = [...session.messages]
+      .reverse()
+      .find((message) => message.author === 'model' && message.kind === 'message');
+    if (lastModelMessage) {
+      lastModelMessage.reaction = reaction;
+      lastModelMessage.reactionBy = 'model';
+      this.touch(session);
+    }
   }
 
   // ------------------------------------------------------------------ clock
@@ -616,10 +656,7 @@ export class AiModelChatService {
       name: session.identity ? firstNameOf(session.identity.name) : '',
       seed: `${session.slug}|${session.startedAt}|farewell`,
     });
-    this.appendMessage(
-      session,
-      newMessage({ author: 'model', text, intent: 'goodbye' }),
-    );
+    this.appendMessage(session, newMessage({ author: 'model', text, intent: 'goodbye' }));
     this.endSession(session, 'inactive');
   }
 
@@ -691,6 +728,14 @@ export class AiModelChatService {
     if (session.closed) return;
     session.closed = reason;
     session.closedAt = Date.now();
+    // The photographs `livechatselfiesandphotos` generated were never stored anywhere: they lived
+    // only in this browser, and the moment the session ends — by her, by the visitor, or by the
+    // two hours — their bytes are dropped from the transcript for good.
+    for (const sessionMessage of session.messages) {
+      if (sessionMessage.attachment?.ephemeral) {
+        sessionMessage.attachment = { ...sessionMessage.attachment, preview: '', fileData: '' };
+      }
+    }
     if (message) {
       this.appendMessage(
         session,
@@ -766,7 +811,12 @@ export class AiModelChatService {
       model,
       message: userMessage,
       history: session.messages,
-      session: { strikes: session.strikes, introduced: session.introduced, identity: user },
+      session: {
+        strikes: session.strikes,
+        introduced: session.introduced,
+        identity: user,
+        pendingPhotoAsk: session.pendingPhotoAsk,
+      },
       user,
       photo,
       reading,
@@ -777,6 +827,10 @@ export class AiModelChatService {
     session.strikes = local.strikes;
     const wasIntroduced = session.introduced;
     session.introduced = local.introduced;
+    // Her "photo or a current selfie?" question opens when she asks it, and closes the moment the
+    // visitor answers with either of them.
+    if (local.photoAsk) session.pendingPhotoAsk = true;
+    else if (local.intent === 'selfie') session.pendingPhotoAsk = false;
 
     // Safety and identity come first and are never delegated: a warning must not be reworded, and
     // the first answer of the session is always her scripted introduction (requirement D).
@@ -785,6 +839,10 @@ export class AiModelChatService {
       // Her answer in the visitor's own Romanised language is written by her own books: an English
       // answer from the studio's OpenAI model would break the language she has settled into.
       local.intent.startsWith('language:') ||
+      // A photograph is a decision the window carries out — her open photo question, and the trip
+      // to `livechatselfiesandphotos` behind the word "selfie" — so neither may be reworded away.
+      Boolean(local.photoAsk) ||
+      Boolean(local.selfie) ||
       !wasIntroduced ||
       userMessage.attachment !== null;
 
@@ -822,30 +880,69 @@ export class AiModelChatService {
     // The fallback asks the same single question as the AI, never a questionnaire.
     if (personalQuestion && intent !== 'openai') answerText += `\n\n${personalQuestion}`;
 
-    // E — a selfie goes out as a photograph, not as a promise of one.
+    // E — a selfie goes out as photographs, not as a promise of one: `livechatselfiesandphotos`
+    // generates two of them (same outfit, same ambience, different poses), and they are sent as
+    // two ephemeral bubbles that live only in this browser.
     let selfie: AiChatAttachment | null = null;
+    let liveExtras: AiChatAttachment[] = [];
     if (answerText === local.text && local.selfie) {
       const alreadySent = session.messages
         .map((message) => message.attachment)
         .filter((attachment) => attachment?.selfie === true)
         .map((attachment) => attachment?.preview ?? '');
       const seed = `${userMessage.id}|${session.messages.length}`;
-      // The word "selfie" means she takes one now, with her camera and her own photograph; asking
-      // for her photographs means her album, and the album frame is the answer.
+      // The word "selfie" means she takes them now, through the live service; a resolved "photo"
+      // means her album, and the album frame is the answer.
       const moment = local.selfieMoment ?? pickSelfieMoment(seed);
-      const taken = local.selfieMoment ? await this.takeSelfie(model, moment) : null;
       const shot = pickChatSelfie(model, seed, alreadySent);
-      const preview = taken ?? shot?.photo ?? '';
-      if (preview) {
-        selfie = {
-          kind: 'photo',
-          name: `${model.slug}-selfie.${taken ? 'png' : 'jpg'}`,
-          type: taken ? 'image/png' : 'image/jpeg',
-          size: 0,
-          source: 'camera',
-          preview,
-          selfie: true,
-        };
+
+      if (local.liveSelfie) {
+        const live = await this.takeLiveSelfies(model, moment, seed);
+        if (live) {
+          // The caption says where the service actually photographed her — her own streets, her
+          // own hour — rather than the moment that was guessed before the photographs existed.
+          answerText = selfieCaption(
+            model,
+            {
+              photo: live.images[0],
+              place: live.place || moment.place,
+              flaw: live.flaw || moment.flaw,
+            },
+            seed,
+            user?.firstName ?? '',
+          );
+          const generated = live.images.map((image, index): AiChatAttachment => ({
+            kind: 'photo',
+            name: `${model.slug}-live-selfie-${index + 1}.png`,
+            type: 'image/png',
+            size: 0,
+            source: 'camera',
+            preview: image,
+            selfie: true,
+            // Never stored: browser memory only, scrubbed when this session ends.
+            ephemeral: true,
+          }));
+          selfie = generated[0] ?? null;
+          liveExtras = generated.slice(1);
+        }
+      }
+
+      if (!selfie) {
+        // Her old camera (one photograph), and then her own album — a visitor who asks for a
+        // photograph always gets one, even where no image key is configured.
+        const taken = local.selfieMoment ? await this.takeSelfie(model, moment) : null;
+        const preview = taken ?? shot?.photo ?? '';
+        if (preview) {
+          selfie = {
+            kind: 'photo',
+            name: `${model.slug}-selfie.${taken ? 'png' : 'jpg'}`,
+            type: taken ? 'image/png' : 'image/jpeg',
+            size: 0,
+            source: 'camera',
+            preview,
+            selfie: true,
+          };
+        }
       }
     }
 
@@ -854,17 +951,26 @@ export class AiModelChatService {
       userMessage.reactionBy = 'model';
     }
 
+    // Her reply over the message the visitor replied to: the quote rides at the top of her bubble
+    // the way it does in an Instagram chat.
+    const outgoingQuote = userMessage.replyTo ? replyQuoteOf(userMessage) : null;
+
     // C — the answer arrives as one message or as several, each one typed in front of the visitor
-    // and landing whole. A selfie is one message: a photograph is not split in two.
+    // and landing whole. A selfie is one message: a photograph is not split in two — the second
+    // photograph of the pair follows as a message of its own.
     const parts = selfie ? [answerText] : splitChatMessages(answerText, this.pacing.bubbleMaxChars);
     await this.deliver(session, parts, {
       intent,
       sources: answerSources,
       attachment: selfie,
+      replyTo: outgoingQuote,
       // Who read the visitor's message before she answered it — the studio's reading desk, or the
       // window's own reader. Part of the transcript, so the studio can see the desk at work.
       analysedBy: reading.provider,
     });
+    for (const extra of liveExtras) {
+      await this.deliver(session, [''], { intent, attachment: extra });
+    }
 
     if (topic && !session.closed) {
       markPersonalQuestion(memory, topic, Date.now(), visitorTurns);
@@ -921,6 +1027,8 @@ export class AiModelChatService {
       intent?: string;
       sources?: readonly AiChatSource[];
       attachment?: AiChatAttachment | null;
+      /** The message this answer replies over — the quote at the top of the first bubble. */
+      replyTo?: AiChatReplyQuote | null;
       /** False for her own scripted openings, where a random away pause would only be a delay. */
       away?: boolean;
       /** Who read the visitor's message before this answer was written. */
@@ -961,6 +1069,7 @@ export class AiModelChatService {
         analysedBy: options.analysedBy ?? '',
         sources: index === 0 ? [...(options.sources ?? [])] : [],
         attachment: index === 0 ? (options.attachment ?? null) : null,
+        replyTo: index === 0 ? (options.replyTo ?? null) : null,
       });
       this.appendMessage(session, message);
       if (index === 0) first = message;
@@ -1103,12 +1212,46 @@ export class AiModelChatService {
     }
 
     // The wait a person needs to aim a phone at herself, when the camera answered faster than that.
-    if (!this.silent) {
-      const wanted = this.between(this.pacing.selfieMinMs, this.pacing.selfieMaxMs);
-      const remaining = wanted - (Date.now() - started);
-      if (remaining > 0) await delay(remaining);
-    }
+    await this.waitOutSelfiePace(started);
     return taken.image;
+  }
+
+  /**
+   * E — the two live photographs from **`livechatselfiesandphotos`**: her own profile photograph
+   * is fetched as the likeness and handed to the service with the moment she is in, and two fresh
+   * frames come back — same outfit, same ambience, different poses, stamped with her local
+   * timestamp and the phone watermark. They live only in the browser. Returns `null` when the
+   * studio has no image key or the service cannot answer, and the chat then falls back to her old
+   * camera and finally to her album, so a visitor who asks always gets a photograph.
+   */
+  private async takeLiveSelfies(
+    model: AiModelProfile,
+    moment: { place: string; flaw: string },
+    seed: string,
+  ): Promise<GeneratedLiveChatSelfies | null> {
+    if (this.selfieCameraUnavailable()) return null;
+
+    const reference = await readSelfieReference(selfieReference(model));
+    if (!reference) {
+      this.selfieCameraUnavailable.set(true);
+      return null;
+    }
+
+    const started = Date.now();
+    const live = await generateLiveChatSelfies({ model, moment, reference, seed });
+    if (!live) return null;
+
+    // The wait two frames deserve — she held the phone up twice and checked them both.
+    await this.waitOutSelfiePace(started);
+    return live;
+  }
+
+  /** The wait a person needs to take a photograph, when it was taken faster than that. */
+  private async waitOutSelfiePace(started: number): Promise<void> {
+    if (this.silent) return;
+    const wanted = this.between(this.pacing.selfieMinMs, this.pacing.selfieMaxMs);
+    const remaining = wanted - (Date.now() - started);
+    if (remaining > 0) await delay(remaining);
   }
 
   /** True when the reading desk may be asked for a reading (a browser, online, and not refused yet). */
@@ -1364,6 +1507,7 @@ export class AiModelChatService {
       closed: '',
       reminders: [],
       introduced: false,
+      pendingPhotoAsk: false,
       followUpAt: 0,
       followUps: 0,
       lastVisitorAt: 0,
@@ -1421,11 +1565,18 @@ export class AiModelChatService {
             if (!message.attachment) return { ...message, pending: false };
             // A picture's preview and a document's own bytes are both far too large for the tab's
             // storage, so either of them is dropped (and the bubble keeps the file's name) as soon
-            // as it would not fit.
+            // as it would not fit — and a photograph generated by `livechatselfiesandphotos` is
+            // never written to storage at all: it lives only in the browser and is dropped when
+            // the session ends.
+            const ephemeral = message.attachment.ephemeral === true;
             const keepPreview =
-              !stripPreviews && message.attachment.preview.length <= PREVIEW_PERSIST_LIMIT;
+              !stripPreviews &&
+              !ephemeral &&
+              message.attachment.preview.length <= PREVIEW_PERSIST_LIMIT;
             const keepFileData =
-              !stripPreviews && (message.attachment.fileData?.length ?? 0) <= PREVIEW_PERSIST_LIMIT;
+              !stripPreviews &&
+              !ephemeral &&
+              (message.attachment.fileData?.length ?? 0) <= PREVIEW_PERSIST_LIMIT;
             return {
               ...message,
               pending: false,
@@ -1484,6 +1635,7 @@ export class AiModelChatService {
           closed: session.closed ?? '',
           reminders: Array.isArray(session.reminders) ? session.reminders : [],
           introduced: Boolean(session.introduced),
+          pendingPhotoAsk: Boolean(session.pendingPhotoAsk),
           followUpAt: session.followUpAt ?? 0,
           followUps: session.followUps ?? 0,
           // A session stored before her own initiative changed shape is measured from the moment it

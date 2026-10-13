@@ -27,7 +27,7 @@ export const SELFIE_WORD_PATTERN = /\bselfie?s?\b|\bselfis?\b/;
 
 /** Asking for a picture of her rather than about the studio's work. */
 export const SELFIE_REQUEST_PATTERN =
-  /\bselfies?\b|\b(?:send|share|show|give|post|see)\b[^?]{0,28}\b(?:your|ur)\b[^?]{0,12}\b(?:photo|photos|pic|pics|picture|pictures|face|self)\b|\b(?:photo|pic|picture|selfie)s?\s+of\s+(?:you|yourself)\b|\bshow me (?:you|yourself)\b/;
+  /\bselfies?\b|\b(?:send|share|show|give|post|see)\b[^?]{0,28}\b(?:your|ur)\b[^?]{0,12}\b(?:photo|photos|pic|pics|picture|pictures|face|self)\b|\b(?:photo|pic|picture|selfie)s?\s+of\s+(?:you|yourself)\b|\bshow me (?:you|yourself)\b|\b(?:send|share|show|give|post|get|fetch)\b[^?]{0,24}\b(?:a|an|one|some|another|the|fresh|new)\s+(?:photo|photos|pic|pics|picture|pictures)\b/;
 
 /** Asking her for a video. */
 export const VIDEO_REQUEST_PATTERN =

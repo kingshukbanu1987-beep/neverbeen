@@ -267,12 +267,25 @@ session clock in the top-right corner is the same idea applied to the countdown.
 
 ## H. Reactions, both ways
 
-Her messages carry a reaction button that opens the Instagram tray
-(`AI_CHAT_REACTIONS`: 👍 ❤️ 😂 😮 😢 😡); a double-click on her bubble is a ❤️. Her answer to a
-reaction is written by `reactionAcknowledgement()`, and she reacts **back** on the visitor's own last
-message — `reactionForUserMessage()` picks hers from what the visitor wrote, so a sweet message gets
-a ❤️ and a rude one an 😡. Both stamps are shown under the bubble (`You reacted ❤️`,
-`Alisha reacted ❤️`), and pressing the same emoji again takes the reaction off.
+Every bubble — hers and the visitor's, text messages and photographs alike — carries a reaction
+button that opens the Instagram tray of **seven expressions** (`AI_CHAT_REACTIONS`: like 👍,
+dislike 👎, love ❤️, smile 😊, angry 😡, cry 😭, happy 😄); a double-click on a bubble is a ❤️.
+Her answer to a reaction on one of **her** messages is written by `reactionAcknowledgement()` and
+arrives as a reply over the very message it was about, and she reacts **back** on the visitor's own
+last message — `reactionForUserMessage()` picks hers from what the visitor wrote, so a sweet
+message gets a ❤️ and a sad one a 😭. A reaction on the **visitor's own** message is answered
+quietly: the same expression lands on her most recent message. Both stamps are shown under the
+bubble (`You reacted ❤️`, `Alisha reacted ❤️`), and pressing the same emoji again takes the
+reaction off. A photograph the visitor sends gets one the moment she has looked at it — ❤️, 😊 or
+😄 with the answer that describes it.
+
+## Replies, Instagram style
+
+Either side can choose a message and reply over it, the way it works in Instagram chat. The ↩
+button on a bubble puts the quote into the composer (`Replying to Alisha`, with the ⨯ to cancel
+it); the visitor's message then carries the quoted snapshot at the top of its bubble
+(`replyQuoteOf()` → `AiChatReplyQuote` on `AiChatMessage.replyTo`), a click on a quote scrolls back
+to the message it quotes, and her answer replies over the visitor's message in turn.
 
 ## The form's rules (requirement A)
 
@@ -337,6 +350,25 @@ about a smiley ever reaches the "I do not know that one" fallback.
 
 ## E and F. Selfies, and the pictures they send
 
+Asking for **"a photo"** first makes her ask which one the visitor actually wants — _just a photo
+of me from my album, or a current selfie, taken this second?_ (`photoAsk` in `chat-replies.ts`,
+`session.pendingPhotoAsk`). "Photo" is answered with a random frame from her album; "selfie" — or
+asking for a **selfie by name** in the first place — is answered by the
+**`livechatselfiesandphotos`** service (`POST /api/livechatselfiesandphotos`,
+`worker/livechatselfiesandphotos.mjs`), which generates **two fresh photographs of her**: the same
+outfit and the same ambience in both, different poses and a different style, a shared expression,
+the real photography flaws of a phone snapshot (a slight tilt, blur, grain, a lens smudge), no
+phone ever visible in the frame — and, stamped into the bottom-right corner of each, her **current
+timestamp** in her own time zone and the **latest trending phone's camera watermark**
+(`Shot on iPhone 18 Pro`, overridable with `LIVECHAT_PHONE_WATERMARK`). The service works out the
+scene from her card: her country and city give the time zone and the surroundings (a bazaar lane,
+her own balcony, a corniche), and her local hour gives the light — daytime is photographed inside
+or out on the streets, markets, shops and gardens; evening and night indoors with the lamps on or
+outside in the evening ambience. The two photographs are never stored anywhere: they travel as
+`data:` URLs, live only in the browser (`ephemeral` on the bubble), are never written into the
+session mirror, and are scrubbed from the transcript the moment the session ends — the bubble
+stays behind with a quiet _deleted when this chat session ended_ placeholder.
+
 When the visitor asks for a **selfie by name**, she **takes one now**: `chat-selfie.ts` fetches her
 own profile photograph, reduces it to a likeness (`readSelfieReference`) and hands it, with the
 moment and the flaw from `SELFIE_MOMENTS` — "in my room, the lamp is on and it is too warm in here",
@@ -372,7 +404,7 @@ and the answer goes out with the intent `attachment:photo`.
 - **B — the three things that give her the floor** — `chatInitiative()` reads them from the
   transcript and hands `speakUp()` a `reason`: the session has already run `AI_CHAT_ENGAGED_MS`
   (five minutes) → `'session'`; a subject they keep coming back to is in the transcript → `'topic'`
-  (the visitor's own interest, with `idleChatOpener({ reason, topic })` continuing *that* subject);
+  (the visitor's own interest, with `idleChatOpener({ reason, topic })` continuing _that_ subject);
   the visitor asked her something → `'question'`. Nothing else does. She waits
   `AI_CHAT_FOLLOWUP_MIN_MS`–`MAX_MS` (45–75 s, `followUpDelay()`, a fixed 20 s longer every time she
   has already spoken) before the follow-up goes out, never while she is mid-answer, and at most
@@ -436,14 +468,14 @@ visitor's own rating:
 
 ## The third brief: A–F
 
-| Letter | What it asks for                                                                                                     | Where it lives                                                                                                                                                                                                                                                                  |
-| ------ | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A      | she sends the first message, and then waits for the visitor — no more talking to an empty room                        | `chatInitiative()`'s `heardFrom` (the visitor's own messages, the transcript read once) + `speakUp()` in `ai-model-chat.service.ts`, which writes nothing on her side until it is true; her introduction is still hers (`introduceFirst()`)                                       |
-| B      | she may write unprompted only past five minutes, on a subject that is in play, or after a question of the visitor's   | `chatInitiative()`'s `reason` (`'session'` at `AI_CHAT_ENGAGED_MS`, `'topic'` from `analyseUserBehaviour()`, `'question'` from `asksSomething()`) and `speakUp()` (`followUpDelay()`, `AI_CHAT_FOLLOWUP_LIMIT`) with `idleChatOpener({ reason, topic })`                          |
-| C      | no city, country, age or album size until she is asked                                                                | `voiceIntroduction()`'s `WELCOME_TONE_LINES`, `WELCOME_DAY_LINES`, `welcomeCardLines()` and `homeLifeLine()` carry her country's flavour and her age band, never a number; the facts stay behind the questions that ask for them (her card, her biography, her album)             |
-| D      | three minutes of silence and she ends the session herself, realising the visitor is not interested                     | `AI_CHAT_INTEREST_MS` in `chat-initiative.ts` (`disinterested`), `mayEndForSilence()` and `endForDisinterest()` in the service: `disinterestFarewell()`, `endSession('inactive')`, and the close form raised with it                                                              |
-| E      | the ✕ — and every session she ends — asks first: both faces and names, the time together, the totals and each side's, the photographs, 1–5 stars and a comments box | `chat-feedback.{ts,html,css}` (`app-chat-feedback`), raised by `requestClose()`/`openFeedback()` and by `endSession()`, fed by `buildChatFeedbackFacts()`; `recordFeedback()` keeps what was given                                                     |
-| F      | the form does not auto-close; it waits for the visitor's own Close button                                             | `ChatFeedbackCard.close()` is the only thing that ends it — no timer anywhere (`CHAT_AUTO_CLOSE_MS` and the auto-close effect are gone); Escape in the window hands its keystroke to that same button                                                                             |
+| Letter | What it asks for                                                                                                                                                    | Where it lives                                                                                                                                                                                                                                                        |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | she sends the first message, and then waits for the visitor — no more talking to an empty room                                                                      | `chatInitiative()`'s `heardFrom` (the visitor's own messages, the transcript read once) + `speakUp()` in `ai-model-chat.service.ts`, which writes nothing on her side until it is true; her introduction is still hers (`introduceFirst()`)                           |
+| B      | she may write unprompted only past five minutes, on a subject that is in play, or after a question of the visitor's                                                 | `chatInitiative()`'s `reason` (`'session'` at `AI_CHAT_ENGAGED_MS`, `'topic'` from `analyseUserBehaviour()`, `'question'` from `asksSomething()`) and `speakUp()` (`followUpDelay()`, `AI_CHAT_FOLLOWUP_LIMIT`) with `idleChatOpener({ reason, topic })`              |
+| C      | no city, country, age or album size until she is asked                                                                                                              | `voiceIntroduction()`'s `WELCOME_TONE_LINES`, `WELCOME_DAY_LINES`, `welcomeCardLines()` and `homeLifeLine()` carry her country's flavour and her age band, never a number; the facts stay behind the questions that ask for them (her card, her biography, her album) |
+| D      | three minutes of silence and she ends the session herself, realising the visitor is not interested                                                                  | `AI_CHAT_INTEREST_MS` in `chat-initiative.ts` (`disinterested`), `mayEndForSilence()` and `endForDisinterest()` in the service: `disinterestFarewell()`, `endSession('inactive')`, and the close form raised with it                                                  |
+| E      | the ✕ — and every session she ends — asks first: both faces and names, the time together, the totals and each side's, the photographs, 1–5 stars and a comments box | `chat-feedback.{ts,html,css}` (`app-chat-feedback`), raised by `requestClose()`/`openFeedback()` and by `endSession()`, fed by `buildChatFeedbackFacts()`; `recordFeedback()` keeps what was given                                                                    |
+| F      | the form does not auto-close; it waits for the visitor's own Close button                                                                                           | `ChatFeedbackCard.close()` is the only thing that ends it — no timer anywhere (`CHAT_AUTO_CLOSE_MS` and the auto-close effect are gone); Escape in the window hands its keystroke to that same button                                                                 |
 
 ## Reading what the visitor actually typed
 
@@ -554,7 +586,7 @@ differently on every visit: a different hello (`openingLine`), a different way o
 the Multiverse), a different line of tone chosen by her age band, a different shape for her own
 evening (her country's own kitchen, street and weather through `homeLifeLine`), the two middle
 messages in either order, and a different question back, in her country's idiom, with the visitor's
-first name in front of it. Her age and her country are what the lines are chosen *by* — since
+first name in front of it. Her age and her country are what the lines are chosen _by_ — since
 requirement **C** of the third brief neither of them is a number in the sentence, and the size of her
 album is nowhere in it either (`voiceIntroduction()` carries no city, no age and no count; asking for
 any of them is what brings them out, in `chatBioReply()` and the album answers).
@@ -593,6 +625,21 @@ with words instead of a picture (`502 selfie-refused`), or the camera being unre
 instead, so nobody asking for a photograph is left with an empty bubble. The endpoint has its own,
 tighter throttle (12 requests a minute) because an image is the most expensive request on the site.
 
+## The live selfies: `livechatselfiesandphotos`
+
+`POST /api/livechatselfiesandphotos` (`worker/livechatselfiesandphotos.mjs`) is the live-chat
+selfie and photo service behind the word "selfie". The window posts her card, the likeness
+(`reference`, her profile photograph reduced exactly as for her camera), her IANA time zone when
+it knows one, and a seed; the service resolves her zone from her city and country when it does
+not, reads her local hour, and builds one scene for the pair — `resolveModelTimeZone`,
+`modelLocalMoment`, `ambienceFor`, `liveChatSelfieScene`. Two Gemini image calls follow (one per
+pose, in parallel), and the answer is
+`{ ok: true, provider: "gemini", images: [two data URLs], place, flaw, timestamp, watermark, … }`.
+Its refusals mirror her camera's: `400 reference-required`, `503 selfies-unavailable`,
+`502 selfies-refused` / `selfies-failed` — and the window then falls back to her old camera and
+finally to her album. Every request is two images, so the throttle is the strictest on the site
+(8 a minute).
+
 ## Files
 
 | File                                                               | What it holds                                                                                                                                                                                                                                                |
@@ -600,11 +647,12 @@ tighter throttle (12 requests a minute) because an image is the most expensive r
 | `src/app/pages/ai-models/chat/ai-model-chat.{ts,html,css}`         | the window: layout, composer, attachments, reactions, the centred reminder, the closed state, both overlays                                                                                                                                                  |
 | `src/app/pages/ai-models/chat/chat-identity-prompt.{ts,html,css}`  | the form in front of the window: the photograph and the name (requirement A)                                                                                                                                                                                 |
 | `src/app/pages/ai-models/chat/chat-identity.ts`                    | the name rules and the visitor's photograph: 3–14 characters, 100 KB, first name only                                                                                                                                                                        |
-| `src/app/pages/ai-models/chat/chat-feedback.{ts,html,css}`         | the ultra-modern close form (`app-chat-feedback`): both faces, the time together, the four counts, the 1–5 stars, the comments box and the single Close button (requirements E and F)                                                                          |
+| `src/app/pages/ai-models/chat/chat-feedback.{ts,html,css}`         | the ultra-modern close form (`app-chat-feedback`): both faces, the time together, the four counts, the 1–5 stars, the comments box and the single Close button (requirements E and F)                                                                        |
 | `src/app/pages/ai-models/chat/chat-summary.ts`                     | what that form says: the minutes, the counts, her rating and her paragraph about the chat (`buildChatFeedbackFacts`, `buildChatSessionSummary`)                                                                                                              |
-| `src/app/pages/ai-models/chat/chat-initiative.ts`                  | who has the floor: A (`heardFrom`), B (the three reasons she may write unprompted) and D (the three quiet minutes that end a session), read from the transcript alone                                                                                          |
-| `src/app/pages/ai-models/chat/chat-voice.ts`                       | her voice by country and age, the visitor's behaviour, the opening line, the follow-up she writes for a reason (`idleChatOpener`), her goodbye to a visitor who went quiet (`disinterestFarewell`), the pitch, the video line                                      |
+| `src/app/pages/ai-models/chat/chat-initiative.ts`                  | who has the floor: A (`heardFrom`), B (the three reasons she may write unprompted) and D (the three quiet minutes that end a session), read from the transcript alone                                                                                        |
+| `src/app/pages/ai-models/chat/chat-voice.ts`                       | her voice by country and age, the visitor's behaviour, the opening line, the follow-up she writes for a reason (`idleChatOpener`), her goodbye to a visitor who went quiet (`disinterestFarewell`), the pitch, the video line                                |
 | `src/app/pages/ai-models/chat/chat-selfie.ts`                      | her camera and her album: the moments and flaws, the likeness (`readSelfieReference`), Gemini's selfie (`generateChatSelfie`), the album frame she falls back on, and the video-request pattern                                                              |
+| `src/app/pages/ai-models/chat/chat-live-selfies.ts`                | the window's client for `livechatselfiesandphotos`: two fresh photographs per selfie request, her time zone with them, and the `null` that hands over to her album                                                                                           |
 | `src/app/pages/ai-models/chat/chat-analysis.ts`                    | the reading before the answer: the window's own reading, the studio's reading desk, the merge, and the document bytes that travel with a message                                                                                                             |
 | `src/app/pages/ai-models/chat/chat-photo.ts`                       | what she can see in a picture the visitor sends (requirement F)                                                                                                                                                                                              |
 | `src/app/pages/ai-models/chat/chat-random.ts`                      | the seeded pick/roll helpers, so every random choice is still testable                                                                                                                                                                                       |
@@ -754,3 +802,4 @@ files and 203 tests at the time of writing (the third brief's `chat-initiative.s
 Validation: identity form/name tests, scheduling/conditional memory tests, chat
 service and Worker regression tests, production build, and real CPU detector
 smoke checks (portrait accepted; skin-coloured faceless image rejected).
+cted).

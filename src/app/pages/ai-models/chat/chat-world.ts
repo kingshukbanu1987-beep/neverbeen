@@ -330,6 +330,15 @@ function timeZoneFor(place: string): string | null {
   return null;
 }
 
+/**
+ * The IANA time zone of a city or a country — `Darjeeling, India` → `Asia/Kolkata`, or `null`
+ * when the world's books do not know the place. `livechatselfiesandphotos` needs it to work out
+ * the model's own current hour before it takes her photographs.
+ */
+export function timeZoneForPlace(place: string): string | null {
+  return timeZoneFor(place);
+}
+
 /** The local time in a city or country, e.g. "in Darjeeling, India it is 18:42 on Monday". */
 export function timeInPlace(place: string, now: Date): string | null {
   const zone = timeZoneFor(place);
