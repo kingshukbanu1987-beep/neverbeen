@@ -698,6 +698,10 @@ npx wrangler secret put GEMINI_API_KEY            # the reading desk, and the ca
 npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # optional: the Cloud Translation API
 ```
 
+Live Chat's Gemini configuration currently lives in `wrangler.jsonc` (`vars`): `GEMINI_API_KEY`
+holds the key, and both `GEMINI_MODEL` and `GEMINI_IMAGE_MODEL` are pinned to `gemini-2.5-flash`,
+so the reading desk and the live-chat selfies run on that model.
+
 `npm start` prints a line for each of the three endpoints and says what is configured: the chat, the
 reading desk, and her camera.
 
