@@ -87,12 +87,16 @@ export interface AiChatMessage {
   /** Reaction left **on this message**, and who left it. */
   reaction: AiChatReaction | null;
   reactionBy: 'user' | 'model' | null;
-  /** True while her answer is still being revealed word by word. */
+  /**
+   * True only between the moment a bubble is created and the moment it lands whole. Her answer is
+   * never printed out letter by letter: it is written while the typing indicator is up and appears
+   * in one piece (requirement A of the second brief).
+   */
   pending: boolean;
   /**
-   * How much of `text` the window may reveal so far — the Messenger-style "typing" reveal. The full
-   * answer is already in `text`, so the transcript, the exported session and the tests never see a
-   * half-written sentence; only the bubble renders `revealedChars` characters while `pending`.
+   * Characters of `text` on screen. The full answer is already in `text`, so the transcript, the
+   * exported session and the tests never see a half-written sentence; a message that has landed
+   * carries `text.length`.
    */
   revealedChars: number;
   /** Google results behind the answer, shown beneath her bubble. */
@@ -158,9 +162,59 @@ export const AI_CHAT_IDLE_MAX_MS = 19_000;
 /** How many times she will reach out on her own in one session before she lets the window rest. */
 export const AI_CHAT_NUDGE_LIMIT = 6;
 
-/** How long she "types" before her answer starts arriving (requirement I): four to five seconds. */
-export const AI_CHAT_TYPING_MS = 4_400;
-export const AI_CHAT_TYPING_JITTER_MS = 600;
+/**
+ * How long a person needs to type a message (requirement A of the second brief): she is not a
+ * machine that prints an answer out, so the wait before a bubble lands is the time a real person
+ * would have spent typing that many characters on a phone — with a floor for a short line and a
+ * ceiling so nobody waits forever.
+ */
+export const AI_CHAT_TYPING_PER_CHAR_MS = 34;
+export const AI_CHAT_TYPING_MIN_MS = 2_400;
+export const AI_CHAT_TYPING_MAX_MS = 7_200;
+
+/** The random salt on every wait, so two chats never feel timed by the same machine. */
+export const AI_CHAT_JITTER_MS = 500;
+
+/**
+ * A — how long she "types" a message of this many characters: a person's speed on a phone, kept
+ * inside the floor and the ceiling so a one-word reply is never instant and a long one is never a
+ * two-minute wait.
+ */
+export function typingTimeFor(
+  textLength: number,
+  perCharMs = AI_CHAT_TYPING_PER_CHAR_MS,
+  floorMs = AI_CHAT_TYPING_MIN_MS,
+  ceilingMs = AI_CHAT_TYPING_MAX_MS,
+): number {
+  const wanted = Math.round(Math.max(0, textLength) * Math.max(0, perCharMs));
+  const low = Math.max(0, floorMs);
+  const high = Math.max(low, ceilingMs);
+  return Math.min(Math.max(wanted, low), high);
+}
+
+/**
+ * Requirement D of the second brief: sometimes she is not at her phone when the message arrives and
+ * only picks it up three to seven seconds later — before a single letter of "typing" shows.
+ */
+export const AI_CHAT_AWAY_MIN_MS = 3_000;
+export const AI_CHAT_AWAY_MAX_MS = 7_000;
+export const AI_CHAT_AWAY_CHANCE = 0.45;
+
+/** And sometimes she stops mid-thought: the typing indicator goes, then comes back. */
+export const AI_CHAT_MID_PAUSE_CHANCE = 0.3;
+export const AI_CHAT_MID_PAUSE_MIN_MS = 2_000;
+export const AI_CHAT_MID_PAUSE_MAX_MS = 5_000;
+
+/** Requirement C: her answer may arrive as several messages, two to four seconds apart. */
+export const AI_CHAT_GAP_MIN_MS = 2_000;
+export const AI_CHAT_GAP_MAX_MS = 4_000;
+
+/** How much of her answer goes into one bubble before the next one starts. */
+export const AI_CHAT_BUBBLE_MAX_CHARS = 240;
+
+/** Requirement F: her introduction takes three to five seconds before it starts. */
+export const AI_CHAT_INTRO_MIN_MS = 3_000;
+export const AI_CHAT_INTRO_MAX_MS = 5_000;
 
 /** Boundaries of one attachment: 8 MB for a picture, 16 MB for a document. */
 export const AI_CHAT_PHOTO_LIMIT_BYTES = 8 * 1024 * 1024;

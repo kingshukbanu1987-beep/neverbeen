@@ -22,7 +22,11 @@
  */
 import { Injectable, computed, signal } from '@angular/core';
 import { AiModelProfile, aiModelProfiles } from '../pages/ai-models/ai-model-data';
-import { composeChatReply, reactionAcknowledgement } from '../pages/ai-models/chat/chat-replies';
+import {
+  composeChatReply,
+  greetingFor,
+  reactionAcknowledgement,
+} from '../pages/ai-models/chat/chat-replies';
 import {
   AI_CHAT_IDLE_MAX_MS,
   AI_CHAT_IDLE_MIN_MS,
@@ -30,8 +34,22 @@ import {
   AI_CHAT_NUDGE_LIMIT,
   AI_CHAT_REMINDER_MARKS,
   AI_CHAT_SESSION_MS,
-  AI_CHAT_TYPING_JITTER_MS,
-  AI_CHAT_TYPING_MS,
+  AI_CHAT_AWAY_CHANCE,
+  AI_CHAT_AWAY_MAX_MS,
+  AI_CHAT_AWAY_MIN_MS,
+  AI_CHAT_BUBBLE_MAX_CHARS,
+  AI_CHAT_GAP_MAX_MS,
+  AI_CHAT_GAP_MIN_MS,
+  AI_CHAT_INTRO_MAX_MS,
+  AI_CHAT_INTRO_MIN_MS,
+  AI_CHAT_JITTER_MS,
+  AI_CHAT_MID_PAUSE_CHANCE,
+  AI_CHAT_MID_PAUSE_MAX_MS,
+  AI_CHAT_MID_PAUSE_MIN_MS,
+  AI_CHAT_TYPING_MAX_MS,
+  AI_CHAT_TYPING_MIN_MS,
+  AI_CHAT_TYPING_PER_CHAR_MS,
+  typingTimeFor,
   AiChatAttachment,
   AiChatClosedReason,
   AiChatMessage,
@@ -47,7 +65,8 @@ import {
   contractPitch,
   idleChatOpener,
   modelVoice,
-  openingLine,
+  splitChatMessages,
+  voiceIntroduction,
 } from '../pages/ai-models/chat/chat-voice';
 import { seededBetween } from '../pages/ai-models/chat/chat-random';
 import { buildModelDossier } from '../pages/ai-models/chat/chat-knowledge';
@@ -109,6 +128,13 @@ export class AiModelChatService {
   /** True while she is composing an answer. */
   readonly thinking = signal(false);
 
+  /**
+   * True while she is away from her phone — the three to seven seconds of requirement D, before a
+   * single letter of "typing" appears. The window keeps its typing indicator off in this state: in a
+   * real chat nobody is typing while the phone is in another room.
+   */
+  readonly away = signal(false);
+
   /** Milliseconds left of the two hours, kept up to date while a window is open. */
   readonly remainingMs = signal(AI_CHAT_SESSION_MS);
 
@@ -134,14 +160,35 @@ export class AiModelChatService {
   readonly visitorName = computed(() => this.session()?.identity?.name ?? '');
 
   /**
-   * The cosmetic timing of an answer (requirement I): she types for four to five seconds before the
-   * first word arrives, then the words themselves land quickly. The window keeps these values; the
-   * tests set them to zero.
+   * How a person types, not how a machine answers (requirements A, C, D and F of the second brief):
+   * she needs about the time a human thumb needs for that many characters, she sometimes was not at
+   * her phone when the message arrived, she sometimes stops mid-thought, and a long answer arrives
+   * as several messages with a pause between them. The window keeps these values; the tests set them
+   * to zero.
    */
   readonly pacing = {
-    thinkingMs: AI_CHAT_TYPING_MS,
-    jitterMs: AI_CHAT_TYPING_JITTER_MS,
-    revealMs: 22,
+    /** How long one character takes to type, and the floor and ceiling around it. */
+    perCharMs: AI_CHAT_TYPING_PER_CHAR_MS,
+    floorMs: AI_CHAT_TYPING_MIN_MS,
+    ceilingMs: AI_CHAT_TYPING_MAX_MS,
+    /** The salt on every wait, so nothing feels clocked by the same machine. */
+    jitterMs: AI_CHAT_JITTER_MS,
+    /** How often she was away from her phone, and how long that pause looks like. */
+    awayChance: AI_CHAT_AWAY_CHANCE,
+    awayMinMs: AI_CHAT_AWAY_MIN_MS,
+    awayMaxMs: AI_CHAT_AWAY_MAX_MS,
+    /** How often she stops mid-thought, with the typing indicator going and coming back. */
+    midPauseChance: AI_CHAT_MID_PAUSE_CHANCE,
+    midPauseMinMs: AI_CHAT_MID_PAUSE_MIN_MS,
+    midPauseMaxMs: AI_CHAT_MID_PAUSE_MAX_MS,
+    /** The gap between two messages of the same answer. */
+    gapMinMs: AI_CHAT_GAP_MIN_MS,
+    gapMaxMs: AI_CHAT_GAP_MAX_MS,
+    /** When her introduction starts after the visitor filled in the form. */
+    introMinMs: AI_CHAT_INTRO_MIN_MS,
+    introMaxMs: AI_CHAT_INTRO_MAX_MS,
+    /** How much of a long answer goes into one message. */
+    bubbleMaxChars: AI_CHAT_BUBBLE_MAX_CHARS,
   };
 
   /** `01:59:31`-style countdown for the top-right corner of the chat window. */
@@ -202,29 +249,47 @@ export class AiModelChatService {
     session.startedAt = now;
     session.endsAt = now + AI_CHAT_SESSION_MS;
     session.nudgeAt = now + this.idleDelay(1);
-    // She has introduced herself in the opening line, so her first answer to the visitor's first
-    // question is an answer, not a second introduction.
+    // Her introduction (requirement F of the second brief) is her opening, so the first question the
+    // visitor asks is answered as a question and not with a second introduction.
     session.introduced = true;
     this.remainingMs.set(AI_CHAT_SESSION_MS);
     this.summaryOpen.set(false);
     this.touch(session);
     this.startClock();
 
-    const greeting = openingLine(
+    const voice = modelVoice(model);
+    const firstName = firstNameOf(identity.name);
+    // F — the introduction is written for her own age and country, and it is several messages.
+    const parts = voiceIntroduction(
       model,
-      modelVoice(model),
-      firstNameOf(identity.name),
+      voice,
+      firstName,
       identity.name,
+      greetingFor(new Date(now)),
     );
-    const message = newMessage({
-      author: 'model',
-      text: greeting,
-      pending: true,
-      revealedChars: 0,
-      intent: 'opening',
-    });
-    this.appendMessage(session, message);
-    void this.reveal(message, session, greeting);
+    void this.introduceFirst(session, parts);
+  }
+
+  /**
+   * F — her introduction: three to five seconds of quiet (the window sits on the conversation), then
+   * one message at a time, two to four seconds apart, with "typing" in front of each.
+   */
+  private async introduceFirst(session: AiChatSession, parts: readonly string[]): Promise<void> {
+    if (this.silent) {
+      // A test, or a studio that has switched every wait off: the delivery is written in one go and
+      // nothing is left hanging in a promise.
+      void this.deliver(session, parts, { intent: 'opening', away: false });
+      return;
+    }
+    this.thinking.set(true);
+    try {
+      const first = this.between(this.pacing.introMinMs, this.pacing.introMaxMs);
+      if (first > 0) await delay(first);
+      await this.deliver(session, parts, { intent: 'opening', away: false });
+    } finally {
+      this.thinking.set(false);
+      this.syncClock();
+    }
   }
 
   /**
@@ -292,7 +357,9 @@ export class AiModelChatService {
     this.thinking.set(true);
     // She is listening again: the silence that makes her speak up starts from this message.
     session.nudgeAt = Date.now() + this.idleDelay(session.nudges + 1);
-    this.persist();
+    // The visitor's own message is on screen at once — the wait before her answer belongs to her
+    // (requirement D), not to their own message.
+    this.syncClock();
 
     try {
       await this.answer(model, session, userMessage, photo);
@@ -333,15 +400,11 @@ export class AiModelChatService {
       lastUserMessage.reactionBy = 'model';
     }
 
-    const herMessage = newMessage({
-      author: 'model',
-      text: acknowledgement.text,
-      pending: true,
-      revealedChars: 0,
+    this.touch(session);
+    void this.deliver(session, [acknowledgement.text], {
       intent: `reaction:${reaction}`,
+      away: false,
     });
-    this.appendMessage(session, herMessage);
-    void this.reveal(herMessage, session, acknowledgement.text);
   }
 
   // ------------------------------------------------------------------ clock
@@ -411,15 +474,9 @@ export class AiModelChatService {
       seed: `${session.slug}|nudge|${session.nudges}|${session.messages.length}`,
     });
 
-    const message = newMessage({
-      author: 'model',
-      text,
-      pending: true,
-      revealedChars: 0,
-      intent: 'idle',
-    });
-    this.appendMessage(session, message);
-    void this.reveal(message, session, text);
+    // She speaks up on her own: the pause that makes it feel like a message from her rather than an
+    // answer is the away pause of requirement D, and here it is always on.
+    void this.deliver(session, [text], { intent: 'idle' });
   }
 
   /** The model of the open window — the one every session change is applied to. */
@@ -518,61 +575,57 @@ export class AiModelChatService {
     const mustBeLocal =
       local.intent.startsWith('moderation:') || !wasIntroduced || userMessage.attachment !== null;
 
-    const herMessage = newMessage({ author: 'model', text: '', pending: true, revealedChars: 0 });
-    this.appendMessage(session, herMessage);
-
     this.touch(session);
 
-    let spoken = false;
+    // B — the studio's OpenAI and Google keys answer when they are configured. The words arrive as
+    // one finished answer here and are typed out like her own; no part of the stream is ever shown
+    // word by word (requirement A of the second brief).
+    let answerText = local.text;
+    let answerSources: readonly AiChatSource[] = [];
+    let intent = local.intent;
     if (!mustBeLocal) {
-      const remote = await this.streamRemoteReply(model, session, userMessage, herMessage);
+      const remote = await this.streamRemoteReply(model, session, userMessage);
       if (remote) {
-        herMessage.text = remote.text;
-        herMessage.sources = remote.sources;
-        herMessage.pending = false;
-        herMessage.revealedChars = remote.text.length;
-        spoken = true;
+        answerText = remote.text;
+        answerSources = remote.sources;
+        intent = 'openai';
       }
     }
 
-    if (!spoken) {
-      herMessage.text = local.text;
-      herMessage.intent = local.intent;
-      // E — a selfie goes out as a photograph, not as a promise of one.
-      if (local.selfie) {
-        const alreadySent = session.messages
-          .map((message) => message.attachment)
-          .filter((attachment) => attachment?.selfie === true)
-          .map((attachment) => attachment?.preview ?? '');
-        const shot = pickChatSelfie(
-          model,
-          `${userMessage.id}|${session.messages.length}`,
-          alreadySent,
-        );
-        if (shot) {
-          herMessage.attachment = {
-            kind: 'photo',
-            name: `${model.slug}-selfie.jpg`,
-            type: 'image/jpeg',
-            size: 0,
-            source: 'camera',
-            preview: shot.photo,
-            selfie: true,
-          };
-        }
-      }
-      if (userMessage && local.reaction) {
-        userMessage.reaction = local.reaction;
-        userMessage.reactionBy = 'model';
-      }
-      await this.reveal(herMessage, session, local.text);
-    } else {
-      herMessage.intent = 'openai';
-      if (local.reaction) {
-        userMessage.reaction = local.reaction;
-        userMessage.reactionBy = 'model';
+    // E — a selfie goes out as a photograph, not as a promise of one.
+    let selfie: AiChatAttachment | null = null;
+    if (answerText === local.text && local.selfie) {
+      const alreadySent = session.messages
+        .map((message) => message.attachment)
+        .filter((attachment) => attachment?.selfie === true)
+        .map((attachment) => attachment?.preview ?? '');
+      const shot = pickChatSelfie(
+        model,
+        `${userMessage.id}|${session.messages.length}`,
+        alreadySent,
+      );
+      if (shot) {
+        selfie = {
+          kind: 'photo',
+          name: `${model.slug}-selfie.jpg`,
+          type: 'image/jpeg',
+          size: 0,
+          source: 'camera',
+          preview: shot.photo,
+          selfie: true,
+        };
       }
     }
+
+    if (userMessage && local.reaction) {
+      userMessage.reaction = local.reaction;
+      userMessage.reactionBy = 'model';
+    }
+
+    // C — the answer arrives as one message or as several, each one typed in front of the visitor
+    // and landing whole. A selfie is one message: a photograph is not split in two.
+    const parts = selfie ? [answerText] : splitChatMessages(answerText, this.pacing.bubbleMaxChars);
+    await this.deliver(session, parts, { intent, sources: answerSources, attachment: selfie });
 
     if (local.closes) {
       this.endSession(
@@ -602,19 +655,88 @@ export class AiModelChatService {
 
     session.pitches += 1;
     const text = contractPitch(model, `${session.slug}|pitch|${theirs}`);
-    const message = newMessage({
-      author: 'model',
-      text,
-      pending: true,
-      revealedChars: 0,
+    await this.deliver(session, splitChatMessages(text, this.pacing.bubbleMaxChars), {
       intent: 'contract',
     });
-    this.appendMessage(session, message);
-    await this.reveal(message, session, text);
   }
 
-  /** Reveals a finished answer word by word — the Messenger-style "typing" (requirement H's realism). */
-  private async reveal(
+  /**
+   * C — her answer as the visitor experiences it: one message, or two or three of them, each one
+   * typed in front of them and each one landing whole. Nothing here prints a sentence out letter by
+   * letter: the wait is the typing, and the message arrives in one piece (requirement A).
+   *
+   * The order of a single message is the order of a real chat (requirement D): sometimes she was not
+   * at her phone yet, so nothing shows at all for three to seven seconds; then her name and "typing"
+   * appear; sometimes she stops mid-thought and the indicator goes with her before it comes back; and
+   * then the message lands.
+   */
+  private async deliver(
+    session: AiChatSession,
+    parts: readonly string[],
+    options: {
+      intent?: string;
+      sources?: readonly AiChatSource[];
+      attachment?: AiChatAttachment | null;
+      /** False for her own scripted openings, where a random away pause would only be a delay. */
+      away?: boolean;
+    } = {},
+  ): Promise<AiChatMessage | null> {
+    let first: AiChatMessage | null = null;
+    const silent = this.silent;
+
+    if (!silent && parts.length > 0 && options.away !== false && !session.closed) {
+      // D — she was somewhere else when the message arrived: nothing types until she picks it up.
+      const away = this.awayPauseMs();
+      if (away > 0) {
+        this.away.set(true);
+        try {
+          await delay(away);
+        } finally {
+          this.away.set(false);
+        }
+      }
+    }
+
+    for (const [index, text] of parts.entries()) {
+      if (session.closed) break;
+      // C — the messages of one answer follow each other with the pause it takes to send the next
+      // thought, and the typing indicator is up in front of each one.
+      if (index > 0 && !silent) {
+        const gap = this.between(this.pacing.gapMinMs, this.pacing.gapMaxMs);
+        if (gap > 0) await delay(gap);
+      }
+
+      const message = newMessage({
+        author: 'model',
+        text: '',
+        pending: true,
+        revealedChars: 0,
+        intent: options.intent ?? '',
+        sources: index === 0 ? [...(options.sources ?? [])] : [],
+        attachment: index === 0 ? (options.attachment ?? null) : null,
+      });
+      this.appendMessage(session, message);
+      if (index === 0) first = message;
+      if (silent) this.writeMessage(message, session, text);
+      else await this.typeOut(message, session, text);
+    }
+
+    return first;
+  }
+
+  /** The message as the visitor sees it the moment it lands: complete, and not a character short. */
+  private writeMessage(message: AiChatMessage, session: AiChatSession, text: string): void {
+    message.text = text;
+    message.pending = false;
+    message.revealedChars = text.length;
+    this.touch(session);
+  }
+
+  /**
+   * A — one message: the wait a person needs to type that many characters, with the typing indicator
+   * up, and then the whole message at once.
+   */
+  private async typeOut(
     message: AiChatMessage,
     session: AiChatSession,
     text: string,
@@ -624,25 +746,82 @@ export class AiModelChatService {
     message.revealedChars = 0;
     this.touch(session);
 
-    this.touch(session);
+    const typing = this.typingMsFor(text);
+    const half = Math.round(typing / 2);
+    const stops = typing >= 2_000 && this.midPauseChance() > 0;
 
-    // I — she types for four to five seconds — the window shows her name and "typing…" — and only
-    // then does the answer start arriving.
-    if (this.pacing.thinkingMs > 0) {
-      const jitter = Math.round(Math.random() * Math.max(0, this.pacing.jitterMs));
-      await delay(this.pacing.thinkingMs + jitter);
+    if (stops) {
+      // D — she stopped mid-thought: the indicator goes with her, and comes back when she picks the
+      // thought up again.
+      await delay(half);
+      this.removeMessage(session, message);
+      await delay(this.between(this.pacing.midPauseMinMs, this.pacing.midPauseMaxMs));
+      // The two hours can run out while she is away from the thought: the message is not put back
+      // into a transcript that has already closed.
+      if (session.closed) return;
+      this.appendMessage(session, message);
+      await delay(typing - half);
+    } else if (typing > 0) {
+      await delay(typing);
     }
 
-    const step = Math.max(4, Math.round(text.length / 90));
-    while (message.revealedChars < text.length) {
-      message.revealedChars = Math.min(text.length, message.revealedChars + step);
-      this.touch(session, false);
-      if (this.pacing.revealMs > 0) await delay(this.pacing.revealMs);
-    }
-
+    // The message appears as a whole. No reveal, no stream, no typewriter.
     message.revealedChars = text.length;
     message.pending = false;
     this.touch(session);
+  }
+
+  /** Takes a message that has not arrived yet back out of the transcript, and counts the change. */
+  private removeMessage(session: AiChatSession, message: AiChatMessage): void {
+    const at = session.messages.indexOf(message);
+    if (at < 0) return;
+    session.messages.splice(at, 1);
+    this.touch(session);
+  }
+
+  /** A — how long she needs to type this message, with the salt of requirement D on every wait. */
+  private typingMsFor(text: string): number {
+    const { perCharMs, floorMs, ceilingMs, jitterMs } = this.pacing;
+    const base = typingTimeFor(text.length, perCharMs, floorMs, ceilingMs);
+    if (jitterMs <= 0) return base;
+    return Math.max(0, base + Math.round((Math.random() * 2 - 1) * jitterMs));
+  }
+
+  /**
+   * True when every wait is switched off — the tests, and nothing else. In that state the whole
+   * delivery is written in one go, so a page of tests never waits for a second of wall clock.
+   */
+  private get silent(): boolean {
+    const p = this.pacing;
+    return (
+      p.perCharMs <= 0 &&
+      p.floorMs <= 0 &&
+      p.ceilingMs <= 0 &&
+      p.gapMaxMs <= 0 &&
+      p.awayChance <= 0 &&
+      p.midPauseChance <= 0 &&
+      p.introMaxMs <= 0
+    );
+  }
+
+  /** D — the three to seven seconds before a single letter of typing appears, sometimes. */
+  private awayPauseMs(): number {
+    const { awayChance, awayMinMs, awayMaxMs } = this.pacing;
+    if (awayChance <= 0 || awayMinMs <= 0 || Math.random() > awayChance) return 0;
+    return this.between(awayMinMs, awayMaxMs);
+  }
+
+  /** D — how often she stops mid-thought; zero turns it off entirely, which is what the tests do. */
+  private midPauseChance(): number {
+    const { midPauseChance } = this.pacing;
+    if (midPauseChance <= 0) return 0;
+    return Math.random() < midPauseChance ? 1 : 0;
+  }
+
+  /** A whole number between two bounds of the pacing table. */
+  private between(min: number, max: number): number {
+    if (max <= min) return Math.max(0, Math.round(min));
+    return Math.round(min + Math.random() * (max - min));
   }
 
   /**
@@ -654,7 +833,6 @@ export class AiModelChatService {
     model: AiModelProfile,
     session: AiChatSession,
     userMessage: AiChatMessage,
-    herMessage: AiChatMessage,
   ): Promise<AiChatRemoteReply | null> {
     if (this.remoteUnavailable() || typeof fetch !== 'function') return null;
 
@@ -741,12 +919,9 @@ export class AiModelChatService {
                 error?: string;
               };
               if (parsed.error) return null;
-              if (parsed.delta) {
-                text += parsed.delta;
-                herMessage.text = text;
-                herMessage.revealedChars = text.length;
-                this.touch(session, false);
-              }
+              // The deltas are collected into one finished answer; the window never shows them
+              // arriving one at a time (requirement A of the second brief).
+              if (parsed.delta) text += parsed.delta;
               if (parsed.sources) sources.splice(0, sources.length, ...parsed.sources);
             } catch {
               // A partial or unknown event is ignored; the next chunk completes it.

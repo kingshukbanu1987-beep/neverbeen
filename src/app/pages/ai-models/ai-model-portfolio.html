@@ -40,6 +40,21 @@
             <div class="identity-copy">
               <p class="eyebrow model-location">{{ modelLocation(profile) }}</p>
               <h1 id="portfolio-title">{{ profile.name }}</h1>
+
+              <!-- E — the Live Chat button, right under her name where it cannot be missed: two and
+                   a half times the studio's button, with a quiet light moving through it. -->
+              <div class="chat-cta">
+                <button
+                  #chatButton
+                  type="button"
+                  class="action-button action-chat is-hero"
+                  [attr.aria-label]="'Chat live with ' + profile.name"
+                  (click)="openChat()"
+                >
+                  Live Chat
+                </button>
+              </div>
+
               <p class="handle-line">
                 <span class="handle">{{ profile.handle }}</span>
                 <span
@@ -68,16 +83,6 @@
                   <a [routerLink]="['/ai-models', profile.slug, 'biography']" class="biography-link"
                     ><span aria-hidden="true">↗</span> Read full Biography</a
                   >
-                  <!-- Real-time chat with the model: the green button directly above Rent Me. -->
-                  <button
-                    #chatButton
-                    type="button"
-                    class="action-button action-chat"
-                    [attr.aria-label]="'Chat live with ' + profile.name"
-                    (click)="openChat()"
-                  >
-                    Live Chat
-                  </button>
                   <button
                     #rentButton
                     type="button"

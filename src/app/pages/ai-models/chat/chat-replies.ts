@@ -1,5 +1,5 @@
 /**
- * The model's own brain (requirements A, B, C, D, E, F, H, J, L).
+ * The model's own brain (requirements A, B, C, D, E, F, H, J, L; second brief A, B, C, D, F).
  *
  * Every answer is composed here when the studio has no OpenAI key configured — and always for the
  * three things that must never vary: her introduction, the language warnings and the goodbye. The
@@ -44,6 +44,7 @@ import {
   garnishChatReply,
   modelVoice,
   videoRefusal,
+  voiceIntroduction,
 } from './chat-voice';
 import {
   WorldCountry,
@@ -118,17 +119,16 @@ export function greetingFor(now: Date): ChatGreeting {
 }
 
 /**
- * Requirement D: the first message she writes is always this introduction — the time of day, her
- * full name, her model id, where she belongs, her age, and the fact that she is an AI model agent
- * who does not exist in reality outside the NeverBeen Multiverse.
+ * Requirement D, rewritten by the second brief's F: the first thing she writes is still the time of
+ * day, her full name, her model id, where she belongs and her age — but it arrives as several
+ * messages, in the words of a woman of her own age from her own country, and the blank line between
+ * them is where the window pauses to show her typing again.
  */
 export function chatIntroduction(model: AiModelProfile, now: Date, firstName = ''): string {
-  const persona = chatPersona(model);
-  const origin = [persona.city, persona.country].filter(Boolean).join(', ');
-  return [
-    `${greetingFor(now)}${firstName ? `, ${firstName}` : ''}! I am ${persona.name} — ${persona.handle} — and I am ${persona.age || 'ageless'}, writing to you from ${origin || 'the NeverBeen Multiverse'}.`,
-    'Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it is an invitation: ask me anything.',
-  ].join(' ');
+  const name = firstName || model.name;
+  return voiceIntroduction(model, modelVoice(model), firstName, name, greetingFor(now)).join(
+    '\n\n',
+  );
 }
 
 // ------------------------------------------------------------------ reactions
@@ -807,6 +807,17 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   const inVoice = (text: string, garnishSeed = seed): string =>
     garnishChatReply(text, { voice, behaviour, name: firstName, seed: garnishSeed });
 
+  /**
+   * The garnish works on one message at a time, so the blank line — the seam requirement C sends
+   * between two bubbles — has to survive it: the garnish sees each piece as its own line and the
+   * seam is put back afterwards.
+   */
+  const inSections = (text: string): string =>
+    text
+      .split(/\n{2,}/)
+      .map((section) => inVoice(section))
+      .join('\n\n');
+
   // B — language first: nothing a visitor writes is answered before it has been read for abuse.
   const assessment = assessChatLanguage(question);
   if (assessment.level !== 'clean') {
@@ -853,7 +864,7 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
       text: inVoice(
         session.introduced
           ? text
-          : `${chatIntroduction(model, now, firstName)} And to the ${article} you just sent — ${text}`,
+          : `${chatIntroduction(model, now, firstName)}\n\nAnd to the ${article} you just sent — ${text}`,
         `${seed}|attachment`,
       ),
       reaction,
@@ -867,7 +878,8 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   if (VIDEO_REQUEST_PATTERN.test(lowered)) {
     return {
       ...base,
-      text: inVoice(videoRefusal(), `${seed}|video`),
+      // J — word for word, as the founder asked: no interjection, no garnish, no rewording.
+      text: videoRefusal(),
       reaction,
       intent: 'video',
       introduced: session.introduced,
@@ -915,7 +927,9 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
     const intro = chatIntroduction(model, now, firstName);
     return {
       ...base,
-      text: answer ? `${intro} ${answer}` : intro,
+      // The introduction is already several messages (requirement F of the second brief), so the
+      // seam goes in front of the answer rather than between two sentences.
+      text: answer ? `${intro}\n\n${inSections(answer)}` : intro,
       reaction,
       intent: 'introduction',
       introduced: true,
@@ -948,7 +962,7 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   if (answer) {
     return {
       ...base,
-      text: inVoice(answer),
+      text: inSections(answer),
       reaction,
       intent: intentName(lowered),
     };

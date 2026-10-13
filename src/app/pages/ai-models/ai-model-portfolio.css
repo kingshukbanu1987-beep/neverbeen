@@ -525,6 +525,115 @@
   box-shadow: 0 14px 34px rgb(28 88 40 / 32%);
 }
 
+/* E — the button on her own page: two and a half times the standard studio button, standing under
+   her name. The motion is deliberately quiet and modern: a light breathing in its shadow, a light
+   band crossing it once every few seconds, and a small lift when the visitor reaches for it. */
+.chat-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.15rem;
+}
+
+.action-chat.is-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(1.05rem, 2.1vw, 1.8rem) clamp(1.8rem, 3.6vw, 3.1rem);
+  font-size: clamp(1.1rem, 1.9vw, 1.55rem);
+  letter-spacing: -0.015em;
+  box-shadow: 0 22px 52px rgb(28 88 40 / 34%);
+  animation: chat-cta-breathe 3.4s ease-in-out infinite;
+  transition:
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 200ms ease,
+    box-shadow 240ms ease;
+}
+
+/* The light band: a wide, soft gradient crossing the pill every few seconds. */
+.action-chat.is-hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -60%;
+  left: -40%;
+  width: 34%;
+  height: 220%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 42%), transparent);
+  transform: rotate(8deg);
+  animation: chat-cta-sheen 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* The light inside it: a soft centre that swells and fades, like a breath. */
+.action-chat.is-hero::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 120%, rgb(255 255 255 / 34%), transparent 62%);
+  animation: chat-cta-halo 3.4s ease-in-out infinite;
+}
+
+.action-chat.is-hero:hover,
+.action-chat.is-hero:focus-visible {
+  background: #86d187;
+  box-shadow: 0 30px 64px rgb(28 88 40 / 44%);
+  transform: translateY(-2px);
+}
+
+@keyframes chat-cta-breathe {
+  0%,
+  100% {
+    box-shadow: 0 20px 46px rgb(28 88 40 / 28%);
+  }
+
+  50% {
+    box-shadow: 0 28px 62px rgb(28 88 40 / 46%);
+  }
+}
+
+@keyframes chat-cta-sheen {
+  0% {
+    transform: translateX(0) rotate(8deg);
+  }
+
+  55%,
+  100% {
+    transform: translateX(430%) rotate(8deg);
+  }
+}
+
+@keyframes chat-cta-halo {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-chat.is-hero,
+  .action-chat.is-hero::before,
+  .action-chat.is-hero::after {
+    animation: none;
+  }
+}
+
+@media (width <= 640px) {
+  .chat-cta {
+    margin-top: 1rem;
+  }
+
+  .action-chat.is-hero {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .action-chat:hover,
 .action-chat:focus-visible {
   border-color: transparent;

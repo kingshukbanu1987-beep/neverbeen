@@ -317,6 +317,13 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
     return `${this.model().name.split(' ')[0]} is typing`;
   }
 
+  /**
+   * True while a typing indicator is on screen — the window's header says "typing" exactly when a
+   * bubble is showing it, so the seconds before she picks her phone up stay quiet (requirement D of
+   * the second brief).
+   */
+  protected readonly typingNow = computed(() => this.thinking() && !this.chat.away());
+
   protected isTypingBubble(message: AiChatMessage): boolean {
     return message.pending && message.revealedChars === 0;
   }

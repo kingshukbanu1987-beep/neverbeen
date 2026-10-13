@@ -155,9 +155,11 @@ by an upload is renamed in place.
 
 ### Chatting with a model
 
-A green **Live Chat** button (white text, `#74C476`) sits immediately before **Rent Me** in every
-model profile — and in the `.card-actions` row of every card on the `/ai-models` directory — and
-opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
+A green **Live Chat** button (white text, `#74C476`) stands **directly under the model's name** in
+every model profile, at two and a half times the size of the studio's standard button — a slow
+breathing glow, a band of light crossing it every few seconds and a small lift on hover, all of it
+switched off for `prefers-reduced-motion`. The same button sits in the `.card-actions` row of every
+card on the `/ai-models` directory. It opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
 her model id in small italic type (`@alisha.bhattacharya`), her city and country, a grey
 **View Profile** button, then straight into the conversation and the composer. Her messages are
 rounded light grey
@@ -171,8 +173,14 @@ Before any of that, a glass form asks who she is talking to: a name of three to 
 (checked as it is typed) and one photograph — uploaded or taken with the front camera and reduced to
 about 100 KB automatically. From then on her photograph stands, circular, beside every answer and the
 visitor's beside their own messages; she uses their **first name** and opens the conversation herself.
-Her answers show her name and **typing** first and arrive four to five seconds later; she talks the
-way a woman of her own age and country talks (an Indian of 25 does not sound like an Iranian of 40),
+Her answers are never printed out for the visitor: the window shows her name and **typing** for as
+long as a person needs to type that many characters (about 34 ms a character, never under two and a
+half seconds and never over seven), and then the message arrives **whole**, in one piece — no
+word-by-word reveal anywhere. Sometimes the first sign of her is three to seven seconds of nothing at
+all (she was not at her phone), and sometimes she stops mid-thought: the typing bubble goes with her
+and comes back before the message lands. A long answer arrives as two, three or four **separate
+messages**, two to four seconds apart, each one typed in front of the visitor. She talks the way a
+woman of her own age and country talks (an Indian of 25 does not sound like an Iranian of 40),
 reads the visitor's humour and emoji as the session goes on and settles into their way of writing. A
 selfie request brings back one of her own frames as a phone photograph — the room behind her, the bad
 light, the flaw she admits to — a picture the visitor sends is looked at and answered in words, a
@@ -186,12 +194,20 @@ her rating out of five.
 She is grounded in everything NeverBeen knows: her own card, her complete biography, her photographs
 and videos, every other model, the website's prices, packages, coupons, policies and destinations,
 and the studio's own facts — so "how does the booking work?" and "tell me about Nourhan Durrani" are
-answered as well as "who are you?". The first answer of a session is her introduction: the
-good-morning/good-afternoon/good-evening greeting for the visitor's clock, her full name, her model
-id, her country and city, her age, and the plain statement that everything of her lives inside the
-NeverBeen Multiverse and nowhere else — said in her own voice, never as a bot line ("I am an AI
-model", "I am replying from my biography" and their like are rewritten out of her answers). She
-remembers the whole conversation, and a refresh keeps it.
+answered as well as "who are you?". When the studio has configured its OpenAI and Google keys she
+reaches both for any question, and never says so: no "Google", no "OpenAI", no "I searched", no
+"I found it" — she knows it, or she remembers it, with an opinion attached.
+
+The opening of a session is her introduction, and it is not one paragraph. Three to five seconds
+after the form is filled in she sends **four or five messages**, two to four seconds apart, each one
+typed in front of the visitor, and they are written for her own age and country: a woman of 23 in
+Shiraz and a woman of 30 in Sarajevo do not open the same conversation, and neither do an Indian of 25
+and an Iranian of 25 — in the introduction, or in any answer that follows it. The first message
+carries the visitor's name, the second the good-morning/good-afternoon/good-evening greeting for their
+clock, her full name, her model id, her city and country and her age, and with them the plain
+statement that everything of her lives inside the NeverBeen Multiverse and nowhere else — said in her
+own voice, never as a bot line ("I am an AI model", "I am replying from my biography" and their like
+are rewritten out of her answers). She remembers the whole conversation, and a refresh keeps it.
 
 Her tone is seductive, modern, frank and friendly. A swear word is a strike and a warning; sexual
 harassment counts double, and after three strikes she says goodbye and the chat window closes for

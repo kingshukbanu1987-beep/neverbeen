@@ -10,6 +10,7 @@ import {
 } from './chat-replies';
 import { AiChatMessage } from './chat-types';
 import { buildModelDossier, chatPersona } from './chat-knowledge';
+import { videoRefusal } from './chat-voice';
 import { findCountry, evaluateArithmetic, arithmeticExpression, timeInPlace } from './chat-world';
 
 function model(slug: string): AiModelProfile {
@@ -100,7 +101,9 @@ describe('her own knowledge (requirement A)', () => {
     expect(reply('Tell me about your family').text.length).toBeGreaterThan(30);
     expect(reply('What are your hobbies?').text.length).toBeGreaterThan(20);
     expect(reply('How many photographs do you have?').text).toContain(String(alisha.photos.length));
-    expect(reply('Do you have videos?').text).toMatch(/video/i);
+    // J — the founder's wording, exactly, with nothing of her own added to it.
+    expect(reply('Do you have videos?').text).toBe(videoRefusal());
+    expect(reply('send me a clip of you').text).toBe(videoRefusal());
   });
 
   it('knows the studio and the whole website', () => {

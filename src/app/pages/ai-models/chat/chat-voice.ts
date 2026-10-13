@@ -554,13 +554,82 @@ function withEmoji(text: string, options: ChatGarnishOptions): string {
 }
 
 /**
- * "achha, The capital of France is Paris" needs the small letter back — but "achha, Alisha
- * Bhattacharya signing off" must keep its capital, because that first word is her name.
+ * The ordinary words one of her sentences may open with, and the only ones that may lose their
+ * capital when an interjection is put in front. "achha, The capital of France is Paris" wants the
+ * small letter back — "achha, Alisha Bhattacharya signing off" and "achha, Delhi, of course" must
+ * keep theirs, because there is no way to tell a name from an ordinary word otherwise, and a name in
+ * small letters makes her sound like software.
  */
+const ORDINARY_STARTERS: ReadonlySet<string> = new Set([
+  'a',
+  'an',
+  'and',
+  'but',
+  'every',
+  'everybody',
+  'everyone',
+  'fair',
+  'fifty',
+  'five',
+  'good',
+  'here',
+  'honestly',
+  'how',
+  'i',
+  "i'd",
+  "i'll",
+  "i'm",
+  "i've",
+  'if',
+  'it',
+  "it's",
+  'listen',
+  'look',
+  'men',
+  'mine',
+  'my',
+  'never',
+  'no',
+  'nobody',
+  'not',
+  'nothing',
+  'one',
+  'our',
+  'people',
+  'she',
+  'so',
+  'some',
+  'sometimes',
+  'ten',
+  'that',
+  'the',
+  'there',
+  'these',
+  'they',
+  "they're",
+  'this',
+  'those',
+  'three',
+  'true',
+  'twenty',
+  'two',
+  'we',
+  "we're",
+  'well',
+  'what',
+  'when',
+  'why',
+  'women',
+  'yes',
+  'you',
+  'your',
+]);
+
 function lowerFirstUnlessName(text: string): string {
-  const [first = '', second = ''] = text.split(/\s+/);
-  const isName = /^[A-Z][a-z]/.test(first) && /^[A-Z][a-z]/.test(second) && !/^I['’]/.test(second);
-  return isName ? text : text.charAt(0).toLowerCase() + text.slice(1);
+  const [first = ''] = text.split(/\s+/);
+  const word = first.replace(/[^A-Za-z']/g, '').toLowerCase();
+  if (!ORDINARY_STARTERS.has(word)) return text;
+  return text.charAt(0).toLowerCase() + text.slice(1);
 }
 
 function withInterjection(text: string, options: ChatGarnishOptions): string {
@@ -842,4 +911,708 @@ export function contractPitch(model: AiModelProfile, seed: string): string {
 /** J — the answer she has been told to give about videos, word for word. */
 export function videoRefusal(): string {
   return 'Sorry actually, NeverBeen Founder Mr. Kingshuk asked me not to send my videos or any videos while I am chatting with someone. So, you take his permission next time and show me his permission, then I will send. Please don’t mind.';
+}
+
+// ------------------------------------------------------------------ C: her answer in bubbles
+
+/**
+ * C — one answer is not always one message. People send a thought, then the aside, then the
+ * question, one bubble at a time, and the other side watches "typing" between them.
+ *
+ * The reply arrives with its sentences already separated by a line break, so the break is where she
+ * paused to think; those are the best places to send. Nothing is cut mid-thought unless a bubble
+ * would otherwise grow to twice the size one thumb can hold, and there is always a message left —
+ * a long answer never arrives as a single wall of text.
+ */
+export function splitChatMessages(text: string, maxChars: number): string[] {
+  const source = String(text ?? '').trim();
+  if (source.length <= maxChars) return source ? [source] : [];
+
+  const paragraphs = source
+    .split(/\n+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const pieces: string[] = [];
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= maxChars) {
+      pieces.push(paragraph);
+      continue;
+    }
+    // Split on sentence ends, keeping the full stop with the sentence it belongs to.
+    const sentences = paragraph.match(/[^.!?…]+[.!?…]*\s*/g) ?? [paragraph];
+    let current = '';
+    for (const sentence of sentences) {
+      const next = (current ? `${current} ` : '') + sentence.trim();
+      if (current && next.length > maxChars) {
+        pieces.push(current);
+        current = sentence.trim();
+      } else {
+        current = next;
+      }
+    }
+    if (current) pieces.push(current);
+  }
+
+  // Merge the slivers: a two-word fragment is not a message, it is the tail of the one before it.
+  const merged: string[] = [];
+  for (const piece of pieces) {
+    const previous = merged[merged.length - 1];
+    if (previous && (previous.length < maxChars * 0.45 || piece.length < maxChars * 0.25)) {
+      merged[merged.length - 1] = `${previous} ${piece}`;
+    } else {
+      merged.push(piece);
+    }
+  }
+
+  // Still far too long in one go? Break the remaining wall on the space nearest the middle.
+  return merged.flatMap((piece) => hardWrap(piece, maxChars));
+}
+
+function hardWrap(text: string, maxChars: number): string[] {
+  if (text.length <= maxChars) return [text];
+  const parts: string[] = [];
+  let rest = text;
+  while (rest.length > maxChars) {
+    const window = rest.slice(0, maxChars);
+    const cut = Math.max(
+      window.lastIndexOf('. '),
+      window.lastIndexOf('! '),
+      window.lastIndexOf('? '),
+    );
+    const space = window.lastIndexOf(' ');
+    const at = cut > maxChars * 0.5 ? cut + 1 : space > maxChars * 0.5 ? space : maxChars;
+    parts.push(rest.slice(0, at).trim());
+    rest = rest.slice(at).trim();
+  }
+  if (rest) parts.push(rest);
+  return parts;
+}
+
+// ------------------------------------------------------------------ F: where she comes from
+
+interface CountryFlavour {
+  /** Small pieces of home life she can offer without being asked. */
+  home: readonly string[];
+  /** What belongs to her day, in her corner of the world. */
+  daily: readonly string[];
+  /** The question she asks back, in her own idiom. */
+  question: readonly string[];
+}
+
+/**
+ * Requirement F — India and Iran must not sound like the same woman. Her country decides what she
+ * says about home, what her day looks like and how she asks a question back; the countries without
+ * an entry of their own use the warm, general lines below.
+ */
+const COUNTRY_FLAVOURS: Record<string, CountryFlavour> = {
+  india: {
+    home: [
+      'biryani on Sundays and half of my street turning up for it',
+      'the pressure cooker going off at eight every morning',
+    ],
+    daily: [
+      'the heat sits on the terrace until midnight',
+      'the aunties next door have opinions about everything I do',
+    ],
+    question: [
+      'what is your chai count for the day?',
+      'and what do you eat when nobody is watching?',
+    ],
+  },
+  pakistan: {
+    home: [
+      'my mother’s chai, which is really just sugar with colour',
+      'a whole street that knows my name and my schedule',
+    ],
+    daily: [
+      'the evening rush is on the road before the sun is even down',
+      'wedding season is starting again and nobody asks me first',
+    ],
+    question: [
+      'and what is your life like where you are?',
+      'what does your day smell like — food, traffic, or rain?',
+    ],
+  },
+  bangladesh: {
+    home: [
+      'a house full of cousins and one television fighting over it',
+      'fish curry and rice, exactly as my grandmother makes it',
+    ],
+    daily: ['the rains came early this year', 'the rickshaws sound like a song I did not choose'],
+    question: ['and where does your day take you?', 'what is your city like at this hour?'],
+  },
+  iran: {
+    home: [
+      'ghormeh sabzi at my grandmother’s place, with rice I will not apologise for',
+      'an uncle of mine who has read half of Hafez and quotes it at weddings',
+    ],
+    daily: [
+      'the evening is finally cooling down after a long day',
+      'the news coming out of home weighs on me some nights',
+    ],
+    question: [
+      'and you — where does the evening find you?',
+      'what does your day look like from there?',
+    ],
+  },
+  afghanistan: {
+    home: [
+      'a house of green tea and four languages at once',
+      'bread and more bread, which was always the point',
+    ],
+    daily: [
+      'the mountains are pale pink for about ten minutes every evening',
+      'the air is drying and winter is coming in early',
+    ],
+    question: [
+      'and your part of the world — what is it like this month?',
+      'what do your evenings look like there?',
+    ],
+  },
+  syria: {
+    home: [
+      'my mother’s kitchen, where nothing is measured and everything is right',
+      'a coffee I refuse to drink anywhere else',
+    ],
+    daily: [
+      'it is quiet here now, quieter than it should be',
+      'the jasmine is over the whole street at this hour',
+    ],
+    question: [
+      'and telling me about yours — what are your days like?',
+      'what is the place you call home like?',
+    ],
+  },
+  lebanon: {
+    home: [
+      'a family table that gets louder with every course',
+      'olive oil from the village my people come from',
+    ],
+    daily: [
+      'the electricity cuts and my whole street starts talking at once',
+      'the sea is ten minutes away and I still do not go every day',
+    ],
+    question: [
+      'and you — how do you live where you are?',
+      'what does the end of your day sound like?',
+    ],
+  },
+  jordan: {
+    home: [
+      'mansaf on Fridays, with the whole family around one plate',
+      'a grandmother who can talk about tea for twenty minutes',
+    ],
+    daily: [
+      'the desert wind comes up in the afternoon and everyone closes a window',
+      'the city is busier this season than I remember',
+    ],
+    question: [
+      'and what is your everyday like there?',
+      'what do you miss when you are away from home?',
+    ],
+  },
+  iraq: {
+    home: [
+      'a tea pot that never goes cold and never leaves the table',
+      'dates from my uncle’s garden, which he will mention',
+    ],
+    daily: [
+      'the dust came in today and turned the sky orange',
+      'the evenings are for family, no matter what the week did',
+    ],
+    question: [
+      'and your side of the world — what is happening there?',
+      'how is your day going, really?',
+    ],
+  },
+  egypt: {
+    home: [
+      'a pot of tea that gets refreshed whether I want it or not',
+      'Friday lunch that my grandmother refuses to rush',
+    ],
+    daily: [
+      'the whole city is out on the corniche at this hour',
+      'everything takes two hours longer than it should, and I have given up',
+    ],
+    question: ['and you — how is life where you are?', 'what do you usually do at this hour?'],
+  },
+  'saudi arabia': {
+    home: [
+      'cardamom coffee and dates, no negotiation',
+      'a family gathering that starts late and never ends',
+    ],
+    daily: [
+      'the heat outside is a personality of its own',
+      'the malls are full and everyone is awake at midnight',
+    ],
+    question: ['and your evenings there — what are they like?', 'how is your day so far?'],
+  },
+  turkey: {
+    home: [
+      'my mother’s kitchen, where tea arrives before the news does',
+      'a family breakfast that takes three hours and I am not complaining',
+    ],
+    daily: [
+      'the ferry ride at sunset is still the best thing about my city',
+      'the cats on my street have a schedule and I am part of it',
+    ],
+    question: [
+      'and your city — what is it like this week?',
+      'what do you do when you are not working?',
+    ],
+  },
+  'united arab emirates': {
+    home: [
+      'a family that all lives within fifteen minutes of each other',
+      'gahwa and dates at my grandmother’s on Fridays',
+    ],
+    daily: [
+      'everything here is built fast and lit bright',
+      'the desert air is finally bearable after eight at night',
+    ],
+    question: ['and your life — what is it shaped like?', 'how is your day treating you?'],
+  },
+  morocco: {
+    home: [
+      'mint tea poured from a height, which is apparently a talent',
+      'a tagine that has been on the fire since noon',
+    ],
+    daily: [
+      'the medina is loud in exactly the right way',
+      'the evening wind off the coast is the best part of my day',
+    ],
+    question: [
+      'and you, where do the evenings take you there?',
+      'what is the weather like where you are?',
+    ],
+  },
+  bosnia: {
+    home: [
+      'coffee with my grandmother, from a džezva, hours long',
+      'a family table with more food than people',
+    ],
+    daily: [
+      'the hills are already turning the colour of rust',
+      'the whole city walks the same street every evening',
+    ],
+    question: ['and what is your part of the world like?', 'how is your day, honestly?'],
+  },
+  mexico: {
+    home: [
+      'tacos at midnight and a family that screams my name happily',
+      'my grandmother’s kitchen, which smells of chile and gossip',
+    ],
+    daily: [
+      'the plaza is full and the music is loud and nobody has work tomorrow',
+      'the rain comes at six like an appointment',
+    ],
+    question: ['and you — what is your day made of?', 'what are your evenings like there?'],
+  },
+  brazil: {
+    home: [
+      'a house where everyone talks at the same time and nobody minds',
+      'coffee that is strong enough to forgive you',
+    ],
+    daily: [
+      'the beach is ten minutes away and my whole week bends around it',
+      'somebody is always playing music somewhere below my window',
+    ],
+    question: [
+      'and your life there — what is it like?',
+      'what do you do when the day is finished?',
+    ],
+  },
+  spain: {
+    home: [
+      'a dinner that starts at ten and ends at one',
+      'my grandmother’s kitchen where nobody leaves hungry',
+    ],
+    daily: [
+      'the streets are still awake and it is almost midnight',
+      'everyone is out walking, and I am out walking with them',
+    ],
+    question: ['and you — what time do you eat there?', 'what is your evening like?'],
+  },
+  italy: {
+    home: [
+      'coffee standing up at the bar and my family arguing about lunch',
+      'a kitchen that has been loud since I was small',
+    ],
+    daily: [
+      'the piazza is full and the light is doing something lovely',
+      'nobody is in a hurry and I have stopped pretending to be',
+    ],
+    question: ['and you there — what is your day like?', 'what do you eat when you are happy?'],
+  },
+  france: {
+    home: [
+      'a long table, a baguette, and an argument about cheese',
+      'my mother’s kitchen where everything is timed',
+    ],
+    daily: [
+      'the light here at this hour is unfairly good',
+      'the street outside is quiet and I like it that way',
+    ],
+    question: ['and your life — how does it run there?', 'what have you done today that was good?'],
+  },
+  nigeria: {
+    home: [
+      'jollof that starts a family argument every single time',
+      'a house where the music is always louder than the talking',
+    ],
+    daily: [
+      'the whole street knows my business before I do',
+      'traffic took an hour of my life and I want it back',
+    ],
+    question: ['and your day — what is happening there?', 'what is your city like at night?'],
+  },
+  kenya: {
+    home: [
+      'chai ya maziwa in the morning and my grandmother’s voice',
+      'a family that argues about the same stories every visit',
+    ],
+    daily: [
+      'the sky here does things in the evening that I cannot describe',
+      'everyone is out on the street now that it has cooled',
+    ],
+    question: ['and where you are — what is it like?', 'what do you do at the end of your day?'],
+  },
+  'south africa': {
+    home: [
+      'a braai that starts at noon and is still going at seven',
+      'a family where everyone has an opinion and says it',
+    ],
+    daily: [
+      'the mountain is pink and everyone is pretending not to look',
+      'my day was longer than it should have been, honestly',
+    ],
+    question: ['and you — how was your day?', 'what is your city like right now?'],
+  },
+  'united states': {
+    home: [
+      'a kitchen where everyone talks over each other and calls it love',
+      'a family group chat that never sleeps',
+    ],
+    daily: [
+      'the city has not gone quiet once today',
+      'I am drinking iced coffee in October, like a criminal',
+    ],
+    question: ['and you — how is your week going?', 'what does your day look like from there?'],
+  },
+  canada: {
+    home: [
+      'a family dinner that ends with everyone on the porch',
+      'maple everything, and yes we do notice',
+    ],
+    daily: [
+      'the cold is here early and my heating has been on since last night',
+      'a walk with my coffee that took forty minutes too long',
+    ],
+    question: ['and you — how is the weather where you are?', 'what is your day like?'],
+  },
+  australia: {
+    home: [
+      'a backyard barbecue that turns into a full argument about football',
+      'a family that is always at the beach somehow',
+    ],
+    daily: [
+      'it is too hot and everyone is complaining about it like it is new',
+      'the beach was packed and the wind was perfect',
+    ],
+    question: ['and you there — how is your day?', 'what do you do to cool down?'],
+  },
+  'new zealand': {
+    home: [
+      'a family that lives an hour apart and still sees each other weekly',
+      'a kitchen with the back door open to the hills',
+    ],
+    daily: [
+      'the wind came through and rearranged my whole afternoon',
+      'the light here is ridiculous and I do not get used to it',
+    ],
+    question: ['and your corner of the world — what is it like?', 'how has your week been?'],
+  },
+  'united kingdom': {
+    home: [
+      'tea offered before any question is answered',
+      'a family where the kettle fixes most things',
+    ],
+    daily: [
+      'it has done rain, sun and rain again since I woke up',
+      'the pub is going to be full by eight and I am not complaining',
+    ],
+    question: ['and you — how was your day, really?', 'what do you do with your evenings there?'],
+  },
+  ireland: {
+    home: [
+      'tea, then a second tea, because the first one was too short',
+      'a family where every story takes twenty minutes',
+    ],
+    daily: [
+      'it rained sideways for an hour and I just let it',
+      'the whole town is in the one good pub and I am joining them',
+    ],
+    question: ['and your day there — was it any good?', 'what is the weather doing where you are?'],
+  },
+  germany: {
+    home: [
+      'bread that matters far more than it should',
+      'a family that argues about timetables, lovingly',
+    ],
+    daily: [
+      'my day was scheduled to the minute and I am only slightly sorry',
+      'the park was full of people walking seriously',
+    ],
+    question: ['and your week — how is it running?', 'what do you do to switch off?'],
+  },
+  netherlands: {
+    home: [
+      'a family dinner where everyone cycles to arrive',
+      'coffee and one cake at four, and that is the rule',
+    ],
+    daily: [
+      'it rained for the length of one bicycle ride',
+      'the canals look good at this hour and the whole city knows it',
+    ],
+    question: ['and your life there — how is it arranged?', 'what do you do outside of work?'],
+  },
+  russia: {
+    home: [
+      'tea poured at length and a table that never empties',
+      'a grandmother who solves everything with food',
+    ],
+    daily: [
+      'the cold came in today and everyone just put another layer on',
+      'my evening went on longer than the day deserved',
+    ],
+    question: ['and you — how is the weather there?', 'what does your day look like?'],
+  },
+  ukraine: {
+    home: [
+      'borscht that my grandmother would object to and my mother perfected',
+      'a family that talks over the table until late',
+    ],
+    daily: [
+      'the sirens went off this morning and the day carried on anyway',
+      'the sunflowers are everywhere and I love that',
+    ],
+    question: [
+      'and you — how are things where you are?',
+      'what does your day look like from there?',
+    ],
+  },
+  poland: {
+    home: [
+      'pierogi made by four people at once and one who supervises',
+      'tea with a slice of lemon, no arguments',
+    ],
+    daily: [
+      'the town square is lit up and it is colder than it should be',
+      'my day was long and I am not done eating yet',
+    ],
+    question: ['and your part of the world — what is it like?', 'how is your day going?'],
+  },
+  china: {
+    home: [
+      'a family dinner where the dishes keep arriving',
+      'my grandmother teaching me a recipe she never measures',
+    ],
+    daily: [
+      'the streets are loud and lit and the food is everywhere',
+      'my day was all meetings and one very good bowl of noodles',
+    ],
+    question: [
+      'and you — how is your day going?',
+      'what do you eat when you are too tired to cook?',
+    ],
+  },
+  japan: {
+    home: [
+      'a quiet kitchen and my mother’s careful way with everything',
+      'a family that says less and means more',
+    ],
+    daily: [
+      'the convenience store is my true home at this hour',
+      'the evening is quiet and the train was exactly on time',
+    ],
+    question: ['and your day — how was it?', 'what do you do to relax?'],
+  },
+  'south korea': {
+    home: [
+      'a family table with six side dishes and a lot of opinions',
+      'my mother asking if I have eaten, four times a day',
+    ],
+    daily: [
+      'the city does not sleep and neither do I, apparently',
+      'it is fried chicken weather and I have already decided',
+    ],
+    question: ['and you — how was your week?', 'what do you do on a night off?'],
+  },
+  philippines: {
+    home: [
+      'a house with three generations and one karaoke machine',
+      'adobo that tastes like my grandmother’s hands',
+    ],
+    daily: [
+      'the tricycles and the heat and everyone still smiling',
+      'the rain came and the whole street filled up',
+    ],
+    question: ['and you — kumusta, how is your day?', 'what do you do when it rains there?'],
+  },
+  indonesia: {
+    home: [
+      'rice with everything and a family that gathers for it',
+      'my mother’s sambal, which is untouchable',
+    ],
+    daily: [
+      'the city is loud and hot and completely alive',
+      'my day ended early and I am grateful for that',
+    ],
+    question: ['and your day — how is it going?', 'what food makes you feel at home?'],
+  },
+  thailand: {
+    home: [
+      'a family kitchen where the food is always too spicy for visitors',
+      'my grandmother’s curry and a table of cousins',
+    ],
+    daily: [
+      'the street food outside is the best part of my evening',
+      'it has rained and the air is finally cool',
+    ],
+    question: ['and you — how is your day going?', 'what do you eat when you are in a good mood?'],
+  },
+  vietnam: {
+    home: [
+      'a family that eats together at seven, every single night',
+      'my mother’s phở and a recipe she will not write down',
+    ],
+    daily: [
+      'the motorbikes never stop and I have stopped hearing them',
+      'the rain came fast, as always, and left just as fast',
+    ],
+    question: ['and you — how was your day?', 'what does your city smell like at this hour?'],
+  },
+  greece: {
+    home: [
+      'a grandmother who feeds first and asks later',
+      'a table under a tree with far too much food',
+    ],
+    daily: [
+      'the sea is two streets away and everyone is late for something',
+      'the whole taverna started singing and nobody knew why',
+    ],
+    question: ['and you — how is your day going?', 'what do your evenings look like?'],
+  },
+};
+
+const FLAVOUR_TONES: Record<ChatAgeBand, { opener: string[]; close: string[] }> = {
+  young: {
+    opener: [
+      'So tell me something. ',
+      'Okay, but this is the part I like. ',
+      'I will go first, and then you talk. ',
+      'Right — one thing you should know already. ',
+    ],
+    close: ['Your turn now, and do not make it boring. ', 'Go on then, tell me. '],
+  },
+  mid: {
+    opener: [
+      'What I will tell you first is this. ',
+      'Before we go any further, one thing. ',
+      'Here is something about me, so you know who you are talking to. ',
+    ],
+    close: ['And you — your turn. ', 'So, what about you? '],
+  },
+  senior: {
+    opener: [
+      'Let me tell you one thing, because you cannot see me and I cannot see you. ',
+      'I will be plain with you, because there is no point in anything else. ',
+      'Let me begin properly. ',
+    ],
+    close: ['Now I have talked enough about myself. ', 'I would rather hear your side now. '],
+  },
+};
+
+const GLOBAL_FLAVOUR: CountryFlavour = {
+  home: ['a house that is never quiet for long', 'a kitchen where the recipes are arguments'],
+  daily: [
+    'the day was long and the evening is finally mine',
+    'the weather has been doing whatever it likes',
+  ],
+  question: ['what is your day like where you are?', 'what do you do when the work is done?'],
+};
+
+/**
+ * F — the opening she sends the moment the form is filled: four or five messages that could only
+ * come from a woman of her age in her country. She greets the visitor by name the way her own
+ * people do it, lays out who she is and where home is, says how old she is, what her part of the
+ * world is like at that hour, and then asks them something of her own.
+ *
+ * Each string is one message in the window: the service sends them one at a time, with the typing
+ * indicator in front of each (requirement F of the second brief).
+ */
+export function voiceIntroduction(
+  model: AiModelProfile,
+  voice: ChatVoice,
+  firstName: string,
+  fullName: string,
+  greeting: string,
+): string[] {
+  const persona = chatPersona(model);
+  const seed = `${model.slug}|intro|${voice.country}|${voice.age}|${fullName}`;
+  const flavour = COUNTRY_FLAVOURS[voice.country.trim().toLowerCase()] ?? GLOBAL_FLAVOUR;
+  const who = firstName || 'you';
+  const place = [persona.city, persona.country].filter(Boolean).join(', ');
+
+  const age: Record<ChatAgeBand, string[]> = {
+    young: [
+      'I am younger than I sound in my photographs and faster than I sound in general, so keep up.',
+      'I do not do small talk for long, so we are going to be properly interesting or I will get bored.',
+    ],
+    mid: [
+      'I am old enough to have opinions I did not copy from anybody, and young enough to still change them.',
+      'I have two hours and I would rather spend them on what you actually think than on the weather.',
+    ],
+    senior: [
+      'I have watched a few decades go past, so you can ask me the real questions, not the polite ones.',
+      'I have no patience left for pretending, which makes me better company than most.',
+    ],
+  };
+
+  const details = [
+    `${greeting}, ${who}. I am ${persona.name} — ${persona.handle} — ${persona.age || 'ageless'}, writing to you from ${place || 'the other side of this window'}. Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it is an invitation: ask me anything.`,
+    `${greeting} ${who} — ${persona.name}, ${persona.handle}, ${persona.age || 'ageless'} years of it, writing to you from ${place || 'the other side of this window'}, and not one of those years was spent answering like a machine. Everything of me — my story, my photographs, my videos — lives inside the NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. So ask away.`,
+  ];
+
+  const home = [
+    `Where I come from it is ${flavour.home[0]}, and here it is ${flavour.daily[0]}.`,
+    `Home is ${flavour.home[0]}. My days are ${flavour.daily[0]}.`,
+  ];
+
+  const lines = [
+    // Her hello, in the words of a woman of her age: young and bubbly, mid and warm, senior and plain.
+    openingLine(model, voice, firstName, fullName),
+    pickFrom(details, `${seed}|details`),
+    pickFrom(age[voice.band], `${seed}|age`),
+    pickFrom(home, `${seed}|home`),
+    `${pickFrom(flavour.question, `${seed}|ask`)}${firstName ? `, ${who}` : ''}`,
+  ];
+
+  // A reserved woman of a certain age sends four; everyone else sends the full five.
+  const intro =
+    voice.band === 'senior' && voice.expressiveness < 0.7
+      ? [...lines.slice(0, 2), ...lines.slice(3)]
+      : lines;
+
+  return intro.map((line, index) => garnishIntroLine(line, voice, `${seed}|${index}`, index));
+}
+
+/** A quiet finishing touch to an introduction line: her own emoji, never a machine's. */
+function garnishIntroLine(line: string, voice: ChatVoice, seed: string, index: number): string {
+  // The question she asks back stays plain: an emoji there would be a wink, not a question.
+  if (line.includes('?')) return line;
+  if (!roll(`${seed}|intro-emoji-${index}`, voice.emojiRate * 0.35)) return line;
+  const already = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u.test(line);
+  return already ? line : `${line} ${pickFrom(voice.favourites, `${seed}|intro-fav-${index}`)}`;
 }

@@ -6,7 +6,10 @@ import {
   contractPitch,
   idleChatOpener,
   modelVoice,
+  openingLine,
+  splitChatMessages,
   videoRefusal,
+  voiceIntroduction,
 } from './chat-voice';
 
 const model = (slug: string): AiModelProfile =>
@@ -149,5 +152,106 @@ describe('her own prompts', () => {
     // She moves the conversation on instead of repeating herself.
     expect(first).not.toBe(second);
     expect(first).toMatch(/[?]|I |my |Did you|Ask me/);
+  });
+});
+
+describe('her introduction by age and country (requirement F of the second brief)', () => {
+  /** Four or five messages, one of which is the question she asks back. */
+  function introductionOf(profile: AiModelProfile, firstName = 'Rahul'): string[] {
+    const voice = modelVoice(profile);
+    return voiceIntroduction(profile, voice, firstName, `${firstName} Verma`, 'Good evening');
+  }
+
+  it('sends four or five separate messages, each of them her own', () => {
+    const messages = introductionOf(alisha);
+
+    expect(messages.length).toBeGreaterThanOrEqual(4);
+    expect(messages.length).toBeLessThanOrEqual(5);
+    expect(new Set(messages).size).toBe(messages.length);
+    for (const message of messages) {
+      expect(message.trim().length).toBeGreaterThan(10);
+      expect(message).not.toContain('\n');
+    }
+    // She uses their first name, never the whole name (requirement A of the first brief).
+    expect(messages[0]).toContain('Rahul');
+    expect(messages.join(' ')).not.toContain('Verma');
+    // Nobody is told where an answer comes from, and she never speaks like software (B, L).
+    expect(messages.join(' ')).not.toMatch(/\b(?:google|openai|chatgpt|gpt|api)\b/i);
+    expect(messages.join(' ')).not.toContain('I am an AI model');
+  });
+
+  it('says who she is, where home is, how old she is, and asks something back', () => {
+    const messages = introductionOf(alisha, 'Rahul').join(' ');
+
+    expect(messages).toContain('Good evening');
+    expect(messages).toContain('Alisha Bhattacharya');
+    expect(messages).toContain('@alisha.bhattacharya');
+    expect(messages).toContain('Darjeeling');
+    expect(messages).toContain('India');
+    expect(messages).toContain('25');
+    expect(messages).toContain('NeverBeen Multiverse');
+    expect(messages).toContain('?');
+  });
+
+  it('does not let an Indian woman and an Iranian woman sound alike', () => {
+    const india = introductionOf(alisha).join(' ');
+    const iran = introductionOf(banafsheh).join(' ');
+
+    expect(india).not.toBe(iran);
+    // Home, habits and the question she asks are drawn from her own country and nowhere else.
+    expect(india).toMatch(/biryani|pressure cooker|aunties next door|chai count/);
+    expect(iran).toMatch(/ghormeh sabzi|Hafez|cooling down|weighs on me/);
+    expect(iran).not.toMatch(/biryani|pressure cooker|aunties next door|chai count/);
+  });
+
+  it('does not let a twenty-three-year-old and a thirty-year-old write the same way', () => {
+    const young = introductionOf(model('fiadh-dara')); // Shiraz, Iran — 23
+    const older = introductionOf(model('nourhan-durrani')); // Sarajevo — 30
+
+    expect(young.join(' ')).not.toBe(older.join(' '));
+    expect(young.join(' ')).toMatch(/younger|bored|small talk/);
+    expect(older.join(' ')).toMatch(/opinions|two hours|weather/);
+    // Four messages for a reserved woman of a certain age, five for a young one.
+    expect(young.length).toBeGreaterThanOrEqual(4);
+    expect(older.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('keeps her hello in her own age’s words', () => {
+    const voice = modelVoice(alisha);
+    const hello = openingLine(alisha, voice, 'Rahul', 'Rahul Verma');
+
+    expect(hello).toContain('Rahul');
+    expect(hello).toContain('Alisha');
+    expect(hello).not.toContain('Verma');
+  });
+});
+
+describe('one answer, several messages (requirement C of the second brief)', () => {
+  it('keeps a short answer as one message', () => {
+    expect(splitChatMessages('Paris, of course.', 240)).toEqual(['Paris, of course.']);
+    expect(splitChatMessages('  ', 240)).toEqual([]);
+  });
+
+  it('breaks a long answer where she paused to think, never mid-word', () => {
+    const answer =
+      'I am Alisha Bhattacharya, and I am from Darjeeling. Everything of mine lives inside the NeverBeen Multiverse and nowhere else. Ask me about my photographs, my rate or my story, and I will answer properly.';
+    const parts = splitChatMessages(answer, 90);
+
+    expect(parts.length).toBeGreaterThanOrEqual(2);
+    expect(parts.join(' ')).toBe(answer);
+    for (const part of parts) {
+      expect(part.length).toBeLessThanOrEqual(90 * 2);
+      expect(part.startsWith(' ')).toBe(false);
+      expect(part.endsWith(' ')).toBe(false);
+    }
+  });
+
+  it('breaks a wall of text that has no sentence to break on', () => {
+    const wall = Array.from({ length: 60 }, (_, index) => `word${index}`).join(' ');
+    const parts = splitChatMessages(wall, 100);
+
+    expect(parts.length).toBeGreaterThan(1);
+    expect(parts.join(' ')).toBe(wall);
+    for (const part of parts) expect(part.length).toBeLessThanOrEqual(100);
   });
 });

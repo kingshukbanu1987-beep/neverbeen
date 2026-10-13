@@ -17,7 +17,7 @@
         </span>
         <span class="chat-bar-copy">
           <b>{{ model().name }}</b>
-          @if (thinking()) {
+          @if (typingNow()) {
             <i class="is-typing" role="status">{{ typingLabel() }}…</i>
           } @else if (visitorFirstName()) {
             <i>Chatting with {{ visitorFirstName() }} · active now</i>
@@ -140,8 +140,9 @@
                 }
 
                 @if (isTypingBubble(message)) {
-                  <!-- I — her name and "typing" land first, and the answer follows four to five
-                       seconds later, the way a person typing in front of you does it. -->
+                  <!-- A, I — her name and "typing" land first, and the whole message follows once
+                       she has had the time a person needs to type it. It is never printed out a
+                       letter at a time. -->
                   <span class="chat-typing-copy" role="status">{{ typingLabel() }}</span>
                   <span class="chat-typing" aria-hidden="true"><i></i><i></i><i></i></span>
                 } @else if (bubbleText(message)) {

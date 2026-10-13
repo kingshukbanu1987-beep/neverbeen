@@ -9,6 +9,7 @@ import {
   chatReminderText,
   formatRemaining,
 } from './ai-model-chat.service';
+import { silenceChatPacing } from './ai-model-chat.testing';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
 
@@ -32,9 +33,7 @@ const VISITOR: ChatIdentity = { name: 'Rahul Verma', avatar: VISITOR_PHOTO };
 
 function service(): AiModelChatService {
   const instance = TestBed.inject(AiModelChatService);
-  instance.pacing.thinkingMs = 0;
-  instance.pacing.jitterMs = 0;
-  instance.pacing.revealMs = 0;
+  silenceChatPacing(instance);
   return instance;
 }
 
@@ -92,28 +91,29 @@ describe('AiModelChatService', () => {
     expect(chat.canSend()).toBe(true);
     expect(chat.timeLeftLabel()).toBe('02:00:00');
 
-    // She speaks first, and she speaks to Rahul, not to a window (the first name only).
-    expect(session.messages).toHaveLength(2);
-    const opening = session.messages[1];
-    expect(opening.author).toBe('model');
-    expect(opening.text).toContain('Rahul');
-    expect(opening.text).not.toContain('Verma');
-    expect(opening.pending).toBe(false);
-    expect(opening.intent).toBe('opening');
+    // She speaks first — and she speaks to Rahul, not to a window (the first name only), in the
+    // several messages her age and her country would send (requirement F of the second brief).
+    const opening = session.messages.filter((message) => message.intent === 'opening');
+    expect(opening.length).toBeGreaterThanOrEqual(4);
+    expect(opening[0].text).toContain('Rahul');
+    expect(opening[0].text).not.toContain('Verma');
+    expect(opening.every((message) => !message.pending)).toBe(true);
+    expect(opening.map((message) => message.text).join(' ')).toContain('NeverBeen Multiverse');
+    expect(chat.thinking()).toBe(false);
 
     await chat.sendMessage(alisha, 'Hello there');
 
     const messages = chat.session()!.messages;
     expect(messages.filter((message) => message.author === 'user')).toHaveLength(1);
     const hers = messages.filter((message) => message.author === 'model');
-    expect(hers).toHaveLength(2);
-    expect(hers[1].text.length).toBeGreaterThan(0);
-    expect(hers[1].pending).toBe(false);
+    expect(hers).toHaveLength(opening.length + 1);
+    expect(hers[hers.length - 1].text.length).toBeGreaterThan(0);
+    expect(hers[hers.length - 1].pending).toBe(false);
 
     // A second introduction would be a duplicate, and the form is only asked for once.
     chat.setIdentity(alisha, { name: 'Somebody Else', avatar: VISITOR_PHOTO });
     expect(chat.visitorName()).toBe('Rahul Verma');
-    expect(chat.session()!.messages).toHaveLength(4);
+    expect(chat.session()!.messages).toHaveLength(messages.length);
   });
 
   it('keeps the conversation going when the visitor goes quiet (requirement H)', async () => {
@@ -143,22 +143,26 @@ describe('AiModelChatService', () => {
     ).toBeLessThanOrEqual(AI_CHAT_NUDGE_LIMIT);
   });
 
-  it('types her own name into the window for four to five seconds before the answer lands (requirement I)', async () => {
+  it('holds the typing indicator for the time a person needs, then lands the answer whole (requirement A)', async () => {
     vi.useFakeTimers();
     const chat = TestBed.inject(AiModelChatService);
-    chat.pacing.thinkingMs = 4_400;
-    chat.pacing.jitterMs = 0;
-    chat.pacing.revealMs = 0;
+    silenceChatPacing(chat);
     open(chat);
+    // A message of any length takes four and a half seconds to type here: the test is about what
+    // the window does during the wait, not about the length of her answer.
+    Object.assign(chat.pacing, { perCharMs: 0, floorMs: 4_500, ceilingMs: 4_500 });
 
-    const sending = chat.sendMessage(alisha, 'Tell me about Darjeeling');
+    const sending = chat.sendMessage(alisha, 'What is the capital of India?');
 
     await vi.advanceTimersByTimeAsync(4_300);
     expect(chat.thinking()).toBe(true);
     const waiting = chat.session()!.messages.at(-1)!;
     expect(waiting.author).toBe('model');
     expect(waiting.pending).toBe(true);
+    // The answer is written and ready — and the window is showing none of it. No first word, no
+    // letter-by-letter reveal: only the typing indicator.
     expect(waiting.revealedChars).toBe(0);
+    expect(waiting.text.length).toBeGreaterThan(0);
 
     await vi.advanceTimersByTimeAsync(900);
     await sending;
@@ -166,7 +170,139 @@ describe('AiModelChatService', () => {
     const answer = chat.session()!.messages.at(-1)!;
     expect(answer.pending).toBe(false);
     expect(answer.revealedChars).toBe(answer.text.length);
-    expect(answer.text.length).toBeGreaterThan(0);
+    expect(answer.text).toContain('Delhi');
+  });
+
+  it('introduces herself message by message, three to five seconds after the form is filled in (requirement F)', async () => {
+    vi.useFakeTimers();
+    const chat = TestBed.inject(AiModelChatService);
+    silenceChatPacing(chat);
+    chat.openChat(alisha);
+    Object.assign(chat.pacing, {
+      floorMs: 1_000,
+      ceilingMs: 1_000,
+      gapMinMs: 2_000,
+      gapMaxMs: 2_000,
+      introMinMs: 3_000,
+      introMaxMs: 3_000,
+    });
+
+    chat.setIdentity(alisha, VISITOR);
+    // Only the studio's notice: she has not started yet.
+    expect(chat.session()!.messages).toHaveLength(1);
+    expect(chat.thinking()).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(2_900);
+    expect(chat.session()!.messages).toHaveLength(1);
+
+    await vi.advanceTimersByTimeAsync(1_200); // 4.1 s: the first message of the introduction
+    expect(chat.session()!.messages).toHaveLength(2);
+    expect(chat.session()!.messages[1].text).toContain('Rahul');
+    expect(chat.session()!.messages[1].pending).toBe(false);
+
+    // The next message waits out its two-second gap, types, and lands on its own.
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(chat.session()!.messages).toHaveLength(3);
+
+    await vi.advanceTimersByTimeAsync(30_000);
+    const her = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model' && message.intent === 'opening');
+    expect(her.length).toBeGreaterThanOrEqual(4);
+    expect(her.length).toBeLessThanOrEqual(5);
+    expect(her.every((message) => !message.pending)).toBe(true);
+    expect(her.every((message) => message.revealedChars === message.text.length)).toBe(true);
+  });
+
+  it('sends a long answer as several messages, one after the other (requirement C)', async () => {
+    const chat = service();
+    open(chat);
+
+    // Short messages force her answer to be split the way a talkative person splits one.
+    chat.pacing.bubbleMaxChars = 40;
+    await chat.sendMessage(alisha, 'Tell me about the studio');
+
+    const answers = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model' && message.intent !== 'opening');
+    expect(answers.length).toBeGreaterThanOrEqual(2);
+    for (const message of answers) {
+      expect(message.pending).toBe(false);
+      expect(message.revealedChars).toBe(message.text.length);
+      expect(message.text.length).toBeGreaterThan(0);
+    }
+    // Nothing is answered in one wall of text when the visitor is watching.
+    const said = answers.map((message) => message.text).join(' ');
+    expect(said.length).toBeGreaterThan(answers[0].text.length);
+  });
+
+  it('sometimes waits before typing and sometimes stops mid-thought (requirement D)', async () => {
+    vi.useFakeTimers();
+    const chat = TestBed.inject(AiModelChatService);
+    silenceChatPacing(chat);
+    open(chat);
+    Object.assign(chat.pacing, {
+      perCharMs: 0,
+      floorMs: 2_000,
+      ceilingMs: 2_000,
+      awayChance: 1,
+      awayMinMs: 4_000,
+      awayMaxMs: 4_000,
+      midPauseChance: 1,
+      midPauseMinMs: 2_000,
+      midPauseMaxMs: 2_000,
+    });
+    const before = chat.session()!.messages.length;
+
+    const sending = chat.sendMessage(alisha, 'Where are you from?');
+
+    // She is not at her phone yet: nothing on screen but the visitor's own message.
+    await vi.advanceTimersByTimeAsync(3_900);
+    expect(chat.session()!.messages).toHaveLength(before + 1);
+    expect(chat.session()!.messages.at(-1)!.author).toBe('user');
+
+    await vi.advanceTimersByTimeAsync(200); // 4.1 s: she picked the phone up and is typing
+    const typing = chat.session()!.messages.at(-1)!;
+    expect(typing.author).toBe('model');
+    expect(typing.pending).toBe(true);
+    expect(typing.revealedChars).toBe(0);
+
+    // She stops mid-thought a second in: the typing indicator goes with her.
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(chat.session()!.messages.at(-1)!.author).toBe('user');
+
+    await vi.advanceTimersByTimeAsync(1_500);
+    expect(chat.session()!.messages.at(-1)!.author).toBe('user');
+
+    await vi.advanceTimersByTimeAsync(700); // she picks the thought up again
+    expect(chat.session()!.messages.at(-1)!.author).toBe('model');
+    expect(chat.session()!.messages.at(-1)!.pending).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(1_200);
+    await sending;
+    expect(chat.session()!.messages.at(-1)!.pending).toBe(false);
+  });
+
+  it('never tells the visitor where an answer came from, and never speaks like software (requirements B and L)', async () => {
+    const chat = service();
+    open(chat);
+
+    await chat.sendMessage(alisha, 'What is the capital of Japan?');
+    await chat.sendMessage(alisha, 'Who is the president of the United States?');
+    await chat.sendMessage(alisha, 'Tell me about the studio');
+    await chat.sendMessage(alisha, 'Send me a selfie');
+
+    const said = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model' && message.intent !== 'opening')
+      .map((message) => message.text)
+      .join(' ');
+    expect(said.length).toBeGreaterThan(0);
+    expect(said).not.toMatch(/\b(?:google|openai|chatgpt|gpt|api|bing|search engine)\b/i);
+    expect(said).not.toMatch(/\b(?:neverbeen) (?:ai|api|engine|service|knowledge base)\b/i);
+    expect(said).not.toContain('from my biography');
+    expect(said).not.toContain('I am an AI model');
+    expect(said).not.toContain('As an AI');
   });
 
   it('answers a selfie request with one of her own photographs (requirements E and F)', async () => {
@@ -410,7 +546,11 @@ describe('AiModelChatService', () => {
     open(chat);
     chat.closeChat();
     await chat.sendMessage(alisha, 'Are you there?');
-    // The privacy notice and her opening line, and nothing more.
-    expect(chat.sessionOf(alisha.slug)!.messages).toHaveLength(2);
+    // The privacy notice and her own introduction, and nothing more.
+    const messages = chat.sessionOf(alisha.slug)!.messages;
+    expect(messages.filter((message) => message.author === 'user')).toHaveLength(0);
+    expect(messages.filter((message) => message.author === 'model').length).toBeGreaterThanOrEqual(
+      4,
+    );
   });
 });

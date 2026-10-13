@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AiModelChatService } from '../../../services/ai-model-chat.service';
+import { silenceChatPacing } from '../../../services/ai-model-chat.testing';
 import { aiModelProfiles } from '../ai-model-data';
 import { AiModelChatDialog } from './ai-model-chat';
 
@@ -26,8 +27,7 @@ const VISITOR_PHOTO =
  */
 async function openChat(model = alisha, { identify = true } = {}): Promise<Harness> {
   const chat = TestBed.inject(AiModelChatService);
-  chat.pacing.thinkingMs = 0;
-  chat.pacing.revealMs = 0;
+  silenceChatPacing(chat);
   chat.openChat(model);
 
   const fixture = TestBed.createComponent(AiModelChatDialog);
@@ -136,17 +136,21 @@ describe('AiModelChatDialog', () => {
     expect(text).toContain('Alisha Bhattacharya');
     expect(text).toContain('NeverBeen Multiverse');
 
-    // She greeted the visitor first (requirement H), so her introduction is the second bubble.
+    // She greeted the visitor first (requirement H of the first brief, F of the second): her
+    // introduction arrives as several messages, and her answer follows them.
     const outgoing = harness.element.querySelectorAll('.chat-bubble.is-outgoing');
     const incoming = harness.element.querySelectorAll('.chat-bubble.is-incoming');
     expect(outgoing.length).toBe(1);
     expect(outgoing[0].textContent).toContain('Hello, who are you?');
-    expect(incoming.length).toBe(2);
+    expect(incoming.length).toBeGreaterThanOrEqual(5);
     // A — she opened with their first name, and only their first name.
     expect(incoming[0].textContent).toContain('Rahul');
     expect(incoming[0].textContent).not.toContain('Verma');
-    // Her own answer carries her name and model id, with no bot line anywhere in the window.
-    expect(incoming[1].textContent).toContain('@alisha.bhattacharya');
+    // Her own introduction carries her name and model id; the answer is the bubble after it.
+    const said = Array.from(incoming)
+      .map((bubble) => bubble.textContent ?? '')
+      .join('\n');
+    expect(said).toContain('@alisha.bhattacharya');
     expect(text).not.toContain('I am an AI model');
     expect(text).not.toContain('from my biography');
 
@@ -157,10 +161,14 @@ describe('AiModelChatDialog', () => {
 
   it('shows her name and “typing” for four to five seconds before the answer appears (requirement I)', async () => {
     const harness = await openChat();
-    // The real pacing, with the jitter pinned down so the wait is exactly four and a half seconds.
-    harness.chat.pacing.thinkingMs = 4_500;
-    harness.chat.pacing.jitterMs = 0;
-    harness.chat.pacing.revealMs = 0;
+    // The real pacing, with the typing time pinned down so the wait is exactly four and a half
+    // seconds — and long enough, so nothing in her answer is split into a second message.
+    Object.assign(harness.chat.pacing, {
+      perCharMs: 0,
+      floorMs: 4_500,
+      ceilingMs: 4_500,
+      jitterMs: 0,
+    });
 
     const textarea = harness.element.querySelector<HTMLTextAreaElement>('.chat-input')!;
     textarea.value = 'Tell me about Darjeeling';
@@ -173,11 +181,23 @@ describe('AiModelChatDialog', () => {
 
     // Her name is in the window and she is typing — the visitor's own name is in the bar, hers on
     // the typing bubble, so nobody is guessing who is about to speak.
-    const typing = harness.element.querySelector('.chat-typing-copy')?.textContent ?? '';
-    expect(typing).toBe('Alisha is typing');
-    expect(harness.element.querySelector('.chat-bubble.is-incoming .chat-typing')).not.toBeNull();
-    const bar = harness.element.querySelector('.chat-bar-copy i')?.textContent ?? '';
-    expect(bar).toContain('Alisha is typing');
+    // The bar shows her typing the moment the message is on its way, and the indicator itself
+    // appears in the bubble that is about to become her answer.
+    expect(harness.element.querySelector('.chat-bar-copy i')?.textContent).toContain(
+      'Alisha is typing',
+    );
+    await vi.waitFor(() => {
+      harness.fixture.detectChanges();
+      expect(harness.element.querySelector('.chat-typing-copy')?.textContent).toBe(
+        'Alisha is typing',
+      );
+    });
+    harness.fixture.detectChanges();
+    // Her bubble holds not one letter of the answer while it is being typed.
+    const incoming = harness.element.querySelectorAll('.chat-bubble.is-incoming');
+    const typingBubble = incoming[incoming.length - 1];
+    expect(typingBubble.querySelector('.chat-bubble-text')).toBeNull();
+    expect(typingBubble.querySelector('.chat-typing')).not.toBeNull();
     expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
       '02:00:00',
     );
@@ -194,7 +214,8 @@ describe('AiModelChatDialog', () => {
 
     expect(harness.element.querySelector('.chat-typing-copy')).toBeNull();
     const bubbles = harness.element.querySelectorAll('.chat-bubble.is-incoming');
-    expect(bubbles.length).toBe(2);
+    // A — four or five messages of introduction and one answer, and nothing else.
+    expect(bubbles.length).toBeGreaterThanOrEqual(5);
     expect(bubbles[bubbles.length - 1].textContent?.trim().length ?? 0).toBeGreaterThan(0);
     expect(harness.element.textContent).toContain('Chatting with Rahul · active now');
     expect(harness.chat.remainingMs()).toBeLessThanOrEqual(2 * 60 * 60 * 1000);
@@ -364,15 +385,16 @@ describe('AiModelChatDialog', () => {
 
     expect(harness.chat.identified()).toBe(true);
     expect(element.querySelector('.gate')).toBeNull();
-    expect(harness.chat.session()?.messages.length).toBe(2);
-    expect(element.querySelector('.chat-bubble.is-incoming')?.textContent).toContain('Alisha');
+    expect(harness.chat.session()?.messages.length).toBeGreaterThanOrEqual(5);
+    const herFirst = element.querySelectorAll('.chat-bubble.is-incoming');
+    expect(herFirst.length).toBeGreaterThanOrEqual(4);
+    expect(Array.from(herFirst, (bubble) => bubble.textContent).join(' ')).toContain('Alisha');
     expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('02:00:00');
   });
 
   it('counts the two hours down once the visitor has introduced themselves', async () => {
     vi.useFakeTimers();
     const harness = await openChat(alisha, { identify: false });
-    harness.chat.pacing.thinkingMs = 0;
     harness.chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
     harness.fixture.detectChanges();
 
@@ -397,8 +419,7 @@ describe('AiModelChatDialog', () => {
     // Regression: the pages only set their own signal, so the window has to open its own session —
     // otherwise nothing could be sent and she never answered.
     const chat = TestBed.inject(AiModelChatService);
-    chat.pacing.thinkingMs = 0;
-    chat.pacing.revealMs = 0;
+    silenceChatPacing(chat);
 
     const fixture = TestBed.createComponent(AiModelChatDialog);
     fixture.componentRef.setInput('model', alisha);
@@ -417,7 +438,9 @@ describe('AiModelChatDialog', () => {
     await send(harness, 'Are you really there?');
 
     expect(harness.element.querySelectorAll('.chat-bubble.is-outgoing').length).toBe(1);
-    expect(harness.element.querySelectorAll('.chat-bubble.is-incoming').length).toBe(2);
+    expect(
+      harness.element.querySelectorAll('.chat-bubble.is-incoming').length,
+    ).toBeGreaterThanOrEqual(5);
     expect(harness.element.textContent).toContain('Alisha Bhattacharya');
     expect(harness.element.textContent).toContain('NeverBeen Multiverse');
 
@@ -469,8 +492,8 @@ describe('AiModelChatDialog', () => {
     expect(harness.element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe(
       '02:00:00',
     );
-    // A fresh session starts on nothing but her own opening line.
-    expect(harness.element.querySelectorAll('.chat-bubble').length).toBe(1);
+    // A fresh session starts on nothing but her own introduction.
+    expect(harness.element.querySelectorAll('.chat-bubble').length).toBeGreaterThanOrEqual(4);
     expect(harness.element.querySelector('.chat-bubble')?.textContent).toContain('Alisha');
   });
 });
