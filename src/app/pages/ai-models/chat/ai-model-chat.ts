@@ -137,7 +137,7 @@ export class AiModelChatDialog implements OnInit {
    * The window opens its own two-hour session the moment it is mounted: a page only has to render
    * `<app-ai-model-chat [model]>` and everything else — the clock, the reminders, her answers —
    * follows. `openChat()` is idempotent per model, so closing and reopening the window continues the
-   * same session instead of starting a second one.
+   * same active session. Completed sessions reopen with a fresh identity form.
    */
   ngOnInit(): void {
     this.chat.openChat(this.model());
@@ -175,6 +175,7 @@ export class AiModelChatDialog implements OnInit {
   protected onFeedbackClosed(feedback: AiChatFeedback | null): void {
     if (feedback) this.chat.recordFeedback(this.model(), feedback);
     const ended = this.sessionOver();
+    if (!ended) this.chat.endVisitorSession();
     this.chat.dismissFeedback();
     if (!ended) this.close();
   }

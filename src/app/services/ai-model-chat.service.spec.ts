@@ -65,6 +65,71 @@ describe('AiModelChatService', () => {
     sessionStorage.clear();
   });
 
+  it('starts fresh after a visitor ends the chat, requiring a new name and photo', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'I am 31 years old');
+    expect(chat.session()?.personalMemory?.answers.age).toBe('31');
+    chat.endVisitorSession();
+    expect(chat.session()?.closed).toBe('visitor');
+    chat.closeChat();
+    chat.openChat(alisha);
+    expect(chat.identified()).toBe(false);
+    expect(chat.session()?.identity).toBeNull();
+    expect(chat.session()?.personalMemory?.answers).toEqual({});
+    expect(chat.session()?.startedAt).toBe(0);
+    expect(chat.session()?.messages.some((message) => message.author === 'user')).toBe(false);
+    chat.setIdentity(alisha, VISITOR);
+    expect(chat.identified()).toBe(true);
+  });
+
+  it('starts fresh when reopening a model-ended or expired session', () => {
+    const chat = service();
+    open(chat);
+    const old = chat.sessionOf(alisha.slug)!;
+    old.closed = 'inactive';
+    chat.openChat(alisha); // Includes clicking Live Chat while the ended window is still present.
+    expect(chat.session()?.identity).toBeNull();
+    chat.setIdentity(alisha, VISITOR);
+    chat.closeChat();
+    chat.sessionOf(alisha.slug)!.endsAt = Date.now() - 1;
+    chat.openChat(alisha);
+    expect(chat.session()?.identity).toBeNull();
+    expect(chat.feedbackOpen()).toBe(false);
+  });
+
+  it('keeps personal answers across active-session reloads', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'My city is Kolkata');
+    const restored = new AiModelChatService();
+    silenceChatPacing(restored);
+    restored.openChat(alisha);
+    expect(restored.session()?.personalMemory?.answers.city).toBe('Kolkata');
+    restored.closeChat();
+  });
+
+  it('asks personal questions gradually and remembers replies in the offline engine', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'Hello');
+    await chat.sendMessage(alisha, 'How are you?');
+    // Keep lastVisitorAt current so this is not an idle-timeout test.
+    chat.sessionOf(alisha.slug)!.startedAt = Date.now() - 121000;
+    await chat.sendMessage(alisha, 'Tell me more');
+    expect(chat.session()?.personalMemory?.pending).toBe('age');
+    expect(chat.session()?.personalMemory?.asked).toEqual(['age']);
+    await chat.sendMessage(alisha, '29');
+    expect(chat.session()?.personalMemory?.answers.age).toBe('29');
+    await chat.sendMessage(alisha, 'Do you remember my age?');
+    const reply = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model' && message.intent !== 'contract')
+      .at(-1)!;
+    expect(reply.text).toContain('29');
+    expect(chat.session()?.personalMemory?.asked).toEqual(['age']);
+  });
+
   it('answers a Romanised Bengali message in Bengali, and keeps the language (the studio’s example)', async () => {
     const chat = service();
     open(chat);
@@ -387,7 +452,6 @@ describe('AiModelChatService', () => {
     expect(chat.session()!.followUps).toBeLessThanOrEqual(AI_CHAT_FOLLOWUP_LIMIT);
     expect(idle.length).toBeLessThanOrEqual(AI_CHAT_FOLLOWUP_LIMIT);
   });
-
 
   it('holds the typing indicator for the time a person needs, then lands the answer whole (requirement A)', async () => {
     vi.useFakeTimers();

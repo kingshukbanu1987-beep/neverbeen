@@ -539,6 +539,12 @@ describe('AiModelChatDialog', () => {
     });
     expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
     expect(harness.chat.openSlug()).toBeNull();
+    expect(harness.chat.sessionOf(alisha.slug)?.closed).toBe('visitor');
+    harness.fixture.destroy();
+    const reopened = await openChat(alisha, { identify: false });
+    expect(reopened.element.querySelector('app-chat-identity-prompt')).not.toBeNull();
+    expect(reopened.chat.session()?.identity).toBeNull();
+    expect(reopened.chat.session()?.personalMemory?.answers).toEqual({});
   });
 
   it('brings the same form up when she ends the chat herself, and leaves the ended window behind it (requirements D, E and F)', async () => {

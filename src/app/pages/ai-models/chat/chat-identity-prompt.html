@@ -35,7 +35,7 @@
         @if (avatar()) {
           <img [src]="avatar()" alt="Your photograph" />
         } @else if (working()) {
-          <span class="gate-spinner" aria-hidden="true"></span>
+          <span class="gate-spinner" role="status" aria-label="Verifying your photo"></span>
         } @else {
           <span class="gate-photo-hint" aria-hidden="true">
             <b>+</b>
@@ -57,8 +57,8 @@
       </div>
 
       <p class="gate-note">
-        Reduced to {{ avatarLimit / 1024 }} KB automatically. It stays in this browser, and it is
-        used only beside your own messages.
+        Checked for a visible face and reduced to {{ avatarLimit / 1024 }} KB automatically. It
+        stays in this browser, and it is used only beside your own messages.
       </p>
 
       <input

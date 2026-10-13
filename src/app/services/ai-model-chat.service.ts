@@ -35,6 +35,16 @@
  *   the visitor pressing ✕ — brings up `chat-feedback.*`: the two faces, the time together, the
  *   counts and the visitor's own stars and words. It stays until they close it.
  */
+import {
+  newPersonalMemory,
+  restorePersonalMemory,
+  rememberPersonalAnswer,
+  nextPersonalTopic,
+  personalQuestionFor,
+  markPersonalQuestion,
+  personalRecall,
+  PersonalTopic,
+} from '../pages/ai-models/chat/chat-personal-memory';
 import { Injectable, computed, signal } from '@angular/core';
 import { AiModelProfile, aiModelProfiles } from '../pages/ai-models/ai-model-data';
 import {
@@ -79,7 +89,7 @@ import {
   AiChatSource,
 } from '../pages/ai-models/chat/chat-types';
 import { ChatInitiative, chatInitiative } from '../pages/ai-models/chat/chat-initiative';
-import { ChatIdentity, firstNameOf } from '../pages/ai-models/chat/chat-identity';
+import { ChatIdentity, firstNameOf, isValidChatName } from '../pages/ai-models/chat/chat-identity';
 import { readChatPhotoFacts } from '../pages/ai-models/chat/chat-photo';
 import {
   analyseVisitorTurn,
@@ -270,9 +280,15 @@ export class AiModelChatService {
 
   // ------------------------------------------------------------------ window
 
-  /** Opens one model's chat window, creating her two-hour session the first time. */
+  /** Opens one model's chat window, resuming an active session or replacing a completed one. */
   openChat(model: AiModelProfile): void {
-    if (this.openSlug() === model.slug) return;
+    const previous = this.sessions.get(model.slug);
+    if (this.openSlug() === model.slug && !previous?.closed) return;
+    // A completed or expired conversation must never reuse its identity or personal memory.
+    if (previous && (previous.closed || (previous.endsAt > 0 && previous.endsAt <= Date.now()))) {
+      this.sessions.set(model.slug, this.createSession(model.slug));
+    }
+    this.feedbackOpen.set(false);
     const session = this.sessionFor(model);
     this.openSlug.set(model.slug);
     this.view(session);
@@ -301,7 +317,8 @@ export class AiModelChatService {
    */
   setIdentity(model: AiModelProfile, identity: ChatIdentity): void {
     const session = this.sessionFor(model);
-    if (session.identity) return;
+    if (session.identity || session.closed || !isValidChatName(identity.name) || !identity.avatar)
+      return;
 
     const now = Date.now();
     session.identity = { name: identity.name, avatar: identity.avatar };
@@ -387,6 +404,13 @@ export class AiModelChatService {
    */
   openFeedback(): void {
     this.feedbackOpen.set(true);
+  }
+
+  /** Explicitly ending a chat differs from temporarily hiding its window. */
+  endVisitorSession(): void {
+    const slug = this.openSlug();
+    const session = slug ? this.sessions.get(slug) : null;
+    if (session?.identity) this.endSession(session, 'visitor');
   }
 
   /** E and K — puts the close form away, leaving the session behind it exactly as it was. */
@@ -764,22 +788,39 @@ export class AiModelChatService {
       !wasIntroduced ||
       userMessage.attachment !== null;
 
+    const memory = (session.personalMemory ??= newPersonalMemory());
+    const safeTurn = !local.intent.startsWith('moderation:');
+    if (safeTurn)
+      rememberPersonalAnswer(memory, userMessage.text, userMessage.attachment?.kind === 'photo');
+    const visitorTurns = session.messages.filter((message) => message.author === 'user').length;
+    const topic =
+      safeTurn && !local.closes && !local.selfie
+        ? nextPersonalTopic(memory, session.startedAt, Date.now(), visitorTurns)
+        : '';
+    const personalQuestion = topic ? personalQuestionFor(model, topic, userMessage.id) : '';
+
     this.touch(session);
 
     // B — the studio's OpenAI and Google keys answer when they are configured. The words arrive as
     // one finished answer here and are typed out like her own; no part of the stream is ever shown
     // word by word (requirement A of the second brief).
-    let answerText = local.text;
+    let answerText =
+      (safeTurn && !local.selfie && !language?.romanised
+        ? personalRecall(memory, userMessage.text)
+        : '') || local.text;
     let answerSources: readonly AiChatSource[] = [];
     let intent = local.intent;
     if (!mustBeLocal) {
-      const remote = await this.streamRemoteReply(model, session, userMessage, reading);
+      const remote = await this.streamRemoteReply(model, session, userMessage, reading, topic);
       if (remote) {
         answerText = remote.text;
         answerSources = remote.sources;
         intent = 'openai';
       }
     }
+
+    // The fallback asks the same single question as the AI, never a questionnaire.
+    if (personalQuestion && intent !== 'openai') answerText += `\n\n${personalQuestion}`;
 
     // E — a selfie goes out as a photograph, not as a promise of one.
     let selfie: AiChatAttachment | null = null;
@@ -824,6 +865,11 @@ export class AiModelChatService {
       // window's own reader. Part of the transcript, so the studio can see the desk at work.
       analysedBy: reading.provider,
     });
+
+    if (topic && !session.closed) {
+      markPersonalQuestion(memory, topic, Date.now(), visitorTurns);
+      this.touch(session);
+    }
 
     if (local.closes) {
       this.endSession(
@@ -1187,12 +1233,14 @@ export class AiModelChatService {
     session: AiChatSession,
     userMessage: AiChatMessage,
     reading: ChatTurnReading | null = null,
+    personalTopic: PersonalTopic | '' = '',
   ): Promise<AiChatRemoteReply | null> {
     if (this.remoteUnavailable() || typeof fetch !== 'function') return null;
 
     const attachment = userMessage.attachment;
     const identity = session.identity;
     const body = {
+      personal: { answers: session.personalMemory?.answers ?? {}, nextTopic: personalTopic },
       // A — the visitor travels with every turn, so the answer comes back addressed to them.
       user: identity
         ? { name: identity.name, firstName: firstNameOf(identity.name) }
@@ -1302,6 +1350,7 @@ export class AiModelChatService {
     return {
       slug,
       identity: null,
+      personalMemory: newPersonalMemory(),
       startedAt: 0,
       endsAt: 0,
       messages: [
@@ -1422,6 +1471,7 @@ export class AiModelChatService {
         this.sessions.set(slug, {
           slug,
           identity: session.identity ?? null,
+          personalMemory: restorePersonalMemory(session.personalMemory),
           startedAt: session.startedAt ?? Date.now(),
           endsAt: session.endsAt,
           messages: session.messages.map((message) => ({

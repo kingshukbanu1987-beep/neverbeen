@@ -4,10 +4,16 @@ import {
   ElementRef,
   computed,
   input,
+  inject,
   output,
   signal,
   viewChild,
 } from '@angular/core';
+import {
+  CHAT_FACE_DETECTOR,
+  CHAT_NO_FACE_ERROR,
+  CHAT_FACE_CHECK_ERROR,
+} from './chat-face-detection';
 import { AiModelProfile } from '../ai-model-data';
 import {
   CHAT_IDENTITY_AVATAR_BYTES,
@@ -51,13 +57,16 @@ export class ChatIdentityPrompt {
   protected readonly working = signal(false);
   protected readonly touched = signal(false);
 
+  private readonly detectFace = inject(CHAT_FACE_DETECTOR);
+  private photoRequest = 0;
+
   private readonly photoInput = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private readonly cameraInput = viewChild<ElementRef<HTMLInputElement>>('cameraInput');
 
   protected readonly nameError = computed(() => (this.touched() ? chatNameError(this.name()) : ''));
 
   protected readonly ready = computed(
-    () => isValidChatName(this.name()) && this.avatar().length > 0,
+    () => !this.working() && isValidChatName(this.name()) && this.avatar().length > 0,
   );
 
   protected readonly firstName = computed(() => {
@@ -73,6 +82,7 @@ export class ChatIdentityPrompt {
 
   /** The ✕ of the form: nothing is confirmed, the window simply closes. */
   protected cancel(): void {
+    this.photoRequest++;
     this.cancelled.emit();
   }
 
@@ -85,6 +95,8 @@ export class ChatIdentityPrompt {
   }
 
   protected clearPhoto(): void {
+    this.photoRequest++;
+    this.working.set(false);
     this.avatar.set('');
     this.problem.set('');
   }
@@ -96,6 +108,8 @@ export class ChatIdentityPrompt {
     input.value = '';
     if (!file) return;
 
+    const request = ++this.photoRequest;
+    this.avatar.set('');
     this.working.set(true);
     this.problem.set('');
     try {
@@ -104,18 +118,33 @@ export class ChatIdentityPrompt {
         return;
       }
       const compressed = await compressCommunityImage(file, CHAT_IDENTITY_AVATAR_BYTES);
-      this.avatar.set(await readImageAsDataUrl(compressed));
+      const preview = await readImageAsDataUrl(compressed);
+      let hasFace: boolean;
+      try {
+        hasFace = await this.detectFace(preview);
+      } catch {
+        if (request === this.photoRequest) this.problem.set(CHAT_FACE_CHECK_ERROR);
+        return;
+      }
+      if (request !== this.photoRequest) return;
+      if (!hasFace) {
+        this.problem.set(CHAT_NO_FACE_ERROR);
+        return;
+      }
+      this.avatar.set(preview);
     } catch (error) {
+      if (request !== this.photoRequest) return;
       this.problem.set(
         error instanceof Error ? error.message : 'That picture could not be read. Try another one.',
       );
     } finally {
-      this.working.set(false);
+      if (request === this.photoRequest) this.working.set(false);
     }
   }
 
   protected confirm(): void {
     this.touched.set(true);
+    if (this.working()) return;
     if (!isValidChatName(this.name())) return;
     if (!this.avatar()) {
       this.problem.set('One photograph of you, so I know who I am talking to.');
