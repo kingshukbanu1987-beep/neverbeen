@@ -443,8 +443,16 @@
   pointer-events: none;
 }
 
-.card-copy a {
+.card-copy a,
+.card-copy button {
   pointer-events: auto;
+}
+
+/* The live chat stands directly under the model's name, not down in the row of links. */
+.card-chat-row {
+  display: flex;
+  align-items: center;
+  margin-top: 0.62rem;
 }
 
 .card-location {
@@ -796,33 +804,108 @@
   color: #fff;
 }
 
-/* Live Chat — the real-time chat with the model, in the studio's green (#74C476). */
+/* Live Chat — the real-time chat with the model, in the studio's green (#74C476). It stands under
+   the model's name (0.68rem → 1.02rem: one and a half times the button it was in the link row) and
+   carries a deliberately simple, modern motion: a glow that breathes in its shadow, one band of
+   light crossing the pill every few seconds, and a live dot pulsing like a heartbeat. */
 .card-action-chat {
-  padding: 0.3rem 0.6rem;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.98rem;
+  overflow: hidden;
   border: 0;
   border-radius: 999px;
   background: #74c476;
   color: #ffffff;
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: 1.02rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
   cursor: pointer;
+  animation: card-chat-glow 3.2s ease-in-out infinite;
   transition:
-    background 180ms ease,
-    transform 180ms ease,
-    color 180ms ease;
+    background 220ms ease,
+    filter 220ms ease,
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The band of light: a soft gradient crossing the pill, then resting before it crosses again. */
+.card-action-chat::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -70%;
+  left: -42%;
+  width: 30%;
+  height: 240%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 46%), transparent);
+  transform: rotate(14deg);
+  animation: card-chat-beam 4.4s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+/* The live dot: a small white centre with a ring that leaves it, again and again. */
+.card-chat-dot {
+  display: inline-block;
+  width: 0.5rem;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: card-chat-dot-pulse 2.2s ease-out infinite;
 }
 
 .card-action-chat:hover,
 .card-action-chat:focus-visible {
   background: #86d187;
   color: #ffffff;
-  transform: translateY(-1px);
+  filter: brightness(1.03);
+  transform: translateY(-2px);
+}
+
+.card-action-chat:active {
+  transform: translateY(0) scale(0.985);
 }
 
 .card-action-chat:focus-visible {
   outline: 2px solid #74c476;
-  outline-offset: 2px;
+  outline-offset: 3px;
+}
+
+@keyframes card-chat-glow {
+  0%,
+  100% {
+    box-shadow: 0 9px 22px rgb(28 88 40 / 26%);
+  }
+
+  50% {
+    box-shadow: 0 15px 32px rgb(28 88 40 / 46%);
+  }
+}
+
+@keyframes card-chat-beam {
+  0% {
+    transform: translateX(0) rotate(14deg);
+  }
+
+  58%,
+  100% {
+    transform: translateX(520%) rotate(14deg);
+  }
+}
+
+@keyframes card-chat-dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 255 255 / 62%);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.42rem rgb(255 255 255 / 0%);
+  }
 }
 
 .card-action i {

@@ -21,6 +21,7 @@ import {
 import { ChatAutoScroll } from '../../../shared/chat-auto-scroll/chat-auto-scroll';
 import { AiModelProfile } from '../ai-model-data';
 import { CHAT_WELCOME_LINE } from './chat-replies';
+import { readDocumentBytes } from './chat-analysis';
 import { splitLocation } from './chat-knowledge';
 import { buildChatSessionSummary } from './chat-summary';
 import { ChatIdentity } from './chat-identity';
@@ -263,7 +264,7 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
     }
   }
 
-  protected onDocumentPicked(event: Event): void {
+  protected async onDocumentPicked(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
@@ -281,6 +282,9 @@ export class AiModelChatDialog implements OnInit, OnDestroy {
       size: file.size,
       source: 'file',
       preview: '',
+      // The desk reads the document itself when it can: its own bytes travel with the message (up to
+      // a few megabytes), so a brief or an invoice is read rather than thanked for.
+      ...(await readDocumentBytes(file)),
     };
     this.chat.setDraftAttachment(attachment);
     this.readError.set('');

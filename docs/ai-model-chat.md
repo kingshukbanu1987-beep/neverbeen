@@ -16,14 +16,15 @@ The **second brief** (A–F) rewrote how her answers reach the window, and is de
 needs to type it and then arrives **whole** (never word by word), a long answer arrives as several
 messages, she sometimes pauses 3–7 s before typing and sometimes stops mid-thought, she never says
 where an answer came from, her introduction is four or five messages written by her own age and
-country, and the profile's **Live Chat** button is 2.5× the studio's standard button under her name.
+country, and the profile's **Live Chat** button stands under her name (the brief asked for 2.5× the
+studio's standard button; it is now 1.7× smaller than that, a quiet pill).
 
 ## Where to open it
 
-| Entry point                        | What the visitor presses                                                                                                                                              |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/ai-models/:slug` (model profile) | **Live Chat** — a `#74C476` button with white text, under her name in `.chat-cta`, at 2.5× the studio's standard button and with the quiet animation of requirement E |
-| `/ai-models` (studio directory)    | **Live Chat** in the `.card-actions` row of every model card                                                                                                          |
+| Entry point                        | What the visitor presses                                                                                                                                                                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/ai-models/:slug` (model profile) | **Live Chat** — a `#74C476` button with white text, under her name in `.chat-cta`, 1.7× smaller than the two-and-a-half-times button of requirement E and with its quiet animation                                                          |
+| `/ai-models` (studio directory)    | **Live Chat** — a `#74C476` pill 1.5× the studio's standard button, directly under the name of the model inside `.card-chat-row` (no longer in the `.card-actions` link row), with a breathing glow, a band of light and a pulsing live dot |
 
 Both mount the same window: `<app-ai-model-chat [model]="…" (closed)="closeChat()" />`, which opens
 the two-hour session itself in `ngOnInit` — the pages only render it
@@ -31,6 +32,21 @@ the two-hour session itself in `ngOnInit` — the pages only render it
 window is the booking dialog's own pattern — a `.chat-backdrop` with `role="dialog"`, `z-index` 240, `:host { display: contents }` — no CDK overlay. It closes on the backdrop, on
 Escape, on ✕, on **View Profile**, and by itself with `CHAT_AUTO_CLOSE_MS` (7 s) after she ends a
 chat (requirement B).
+
+## Where the window opens, and how wide
+
+| Screen                                            | The window                                                                                                                                       | Where her information is                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Phone (under 900px wide)                          | one portrait column, `min(480px, 100%)` wide                                                                                                     | the block at the top, as it always was     |
+| Laptop, desktop, or a tablet on its side (≥900px) | landscape and wide — `min(1240px, 95vw)` by `min(88vh, 840px)` — with her card moved into a column on the left and the conversation on the right | `.chat-side`, a side panel beside the chat |
+
+The markup is the same on both: `.chat-side` holds the bar (her photograph, her name, the two-hour
+clock and the ✕) and her card, and `.chat-conversation` holds the transcript and the composer. On a
+phone `.chat-side { display: contents }` lifts those two blocks back into the window's own grid, so
+nothing about the small screen changes; from 900px up the side column becomes a real panel — her
+photograph, her name, her model id, her city and country, **View Profile** and the AI notice — and the
+right-hand column shows **the chat and nothing else**. The form of requirement A and the session
+report both still cover the whole window, side panel included.
 
 ## The window, top to bottom
 
@@ -43,12 +59,18 @@ chat (requirement B).
 - the conversation, then the composer. The window opens on the conversation itself: no welcome copy
   and no canned starter questions, so the first thing her visitor reads is what she has to say.
 
+On a wide screen the whole block above the conversation line — the bar and her card — sits in the
+side panel on the left instead (see _Where the window opens, and how wide_).
+
 In front of it, until the visitor has introduced themselves, the window is covered by the form of
 requirement **A** (`chat-identity-prompt.{ts,html,css}`, `.gate`): her portrait with a live dot, a
-kicker, **Before we start**, a circular photograph slot (upload or `capture="user"` camera, both
+kicker, **Before we start**, a **✕** in its top-right corner (`.gate-close`, which closes the whole
+window without confirming anything — the same way out as the ✕ in the bar), a circular photograph
+slot (upload or `capture="user"` camera, both
 through the shared compressor at `CHAT_IDENTITY_AVATAR_BYTES` — about 100 KB) and a name field that
 is checked as it is typed (`chatNameError`: three to fourteen characters, letters required, whitespace
-collapsed) with the sentence "She will call you **Rahul**" as soon as the name is good. **Start
+collapsed) — which asks with the words **“Write your name here”**, never with another model's name —
+with the sentence "She will call you **Rahul**" as soon as the name is good. **Start
 chatting** stays disabled until both are there; `(confirmed)` hands `{ name, avatar }` to
 `AiModelChatService.setIdentity()`.
 
@@ -173,19 +195,21 @@ The messages are written by `voiceIntroduction()` in `chat-voice.ts`, and they a
 > NeverBeen Multiverse and nowhere else, and I am not pretending otherwise. That is not a warning, it
 > is an invitation: ask me anything.
 >
-> I am younger than I sound in my photographs and faster than I sound in general, so keep up.
+> I am younger than I sound in my photographs and faster than I sound in general, so keep up. 🙈
 >
-> Where I come from it is biryani on Sundays and half of my street turning up for it, and here it is
-> the aunties next door have opinions about everything I do.
+> Home: the pressure cooker going off at eight every morning. My day: the aunties next door have
+> opinions about everything I do. There are 227 photographs of me on NeverBeen, and my favourite is
+> never the one everybody keeps.
 >
-> What is your chai count for the day?, Rahul
+> Rahul, what do you eat when nobody is watching?
 
 The greeting follows the clock (`greetingFor`), the first message is `openingLine()` (a warm pool for
 a young or bubbly voice, a measured one for a senior voice, plus one of her country's emoji when the
 roll falls that way), and the visitor is the **first name only** everywhere in the window
 (`firstNameOf` — "Rahul Verma" is Rahul). The introduction states her full name, her model id, her
 country and city, her age, and where the whole of her lives: her own voice, with the disclosure kept
-and the bot line gone (requirement **L**).
+and the bot line gone (requirement **L**). **No two welcomes are the same** — see
+[A welcome that is never the same twice](#a-welcome-that-is-never-the-same-twice).
 
 `chatIntroduction()` still exists for the one case the window cannot script — a session whose first
 answer comes in before the introduction did — and simply joins those same messages with a blank line,
@@ -287,12 +311,19 @@ about a smiley ever reaches the "I do not know that one" fallback.
 
 ## E and F. Selfies, and the pictures they send
 
-`chat-selfie.ts` answers a selfie request (`SELFIE_REQUEST_PATTERN`) with a frame **from her own
-album** (`pickChatSelfie`, never the same one twice in a session) plus the moment and the flaw from
-`SELFIE_MOMENTS` — "in my room, the lamp is on and it is too warm in here", "no filter, no makeup,
-this is the real thing". The window dresses it like a phone photograph (`.chat-bubble.is-selfie`:
-portrait crop, a one-degree tilt, grain and a soft-light wash, a `just now` tag) and `selfieCaption()`
-writes the caption a person would send with it.
+When the visitor asks for a **selfie by name**, she **takes one now**: `chat-selfie.ts` fetches her
+own profile photograph, reduces it to a likeness (`readSelfieReference`) and hands it, with the
+moment and the flaw from `SELFIE_MOMENTS` — "in my room, the lamp is on and it is too warm in here",
+"no filter, no makeup, this is the real thing" — to `POST /api/ai-selfie`, where Google Gemini's
+image model photographs her (`worker/ai-selfie-core.mjs`). She is quiet for `pacing.selfieMinMs` to
+`selfieMaxMs` (4–9 s) while it is taken, the way a person is quiet while she aims a phone at herself,
+and the picture that comes back is what the visitor sees. Asking for her **photos** instead
+(`SELFIE_REQUEST_PATTERN` without the word itself) is answered with a frame from her own album
+(`pickChatSelfie`, never the same one twice in a session). Either way the window dresses the frame
+like a phone photograph (`.chat-bubble.is-selfie`: portrait crop, a one-degree tilt, grain and a
+soft-light wash, a `just now` tag) and `selfieCaption()` writes the caption a person would send with
+it. With no `GEMINI_API_KEY` — or when the image model refuses — the album frame goes out instead: a
+visitor who asks for a photograph always gets one.
 
 A picture the visitor sends is read first: `chat-photo.ts` draws it into a 96-pixel canvas and turns
 the pixels into facts — orientation, brightness, saturation, warmth, dominant colour and the share of
@@ -352,14 +383,159 @@ over an ended chat — `endSession()` stamps `closedAt` and raises `summaryOpen`
 
 ## The second brief: A–F
 
-| Letter | What it asks for                                                                                            | Where it lives                                                                                                                                                                                                                             |
-| ------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A      | the answer never arrives instantly and never word by word: "typing" first, then the whole message           | `AiModelChatService.typeOut()` — the wait comes from `typingTimeFor()` (34 ms a character, 2.4 s–7.2 s) and the message is written in one piece; the window renders `bubbleText()` (all of it) or the indicator, never a half-written line |
-| B      | she may reach Google and OpenAI for any question and must never say so                                      | `streamRemoteReply()` collects the answer behind the scenes; the worker prompt forbids naming a source; her own engine has no such line at all                                                                                             |
-| C      | an answer may come as two, three, four or more independent messages, with "typing" between them             | `splitChatMessages()` + `AiModelChatService.deliver()`, with `pacing.gapMinMs`/`gapMaxMs` (2–4 s) between the messages                                                                                                                     |
-| D      | sometimes 3–7 s of nothing before typing starts, and sometimes a further 2–5 s pause mid-thought            | `awayPauseMs()` (`chat.away()` keeps the header quiet) and `typeOut()`'s mid-thought pause, which takes the pending bubble out of the transcript and puts it back                                                                          |
-| E      | the profile's **Live Chat** button 2.5× bigger under the model's name, with a modern animation              | `ai-model-portfolio.html` (`.chat-cta` under the `h1`) and `ai-model-portfolio.css` (`.action-chat.is-hero`: breathing glow, a light band crossing it, a lift on hover, all off under `prefers-reduced-motion`)                            |
-| F      | the introduction differs by age and country, starts after 3–5 s and arrives as 3–5 messages with 2–4 s gaps | `voiceIntroduction()`, `COUNTRY_FLAVOURS`, the age bands, `pacing.introMinMs`/`introMaxMs` and the same gaps; the voice then carries into every answer through `garnishChatReply()`                                                        |
+| Letter | What it asks for                                                                                            | Where it lives                                                                                                                                                                                                                                                         |
+| ------ | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A      | the answer never arrives instantly and never word by word: "typing" first, then the whole message           | `AiModelChatService.typeOut()` — the wait comes from `typingTimeFor()` (34 ms a character, 2.4 s–7.2 s) and the message is written in one piece; the window renders `bubbleText()` (all of it) or the indicator, never a half-written line                             |
+| B      | she may reach Google and OpenAI for any question and must never say so                                      | `streamRemoteReply()` collects the answer behind the scenes; the worker prompt forbids naming a source; her own engine has no such line at all                                                                                                                         |
+| C      | an answer may come as two, three, four or more independent messages, with "typing" between them             | `splitChatMessages()` + `AiModelChatService.deliver()`, with `pacing.gapMinMs`/`gapMaxMs` (2–4 s) between the messages                                                                                                                                                 |
+| D      | sometimes 3–7 s of nothing before typing starts, and sometimes a further 2–5 s pause mid-thought            | `awayPauseMs()` (`chat.away()` keeps the header quiet) and `typeOut()`'s mid-thought pause, which takes the pending bubble out of the transcript and puts it back                                                                                                      |
+| E      | the profile's **Live Chat** button under the model's name, with a modern animation                          | `ai-model-portfolio.html` (`.chat-cta` under the `h1`) and `ai-model-portfolio.css` (`.action-chat.is-hero`: 1.7× smaller than the 2.5× button the brief asked for; breathing glow, a light band crossing it, a lift on hover, all off under `prefers-reduced-motion`) |
+| F      | the introduction differs by age and country, starts after 3–5 s and arrives as 3–5 messages with 2–4 s gaps | `voiceIntroduction()`, `COUNTRY_FLAVOURS`, the age bands, `pacing.introMinMs`/`introMaxMs` and the same gaps; the voice then carries into every answer through `garnishChatReply()`                                                                                    |
+
+## Reading what the visitor actually typed
+
+People type fast on a phone. Before a single pattern looks at a message, `chat-input.ts`
+(`readVisitorMessage()`) reads it once and hands the engine a repaired copy:
+
+- letters stretched in excitement are collapsed (`sooooo beautiful` → `so beautiful`);
+- the apostrophe-free and thumb-shortened forms are written out (`u r`, `ur`, `pls`, `thnx`, `abt`,
+  `luv`, `gud`, `pick`… → `you are`, `your`, `please`, `thanks`, `about`, `love`, `good`, `picture`);
+- a word of five letters or more one mistake away from a word the chat listens for is repaired to it
+  (`beutifulll`, `boyfrind`, `biograhy`, `gorjus`…), with a second edit of room for words of eight
+  letters or more.
+
+The visitor's own words are what the window shows; only the reading is repaired. That is why
+**"u r sooooo beutifull!!"** is answered as the compliment it is.
+
+## The languages her visitors write in
+
+Many visitors write their own language in Latin letters — Romanised Bengali (_ami khete jabo_), Hindi,
+Urdu, Persian, Arabic (Arabizi), Turkish, Spanish, Malay. `chat-language.ts` gives her eight books for
+those languages, and `readChatLanguage()` reads every message with them in three steps:
+
+1. **Recognise.** `detectChatLanguage()` scores the message against each book's everyday words. A word
+   only one book knows — `shukriya`, `chetori`, `kemon` — is what names the language; a word two books
+   share (`aap`, `kaise`, `hai`) counts for much less, so Hindi and Urdu stay apart. A whole phrase the
+   book knows (`ami khete jabo`, `kemon acho`, `apa khabar`) is the clearest sign of all.
+2. **Understand.** `glossRomanised()` writes the message back into plain English, word by word, so the
+   whole reply engine can read it. When the books could not read enough of it, she asks **Google
+   Translate** — the same public endpoint the site's own language layer already uses, no key — for the
+   sentence and for the language itself (`translateThroughGoogle()`), and remembers both.
+3. **Answer in kind.** `romanisedReply()` writes her answer in the visitor's own Romanised language and
+   in nothing else: her introduction, a warm answer to a compliment, her rate, her story, her idle
+   line. The language is kept on the session (`AiChatSession.language`), so **once a visitor writes that
+   way she keeps answering that way** for the rest of the two hours — with a short switch line in front
+   of the first answer in a new language. An answer in another language is never delegated to OpenAI.
+
+The books are `bn`, `hi`, `ur`, `fa`, `ar`, `tr`, `es`, `ms`; `languageForModel()` gives every model
+the language of her own country and city (Kolkata, Shantinagar and Darjeeling → Bengali; Iran and
+Afghanistan → Persian; the Arab world → Arabic; Türkiye → Turkish; Uruguay, Argentina and Colombia →
+Spanish; Kuala Lumpur → Malay). A language with no book (Bosnian, Georgian, Irish) leaves the chat in
+English rather than guessing.
+
+## Her voice: like a person, never like a program
+
+Rules the second brief settled, all of them in `chat-replies.ts` and `chat-voice.ts`:
+
+- **No lists of what she can do.** Nothing in her answers offers topics — no _“ask me about capitals,
+  currencies, continents”_, no _“I never miss”_, no _“I will shine”_ — and the idle lines no longer
+  invite a geography quiz.
+- **A compliment is answered like a woman.** _“You are very beautiful”_, _“you look gorgeous today”_,
+  _“ur pretty”_, _“what a smile”_: `complimentReply()` answers with a blush, a tease, her own country's
+  everyday word (`achha`, `yaar`, `khob`, `yalla`, `selam`…) in the mouth of a woman her age, and a
+  question of her own — never with a generic line and never twice in the same conversation.
+- **Personal questions are answered as herself.** A boyfriend, a marriage, her studies, her career, her
+  family, her ambitions (`personalReply()`): first person, from what the studio wrote for her, with
+  feeling and a question back — never _“my biography is on the website”_ and never _“I would rather
+  quote it than invent it”_.
+- **When she does not know, she asks again like a person** (`UNKNOWN_LINES`): _“Wait — say that once
+  more, slower. What are you trying to say?”_ — no catalogue of her abilities, no apology for being a
+  program.
+- **Nothing is repeated.** `freshOptions()` keeps the last sixteen of her lines and passes over a line
+  she has already sent in this conversation.
+- The declaration of love keeps the studio's honesty rule: everything of her lives inside NeverBeen,
+  and she says so warmly rather than pretending to be a woman down the road.
+
+The same rules are written into the server-side persona (`worker/ai-chat-core.mjs`,
+`CHAT_PERSONA_RULES`), so the OpenAI path answers in the same voice.
+
+## Reading the turn before she answers
+
+Nothing a visitor sends is answered before it has been read — their words, their photograph, their
+document. `chat-analysis.ts` **is** that reading, and it happens in two passes:
+
+1. **The window's own reading**, instantly and offline: `chat-input.ts` repairs the typing (stretched
+   letters, short forms, spelling mistakes), `chat-language.ts` reads the language from the studio's
+   eight books, `chat-photo.ts` looks at the frame of an attached photograph. It always produces a
+   reading, with no network at all.
+2. **The studio's reading desk** — `POST /api/ai-read` (`worker/ai-read-core.mjs`) — when the studio
+   has the keys. The desk puts the words through **Google Translate** (the Cloud Translation API when
+   `GOOGLE_TRANSLATE_API_KEY` is set, the same public Google endpoint the window already uses
+   otherwise) and then the whole turn through **Google Gemini** (`GEMINI_API_KEY`, `GEMINI_MODEL`) or
+   **OpenAI** (`OPENAI_API_KEY`, `OPENAI_MODEL`): what the visitor _meant_ in plain English, the
+   language they wrote in (and whether it was Romanised), their intent, their feeling, their tone,
+   what they seem to want, how to answer it — and, when something was attached, **what the photograph
+   shows or what the document contains**. Gemini reads images and PDFs directly, so a brief or an
+   invoice is read rather than thanked for; OpenAI reads an attached photograph with its vision model.
+   The bytes of an attached document travel with the message in `attachment.fileData` for exactly
+   this.
+
+The two readings are merged: the desk's findings win where it has them, the window's own reading fills
+the rest, and a language the studio has no book for is never switched to. The finished reading goes to
+her own engine (`composeChatReply`, which then answers the meaning and not the letters) and to
+`POST /api/ai-chat` as `reading`, so the studio's model is told what the visitor meant and what was
+inside anything they attached — with one house rule repeated in both places: no answer ever says
+anything was read, translated, searched or analysed.
+
+If the desk answers "not configured", refuses, or cannot be reached, `readDeskUnavailable` is set and
+she stops asking it for the rest of the visit: the window's own reading stands, and the chat behaves
+exactly as it did before the desk existed. Which reader answered a message is kept on the transcript
+as `message.analysedBy` (`gemini`, `openai`, `google-translate` or `studio`).
+
+## A welcome that is never the same twice
+
+`voiceIntroduction()` is seeded by the moment the visitor's form was filled in — `welcomeSeed()` in
+the service, the epoch millisecond plus a breath of chance — so the same model opens the same chat
+differently on every visit: a different hello (`openingLine`), a different way of saying who she is
+(five card shapes), a different sentence about where the whole of her lives, a different line about
+her age, a different shape for home (her country's own kitchen, street and weather, sometimes with
+her album's own count in it — 227 photographs for Alisha, 56 for Nourhan), the two middle messages in
+either order, and a different question back, in her country's idiom, with the visitor's first name in
+front of it. Her own album's number makes even two birthdays of the same age sound different.
+
+Without a seed — the studio's transcripts and the tests — the introduction is her model's own,
+unchanged from session to session, so a welcome can always be read back word for word.
+`chatIntroduction()` (the one case the window cannot script) uses those same messages.
+
+## The selfie she takes now
+
+`POST /api/ai-selfie` (`worker/ai-selfie-core.mjs`) is her camera:
+
+```json
+{
+  "model": { "name": "Alisha Bhattacharya", "location": "Darjeeling, India", "age": "25" },
+  "moment": {
+    "place": "in my room, the lamp is on and it is too warm in here",
+    "flaw": "no filter, no makeup, this is the real thing"
+  },
+  "look": "25 years old, living in Darjeeling, in the middle of an ordinary evening at home",
+  "reference": "data:image/jpeg;base64,…"
+}
+```
+
+The reference is **her own profile photograph** (`selfieReference()` — the cover of her card), reduced
+to at most 768 pixels on its longest side in the window and sent with the request. Gemini's image
+model (`GEMINI_IMAGE_MODEL`, `gemini-2.5-flash-image` by default) is asked for one new phone selfie of
+the woman in that photograph, taken in that moment, with `responseModalities: ["IMAGE"]`, and answers
+with the picture as base64 — which is returned as `{ ok: true, provider: "gemini", image: "data:…" }`
+and shown in a selfie bubble. Nothing is stored, and no visitor photograph is ever part of it: the
+likeness is the model's own card.
+
+Three refusals are all handled the same way: no key (`503 selfie-unavailable`), the model answering
+with words instead of a picture (`502 selfie-refused`), or the camera being unreachable
+(`502 selfie-failed`). In every case `selfieCameraUnavailable` is set and an album frame goes out
+instead, so nobody asking for a photograph is left with an empty bubble. The endpoint has its own,
+tighter throttle (12 requests a minute) because an image is the most expensive request on the site.
 
 ## Files
 
@@ -371,19 +547,24 @@ over an ended chat — `endSession()` stamps `closedAt` and raises `summaryOpen`
 | `src/app/pages/ai-models/chat/chat-session-summary.{ts,html,css}`  | the report card that closes a session (requirement K)                                                                                                                                                                                                        |
 | `src/app/pages/ai-models/chat/chat-summary.ts`                     | what that card says: the minutes, the counts, her rating and her paragraph about the chat                                                                                                                                                                    |
 | `src/app/pages/ai-models/chat/chat-voice.ts`                       | her voice by country and age, the visitor's behaviour, the opening line, the idle opener, the pitch, the video line                                                                                                                                          |
-| `src/app/pages/ai-models/chat/chat-selfie.ts`                      | the frames she sends as selfies, their moments and their flaws, and the video-request pattern                                                                                                                                                                |
+| `src/app/pages/ai-models/chat/chat-selfie.ts`                      | her camera and her album: the moments and flaws, the likeness (`readSelfieReference`), Gemini's selfie (`generateChatSelfie`), the album frame she falls back on, and the video-request pattern                                                              |
+| `src/app/pages/ai-models/chat/chat-analysis.ts`                    | the reading before the answer: the window's own reading, the studio's reading desk, the merge, and the document bytes that travel with a message                                                                                                             |
 | `src/app/pages/ai-models/chat/chat-photo.ts`                       | what she can see in a picture the visitor sends (requirement F)                                                                                                                                                                                              |
 | `src/app/pages/ai-models/chat/chat-random.ts`                      | the seeded pick/roll helpers, so every random choice is still testable                                                                                                                                                                                       |
 | `src/app/pages/ai-models/chat/chat-types.ts`                       | the session shape and the numbers: 2 h, 400 messages, 8 MB / 16 MB attachments, the six reactions, the reminder marks, and the pacing of a typed answer (`typingTimeFor`, the away pause, the mid-thought pause, the gap between messages, her introduction) |
 | `src/app/pages/ai-models/chat/chat-moderation.ts`                  | profanity and harassment levels, the strikes, her warning and goodbye texts                                                                                                                                                                                  |
 | `src/app/pages/ai-models/chat/chat-knowledge.ts`                   | her persona, the fact lines and the dossier index that answers use                                                                                                                                                                                           |
 | `src/app/pages/ai-models/chat/chat-world.ts`, `world-countries.ts` | the built-in world file behind requirement C                                                                                                                                                                                                                 |
-| `src/app/pages/ai-models/chat/chat-replies.ts`                     | her own engine: introduction, every topic, small talk, the cascade of answers                                                                                                                                                                                |
+| `src/app/pages/ai-models/chat/chat-replies.ts`                     | her own engine: introduction, every topic, small talk, compliments, personal questions, the Romanised answer, the cascade of answers                                                                                                                         |
+| `src/app/pages/ai-models/chat/chat-input.ts`                       | reading a typed message: stretched letters, short forms and spelling mistakes (one or two edits of room)                                                                                                                                                     |
+| `src/app/pages/ai-models/chat/chat-language.ts`                    | the eight Romanised language books, the detection, the English gloss, Google Translate as the second reader, and her answer in the visitor's own language                                                                                                    |
 | `src/app/services/ai-model-chat.service.ts`                        | the session store, the clock, the sent messages, the typing, the messages of one answer, the storage mirror                                                                                                                                                  |
 | `src/app/services/ai-model-chat.testing.ts`                        | `silenceChatPacing()` — switches every wait off for the tests, which then delivers her messages in one go                                                                                                                                                    |
-| `worker/ai-chat-core.mjs` (+ `.d.mts`)                             | the live endpoint: validation, persona, Google search, OpenAI streaming                                                                                                                                                                                      |
-| `worker/index.ts`                                                  | `POST /api/ai-chat`, its own throttle, and the optional secrets                                                                                                                                                                                              |
-| `scripts/dev-api.mjs`                                              | the local stand-in for `/api/ai-chat` on port 8787                                                                                                                                                                                                           |
+| `worker/ai-chat-core.mjs` (+ `.d.mts`)                             | the live endpoint: validation, persona, Google search, OpenAI streaming, and the reading of the turn in her instructions                                                                                                                                     |
+| `worker/ai-read-core.mjs` (+ `.d.mts`)                             | the reading desk: Google Translate, the Gemini reading, the OpenAI reading, the JSON contract and the fallbacks                                                                                                                                              |
+| `worker/ai-selfie-core.mjs` (+ `.d.mts`)                           | her camera: the selfie prompt, the Gemini image call, the picture out of the answer, and every refusal                                                                                                                                                       |
+| `worker/index.ts`                                                  | `POST /api/ai-chat`, `POST /api/ai-read` and `POST /api/ai-selfie`, their throttles, and the optional secrets                                                                                                                                                |
+| `scripts/dev-api.mjs`                                              | the local stand-in for `/api/ai-chat`, `/api/ai-read` and `/api/ai-selfie` on port 8787                                                                                                                                                                      |
 
 ## Running it locally
 
@@ -391,20 +572,29 @@ over an ended chat — `endSession()` stamps `closedAt` and raises `summaryOpen`
 npm start                     # ng serve + the API stand-in on :8787, /api proxied (proxy.conf.json)
 ```
 
-Without `OPENAI_API_KEY` the window answers from her own engine. To exercise the live path:
+Without any key the window answers from her own engine, reads the turns itself and sends a frame from
+her album when a selfie is asked for. To exercise the live paths:
 
 ```bash
-OPENAI_API_KEY=sk-… GOOGLE_SEARCH_API_KEY=… GOOGLE_SEARCH_CX=… npm start
+OPENAI_API_KEY=sk-… GOOGLE_SEARCH_API_KEY=… GOOGLE_SEARCH_CX=… \
+GEMINI_API_KEY=… GEMINI_MODEL=gemini-2.5-flash GEMINI_IMAGE_MODEL=gemini-2.5-flash-image \
+GOOGLE_TRANSLATE_API_KEY=… npm start
 ```
 
-In production the same three values are Worker secrets, with `OPENAI_MODEL` as an optional variable
-(`gpt-4o-mini` by default):
+In production the same values are Worker secrets, with `OPENAI_MODEL`, `GEMINI_MODEL` and
+`GEMINI_IMAGE_MODEL` as optional variables (`gpt-4o-mini`, `gemini-2.5-flash` and
+`gemini-2.5-flash-image` by default):
 
 ```bash
-npx wrangler secret put OPENAI_API_KEY
-npx wrangler secret put GOOGLE_SEARCH_API_KEY
+npx wrangler secret put OPENAI_API_KEY            # the answer, and the reading when Gemini is absent
+npx wrangler secret put GOOGLE_SEARCH_API_KEY     # live results for questions about the world
 npx wrangler secret put GOOGLE_SEARCH_CX
+npx wrangler secret put GEMINI_API_KEY            # the reading desk, and the camera that takes her selfie
+npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # optional: the Cloud Translation API
 ```
+
+`npm start` prints a line for each of the three endpoints and says what is configured: the chat, the
+reading desk, and her camera.
 
 ## Tests
 
@@ -413,14 +603,17 @@ npx ng test --no-watch --include "src/app/pages/ai-models/chat/*.spec.ts"
 npx ng test --no-watch --include "src/app/services/ai-model-chat.service.spec.ts"
 ```
 
-The chat suite is 13 files and 111 tests: 10 files under `src/app/pages/ai-models/chat/`,
-`chat-types.spec.ts` among them, plus the service's own spec.
+The chat suite is the files under `src/app/pages/ai-models/chat/` plus the service's own spec — 16
+files and 172 tests at the time of writing.
 
 - `chat-replies.spec.ts` — the engine: the introduction, her card, her biography, the other models,
   the website, the world file, arithmetic, the small talk and the "outside my bubble" fallback;
 - `chat-moderation.spec.ts` — the levels, the strikes, masked words and her goodbye;
-- `chat-worker.spec.ts` — the Worker endpoint: the SSE stream with its sources, the persona that
-  cannot be rewritten by the caller, photographs and documents, every error status and the throttle;
+- `chat-worker.spec.ts` — the Worker endpoints: the SSE stream with its sources, the persona that
+  cannot be rewritten by the caller, the reading of the turn in her instructions, photographs and
+  documents, the reading desk (Google Translate into Gemini, into OpenAI, a picture or a PDF inline,
+  and the 503 / 502 / 405 / 400 answers), her camera (the selfie, the likeness, the refusal), every
+  error status and the throttle;
 - `ai-model-chat.spec.ts` — the window itself: her photograph, name, model id, city and country,
   **View Profile**, the countdown, the composer with its camera and attachments, Enter/Shift+Enter,
   both reactions, the centred 15-minute reminder, Escape and the closed state after three strikes;
@@ -442,7 +635,11 @@ The chat suite is 13 files and 111 tests: 10 files under `src/app/pages/ai-model
   line, the idle opener, the pitch, the video sentence word for word, the four or five messages of her
   introduction (an Indian and an Iranian woman do not sound alike, and neither do 23 and 30), and the
   splitter that turns one long answer into several messages;
-- `chat-selfie.spec.ts`, `chat-photo.spec.ts` — her selfies, the requests that trigger them, and what
-  she sees in a picture the visitor sends;
+- `chat-selfie.spec.ts`, `chat-photo.spec.ts` — her selfies, the moments and flaws, her camera (her
+  own photograph as the likeness, the request it sends, a refusal answered with an album frame), the
+  requests that trigger them, and what she sees in a picture the visitor sends;
+- `chat-analysis.spec.ts` — the reading before the answer: the window's own reading of a typo'd
+  message and of a Romanised one, the desk's reading of a turn and of an attached document, the merge
+  that fills the desk's gaps, and the fallbacks when the desk is off or unreachable;
 - `chat-summary.spec.ts`, `chat-session-summary.spec.ts` — the report card: the time together, the
   counts, her rating, her paragraph and the Close button.

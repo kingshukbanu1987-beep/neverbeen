@@ -5,6 +5,7 @@
  * (`src/app/services/ai-model-chat.service.ts`).
  */
 import { ChatIdentity } from './chat-identity';
+import type { RomanisedLanguageCode } from './chat-language';
 
 /** Who wrote a message: the model, the visitor, or NeverBeen itself (reminders and notices). */
 export type AiChatAuthor = 'model' | 'user' | 'system';
@@ -68,6 +69,12 @@ export interface AiChatAttachment {
    * session is restored without room for it (see `compactSessions` in the chat service).
    */
   preview: string;
+  /**
+   * A document's own bytes, as a data URL, so the studio's reading desk can actually open it before
+   * she answers (a PDF is read by the reading model, not thanked for). Empty for photographs, whose
+   * bytes travel in `preview`, and dropped on restore when it is larger than a session may keep.
+   */
+  fileData?: string;
 }
 
 /** One source behind an answer taken from outside NeverBeen (a Google result). */
@@ -103,6 +110,12 @@ export interface AiChatMessage {
   sources: AiChatSource[];
   /** Set on her messages: the intent the reply engine recognised. */
   intent: string;
+  /**
+   * Set on her messages: who read the visitor's message before she answered it — `gemini`,
+   * `openai`, `google-translate` or `studio` (the window's own reader). Part of the transcript
+   * because it is how the studio sees whether the reading desk is doing its work.
+   */
+  analysedBy?: string;
 }
 
 /** Why a chat session can no longer be written to. */
@@ -141,6 +154,13 @@ export interface AiChatSession {
   pitches: number;
   /** When the session ended, for the summary card (requirement K). */
   closedAt: number;
+  /**
+   * The Romanised language the visitor writes in (`chat-language.ts`), once it has been read from
+   * their own words: `bn`, `hi`, `ur`, `fa`, `ar`, `tr`, `es` or `ms`, and `''` while the
+   * conversation is in English. She keeps answering in it for the rest of the session — the way a
+   * person does once the other side has switched.
+   */
+  language: RomanisedLanguageCode | '';
 }
 
 /** The two-hour maximum of one chat session. */
@@ -208,6 +228,13 @@ export const AI_CHAT_MID_PAUSE_MAX_MS = 5_000;
 /** Requirement C: her answer may arrive as several messages, two to four seconds apart. */
 export const AI_CHAT_GAP_MIN_MS = 2_000;
 export const AI_CHAT_GAP_MAX_MS = 4_000;
+
+/**
+ * A selfie is taken, not picked: when her camera answers, she is quiet for a few seconds while the
+ * photograph is made, the way a person is quiet while they aim a phone at themselves.
+ */
+export const AI_CHAT_SELFIE_MIN_MS = 4_000;
+export const AI_CHAT_SELFIE_MAX_MS = 9_000;
 
 /** How much of her answer goes into one bubble before the next one starts. */
 export const AI_CHAT_BUBBLE_MAX_CHARS = 240;

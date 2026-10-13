@@ -24,6 +24,16 @@
  *   npx wrangler secret put GOOGLE_SEARCH_API_KEY  # Google Custom Search JSON API key
  *   npx wrangler secret put GOOGLE_SEARCH_CX       # programmable search engine id
  *
+ * `/api/ai-read` is the reading desk: everything a visitor sends — the words, the photograph, the
+ * document — is read before she answers it. Google Translate reads the language, and Gemini (or
+ * OpenAI) does the structured reading. Optional, and the window reads the turn itself without them:
+ *
+ *   npx wrangler secret put GEMINI_API_KEY            # Google Gemini key (reading + selfies)
+ *   npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # Cloud Translation key (optional)
+ *
+ * `/api/ai-selfie` takes her selfie: Gemini's image model photographs her from her own profile
+ * photograph at the moment the chat has put her in, instead of her sending an album frame.
+ *
  * See `worker/ai-chat-core.mjs` and `docs/ai-model-chat.md`.
  *
  * The API target can be overridden with the NEVERBEEN_API_URL variable (see wrangler.jsonc).
@@ -33,6 +43,12 @@
  */
 import { BOOKING_ENDPOINT, handleModelBookingRequest } from './model-booking-core.mjs';
 import { AI_CHAT_ENDPOINT, MAX_CHAT_BODY_BYTES, createAiChatResponse } from './ai-chat-core.mjs';
+import { AI_READ_ENDPOINT, MAX_READ_BODY_BYTES, createAiReadResponse } from './ai-read-core.mjs';
+import {
+  AI_SELFIE_ENDPOINT,
+  MAX_SELFIE_BODY_BYTES,
+  createAiSelfieResponse,
+} from './ai-selfie-core.mjs';
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -48,6 +64,14 @@ interface Env {
   /** Google Custom Search credentials — live search results for the chat (both optional). */
   GOOGLE_SEARCH_API_KEY?: string;
   GOOGLE_SEARCH_CX?: string;
+  /** Google Gemini key — the reading desk, and the camera that takes her selfies (optional). */
+  GEMINI_API_KEY?: string;
+  /** Gemini model used for the reading (defaults to `gemini-2.5-flash`). */
+  GEMINI_MODEL?: string;
+  /** Gemini image model used for her selfies (defaults to `gemini-2.5-flash-image`). */
+  GEMINI_IMAGE_MODEL?: string;
+  /** Cloud Translation key; without it the same public Google translator the site uses answers. */
+  GOOGLE_TRANSLATE_API_KEY?: string;
 }
 
 /** Same-origin path the Angular app uses for the NeverBeen Web API. */
@@ -72,6 +96,16 @@ const RATE_LIMIT_REQUESTS = 6;
 /** A chat turn carries the dossier and possibly a picture, so it gets its own, larger budget. */
 const RATE_LIMIT_CHAT_REQUESTS = 30;
 const chatRequests = new Map<string, number[]>();
+
+/**
+ * The reading desk and the camera get their own, tighter budget: a reading happens before every
+ * answer and an image costs real money, so a client that hammers either is cut off long before the
+ * chat itself is.
+ */
+const RATE_LIMIT_READ_REQUESTS = 40;
+const RATE_LIMIT_SELFIE_REQUESTS = 12;
+const readRequests = new Map<string, number[]>();
+const selfieRequests = new Map<string, number[]>();
 
 /** Best-effort per-isolate throttle: enough to stop a single client hammering the endpoint. */
 const recentRequests = new Map<string, number[]>();
@@ -103,6 +137,36 @@ function isChatRateLimited(key: string, now: number): boolean {
   }
 
   return hits.length > RATE_LIMIT_CHAT_REQUESTS;
+}
+
+/** The reading desk's throttle. */
+function isReadRateLimited(key: string, now: number): boolean {
+  const hits = (readRequests.get(key) ?? []).filter((time) => now - time < RATE_LIMIT_WINDOW_MS);
+  hits.push(now);
+  readRequests.set(key, hits);
+
+  if (readRequests.size > 500) {
+    for (const [entry, times] of readRequests) {
+      if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) readRequests.delete(entry);
+    }
+  }
+
+  return hits.length > RATE_LIMIT_READ_REQUESTS;
+}
+
+/** Her camera's throttle: an image is the most expensive request on the site. */
+function isSelfieRateLimited(key: string, now: number): boolean {
+  const hits = (selfieRequests.get(key) ?? []).filter((time) => now - time < RATE_LIMIT_WINDOW_MS);
+  hits.push(now);
+  selfieRequests.set(key, hits);
+
+  if (selfieRequests.size > 500) {
+    for (const [entry, times] of selfieRequests) {
+      if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) selfieRequests.delete(entry);
+    }
+  }
+
+  return hits.length > RATE_LIMIT_SELFIE_REQUESTS;
 }
 
 function json(status: number, body: unknown): Response {
@@ -218,6 +282,71 @@ export default {
           OPENAI_MODEL: env.OPENAI_MODEL,
           GOOGLE_SEARCH_API_KEY: env.GOOGLE_SEARCH_API_KEY,
           GOOGLE_SEARCH_CX: env.GOOGLE_SEARCH_CX,
+        },
+      });
+    }
+
+    if (url.pathname === AI_READ_ENDPOINT) {
+      const clientKey = request.headers.get('cf-connecting-ip') ?? 'unknown';
+      if (isReadRateLimited(clientKey, Date.now())) {
+        return json(429, { ok: false, error: 'too-many-requests' });
+      }
+
+      if (request.method !== 'POST') return json(405, { ok: false, error: 'method-not-allowed' });
+
+      const declared = Number(request.headers.get('content-length') ?? '0');
+      const text =
+        Number.isFinite(declared) && declared > MAX_READ_BODY_BYTES ? null : await request.text();
+      if (text === null || text.length > MAX_READ_BODY_BYTES) {
+        return json(413, { ok: false, error: 'payload-too-large' });
+      }
+
+      let payload: unknown;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        return json(400, { ok: false, error: 'invalid-json' });
+      }
+
+      return createAiReadResponse({
+        payload,
+        env: {
+          GEMINI_API_KEY: env.GEMINI_API_KEY,
+          GEMINI_MODEL: env.GEMINI_MODEL,
+          OPENAI_API_KEY: env.OPENAI_API_KEY,
+          OPENAI_MODEL: env.OPENAI_MODEL,
+          GOOGLE_TRANSLATE_API_KEY: env.GOOGLE_TRANSLATE_API_KEY,
+        },
+      });
+    }
+
+    if (url.pathname === AI_SELFIE_ENDPOINT) {
+      const clientKey = request.headers.get('cf-connecting-ip') ?? 'unknown';
+      if (isSelfieRateLimited(clientKey, Date.now())) {
+        return json(429, { ok: false, error: 'too-many-requests' });
+      }
+
+      if (request.method !== 'POST') return json(405, { ok: false, error: 'method-not-allowed' });
+
+      const declared = Number(request.headers.get('content-length') ?? '0');
+      const text =
+        Number.isFinite(declared) && declared > MAX_SELFIE_BODY_BYTES ? null : await request.text();
+      if (text === null || text.length > MAX_SELFIE_BODY_BYTES) {
+        return json(413, { ok: false, error: 'payload-too-large' });
+      }
+
+      let payload: unknown;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        return json(400, { ok: false, error: 'invalid-json' });
+      }
+
+      return createAiSelfieResponse({
+        payload,
+        env: {
+          GEMINI_API_KEY: env.GEMINI_API_KEY,
+          GEMINI_IMAGE_MODEL: env.GEMINI_IMAGE_MODEL,
         },
       });
     }

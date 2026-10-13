@@ -2,6 +2,17 @@
   <div class="gate-card">
     <span class="gate-aurora" aria-hidden="true"></span>
 
+    <!-- The way out of the form: the window closes exactly as it does from the ✕ in its bar. -->
+    <button
+      type="button"
+      class="gate-close"
+      aria-label="Close the chat"
+      title="Close"
+      (click)="cancel()"
+    >
+      ✕
+    </button>
+
     <header class="gate-head">
       <span class="gate-portrait">
         @if (model().cover) {
@@ -75,7 +86,7 @@
         name="chat-gate-name"
         autocomplete="given-name"
         inputmode="text"
-        placeholder="Alisha"
+        placeholder="Write your name here"
         [value]="name()"
         [attr.aria-invalid]="nameError() ? 'true' : 'false'"
         aria-describedby="chat-gate-name-help"

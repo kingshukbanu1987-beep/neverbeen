@@ -523,6 +523,29 @@ describe('AiModelsPage', () => {
     expect(cardCovers(element)).toEqual(before);
   });
 
+  it('puts Live Chat directly under the model name, with its live dot, out of the link row', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const cards = Array.from(element.querySelectorAll<HTMLElement>('.model-card'));
+    expect(cards.length).toBeGreaterThan(0);
+
+    for (const card of cards) {
+      const name = card.querySelector<HTMLElement>('.card-copy h3');
+      const chat = card.querySelector<HTMLButtonElement>('.card-action-chat');
+      expect(chat?.textContent?.trim()).toBe('Live Chat');
+      // The small dot that pulses beside the words, so the button reads as live.
+      expect(chat?.querySelector('.card-chat-dot')).toBeTruthy();
+
+      // It now stands directly under the name of the model, and no longer down in the links row.
+      const row = chat?.closest('.card-chat-row');
+      expect(row?.parentElement?.classList.contains('card-copy')).toBe(true);
+      expect(name?.nextElementSibling).toBe(row);
+      expect(card.querySelector('.card-actions .card-action-chat')).toBeNull();
+    }
+  });
+
   it('falls back to the stored cover for a model whose album is still empty', () => {
     const profile: AiModelProfile = {
       ...aiModelProfiles[0],

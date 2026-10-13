@@ -45,6 +45,7 @@ function session(overrides: Partial<AiChatSession> = {}): AiChatSession {
     nudges: 0,
     pitches: 0,
     closedAt: 0,
+    language: '',
     ...overrides,
   };
 }

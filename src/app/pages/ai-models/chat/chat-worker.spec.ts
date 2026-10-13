@@ -5,11 +5,15 @@ import {
   MAX_CHAT_BODY_BYTES,
   OPENAI_DEFAULT_MODEL,
 } from '../../../../../worker/ai-chat-core.mjs';
+import { GEMINI_DEFAULT_MODEL } from '../../../../../worker/ai-read-core.mjs';
+import { GEMINI_DEFAULT_IMAGE_MODEL } from '../../../../../worker/ai-selfie-core.mjs';
 
 const worker = (workerEntry as { default?: typeof workerEntry }).default ?? workerEntry;
 const ORIGIN = 'https://neverbeen.example';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const GOOGLE_URL = 'https://www.googleapis.com/customsearch/v1';
+const TRANSLATE_URL = 'https://translate.googleapis.com/translate_a/single';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const ENV = {
   ASSETS: {
@@ -95,6 +99,376 @@ function stubOpenAi(answer = 'Delhi, of course.', sse?: string): OpenAiBody[] {
   return requests;
 }
 
+/* ---------------------------------------------------------------- the reading desk */
+
+/** The Gemini side of the reading desk: one JSON reading, plus the request it was sent. */
+function stubGeminiReading(reading: Record<string, unknown>, image?: string) {
+  const bodies: Record<string, unknown>[] = [];
+  vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    if (url.startsWith(TRANSLATE_URL)) {
+      // The public Google translator: the visitor's Romanised words, the language it found.
+      return new Response(
+        JSON.stringify([[['You are very beautiful.', 'tumi khub sundor', null]], null, 'bn']),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        },
+      );
+    }
+    expect(url).toContain(`${GEMINI_URL}/`);
+    bodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+    return new Response(
+      JSON.stringify({
+        candidates: [
+          {
+            content: {
+              parts: image
+                ? [{ inlineData: { mimeType: 'image/png', data: image } }]
+                : [{ text: JSON.stringify(reading) }],
+            },
+          },
+        ],
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    );
+  });
+  return bodies;
+}
+
+const READ_BODY = {
+  text: 'tumi khub sundor',
+  model: {
+    slug: 'alisha-bhattacharya',
+    name: 'Alisha Bhattacharya',
+    handle: '@alisha.bhattacharya',
+    location: 'Darjeeling, India',
+    age: '24',
+  },
+  user: { name: 'Rahul Verma', firstName: 'Rahul' },
+  local: { english: 'tumi khub sundor', language: 'bn', romanised: true, meaning: '' },
+  attachment: null,
+  history: [{ role: 'user', text: 'Hello' }],
+};
+
+function postRead(body: unknown, ip = '2030:db8::40') {
+  return new Request(`${ORIGIN}/api/ai-read`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip },
+    body: JSON.stringify(body),
+  });
+}
+
+function postSelfie(body: unknown, ip = '2030:db8::50') {
+  return new Request(`${ORIGIN}/api/ai-selfie`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'cf-connecting-ip': ip },
+    body: JSON.stringify(body),
+  });
+}
+
+describe('the reading desk Worker entry', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reads the turn with Google Translate and Gemini before she answers it', async () => {
+    const bodies = stubGeminiReading({
+      english: 'You are very beautiful, and I wanted you to know it.',
+      language: 'bn',
+      languageName: 'Bengali',
+      romanised: true,
+      intent: 'compliment',
+      sentiment: 'warm',
+      tone: 'short and sweet',
+      about: 'a compliment about her looks',
+      wants: 'to hear something kind back',
+      attachment: '',
+      advice: 'Blush, tease him, and ask him something about himself.',
+    });
+
+    const response = await call(postRead(READ_BODY), { ASSETS: ENV.ASSETS, GEMINI_API_KEY: 'k' });
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as { ok: boolean; reading: Record<string, unknown> };
+    expect(payload.ok).toBe(true);
+    expect(payload.reading['english']).toContain('very beautiful');
+    expect(payload.reading['language']).toBe('bn');
+    expect(payload.reading['romanised']).toBe(true);
+    expect(payload.reading['intent']).toBe('compliment');
+    expect(payload.reading['advice']).toContain('Blush');
+    expect(payload.reading['provider']).toBe('gemini');
+
+    // Google Translate's reading of the words reaches the model, so the Romanised message is read
+    // as language and not as letters.
+    expect(bodies.length).toBe(1);
+    const instruction = JSON.stringify(bodies[0]);
+    expect(instruction).toContain('You are very beautiful.');
+    expect(instruction).toContain('Alisha Bhattacharya');
+    expect(instruction).toContain('Rahul');
+    expect(
+      String((bodies[0]['generationConfig'] as Record<string, unknown>)['responseMimeType']),
+    ).toBe('application/json');
+  });
+
+  it('puts an attached photograph or document in front of the reading model', async () => {
+    const bodies = stubGeminiReading({
+      english: 'Here is the brief.',
+      language: 'en',
+      languageName: 'English',
+      romanised: false,
+      intent: 'document',
+      sentiment: 'neutral',
+      tone: 'businesslike',
+      about: 'a shoot brief',
+      wants: 'a price for the shoot',
+      attachment: 'A two-page PDF: a creative brief for a beach shoot in Goa, with a budget.',
+      advice: 'Answer the price question properly.',
+    });
+
+    const response = await call(
+      postRead(
+        {
+          ...READ_BODY,
+          text: 'Here is the brief',
+          attachment: {
+            kind: 'document',
+            name: 'brief.pdf',
+            type: 'application/pdf',
+            dataUrl: 'data:application/pdf;base64,JVBERi0xLjQK',
+          },
+        },
+        '2030:db8::41',
+      ),
+      { ASSETS: ENV.ASSETS, GEMINI_API_KEY: 'k' },
+    );
+
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as { reading: Record<string, unknown> };
+    expect(payload.reading['attachment']).toContain('creative brief');
+
+    const parts = ((bodies[0]['contents'] as Record<string, unknown>[])[0]['parts'] as Record<
+      string,
+      unknown
+    >[])!;
+    expect(parts.length).toBe(2);
+    expect((parts[1]['inlineData'] as Record<string, unknown>)['mimeType']).toBe('application/pdf');
+    expect((parts[1]['inlineData'] as Record<string, unknown>)['data']).toBe('JVBERi0xLjQK');
+  });
+
+  it('reads with OpenAI, photograph and all, when Gemini is not configured', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.startsWith(TRANSLATE_URL)) {
+        return new Response(
+          JSON.stringify([[['I took this yesterday.', 'kal tulechi', null]], null, 'bn']),
+          {
+            status: 200,
+          },
+        );
+      }
+      expect(url).toBe(OPENAI_URL);
+      bodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  english: 'I took this yesterday.',
+                  language: 'bn',
+                  languageName: 'Bengali',
+                  romanised: true,
+                  intent: 'photo',
+                  sentiment: 'warm',
+                  tone: 'proud',
+                  about: 'a photograph they took yesterday',
+                  wants: 'her opinion of the picture',
+                  attachment: 'A man on a beach at sunset, standing in the water.',
+                  advice: 'Tell him what you see in it and ask where it was.',
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+
+    const response = await call(
+      postRead(
+        {
+          ...READ_BODY,
+          text: 'kal tulechi',
+          attachment: {
+            kind: 'photo',
+            name: 'beach.jpg',
+            type: 'image/jpeg',
+            dataUrl: 'data:image/jpeg;base64,AAAA',
+          },
+        },
+        '2030:db8::42',
+      ),
+      { ASSETS: ENV.ASSETS, OPENAI_API_KEY: 'k' },
+    );
+
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as { reading: Record<string, unknown> };
+    expect(payload.reading['provider']).toBe('openai');
+    expect(payload.reading['attachment']).toContain('beach');
+
+    // OpenAI sees the picture, and the reading is asked for as JSON.
+    expect((bodies[0]['response_format'] as Record<string, unknown>)['type']).toBe('json_object');
+    const content = (bodies[0]['messages'] as Record<string, unknown>[])[0]['content'] as Record<
+      string,
+      unknown
+    >[];
+    expect(content[1]['image_url']).toEqual({ url: 'data:image/jpeg;base64,AAAA' });
+  });
+
+  it('answers 503 with no key at all, 405 for GET and 400 for an empty turn', async () => {
+    vi.stubGlobal('fetch', async () => {
+      throw new Error('nothing may be called out without a key');
+    });
+
+    const unconfigured = await call(postRead(READ_BODY, '2030:db8::43'), { ASSETS: ENV.ASSETS });
+    expect(unconfigured.status).toBe(503);
+    expect(((await unconfigured.json()) as Record<string, unknown>)['error']).toBe(
+      'analysis-unavailable',
+    );
+
+    const wrongMethod = await call(new Request(`${ORIGIN}/api/ai-read`));
+    expect(wrongMethod.status).toBe(405);
+
+    const empty = await call(postRead({ text: '   ' }, '2030:db8::44'), { ASSETS: ENV.ASSETS });
+    expect(empty.status).toBe(400);
+    expect(((await empty.json()) as Record<string, unknown>)['error']).toBe('empty-turn');
+  });
+
+  it('still reads the language when a key is configured but the reading model fails', async () => {
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      if (String(input).startsWith(TRANSLATE_URL)) {
+        return new Response(
+          JSON.stringify([[['You are very beautiful.', 'tumi khub sundor', null]], null, 'bn']),
+          {
+            status: 200,
+          },
+        );
+      }
+      return new Response('nope', { status: 500 });
+    });
+
+    const response = await call(postRead(READ_BODY, '2030:db8::45'), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+    });
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as { reading: Record<string, unknown> };
+    // Google Translate's reading stands on its own: the language, and the words in English.
+    expect(payload.reading['provider']).toBe('google-translate');
+    expect(payload.reading['language']).toBe('bn');
+    expect(payload.reading['english']).toBe('You are very beautiful.');
+  });
+});
+
+describe('her camera Worker entry', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const SELFIE_BODY = {
+    model: {
+      slug: 'alisha-bhattacharya',
+      name: 'Alisha Bhattacharya',
+      handle: '@alisha.bhattacharya',
+      location: 'Darjeeling, India',
+      age: '24',
+    },
+    moment: { place: 'in my room, the lamp is on', flaw: 'no filter, this is the real thing' },
+    look: '24 years old, living in Darjeeling, in the middle of an ordinary evening at home',
+    reference: 'data:image/jpeg;base64,AAAA',
+  };
+
+  it('takes the selfie from her own profile photograph with Gemini', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(String(input)).toContain(
+        `${GEMINI_URL}/${GEMINI_DEFAULT_IMAGE_MODEL}:generateContent`,
+      );
+      bodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  { text: 'Here you are.' },
+                  { inlineData: { mimeType: 'image/png', data: 'QUJD' } },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+
+    const response = await call(postSelfie(SELFIE_BODY), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+    });
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as Record<string, unknown>;
+    expect(payload['ok']).toBe(true);
+    expect(payload['provider']).toBe('gemini');
+    expect(payload['image']).toBe('data:image/png;base64,QUJD');
+
+    // Her own photograph travels as the likeness, and the prompt is the moment she is in.
+    const parts = ((bodies[0]['contents'] as Record<string, unknown>[])[0]['parts'] as Record<
+      string,
+      unknown
+    >[])!;
+    expect(parts[0]['text'] as string).toContain('Alisha Bhattacharya');
+    expect(parts[0]['text'] as string).toContain('in my room, the lamp is on');
+    expect(parts[0]['text'] as string).toContain('no filter, this is the real thing');
+    expect(parts[0]['text'] as string).toContain('phone selfie');
+    expect((parts[1]['inlineData'] as Record<string, unknown>)['data']).toBe('AAAA');
+    expect(
+      (bodies[0]['generationConfig'] as Record<string, unknown>)['responseModalities'],
+    ).toEqual(['IMAGE']);
+  });
+
+  it('says so when there is no camera, and when the camera answers with words', async () => {
+    vi.stubGlobal('fetch', async () => {
+      throw new Error('nothing may be called out without a key');
+    });
+    const unconfigured = await call(postSelfie(SELFIE_BODY, '2030:db8::51'), {
+      ASSETS: ENV.ASSETS,
+    });
+    expect(unconfigured.status).toBe(503);
+    expect(((await unconfigured.json()) as Record<string, unknown>)['error']).toBe(
+      'selfie-unavailable',
+    );
+
+    vi.stubGlobal('fetch', async () => {
+      // A refusal: the model answers with a sentence rather than a photograph.
+      return new Response(
+        JSON.stringify({ candidates: [{ content: { parts: [{ text: 'I cannot do that.' }] } }] }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+    const refused = await call(postSelfie(SELFIE_BODY, '2030:db8::52'), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'k',
+    });
+    expect(refused.status).toBe(502);
+    expect(((await refused.json()) as Record<string, unknown>)['error']).toBe('selfie-refused');
+
+    const wrongMethod = await call(new Request(`${ORIGIN}/api/ai-selfie`));
+    expect(wrongMethod.status).toBe(405);
+  });
+});
+
 describe('AI chat Worker entry', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -135,6 +509,42 @@ describe('AI chat Worker entry', () => {
       { role: 'assistant', content: 'Good evening! I am Alisha Bhattacharya.' },
       { role: 'user', content: 'Which city is the capital of India?' },
     ]);
+  });
+
+  it('answers the meaning the reading desk found, not the letters that were typed', async () => {
+    const requests = stubOpenAi('And how could I not blush.');
+
+    const response = await call(
+      post(
+        payload({
+          question: 'tumi khub sundor',
+          reading: {
+            english: 'You are very beautiful.',
+            language: 'bn',
+            languageName: 'Bengali',
+            romanised: true,
+            intent: 'compliment',
+            sentiment: 'warm',
+            tone: 'short and sweet',
+            about: 'a compliment about her looks',
+            wants: 'something kind back',
+            attachment: 'A man on a beach at sunset.',
+            advice: 'Blush and ask him where he is writing from.',
+            provider: 'gemini',
+          },
+        }),
+        '2030:db8::21',
+      ),
+    );
+    expect(response.status).toBe(200);
+    await response.text();
+
+    const system = String(requests[0].messages[0].content);
+    expect(system).toContain('You are very beautiful.');
+    expect(system).toContain('a compliment about her looks');
+    expect(system).toContain('answer this meaning');
+    // Nothing about the reading itself may ever reach the visitor.
+    expect(system).toContain('never mention that anything was read');
   });
 
   it('tells the studio who she is talking to and keeps the founder’s video rule (requirements A and J)', async () => {

@@ -12,6 +12,13 @@
  *     `GOOGLE_SEARCH_CX` are set). Without the key it answers `503 ai-unavailable`, which is exactly
  *     what production does unmapped, and the website answers from the model's own engine instead —
  *     so the chat works either way.
+ *   - `POST /api/ai-read` — the reading desk: Google Translate reads the visitor's words and
+ *     Gemini (or OpenAI) reads the turn — the message, the photograph, the document — before she
+ *     answers. Without a key it answers `503 analysis-unavailable` and the window's own reader
+ *     takes over.
+ *   - `POST /api/ai-selfie` — her camera: Gemini's image model takes a selfie from her own profile
+ *     photograph, at the moment the chat has put her in. Without a key the window sends one of her
+ *     album frames instead.
  *   - `POST /api/model-booking` — the booking endpoint. The portfolio form itself hands off directly
  *     to WhatsApp, so this is only for server-side integrations; the shared logic is
  *     `worker/model-booking-core.mjs` and the only difference is delivery:
@@ -37,6 +44,16 @@ import {
   MAX_BODY_BYTES,
   handleModelBookingRequest,
 } from '../worker/model-booking-core.mjs';
+import {
+  AI_READ_ENDPOINT,
+  MAX_READ_BODY_BYTES,
+  createAiReadResponse,
+} from '../worker/ai-read-core.mjs';
+import {
+  AI_SELFIE_ENDPOINT,
+  MAX_SELFIE_BODY_BYTES,
+  createAiSelfieResponse,
+} from '../worker/ai-selfie-core.mjs';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.env['BOOKING_API_PORT'] ?? 8787);
@@ -85,6 +102,39 @@ const server = createServer(async (request, response) => {
     const chatResponse = await createAiChatResponse({ payload: chatPayload, env: process.env });
     response.writeHead(chatResponse.status, Object.fromEntries(chatResponse.headers.entries()));
     response.end(Buffer.from(await chatResponse.arrayBuffer()));
+    return;
+  }
+
+  if (path === AI_READ_ENDPOINT || path === AI_SELFIE_ENDPOINT) {
+    const isSelfie = path === AI_SELFIE_ENDPOINT;
+    const endpoint = isSelfie ? AI_SELFIE_ENDPOINT : AI_READ_ENDPOINT;
+
+    if ((request.method ?? 'GET').toUpperCase() !== 'POST') {
+      response.writeHead(405, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ ok: false, error: 'method-not-allowed' }));
+      return;
+    }
+
+    let body;
+    try {
+      body = JSON.parse(
+        await readBody(request, isSelfie ? MAX_SELFIE_BODY_BYTES : MAX_READ_BODY_BYTES),
+      );
+    } catch (error) {
+      const tooLarge = error.message === 'payload-too-large';
+      response.writeHead(tooLarge ? 413 : 400, { 'content-type': 'application/json' });
+      response.end(
+        JSON.stringify({ ok: false, error: tooLarge ? 'payload-too-large' : 'invalid-json' }),
+      );
+      return;
+    }
+
+    const apiResponse = isSelfie
+      ? await createAiSelfieResponse({ payload: body, env: process.env })
+      : await createAiReadResponse({ payload: body, env: process.env });
+    response.writeHead(apiResponse.status, Object.fromEntries(apiResponse.headers.entries()));
+    response.end(Buffer.from(await apiResponse.arrayBuffer()));
+    console.log(`[ai-models] ${endpoint} → ${apiResponse.status}`);
     return;
   }
 
@@ -150,6 +200,20 @@ server.listen(port, '127.0.0.1', () => {
       (process.env['OPENAI_API_KEY']
         ? 'OpenAI answers configured'
         : 'no OPENAI_API_KEY, the website answers from the model’s own engine'),
+  );
+  console.log(
+    `[ai-models] Reading desk on http://127.0.0.1:${port}${AI_READ_ENDPOINT} — ` +
+      (process.env['GEMINI_API_KEY']
+        ? 'Gemini reads the turns'
+        : process.env['OPENAI_API_KEY']
+          ? 'OpenAI reads the turns'
+          : 'Google Translate only — the window reads the rest itself'),
+  );
+  console.log(
+    `[ai-models] Her camera on http://127.0.0.1:${port}${AI_SELFIE_ENDPOINT} — ` +
+      (process.env['GEMINI_API_KEY']
+        ? 'selfies are taken with Gemini'
+        : 'no GEMINI_API_KEY, a selfie is one of her own album frames'),
   );
 });
 

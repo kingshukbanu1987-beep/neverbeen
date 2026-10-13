@@ -198,10 +198,12 @@ describe('her introduction by age and country (requirement F of the second brief
     const iran = introductionOf(banafsheh).join(' ');
 
     expect(india).not.toBe(iran);
-    // Home, habits and the question she asks are drawn from her own country and nowhere else.
-    expect(india).toMatch(/biryani|pressure cooker|aunties next door|chai count/);
-    expect(iran).toMatch(/ghormeh sabzi|Hafez|cooling down|weighs on me/);
-    expect(iran).not.toMatch(/biryani|pressure cooker|aunties next door|chai count/);
+    // Whatever the session picks, her country is in her welcome: home is the one line every
+    // introduction carries, and it comes from her own corner of the world and nowhere else.
+    expect(india).toMatch(/biryani|pressure cooker/i);
+    expect(iran).toMatch(/ghormeh sabzi|Hafez/i);
+    expect(iran).not.toMatch(/biryani|pressure cooker|aunties next door|chai count/i);
+    expect(india).not.toMatch(/ghormeh sabzi|Hafez/i);
   });
 
   it('does not let a twenty-three-year-old and a thirty-year-old write the same way', () => {
@@ -209,11 +211,33 @@ describe('her introduction by age and country (requirement F of the second brief
     const older = introductionOf(model('nourhan-durrani')); // Sarajevo — 30
 
     expect(young.join(' ')).not.toBe(older.join(' '));
-    expect(young.join(' ')).toMatch(/younger|bored|small talk/);
+    // Every line of a band is that band's own: a twenty-three-year-old never sounds like a woman of
+    // thirty, and the words of the younger band never turn up in the older one's welcome.
+    expect(young.join(' ')).toMatch(
+      /younger|small talk|bored|deciding what I want to be|fast|laugh/,
+    );
+    expect(older.join(' ')).not.toMatch(/small talk|bored|deciding what I want to be|laugh/);
     expect(older.join(' ')).toMatch(/opinions|two hours|weather/);
     // Four messages for a reserved woman of a certain age, five for a young one.
     expect(young.length).toBeGreaterThanOrEqual(4);
     expect(older.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('welcomes the same visitor differently in every session, and the same session the same way', () => {
+    const voice = modelVoice(alisha);
+    const monday = voiceIntroduction(alisha, voice, 'Rahul', 'Rahul Verma', 'Good evening', '1');
+    const tuesday = voiceIntroduction(alisha, voice, 'Rahul', 'Rahul Verma', 'Good evening', '2');
+    const again = voiceIntroduction(alisha, voice, 'Rahul', 'Rahul Verma', 'Good evening', '1');
+
+    expect(monday.join(' ')).not.toBe(tuesday.join(' '));
+    // The same session is the same welcome, whichever way it is read back.
+    expect(again).toEqual(monday);
+    // And the two welcomes are still hers: her name, her card, her country, her way of talking.
+    for (const introduction of [monday, tuesday]) {
+      expect(introduction.join(' ')).toContain('Alisha Bhattacharya');
+      expect(introduction.join(' ')).toContain('NeverBeen Multiverse');
+      expect(introduction.join(' ')).toContain('?');
+    }
   });
 
   it('keeps her hello in her own age’s words', () => {
@@ -223,6 +247,13 @@ describe('her introduction by age and country (requirement F of the second brief
     expect(hello).toContain('Rahul');
     expect(hello).toContain('Alisha');
     expect(hello).not.toContain('Verma');
+
+    // The hello is salted by the session too: the same model does not open two chats with the same
+    // first line, and the second line is still hers.
+    const other = openingLine(alisha, voice, 'Rahul', 'Rahul Verma', 'session-2');
+    expect(other).toContain('Rahul');
+    expect(other).toContain('Alisha');
+    expect(other).not.toBe(hello);
   });
 });
 

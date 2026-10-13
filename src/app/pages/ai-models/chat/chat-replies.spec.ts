@@ -9,6 +9,7 @@ import {
   reactionForUserMessage,
 } from './chat-replies';
 import { AiChatMessage } from './chat-types';
+import { ChatTurnReading } from './chat-analysis';
 import { buildModelDossier, chatPersona } from './chat-knowledge';
 import { videoRefusal } from './chat-voice';
 import { findCountry, evaluateArithmetic, arithmeticExpression, timeInPlace } from './chat-world';
@@ -267,5 +268,261 @@ describe('attachments and small talk', () => {
   it('gives the same answer twice for the same question', () => {
     expect(reply('Who are you?').text).toBe(reply('Who are you?').text);
     expect(CHAT_WELCOME_LINE).toContain('AI-generated');
+  });
+
+  it('answers a compliment like a woman, not like a machine (the studio’s own example)', () => {
+    const answer = reply('you are very beautiful');
+    expect(answer.intent).not.toBe('unknown');
+    // Nothing about capitals, currencies or what she is good at — she blushes and asks something.
+    expect(answer.text.toLowerCase()).not.toContain('capital');
+    expect(answer.text.toLowerCase()).not.toContain('currency');
+    expect(answer.text.toLowerCase()).not.toContain('i will shine');
+    expect(answer.text.split('\n').length).toBeGreaterThan(1);
+    // Warm, in her own words, and with a question of her own at the end.
+    expect(answer.text).toMatch(
+      /thank|blush|pink|smil|charming|insufferable|kind|lovely|pretty|beautiful/i,
+    );
+    expect(answer.text).toMatch(/\?/);
+  });
+
+  it('reads a compliment through spelling mistakes and stretched letters', () => {
+    const straight = reply('you are very beautiful');
+    const typed = reply('u r sooooo beutifull!!');
+    expect(typed.intent).not.toBe('unknown');
+    expect(typed.text).not.toContain('i am not sure i follow you');
+    expect(straight.intent).toBe(typed.intent);
+  });
+
+  it('answers a personal question as herself, never with “it is on the website”', () => {
+    for (const question of [
+      'do you have a boyfriend?',
+      'tell me about your studies',
+      'how did your career start?',
+      'what is your dream?',
+    ]) {
+      const answer = reply(question);
+      expect(answer.intent).toBe('biography');
+      expect(answer.text.toLowerCase()).not.toContain('would rather quote it');
+      expect(answer.text.toLowerCase()).not.toContain('on the website');
+      expect(answer.text).toMatch(/\?/);
+    }
+  });
+
+  it('never repeats the same sentence twice in one conversation', () => {
+    const said = 'achha — you say that very easily. thank you, i have gone a little pink.';
+    const historyHome: AiChatMessage[] = [
+      {
+        id: 'm1',
+        author: 'model',
+        text: said,
+        at: Date.now(),
+        kind: 'message',
+        attachment: null,
+        reaction: null,
+        reactionBy: null,
+        pending: false,
+        revealedChars: said.length,
+        sources: [],
+        intent: 'affection',
+      },
+    ];
+    const answer = composeChatReply({
+      model: alisha,
+      message: message('you are very beautiful'),
+      history: historyHome,
+      session: { strikes: 0, introduced: true },
+      now: new Date('2026-10-13T09:30:00'),
+    });
+    expect(answer.text).not.toContain('you say that very easily');
+  });
+
+  it('asks again instead of listing what she knows when a message makes no sense', () => {
+    const answer = reply('zzz qqq wwww');
+    expect(answer.intent).toBe('unknown');
+    expect(answer.text.toLowerCase()).not.toContain('capital');
+    expect(answer.text.toLowerCase()).not.toContain('currenc');
+    expect(answer.text.toLowerCase()).not.toContain('i do not know that one');
+    expect(answer.text).toMatch(/\?/);
+  });
+
+  it('answers a Romanised message in that language and nowhere else', () => {
+    const answer = composeChatReply({
+      model: alisha,
+      message: message('ami tomake bhalobashi'),
+      history: [],
+      session: { strikes: 0, introduced: true },
+      language: {
+        code: 'bn',
+        label: 'Bengali',
+        english: 'i love you',
+        romanised: true,
+        source: 'books',
+        fresh: true,
+      },
+      now: new Date('2026-10-13T09:30:00'),
+    });
+    expect(answer.intent).toBe('language:bn:affection');
+    expect(answer.text).toMatch(/[A-Za-z]/);
+    expect(answer.text.toLowerCase()).not.toContain('thank you');
+    expect(answer.text).not.toContain('I ');
+  });
+
+  it('introduces herself in the visitor’s language on the first Bengali message', () => {
+    const answer = composeChatReply({
+      model: alisha,
+      message: message('kemon acho?'),
+      history: [],
+      session: { strikes: 0, introduced: false },
+      language: {
+        code: 'bn',
+        label: 'Bengali',
+        english: 'how are you',
+        romanised: true,
+        source: 'books',
+        fresh: true,
+      },
+      now: new Date('2026-10-13T09:30:00'),
+    });
+    expect(answer.intent).toBe('language:bn:intro');
+    expect(answer.introduced).toBe(true);
+    expect(answer.text).toContain('Alisha Bhattacharya');
+  });
+});
+
+describe('the reading comes before the answer (nothing is answered before it is read)', () => {
+  /** The window's own reading, replaced by what the studio's desk made of the same turn. */
+  function reading(overrides: Partial<ChatTurnReading>): ChatTurnReading {
+    return {
+      source: 'studio',
+      provider: 'gemini',
+      english: '',
+      language: '',
+      languageName: '',
+      romanised: false,
+      intent: 'other',
+      sentiment: 'neutral',
+      tone: '',
+      about: '',
+      wants: '',
+      attachment: '',
+      advice: '',
+      ...overrides,
+    };
+  }
+
+  function replyWith(
+    text: string,
+    turnReading: ChatTurnReading,
+    attachment: AiChatMessage['attachment'] = null,
+  ) {
+    return composeChatReply({
+      model: alisha,
+      message: message(text, attachment),
+      history: [],
+      session: { strikes: 0, introduced: true },
+      reading: turnReading,
+      now: new Date('2026-10-13T09:30:00'),
+    });
+  }
+
+  it('answers the meaning the desk found, not the letters that were typed', () => {
+    // The message itself is a compliment a spell-checker would give up on: the desk read it first.
+    const answer = replyWith(
+      'u r sooooooooo beutifull',
+      reading({
+        english: 'You are very beautiful.',
+        intent: 'compliment',
+        sentiment: 'warm',
+      }),
+    );
+
+    expect(answer.text).toMatch(
+      /thank|blush|pink|smil|charming|insufferable|kind|lovely|pretty|beautiful/i,
+    );
+    expect(answer.text).toMatch(/\?/);
+  });
+
+  it('understands a language the studio has no book for, and still answers in English', () => {
+    const answer = replyWith(
+      'shoot panam evlo',
+      reading({
+        english: 'How much do you charge for a shoot?',
+        // A language the studio has no book for: the desk's English is what she answers.
+        language: '',
+        languageName: 'Tamil',
+        romanised: true,
+        intent: 'studio',
+      }),
+    );
+
+    expect(answer.intent).not.toContain('language:');
+    expect(answer.text).toContain('₹');
+  });
+
+  it('reacts to what the desk saw inside the photograph the visitor sent', () => {
+    const answer = replyWith(
+      'here is one of me',
+      reading({
+        english: 'Here is a photograph of me.',
+        intent: 'photo',
+        attachment: 'A man on a beach at sunset, standing in the water, shot from behind.',
+      }),
+      {
+        kind: 'photo',
+        name: 'beach.jpg',
+        type: 'image/jpeg',
+        size: 100,
+        source: 'upload',
+        preview: 'data:image/jpeg;base64,AAAA',
+      },
+    );
+
+    expect(answer.intent).toBe('attachment:photo');
+    expect(answer.text).toContain('beach at sunset');
+    expect(answer.text).toMatch(/\?/);
+  });
+
+  it('answers a document it has actually read, rather than thanking them for the file', () => {
+    const answer = replyWith(
+      'here is the brief',
+      reading({
+        english: 'Here is the brief for the shoot.',
+        intent: 'document',
+        attachment:
+          'A two-page PDF: a creative brief for a beach editorial in Goa, budget ₹40,000.',
+      }),
+      {
+        kind: 'document',
+        name: 'brief.pdf',
+        type: 'application/pdf',
+        size: 900,
+        source: 'file',
+        preview: '',
+        fileData: 'data:application/pdf;base64,JVBERi0xLjQK',
+      },
+    );
+
+    expect(answer.text).toContain('creative brief');
+    expect(answer.text).not.toContain('tell me what is inside it');
+  });
+
+  it('takes the selfie for the word “selfie”, and sends the album for “photos”', () => {
+    const posed = replyWith(
+      'send me a selfie',
+      reading({ english: 'Send me a selfie.', intent: 'selfie' }),
+    );
+    expect(posed.selfie).toBe(true);
+    expect(posed.selfieMoment?.place.length).toBeGreaterThan(5);
+    expect(posed.selfieMoment?.flaw.length).toBeGreaterThan(5);
+    // The caption says where and how it was taken, in the same moment.
+    expect(posed.text).toContain(posed.selfieMoment!.place);
+    expect(posed.text).toContain(posed.selfieMoment!.flaw);
+
+    const album = replyWith(
+      'can I see your photos?',
+      reading({ english: 'Show me your photos.', intent: 'selfie' }),
+    );
+    expect(album.selfie).toBe(true);
+    expect(album.selfieMoment).toBeUndefined();
   });
 });

@@ -60,6 +60,180 @@ describe('AiModelChatService', () => {
     sessionStorage.clear();
   });
 
+  it('answers a Romanised Bengali message in Bengali, and keeps the language (the studio’s example)', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'ami tomake bhalobashi');
+
+    const answer = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.text.length > 0,
+    );
+    const last = answer[answer.length - 1];
+    expect(last?.intent).toContain('language:bn');
+    // Not English: her language is on the session, and the next message stays in it too.
+    expect(last?.text).toMatch(/[A-Za-z]/);
+    expect(last?.text).not.toContain('thank you');
+    expect(chat.session()?.language).toBe('bn');
+
+    await chat.sendMessage(alisha, 'kemon acho?');
+    const again = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.text.length > 0,
+    );
+    expect(again[again.length - 1]?.intent).toContain('language:bn');
+  });
+
+  it('leaves an English conversation in English', async () => {
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'what is your rate for a shoot?');
+    expect(chat.session()?.language).toBe('');
+    const answer = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.text.length > 0,
+    );
+    expect(answer[answer.length - 1]?.intent).not.toContain('language:');
+  });
+
+  it('reads the turn before she answers it, and answers what the desk found', async () => {
+    const readBodies: Record<string, unknown>[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url === '/api/ai-read') {
+          readBodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              provider: 'gemini',
+              reading: {
+                english: 'You are very beautiful, and I wanted you to know it.',
+                language: 'en',
+                languageName: 'English',
+                romanised: false,
+                intent: 'compliment',
+                sentiment: 'warm',
+                tone: 'short and shy',
+                about: 'a compliment about her looks',
+                wants: 'something kind back',
+                attachment: '',
+                advice: 'Blush, tease him a little, and ask him about his day.',
+                provider: 'gemini',
+              },
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        // The studio's answer endpoint is not configured: her own engine writes the answer.
+        return new Response(JSON.stringify({ ok: false, error: 'ai-unavailable' }), {
+          status: 503,
+        });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'u r sooooooooo beutifull');
+
+    // The turn was read first: her card, the visitor, and the message itself travelled to the desk.
+    expect(readBodies.length).toBe(1);
+    expect(String((readBodies[0]['model'] as Record<string, unknown>)['name'])).toContain('Alisha');
+    expect((readBodies[0]['user'] as Record<string, unknown>)['firstName']).toBe('Rahul');
+    expect(String(readBodies[0]['text'])).toBe('u r sooooooooo beutifull');
+
+    // …and the answer is the one for what the visitor means, not for the letters they typed.
+    const model = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.kind === 'message',
+    );
+    const last = model[model.length - 1];
+    expect(last?.text).toMatch(/thank|blush|pink|smil|charming|insufferable|kind|lovely|pink/i);
+    expect(last?.text).toMatch(/\?/);
+    // Who read the visitor's message is part of the transcript.
+    expect(last?.analysedBy).toBe('gemini');
+  });
+
+  it('takes the selfie with her own photograph when the visitor asks for a selfie', async () => {
+    const selfieBodies: Record<string, unknown>[] = [];
+    const cover = alisha.cover;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url === '/api/ai-read') {
+          return new Response(JSON.stringify({ ok: false, error: 'analysis-unavailable' }), {
+            status: 503,
+          });
+        }
+        if (url === '/api/ai-selfie') {
+          selfieBodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
+          return new Response(
+            JSON.stringify({ ok: true, provider: 'gemini', image: 'data:image/png;base64,QUJD' }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        // Her own profile photograph, from this site's own origin.
+        expect(url).toBe(cover);
+        return new Response('her-photograph', {
+          status: 200,
+          headers: { 'content-type': 'image/jpeg' },
+        });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'send me a selfie please');
+
+    const messages = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.attachment?.selfie === true,
+    );
+    const selfie = messages[messages.length - 1];
+    // The photograph the visitor sees is the one her camera took, not a frame from her album.
+    expect(selfie?.attachment?.preview).toBe('data:image/png;base64,QUJD');
+    expect(selfie?.attachment?.source).toBe('camera');
+    expect(selfie?.intent).toBe('selfie');
+
+    // Her camera was given her own photograph as the likeness, and the moment she is in.
+    expect(selfieBodies.length).toBe(1);
+    expect(String(selfieBodies[0]['reference'])).toMatch(/^data:image\/jpeg;base64,/);
+    expect(
+      String((selfieBodies[0]['moment'] as Record<string, unknown>)['place']).length,
+    ).toBeGreaterThan(5);
+    expect(String(selfieBodies[0]['look'])).toContain(alisha.age);
+    // The caption says where and how it was taken — the same moment the photograph was taken in.
+    expect(selfie?.text).toContain(
+      String((selfieBodies[0]['moment'] as Record<string, unknown>)['place']),
+    );
+  });
+
+  it('sends one of her own album frames instead when the studio has no camera', async () => {
+    withoutStudioAi();
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'send me a selfie right now');
+
+    const messages = (chat.session()?.messages ?? []).filter(
+      (message) => message.author === 'model' && message.attachment?.selfie === true,
+    );
+    const selfie = messages[messages.length - 1];
+    expect(alisha.photos.map((photo) => photo.src)).toContain(selfie?.attachment?.preview);
+  });
+
+  it('welcomes the same visitor differently in every session', async () => {
+    const first = service();
+    open(first);
+    const monday = transcript(first);
+
+    sessionStorage.clear();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+
+    const second = service();
+    open(second);
+    const tuesday = transcript(second);
+
+    expect(monday).toContain('Rahul');
+    expect(tuesday).toContain('Rahul');
+    expect(monday).not.toBe(tuesday);
+  });
+
   it('counts the two hours down in the top-right corner format', () => {
     expect(formatRemaining(7_200_000)).toBe('02:00:00');
     expect(formatRemaining(3_599_000)).toBe('59:59');

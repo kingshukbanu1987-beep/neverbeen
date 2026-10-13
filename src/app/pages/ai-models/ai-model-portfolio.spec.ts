@@ -182,7 +182,7 @@ describe('AiModelPortfolioPage', () => {
       const chat = element.querySelector<HTMLButtonElement>('.action-chat');
       const name = element.querySelector<HTMLElement>('#portfolio-title');
       expect(chat?.textContent?.trim()).toBe('Live Chat');
-      // E — two and a half times the studio's standard button, with its own quiet animation.
+      // E — a quiet pill 1.7× smaller than the button it was, with its own restrained animation.
       expect(chat?.classList.contains('is-hero')).toBe(true);
 
       // It stands directly under the model's name, and no longer down among the action buttons.

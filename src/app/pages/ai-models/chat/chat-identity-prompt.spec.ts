@@ -13,6 +13,7 @@ interface Harness {
   fixture: ComponentFixture<ChatIdentityPrompt>;
   element: HTMLElement;
   confirmed: ChatIdentity[];
+  cancelled: number[];
 }
 
 async function form(): Promise<Harness> {
@@ -20,8 +21,10 @@ async function form(): Promise<Harness> {
   fixture.componentRef.setInput('model', alisha);
   fixture.detectChanges();
   const confirmed: ChatIdentity[] = [];
+  const cancelled: number[] = [];
   fixture.componentInstance.confirmed.subscribe((identity) => confirmed.push(identity));
-  return { fixture, element: fixture.nativeElement as HTMLElement, confirmed };
+  fixture.componentInstance.cancelled.subscribe(() => cancelled.push(1));
+  return { fixture, element: fixture.nativeElement as HTMLElement, confirmed, cancelled };
 }
 
 function typeName(harness: Harness, name: string): void {
@@ -50,6 +53,23 @@ function start(harness: Harness): HTMLButtonElement {
 describe('ChatIdentityPrompt', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [ChatIdentityPrompt] }).compileComponents();
+  });
+
+  it('has a ✕ that closes the form without confirming anything', async () => {
+    const harness = await form();
+    const close = harness.element.querySelector<HTMLButtonElement>('.gate-close');
+    expect(close?.getAttribute('aria-label')).toBe('Close the chat');
+    close?.click();
+    harness.fixture.detectChanges();
+    expect(harness.cancelled.length).toBe(1);
+    expect(harness.confirmed.length).toBe(0);
+  });
+
+  it('asks for the name with the words “Write your name here”, never another woman’s name', async () => {
+    const harness = await form();
+    const input = harness.element.querySelector<HTMLInputElement>('.gate-field input')!;
+    expect(input.getAttribute('placeholder')).toBe('Write your name here');
+    expect(input.getAttribute('placeholder')).not.toBe('Alisha');
   });
 
   it('asks for a photograph and a name before the chat window will start (requirement A)', async () => {

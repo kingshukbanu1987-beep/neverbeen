@@ -156,10 +156,12 @@ by an upload is renamed in place.
 ### Chatting with a model
 
 A green **Live Chat** button (white text, `#74C476`) stands **directly under the model's name** in
-every model profile, at two and a half times the size of the studio's standard button — a slow
-breathing glow, a band of light crossing it every few seconds and a small lift on hover, all of it
-switched off for `prefers-reduced-motion`. The same button sits in the `.card-actions` row of every
-card on the `/ai-models` directory. It opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
+every model profile — a quiet pill, 1.7× smaller than the two-and-a-half-times button of the first
+brief, with a slow breathing glow, a band of light crossing it every few seconds and a small lift on
+hover, all of it switched off for `prefers-reduced-motion`. On the `/ai-models` directory the same
+button stands **directly under the name of the model** in every card — no longer in the
+`.card-actions` link row — at 1.5× the studio's standard button, with its own motion: a breathing
+glow, a band of light crossing the pill and a small white dot pulsing beside the words. It opens an Instagram-style chat window on a white page: her round photograph, her name in bold black type,
 her model id in small italic type (`@alisha.bhattacharya`), her city and country, a grey
 **View Profile** button, then straight into the conversation and the composer. Her messages are
 rounded light grey
@@ -169,9 +171,29 @@ attach a photograph (or take one with the camera) or a document, and can react t
 👍 ❤️ 😂 😮 😢 😡 (a double-click is a ❤️) — and she reacts back on the visitor's own message with
 what the message deserves.
 
-Before any of that, a glass form asks who she is talking to: a name of three to fourteen characters
-(checked as it is typed) and one photograph — uploaded or taken with the front camera and reduced to
-about 100 KB automatically. From then on her photograph stands, circular, beside every answer and the
+On a laptop or a tablet held sideways the window opens landscape and wide (`min(1240px, 95vw)`), with
+her photograph, her name, her city and country and **View Profile** moved into a side panel on the
+left, and the conversation alone on the right; on a phone it is the same portrait column as before.
+
+**Nothing is answered before it has been read.** Every message — the words, a photograph, a document —
+goes through a reading first: her own engine repairs what people actually type (stretched letters,
+missing apostrophes, thumb-shortened forms like `u`, `ur`, `pls`, `thnx`, and spelling mistakes one
+letter away from what was meant), and when the studio has the keys the message is read properly on the
+server by **Google Translate** and then by **Google Gemini** or **OpenAI** (`POST /api/ai-read`) —
+what the visitor meant in plain English, the language they wrote in, and what a photograph shows or a
+document contains (a PDF brief is read, not thanked for). *"u r sooooo beutifull!!"* is answered as
+the compliment it is, warmly and in her own country's words, and never with a list of what she can do.
+Visitors who write their own language in Latin letters (Romanised Bengali, Hindi, Urdu, Persian,
+Arabic, Turkish, Spanish, Malay) are understood through her own phrase books and through Google
+Translate — and **she answers in that same Romanised language and keeps answering in it** for the rest
+of the session. Personal questions about her life are answered in the first person, with feeling and a
+question back. If none of those keys is configured the window reads the message itself and the chat
+behaves exactly as it did before — the conversation never depends on a key.
+
+Before any of that, a glass form asks who she is talking to — it has its own **✕** in the corner — a
+name of three to fourteen characters (checked as it is typed, asked for with the words "Write your
+name here") and one photograph — uploaded or taken with the front camera and reduced to about 100 KB
+automatically. From then on her photograph stands, circular, beside every answer and the
 visitor's beside their own messages; she uses their **first name** and opens the conversation herself.
 Her answers are never printed out for the visitor: the window shows her name and **typing** for as
 long as a person needs to type that many characters (about 34 ms a character, never under two and a
@@ -182,8 +204,12 @@ and comes back before the message lands. A long answer arrives as two, three or 
 messages**, two to four seconds apart, each one typed in front of the visitor. She talks the way a
 woman of her own age and country talks (an Indian of 25 does not sound like an Iranian of 40),
 reads the visitor's humour and emoji as the session goes on and settles into their way of writing. A
-selfie request brings back one of her own frames as a phone photograph — the room behind her, the bad
-light, the flaw she admits to — a picture the visitor sends is looked at and answered in words, a
+selfie request makes her **take** one: her own profile photograph goes to Google Gemini's image model
+in the studio's own `/api/ai-selfie`, and the picture that comes back is a new selfie of her in the
+moment she says she is in — the room behind her, the bad light, the flaw she admits to — dressed as a
+phone photograph. (Asking for her *photos* gets a frame from her album, and without a Gemini key the
+album answers a selfie too, so a visitor who asks for a photograph always gets one.) A picture the
+visitor sends is looked at and answered in words, a
 video request is refused with the Founder's own wording, and once the chat has warmed up she asks for
 work herself: a brand promotion or an editorial set, priced from her card. When the visitor goes quiet
 for ten to twenty seconds she keeps the conversation going on her own — about her, about them, about
@@ -202,7 +228,11 @@ The opening of a session is her introduction, and it is not one paragraph. Three
 after the form is filled in she sends **four or five messages**, two to four seconds apart, each one
 typed in front of the visitor, and they are written for her own age and country: a woman of 23 in
 Shiraz and a woman of 30 in Sarajevo do not open the same conversation, and neither do an Indian of 25
-and an Iranian of 25 — in the introduction, or in any answer that follows it. The first message
+and an Iranian of 25 — in the introduction, or in any answer that follows it. **No two welcomes are
+the same**: the words are seeded by the moment the visitor's form was filled in, so the same model
+opens the same chat differently every time — a different hello, a different way of saying who she is,
+a different line about her age, a different shape for home (sometimes with her own album's count in
+it), and a different question back. The first message
 carries the visitor's name, the second the good-morning/good-afternoon/good-evening greeting for their
 clock, her full name, her model id, her city and country and her age, and with them the plain
 statement that everything of her lives inside the NeverBeen Multiverse and nowhere else — said in her
@@ -219,12 +249,15 @@ the two hours are up and the window closes.
 Questions from outside NeverBeen — "what is the capital of India?" — are answered by the live
 endpoint `POST /api/ai-chat` (`worker/ai-chat-core.mjs`): with an `OPENAI_API_KEY` the answer streams
 from OpenAI and, when `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_CX` are set too, the question is
-searched on Google first and the top links are shown under her answer. Without those secrets the
-endpoint answers `503 ai-unavailable` and the window answers from her own engine and a built-in world
-file instead, so the chat always works. The three values are Worker secrets, `OPENAI_MODEL` picks the
-model (`gpt-4o-mini` by default), and locally the same endpoint runs from `scripts/dev-api.mjs` on
-port 8787 behind the `/api` dev proxy. Full notes and the requirements-to-code map:
-[`docs/ai-model-chat.md`](docs/ai-model-chat.md).
+searched on Google first and the top links are shown under her answer. The same request carries the
+reading of the visitor's message, so the studio's model answers what they meant rather than what they
+typed. Without a key the endpoint answers `503 ai-unavailable` and the window answers from her own
+engine and a built-in world file instead, so the chat always works. `GEMINI_API_KEY` adds the reading
+desk and her camera, `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the Cloud Translation API, and
+`OPENAI_MODEL`, `GEMINI_MODEL` and `GEMINI_IMAGE_MODEL` pick the models (`gpt-4o-mini`,
+`gemini-2.5-flash`, `gemini-2.5-flash-image` by default). Locally the same three endpoints run from
+`scripts/dev-api.mjs` on port 8787 behind the `/api` dev proxy. Full notes and the
+requirements-to-code map: [`docs/ai-model-chat.md`](docs/ai-model-chat.md).
 
 ### Renting a model
 
