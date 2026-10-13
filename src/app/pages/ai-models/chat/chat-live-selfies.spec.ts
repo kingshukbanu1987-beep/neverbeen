@@ -24,7 +24,7 @@ describe('livechatselfiesandphotos — the window’s client', () => {
       );
     }) as unknown as typeof fetch;
 
-    const live = await generateLiveChatSelfies({
+    const outcome = await generateLiveChatSelfies({
       model: alisha,
       moment: { place: 'on the terrace', flaw: 'crooked' },
       reference: 'data:image/jpeg;base64,AAAA',
@@ -32,11 +32,13 @@ describe('livechatselfiesandphotos — the window’s client', () => {
       fetchImpl,
     });
 
-    expect(live).not.toBeNull();
-    expect(live!.images).toHaveLength(2);
-    expect(live!.place).toContain('terrace');
-    expect(live!.timestamp).toBe('13/10/2026 18:42');
-    expect(live!.watermark).toBe('Shot on iPhone 18 Pro');
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    const live = outcome.selfies;
+    expect(live.images).toHaveLength(2);
+    expect(live.place).toContain('terrace');
+    expect(live.timestamp).toBe('13/10/2026 18:42');
+    expect(live.watermark).toBe('Shot on iPhone 18 Pro');
 
     // Her likeness, her own clock and the salt of this turn travel with the request.
     expect(bodies).toHaveLength(1);
@@ -48,7 +50,7 @@ describe('livechatselfiesandphotos — the window’s client', () => {
     expect(String(bodies[0]['seed'])).toBe('turn-7');
   });
 
-  it('never asks without her photograph, and ignores an answer with no images', async () => {
+  it('never asks without her photograph, and reports an answer with no images as transient', async () => {
     const fetchImpl = vi.fn(async () => {
       throw new Error('the service must not be called without a photograph');
     }) as unknown as typeof fetch;
@@ -58,7 +60,7 @@ describe('livechatselfiesandphotos — the window’s client', () => {
       reference: '',
       fetchImpl,
     });
-    expect(withoutReference).toBeNull();
+    expect(withoutReference).toEqual({ ok: false, reason: 'no-reference' });
     expect(fetchImpl).not.toHaveBeenCalled();
 
     const wordOnly = vi.fn(
@@ -73,7 +75,51 @@ describe('livechatselfiesandphotos — the window’s client', () => {
       reference: 'data:image/jpeg;base64,AAAA',
       fetchImpl: wordOnly,
     });
-    expect(noImages).toBeNull();
+    // A word-only answer is worth asking again later — not a verdict on the visit.
+    expect(noImages).toEqual({ ok: false, reason: 'transient' });
+  });
+
+  it('says "unavailable" only for the studio’s no-key answer, and "transient" for every other failure', async () => {
+    const answerWith = (status: number, error: string) =>
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ ok: false, error }), {
+            status,
+            headers: { 'content-type': 'application/json' },
+          }),
+      ) as unknown as typeof fetch;
+
+    // The studio has no image key: definitive — both cameras read that one key.
+    const unconfigured = await generateLiveChatSelfies({
+      model: alisha,
+      reference: 'data:image/jpeg;base64,AAAA',
+      fetchImpl: answerWith(503, 'selfies-unavailable'),
+    });
+    expect(unconfigured).toEqual({ ok: false, reason: 'unavailable' });
+
+    // A throttle, an upstream failure or a refusal: the service is asked again soon.
+    for (const [status, error] of [
+      [429, 'too-many-requests'],
+      [502, 'selfies-failed'],
+      [502, 'selfies-refused'],
+    ] as const) {
+      const failed = await generateLiveChatSelfies({
+        model: alisha,
+        reference: 'data:image/jpeg;base64,AAAA',
+        fetchImpl: answerWith(status, error),
+      });
+      expect(failed).toEqual({ ok: false, reason: 'transient' });
+    }
+
+    // The network itself breaking is transient too.
+    const offline = await generateLiveChatSelfies({
+      model: alisha,
+      reference: 'data:image/jpeg;base64,AAAA',
+      fetchImpl: vi.fn(async () => {
+        throw new Error('offline');
+      }) as unknown as typeof fetch,
+    });
+    expect(offline).toEqual({ ok: false, reason: 'transient' });
   });
 
   it('drops anything in the answer that is not a data-URL photograph', async () => {
@@ -93,11 +139,16 @@ describe('livechatselfiesandphotos — the window’s client', () => {
         ),
     ) as unknown as typeof fetch;
 
-    const live = await generateLiveChatSelfies({
+    const outcome = await generateLiveChatSelfies({
       model: alisha,
       reference: 'data:image/jpeg;base64,AAAA',
       fetchImpl,
     });
-    expect(live!.images).toEqual(['data:image/png;base64,QUJD', 'data:image/png;base64,QUJDMA==']);
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.selfies.images).toEqual([
+      'data:image/png;base64,QUJD',
+      'data:image/png;base64,QUJDMA==',
+    ]);
   });
 });

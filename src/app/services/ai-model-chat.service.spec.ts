@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { aiModelProfiles } from '../pages/ai-models/ai-model-data';
 import { ChatIdentity } from '../pages/ai-models/chat/chat-identity';
 import {
+  SELFIE_CAMERA_TRANSIENT_RETRY_MS,
+  SELFIE_CAMERA_UNAVAILABLE_RETRY_MS,
+} from '../pages/ai-models/chat/chat-selfie';
+import {
   AI_CHAT_FEEDBACK_COMMENT_LIMIT,
   AI_CHAT_FOLLOWUP_LIMIT,
   AI_CHAT_INTEREST_MS,
@@ -341,6 +345,209 @@ describe('AiModelChatService', () => {
     const after = sessionStorage.getItem(AI_CHAT_STORAGE_KEY) ?? '';
     expect(after).not.toContain('LIVEONE');
     expect(after).not.toContain('LIVETWO');
+  });
+
+  it('asks the live service again once a transient failure has rested — one hiccup never decides the visit', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-13T12:00:00Z'));
+
+    let liveFails = true;
+    let liveCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/ai-read') {
+          return new Response(JSON.stringify({ ok: false, error: 'analysis-unavailable' }), {
+            status: 503,
+          });
+        }
+        if (url === '/api/livechatselfiesandphotos') {
+          liveCalls += 1;
+          return liveFails
+            ? new Response(JSON.stringify({ ok: false, error: 'selfies-failed' }), { status: 502 })
+            : new Response(
+                JSON.stringify({
+                  ok: true,
+                  provider: 'gemini',
+                  images: ['data:image/png;base64,LIVEONE', 'data:image/png;base64,LIVETWO'],
+                  place: 'on the roof, it is almost dark already',
+                  flaw: 'grainy, my phone is old',
+                }),
+                { status: 200, headers: { 'content-type': 'application/json' } },
+              );
+        }
+        if (url === '/api/ai-selfie') {
+          return new Response(JSON.stringify({ ok: false, error: 'selfie-failed' }), {
+            status: 502,
+          });
+        }
+        return new Response('her-photograph', {
+          status: 200,
+          headers: { 'content-type': 'image/jpeg' },
+        });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+
+    // The service hiccuped: an album frame went out, the way the fallback promises.
+    await chat.sendMessage(alisha, 'send me a selfie');
+    expect(liveCalls).toBe(1);
+    const first = (chat.session()?.messages ?? [])
+      .filter((message) => message.author === 'model' && message.attachment?.selfie === true)
+      .at(-1)!;
+    expect(alisha.photos.map((photo) => photo.src)).toContain(first.attachment?.preview);
+
+    // While the camera rests the service is not hammered — the album answers.
+    await chat.sendMessage(alisha, 'another selfie please');
+    expect(liveCalls).toBe(1);
+
+    // …but the moment the short rest is over the service is asked again — and now it answers,
+    // with the two generated photographs. The old latch would have sent album frames forever.
+    liveFails = false;
+    await vi.advanceTimersByTimeAsync(SELFIE_CAMERA_TRANSIENT_RETRY_MS + 1_000);
+    await chat.sendMessage(alisha, 'one more selfie');
+    expect(liveCalls).toBe(2);
+    const generated = (chat.session()?.messages ?? []).filter(
+      (message) => message.attachment?.ephemeral === true,
+    );
+    expect(generated).toHaveLength(2);
+    expect(generated[0].attachment?.preview).toBe('data:image/png;base64,LIVEONE');
+    expect(generated[1].attachment?.preview).toBe('data:image/png;base64,LIVETWO');
+    expect(chat.selfieCameraUnavailable()).toBe(false);
+  });
+
+  it('rests both cameras on the studio’s "no image key", without asking the second one to fail the same way', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-13T12:00:00Z'));
+
+    let liveCalls = 0;
+    let oldCameraCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/ai-read') {
+          return new Response(JSON.stringify({ ok: false, error: 'analysis-unavailable' }), {
+            status: 503,
+          });
+        }
+        if (url === '/api/livechatselfiesandphotos') {
+          liveCalls += 1;
+          return new Response(JSON.stringify({ ok: false, error: 'selfies-unavailable' }), {
+            status: 503,
+          });
+        }
+        if (url === '/api/ai-selfie') {
+          oldCameraCalls += 1;
+          return new Response(JSON.stringify({ ok: false, error: 'selfie-unavailable' }), {
+            status: 503,
+          });
+        }
+        return new Response('her-photograph', {
+          status: 200,
+          headers: { 'content-type': 'image/jpeg' },
+        });
+      }),
+    );
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const chat = service();
+      open(chat);
+
+      await chat.sendMessage(alisha, 'send me a selfie');
+      // `503` is definitive — both cameras read the one key, so the old camera is not asked
+      // just to fail the same way, and the album frame goes out.
+      expect(liveCalls).toBe(1);
+      expect(oldCameraCalls).toBe(0);
+      expect(chat.selfieCameraUnavailable()).toBe(true);
+      const sent = (chat.session()?.messages ?? [])
+        .filter((message) => message.author === 'model' && message.attachment?.selfie === true)
+        .at(-1)!;
+      expect(alisha.photos.map((photo) => photo.src)).toContain(sent.attachment?.preview);
+      // The studio can see why: the missing key is said out loud, once.
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('GEMINI_API_KEY'));
+
+      // While they rest, no camera is asked at all — the album answers on its own.
+      await chat.sendMessage(alisha, 'selfie again');
+      expect(liveCalls).toBe(1);
+      expect(oldCameraCalls).toBe(0);
+
+      // A key configured mid-visit is picked up once the long rest is over — no page reload.
+      // She says goodbye after three quiet minutes, so the visitor keeps the visit alive with
+      // small talk while the clock moves through the rest.
+      for (let passed = 0; passed < SELFIE_CAMERA_UNAVAILABLE_RETRY_MS; passed += 120_000) {
+        await vi.advanceTimersByTimeAsync(120_000);
+        await chat.sendMessage(alisha, 'still there?');
+      }
+      await vi.advanceTimersByTimeAsync(1_000);
+      await chat.sendMessage(alisha, 'selfie now');
+      expect(liveCalls).toBe(2);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('never lets one unreadable cover photograph switch the visit over to album frames', async () => {
+    let coverFails = true;
+    let liveCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url === '/api/ai-read') {
+          return new Response(JSON.stringify({ ok: false, error: 'analysis-unavailable' }), {
+            status: 503,
+          });
+        }
+        if (url === '/api/livechatselfiesandphotos') {
+          liveCalls += 1;
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              provider: 'gemini',
+              images: ['data:image/png;base64,LIVEONE', 'data:image/png;base64,LIVETWO'],
+              place: 'by the window with the curtain half closed',
+              flaw: 'half of my face is in shadow',
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        if (url === '/api/ai-selfie') {
+          return new Response(JSON.stringify({ ok: false, error: 'selfie-unavailable' }), {
+            status: 503,
+          });
+        }
+        // Her cover: a fetch that fails once — a blip, not a verdict on the cameras.
+        return coverFails
+          ? new Response('gone', { status: 500 })
+          : new Response('her-photograph', {
+              status: 200,
+              headers: { 'content-type': 'image/jpeg' },
+            });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+
+    await chat.sendMessage(alisha, 'send me a selfie');
+    // The likeness could not be read: the album frame goes out…
+    expect(liveCalls).toBe(0);
+    const first = (chat.session()?.messages ?? [])
+      .filter((message) => message.author === 'model' && message.attachment?.selfie === true)
+      .at(-1)!;
+    expect(alisha.photos.map((photo) => photo.src)).toContain(first.attachment?.preview);
+
+    // …and the very next request tries the service again — the cameras were never latched off.
+    coverFails = false;
+    await chat.sendMessage(alisha, 'try the selfie again');
+    expect(liveCalls).toBe(1);
+    const generated = (chat.session()?.messages ?? []).filter(
+      (message) => message.attachment?.ephemeral === true,
+    );
+    expect(generated).toHaveLength(2);
+    expect(chat.selfieCameraUnavailable()).toBe(false);
   });
 
   it('asks “a photo, or a current selfie?” and sends whichever the visitor chooses', async () => {

@@ -10,10 +10,14 @@
     // Base URL of the NeverBeen Web API. Change it when the API moves to another host.
     "NEVERBEEN_API_URL": "https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net",
     // Gemini key for Live Chat: the reading desk, her camera and the live-chat selfie service.
+    // (A long-lived key belongs in `npx wrangler secret put GEMINI_API_KEY` rather than here —
+    // this file is committed.)
     "GEMINI_API_KEY": "AQ.Ab8RN6KiXIBawUzfmF835eRQthsCJZDxJeaoWSA5SCUbk3jLWw",
-    // Live Chat runs on gemini-2.5-flash — the reading and the live selfies both use it.
+    // The reading desk runs on gemini-2.5-flash. The two cameras need an **image-generation**
+    // model: plain gemini-2.5-flash cannot answer responseModalities:["IMAGE"], and pinning the
+    // cameras to it fails every selfie into the album fallback.
     "GEMINI_MODEL": "gemini-2.5-flash",
-    "GEMINI_IMAGE_MODEL": "gemini-2.5-flash",
+    "GEMINI_IMAGE_MODEL": "gemini-2.5-flash-image",
   },
   "assets": {
     "directory": "./dist/neverbeen/browser",

@@ -80,16 +80,17 @@ describe('her camera (she takes the selfie now)', () => {
     }) as unknown as typeof fetch;
 
     const moment = pickSelfieMoment('alisha|selfie');
-    const taken = await generateChatSelfie({
+    const outcome = await generateChatSelfie({
       model: alisha,
       moment,
       reference: 'data:image/jpeg;base64,AAAA',
       fetchImpl,
     });
 
-    expect(taken).not.toBeNull();
-    expect(taken!.image).toBe('data:image/png;base64,QUJD');
-    expect(taken!.provider).toBe('gemini');
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.selfie.image).toBe('data:image/png;base64,QUJD');
+    expect(outcome.selfie.provider).toBe('gemini');
     // Her card, the moment she is in, and the likeness the photograph is taken from.
     expect((bodies[0]['moment'] as Record<string, unknown>)['place']).toBe(moment.place);
     expect((bodies[0]['moment'] as Record<string, unknown>)['flaw']).toBe(moment.flaw);
@@ -108,7 +109,7 @@ describe('her camera (she takes the selfie now)', () => {
       reference: '',
       fetchImpl,
     });
-    expect(withoutReference).toBeNull();
+    expect(withoutReference).toEqual({ ok: false, reason: 'no-reference' });
     expect(fetchImpl).not.toHaveBeenCalled();
 
     const words = vi.fn(
@@ -124,7 +125,8 @@ describe('her camera (she takes the selfie now)', () => {
       reference: 'data:image/jpeg;base64,AAAA',
       fetchImpl: words,
     });
-    expect(notAPicture).toBeNull();
+    // Words instead of a picture are worth asking again later — not a verdict on the visit.
+    expect(notAPicture).toEqual({ ok: false, reason: 'transient' });
   });
 
   it('falls back to her album when the studio has no camera at all', async () => {
@@ -136,16 +138,37 @@ describe('her camera (she takes the selfie now)', () => {
         }),
     ) as unknown as typeof fetch;
 
-    const taken = await generateChatSelfie({
+    const outcome = await generateChatSelfie({
       model: alisha,
       moment: pickSelfieMoment('alisha|selfie'),
       reference: 'data:image/jpeg;base64,AAAA',
       fetchImpl: refused,
     });
 
-    expect(taken).toBeNull();
+    // `503` is the studio saying "no image key" — definitive, and named as such so the window
+    // rests both cameras instead of asking the other one just to fail the same way.
+    expect(outcome).toEqual({ ok: false, reason: 'unavailable' });
     // …and the frame she sends is still one of her own, so a visitor who asks always gets one.
     expect(pickChatSelfie(alisha, 'alisha|selfie')).not.toBeNull();
+  });
+
+  it('reports a failing or throttled camera as transient, worth asking again soon', async () => {
+    for (const status of [429, 500, 502]) {
+      const failing = vi.fn(
+        async () =>
+          new Response(JSON.stringify({ ok: false, error: 'selfie-failed' }), {
+            status,
+            headers: { 'content-type': 'application/json' },
+          }),
+      ) as unknown as typeof fetch;
+      const outcome = await generateChatSelfie({
+        model: alisha,
+        moment: pickSelfieMoment('alisha|selfie'),
+        reference: 'data:image/jpeg;base64,AAAA',
+        fetchImpl: failing,
+      });
+      expect(outcome).toEqual({ ok: false, reason: 'transient' });
+    }
   });
 
   it('takes the likeness from her profile card, and describes only her age and her city', () => {

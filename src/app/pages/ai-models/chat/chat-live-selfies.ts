@@ -11,16 +11,26 @@
  * The photographs come back as `data:` URLs and are never uploaded anywhere else: they live only
  * in the browser, are flagged `ephemeral` on their bubbles, and are dropped from the transcript
  * the moment the chat session ends.
+ *
+ * A failure is reported as a **reason**, not as a verdict on the whole session: `unavailable`
+ * (the studio has no image key — definitive, and her old camera reads the same key, so it is not
+ * asked either) or `transient` (a timeout, a throttle, a network blip, a refusal — worth asking
+ * again shortly). The chat service turns those reasons into short, per-camera cooldowns, so one
+ * failed request never decides the rest of the visit.
  */
 import { AiModelProfile } from '../ai-model-data';
-import { selfieLook } from './chat-selfie';
+import { ChatSelfieFailure, selfieLook } from './chat-selfie';
 import { timeZoneForPlace } from './chat-world';
 
 /** Where the window asks for the two live photographs. */
 export const LIVE_CHAT_SELFIES_ENDPOINT = '/api/livechatselfiesandphotos';
 
-/** How long the service is given before the window falls back to her album. */
-export const LIVE_CHAT_SELFIES_TIMEOUT_MS = 45_000;
+/**
+ * How long the service is given before the window falls back to her album. Two photographs are
+ * generated in parallel, and an image model under load can take a while — the budget is wide
+ * enough that a slow answer still arrives instead of being cut down into a fallback.
+ */
+export const LIVE_CHAT_SELFIES_TIMEOUT_MS = 60_000;
 
 export interface GeneratedLiveChatSelfies {
   /** The two photographs, as data URLs — same outfit and ambience, different poses. */
@@ -35,11 +45,16 @@ export interface GeneratedLiveChatSelfies {
   watermark: string;
 }
 
+/** Either the two photographs, or the reason there are none — never a bare, unexplained `null`. */
+export type LiveChatSelfiesOutcome =
+  | { ok: true; selfies: GeneratedLiveChatSelfies }
+  | { ok: false; reason: ChatSelfieFailure };
+
 /**
- * Asks the service for two fresh photographs of the model. Returns `null` — so the chat sends one
- * of her own album frames instead, and a visitor who asked always gets a photograph — when the
- * studio has no image key, the service is unreachable, or it answers with words instead of
- * pictures.
+ * Asks the service for two fresh photographs of the model. The answer carries **why** when there
+ * are no photographs — so the chat can rest the right camera for the right length of time, send
+ * one of her own album frames for now, and try the service again on a later request: a visitor
+ * who asks always gets a photograph, and a single failed request never decides the session.
  */
 export async function generateLiveChatSelfies(input: {
   model: AiModelProfile;
@@ -50,9 +65,11 @@ export async function generateLiveChatSelfies(input: {
   /** Salt for the setting and poses, so one session never photographs her the same way twice. */
   seed?: string;
   fetchImpl?: typeof fetch | null;
-}): Promise<GeneratedLiveChatSelfies | null> {
+}): Promise<LiveChatSelfiesOutcome> {
   const fetchImpl = input.fetchImpl ?? (typeof fetch === 'function' ? fetch : null);
-  if (!fetchImpl || !input.reference.startsWith('data:image/')) return null;
+  if (!fetchImpl || !input.reference.startsWith('data:image/')) {
+    return { ok: false, reason: 'no-reference' };
+  }
 
   const controller = typeof AbortController === 'function' ? new AbortController() : null;
   const timeout = controller
@@ -84,7 +101,12 @@ export async function generateLiveChatSelfies(input: {
       }),
       signal: controller?.signal,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      // `503 selfies-unavailable` is the studio saying "no image key" — definitive, and her old
+      // camera reads the same key. Everything else (a throttle, a timeout, an upstream failure,
+      // a refusal) is transient: the service is asked again on a later request.
+      return { ok: false, reason: response.status === 503 ? 'unavailable' : 'transient' };
+    }
 
     const payload = (await response.json()) as {
       images?: unknown;
@@ -98,17 +120,20 @@ export async function generateLiveChatSelfies(input: {
           (image): image is string => typeof image === 'string' && image.startsWith('data:image/'),
         )
       : [];
-    if (images.length === 0) return null;
+    if (images.length === 0) return { ok: false, reason: 'transient' };
 
     return {
-      images,
-      place: typeof payload?.place === 'string' && payload.place ? payload.place : '',
-      flaw: typeof payload?.flaw === 'string' && payload.flaw ? payload.flaw : '',
-      timestamp: typeof payload?.timestamp === 'string' ? payload.timestamp : '',
-      watermark: typeof payload?.watermark === 'string' ? payload.watermark : '',
+      ok: true,
+      selfies: {
+        images,
+        place: typeof payload?.place === 'string' && payload.place ? payload.place : '',
+        flaw: typeof payload?.flaw === 'string' && payload.flaw ? payload.flaw : '',
+        timestamp: typeof payload?.timestamp === 'string' ? payload.timestamp : '',
+        watermark: typeof payload?.watermark === 'string' ? payload.watermark : '',
+      },
     };
   } catch {
-    return null;
+    return { ok: false, reason: 'transient' };
   } finally {
     if (timeout !== null) clearTimeout(timeout);
   }

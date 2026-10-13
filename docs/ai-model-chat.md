@@ -381,7 +381,9 @@ and the picture that comes back is what the visitor sees. Asking for her **photo
 like a phone photograph (`.chat-bubble.is-selfie`: portrait crop, a one-degree tilt, grain and a
 soft-light wash, a `just now` tag) and `selfieCaption()` writes the caption a person would send with
 it. With no `GEMINI_API_KEY` — or when the image model refuses — the album frame goes out instead: a
-visitor who asks for a photograph always gets one.
+visitor who asks for a photograph always gets one. The refusal rests the camera only briefly (see
+*The selfie she takes now* below), so the very next selfie request after the rest tries the service
+again — one failed request never switches the visit over to album frames.
 
 A picture the visitor sends is read first: `chat-photo.ts` draws it into a 96-pixel canvas and turns
 the pixels into facts — orientation, brightness, saturation, warmth, dominant colour and the share of
@@ -619,11 +621,21 @@ with the picture as base64 — which is returned as `{ ok: true, provider: "gemi
 and shown in a selfie bubble. Nothing is stored, and no visitor photograph is ever part of it: the
 likeness is the model's own card.
 
-Three refusals are all handled the same way: no key (`503 selfie-unavailable`), the model answering
-with words instead of a picture (`502 selfie-refused`), or the camera being unreachable
-(`502 selfie-failed`). In every case `selfieCameraUnavailable` is set and an album frame goes out
-instead, so nobody asking for a photograph is left with an empty bubble. The endpoint has its own,
-tighter throttle (12 requests a minute) because an image is the most expensive request on the site.
+Three refusals all send an album frame instead, so nobody asking for a photograph is left with an
+empty bubble — but they are not all the same refusal, and the window now treats them differently.
+`generateChatSelfie` answers `{ ok: false, reason }`: `unavailable` for the studio's "no image key"
+(`503 selfie-unavailable`), `transient` for the model answering with words instead of a picture
+(`502 selfie-refused`), the camera being unreachable (`502 selfie-failed`), a throttle or a timeout.
+The service turns the reason into a **rest**, not a verdict: a `transient` failure rests that one
+camera for `SELFIE_CAMERA_TRANSIENT_RETRY_MS` (30 s), an `unavailable` answer rests **both** cameras
+for `SELFIE_CAMERA_UNAVAILABLE_RETRY_MS` (10 min) — they read the one `GEMINI_API_KEY`, so asking
+the other right after would only waste a round trip — and a failure to read her cover photograph
+(`no-reference`) rests nothing at all, because that was her album failing to load, not a camera.
+While a camera rests, the album answers; the moment the rest is over, the next selfie request tries
+the service again, and `selfieCameraUnavailable` is true only while both cameras are resting. A
+single hiccup — a timeout, a `429` from the throttle, one bad minute at the image provider — never
+switches the rest of the visit over to frames from her folder. The endpoint has its own, tighter
+throttle (12 requests a minute) because an image is the most expensive request on the site.
 
 ## The live selfies: `livechatselfiesandphotos`
 
@@ -636,9 +648,14 @@ not, reads her local hour, and builds one scene for the pair — `resolveModelTi
 pose, in parallel), and the answer is
 `{ ok: true, provider: "gemini", images: [two data URLs], place, flaw, timestamp, watermark, … }`.
 Its refusals mirror her camera's: `400 reference-required`, `503 selfies-unavailable`,
-`502 selfies-refused` / `selfies-failed` — and the window then falls back to her old camera and
-finally to her album. Every request is two images, so the throttle is the strictest on the site
-(8 a minute).
+`502 selfies-refused` / `selfies-failed`. `generateLiveChatSelfies` reports them as the same
+`unavailable` / `transient` reasons, and the window then falls back to her old camera and finally
+to her album — with the rests described above, so the fallback is what answers **this** request,
+never the rest of the visit: after a transient failure the service is asked again 30 s later, and
+after a `503` both cameras rest together for 10 min (the old camera reads the same key, so it is
+spared the guaranteed-failing round trip) before either is asked again. Every request is two
+images, so the throttle is the strictest on the site (8 a minute) — and a `429` from it is just
+another transient rest, not a dead camera.
 
 ## Files
 
@@ -651,8 +668,8 @@ finally to her album. Every request is two images, so the throttle is the strict
 | `src/app/pages/ai-models/chat/chat-summary.ts`                     | what that form says: the minutes, the counts, her rating and her paragraph about the chat (`buildChatFeedbackFacts`, `buildChatSessionSummary`)                                                                                                              |
 | `src/app/pages/ai-models/chat/chat-initiative.ts`                  | who has the floor: A (`heardFrom`), B (the three reasons she may write unprompted) and D (the three quiet minutes that end a session), read from the transcript alone                                                                                        |
 | `src/app/pages/ai-models/chat/chat-voice.ts`                       | her voice by country and age, the visitor's behaviour, the opening line, the follow-up she writes for a reason (`idleChatOpener`), her goodbye to a visitor who went quiet (`disinterestFarewell`), the pitch, the video line                                |
-| `src/app/pages/ai-models/chat/chat-selfie.ts`                      | her camera and her album: the moments and flaws, the likeness (`readSelfieReference`), Gemini's selfie (`generateChatSelfie`), the album frame she falls back on, and the video-request pattern                                                              |
-| `src/app/pages/ai-models/chat/chat-live-selfies.ts`                | the window's client for `livechatselfiesandphotos`: two fresh photographs per selfie request, her time zone with them, and the `null` that hands over to her album                                                                                           |
+| `src/app/pages/ai-models/chat/chat-selfie.ts`                      | her camera and her album: the moments and flaws, the likeness (`readSelfieReference`), Gemini's selfie (`generateChatSelfie`, with the failure **reason** and the two rest lengths that decide when a camera is asked again), the album frame she falls back on, and the video-request pattern                                |
+| `src/app/pages/ai-models/chat/chat-live-selfies.ts`                | the window's client for `livechatselfiesandphotos`: two fresh photographs per selfie request, her time zone with them, and the failure reason (`unavailable` / `transient`) that decides how long the service rests before the window asks it again           |
 | `src/app/pages/ai-models/chat/chat-analysis.ts`                    | the reading before the answer: the window's own reading, the studio's reading desk, the merge, and the document bytes that travel with a message                                                                                                             |
 | `src/app/pages/ai-models/chat/chat-photo.ts`                       | what she can see in a picture the visitor sends (requirement F)                                                                                                                                                                                              |
 | `src/app/pages/ai-models/chat/chat-random.ts`                      | the seeded pick/roll helpers, so every random choice is still testable                                                                                                                                                                                       |
@@ -663,7 +680,7 @@ finally to her album. Every request is two images, so the throttle is the strict
 | `src/app/pages/ai-models/chat/chat-replies.ts`                     | her own engine: introduction, every topic, small talk, compliments, personal questions, the Romanised answer, the cascade of answers                                                                                                                         |
 | `src/app/pages/ai-models/chat/chat-input.ts`                       | reading a typed message: stretched letters, short forms and spelling mistakes (one or two edits of room)                                                                                                                                                     |
 | `src/app/pages/ai-models/chat/chat-language.ts`                    | the eight Romanised language books, the detection, the English gloss, Google Translate as the second reader, and her answer in the visitor's own language                                                                                                    |
-| `src/app/services/ai-model-chat.service.ts`                        | the session store, the clock, the sent messages, the typing, the messages of one answer, the storage mirror                                                                                                                                                  |
+| `src/app/services/ai-model-chat.service.ts`                        | the session store, the clock, the sent messages, the typing, the messages of one answer, the two cameras' short rests after a failure, the storage mirror                                                                                                                                                  |
 | `src/app/services/ai-model-chat.testing.ts`                        | `silenceChatPacing()` — switches every wait off for the tests, which then delivers her messages in one go                                                                                                                                                    |
 | `worker/ai-chat-core.mjs` (+ `.d.mts`)                             | the live endpoint: validation, persona, Google search, OpenAI streaming, and the reading of the turn in her instructions                                                                                                                                     |
 | `worker/ai-read-core.mjs` (+ `.d.mts`)                             | the reading desk: Google Translate, the Gemini reading, the OpenAI reading, the JSON contract and the fallbacks                                                                                                                                              |
@@ -694,16 +711,19 @@ In production the same values are Worker secrets, with `OPENAI_MODEL`, `GEMINI_M
 npx wrangler secret put OPENAI_API_KEY            # the answer, and the reading when Gemini is absent
 npx wrangler secret put GOOGLE_SEARCH_API_KEY     # live results for questions about the world
 npx wrangler secret put GOOGLE_SEARCH_CX
-npx wrangler secret put GEMINI_API_KEY            # the reading desk, and the camera that takes her selfie
+npx wrangler secret put GEMINI_API_KEY            # the reading desk, and both cameras: her selfie and the live selfie service
 npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # optional: the Cloud Translation API
 ```
 
 Live Chat's Gemini configuration currently lives in `wrangler.jsonc` (`vars`): `GEMINI_API_KEY`
-holds the key, and both `GEMINI_MODEL` and `GEMINI_IMAGE_MODEL` are pinned to `gemini-2.5-flash`,
-so the reading desk and the live-chat selfies run on that model.
+holds the key and `GEMINI_MODEL` is pinned to `gemini-2.5-flash` for the reading desk.
+`GEMINI_IMAGE_MODEL` must name an **image-generation** model — `gemini-2.5-flash-image`: the plain
+`gemini-2.5-flash` cannot answer `responseModalities: ["IMAGE"]`, so pinning the cameras to it
+fails every selfie into the album fallback (a committed key also belongs in
+`npx wrangler secret put GEMINI_API_KEY`, not in the repository).
 
-`npm start` prints a line for each of the three endpoints and says what is configured: the chat, the
-reading desk, and her camera.
+`npm start` prints a line for each of the four endpoints and says what is configured: the chat, the
+reading desk, her camera, and the live selfie service.
 
 ## Tests
 
@@ -712,8 +732,8 @@ npx ng test --no-watch --include "src/app/pages/ai-models/chat/*.spec.ts"
 npx ng test --no-watch --include "src/app/services/ai-model-chat.service.spec.ts"
 ```
 
-The chat suite is the files under `src/app/pages/ai-models/chat/` plus the service's own spec — 18
-files and 203 tests at the time of writing (the third brief's `chat-initiative.spec.ts` and
+The chat suite is the files under `src/app/pages/ai-models/chat/` plus the service's own spec — 19
+files and 243 tests at the time of writing (the third brief's `chat-initiative.spec.ts` and
 `chat-feedback.spec.ts` are new, and `chat-session-summary.spec.ts` went with its component).
 
 - `chat-replies.spec.ts` — the engine: the introduction, her card, her biography, the other models,
@@ -722,8 +742,10 @@ files and 203 tests at the time of writing (the third brief's `chat-initiative.s
 - `chat-worker.spec.ts` — the Worker endpoints: the SSE stream with its sources, the persona that
   cannot be rewritten by the caller, the reading of the turn in her instructions, photographs and
   documents, the reading desk (Google Translate into Gemini, into OpenAI, a picture or a PDF inline,
-  and the 503 / 502 / 405 / 400 answers), her camera (the selfie, the likeness, the refusal), every
-  error status and the throttle;
+  and the 503 / 502 / 405 / 400 answers), her camera (the selfie, the likeness, the refusal), the
+  live selfie service (two fresh photographs with her own hour and the watermark, one pose failing
+  and the other still answering, the 503 / 502 / 400 / 405 answers and the 8-a-minute throttle),
+  every error status and the throttle;
 - `ai-model-chat.spec.ts` — the window itself: her photograph, name, model id, city and country,
   **View Profile**, the countdown, the composer with its camera and attachments, Enter/Shift+Enter,
   both reactions, the centred 15-minute reminder, the closed state after three strikes, and the
@@ -740,7 +762,10 @@ files and 203 tests at the time of writing (the third brief's `chat-initiative.s
   strikes, the close form (raised by ✕ and by a session that ends, `openFeedback()`/`dismissFeedback()`,
   `recordFeedback()` with its clamp and its 600-character comment, `feedbackFor()`), the reactions, the
   live endpoint with its sources, the answer that never names a source, the fallback to her own engine,
-  the storage mirror and the closed-window guards;
+  the two cameras' rests (a transient failure asked again once its 30 s are over, the studio's
+  no-key answer resting both cameras without asking the second one to fail the same way, and a
+  cover photograph that failed to read never latching the cameras off), the storage mirror and the
+  closed-window guards;
 - `chat-types.spec.ts` — the numbers of that pacing: the typing time that grows with the message and
   stays inside its floor and ceiling, and the 3–7 s / 2–5 s / 3–5 s / 2–4 s windows the second brief
   asks for;
@@ -754,8 +779,12 @@ files and 203 tests at the time of writing (the third brief's `chat-initiative.s
   neither of them gives away a city, an age or a count of her photographs, C), and the splitter that
   turns one long answer into several messages;
 - `chat-selfie.spec.ts`, `chat-photo.spec.ts` — her selfies, the moments and flaws, her camera (her
-  own photograph as the likeness, the request it sends, a refusal answered with an album frame), the
-  requests that trigger them, and what she sees in a picture the visitor sends;
+  own photograph as the likeness, the request it sends, a refusal answered with an album frame and
+  named for what it was — `unavailable` for the missing key, `transient` for everything worth
+  asking again), the requests that trigger them, and what she sees in a picture the visitor sends;
+- `chat-live-selfies.spec.ts` — the window's client for the live service: the two photographs it
+  returns, her likeness, her own time zone and the seed that travel with the request, the failure
+  reasons, and the answer that is not a `data:` photograph dropped;
 - `chat-analysis.spec.ts` — the reading before the answer: the window's own reading of a typo'd
   message and of a Romanised one, the desk's reading of a turn and of an attached document, the merge
   that fills the desk's gaps, and the fallbacks when the desk is off or unreachable;
