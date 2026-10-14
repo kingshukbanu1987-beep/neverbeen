@@ -450,6 +450,11 @@
 
 /* The live chat stands directly under the model's name, not down in the row of links. */
 .card-chat-row {
+  /* One shared height for the whole row, set by the Live Chat button itself: its vertical
+     padding (0.45rem × 2) around its text line (1.02rem × 1.15). The button and the split
+     pill both take this height, so the two always stand exactly as tall as each other. */
+  --card-chat-height: calc(0.45rem * 2 + 1.02rem * 1.15);
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -458,16 +463,18 @@
 }
 
 /*
- * The split transparent pill beside the Live Chat button: one glassy capsule in two halves —
- * the chats live with her right now (grey dot while there are none, a green pulse while there
- * are), then her whole past-chat total — divided by a hairline of light.
+ * The split transparent pill beside the Live Chat button, exactly as tall as that button:
+ * one glassy capsule in two halves — the chats live with her right now (grey dot while there
+ * are none, a green pulse while there are), then her whole past-chat total behind a small
+ * translucent white chat bubble — divided by a hairline of light.
  */
 .card-live-pill {
   position: relative;
   display: inline-flex;
   min-width: 0;
   align-items: stretch;
-  min-height: 1.92rem;
+  /* Exactly as tall as the Live Chat button beside it (see --card-chat-height). */
+  height: var(--card-chat-height, calc(0.45rem * 2 + 1.02rem * 1.15));
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 18%);
   border-radius: 999px;
@@ -512,6 +519,37 @@
   background: linear-gradient(180deg, transparent, rgb(255 255 255 / 30%), transparent);
 }
 
+/* The small chat bubble in front of the past-chat total: a modern rounded bubble in
+   translucent white glass — a faint white fill inside a soft white outline, three quiet
+   dots for the chat inside it — so the past half reads as "chats" at a glance. */
+.card-live-pill-bubble {
+  display: inline-flex;
+  width: 0.98rem;
+  height: 0.98rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-live-pill-bubble svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 4px rgb(0 0 0 / 22%));
+}
+
+.card-live-pill-bubble-shape {
+  fill: rgb(255 255 255 / 14%);
+  stroke: rgb(255 255 255 / 78%);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.card-live-pill-bubble-dot {
+  fill: rgb(255 255 255 / 88%);
+}
+
 /* The dot of the live half: quiet grey while nobody is chatting, a pulsing beacon while they are. */
 .card-live-pill-dot {
   width: 0.4rem;
@@ -529,7 +567,7 @@
 
 .card-live-pill-value {
   font-family: var(--numeric-font);
-  font-size: 0.8rem;
+  font-size: 0.94rem;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -543,7 +581,7 @@
 .card-live-pill-word {
   color: rgb(255 255 255 / 66%);
   font-family: inherit;
-  font-size: 0.5rem;
+  font-size: 0.6rem;
   font-style: normal;
   font-weight: 700;
   letter-spacing: 0.11em;
@@ -572,7 +610,8 @@
   }
 }
 
-/* On a phone the button and the whole split pill share one row: the pill shrinks, nothing wraps. */
+/* On a phone the button and the whole split pill share one row: the pill keeps the button's
+   height but tightens its padding and type, so nothing wraps. */
 @media (max-width: 640px) {
   .card-chat-row {
     flex-wrap: nowrap;
@@ -583,25 +622,26 @@
     flex: 0 0 auto;
   }
 
-  .card-live-pill {
-    min-height: 1.72rem;
-  }
-
   .card-live-pill-seg {
     gap: 0.28rem;
-    padding: 0.18rem 0.48rem;
+    padding: 0.18rem 0.44rem;
   }
 
   .card-live-pill-seg.is-now {
-    padding-left: 0.54rem;
+    padding-left: 0.5rem;
+  }
+
+  .card-live-pill-bubble {
+    width: 0.84rem;
+    height: 0.84rem;
   }
 
   .card-live-pill-value {
-    font-size: 0.68rem;
+    font-size: 0.78rem;
   }
 
   .card-live-pill-word {
-    font-size: 0.42rem;
+    font-size: 0.5rem;
   }
 }
 
@@ -977,6 +1017,8 @@
   position: relative;
   isolation: isolate;
   display: inline-flex;
+  /* The height the split pill beside it matches (see --card-chat-height on the row). */
+  min-height: var(--card-chat-height, calc(0.45rem * 2 + 1.02rem * 1.15));
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 0.98rem;

@@ -94,10 +94,16 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     const now = pillTextOf(pill, 'is-now');
     expect(now.value).toBe('3');
     expect(now.word).toBe('Live Now');
+    // The chat bubble belongs to the past half only, and stands in front of its total.
+    expect(pill.querySelector('.is-now .card-live-pill-bubble')).toBeNull();
 
     const past = pillTextOf(pill, 'is-past');
     expect(past.value).toBe('1,284');
     expect(past.word).toBe('past chats');
+    const pastSeg = pill.querySelector('.card-live-pill-seg.is-past')!;
+    const bubble = pastSeg.querySelector('.card-live-pill-bubble svg');
+    expect(bubble).not.toBeNull();
+    expect(pastSeg.firstElementChild?.classList.contains('card-live-pill-bubble')).toBe(true);
 
     expect(pill.getAttribute('aria-label')).toBe(
       `3 live now and 1,284 past chats with ${profile.name}`,
