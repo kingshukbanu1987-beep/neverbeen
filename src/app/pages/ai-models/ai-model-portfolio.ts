@@ -763,6 +763,18 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.chatButton()?.nativeElement.focus({ preventScroll: true });
   }
 
+  /**
+   * Instagram's Forward to another model: this page only shows one model, so the visitor goes to the
+   * directory, where that model's access screen opens with the forwarded message waiting in it.
+   */
+  protected forwardChat(target: AiModelProfile): void {
+    this.chatOpen.set(false);
+    this.chatPlan.set(null);
+    this.registeredChatIdentity.set(null);
+    this.resumeRegisteredChat.set(false);
+    void this.router.navigate(['/ai-models'], { queryParams: { forwardChat: target.slug } });
+  }
+
   /** Another arrangement of the same album, without leaving the page. */
   protected shuffleNow(): void {
     this.shuffleTick.update((tick) => tick + 1);

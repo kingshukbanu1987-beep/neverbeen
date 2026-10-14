@@ -221,4 +221,28 @@ describe('chat history document', () => {
       '&lt;a href=&quot;x&quot;&gt;&#39;&amp;&#39;&lt;/a&gt;',
     );
   });
+  it('leaves out what the visitor deleted for themselves, and says what was unsent', () => {
+    const history = session([
+      message({ id: 'hi', author: 'model', text: 'Hello Rahul' }),
+      message({
+        id: 'gone-for-me',
+        author: 'user',
+        text: 'Only I will not see this',
+        deletedForYou: true,
+      }),
+      message({ id: 'unsent', author: 'user', text: '', unsent: true }),
+      message({ id: 'pinned', author: 'model', text: 'Keep this', pinned: true }),
+      message({ id: 'fwd', author: 'user', text: 'Passed on', forwarded: true }),
+    ]);
+
+    const entries = buildChatHistory(history, model);
+    expect(entries.map((entry) => entry.id)).toEqual(['hi', 'unsent', 'pinned', 'fwd']);
+    expect(entries.find((entry) => entry.id === 'unsent')).toMatchObject({
+      text: 'You unsent a message',
+      unsent: true,
+    });
+    expect(entries.find((entry) => entry.id === 'pinned')?.pinned).toBe(true);
+    expect(entries.find((entry) => entry.id === 'fwd')?.forwarded).toBe(true);
+    expect(entries.find((entry) => entry.id === 'hi')?.forwarded).toBe(false);
+  });
 });

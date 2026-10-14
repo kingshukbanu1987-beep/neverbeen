@@ -182,6 +182,14 @@ export class AiModelsPage {
       }
     }
 
+    // A message forwarded from another model's chat (Instagram's Forward) arrives here from a
+    // model's own page: that model's access screen opens, and the message waits in her composer.
+    const forwardedTo = this.route.snapshot.queryParamMap?.get('forwardChat') ?? null;
+    if (forwardedTo) {
+      const model = this.models.find((candidate) => candidate.slug === forwardedTo) ?? null;
+      if (model) this.openChat(model);
+    }
+
     // Load engagement for both media types so each directory card can show album-wide totals.
     for (const model of this.models) {
       this.engagement.registerModel(model.slug, [

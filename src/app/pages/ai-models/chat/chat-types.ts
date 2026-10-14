@@ -165,6 +165,48 @@ export function replyQuoteOf(message: AiChatMessage): AiChatReplyQuote {
   return { id: message.id, author: message.author, text, at: message.at, photo };
 }
 
+/**
+ * The words a message carries for copying and forwarding: the typed text, or `''` when there are
+ * none. The placeholder a photograph, video or document sends ("Sent a photograph") is not words,
+ * and an unsent message has none at all.
+ */
+export function chatMessageBody(message: AiChatMessage): string {
+  if (message.unsent) return '';
+  const text = message.text.trim();
+  if (!text) return '';
+  if (message.attachment && text === placeholderTextOf(message)) return '';
+  return text;
+}
+
+/** The text a message gets when it was sent with no words of its own. */
+function placeholderTextOf(message: AiChatMessage): string {
+  switch (message.attachment?.kind) {
+    case 'document':
+      return 'Sent a document';
+    case 'video':
+      return 'Sent a video';
+    case 'photo':
+      return 'Sent a photograph';
+    default:
+      return '';
+  }
+}
+
+/**
+ * True while the visitor may still unsend one of their own messages: the Instagram unsend is for
+ * the writer alone, and only in the first two minutes after the message was sent.
+ */
+export function canUnsendMessage(message: AiChatMessage, now: number = Date.now()): boolean {
+  return (
+    message.author === 'user' &&
+    message.kind === 'message' &&
+    !message.pending &&
+    !message.unsent &&
+    now - message.at >= 0 &&
+    now - message.at <= AI_CHAT_UNSEND_WINDOW_MS
+  );
+}
+
 export interface AiChatMessage {
   id: string;
   author: AiChatAuthor;
@@ -203,6 +245,23 @@ export interface AiChatMessage {
    * because it is how the studio sees whether the reading desk is doing its work.
    */
   analysedBy?: string;
+  /**
+   * The Instagram forward: this message was passed on from another model's chat, and carries the
+   * "Forwarded" label above its words. Absent on everything the visitor typed themselves.
+   */
+  forwarded?: boolean;
+  /** Pinned to the top of the chat (see `AI_CHAT_PIN_LIMIT`). Absent when not pinned. */
+  pinned?: boolean;
+  /**
+   * Unsent by its writer inside `AI_CHAT_UNSEND_WINDOW_MS`: the words and the photograph are gone
+   * from the transcript and the bubble says so. Absent on every message that was not unsent.
+   */
+  unsent?: boolean;
+  /**
+   * Deleted by the visitor for themselves only ("Delete for you"): the window and the history no
+   * longer show it. The model still has it, the way the other side of an Instagram chat does.
+   */
+  deletedForYou?: boolean;
 }
 
 /** Why a chat session can no longer be written to. */
@@ -303,6 +362,15 @@ export const AI_CHAT_SESSION_MS = 2 * 60 * 60 * 1000;
  * reminders, then every five minutes, then the last minute on its own.
  */
 export const AI_CHAT_REMINDER_MARKS: readonly number[] = [15, 10, 5, 1];
+
+/** How long the visitor may unsend a message they sent — the two minutes of the Instagram unsend. */
+export const AI_CHAT_UNSEND_WINDOW_MS = 2 * 60 * 1000;
+
+/** How many messages one chat can have pinned at the top at a time. */
+export const AI_CHAT_PIN_LIMIT = 3;
+
+/** How long a finger (or a mouse button) has to rest on a message before its menu opens. */
+export const AI_CHAT_LONG_PRESS_MS = 500;
 
 /** How many messages one session keeps in memory and in the transcript. */
 export const AI_CHAT_MESSAGE_LIMIT = 400;

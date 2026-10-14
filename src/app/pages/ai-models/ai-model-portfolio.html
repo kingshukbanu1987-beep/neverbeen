@@ -872,6 +872,7 @@
       [plan]="plan"
       [registeredIdentity]="registeredChatIdentity()"
       (closed)="closeChat()"
+      (forwardTo)="forwardChat($event)"
     />
   } @else {
     <app-live-chat-access

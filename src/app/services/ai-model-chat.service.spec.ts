@@ -7,6 +7,7 @@ import {
   AI_CHAT_FOLLOWUP_LIMIT,
   AI_CHAT_INTEREST_MS,
   AI_CHAT_SESSION_MS,
+  AI_CHAT_UNSEND_WINDOW_MS,
   replyQuoteOf,
 } from '../pages/ai-models/chat/chat-types';
 import { clearCharacterDatabaseCache } from '../pages/ai-models/chat/character-database';
@@ -1368,5 +1369,125 @@ describe('AiModelChatService', () => {
     expect(messages.filter((message) => message.author === 'model').length).toBeGreaterThanOrEqual(
       4,
     );
+  });
+  describe('message actions (Instagram menu)', () => {
+    /** Sends one visitor message and returns it from the transcript. */
+    async function sendOwn(chat: AiModelChatService, text: string, options = {}) {
+      await chat.sendMessage(alisha, text, null, options);
+      const messages = chat.sessionOf(alisha.slug)!.messages;
+      return messages.filter((message) => message.author === 'user').at(-1)!;
+    }
+
+    it('unsends the visitor’s own message inside the two minutes, and clears its words', async () => {
+      const chat = service();
+      open(chat);
+      const mine = await sendOwn(chat, 'I did not mean that');
+
+      expect(chat.unsendMessage(alisha, mine.id)).toBe(true);
+      const kept = chat.sessionOf(alisha.slug)!.messages.find((message) => message.id === mine.id)!;
+      expect(kept.unsent).toBe(true);
+      expect(kept.text).toBe('');
+      expect(kept.attachment).toBeNull();
+      expect(kept.reaction).toBeNull();
+      // Nothing of the words is left in the transcript the model reads.
+      expect(transcript(chat)).not.toContain('I did not mean that');
+    });
+
+    it('refuses to unsend after the two minutes, or a message the model wrote', async () => {
+      const chat = service();
+      open(chat);
+      const mine = await sendOwn(chat, 'Too late to take back');
+
+      const late = mine.at + AI_CHAT_UNSEND_WINDOW_MS + 1;
+      expect(chat.unsendMessage(alisha, mine.id, late)).toBe(false);
+      expect(mine.unsent).toBeUndefined();
+
+      const hers = chat
+        .sessionOf(alisha.slug)!
+        .messages.find((message) => message.author === 'model')!;
+      expect(chat.unsendMessage(alisha, hers.id)).toBe(false);
+    });
+
+    it('makes a reply that quoted the unsent message quote nothing', async () => {
+      const chat = service();
+      open(chat);
+      const mine = await sendOwn(chat, 'Tell me about the mountains');
+      const quoting = {
+        id: 'answer-1',
+        author: 'model' as const,
+        text: 'About the mountains…',
+        at: Date.now(),
+        kind: 'message' as const,
+        attachment: null,
+        reaction: null,
+        reactionBy: null,
+        pending: false,
+        revealedChars: 0,
+        sources: [],
+        replyTo: replyQuoteOf(mine),
+        intent: '',
+      };
+      chat.sessionOf(alisha.slug)!.messages.push(quoting);
+
+      chat.unsendMessage(alisha, mine.id);
+      expect(quoting.replyTo?.text).toBe('');
+    });
+
+    it('deletes a message for the visitor only, and keeps it for the model', async () => {
+      const chat = service();
+      open(chat);
+      const mine = await sendOwn(chat, 'Keep this one for me');
+
+      expect(chat.deleteForYou(alisha, mine.id)).toBe(true);
+      const kept = chat.sessionOf(alisha.slug)!.messages.find((message) => message.id === mine.id)!;
+      expect(kept.deletedForYou).toBe(true);
+      // The model's history still has it: the other side of an Instagram chat still sees it.
+      expect(transcript(chat)).toContain('Keep this one for me');
+    });
+
+    it('pins up to three messages and refuses a fourth with a notice', async () => {
+      const chat = service();
+      open(chat);
+      // Her introduction arrives in several messages: wait until there are four to pin.
+      await vi.waitFor(() => {
+        const count = chat
+          .sessionOf(alisha.slug)!
+          .messages.filter((m) => m.author === 'model').length;
+        expect(count).toBeGreaterThanOrEqual(4);
+      });
+      const hers = chat.sessionOf(alisha.slug)!.messages.filter((m) => m.author === 'model');
+      const pinnable = hers.slice(0, 4);
+
+      expect(chat.togglePin(alisha, pinnable[0].id)).toBe('pinned');
+      expect(chat.togglePin(alisha, pinnable[1].id)).toBe('pinned');
+      expect(chat.togglePin(alisha, pinnable[2].id)).toBe('pinned');
+      expect(chat.togglePin(alisha, pinnable[3].id)).toBe('limit');
+      expect(chat.notice()).toContain('up to 3');
+      expect(pinnable[3].pinned).toBeUndefined();
+
+      expect(chat.togglePin(alisha, pinnable[0].id)).toBe('unpinned');
+      expect(pinnable[0].pinned).toBeUndefined();
+    });
+
+    it('marks a message sent from a forward as forwarded, and no other', async () => {
+      const chat = service();
+      open(chat);
+      const forwarded = await sendOwn(chat, 'Passed on from another chat', { forwarded: true });
+      const typed = await sendOwn(chat, 'Typed here');
+      expect(forwarded.forwarded).toBe(true);
+      expect(typed.forwarded).toBeUndefined();
+    });
+
+    it('stages forwarded words for another model once, and hands them over only then', () => {
+      const chat = service();
+      const other = aiModelProfiles.find((model) => model.slug !== alisha.slug)!;
+
+      chat.stageForward(other.slug, '   ');
+      expect(chat.takeForward(other.slug)).toBeNull();
+
+      chat.stageForward(other.slug, 'Have a look at this');
+      expect(chat.takeForward(other.slug)).toBe('Have a look at this');
+      expect(chat.takeForward(other.slug)).toBeNull();
+    });
   });
 });

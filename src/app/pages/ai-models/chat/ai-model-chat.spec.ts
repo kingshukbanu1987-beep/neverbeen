@@ -790,4 +790,286 @@ describe('AiModelChatDialog', () => {
     expect(harness.element.querySelectorAll('.chat-bubble').length).toBeGreaterThanOrEqual(4);
     expect(harness.element.querySelector('.chat-bubble')?.textContent).toContain('Alisha');
   });
+  // ------------------------------------------------------------ the Instagram message menu
+
+  /** The labels of the menu that is open on the window, in the order they are shown. */
+  function menuLabels(element: HTMLElement): string[] {
+    return Array.from(element.querySelectorAll<HTMLElement>('.chat-action-item')).map((item) =>
+      item.textContent!.trim(),
+    );
+  }
+
+  /** Opens the menu of a bubble with a right click, the way a mouse does it. */
+  function rightClick(harness: Harness, bubble: Element): boolean {
+    const event = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 120,
+      clientY: 200,
+    });
+    const proceed = bubble.dispatchEvent(event);
+    harness.fixture.detectChanges();
+    return proceed;
+  }
+
+  /** Presses a menu action by its label, the way a visitor taps it. */
+  function chooseAction(harness: Harness, label: string): void {
+    const item = Array.from(
+      harness.element.querySelectorAll<HTMLButtonElement>('.chat-action-item'),
+    ).find((candidate) => candidate.textContent?.trim() === label);
+    expect(item, `menu action "${label}"`).toBeTruthy();
+    item!.click();
+    harness.fixture.detectChanges();
+  }
+
+  /** Her latest bubble, and the visitor's latest bubble. */
+  const hersOf = (harness: Harness): HTMLElement =>
+    Array.from(harness.element.querySelectorAll<HTMLElement>('.chat-bubble.is-incoming')).at(-1)!;
+  const mineOf = (harness: Harness): HTMLElement =>
+    Array.from(harness.element.querySelectorAll<HTMLElement>('.chat-bubble.is-outgoing')).at(-1)!;
+
+  it('opens the menu on a right click, with the actions in Instagram order', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+
+    const proceed = rightClick(harness, mineOf(harness));
+    // The browser's own menu is replaced by the chat's.
+    expect(proceed).toBe(false);
+    expect(menuLabels(harness.element)).toEqual([
+      'Reply',
+      'Forward',
+      'Copy',
+      'Delete for you',
+      'Unsend',
+      'Pin',
+    ]);
+
+    // Escape takes the menu away first.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('.chat-action-menu')).toBeNull();
+  });
+
+  it('offers no Unsend on her message, and only the actions that fit her words', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+
+    rightClick(harness, hersOf(harness));
+    expect(menuLabels(harness.element)).toEqual([
+      'Reply',
+      'Forward',
+      'Copy',
+      'Delete for you',
+      'Pin',
+    ]);
+  });
+
+  it('opens the same menu after a long press of about half a second, and not before', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+    const bubble = mineOf(harness);
+
+    bubble.dispatchEvent(
+      Object.assign(new Event('pointerdown', { bubbles: true }), {
+        clientX: 50,
+        clientY: 60,
+        button: 0,
+        pointerType: 'touch',
+      }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('.chat-action-menu')).toBeNull();
+
+    await vi.waitFor(() => {
+      harness.fixture.detectChanges();
+      expect(harness.element.querySelector('.chat-action-menu')).not.toBeNull();
+    });
+    expect(menuLabels(harness.element)).toContain('Unsend');
+  });
+
+  it('does not open the menu when the finger moves before the half second is up (a scroll)', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+    const bubble = mineOf(harness);
+
+    bubble.dispatchEvent(
+      Object.assign(new Event('pointerdown', { bubbles: true }), {
+        clientX: 50,
+        clientY: 60,
+        button: 0,
+        pointerType: 'touch',
+      }),
+    );
+    bubble.dispatchEvent(
+      Object.assign(new Event('pointermove', { bubbles: true }), { clientX: 50, clientY: 110 }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('.chat-action-menu')).toBeNull();
+  });
+
+  it('opens the same menu from the ⋯ beside a message, for the keyboard', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+
+    harness.element
+      .querySelector<HTMLButtonElement>('.chat-row:not(.is-outgoing) .chat-more-button')!
+      .click();
+    harness.fixture.detectChanges();
+    expect(menuLabels(harness.element)).toContain('Reply');
+  });
+
+  it('closes the menu when the visitor presses anywhere else', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+    rightClick(harness, mineOf(harness));
+    expect(harness.element.querySelector('.chat-action-menu')).not.toBeNull();
+
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('.chat-action-menu')).toBeNull();
+  });
+
+  it('replies over a message chosen from the menu', async () => {
+    const harness = await openChat();
+    await send(harness, 'Tell me about your city');
+
+    rightClick(harness, hersOf(harness));
+    chooseAction(harness, 'Reply');
+
+    expect(harness.element.querySelector('.chat-action-menu')).toBeNull();
+    expect(harness.element.querySelector('.chat-reply-strip')?.textContent).toContain(
+      'Replying to Alisha',
+    );
+  });
+
+  it('copies the words of a message to the clipboard', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    try {
+      const harness = await openChat();
+      await send(harness, 'Copy this exact line');
+
+      rightClick(harness, mineOf(harness));
+      chooseAction(harness, 'Copy');
+
+      await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('Copy this exact line'));
+      harness.fixture.detectChanges();
+      expect(harness.element.querySelector('.chat-toast')?.textContent).toContain('Message copied');
+    } finally {
+      delete (navigator as unknown as { clipboard?: unknown }).clipboard;
+    }
+  });
+
+  it('deletes a message for the visitor only: it leaves the window, and the model keeps it', async () => {
+    const harness = await openChat();
+    await send(harness, 'Take this back');
+    const before = harness.element.querySelectorAll('.chat-bubble.is-outgoing').length;
+
+    rightClick(harness, mineOf(harness));
+    chooseAction(harness, 'Delete for you');
+
+    expect(harness.element.querySelectorAll('.chat-bubble.is-outgoing').length).toBe(before - 1);
+    expect(harness.element.textContent).not.toContain('Take this back');
+    const kept = harness.chat
+      .sessionOf(alisha.slug)!
+      .messages.find((message) => message.text === 'Take this back');
+    expect(kept?.deletedForYou).toBe(true);
+  });
+
+  it('unsends a message inside two minutes, and takes the Unsend action away after that', async () => {
+    const harness = await openChat();
+    await send(harness, 'I wrote this by mistake');
+
+    rightClick(harness, mineOf(harness));
+    chooseAction(harness, 'Unsend');
+
+    const bubble = mineOf(harness);
+    expect(bubble.querySelector('.chat-unsent')?.textContent).toContain('You unsent a message');
+    expect(bubble.textContent).not.toContain('I wrote this by mistake');
+
+    // A message from two minutes ago can no longer be unsent.
+    await send(harness, 'Sent long ago');
+    const old = harness.chat
+      .sessionOf(alisha.slug)!
+      .messages.filter((message) => message.author === 'user')
+      .at(-1)!;
+    old.at = Date.now() - 2 * 60 * 1000 - 1000;
+    rightClick(harness, mineOf(harness));
+    expect(menuLabels(harness.element)).not.toContain('Unsend');
+  });
+
+  it('pins a message to the top of the chat, and unpins it again', async () => {
+    const harness = await openChat();
+    await send(harness, 'Remember this');
+
+    rightClick(harness, mineOf(harness));
+    chooseAction(harness, 'Pin');
+
+    const banner = harness.element.querySelector<HTMLButtonElement>('.chat-pinned');
+    expect(banner).not.toBeNull();
+    expect(banner?.textContent).toContain('Pinned message');
+    expect(banner?.textContent).toContain('Remember this');
+    expect(harness.element.querySelector('.chat-pin-note')).not.toBeNull();
+
+    rightClick(harness, mineOf(harness));
+    chooseAction(harness, 'Unpin');
+    expect(harness.element.querySelector('.chat-pinned')).toBeNull();
+  });
+
+  it('forwards a message to another model: a sheet lists the others, and her chat gets the words', async () => {
+    const harness = await openChat();
+    await send(harness, 'Hello');
+    const forwarded = vi.fn();
+    const subscription = harness.fixture.componentInstance.forwardTo.subscribe(forwarded);
+
+    rightClick(harness, mineOf(harness));
+    chooseAction(harness, 'Forward');
+
+    const sheet = harness.element.querySelector<HTMLElement>('.chat-forward')!;
+    expect(sheet).not.toBeNull();
+    // Every model but this one.
+    expect(sheet.querySelectorAll('.chat-forward-target').length).toBe(aiModelProfiles.length - 1);
+    expect(
+      sheet.querySelector('.chat-forward-target[aria-label="Forward to Alisha Bhattacharya"]'),
+    ).toBeNull();
+
+    const target = aiModelProfiles.find((model) => model.slug !== alisha.slug)!;
+    sheet
+      .querySelector<HTMLButtonElement>(
+        `.chat-forward-target[aria-label="Forward to ${target.name}"]`,
+      )!
+      .click();
+    harness.fixture.detectChanges();
+
+    expect(forwarded).toHaveBeenCalledWith(expect.objectContaining({ slug: target.slug }));
+    expect(harness.chat.takeForward(target.slug)).toBe('Hello');
+    expect(harness.element.querySelector('.chat-forward')).toBeNull();
+    subscription.unsubscribe();
+  });
+
+  it('puts a forwarded message in the composer of the chat it is sent to, marked as forwarded', async () => {
+    const chat = TestBed.inject(AiModelChatService);
+    silenceChatPacing(chat);
+    chat.stageForward(alisha.slug, 'Have a look at this brief');
+
+    const fixture = TestBed.createComponent(AiModelChatDialog);
+    fixture.componentRef.setInput('model', alisha);
+    fixture.detectChanges();
+    const harness: Harness = { fixture, element: fixture.nativeElement as HTMLElement, chat };
+    chat.setIdentity(alisha, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(chat.thinking()).toBe(false);
+    });
+    fixture.detectChanges();
+
+    const textarea = harness.element.querySelector<HTMLTextAreaElement>('.chat-input')!;
+    expect(textarea.value).toBe('Have a look at this brief');
+
+    await send(harness, 'Have a look at this brief');
+    const sent = mineOf(harness);
+    expect(sent.querySelector('.chat-forwarded')?.textContent).toContain('Forwarded');
+  });
 });
