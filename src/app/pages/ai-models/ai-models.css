@@ -500,12 +500,12 @@
 .card-live-pill-seg {
   display: inline-flex;
   align-items: center;
-  gap: 0.34rem;
-  padding: 0.22rem 0.66rem;
+  gap: 0.42rem;
+  padding: 0.22rem 0.86rem;
 }
 
 .card-live-pill-seg.is-now {
-  padding-left: 0.72rem;
+  padding-left: 0.92rem;
 }
 
 .card-live-pill.is-live .card-live-pill-seg.is-now {
@@ -524,8 +524,8 @@
    dots for the chat inside it — so the past half reads as "chats" at a glance. */
 .card-live-pill-bubble {
   display: inline-flex;
-  width: 0.98rem;
-  height: 0.98rem;
+  width: 1.24rem;
+  height: 1.24rem;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
@@ -552,7 +552,7 @@
 
 /* The dot of the live half: quiet grey while nobody is chatting, a pulsing beacon while they are. */
 .card-live-pill-dot {
-  width: 0.4rem;
+  width: 0.52rem;
   aspect-ratio: 1;
   flex: 0 0 auto;
   border-radius: 50%;
@@ -567,7 +567,7 @@
 
 .card-live-pill-value {
   font-family: var(--numeric-font);
-  font-size: 0.94rem;
+  font-size: 1.12rem;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -581,10 +581,10 @@
 .card-live-pill-word {
   color: rgb(255 255 255 / 66%);
   font-family: inherit;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
   font-style: normal;
   font-weight: 700;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -600,7 +600,7 @@
 
   70%,
   100% {
-    box-shadow: 0 0 0 0.4rem rgb(116 196 118 / 0%);
+    box-shadow: 0 0 0 0.5rem rgb(116 196 118 / 0%);
   }
 }
 
@@ -610,11 +610,12 @@
   }
 }
 
-/* On a phone the button and the whole split pill share one row: the pill keeps the button's
-   height but tightens its padding and type, so nothing wraps. */
+/* On a phone the button and the split pill share one row when they fit (the pill keeps the
+   button's height but tightens its padding and type); on the narrowest screens the pill drops
+   below the button rather than squeezing its text. */
 @media (max-width: 640px) {
   .card-chat-row {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 0.4rem;
   }
 
@@ -623,25 +624,30 @@
   }
 
   .card-live-pill-seg {
-    gap: 0.28rem;
-    padding: 0.18rem 0.44rem;
+    gap: 0.3rem;
+    padding: 0.18rem 0.5rem;
   }
 
   .card-live-pill-seg.is-now {
-    padding-left: 0.5rem;
+    padding-left: 0.58rem;
   }
 
   .card-live-pill-bubble {
-    width: 0.84rem;
-    height: 0.84rem;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .card-live-pill-dot {
+    width: 0.44rem;
   }
 
   .card-live-pill-value {
-    font-size: 0.78rem;
+    font-size: 0.92rem;
   }
 
   .card-live-pill-word {
-    font-size: 0.5rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.07em;
   }
 }
 
