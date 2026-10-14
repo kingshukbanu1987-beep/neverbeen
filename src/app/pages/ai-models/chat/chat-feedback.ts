@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { AiModelProfile } from '../ai-model-data';
+import { ModelVerifiedTick } from '../../../shared/model-verified-tick/model-verified-tick';
 import { ChatIdentity } from './chat-identity';
 import { ChatFeedbackFacts } from './chat-summary';
 import { AI_CHAT_FEEDBACK_COMMENT_LIMIT, AiChatClosedReason, AiChatFeedback } from './chat-types';
@@ -34,6 +35,7 @@ export const CHAT_FEEDBACK_RATING_LABELS: readonly string[] = [
  */
 @Component({
   selector: 'app-chat-feedback',
+  imports: [ModelVerifiedTick],
   templateUrl: './chat-feedback.html',
   styleUrl: './chat-feedback.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

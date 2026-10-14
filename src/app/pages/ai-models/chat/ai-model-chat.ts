@@ -19,6 +19,7 @@ import {
   compressCommunityImage,
 } from '../../../shared/community-image-compression';
 import { ChatAutoScroll } from '../../../shared/chat-auto-scroll/chat-auto-scroll';
+import { ModelVerifiedTick } from '../../../shared/model-verified-tick/model-verified-tick';
 import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { CHAT_WELCOME_LINE } from './chat-replies';
 import { AiChatMessageAction, AiChatMessageMenuItem, chatMessageMenu } from './chat-message-menu';
@@ -27,6 +28,7 @@ import { splitLocation } from './chat-knowledge';
 import { buildChatFeedbackFacts } from './chat-summary';
 import { ChatIdentity } from './chat-identity';
 import { ChatIdentityPrompt } from './chat-identity-prompt';
+import { requiresRegisteredChat } from './live-chat-policy';
 import { ChatFeedbackCard } from './chat-feedback';
 import { ChatHistory } from './chat-history';
 import {
@@ -84,7 +86,14 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
  */
 @Component({
   selector: 'app-ai-model-chat',
-  imports: [RouterLink, ChatAutoScroll, ChatIdentityPrompt, ChatFeedbackCard, ChatHistory],
+  imports: [
+    RouterLink,
+    ChatAutoScroll,
+    ChatIdentityPrompt,
+    ChatFeedbackCard,
+    ChatHistory,
+    ModelVerifiedTick,
+  ],
   templateUrl: './ai-model-chat.html',
   styleUrl: './ai-model-chat.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -252,6 +261,8 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
 
   protected readonly country = computed(() => splitLocation(this.model().location).country);
   protected readonly city = computed(() => splitLocation(this.model().location).city);
+  /** Registered User models carry a blue tick beside their name, in every line of this window. */
+  protected readonly registeredOnly = computed(() => requiresRegisteredChat(this.model()));
   protected readonly canSend = computed(
     () =>
       !this.sessionOver() &&

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AiModelChatService } from '../../../services/ai-model-chat.service';
 import { silenceChatPacing } from '../../../services/ai-model-chat.testing';
 import { aiModelProfiles } from '../ai-model-data';
+import { requiresRegisteredChat } from './live-chat-policy';
 import { AiModelChatDialog } from './ai-model-chat';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
@@ -1084,5 +1085,28 @@ describe('AiModelChatDialog', () => {
     await send(harness, 'Have a look at this brief');
     const sent = mineOf(harness);
     expect(sent.querySelector('.chat-forwarded')?.textContent).toContain('Forwarded');
+  });
+
+  it('marks a Registered User model with the blue tick in the header, the profile and every response', async () => {
+    const harness = await openChat(alisha);
+    expect(harness.element.querySelector('.chat-bar-name .model-verified-tick')).not.toBeNull();
+    expect(harness.element.querySelector('#chat-model-name .model-verified-tick')).not.toBeNull();
+
+    await send(harness, 'Hello, who are you?');
+    const replies = Array.from(harness.element.querySelectorAll('.chat-row:not(.is-outgoing)'));
+    expect(replies.length).toBeGreaterThan(0);
+    for (const row of replies) {
+      const tag = row.querySelector('.chat-author-tag');
+      expect(tag?.querySelector('b')?.textContent?.trim()).toBe(alisha.name);
+      expect(tag?.querySelector('.model-verified-tick')).not.toBeNull();
+    }
+    expect(harness.element.querySelector('.chat-row.is-outgoing .chat-author-tag')).toBeNull();
+  });
+
+  it('shows no blue tick for an ordinary model', async () => {
+    const ordinary = aiModelProfiles.find((model) => !requiresRegisteredChat(model))!;
+    const harness = await openChat(ordinary);
+    expect(harness.element.querySelector('.model-verified-tick')).toBeNull();
+    expect(harness.element.querySelector('.chat-author-tag')).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { AiModelProfile } from '../ai-model-data';
+import { ModelVerifiedTick } from '../../../shared/model-verified-tick/model-verified-tick';
 import { AiChatSession } from './chat-types';
 import { buildChatHistory, chatHistoryPrintHtml, printHtmlDocument } from './chat-history-document';
 
@@ -14,6 +15,7 @@ import { buildChatHistory, chatHistoryPrintHtml, printHtmlDocument } from './cha
  */
 @Component({
   selector: 'app-chat-history',
+  imports: [ModelVerifiedTick],
   templateUrl: './chat-history.html',
   styleUrl: './chat-history.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

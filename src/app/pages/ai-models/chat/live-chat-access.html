@@ -19,7 +19,8 @@
           <span class="exclusive-notice-kicker">NeverBeen · Exclusive access</span>
           <h2>A safer space to connect.</h2>
           <p>
-            Exclusive models like <strong>{{ model().name }}</strong> are only available to chat
+            Exclusive models like <strong>{{ model().name }}</strong
+            ><app-model-verified-tick [slug]="model().slug" /> are only available to chat
             with a <strong>Registered User</strong>. For safety and care for our community, please
             support this policy by signing in or registering.
           </p>
@@ -44,7 +45,9 @@
           <span class="selected-model-eyebrow"
             ><i aria-hidden="true"></i> Selected NeverBeen model</span
           >
-          <b>{{ model().name }}</b>
+          <b class="selected-model-name"
+            >{{ model().name }}<app-model-verified-tick [slug]="model().slug"
+          /></b>
           <span class="selected-model-place" aria-label="Selected model location">
             @if (modelCity()) {
               <small><i aria-hidden="true">⌖</i> {{ modelCity() }}</small>
@@ -80,11 +83,12 @@
           <h2 id="live-chat-access-title">Choose how you want to connect.</h2>
           <p>
             @if (registeredOnly()) {
-              Connect with <b>{{ model().name }}</b> as a Registered User. Your verified Community
+              Connect with <b>{{ model().name }}</b
+              ><app-model-verified-tick [slug]="model().slug" /> as a Registered User. Your verified Community
               profile unlocks a longer, more personal conversation.
             } @else {
               Two thoughtful ways to meet <b>{{ model().name }}</b
-              >. Your time, sharing controls and conversation experience are set before the chat
+              ><app-model-verified-tick [slug]="model().slug" />. Your time, sharing controls and conversation experience are set before the chat
               begins.
             }
           </p>
@@ -199,6 +203,12 @@
              the model's personal context rather than returning to a blank surface. -->
         <img class="sign-in-model-photo" [src]="modelAlbumBackdrop()" alt="" aria-hidden="true" />
         <div class="sign-in-flow-content">
+          @if (registeredOnly()) {
+            <p class="sign-in-model-tag">
+              <span>Live Chat with</span>
+              <b>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></b>
+            </p>
+          }
           <app-community-sign-in-card
             [returnTo]="returnTo()"
             eyebrow="NeverBeen Community · Live Chat"
@@ -234,7 +244,10 @@
             </span>
             <div>
               <i>NeverBeen model</i>
-              <h3>{{ model().name }}</h3>
+              <h3>
+                {{ model().name }}
+                <app-model-verified-tick [slug]="model().slug" />
+              </h3>
               <p>{{ modelLocation() || 'NeverBeen Multiverse' }}</p>
               <small>{{ model().handle }}</small>
             </div>

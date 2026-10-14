@@ -710,6 +710,38 @@
   margin: 0 auto;
 }
 
+/* The Registered User model's name, above the Community card, with its blue tick. */
+.sign-in-model-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  width: fit-content;
+  margin: 0 auto 0.9rem;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+  color: #1b2918;
+  font-size: 0.82rem;
+}
+
+.sign-in-model-tag span {
+  color: #5b6a52;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sign-in-model-tag b {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
 .access-review {
   max-width: 800px;
 }

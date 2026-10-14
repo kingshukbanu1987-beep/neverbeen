@@ -138,3 +138,45 @@ describe('exclusive Live Chat access', () => {
     fixture.destroy();
   });
 });
+
+describe('blue tick beside Registered User model names', () => {
+  beforeEach(async () => {
+    community.currentUser.set(null);
+    community.isAuthenticated.set(false);
+    community.guestBrowsing.set(false);
+    community.profile.set(null);
+    await TestBed.configureTestingModule({
+      imports: [LiveChatAccess],
+      providers: [provideRouter([]), { provide: CommunityService, useValue: community }],
+    }).compileComponents();
+  });
+
+  it('shows the tick after the name in the plan form and the safety notice of an exclusive model', () => {
+    const { fixture, element } = chooser(exclusiveSlugs[0]);
+    expect(element.querySelector('.selected-model-name .model-verified-tick')).not.toBeNull();
+    expect(element.querySelector('.exclusive-notice .model-verified-tick')).not.toBeNull();
+    expect(element.querySelector('.model-verified-tick')?.getAttribute('title')).toContain(
+      'Registered Users only',
+    );
+    fixture.destroy();
+  });
+
+  it('shows the tick in the Community sign-in step, where it names the model above the form', () => {
+    const { fixture, element } = chooser(exclusiveSlugs[0]);
+    element.querySelector<HTMLButtonElement>('.plan-start-registered')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.sign-in-model-tag b .model-verified-tick')).not.toBeNull();
+    fixture.destroy();
+  });
+
+  it('shows no tick and no sign-in name chip for an ordinary model', () => {
+    const ordinary = aiModelProfiles.find((model) => !requiresRegisteredChat(model))!;
+    const { fixture, element } = chooser(ordinary.slug);
+    expect(element.querySelector('app-model-verified-tick')).not.toBeNull();
+    expect(element.querySelector('.model-verified-tick')).toBeNull();
+    element.querySelector<HTMLButtonElement>('.plan-start-registered')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.sign-in-model-tag')).toBeNull();
+    fixture.destroy();
+  });
+});

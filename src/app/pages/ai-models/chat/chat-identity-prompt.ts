@@ -29,6 +29,7 @@ import {
   compressCommunityImage,
   readImageAsDataUrl,
 } from '../../../shared/community-image-compression';
+import { ModelVerifiedTick } from '../../../shared/model-verified-tick/model-verified-tick';
 
 /**
  * A — the form in front of the chat window: the visitor's photograph (uploaded or taken with the
@@ -38,6 +39,7 @@ import {
  */
 @Component({
   selector: 'app-chat-identity-prompt',
+  imports: [ModelVerifiedTick],
   templateUrl: './chat-identity-prompt.html',
   styleUrl: './chat-identity-prompt.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

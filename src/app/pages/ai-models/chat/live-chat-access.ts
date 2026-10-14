@@ -11,6 +11,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
 import { CommunitySignInCard } from '../../../shared/community-sign-in-card/community-sign-in-card';
+import { ModelVerifiedTick } from '../../../shared/model-verified-tick/model-verified-tick';
 import { AiModelProfile } from '../ai-model-data';
 import { ChatIdentity } from './chat-identity';
 import { requiresRegisteredChat } from './live-chat-policy';
@@ -31,7 +32,7 @@ type PlanFeature = {
  */
 @Component({
   selector: 'app-live-chat-access',
-  imports: [RouterLink, CommunitySignInCard],
+  imports: [RouterLink, CommunitySignInCard, ModelVerifiedTick],
   templateUrl: './live-chat-access.html',
   styleUrl: './live-chat-access.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
