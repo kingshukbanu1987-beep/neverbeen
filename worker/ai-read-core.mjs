@@ -26,13 +26,15 @@
  * understood, and the rules she answers by forbid naming where anything came from.
  */
 
+import { geminiGenerateContentUrl, geminiHeaders, logGeminiFailure } from './gemini-http.mjs';
+
 export const AI_READ_ENDPOINT = '/api/ai-read';
 
 /** A turn is the question, the model card and one attachment — about the size of the chat body. */
 export const MAX_READ_BODY_BYTES = 6 * 1024 * 1024;
 
-/** The Gemini model that does the reading when `GEMINI_MODEL` is not configured. */
-export const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
+/** Default for projects without legacy Gemini 2.5 access; override with GEMINI_MODEL. */
+export const GEMINI_DEFAULT_MODEL = 'gemini-3.6-flash';
 
 /** The OpenAI model used for the reading when `OPENAI_MODEL` is not configured. */
 export const OPENAI_DEFAULT_READ_MODEL = 'gpt-4o-mini';
@@ -40,7 +42,6 @@ export const OPENAI_DEFAULT_READ_MODEL = 'gpt-4o-mini';
 /** The largest attachment the reading desk will look at (the window sends about 320 KB). */
 export const MAX_READ_ATTACHMENT_BYTES = 4 * 1024 * 1024;
 
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 const GOOGLE_TRANSLATE_ENDPOINT = 'https://translation.googleapis.com/language/translate/v2';
 const GOOGLE_TRANSLATE_PUBLIC_ENDPOINT = 'https://translate.googleapis.com/translate_a/single';
@@ -374,7 +375,7 @@ export function buildOpenAiReadBody(turn, translation, model = OPENAI_DEFAULT_RE
 }
 
 /** The Gemini body for the reading: the same instruction, with the image or the PDF inline. */
-export function buildGeminiReadBody(turn, translation) {
+export function buildGeminiReadBody(turn, translation, model = GEMINI_DEFAULT_MODEL) {
   const parts = [{ text: buildReadInstruction(turn, translation) }];
   const attachment = turn.attachment;
   if (attachment?.dataUrl) {
@@ -390,7 +391,13 @@ export function buildGeminiReadBody(turn, translation) {
     generationConfig: {
       temperature: 0.2,
       responseMimeType: 'application/json',
-      maxOutputTokens: 800,
+      maxOutputTokens: 2048,
+      // Gemini 3+ controls reasoning with `thinkingLevel`, not the 2.5 series' `thinkingBudget`.
+      // The reading is a quick structured pass, so keep it at the cheapest level that still
+      // reads properly — and only send it to models that understand it.
+      ...(/^(?:models\/)?gemini-[34](?:[.-])/.test(model)
+        ? { thinkingConfig: { thinkingLevel: 'low' } }
+        : {}),
     },
   };
 }
@@ -464,19 +471,21 @@ export async function readWithGemini(turn, translation, env, fetchImpl = fetch) 
 
   const model = env.GEMINI_MODEL?.trim() || GEMINI_DEFAULT_MODEL;
   try {
-    const response = await fetchImpl(
-      `${GEMINI_ENDPOINT}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(buildGeminiReadBody(turn, translation)),
-      },
-    );
-    if (!response.ok) return null;
+    const response = await fetchImpl(geminiGenerateContentUrl(model), {
+      method: 'POST',
+      headers: geminiHeaders(key),
+      body: JSON.stringify(buildGeminiReadBody(turn, translation, model)),
+    });
+    if (!response.ok) {
+      await logGeminiFailure('ai-read', model, response);
+      return null;
+    }
     const payload = await response.json();
     const parts = payload?.candidates?.[0]?.content?.parts;
     const text = Array.isArray(parts)
-      ? parts.map((part) => (typeof part?.text === 'string' ? part.text : '')).join('')
+      ? parts
+          .map((part) => (!part?.thought && typeof part?.text === 'string' ? part.text : ''))
+          .join('')
       : '';
     const reading = normaliseReading(text, null);
     return reading ? { ...reading, provider: 'gemini' } : null;

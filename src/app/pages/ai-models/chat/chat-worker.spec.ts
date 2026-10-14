@@ -218,6 +218,65 @@ describe('the reading desk Worker entry', () => {
     ).toBe('application/json');
   });
 
+  it('sends the auth key in the x-goog-api-key header to a model a new key may use', async () => {
+    // Regression: the site defaulted to gemini-2.5-flash with the key in `?key=`. Google
+    // can return 404 when the project lacks legacy 2.5 access. Credentials belong in
+    // the documented auth header, never in request URLs.
+    const calls: { url: string; headers: Record<string, string> }[] = [];
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.startsWith(TRANSLATE_URL)) {
+        return new Response(JSON.stringify([[['Hello.', 'hello', null]], null, 'en']), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      calls.push({
+        url,
+        headers: (init?.headers ?? {}) as Record<string, string>,
+      });
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      english: 'Hello.',
+                      language: 'en',
+                      languageName: 'English',
+                      romanised: false,
+                      intent: 'greeting',
+                      sentiment: 'warm',
+                      tone: 'short and sweet',
+                      about: 'a greeting',
+                      wants: 'a greeting back',
+                      attachment: '',
+                      advice: 'Say hello back.',
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+
+    const response = await call(postRead(READ_BODY, '2030:db8::46'), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'AQ.test-auth-key',
+    });
+    expect(response.status).toBe(200);
+    expect(calls.length).toBe(1);
+    expect(calls[0].url).toBe(`${GEMINI_URL}/${GEMINI_DEFAULT_MODEL}:generateContent`);
+    expect(calls[0].url).not.toContain('gemini-2.5');
+    expect(calls[0].url).not.toContain('key=');
+    expect(calls[0].headers['x-goog-api-key']).toBe('AQ.test-auth-key');
+  });
+
   it('puts an attached photograph or document in front of the reading model', async () => {
     const bodies = stubGeminiReading({
       english: 'Here is the brief.',
@@ -399,10 +458,15 @@ describe('her camera Worker entry', () => {
 
   it('takes the selfie from her own profile photograph with Gemini', async () => {
     const bodies: Record<string, unknown>[] = [];
+    const calls: { url: string; headers: Record<string, string> }[] = [];
     vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toContain(
         `${GEMINI_URL}/${GEMINI_DEFAULT_IMAGE_MODEL}:generateContent`,
       );
+      calls.push({
+        url: String(input),
+        headers: (init?.headers ?? {}) as Record<string, string>,
+      });
       bodies.push(JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>);
       return new Response(
         JSON.stringify({
@@ -426,6 +490,10 @@ describe('her camera Worker entry', () => {
       GEMINI_API_KEY: 'k',
     });
     expect(response.status).toBe(200);
+    // The camera must use the new image-model default and header authentication.
+    expect(calls[0].url).not.toContain('gemini-2.5');
+    expect(calls[0].url).not.toContain('key=');
+    expect(calls[0].headers['x-goog-api-key']).toBe('k');
     const payload = (await response.json()) as Record<string, unknown>;
     expect(payload['ok']).toBe(true);
     expect(payload['provider']).toBe('gemini');
@@ -737,5 +805,65 @@ describe('AI chat Worker entry', () => {
 
     expect(statuses.filter((status) => status === 405).length).toBe(30);
     expect(statuses.at(-1)).toBe(429);
+  });
+});
+
+describe('Gemini live selfie transport regression', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('uses the image model and header authentication for both photos', async () => {
+    const calls: { url: string; init?: RequestInit }[] = [];
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(input), init });
+      return Response.json({
+        candidates: [
+          { content: { parts: [{ inlineData: { mimeType: 'image/png', data: 'QUJD' } }] } },
+        ],
+      });
+    });
+    const response = await call(postLiveSelfies({ reference: 'data:image/jpeg;base64,AAAA' }), {
+      ASSETS: ENV.ASSETS,
+      GEMINI_API_KEY: 'AQ.test-auth-key',
+      GEMINI_IMAGE_MODEL: 'models/gemini-3.1-flash-image',
+    });
+    expect(response.status).toBe(200);
+    expect((await response.json()).count).toBe(2);
+    expect(calls).toHaveLength(2);
+    for (const { url, init } of calls) {
+      expect(url).toBe(`${GEMINI_URL}/gemini-3.1-flash-image:generateContent`);
+      expect(new Headers(init?.headers).get('x-goog-api-key')).toBe('AQ.test-auth-key');
+      expect(JSON.parse(String(init?.body)).generationConfig.responseModalities).toEqual(['IMAGE']);
+    }
+  });
+
+  it('keeps failures generic to the browser and logs no upstream secrets', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const upstream = vi.fn(async () =>
+      Response.json(
+        {
+          error: {
+            message: 'Secret AQ.test-auth-key and private user input',
+          },
+        },
+        { status: 404 },
+      ),
+    );
+    vi.stubGlobal('fetch', upstream);
+    const response = await call(
+      postLiveSelfies({ reference: 'data:image/jpeg;base64,AAAA' }, '2030:db8::61'),
+      {
+        ASSETS: ENV.ASSETS,
+        GEMINI_API_KEY: 'AQ.test-auth-key',
+      },
+    );
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({ ok: false, error: 'selfies-failed' });
+    expect(upstream).toHaveBeenCalledTimes(2); // no retry loop against an unavailable model
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(warn.mock.calls)).toContain('404');
+    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/AQ.test|private user/);
   });
 });

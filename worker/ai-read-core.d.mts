@@ -104,6 +104,7 @@ export declare function buildOpenAiReadBody(
 export declare function buildGeminiReadBody(
   turn: ReadTurn,
   translation: GoogleTranslation | null,
+  model?: string,
 ): Record<string, unknown>;
 export declare function parseJsonObject(raw: unknown): Record<string, unknown> | null;
 export declare function normaliseReading(

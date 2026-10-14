@@ -115,7 +115,7 @@ profile or add a model, so the repository matches what is deployed.
 
    to `POST /neverbeen-api/api/ai-chat`, on every turn.
 
-3. The API (patch below) puts the biography into the Gemini (`gemini-2.5-flash`) system
+3. The API (patch below) puts the biography into the Gemini (`gemini-3.6-flash`) system
    instruction, right after the character profile. Gemini is told:
    - this is her own past, to be told in the first person, a detail or two at a time;
    - never to invent a fact that contradicts it, and that the profile wins over the biography;

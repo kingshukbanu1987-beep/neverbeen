@@ -635,7 +635,7 @@ unchanged from session to session, so a welcome can always be read back word for
 
 The reference is **her own profile photograph** (`selfieReference()` — the cover of her card), reduced
 to at most 768 pixels on its longest side in the window and sent with the request. Gemini's image
-model (`GEMINI_IMAGE_MODEL`, `gemini-2.5-flash-image` by default) is asked for one new phone selfie of
+model (`GEMINI_IMAGE_MODEL`, `gemini-3.1-flash-image` by default) is asked for one new phone selfie of
 the woman in that photograph, taken in that moment, with `responseModalities: ["IMAGE"]`, and answers
 with the picture as base64 — which is returned as `{ ok: true, provider: "gemini", image: "data:…" }`
 and shown in a selfie bubble. Nothing is stored, and no visitor photograph is ever part of it: the
@@ -738,9 +738,9 @@ Her open-ended answers come from the **NeverBeen Web API**, never from a key in 
    character profile as her main rule engine (its `hardLimits` absolute; it cannot switch the
    studio rules off), her biography as her own first-person past (the profile wins where the two
    disagree), her card, the visitor, the reading and the dossier — and calls
-   **`gemini-2.5-flash`** with the key from its **`GEMINI_API_KEY` environment variable**, sent in
+   **`gemini-3.6-flash`** with the key from its **`GEMINI_API_KEY` environment variable**, sent in
    the `x-goog-api-key` header.
-4. It answers `200 { "ok": true, "reply": "…", "provider": "gemini", "model": "gemini-2.5-flash" }`;
+4. It answers `200 { "ok": true, "reply": "…", "provider": "gemini", "model": "gemini-3.6-flash" }`;
    the window types the reply out like her own and splits it on blank lines (intent `gemini`). The
    reply is **read before she says it** — by the API first (`AiChatPrompt.InHerVoice()`, which takes
    out the sentences that read like software) and by the window again (requirement **L**, below) —
@@ -785,13 +785,13 @@ her album when a selfie is asked for. To exercise the live paths:
 
 ```bash
 OPENAI_API_KEY=sk-… GOOGLE_SEARCH_API_KEY=… GOOGLE_SEARCH_CX=… \
-GEMINI_API_KEY=… GEMINI_MODEL=gemini-2.5-flash GEMINI_IMAGE_MODEL=gemini-2.5-flash-image \
+GEMINI_API_KEY=… GEMINI_MODEL=gemini-3.6-flash GEMINI_IMAGE_MODEL=gemini-3.1-flash-image \
 GOOGLE_TRANSLATE_API_KEY=… npm start
 ```
 
 In production the same values are Worker secrets, with `OPENAI_MODEL`, `GEMINI_MODEL` and
-`GEMINI_IMAGE_MODEL` as optional variables (`gpt-4o-mini`, `gemini-2.5-flash` and
-`gemini-2.5-flash-image` by default):
+`GEMINI_IMAGE_MODEL` as optional variables (`gpt-4o-mini`, `gemini-3.6-flash` and
+`gemini-3.1-flash-image` by default):
 
 ```bash
 npx wrangler secret put OPENAI_API_KEY            # the answer, and the reading when Gemini is absent
@@ -802,15 +802,53 @@ npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # optional: the Cloud Translat
 ```
 
 **No Gemini key lives in `wrangler.jsonc` any more** — the file is public. `GEMINI_MODEL` and
-`GEMINI_IMAGE_MODEL` stay there (model names are not secrets) and are pinned to `gemini-2.5-flash`
-for the reading desk and the live-chat selfies; those Worker endpoints read the key from an
-optional Worker secret (`npx wrangler secret put GEMINI_API_KEY` above). The chat's answer itself
-comes from the backend — see [AI Chat through the backend (Gemini)](#ai-chat-through-the-backend-gemini).
+`GEMINI_IMAGE_MODEL` stay there (model names are not secrets) and are pinned to `gemini-3.6-flash`
+for the reading desk and `gemini-3.1-flash-image` for her camera and the live-chat selfies; those
+Worker endpoints read the key from an optional Worker secret
+(`npx wrangler secret put GEMINI_API_KEY` above). The chat's answer itself comes from the backend —
+see [AI Chat through the backend (Gemini)](#ai-chat-through-the-backend-gemini).
+
+### Gemini 404 migration (2026-10-14)
+
+The old reading/chat default was `gemini-2.5-flash`. Google limits Gemini 2.5 access to
+projects that previously used those models; unavailable models can return `404 NOT_FOUND`.
+This is a likely explanation for the reported errors, not a live verification of any key.
+The production image variable also incorrectly selected the text-only `gemini-2.5-flash`.
+
+- Deploy this Worker with `GEMINI_MODEL=gemini-3.6-flash` and
+  `GEMINI_IMAGE_MODEL=gemini-3.1-flash-image`. Update any dashboard/environment overrides too.
+- **The chat reply is hosted separately in Azure.** After the three API patches above, apply
+  `docs/patches/neverbeen-api-ai-chat-model-migration.patch` in `neverbeen-api` and redeploy
+  that API. It changes `ChatModel` and replaces the 2.5-only `thinkingBudget` with
+  `thinkingLevel`. Changing the Worker's variables does not change Azure's hard-coded model.
+  The original patches remain unchanged for existing installations. From the API checkout:
+
+  ```bash
+  git apply --check ../neverbeen/docs/patches/neverbeen-api-ai-chat-model-migration.patch
+  git apply ../neverbeen/docs/patches/neverbeen-api-ai-chat-model-migration.patch
+  ```
+- All Worker Gemini calls now use `x-goog-api-key`, following Google's documented native REST
+  authentication, rather than putting credentials in URLs. No prefix validation rejects auth keys.
+- Rotate any shared key. Set the replacement as the Cloudflare Worker secret `GEMINI_API_KEY`
+  and the Azure application setting `GEMINI_API_KEY`. Never commit it or paste it into chat.
+- After deployment check `/api/ai-read` for `provider: "gemini"`,
+  `/neverbeen-api/api/ai-chat` for a Gemini reply, and `/api/livechatselfiesandphotos` for images.
+  A local/album fallback is **not** evidence that Gemini succeeded. Worker logs now report the
+  model and upstream status without logging keys, prompts, images, or upstream response bodies.
+  A persistent 404 needs the model/project availability checked; 401/403 indicate credentials or
+  permissions, and 429 indicates quota/rate limits. Review a fresh usage window: historical
+  failed requests remain in the dashboard after a fix.
+
+References: [1](https://ai.google.dev/gemini-api/docs/models),
+[6](https://ai.google.dev/gemini-api/docs/generate-content/api-key),
+[1](https://ai.google.dev/gemini-api/docs/generate-content/thinking).
 
 `npm start` prints a line for each of the three endpoints and says what is configured: the chat, the
 reading desk, and her camera.
 
 ## Tests
+
+Gemini configuration and incremental API migration: `node --test scripts/gemini-config.test.mjs`.
 
 ```bash
 npx ng test --no-watch --include "src/app/pages/ai-models/chat/*.spec.ts"
