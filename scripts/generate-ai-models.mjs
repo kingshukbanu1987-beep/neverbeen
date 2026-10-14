@@ -87,13 +87,18 @@ function listImages(directory) {
 /**
  * Biography and Portfolio images belong to their own pages and must never leak into the
  * portfolio grid: `Biography/` holds the fictional memory images, `Portfolio/` holds the
- * generated portfolio document and its assets.
+ * generated portfolio document and its assets, and `personality/` holds the model's static
+ * character database (`characterdatabase.json`) for Live Chat.
  */
 function listAlbumImages(albumDir) {
   return naturalSort(
     listImages(albumDir).filter((absolutePath) => {
       const firstDirectory = relative(albumDir, absolutePath).split(sep)[0]?.toLocaleLowerCase();
-      return firstDirectory !== 'biography' && firstDirectory !== 'portfolio';
+      return (
+        firstDirectory !== 'biography' &&
+        firstDirectory !== 'portfolio' &&
+        firstDirectory !== 'personality'
+      );
     }),
   );
 }

@@ -11,6 +11,7 @@
     "generate:collection": "node scripts/generate-collection.mjs",
     "generate:ai-models": "node scripts/generate-ai-models.mjs",
     "biography": "node BiographyScript.mjs",
+    "personality": "node CharacterDatabaseScript.mjs",
     "portfolio": "node CreatePortfolio.mjs",
     "ingest:collection": "node scripts/ingest-collection-uploads.mjs",
     "ingest:model-photos": "node scripts/ingest-model-photos.mjs",
