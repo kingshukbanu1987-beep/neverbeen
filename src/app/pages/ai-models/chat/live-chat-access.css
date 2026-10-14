@@ -629,10 +629,13 @@
 }
 
 .flow-back {
-  display: inline-flex;
+  /* This is intentionally a block-level flex button. It reserves its own row before the plan
+     kicker, preventing “All chat options” and “Registered User” from sharing/overlapping a line. */
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: 0.38rem;
-  margin: 0 auto 1.7rem;
+  margin: 0 auto 1.05rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -645,6 +648,52 @@
 
 .flow-back:hover {
   color: #3f8b19;
+}
+
+/* The Community step stays visibly connected to the selected model: an album photograph is
+   layered at 70% opacity across the form, while the interactive sign-in controls remain crisp. */
+.access-sign-in {
+  width: 100%;
+  max-width: none;
+  overflow: hidden;
+  padding: 0;
+  isolation: isolate;
+  background: #fff;
+}
+
+.sign-in-model-photo {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.sign-in-flow-content {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  padding: clamp(1.4rem, 4vw, 3rem);
+  margin: 0 auto;
+}
+
+/* The soft light edge keeps the headline legible over every selected album image without
+   disguising the photo or reducing its requested 70% presence. */
+.sign-in-flow-content > .flow-back,
+.sign-in-flow-content > .access-kicker,
+.sign-in-flow-content > h2,
+.sign-in-flow-content > .flow-lede {
+  text-shadow: 0 1px 16px rgb(255 255 255 / 96%), 0 0 5px rgb(255 255 255 / 88%);
+}
+
+.access-sign-in .waiting-title {
+  font-family: Calibri, Carlito, 'Segoe UI', Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.035em;
 }
 
 .access-sign-in .community-auth-card {
@@ -908,6 +957,11 @@
   .access-content,
   .access-flow {
     padding: 1.35rem 1rem 1.7rem;
+  }
+
+  /* The image-backed member sign-in owns its padding through its inner content wrapper. */
+  .access-sign-in {
+    padding: 0;
   }
 
   .plan-grid,

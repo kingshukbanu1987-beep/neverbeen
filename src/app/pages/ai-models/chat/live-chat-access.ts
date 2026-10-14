@@ -171,6 +171,21 @@ export class LiveChatAccess {
     this.registeredStarted.emit({ name: this.memberName(), avatar: this.memberPhoto() });
   }
 
+  /**
+   * Gives the registration step a real photograph from the selected model's own album. The hash
+   * makes the choice stable during the flow (and safe for rendering) while still varying across
+   * the NeverBeen models instead of always repeating their cover image.
+   */
+  protected readonly modelAlbumBackdrop = computed(() => {
+    const model = this.model();
+    const albumPhotos = model.photos.filter((photo) => photo.src && photo.src !== model.cover);
+    const candidates = albumPhotos.length ? albumPhotos : model.photos;
+    if (!candidates.length) return model.cover;
+
+    const hash = [...model.slug].reduce((total, character) => total * 31 + character.charCodeAt(0), 17);
+    return candidates[Math.abs(hash) % candidates.length].src;
+  });
+
   protected modelLocation(): string {
     return this.modelLocationParts().join(' · ');
   }

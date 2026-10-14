@@ -135,20 +135,25 @@
       </div>
     } @else if (stage() === 'sign-in') {
       <div class="access-flow access-sign-in">
-        <button type="button" class="flow-back" (click)="backToPlans()"><span aria-hidden="true">←</span> All chat options</button>
-        <span class="access-kicker"><i aria-hidden="true"></i> Registered User</span>
-        <h2 id="live-chat-access-title">Your 45-minute chat is waiting.</h2>
-        <p class="flow-lede">
-          Sign in to Community to verify your profile, unlock photo and video sharing, and continue
-          to your private chat details with <b>{{ model().name }}</b>.
-        </p>
-        <app-community-sign-in-card
-          [returnTo]="returnTo()"
-          eyebrow="NeverBeen Community · Live Chat"
-          title="Continue as a Community member."
-          copy="Use the same secure Google sign-in as Community testimonials. New members can complete their profile, then return directly to this chat."
-          note="Registered User Live Chat · profile registration required · 45 minutes"
-        />
+        <!-- A different album image is selected for each model, retaining the personal context
+             through the Community sign-in step rather than returning to a blank surface. -->
+        <img class="sign-in-model-photo" [src]="modelAlbumBackdrop()" alt="" aria-hidden="true" />
+        <div class="sign-in-flow-content">
+          <button type="button" class="flow-back" (click)="backToPlans()"><span aria-hidden="true">←</span> All chat options</button>
+          <span class="access-kicker"><i aria-hidden="true"></i> Registered User</span>
+          <h2 id="live-chat-access-title" class="waiting-title">Your 45-minute chat is waiting.</h2>
+          <p class="flow-lede">
+            Sign in to Community to verify your profile, unlock photo and video sharing, and continue
+            to your private chat details with <b>{{ model().name }}</b>.
+          </p>
+          <app-community-sign-in-card
+            [returnTo]="returnTo()"
+            eyebrow="NeverBeen Community · Live Chat"
+            title="Continue as a Community member."
+            copy="Use the same secure Google sign-in as Community testimonials. New members can complete their profile, then return directly to this chat."
+            note="Registered User Live Chat · profile registration required · 45 minutes"
+          />
+        </div>
       </div>
     } @else {
       <div class="access-flow access-review">
