@@ -27,7 +27,7 @@
  *     pair matches, while the poses and the angle differ.
  *
  *   Gemini image model  `GEMINI_API_KEY`, `GEMINI_IMAGE_MODEL`
- *                       (default `gemini-2.5-flash-image`)
+ *                       (default `gemini-3.1-flash-image`)
  *   Phone watermark      `LIVECHAT_PHONE_WATERMARK`
  *                       (default `Shot on iPhone 18 Pro`)
  *
@@ -40,6 +40,7 @@ import {
   cleanSelfieText,
   extractGeneratedImage,
 } from './ai-selfie-core.mjs';
+import { geminiGenerateContentUrl, geminiHeaders, logGeminiFailure } from './gemini-http.mjs';
 
 export const LIVE_CHAT_SELFIES_ENDPOINT = '/api/livechatselfiesandphotos';
 
@@ -54,8 +55,6 @@ export const LIVE_CHAT_PHOTO_COUNT = 2;
 
 /** The latest trending phone's camera watermark, stamped into the bottom-right of every photo. */
 export const LIVE_CHAT_PHONE_WATERMARK_DEFAULT = 'Shot on iPhone 18 Pro';
-
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const LIMITS = {
   name: 120,
@@ -644,15 +643,13 @@ export async function createLiveChatSelfiesResponse({ payload, env, fetchImpl = 
     scene.poses.map(async (pose) => {
       const variant = { ...variantBase, pose, flaw: scene.flaws[0] };
       try {
-        const upstream = await fetchImpl(
-          `${GEMINI_ENDPOINT}/${encodeURIComponent(geminiModel)}:generateContent?key=${encodeURIComponent(key)}`,
-          {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(buildGeminiLiveChatSelfiesBody(request, variant)),
-          },
-        );
+        const upstream = await fetchImpl(geminiGenerateContentUrl(geminiModel), {
+          method: 'POST',
+          headers: geminiHeaders(key),
+          body: JSON.stringify(buildGeminiLiveChatSelfiesBody(request, variant)),
+        });
         if (!upstream.ok) {
+          await logGeminiFailure('livechatselfiesandphotos', geminiModel, upstream);
           unreachable = true;
           return null;
         }

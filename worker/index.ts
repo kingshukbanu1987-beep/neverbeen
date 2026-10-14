@@ -18,7 +18,7 @@
  *
  * The AI model chat's answers come from the NeverBeen Web API (`/neverbeen-api/api/ai-chat`, proxied
  * below): the website sends the visitor's message and the model's `characterdatabase.json`, and the
- * API calls Gemini `gemini-2.5-flash` with its own `GEMINI_API_KEY` environment variable. No Gemini
+ * API calls Gemini `gemini-3.6-flash` with its own `GEMINI_API_KEY` environment variable. No Gemini
  * key belongs in `wrangler.jsonc`.
  *
  * `/api/ai-chat` is the older OpenAI chat endpoint, no longer called by the website. It needs its
@@ -83,9 +83,9 @@ interface Env {
   GOOGLE_SEARCH_CX?: string;
   /** Google Gemini key — the reading desk, and the camera that takes her selfies (optional). */
   GEMINI_API_KEY?: string;
-  /** Gemini model used for the reading (defaults to `gemini-2.5-flash`). */
+  /** Gemini model used for the reading (defaults to `gemini-3.6-flash`). */
   GEMINI_MODEL?: string;
-  /** Gemini image model used for her selfies (defaults to `gemini-2.5-flash-image`). */
+  /** Gemini image model used for her selfies (defaults to `gemini-3.1-flash-image`). */
   GEMINI_IMAGE_MODEL?: string;
   /** The camera watermark `livechatselfiesandphotos` stamps into the corner of every photo. */
   LIVECHAT_PHONE_WATERMARK?: string;

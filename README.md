@@ -247,7 +247,7 @@ the conversation** at fifteen, ten, five and one minutes left as a glowing viole
 the two hours are up and the window closes.
 
 **Every message the visitor sends** goes from `POST /neverbeen-api/api/ai-chat` (the Worker's
-same-origin proxy to the API) to the **NeverBeen Web API** with **Google Gemini `gemini-2.5-flash`**:
+same-origin proxy to the API) to the **NeverBeen Web API** with **Google Gemini `gemini-3.6-flash`**:
 the window sends their message together with the model's character profile —
 `public/NeverBeenModels/<Album>/personality/characterdatabase.json` — and her biography —
 `personality/biography.json`, her own profile plus the details of her life, written by
@@ -271,7 +271,10 @@ changes are
 then [`docs/patches/neverbeen-api-ai-chat-biography.patch`](docs/patches/neverbeen-api-ai-chat-biography.patch),
 then [`docs/patches/neverbeen-api-ai-chat-her-voice.patch`](docs/patches/neverbeen-api-ai-chat-her-voice.patch)
 (requirement **L** on the server: the rules, the visitor's `language`, and the scrub), each with its
-own `*-verification.py`.
+own `*-verification.py`. Then apply
+[`docs/patches/neverbeen-api-ai-chat-model-migration.patch`](docs/patches/neverbeen-api-ai-chat-model-migration.patch)
+to upgrade existing API installations to Gemini 3.6 (see the Gemini 404 migration notes in
+[`docs/ai-model-chat.md`](docs/ai-model-chat.md#gemini-404-migration-2026-10-14)).
 The Worker's reading desk (`/api/ai-read`) and camera (`/api/ai-selfie`,
 `/api/livechatselfiesandphotos`) read an optional Worker **secret** of the same name
 (`npx wrangler secret put GEMINI_API_KEY`), `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the

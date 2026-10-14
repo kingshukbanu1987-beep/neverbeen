@@ -990,7 +990,7 @@ describe('AiModelChatService', () => {
                 ok: true,
                 reply: 'Delhi, of course.',
                 provider: 'gemini',
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3.6-flash',
               }),
               { status: 200, headers: { 'content-type': 'application/json' } },
             ),

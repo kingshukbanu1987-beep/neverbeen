@@ -8,7 +8,7 @@
  * a new photograph, at the moment she says she took it.
  *
  *   Gemini image model  `GEMINI_API_KEY`, `GEMINI_IMAGE_MODEL`
- *                       (default `gemini-2.5-flash-image`)
+ *                       (default `gemini-3.1-flash-image`)
  *
  * With no key — and whenever the model refuses, times out or answers with something that is not a
  * picture — the endpoint answers `503 { ok: false, error: 'selfie-unavailable' }` and the chat
@@ -19,21 +19,21 @@
  * the visitor's own photograph never reaches the studio's albums.
  */
 
+import { geminiGenerateContentUrl, geminiHeaders, logGeminiFailure } from './gemini-http.mjs';
+
 export const AI_SELFIE_ENDPOINT = '/api/ai-selfie';
 
 /** Her profile photograph travels with the request, so the body is a little larger than a turn. */
 export const MAX_SELFIE_BODY_BYTES = 8 * 1024 * 1024;
 
-/** The image model that takes the selfie when `GEMINI_IMAGE_MODEL` is not configured. */
-export const GEMINI_DEFAULT_IMAGE_MODEL = 'gemini-2.5-flash-image';
+/** Native image generation model, distinct from the text/reading model. */
+export const GEMINI_DEFAULT_IMAGE_MODEL = 'gemini-3.1-flash-image';
 
 /** The largest profile photograph the endpoint will send as the likeness reference. */
 export const MAX_SELFIE_REFERENCE_BYTES = 5 * 1024 * 1024;
 
 /** The largest selfie the endpoint will accept back from the model (about 6 MB of base64). */
 export const MAX_SELFIE_IMAGE_CHARS = 8 * 1024 * 1024;
-
-const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
 const LIMITS = {
   name: 120,
@@ -178,19 +178,17 @@ export async function createAiSelfieResponse({ payload, env, fetchImpl = fetch }
 
   let upstream;
   try {
-    upstream = await fetchImpl(
-      `${GEMINI_ENDPOINT}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(buildGeminiSelfieBody(request)),
-      },
-    );
+    upstream = await fetchImpl(geminiGenerateContentUrl(model), {
+      method: 'POST',
+      headers: geminiHeaders(key),
+      body: JSON.stringify(buildGeminiSelfieBody(request)),
+    });
   } catch {
     return jsonResponse(502, { ok: false, error: 'selfie-failed' });
   }
 
   if (!upstream.ok) {
+    await logGeminiFailure('ai-selfie', model, upstream);
     return jsonResponse(502, { ok: false, error: 'selfie-failed' });
   }
 

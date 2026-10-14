@@ -17,7 +17,7 @@
  *   NeverBeen Web API: their words travel with the model's character profile (her
  *   `personality/characterdatabase.json`) and her biography (`personality/biography.json` — her
  *   profile and her life story) to `POST /neverbeen-api/api/ai-chat`, the API calls
- *   Google Gemini (`gemini-2.5-flash`) with the key that only the server knows, and **the answer it
+ *   Google Gemini (`gemini-3.6-flash`) with the key that only the server knows, and **the answer it
  *   sends back is what she says** — never a canned line, never a menu of what she can do. Her own
  *   engine (`chat-replies.ts`) writes a turn only when the API cannot be reached at all (no key, no
  *   endpoint, offline), or when the turn is one the window itself carries out (a warning, her
@@ -1549,7 +1549,7 @@ export class AiModelChatService {
    *
    * Her card, the visitor, the reading of the turn (meaning, language, tone, what an attachment
    * held), the personal answers they have given so far and the recent conversation travel with them.
-   * The backend calls Google Gemini (`gemini-2.5-flash`) with its secret `GEMINI_API_KEY` and
+   * The backend calls Google Gemini (`gemini-3.6-flash`) with its secret `GEMINI_API_KEY` and
    * answers `{ ok: true, reply, provider: 'gemini', model }` — and that reply is what she says.
    *
    * Returns `null` — so the local engine writes this one turn — only when the backend cannot be

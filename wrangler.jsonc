@@ -12,11 +12,13 @@
     // No GEMINI_API_KEY here, ever: this file is public. The AI Chat's Gemini key lives only in the
     // NeverBeen Web API's GEMINI_API_KEY environment variable — the website sends the visitor's
     // message and the model's characterdatabase.json to /neverbeen-api/api/ai-chat and the API
-    // calls gemini-2.5-flash. (The Worker's own reading desk and selfie endpoints read an optional
+    // calls gemini-3.6-flash. (The Worker's own reading desk and selfie endpoints read an optional
     // Worker *secret* of the same name: `npx wrangler secret put GEMINI_API_KEY`.)
-    // Model names are not secrets — the reading and the live selfies both use gemini-2.5-flash.
-    "GEMINI_MODEL": "gemini-2.5-flash",
-    "GEMINI_IMAGE_MODEL": "gemini-2.5-flash",
+    // Model names are not secrets. Do not pin these back to a gemini-2.5-* model: Google returns
+    // 404 NOT_FOUND when a project lacks legacy access. Reading uses gemini-3.6-flash;
+    // cameras use gemini-3.1-flash-image (the text model cannot generate photographs).
+    "GEMINI_MODEL": "gemini-3.6-flash",
+    "GEMINI_IMAGE_MODEL": "gemini-3.1-flash-image",
   },
   "assets": {
     "directory": "./dist/neverbeen/browser",
