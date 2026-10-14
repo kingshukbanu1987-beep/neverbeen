@@ -1,6 +1,7 @@
 <div class="access-backdrop" (click)="closed.emit()">
   <section
     class="access-shell"
+    [class.is-sign-in]="stage() === 'sign-in'"
     role="dialog"
     aria-modal="true"
     aria-label="Live Chat access"

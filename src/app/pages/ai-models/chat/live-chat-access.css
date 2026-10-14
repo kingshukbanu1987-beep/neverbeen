@@ -940,9 +940,36 @@
     padding: 1.35rem 1rem 1.7rem;
   }
 
-  /* The image-backed member sign-in owns its padding through its inner content wrapper. */
+  /* Only the Community sign-in step fills the mobile viewport as a portrait page.
+     Keep the card in normal flow so short screens and expanded auth errors can scroll. */
+  .access-shell.is-sign-in {
+    display: flex;
+    min-height: 100vh;
+    min-height: 100dvh;
+    flex-direction: column;
+  }
+
+  .access-shell.is-sign-in .access-model-bar {
+    flex-shrink: 0;
+  }
+
   .access-sign-in {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     padding: 0;
+  }
+
+  .access-sign-in .sign-in-model-photo {
+    object-position: center top;
+  }
+
+  .access-sign-in .sign-in-flow-content {
+    box-sizing: border-box;
+    width: 100%;
+    /* Leave portrait space above the card even on shorter phones. */
+    padding: clamp(8rem, 25svh, 15rem) 1rem max(1rem, env(safe-area-inset-bottom));
+    margin: auto auto 0;
   }
 
   .plan-grid,
