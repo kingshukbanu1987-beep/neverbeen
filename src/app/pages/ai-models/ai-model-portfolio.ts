@@ -36,6 +36,7 @@ import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './a
 import { AiModelBookingDialog } from './booking/ai-model-booking';
 import { AiModelChatDialog } from './chat/ai-model-chat';
 import { LiveChatAccess } from './chat/live-chat-access';
+import { requiresRegisteredChat } from './chat/live-chat-policy';
 import { ChatIdentity } from './chat/chat-identity';
 import { LiveChatPlan } from './chat/chat-types';
 import { AiModelPhotoViewer } from './photo-viewer/ai-model-photo-viewer';
@@ -738,6 +739,8 @@ export class AiModelPortfolioPage implements OnDestroy {
   }
 
   protected startFreeChat(): void {
+    const model = this.model();
+    if (!model || requiresRegisteredChat(model)) return;
     this.chatPlan.set('free');
     this.registeredChatIdentity.set(null);
   }
