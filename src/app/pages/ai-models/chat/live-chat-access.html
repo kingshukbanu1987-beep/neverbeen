@@ -139,13 +139,17 @@
              through the Community sign-in step rather than returning to a blank surface. -->
         <img class="sign-in-model-photo" [src]="modelAlbumBackdrop()" alt="" aria-hidden="true" />
         <div class="sign-in-flow-content">
-          <button type="button" class="flow-back" (click)="backToPlans()"><span aria-hidden="true">←</span> All chat options</button>
-          <span class="access-kicker"><i aria-hidden="true"></i> Registered User</span>
-          <h2 id="live-chat-access-title" class="waiting-title">Your 45-minute chat is waiting.</h2>
-          <p class="flow-lede">
-            Sign in to Community to verify your profile, unlock photo and video sharing, and continue
-            to your private chat details with <b>{{ model().name }}</b>.
-          </p>
+          <!-- The context copy uses the same high-contrast card treatment as the Google sign-in
+               experience below, so every line remains clear over the model photograph. -->
+          <section class="sign-in-intro-card" aria-labelledby="live-chat-access-title">
+            <button type="button" class="flow-back" (click)="backToPlans()"><span aria-hidden="true">←</span> All chat options</button>
+            <span class="access-kicker"><i aria-hidden="true"></i> Registered User</span>
+            <h2 id="live-chat-access-title" class="waiting-title">Your 45-minute chat is waiting.</h2>
+            <p class="flow-lede">
+              Sign in to Community to verify your profile, unlock photo and video sharing, and continue
+              to your private chat details with <b>{{ model().name }}</b>.
+            </p>
+          </section>
           <app-community-sign-in-card
             [returnTo]="returnTo()"
             eyebrow="NeverBeen Community · Live Chat"

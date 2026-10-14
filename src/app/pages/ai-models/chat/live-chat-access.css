@@ -681,19 +681,56 @@
   margin: 0 auto;
 }
 
-/* The soft light edge keeps the headline legible over every selected album image without
-   disguising the photo or reducing its requested 70% presence. */
-.sign-in-flow-content > .flow-back,
-.sign-in-flow-content > .access-kicker,
-.sign-in-flow-content > h2,
-.sign-in-flow-content > .flow-lede {
-  text-shadow: 0 1px 16px rgb(255 255 255 / 96%), 0 0 5px rgb(255 255 255 / 88%);
+/* The explanatory copy is contained in the same high-contrast, elevated card language as the
+   Community sign-in card below it. This keeps every line readable over the 70% album photo. */
+.sign-in-intro-card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.3rem, 3vw, 1.85rem) clamp(1.2rem, 4vw, 2.25rem);
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(239 106 165 / 13%), transparent 48%),
+    linear-gradient(145deg, rgb(32 23 33 / 96%), rgb(17 13 20 / 98%));
+  box-shadow:
+    0 22px 60px rgb(0 0 0 / 28%),
+    inset 0 1px 0 rgb(255 255 255 / 7%);
+  color: #f7f0f4;
+}
+
+.sign-in-intro-card .flow-back {
+  margin-bottom: 1.05rem;
+  color: #f1c373;
+}
+
+.sign-in-intro-card .flow-back:hover {
+  color: #fff2cf;
+}
+
+.sign-in-intro-card .access-kicker {
+  color: #e9b85f;
+}
+
+.sign-in-intro-card .access-kicker i {
+  background: #e9b85f;
+  box-shadow: 0 0 0 4px rgb(233 184 95 / 16%), 0 0 16px #e9b85f;
 }
 
 .access-sign-in .waiting-title {
+  color: #f7f0f4;
   font-family: Calibri, Carlito, 'Segoe UI', Arial, sans-serif;
   font-weight: 700;
   letter-spacing: -0.035em;
+}
+
+.sign-in-intro-card .flow-lede {
+  max-width: 510px;
+  margin-bottom: 0;
+  color: rgb(247 240 244 / 72%);
+}
+
+.sign-in-intro-card .flow-lede b {
+  color: #f1c373;
 }
 
 .access-sign-in .community-auth-card {
