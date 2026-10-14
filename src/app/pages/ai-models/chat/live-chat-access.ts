@@ -13,6 +13,7 @@ import { CommunityService } from '../../../services/community.service';
 import { CommunitySignInCard } from '../../../shared/community-sign-in-card/community-sign-in-card';
 import { AiModelProfile } from '../ai-model-data';
 import { ChatIdentity } from './chat-identity';
+import { requiresRegisteredChat } from './live-chat-policy';
 import { LIVE_CHAT_PLANS, LiveChatPlan } from './chat-types';
 
 type AccessStage = 'plans' | 'sign-in' | 'member-check';
@@ -48,8 +49,12 @@ export class LiveChatAccess {
 
   protected readonly plans = LIVE_CHAT_PLANS;
   protected readonly stage = signal<AccessStage>('plans');
-  /** Free Chat is the open default; selecting either card updates the summary in the top centre. */
-  protected readonly selected = signal<LiveChatPlan>('free');
+  protected readonly registeredOnly = computed(() => requiresRegisteredChat(this.model()));
+  /** Exclusive models always show Registered User, including when the model input changes. */
+  private readonly preferredPlan = signal<LiveChatPlan>('free');
+  protected readonly selected = computed<LiveChatPlan>(() =>
+    this.registeredOnly() ? 'registered' : this.preferredPlan(),
+  );
   protected readonly registrationMessage = signal('');
   /** Incremented as the member sign-in form opens, so its album backdrop is newly randomised. */
   private readonly signInPhotoSelection = signal(0);
@@ -64,7 +69,7 @@ export class LiveChatAccess {
     effect(() => {
       if (!this.resumeRegistered() || this.resumeHandled || !this.isRegisteredMember()) return;
       this.resumeHandled = true;
-      this.selected.set('registered');
+      this.preferredPlan.set('registered');
       this.stage.set('member-check');
     });
   }
@@ -74,9 +79,9 @@ export class LiveChatAccess {
     const user = this.community.currentUser();
     return Boolean(
       this.community.isAuthenticated() &&
-        !this.community.guestBrowsing() &&
-        user?.profileComplete &&
-        user.status.trim().toLocaleLowerCase() === 'active',
+      !this.community.guestBrowsing() &&
+      user?.profileComplete &&
+      user.status.trim().toLocaleLowerCase() === 'active',
     );
   });
 
@@ -114,7 +119,10 @@ export class LiveChatAccess {
       .join(''),
   );
   protected readonly canStartRegistered = computed(
-    () => this.isRegisteredMember() && Boolean(this.memberPhoto()) && this.memberName() !== 'Community member',
+    () =>
+      this.isRegisteredMember() &&
+      Boolean(this.memberPhoto()) &&
+      this.memberName() !== 'Community member',
   );
 
   protected readonly freeFeatures: readonly PlanFeature[] = [
@@ -136,11 +144,13 @@ export class LiveChatAccess {
   ];
 
   protected choose(plan: LiveChatPlan): void {
-    this.selected.set(plan);
+    if (plan === 'free' && this.registeredOnly()) return;
+    this.preferredPlan.set(plan);
   }
 
   protected start(plan: LiveChatPlan): void {
-    this.selected.set(plan);
+    if (plan === 'free' && this.registeredOnly()) return;
+    this.preferredPlan.set(plan);
     this.registrationMessage.set('');
     if (plan === 'free') {
       this.freeStarted.emit();

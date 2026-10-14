@@ -15,6 +15,7 @@ import { ModelLiveChatPill } from '../../shared/model-live-chat-pill/model-live-
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelChatDialog } from './chat/ai-model-chat';
 import { LiveChatAccess } from './chat/live-chat-access';
+import { requiresRegisteredChat } from './chat/live-chat-policy';
 import { ChatIdentity } from './chat/chat-identity';
 import { LiveChatPlan } from './chat/chat-types';
 
@@ -234,6 +235,8 @@ export class AiModelsPage {
   }
 
   protected startFreeChat(): void {
+    const model = this.chatModel();
+    if (!model || requiresRegisteredChat(model)) return;
     this.chatPlan.set('free');
     this.registeredChatIdentity.set(null);
   }

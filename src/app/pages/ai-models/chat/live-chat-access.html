@@ -7,6 +7,27 @@
     aria-label="Live Chat access"
     (click)="$event.stopPropagation()"
   >
+    @if (registeredOnly()) {
+      <aside class="exclusive-notice" aria-label="Exclusive model chat policy">
+        <span class="exclusive-notice-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6l-8-3Z" />
+            <path d="m8.5 12 2.5 2.5 4.5-5" />
+          </svg>
+        </span>
+        <div class="exclusive-notice-copy">
+          <span class="exclusive-notice-kicker">NeverBeen · Exclusive access</span>
+          <h2>A safer space to connect.</h2>
+          <p>
+            Exclusive models like <strong>{{ model().name }}</strong> are only available to chat
+            with a <strong>Registered User</strong>. For safety and care for our community, please
+            support this policy by signing in or registering.
+          </p>
+        </div>
+        <span class="exclusive-notice-badge">✦ Members only</span>
+      </aside>
+    }
+
     <header class="access-model-bar">
       <!-- The selected model is the hero of the access screen: portrait, name and separate city /
            country details are centred before either plan is chosen. -->
@@ -20,7 +41,9 @@
           <i class="selected-model-live" aria-hidden="true"></i>
         </span>
         <span class="selected-model-detail">
-          <span class="selected-model-eyebrow"><i aria-hidden="true"></i> Selected NeverBeen model</span>
+          <span class="selected-model-eyebrow"
+            ><i aria-hidden="true"></i> Selected NeverBeen model</span
+          >
           <b>{{ model().name }}</b>
           <span class="selected-model-place" aria-label="Selected model location">
             @if (modelCity()) {
@@ -40,7 +63,12 @@
         </span>
       </div>
 
-      <button type="button" class="access-close" aria-label="Close Live Chat options" (click)="closed.emit()">
+      <button
+        type="button"
+        class="access-close"
+        aria-label="Close Live Chat options"
+        (click)="closed.emit()"
+      >
         <span aria-hidden="true">✕</span>
       </button>
     </header>
@@ -51,8 +79,14 @@
           <span class="access-kicker"><i aria-hidden="true"></i> Live Chat access</span>
           <h2 id="live-chat-access-title">Choose how you want to connect.</h2>
           <p>
-            Two thoughtful ways to meet <b>{{ model().name }}</b>. Your time, sharing controls and
-            conversation experience are set before the chat begins.
+            @if (registeredOnly()) {
+              Connect with <b>{{ model().name }}</b> as a Registered User. Your verified Community
+              profile unlocks a longer, more personal conversation.
+            } @else {
+              Two thoughtful ways to meet <b>{{ model().name }}</b
+              >. Your time, sharing controls and conversation experience are set before the chat
+              begins.
+            }
           </p>
         </div>
 
@@ -60,13 +94,21 @@
           <article
             class="plan-card plan-card-free"
             [class.is-selected]="selected() === 'free'"
+            [class.is-disabled]="registeredOnly()"
+            [attr.aria-disabled]="registeredOnly()"
+            [attr.aria-describedby]="registeredOnly() ? 'free-chat-unavailable' : null"
             role="option"
             [attr.aria-selected]="selected() === 'free'"
-            tabindex="0"
+            [attr.tabindex]="registeredOnly() ? -1 : 0"
             (click)="choose('free')"
             (keydown.enter)="choose('free')"
             (keydown.space)="choose('free'); $event.preventDefault()"
           >
+            @if (registeredOnly()) {
+              <div class="plan-unavailable-overlay">
+                <span id="free-chat-unavailable">Not Available</span>
+              </div>
+            }
             <div class="plan-card-top">
               <span class="plan-orbit plan-orbit-free" aria-hidden="true">⌁</span>
               <span class="plan-choice"><i aria-hidden="true"></i> Open access</span>
@@ -79,13 +121,22 @@
 
             <ul class="plan-features">
               @for (feature of freeFeatures; track feature.text) {
-                <li [class.is-unavailable]="!feature.included" [class.is-emphasis]="feature.emphasis">
-                  <span aria-hidden="true">{{ feature.included ? '✓' : '—' }}</span>{{ feature.text }}
+                <li
+                  [class.is-unavailable]="!feature.included"
+                  [class.is-emphasis]="feature.emphasis"
+                >
+                  <span aria-hidden="true">{{ feature.included ? '✓' : '—' }}</span
+                  >{{ feature.text }}
                 </li>
               }
             </ul>
 
-            <button type="button" class="plan-start plan-start-free" (click)="start('free')">
+            <button
+              type="button"
+              class="plan-start plan-start-free"
+              [disabled]="registeredOnly()"
+              (click)="start('free')"
+            >
               <span>Start Free Chat</span><i aria-hidden="true">→</i>
             </button>
             <p class="plan-footnote">No sign-up required · closes automatically after 2 minutes</p>
@@ -110,7 +161,9 @@
               <h3>Registered <em>User</em></h3>
               <span class="plan-time"><b>45</b><small>MIN</small></span>
             </div>
-            <p class="plan-summary">A fuller, faster conversation with media sharing for Community members.</p>
+            <p class="plan-summary">
+              A fuller, faster conversation with media sharing for Community members.
+            </p>
 
             <ul class="plan-features">
               @for (feature of registeredFeatures; track feature.text) {
@@ -120,8 +173,14 @@
               }
             </ul>
 
-            <button type="button" class="plan-start plan-start-registered" (click)="start('registered')">
-              <span>{{ isRegisteredMember() ? 'Review & start chat' : 'Start with Community' }}</span
+            <button
+              type="button"
+              class="plan-start plan-start-registered"
+              (click)="start('registered')"
+            >
+              <span>{{
+                isRegisteredMember() ? 'Review & start chat' : 'Start with Community'
+              }}</span
               ><i aria-hidden="true">→</i>
             </button>
             <p class="plan-footnote">
@@ -144,7 +203,11 @@
             [returnTo]="returnTo()"
             eyebrow="NeverBeen Community · Live Chat"
             title="Continue as a Community member."
-            [copy]="'Sign in to Community to verify your profile, unlock photo and video sharing, and continue to your private chat details with ' + model().name + '.'"
+            [copy]="
+              'Sign in to Community to verify your profile, unlock photo and video sharing, and continue to your private chat details with ' +
+              model().name +
+              '.'
+            "
             note="Registered User Live Chat · profile registration required · 45 minutes"
             [translucent]="true"
           />
@@ -152,7 +215,9 @@
       </div>
     } @else {
       <div class="access-flow access-review">
-        <button type="button" class="flow-back" (click)="backToPlans()"><span aria-hidden="true">←</span> All chat options</button>
+        <button type="button" class="flow-back" (click)="backToPlans()">
+          <span aria-hidden="true">←</span> All chat options
+        </button>
         <span class="access-kicker"><i aria-hidden="true"></i> Registered User · ready</span>
         <h2 id="live-chat-access-title">A private chat, prepared for both of you.</h2>
         <p class="flow-lede">Review the two profiles and the session settings before you begin.</p>
@@ -195,7 +260,9 @@
         <div class="session-rules" aria-label="Registered User chat features">
           <span><i aria-hidden="true">45</i><b>Minutes</b><small>automatic close</small></span>
           <span><i aria-hidden="true">◫</i><b>Media enabled</b><small>photos & videos</small></span>
-          <span><i aria-hidden="true">✦</i><b>Advanced memory</b><small>faster replies</small></span>
+          <span
+            ><i aria-hidden="true">✦</i><b>Advanced memory</b><small>faster replies</small></span
+          >
         </div>
 
         @if (registrationMessage()) {
@@ -203,12 +270,19 @@
           <a routerLink="/community/profile" class="complete-profile">Complete Community profile</a>
         }
 
-        <button type="button" class="review-start" [disabled]="!canStartRegistered()" (click)="startRegisteredChat()">
+        <button
+          type="button"
+          class="review-start"
+          [disabled]="!canStartRegistered()"
+          (click)="startRegisteredChat()"
+        >
           <span class="review-start-dot" aria-hidden="true"></span>
           Start 45-minute Live Chat <i aria-hidden="true">→</i>
         </button>
         @if (!canStartRegistered()) {
-          <p class="profile-required">A completed Community profile with a photo is required to start.</p>
+          <p class="profile-required">
+            A completed Community profile with a photo is required to start.
+          </p>
         }
       </div>
     }
