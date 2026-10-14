@@ -2,12 +2,18 @@
 
 ## What the website does
 
-- **Live Now and past chats on each model card.** A single split transparent pill sits beside the
-  Live Chat button. Its first half shows how many chat sessions are **live with the model right
-  now** under the word *Live Now* — a grey, still dot while there are none (the default, `0`), and
-  a pulsing green dot while there are any. Its second half shows the model's whole **past-chat
-  total** (`0 past chats`, `1 past chat`, `12 past chats`). On a phone the pill shrinks so it
-  shares one row with the Live Chat button.
+- **Live Now and past chats on each model card.** A single split transparent pill comes on the line
+  under the card's Live Chat button (and beside the button on the model's own page), as tall as that
+  button. Its first half shows how many chat sessions are **live with the model right now** under the
+  word *Live Now* — a grey, still dot while there are none (the default, `0`), and a pulsing green
+  dot while there are any. Its second half shows the model's whole **past-chat total**
+  (`0 past chats`, `1 past chat`, `12 past chats`). A long total is written compactly, exactly as the
+  card's engagement counters are — `1400` reads `1.4K`, `1700000` reads `1.7M`, `1400000000` reads
+  `1.4B`, `1900000000000` reads `1.9T` — and the exact figure is never lost: it stays in the
+  tool-tip on hover and in the words read out by assistive tech. The pill has a line to itself on the
+  card, so the frame is that much taller to hold the copy over it: the cover is 0.7 of its width
+  (0.8 on the narrowest phones), and the card reads its rating figure 1.3× bigger than it was
+  (1.08rem → 1.4rem), the stars unchanged.
 - **The counters are live.** They are read from `GET /api/models/live-chats` when the directory
   opens, and the directory keeps polling the same endpoint every two seconds while it is on
   screen (a hidden tab pauses, and catches up the moment it returns). A chat started or ended on

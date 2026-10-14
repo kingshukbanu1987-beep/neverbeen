@@ -4,13 +4,13 @@
   role="status"
   [attr.aria-label]="accessibleLabel()"
 >
-  <span class="card-live-pill-seg is-now" aria-hidden="true">
+  <span class="card-live-pill-seg is-now" aria-hidden="true" [attr.title]="liveNowTitle()">
     <span class="card-live-pill-dot"></span>
-    <b class="card-live-pill-value">{{ formatTotal(liveNow()) }}</b>
+    <b class="card-live-pill-value">{{ liveNowText() }}</b>
     <i class="card-live-pill-word">Live Now</i>
   </span>
   <span class="card-live-pill-divider" aria-hidden="true"></span>
-  <span class="card-live-pill-seg is-past" aria-hidden="true">
+  <span class="card-live-pill-seg is-past" aria-hidden="true" [attr.title]="pastChatsTitle()">
     <span class="card-live-pill-bubble" aria-hidden="true">
       <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
         <path
@@ -22,7 +22,7 @@
         <circle class="card-live-pill-bubble-dot" cx="15.8" cy="11.5" r="1" />
       </svg>
     </span>
-    <b class="card-live-pill-value">{{ formatTotal(pastChats()) }}</b>
+    <b class="card-live-pill-value">{{ pastChatsText() }}</b>
     <i class="card-live-pill-word">{{ pastChats() === 1 ? 'past chat' : 'past chats' }}</i>
   </span>
 </span>
