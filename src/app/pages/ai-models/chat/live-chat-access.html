@@ -7,35 +7,35 @@
     (click)="$event.stopPropagation()"
   >
     <header class="access-model-bar">
-      <div class="access-model">
-        <span class="access-model-avatar">
+      <!-- The selected model is the hero of the access screen: portrait, name and separate city /
+           country details are centred before either plan is chosen. -->
+      <div class="access-selected-summary" aria-live="polite">
+        <span class="selected-model-avatar">
           @if (model().cover) {
-            <img [src]="model().cover" [alt]="model().name" />
+            <img [src]="model().cover" [alt]="model().name + ' — selected NeverBeen model'" />
           } @else {
             <span aria-hidden="true">NB</span>
           }
-        </span>
-        <span class="access-model-copy">
-          <i>NeverBeen model</i>
-          <b>{{ model().name }}</b>
-          <small>{{ modelLocation() || 'NeverBeen Multiverse' }}</small>
-        </span>
-      </div>
-
-      <!-- The selected chat mode and a concise model profile stay centred at the top, so a visitor
-           always sees exactly who they are about to meet and which access rules are in play. -->
-      <div class="access-selected-summary" aria-live="polite">
-        <span class="selected-mode" [class.is-free]="selected() === 'free'" [class.is-registered]="selected() === 'registered'">
-          <i aria-hidden="true"></i> Selected mode · {{ plans[selected()].label }}
+          <i class="selected-model-live" aria-hidden="true"></i>
         </span>
         <span class="selected-model-detail">
+          <span class="selected-model-eyebrow"><i aria-hidden="true"></i> Selected NeverBeen model</span>
           <b>{{ model().name }}</b>
-          <small>
-            {{ model().handle }} · {{ modelLocation() || 'NeverBeen Multiverse' }}
-            @if (model().age) {
-              · {{ model().age }} yrs
+          <span class="selected-model-place" aria-label="Selected model location">
+            @if (modelCity()) {
+              <small><i aria-hidden="true">⌖</i> {{ modelCity() }}</small>
             }
-          </small>
+            @if (modelCountry()) {
+              <small><i aria-hidden="true">✦</i> {{ modelCountry() }}</small>
+            }
+          </span>
+          <span
+            class="selected-mode"
+            [class.is-free]="selected() === 'free'"
+            [class.is-registered]="selected() === 'registered'"
+          >
+            <i aria-hidden="true"></i> Selected mode · {{ plans[selected()].label }}
+          </span>
         </span>
       </div>
 

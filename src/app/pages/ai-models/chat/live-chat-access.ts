@@ -172,10 +172,23 @@ export class LiveChatAccess {
   }
 
   protected modelLocation(): string {
+    return this.modelLocationParts().join(' · ');
+  }
+
+  /** The top profile treatment keeps city and country distinct instead of flattening them into one line. */
+  protected modelCity(): string {
+    return this.modelLocationParts()[0] ?? '';
+  }
+
+  protected modelCountry(): string {
+    const places = this.modelLocationParts();
+    return places.length > 1 ? places[places.length - 1] : '';
+  }
+
+  private modelLocationParts(): string[] {
     return this.model()
       .location.split(',')
       .map((part) => part.trim())
-      .filter(Boolean)
-      .join(' · ');
+      .filter(Boolean);
   }
 }
