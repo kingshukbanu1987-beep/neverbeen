@@ -357,6 +357,8 @@
   overflow-y: auto;
   background: var(--chat-bg);
   scrollbar-width: thin;
+  /* A chat that is dragged with a finger scrolls itself, never the page behind it. */
+  overscroll-behavior: contain;
 }
 
 .chat-day {
@@ -1315,4 +1317,79 @@
 .chat-history-open:focus-visible {
   outline: 2px solid var(--chat-violet, #6829ff);
   outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ phones and tablets (portrait) */
+
+/*
+ * Instagram's habit on a phone: her card is the first thing of the conversation, not a band pinned
+ * above it. The card and the transcript share one cell of the window; the transcript is padded down
+ * by the card's own height (`--chat-profile-h`, measured by the component), and the card is moved up
+ * by exactly the distance the transcript has scrolled (`--chat-scroll`). Scroll down and she slides
+ * away with the messages, scroll back to the top and she is there again — the whole screen is for
+ * the chat once it has started.
+ */
+@media (max-width: 899.98px) {
+  .chat-panel {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .chat-bar {
+    position: relative;
+    z-index: 3;
+    grid-row: 1;
+    background: #ffffff;
+  }
+
+  .chat-profile {
+    position: relative;
+    z-index: 1;
+    grid-row: 2;
+    grid-column: 1;
+    align-self: start;
+    border-bottom: 0;
+    /* Touches go through her card to the transcript below it, so a drag on her photograph scrolls
+       the chat; her two buttons stay tappable. */
+    pointer-events: none;
+    transform: translateY(calc(-1 * min(var(--chat-scroll, 0px), var(--chat-profile-h, 0px))));
+    will-change: transform;
+  }
+
+  .chat-profile a,
+  .chat-profile button {
+    pointer-events: auto;
+  }
+
+  .chat-conversation {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .chat-messages {
+    padding-top: calc(var(--chat-profile-h, 0px) + 0.9rem);
+  }
+
+  /* The composer stays above her card whenever the two meet (a short window, the keyboard up). */
+  .chat-footer {
+    position: relative;
+    z-index: 2;
+    background: var(--chat-bg);
+  }
+
+  /* The window follows the visible screen while the keyboard is up (see the component). */
+  .chat-backdrop {
+    inset: var(--chat-viewport-top, 0px) 0 auto 0;
+    height: var(--chat-viewport-height, 100%);
+  }
+}
+
+/*
+ * A phone zooms the whole page into any field whose text is under 16px when it is focused, and does
+ * not zoom back out. Every field of the chat window — the message box, the name field, the
+ * comments box — is therefore 16px on a touch screen, so focusing it never zooms.
+ */
+@media (max-width: 899.98px), (pointer: coarse) {
+  .chat-input {
+    font-size: 16px;
+  }
 }

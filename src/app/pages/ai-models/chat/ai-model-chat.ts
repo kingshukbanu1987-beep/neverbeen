@@ -1,6 +1,8 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   OnInit,
   computed,
@@ -67,10 +69,11 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
     '(document:keydown)': 'onDocumentKeydown($event)',
   },
 })
-export class AiModelChatDialog implements OnInit {
+export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly chat = inject(AiModelChatService);
   /** The window itself, so a click on a reply quote can jump back to the quoted bubble. */
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly model = input.required<AiModelProfile>();
   readonly closed = output<void>();
@@ -150,6 +153,56 @@ export class AiModelChatDialog implements OnInit {
    */
   ngOnInit(): void {
     this.chat.openChat(this.model());
+  }
+
+  /**
+   * On a phone her card scrolls away with the messages (see the phone block of the stylesheet):
+   * the component measures the card so the transcript can be padded by its height, and keeps the
+   * window the size of the visible screen while the keyboard is up.
+   */
+  ngAfterViewInit(): void {
+    const root = this.host.nativeElement as HTMLElement;
+    const panel = root.querySelector<HTMLElement>('.chat-panel');
+    const profile = root.querySelector<HTMLElement>('.chat-profile');
+
+    if (panel && profile && typeof ResizeObserver !== 'undefined') {
+      const measure = (): void =>
+        panel.style.setProperty('--chat-profile-h', `${profile.offsetHeight}px`);
+      const observer = new ResizeObserver(measure);
+      observer.observe(profile);
+      measure();
+      this.destroyRef.onDestroy(() => observer.disconnect());
+    }
+
+    const viewport = typeof window !== 'undefined' ? window.visualViewport : null;
+    const backdrop = root.querySelector<HTMLElement>('.chat-backdrop');
+    if (viewport && backdrop) {
+      const follow = (): void => {
+        // A pinch-zoom is the visitor's own doing: only the keyboard resizes the window.
+        if (viewport.scale > 1.01) {
+          backdrop.style.removeProperty('--chat-viewport-height');
+          backdrop.style.removeProperty('--chat-viewport-top');
+          return;
+        }
+        backdrop.style.setProperty('--chat-viewport-height', `${viewport.height}px`);
+        backdrop.style.setProperty('--chat-viewport-top', `${viewport.offsetTop}px`);
+      };
+      viewport.addEventListener('resize', follow);
+      viewport.addEventListener('scroll', follow);
+      follow();
+      this.destroyRef.onDestroy(() => {
+        viewport.removeEventListener('resize', follow);
+        viewport.removeEventListener('scroll', follow);
+      });
+    }
+  }
+
+  /** Moves her card up with the transcript: it leaves the screen exactly as fast as the messages. */
+  protected onMessagesScroll(event: Event): void {
+    const profile = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '.chat-profile',
+    );
+    profile?.style.setProperty('--chat-scroll', `${(event.target as HTMLElement).scrollTop}px`);
   }
 
   /** Focus the composer when the window opens, so typing starts straight away. */

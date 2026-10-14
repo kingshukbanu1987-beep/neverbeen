@@ -173,6 +173,28 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
+  it('shows the same Live Now / past chats split pill beside the Live Chat button', async () => {
+    const profile = withPhotos(1);
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      const cta = element.querySelector<HTMLElement>('.chat-cta')!;
+      const pill = cta.querySelector<HTMLElement>('app-model-live-chat-pill .card-live-pill');
+      expect(pill).not.toBeNull();
+      expect(cta.querySelector('.action-chat')?.nextElementSibling?.tagName).toBe(
+        'APP-MODEL-LIVE-CHAT-PILL',
+      );
+      expect(pill!.querySelector('.is-now .card-live-pill-word')?.textContent?.trim()).toBe(
+        'Live Now',
+      );
+      expect(pill!.querySelector('.is-past .card-live-pill-bubble svg')).not.toBeNull();
+      expect(pill!.getAttribute('aria-label')).toContain('live now');
+    } finally {
+      release(profile);
+    }
+  });
+
   it('puts Live Chat under her name, and Read full Biography directly above Rent Me (requirement E)', async () => {
     const profile = withPhotos(1);
     const harness = await openPortfolio(profile.slug);

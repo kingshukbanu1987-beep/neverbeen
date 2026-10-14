@@ -10,6 +10,7 @@
 
 .gate {
   position: absolute;
+  z-index: 10;
   inset: 0;
   display: grid;
   place-items: center;
@@ -451,5 +452,12 @@
   .gate-start::after,
   .gate-live {
     animation: none;
+  }
+}
+
+/* A field under 16px makes a phone zoom the page when it is focused: keep the name field at 16px. */
+@media (max-width: 899.98px), (pointer: coarse) {
+  .gate-field input {
+    font-size: 16px;
   }
 }

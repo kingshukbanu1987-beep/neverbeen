@@ -11,6 +11,7 @@ import { ModelLiveChatService } from '../../services/model-live-chat.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
+import { ModelLiveChatPill } from '../../shared/model-live-chat-pill/model-live-chat-pill';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelChatDialog } from './chat/ai-model-chat';
 
@@ -54,7 +55,7 @@ export function drawCover(model: AiModelProfile): string {
 
 @Component({
   selector: 'app-ai-models-page',
-  imports: [RouterLink, CompactCount, ExactCountPopover, AiModelChatDialog],
+  imports: [RouterLink, CompactCount, ExactCountPopover, AiModelChatDialog, ModelLiveChatPill],
   templateUrl: './ai-models.html',
   styleUrl: './ai-models.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,7 +63,7 @@ export function drawCover(model: AiModelProfile): string {
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   private readonly engagement = inject(ModelMediaEngagementService);
-  /** Each model's Live Now and past-chat counts, in the split pill beside her Live Chat button. */
+  /** Loads and polls each model's Live Now and past-chat counts for the split pills on the cards. */
   private readonly liveChats = inject(ModelLiveChatService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -289,34 +290,6 @@ export class AiModelsPage {
     if (summary.reviewCount === 0)
       return `No reviews yet for ${model.name}; open the testimonial section`;
     return `Read ${summary.reviewCount} reviews for ${model.name}`;
-  }
-
-  /**
-   * How many chat sessions are live with this model right now, anywhere. The quiet default — no
-   * session live, a grey dot — is `0`, until the API says otherwise.
-   */
-  protected liveNowCount(model: AiModelProfile): number {
-    return this.liveChats.countsFor(model.slug)?.liveNow ?? 0;
-  }
-
-  /** True while at least one chat is live with her — the pill's dot turns green and pulses. */
-  protected hasLiveNow(model: AiModelProfile): boolean {
-    return this.liveNowCount(model) > 0;
-  }
-
-  /** How many of her chats are already over — the other half of the split pill. */
-  protected pastChatCount(model: AiModelProfile): number {
-    return this.liveChats.countsFor(model.slug)?.pastChats ?? 0;
-  }
-
-  /** `0 past chats`, `1 past chat`, `12 past chats` — the past half of the pill, written out. */
-  protected pastChatLabel(model: AiModelProfile): string {
-    const count = this.pastChatCount(model);
-    return `${this.formatTotal(count)} past ${count === 1 ? 'chat' : 'chats'}`;
-  }
-
-  protected liveChatAccessibleLabel(model: AiModelProfile): string {
-    return `${this.formatTotal(this.liveNowCount(model))} live now and ${this.pastChatLabel(model)} with ${model.name}`;
   }
 
   private async loadReviewSummaries(): Promise<void> {

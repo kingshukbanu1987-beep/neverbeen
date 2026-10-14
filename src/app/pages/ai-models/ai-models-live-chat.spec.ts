@@ -86,7 +86,9 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     const card = cardFor(fixture.nativeElement, profile.name);
     const pill = card.querySelector<HTMLElement>('.card-live-pill')!;
     expect(pill).not.toBeNull();
-    expect(pill.previousElementSibling?.classList.contains('card-action-chat')).toBe(true);
+    expect(pill.parentElement?.previousElementSibling?.classList.contains('card-action-chat')).toBe(
+      true,
+    );
     expect(pill.classList.contains('is-live')).toBe(true);
     expect(pill.querySelector('.card-live-pill-dot')).not.toBeNull();
     expect(pill.querySelector('.card-live-pill-divider')).not.toBeNull();

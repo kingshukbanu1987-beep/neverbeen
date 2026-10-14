@@ -532,7 +532,11 @@
 .chat-cta {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  /* The split pill stands exactly as tall as the Live Chat button: the row stretches both to the
+     button's own height, and the pill follows it (its height is `auto` here). */
+  --card-chat-height: auto;
+
+  align-items: stretch;
   gap: 0.75rem;
   margin: 0.85rem 0 0.15rem;
 }

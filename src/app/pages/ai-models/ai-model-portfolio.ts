@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   OnDestroy,
   afterNextRender,
@@ -14,6 +15,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { CommunityService } from '../../services/community.service';
+import { ModelLiveChatService } from '../../services/model-live-chat.service';
 import {
   MediaKind,
   ModelMediaEngagementService,
@@ -27,6 +29,7 @@ import {
 import { rememberCommunityReturnPath } from '../../shared/community-return-path';
 import { CommunitySignInCard } from '../../shared/community-sign-in-card/community-sign-in-card';
 import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
+import { ModelLiveChatPill } from '../../shared/model-live-chat-pill/model-live-chat-pill';
 import { ModelMediaCommentsDialog } from '../../shared/model-media-comments-dialog/model-media-comments-dialog';
 import { ModelMediaEngagementBar } from '../../shared/model-media-engagement/model-media-engagement';
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
@@ -75,6 +78,7 @@ export const PREVIEW_LIMIT = 12;
     AiModelVideoPlayer,
     CompactCount,
     CommunitySignInCard,
+    ModelLiveChatPill,
     ExactCountPopover,
     ModelMediaCommentsDialog,
     ModelMediaEngagementBar,
@@ -98,6 +102,9 @@ export class AiModelPortfolioPage implements OnDestroy {
 
   protected readonly community = inject(CommunityService);
   private readonly testimonialsApi = inject(ModelTestimonialsService);
+  /** The Live Now / past-chat counts of the split pill beside the Live Chat button. */
+  private readonly liveChats = inject(ModelLiveChatService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly engagement = inject(ModelMediaEngagementService);
 
   /** The photograph or clip whose thread the page-level comments pop-up shows. */
@@ -307,6 +314,11 @@ export class AiModelPortfolioPage implements OnDestroy {
   private shareTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    // The pill is live data, exactly as on the directory's cards: load the counts now and keep
+    // polling while this page is on screen, so a chat started or ended anywhere moves them.
+    void this.liveChats.load();
+    this.destroyRef.onDestroy(this.liveChats.startPolling());
+
     // Load a fresh model-specific public testimonial feed whenever the route changes.
     effect(() => {
       const slug = this.model()?.slug;

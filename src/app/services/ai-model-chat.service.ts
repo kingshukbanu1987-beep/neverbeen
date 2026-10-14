@@ -604,10 +604,15 @@ export class AiModelChatService {
       return;
     }
 
+    // An ended session's clock is frozen at the moment it ended: it never counts on.
+    if (session.closed) {
+      this.remainingMs.set(this.remainingOf(session));
+      this.stopClock();
+      return;
+    }
+
     const remaining = session.endsAt - Date.now();
     this.remainingMs.set(Math.max(0, remaining));
-
-    if (session.closed) return;
     if (remaining <= 0) {
       this.endSession(session, 'timeout', CHAT_TIMEOUT_TEXT);
       return;
@@ -761,6 +766,8 @@ export class AiModelChatService {
       );
     }
     this.thinking.set(false);
+    // The timer stops with the session: nothing ticks after this, and the figure stays frozen.
+    this.stopClock();
     // E, F and K — a session that ends is a session the visitor is asked about: the close form
     // comes up over the window with the two faces, the time they spent and the counts, her own note
     // about the chat, and the visitor's stars and words. It stays there until they close it.
@@ -793,8 +800,17 @@ export class AiModelChatService {
     if (!slug) return;
     const session = this.sessions.get(slug) ?? null;
     this.view(session);
-    if (session) this.remainingMs.set(Math.max(0, session.endsAt - Date.now()));
+    if (session) this.remainingMs.set(this.remainingOf(session));
     this.persist();
+  }
+
+  /**
+   * What the countdown shows for a session: the time left right now while it runs, and the time
+   * that was left at the moment it ended once it has — frozen, whatever the real clock does.
+   */
+  private remainingOf(session: AiChatSession): number {
+    const reference = session.closed ? session.closedAt || Date.now() : Date.now();
+    return Math.max(0, session.endsAt - reference);
   }
 
   private startClock(): void {

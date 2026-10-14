@@ -108,6 +108,7 @@
         aria-live="polite"
         aria-label="Chat with the model"
         [nbChatAutoScroll]="messages()"
+        (scroll)="onMessagesScroll($event)"
       >
         @for (message of messages(); track message.id; let index = $index) {
           @if (daySeparatorFor(index); as separator) {
