@@ -14,8 +14,8 @@
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { extname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { extname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 const modelsDir = join(projectRoot, 'public', 'NeverBeenModels');
@@ -1139,9 +1139,19 @@ function main() {
   });
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(`[biography] ${error.message}`);
-  process.exitCode = 1;
+// The engine is shared: `PersonalityBiographyScript.mjs` imports `findModel` and `makeBiography` to
+// write the Live Chat's `personality/biography.json`. The command line only runs when this file is
+// executed directly (`node BiographyScript.mjs` / `npm run biography`), never on import.
+export { findModel, makeBiography, readModelDirectories };
+
+const runDirectly =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (runDirectly) {
+  try {
+    main();
+  } catch (error) {
+    console.error(`[biography] ${error.message}`);
+    process.exitCode = 1;
+  }
 }

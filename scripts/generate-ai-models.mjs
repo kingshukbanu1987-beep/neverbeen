@@ -25,7 +25,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const projectRoot = fileURLToPath(new URL('..', import.meta.url));
 const publicDir = join(projectRoot, 'public');
@@ -1140,18 +1140,29 @@ async function formatSource(source) {
   }
 }
 
-const profiles = buildProfiles();
-mkdirSync(dirname(outputFile), { recursive: true });
-writeFileSync(outputFile, await formatSource(renderTypeScript(profiles)), 'utf8');
-console.log(
-  `[ai-models] Wrote ${relative(projectRoot, outputFile)} — ${profiles.length} model portfolio${profiles.length === 1 ? '' : 's'}.`,
-);
-for (const profile of profiles) {
-  const videoNote =
-    profile.videos.length > 0
-      ? `, ${profile.videos.length} video${profile.videos.length === 1 ? '' : 's'} in video/`
-      : '';
+// `buildProfiles()` is shared: `PersonalityBiographyScript.mjs` reads the very same merged profile
+// the website shows when it writes the Live Chat's `personality/biography.json`. The manifest is
+// written only when this file is executed directly (`npm start`, `npm run build`,
+// `npm run generate:ai-models`), never on import.
+export { buildProfiles };
+
+const runDirectly =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (runDirectly) {
+  const profiles = buildProfiles();
+  mkdirSync(dirname(outputFile), { recursive: true });
+  writeFileSync(outputFile, await formatSource(renderTypeScript(profiles)), 'utf8');
   console.log(
-    `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${videoNote}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
+    `[ai-models] Wrote ${relative(projectRoot, outputFile)} — ${profiles.length} model portfolio${profiles.length === 1 ? '' : 's'}.`,
   );
+  for (const profile of profiles) {
+    const videoNote =
+      profile.videos.length > 0
+        ? `, ${profile.videos.length} video${profile.videos.length === 1 ? '' : 's'} in video/`
+        : '';
+    console.log(
+      `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${videoNote}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
+    );
+  }
 }

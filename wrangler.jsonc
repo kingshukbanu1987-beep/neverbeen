@@ -9,9 +9,12 @@
   "vars": {
     // Base URL of the NeverBeen Web API. Change it when the API moves to another host.
     "NEVERBEEN_API_URL": "https://neverbeen-api-kingshuk-cqexbcb5hqbqavdb.westus3-01.azurewebsites.net",
-    // Gemini key for Live Chat: the reading desk, her camera and the live-chat selfie service.
-    "GEMINI_API_KEY": "AQ.Ab8RN6KiXIBawUzfmF835eRQthsCJZDxJeaoWSA5SCUbk3jLWw",
-    // Live Chat runs on gemini-2.5-flash — the reading and the live selfies both use it.
+    // No GEMINI_API_KEY here, ever: this file is public. The AI Chat's Gemini key lives only in the
+    // NeverBeen Web API's GEMINI_API_KEY environment variable — the website sends the visitor's
+    // message and the model's characterdatabase.json to /neverbeen-api/api/ai-chat and the API
+    // calls gemini-2.5-flash. (The Worker's own reading desk and selfie endpoints read an optional
+    // Worker *secret* of the same name: `npx wrangler secret put GEMINI_API_KEY`.)
+    // Model names are not secrets — the reading and the live selfies both use gemini-2.5-flash.
     "GEMINI_MODEL": "gemini-2.5-flash",
     "GEMINI_IMAGE_MODEL": "gemini-2.5-flash",
   },

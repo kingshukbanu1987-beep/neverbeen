@@ -246,19 +246,26 @@ remaining time sits in the top-right corner of the window, and reminders appear 
 the conversation** at fifteen, ten, five and one minutes left as a glowing violet glass pill. At zero
 the two hours are up and the window closes.
 
-Questions from outside NeverBeen — "what is the capital of India?" — are answered by the live
-endpoint `POST /api/ai-chat` (`worker/ai-chat-core.mjs`): with an `OPENAI_API_KEY` the answer streams
-from OpenAI and, when `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_CX` are set too, the question is
-searched on Google first and the top links are shown under her answer. The same request carries the
-reading of the visitor's message, so the studio's model answers what they meant rather than what they
-typed. Without a key the endpoint answers `503 ai-unavailable` and the window answers from her own
-engine and a built-in world file instead, so the chat always works. `GEMINI_API_KEY` adds the reading
-desk and her camera, `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the Cloud Translation API, and
-`OPENAI_MODEL`, `GEMINI_MODEL` and `GEMINI_IMAGE_MODEL` pick the models (`gpt-4o-mini`,
-`gemini-2.5-flash`, `gemini-2.5-flash-image` by default). Live Chat currently runs on
-`gemini-2.5-flash` — the Gemini key and both model variables are set in `wrangler.jsonc`'s
-`vars`. Locally the same three endpoints run from `scripts/dev-api.mjs` on port 8787 behind the
-`/api` dev proxy. Full notes and the
+Her open-ended answers come from the **NeverBeen Web API** with **Google Gemini
+`gemini-2.5-flash`**: the window sends the visitor's message together with the model's character
+profile — `public/NeverBeenModels/<Album>/personality/characterdatabase.json` — and her biography —
+`personality/biography.json`, her own profile plus the details of her life, written by
+`npm run personality:biography` ([docs/ai-model-biography.md](docs/ai-model-biography.md)) — to
+`POST /neverbeen-api/api/ai-chat` (the Worker's same-origin proxy to the API), the API calls Gemini
+with its secret **`GEMINI_API_KEY` environment variable**, and returns her finished answer. The key
+is **never** in this repository or in the browser — set it on the API (Azure App Service →
+Configuration → Application settings → `GEMINI_API_KEY`). The same request carries the reading of
+the visitor's message, so she answers what they meant rather than what they typed. Without the key
+the API answers `503 ai-unavailable` and the window answers from her own engine and a built-in world
+file instead, so the chat always works. The API change is
+[`docs/patches/neverbeen-api-ai-chat-gemini.patch`](docs/patches/neverbeen-api-ai-chat-gemini.patch),
+then [`docs/patches/neverbeen-api-ai-chat-biography.patch`](docs/patches/neverbeen-api-ai-chat-biography.patch).
+The Worker's reading desk (`/api/ai-read`) and camera (`/api/ai-selfie`,
+`/api/livechatselfiesandphotos`) read an optional Worker **secret** of the same name
+(`npx wrangler secret put GEMINI_API_KEY`), `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the
+Cloud Translation API, and `GEMINI_MODEL` / `GEMINI_IMAGE_MODEL` in `wrangler.jsonc` pick their
+models. Locally the Worker endpoints run from `scripts/dev-api.mjs` on port 8787 behind the `/api`
+dev proxy, and `/neverbeen-api` is proxied to the deployed API. Full notes and the
 requirements-to-code map: [`docs/ai-model-chat.md`](docs/ai-model-chat.md).
 
 ### Renting a model
