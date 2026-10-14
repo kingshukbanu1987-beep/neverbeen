@@ -678,7 +678,11 @@ Her open-ended answers come from the **NeverBeen Web API**, never from a key in 
 1. The window (`AiModelChatService.requestBackendReply()`) loads the model's character profile —
    `public/NeverBeenModels/<Album>/personality/characterdatabase.json`, through
    `loadCharacterDatabase()` (cached per album, `_doc` notes dropped, merged over the built-in
-   joyful default so a missing file still yields a complete profile).
+   joyful default so a missing file still yields a complete profile) — and, next to it, her
+   **biography**, `personality/biography.json` (her own profile plus the details of her life),
+   through `loadModelBiography()` (`chat/chat-biography.ts`; cached per album, `_doc` notes
+   dropped, rebuilt from the website profile when the file is missing). See
+   [`ai-model-biography.md`](ai-model-biography.md).
 2. It posts the turn to **`POST /neverbeen-api/api/ai-chat`** — the Cloudflare Worker proxies
    `/neverbeen-api/*` to the API (`proxy.conf.json` does the same under `npm start`):
 
@@ -686,6 +690,7 @@ Her open-ended answers come from the **NeverBeen Web API**, never from a key in 
    {
      "message": "What is the capital of India?",
      "characterProfile": { "meta": {}, "ruleEngine": {}, "corePersonality": {}, "…": {} },
+     "biography": { "meta": {}, "profile": { "city": "Kolkata", "age": "24", "…": "…" }, "biography": { "summary": "…", "career": [], "…": {} } },
      "model": { "slug": "alisha-bhattacharya", "name": "Alisha Bhattacharya", "handle": "@alisha.bhattacharya", "location": "Kolkata, India", "age": "24" },
      "user": { "name": "Rahul Verma", "firstName": "Rahul" },
      "history": [{ "role": "model", "text": "…" }, { "role": "user", "text": "…" }],
@@ -698,7 +703,8 @@ Her open-ended answers come from the **NeverBeen Web API**, never from a key in 
 3. The API (`Controllers/AiChatController.cs`, `Services/GeminiChatService.cs`,
    `Services/AiChatPrompt.cs`) builds the system instruction — the studio's fixed rules, then the
    character profile as her main rule engine (its `hardLimits` absolute; it cannot switch the
-   studio rules off), her card, the visitor, the reading and the dossier — and calls
+   studio rules off), her biography as her own first-person past (the profile wins where the two
+   disagree), her card, the visitor, the reading and the dossier — and calls
    **`gemini-2.5-flash`** with the key from its **`GEMINI_API_KEY` environment variable**, sent in
    the `x-goog-api-key` header.
 4. It answers `200 { "ok": true, "reply": "…", "provider": "gemini", "model": "gemini-2.5-flash" }`;
@@ -712,7 +718,10 @@ Her open-ended answers come from the **NeverBeen Web API**, never from a key in 
 
 Setting it up on the API: apply
 [`docs/patches/neverbeen-api-ai-chat-gemini.patch`](patches/neverbeen-api-ai-chat-gemini.patch) to
-`neverbeen-api` (check it with `neverbeen-api-ai-chat-gemini-verification.py`), deploy, and add the
+`neverbeen-api` and then
+[`docs/patches/neverbeen-api-ai-chat-biography.patch`](patches/neverbeen-api-ai-chat-biography.patch)
+on top of it (check them with `neverbeen-api-ai-chat-gemini-verification.py` and
+`neverbeen-api-ai-chat-biography-verification.py`), deploy, and add the
 Application setting **`GEMINI_API_KEY`** in Azure App Service → Configuration. No database change is
 needed — chat turns are not stored.
 

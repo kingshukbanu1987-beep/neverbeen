@@ -16,7 +16,8 @@
  * - **The answer (requirements A, B, C, D, F).** The model's own engine (`chat-replies.ts`) answers
  *   instantly. When the NeverBeen Web API has its `GEMINI_API_KEY`, the backend answers instead:
  *   the visitor's message travels with the model's character profile (her
- *   `personality/characterdatabase.json`) to `POST /neverbeen-api/api/ai-chat`, the API calls
+ *   `personality/characterdatabase.json`) and her biography (`personality/biography.json` — her
+ *   profile and her life story) to `POST /neverbeen-api/api/ai-chat`, the API calls
  *   Google Gemini (`gemini-2.5-flash`) with the key that only the server knows, and returns her
  *   finished answer. Every failure lands back on the local engine, so the chat always answers.
  * - **Her selfies (requirement E).** When the visitor asks for a selfie by name, the window calls
@@ -134,6 +135,7 @@ import {
 import { seededBetween } from '../pages/ai-models/chat/chat-random';
 import { buildModelDossier } from '../pages/ai-models/chat/chat-knowledge';
 import { loadCharacterDatabase } from '../pages/ai-models/chat/character-database';
+import { loadModelBiography } from '../pages/ai-models/chat/chat-biography';
 import {
   ChatVisitorLanguage,
   ROMANISED_LANGUAGE_BOOKS,
@@ -1489,10 +1491,16 @@ export class AiModelChatService {
   /**
    * Asks the NeverBeen Web API for her answer (`POST /neverbeen-api/api/ai-chat`).
    *
-   * The request carries the visitor's input together with the model's **character profile** — her
-   * `public/NeverBeenModels/<Album>/personality/characterdatabase.json`, loaded (and cached) by
-   * `loadCharacterDatabase()` with the editor's `_doc` notes dropped — plus her card, the visitor,
-   * the reading of the turn and the recent conversation. The backend calls Google Gemini
+   * Every request carries the visitor's input together with two files from the model's
+   * `public/NeverBeenModels/<Album>/personality/` folder, both cached per album and sent without
+   * the editor's `_doc` notes:
+   *
+   * - her **character profile**, `characterdatabase.json` (`loadCharacterDatabase()`) — how she
+   *   talks and behaves;
+   * - her **biography**, `biography.json` (`loadModelBiography()`) — her own profile and the
+   *   details of her life.
+   *
+   * Her card, the visitor, the reading of the turn and the recent conversation travel with them. The backend calls Google Gemini
    * (`gemini-2.5-flash`) with its secret `GEMINI_API_KEY` and answers
    * `{ ok: true, reply, provider: 'gemini', model }`.
    *
@@ -1512,14 +1520,20 @@ export class AiModelChatService {
     // Free Chat carries a short, basic working context; registered conversations retain a deeper
     // context for the model's answer. The transcript remains visible to both plans.
     const historyLimit = this.sessionPlan(session) === 'registered' ? 24 : 6;
-    // Her character profile never fails to load: a missing or broken file falls back to the
-    // built-in joyful default, exactly as the database's own `fallbackWhenFileMissing` promises.
-    const characterProfile = await loadCharacterDatabase(model);
+    // Neither file ever fails to load: a missing or broken character database falls back to the
+    // built-in joyful default (its own `fallbackWhenFileMissing`), and a missing biography file is
+    // rebuilt from the profile the website carries — so every turn travels with both.
+    const [characterProfile, biography] = await Promise.all([
+      loadCharacterDatabase(model),
+      loadModelBiography(model),
+    ]);
     const body = {
       // The visitor's input — what she answers.
       message: userMessage.text,
       // Her character profile (`personality/characterdatabase.json`): her main rule engine.
       characterProfile,
+      // Her biography (`personality/biography.json`): her own profile and her life story.
+      biography,
       personal: { answers: session.personalMemory?.answers ?? {}, nextTopic: personalTopic },
       // A — the visitor travels with every turn, so the answer comes back addressed to them.
       user: identity

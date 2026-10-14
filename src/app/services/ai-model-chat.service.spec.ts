@@ -10,6 +10,7 @@ import {
   replyQuoteOf,
 } from '../pages/ai-models/chat/chat-types';
 import { clearCharacterDatabaseCache } from '../pages/ai-models/chat/character-database';
+import { clearModelBiographyCache } from '../pages/ai-models/chat/chat-biography';
 import {
   AI_CHAT_BACKEND_DOSSIER_LIMIT,
   AI_CHAT_BACKEND_ENDPOINT,
@@ -955,8 +956,14 @@ describe('AiModelChatService', () => {
     expect(userMessage.reactionBy).toBe('model');
   });
 
-  it('answers through the backend’s Gemini chat, sending the message and her character profile', async () => {
+  it('answers through the backend’s Gemini chat, sending the message, her character profile and her biography', async () => {
     clearCharacterDatabaseCache();
+    clearModelBiographyCache();
+    const biographyFile = {
+      meta: { _doc: 'notes', biographySource: 'Biography/biography.json' },
+      profile: { _doc: 'notes', name: 'Alisha Bhattacharya', city: 'Darjeeling', age: '25' },
+      biography: { summary: 'A fictional NeverBeen life.', hobbies: ['tea-garden walks'] },
+    };
     const chatBodies: Record<string, any>[] = [];
     const profile = {
       _doc: 'editor notes are never sent',
@@ -969,6 +976,9 @@ describe('AiModelChatService', () => {
         const url = String(input);
         if (url.endsWith('/AlishaBhattacharya/personality/characterdatabase.json')) {
           return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
+        }
+        if (url.endsWith('/AlishaBhattacharya/personality/biography.json')) {
+          return Promise.resolve(new Response(JSON.stringify(biographyFile), { status: 200 }));
         }
         if (url === AI_CHAT_BACKEND_ENDPOINT) {
           chatBodies.push(JSON.parse(String(init?.body)));
@@ -1010,6 +1020,15 @@ describe('AiModelChatService', () => {
     );
     expect(sent['characterProfile'].meta.model.slug).toBe('alisha-bhattacharya');
     expect(sent['characterProfile']._doc).toBeUndefined();
+    // Her biography (personality/biography.json) travels with every turn, notes stripped.
+    expect(sent['biography'].profile.city).toBe('Darjeeling');
+    expect(sent['biography'].biography.summary).toBe('A fictional NeverBeen life.');
+    expect(sent['biography'].meta.model.slug).toBe('alisha-bhattacharya');
+    expect(JSON.stringify(sent['biography'])).not.toContain('_doc');
+    for (const body of chatBodies) {
+      expect(body['biography']).toBeTruthy();
+      expect(body['characterProfile']).toBeTruthy();
+    }
     expect(sent['model'].slug).toBe('alisha-bhattacharya');
     expect(sent['user'].firstName).toBe('Rahul');
     expect(sent['dossier'].length).toBeLessThanOrEqual(AI_CHAT_BACKEND_DOSSIER_LIMIT);
@@ -1019,12 +1038,15 @@ describe('AiModelChatService', () => {
 
   it('skips the backend for one turn on a passing failure, and keeps asking it afterwards', async () => {
     clearCharacterDatabaseCache();
+    clearModelBiographyCache();
+    const chatBodies: Record<string, any>[] = [];
     let chatCalls = 0;
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
         if (String(input) === AI_CHAT_BACKEND_ENDPOINT) {
           chatCalls += 1;
+          chatBodies.push(JSON.parse(String(init?.body)));
           return Promise.resolve(
             chatCalls === 1
               ? new Response(JSON.stringify({ ok: false, error: 'ai-failed' }), { status: 502 })
@@ -1054,6 +1076,11 @@ describe('AiModelChatService', () => {
       .at(-1)!;
     expect(answer.text).toBe('Back again!');
     expect(chatCalls).toBe(2);
+    // With no biography file reachable, her website profile still travels as her biography.
+    for (const body of chatBodies) {
+      expect(body['biography'].meta.biographySource).toBe('website-profile');
+      expect(body['biography'].profile.name).toBe('Alisha Bhattacharya');
+    }
   });
 
   it('falls back to her own engine when the studio has no key, and remembers that', async () => {
