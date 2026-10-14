@@ -650,8 +650,8 @@
   color: #3f8b19;
 }
 
-/* The Community step stays visibly connected to the selected model: an album photograph is
-   layered at 70% opacity across the form, while the interactive sign-in controls remain crisp. */
+/* The Community step stays visibly connected to the selected model: a newly selected album
+   photograph is layered at 90% opacity across the form, while the card controls remain crisp. */
 .access-sign-in {
   width: 100%;
   max-width: none;
@@ -669,7 +669,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  opacity: 0.7;
+  opacity: 0.9;
   pointer-events: none;
 }
 
@@ -682,7 +682,7 @@
 }
 
 /* The explanatory copy is contained in the same high-contrast, elevated card language as the
-   Community sign-in card below it. This keeps every line readable over the 70% album photo. */
+   Community sign-in card below it. This keeps every line readable over the 90% album photo. */
 .sign-in-intro-card {
   position: relative;
   overflow: hidden;

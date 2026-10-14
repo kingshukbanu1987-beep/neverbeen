@@ -51,6 +51,8 @@ export class LiveChatAccess {
   /** Free Chat is the open default; selecting either card updates the summary in the top centre. */
   protected readonly selected = signal<LiveChatPlan>('free');
   protected readonly registrationMessage = signal('');
+  /** Incremented as the member sign-in form opens, so its album backdrop is newly randomised. */
+  private readonly signInPhotoSelection = signal(0);
 
   private readonly community = inject(CommunityService);
   private resumeHandled = false;
@@ -149,7 +151,7 @@ export class LiveChatAccess {
       this.stage.set('member-check');
       return;
     }
-    this.stage.set('sign-in');
+    this.openSignIn();
   }
 
   protected backToPlans(): void {
@@ -159,7 +161,7 @@ export class LiveChatAccess {
 
   protected startRegisteredChat(): void {
     if (!this.isRegisteredMember()) {
-      this.stage.set('sign-in');
+      this.openSignIn();
       return;
     }
     if (!this.canStartRegistered()) {
@@ -171,10 +173,15 @@ export class LiveChatAccess {
     this.registeredStarted.emit({ name: this.memberName(), avatar: this.memberPhoto() });
   }
 
+  private openSignIn(): void {
+    // Trigger the photo computed to make a new random selection when this form opens again.
+    this.signInPhotoSelection.update((selection) => selection + 1);
+    this.stage.set('sign-in');
+  }
+
   /**
-   * Gives the registration step a real photograph from the selected model's own album. The hash
-   * makes the choice stable during the flow (and safe for rendering) while still varying across
-   * the NeverBeen models instead of always repeating their cover image.
+   * Supplies a fresh photograph from the selected model's own album for every opening of the
+   * registration form, without changing it while the member completes their sign-in.
    */
   protected readonly modelAlbumBackdrop = computed(() => {
     const model = this.model();
@@ -182,8 +189,10 @@ export class LiveChatAccess {
     const candidates = albumPhotos.length ? albumPhotos : model.photos;
     if (!candidates.length) return model.cover;
 
-    const hash = [...model.slug].reduce((total, character) => total * 31 + character.charCodeAt(0), 17);
-    return candidates[Math.abs(hash) % candidates.length].src;
+    // Depend on the opening counter so the memoized computed picks one new photo per form visit,
+    // while it remains stable for the complete sign-in interaction.
+    this.signInPhotoSelection();
+    return candidates[Math.floor(Math.random() * candidates.length)].src;
   });
 
   protected modelLocation(): string {

@@ -135,8 +135,8 @@
       </div>
     } @else if (stage() === 'sign-in') {
       <div class="access-flow access-sign-in">
-        <!-- A different album image is selected for each model, retaining the personal context
-             through the Community sign-in step rather than returning to a blank surface. -->
+        <!-- A fresh random album image is selected whenever this Community form opens, retaining
+             the model's personal context rather than returning to a blank surface. -->
         <img class="sign-in-model-photo" [src]="modelAlbumBackdrop()" alt="" aria-hidden="true" />
         <div class="sign-in-flow-content">
           <!-- The context copy uses the same high-contrast card treatment as the Google sign-in
