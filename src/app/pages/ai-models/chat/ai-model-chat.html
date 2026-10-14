@@ -1,4 +1,5 @@
-<div class="chat-backdrop" (click)="onBackdropClick($event)">
+<!-- A click outside the window does nothing: only ✕ or the form's Close button leaves the chat. -->
+<div class="chat-backdrop">
   <section
     class="chat-panel"
     role="dialog"

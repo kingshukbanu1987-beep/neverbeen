@@ -485,44 +485,57 @@ describe('AiModelChatDialog', () => {
     expect(bubble.querySelector('.chat-bubble-file')?.textContent).toContain('creative-brief.pdf');
   });
 
-  it('asks before a window that has started goes: Escape, the backdrop and ✕ all open the close form (requirement E)', async () => {
+  it('keeps a started window open until its Close button is pressed: outside clicks and Escape do nothing (requirement E)', async () => {
     const harness = await openChat();
     const closes: number[] = [];
     harness.fixture.componentInstance.closed.subscribe(() => closes.push(1));
 
-    // Escape — a chat that has started is asked about before the window goes.
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    // A click on the backdrop, outside the window, does nothing: the window and the chat stay.
+    harness.element
+      .querySelector('.chat-backdrop')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
     harness.fixture.detectChanges();
-    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
-    expect(closes.length).toBe(0);
+    expect(harness.element.querySelector('.chat-panel')).not.toBeNull();
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
     expect(harness.chat.openSlug()).toBe(alisha.slug);
 
-    // The Close button at the end of the form is the way out — for the form and the window with it.
+    // Escape does nothing either: a stray key press must not leave a live chat behind.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('.chat-panel')).not.toBeNull();
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
+    expect(harness.chat.openSlug()).toBe(alisha.slug);
+    expect(closes.length).toBe(0);
+
+    // ✕ asks for the close form first. Pressing ✕ again, or clicking outside while the form is
+    // open, leaves the form and the window exactly as they were.
+    harness.element.querySelector<HTMLButtonElement>('.chat-close')!.click();
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
+    harness.element.querySelector<HTMLButtonElement>('.chat-close')!.click();
+    harness.element
+      .querySelector('.chat-backdrop')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    harness.fixture.detectChanges();
+    expect(harness.element.querySelector('app-chat-feedback')).not.toBeNull();
+    expect(harness.chat.openSlug()).toBe(alisha.slug);
+    expect(closes.length).toBe(0);
+
+    // The Close button of the form is the way out: the session is ended, then the window goes.
     harness.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
     harness.fixture.detectChanges();
     expect(closes.length).toBe(1);
     expect(harness.chat.openSlug()).toBeNull();
+    // The session is ended, not left running behind the window.
+    expect(harness.chat.sessionOf(alisha.slug)?.closed).toBe('visitor');
+  });
 
-    // ✕ — the same question, the same answer.
-    const second = await openChat();
-    second.element.querySelector<HTMLButtonElement>('.chat-close')!.click();
-    second.fixture.detectChanges();
-    expect(second.element.querySelector('app-chat-feedback')).not.toBeNull();
-    second.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
-    second.fixture.detectChanges();
-    expect(second.chat.openSlug()).toBeNull();
-
-    // The backdrop — and there is nothing to answer with, so the form closes on its Close button
-    // and the window behind it closes too.
-    const third = await openChat();
-    third.element
-      .querySelector('.chat-backdrop')!
-      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    third.fixture.detectChanges();
-    expect(third.element.querySelector('app-chat-feedback')).not.toBeNull();
-    third.element.querySelector<HTMLButtonElement>('.feedback-close')!.click();
-    third.fixture.detectChanges();
-    expect(third.chat.openSlug()).toBeNull();
+  it('still closes a chat that has not started (no name yet) straight away with ✕ (requirement E)', async () => {
+    const harness = await openChat(alisha, { identify: false });
+    harness.element.querySelector<HTMLButtonElement>('.chat-close')!.click();
+    harness.fixture.detectChanges();
+    expect(harness.chat.openSlug()).toBeNull();
+    expect(harness.element.querySelector('app-chat-feedback')).toBeNull();
   });
 
   it('shows the ultra-modern reminder in the middle of the chat when fifteen minutes are left', async () => {

@@ -344,14 +344,15 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   }
 
   /**
-   * E — the ✕, the backdrop and Escape all ask the same question before the window goes: has this
-   * visitor been in a chat that has started? Then the close form comes up first, with the two faces,
-   * the counts, the stars and the comments box, and the window closes when they close it.
+   * E — the ✕ asks the same question before the window goes: has this visitor been in a chat that
+   * has started? Then the close form comes up first, with the two faces, the counts, the stars and
+   * the comments box, and the window closes when they close it. A chat that has started can only be
+   * left through that form: while it is open, ✕ does nothing, so the session is always ended.
    */
   protected requestClose(): void {
     const session = this.session();
-    if (session?.identity && !session.closed && !this.chat.feedbackOpen()) {
-      this.chat.openFeedback();
+    if (session?.identity && !session.closed) {
+      if (!this.chat.feedbackOpen()) this.chat.openFeedback();
       return;
     }
     this.close();
@@ -409,10 +410,6 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     this.focusComposer();
   }
 
-  protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.requestClose();
-  }
-
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
     // The message menu and the forward sheet are the topmost layers: Escape closes them first.
@@ -440,7 +437,8 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
       this.closeFeedback();
       return;
     }
-    this.requestClose();
+    // Escape does not close the window. Only the ✕ does (or the Close button of the form), so a
+    // stray key press cannot leave a live chat running with nothing on screen.
   }
 
   protected updateDraft(event: Event): void {
