@@ -666,6 +666,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Every response of a Registered User model names her, with the blue tick after the name. */
+.chat-author-tag {
+  display: inline-flex;
+  align-items: center;
+  color: var(--chat-muted, #6b7280);
+  font-size: 0.66rem;
+}
+
+.chat-author-tag b {
+  font-weight: 700;
+}
+
 .chat-reaction-note {
   color: var(--chat-violet);
   font-weight: 600;

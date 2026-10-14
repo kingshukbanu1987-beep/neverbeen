@@ -39,7 +39,10 @@
 
             <div class="identity-copy">
               <p class="eyebrow model-location">{{ modelLocation(profile) }}</p>
-              <h1 id="portfolio-title">{{ profile.name }}</h1>
+              <h1 id="portfolio-title">
+                {{ profile.name }}
+                <app-model-verified-tick [slug]="profile.slug" />
+              </h1>
 
               <!-- E — the Live Chat button, right under her name where it cannot be missed: a quiet
                    pill, 1.7× smaller than the two-and-a-half-times button it was on her own page,

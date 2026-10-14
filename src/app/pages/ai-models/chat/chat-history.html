@@ -11,7 +11,7 @@
     <div class="chat-history-heading">
       <h2 id="chat-history-title">Whole chat history</h2>
       <p>
-        {{ model().name }} · {{ messageCount() }}
+        {{ model().name }}<app-model-verified-tick [slug]="model().slug" /> · {{ messageCount() }}
         {{ messageCount() === 1 ? 'message' : 'messages' }}
       </p>
     </div>

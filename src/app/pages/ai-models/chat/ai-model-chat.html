@@ -19,7 +19,7 @@
           </span>
           <span class="chat-bar-copy">
             <span class="chat-bar-name">
-              <b>{{ model().name }}</b>
+              <b>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></b>
               <!-- Instagram's "›" beside the name: on a phone it opens her information. -->
               <button
                 #infoToggle
@@ -83,7 +83,9 @@
             <span aria-hidden="true">✳</span>
           }
         </span>
-        <h2 id="chat-model-name">{{ model().name }}</h2>
+        <h2 id="chat-model-name">
+          {{ model().name }}<app-model-verified-tick [slug]="model().slug" />
+        </h2>
         <p class="chat-profile-handle">{{ model().handle }}</p>
         <p class="chat-profile-place">
           <span aria-hidden="true">⌖</span>
@@ -289,6 +291,12 @@
                 }
 
                 <div class="chat-meta">
+                  @if (message.author === 'model' && registeredOnly()) {
+                    <span class="chat-author-tag">
+                      <b>{{ model().name }}</b
+                      ><app-model-verified-tick [slug]="model().slug" />
+                    </span>
+                  }
                   <span class="chat-time" [attr.title]="stampOf(message)">{{
                     timeOf(message)
                   }}</span>
@@ -542,7 +550,9 @@
                 <span aria-hidden="true">✳</span>
               }
             </span>
-            <h2>{{ model().name }}</h2>
+            <h2>
+              {{ model().name }}<app-model-verified-tick [slug]="model().slug" />
+            </h2>
             <p class="chat-info-handle">{{ model().handle }}</p>
             <p class="chat-info-place">
               <span aria-hidden="true">⌖</span>
@@ -716,7 +726,7 @@
                   }
                 </span>
                 <span class="chat-forward-name">
-                  <b>{{ target.name }}</b>
+                  <b>{{ target.name }}<app-model-verified-tick [slug]="target.slug" /></b>
                   <i>{{ target.handle }}</i>
                 </span>
               </button>

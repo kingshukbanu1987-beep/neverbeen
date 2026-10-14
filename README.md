@@ -125,6 +125,14 @@ loads additional entries as needed. Visitors get the compact Google sign-in opti
 mode) and return to the model portfolio after signing in. API/database patch and deployment
 instructions are in [`docs/ai-model-testimonials.md`](docs/ai-model-testimonials.md).
 
+Models who only chat with a Registered User (the exclusive models listed in
+`src/app/pages/ai-models/chat/live-chat-policy.ts`) carry a blue Instagram-style verified tick after
+their name everywhere they appear: the `/ai-models` directory, the portfolio profile, the Live Chat
+plan form and its sign-in and review steps, the "Before we start" form, the chat header, profile
+panel, information sheet and history, beside every reply the model sends, and on the Chat End
+feedback form. The tick is drawn by `app-model-verified-tick` (`src/app/shared/model-verified-tick`)
+and appears for no other model.
+
 Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative
 until verified.
 

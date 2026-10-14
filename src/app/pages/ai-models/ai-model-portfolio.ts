@@ -30,6 +30,7 @@ import { rememberCommunityReturnPath } from '../../shared/community-return-path'
 import { CommunitySignInCard } from '../../shared/community-sign-in-card/community-sign-in-card';
 import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
 import { ModelLiveChatPill } from '../../shared/model-live-chat-pill/model-live-chat-pill';
+import { ModelVerifiedTick } from '../../shared/model-verified-tick/model-verified-tick';
 import { ModelMediaCommentsDialog } from '../../shared/model-media-comments-dialog/model-media-comments-dialog';
 import { ModelMediaEngagementBar } from '../../shared/model-media-engagement/model-media-engagement';
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
@@ -87,6 +88,7 @@ export const PREVIEW_LIMIT = 12;
     ExactCountPopover,
     ModelMediaCommentsDialog,
     ModelMediaEngagementBar,
+    ModelVerifiedTick,
   ],
   templateUrl: './ai-model-portfolio.html',
   styleUrl: './ai-model-portfolio.css',

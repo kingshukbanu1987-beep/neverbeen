@@ -12,6 +12,7 @@ import { ModelMediaEngagementService } from '../../services/model-media-engageme
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
 import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
 import { ModelLiveChatPill } from '../../shared/model-live-chat-pill/model-live-chat-pill';
+import { ModelVerifiedTick } from '../../shared/model-verified-tick/model-verified-tick';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelChatDialog } from './chat/ai-model-chat';
 import { LiveChatAccess } from './chat/live-chat-access';
@@ -66,6 +67,7 @@ export function drawCover(model: AiModelProfile): string {
     AiModelChatDialog,
     LiveChatAccess,
     ModelLiveChatPill,
+    ModelVerifiedTick,
   ],
   templateUrl: './ai-models.html',
   styleUrl: './ai-models.css',

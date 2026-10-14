@@ -25,7 +25,7 @@
       <p class="gate-kicker">{{ plan() === 'free' ? 'Free Chat' : 'Live Chat' }} · {{ durationLabel() }}</p>
       <h2 id="chat-gate-title">Before we start</h2>
       <p class="gate-lede">
-        <b>{{ model().name }}</b> would like to know who she is talking to. Your name and one
+        <b>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></b> would like to know who she is talking to. Your name and one
         photograph, and the window is yours.
       </p>
     </header>

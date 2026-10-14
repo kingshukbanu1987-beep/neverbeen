@@ -204,7 +204,10 @@
 
                 <div class="card-copy">
                   <p class="card-location">{{ model.location || 'Location to be announced' }}</p>
-                  <h3>{{ model.name }}</h3>
+                  <h3>
+                    {{ model.name }}
+                    <app-model-verified-tick [slug]="model.slug" />
+                  </h3>
 
                   <!-- The live chat, straight from the directory: right under the name of the model
                        and no longer down in the row of links, 1.5× the studio's standard button and
