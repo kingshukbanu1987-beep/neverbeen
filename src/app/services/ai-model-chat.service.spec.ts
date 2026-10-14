@@ -14,11 +14,13 @@ import { clearModelBiographyCache } from '../pages/ai-models/chat/chat-biography
 import {
   AI_CHAT_BACKEND_DOSSIER_LIMIT,
   AI_CHAT_BACKEND_ENDPOINT,
+  AI_CHAT_BACKEND_RETRY_MS,
   AI_CHAT_STORAGE_KEY,
   AiModelChatService,
   chatReminderText,
   formatRemaining,
 } from './ai-model-chat.service';
+import { AI_READ_ENDPOINT } from '../pages/ai-models/chat/chat-analysis';
 import { silenceChatPacing } from './ai-model-chat.testing';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
@@ -1081,6 +1083,190 @@ describe('AiModelChatService', () => {
       expect(body['biography'].meta.biographySource).toBe('website-profile');
       expect(body['biography'].profile.name).toBe('Alisha Bhattacharya');
     }
+  });
+
+  it('sends every message the visitor writes to the backend, and says the answer it sends back', async () => {
+    clearCharacterDatabaseCache();
+    clearModelBiographyCache();
+    const bodies: Record<string, any>[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url === AI_CHAT_BACKEND_ENDPOINT) {
+          const body = JSON.parse(String(init?.body)) as Record<string, any>;
+          bodies.push(body);
+          return new Response(
+            JSON.stringify({ ok: true, reply: `Gemini answering turn ${bodies.length}.` }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        // The reading desk reads the visitor's own language, and only for the message written in it.
+        if (url === AI_READ_ENDPOINT) {
+          const asked = String(
+            (JSON.parse(String(init?.body ?? '{}')) as { text?: string }).text ?? '',
+          );
+          const romanised = asked === 'ami bhalo achi';
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              provider: 'gemini',
+              reading: romanised
+                ? {
+                    english: 'I am well.',
+                    language: 'bn',
+                    languageName: 'Bengali',
+                    romanised: true,
+                    intent: 'greeting',
+                  }
+                : {
+                    english: asked,
+                    language: 'en',
+                    languageName: 'English',
+                    romanised: false,
+                    intent: 'greeting',
+                  },
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          );
+        }
+        return new Response(JSON.stringify({ ok: false, error: 'analysis-unavailable' }), {
+          status: 503,
+        });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+    // A greeting, a photograph of their own, and a message in their own language: three different
+    // kinds of turn, and every one of them belongs to the backend.
+    await chat.sendMessage(alisha, 'Hello');
+    chat.setDraftAttachment({
+      kind: 'photo',
+      name: 'me.jpg',
+      type: 'image/jpeg',
+      size: 1_024,
+      source: 'upload',
+      preview: VISITOR_PHOTO,
+    });
+    await chat.sendMessage(alisha, 'Look at this');
+    await chat.sendMessage(alisha, 'ami bhalo achi');
+
+    expect(bodies.map((body) => body['message'])).toEqual([
+      'Hello',
+      'Look at this',
+      'ami bhalo achi',
+    ]);
+    for (const body of bodies) {
+      // Her character database and her biography travel with every single message.
+      expect(body['characterProfile']).toBeTruthy();
+      expect(body['biography']).toBeTruthy();
+      // B — nothing tells her where the words came from or that anything was read.
+      expect(JSON.stringify(body)).not.toMatch(/GEMINI_API_KEY|x-goog-api-key/i);
+    }
+    // The language the visitor settled into travels with the turn that was written in it.
+    expect(bodies[2]['language']).toEqual({ code: 'bn', label: 'Bengali', romanised: true });
+    expect(bodies[0]['language']).toBeNull();
+
+    // Her answers are the backend's words, not her engine's.
+    const answers = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model' && message.intent === 'gemini');
+    expect(answers.map((message) => message.text)).toEqual([
+      'Gemini answering turn 1.',
+      'Gemini answering turn 2.',
+      'Gemini answering turn 3.',
+    ]);
+  });
+
+  it('takes a bot line out of the answer, and answers in her own words when that was all of it (requirement L)', async () => {
+    let turn = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === AI_CHAT_BACKEND_ENDPOINT) {
+          turn += 1;
+          const reply =
+            turn === 1
+              ? 'As an AI language model, I cannot browse the internet. But Darjeeling is mist and tea in October.'
+              : 'I am an AI model here to help.\n\nHow can I help you today?';
+          return new Response(JSON.stringify({ ok: true, reply }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({ ok: false, error: 'analysis-unavailable' }), {
+          status: 503,
+        });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'Tell me about Darjeeling');
+    const first = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model')
+      .at(-1)!;
+    expect(first.text).toBe('But Darjeeling is mist and tea in October.');
+    expect(first.intent).toBe('gemini');
+    expect(first.text).not.toMatch(/\bas an ai\b|\blanguage model\b/i);
+
+    // Nothing of the answer survived the guard: she answers from her own engine rather than pass a
+    // chatbot's line on to the visitor.
+    await chat.sendMessage(alisha, 'What can you do, exactly?');
+    const second = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model')
+      .at(-1)!;
+    expect(second.intent).not.toBe('gemini');
+    expect(second.text.length).toBeGreaterThan(0);
+    expect(second.text).not.toMatch(/\bas an ai\b|\bhere to help\b|\bhelp you today\b/i);
+  });
+
+  it('asks a backend that said it cannot answer again after the pause, never for the rest of the visit', async () => {
+    vi.useFakeTimers();
+    let calls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === AI_CHAT_BACKEND_ENDPOINT) {
+          calls += 1;
+          return calls === 1
+            ? new Response(JSON.stringify({ ok: false, error: 'ai-unavailable' }), {
+                status: 503,
+              })
+            : new Response(JSON.stringify({ ok: true, reply: 'Gemini is here.' }), {
+                status: 200,
+                headers: { 'content-type': 'application/json' },
+              });
+        }
+        return new Response('{}', { status: 503 });
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'Hello');
+    expect(calls).toBe(1);
+    expect(chat.remoteUnavailable()).toBe(true);
+
+    // The pause is not over: this turn is hers, and nothing is sent.
+    await chat.sendMessage(alisha, 'Are you there?');
+    expect(calls).toBe(1);
+
+    // The pause passes, and the very next message is Gemini's again — the studio sets its key and
+    // the conversation picks it up without a reload.
+    vi.setSystemTime(Date.now() + AI_CHAT_BACKEND_RETRY_MS + 1);
+    await chat.sendMessage(alisha, 'Now?');
+    expect(calls).toBe(2);
+    expect(chat.remoteUnavailable()).toBe(false);
+    expect(
+      chat
+        .session()!
+        .messages.filter((message) => message.author === 'model')
+        .at(-1)!.text,
+    ).toBe('Gemini is here.');
   });
 
   it('falls back to her own engine when the studio has no key, and remembers that', async () => {
