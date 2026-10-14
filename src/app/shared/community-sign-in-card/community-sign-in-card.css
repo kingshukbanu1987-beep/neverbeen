@@ -20,6 +20,14 @@
   text-align: center;
 }
 
+/* Used by the image-backed Registered User flow: retain the card's contrast while letting 20%
+   of the selected model photograph remain visible beneath it. */
+.community-auth-card.is-translucent {
+  background:
+    radial-gradient(circle at 100% 0, rgb(239 106 165 / 13%), transparent 48%),
+    linear-gradient(145deg, rgb(32 23 33 / 80%), rgb(17 13 20 / 80%));
+}
+
 .auth-card-mark {
   display: grid;
   width: 42px;
