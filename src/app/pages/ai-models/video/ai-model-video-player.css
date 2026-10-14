@@ -16,7 +16,15 @@
   position: fixed;
   z-index: 60;
   inset: 0;
+  /* Dynamic viewport units keep the player flush with the visible screen when mobile browser
+     chrome appears or retracts, while the preceding values remain a safe fallback. */
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100svh;
   display: grid;
+  overflow: hidden;
   background: rgb(4 3 5 / 96%);
   backdrop-filter: blur(14px);
   animation: player-in 220ms ease backwards;
@@ -24,11 +32,15 @@
 
 .player-panel {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  /* A definite, shrinkable centre track is essential for video sizing.  The video can now fill
+     exactly the viewport area left by its controls without either portrait or landscape media
+     forcing the panel taller, wider, or into a cropped flex layout. */
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
   background: linear-gradient(160deg, #1b1320, #0b080e 76%);
   animation: player-panel-in 260ms ease backwards;
@@ -135,7 +147,9 @@
 .player-stage {
   position: relative;
   display: grid;
-  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   place-items: center;
@@ -143,18 +157,32 @@
 }
 
 .player-video {
+  display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
   background: #000;
   cursor: pointer;
+  /* Never trade part of a clip for extra visual size: native portrait and landscape ratios both
+     sit entirely inside the stage and use the largest possible dimension. */
   object-fit: contain;
 }
 
+/* Full-screen mode keeps the same close, transport, download and clip-navigation features as
+   the regular viewer.  The stage's shrinkable grid track still absorbs the remaining viewport. */
 .player-panel:fullscreen .player-bar,
 .player-panel:fullscreen .player-foot,
 .player-panel.is-fullscreen .player-bar,
 .player-panel.is-fullscreen .player-foot {
-  display: none;
+  display: flex;
+}
+
+.player-panel:fullscreen .player-foot,
+.player-panel.is-fullscreen .player-foot {
+  display: grid;
 }
 
 /* ------------------------------------------------------- engagement strip, comments */
@@ -183,9 +211,11 @@
   flex: 1;
 }
 
+/* Comments remain available after entering browser full screen; they float above rather than
+   taking pixels out of the video stage, so the clip's complete intrinsic frame is still fitted. */
 .player-panel:fullscreen .player-comments,
 .player-panel.is-fullscreen .player-comments {
-  display: none;
+  display: flex;
 }
 
 @media (max-width: 1079px) {

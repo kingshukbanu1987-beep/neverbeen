@@ -1289,7 +1289,8 @@ describe('AiModelVideoPlayer', () => {
     fixture.detectChanges();
     expect(panel.classList.contains('is-fullscreen')).toBe(false);
 
-    // A browser that grants it flips the player, hiding the bar and foot around the picture.
+    // A browser that grants it flips the player into its immersive full-viewport layout while
+    // retaining the bar, transport controls and clip tools.
     Object.assign(panel, { requestFullscreen: () => Promise.resolve() });
     button.click();
     await Promise.resolve();

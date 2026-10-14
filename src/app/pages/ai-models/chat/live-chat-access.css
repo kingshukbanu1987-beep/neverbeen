@@ -8,7 +8,10 @@
   inset: 0;
   display: grid;
   overflow-y: auto;
-  place-items: center;
+  /* The chooser can be taller than a laptop viewport. Start it at the scroll origin instead of
+     vertically centring an oversized panel, which used to push the model header above the visible
+     area on tablets and laptops. */
+  place-items: start center;
   padding: clamp(0.55rem, 3vw, 2.3rem);
   background:
     radial-gradient(circle at 14% 10%, rgb(100 189 39 / 14%), transparent 34rem),
