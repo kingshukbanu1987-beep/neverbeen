@@ -107,7 +107,13 @@ export function localTurnReading(input: {
     romanised: Boolean(language?.romanised),
     // What the turn is stays for the reading desk to say: the window's own reader repairs the
     // typing and reads the language, but naming the intent is the desk's work.
-    intent: attachment ? (attachment.kind === 'document' ? 'document' : 'photo') : '',
+    intent: attachment
+      ? attachment.kind === 'document'
+        ? 'document'
+        : attachment.kind === 'video'
+          ? 'video'
+          : 'photo'
+      : '',
     sentiment: 'neutral',
     tone: '',
     about: '',

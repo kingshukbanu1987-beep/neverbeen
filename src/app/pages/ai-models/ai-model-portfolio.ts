@@ -35,6 +35,9 @@ import { ModelMediaEngagementBar } from '../../shared/model-media-engagement/mod
 import { AiModelPhoto, AiModelProfile, AiModelVideo, aiModelProfiles } from './ai-model-data';
 import { AiModelBookingDialog } from './booking/ai-model-booking';
 import { AiModelChatDialog } from './chat/ai-model-chat';
+import { LiveChatAccess } from './chat/live-chat-access';
+import { ChatIdentity } from './chat/chat-identity';
+import { LiveChatPlan } from './chat/chat-types';
 import { AiModelPhotoViewer } from './photo-viewer/ai-model-photo-viewer';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
 
@@ -74,6 +77,7 @@ export const PREVIEW_LIMIT = 12;
     RouterLink,
     AiModelBookingDialog,
     AiModelChatDialog,
+    LiveChatAccess,
     AiModelPhotoViewer,
     AiModelVideoPlayer,
     CompactCount,
@@ -92,6 +96,14 @@ export class AiModelPortfolioPage implements OnDestroy {
   private readonly slug = toSignal(
     this.route.paramMap.pipe(map((params) => params.get('slug') ?? '')),
     { initialValue: this.route.snapshot.paramMap.get('slug') ?? '' },
+  );
+  // Some lightweight route hosts only expose `paramMap`; falling back keeps the portfolio usable in
+  // embeds and tests while real routed pages read the post-Google `liveChatPlan` query string.
+  private readonly returnedLiveChatPlan = toSignal(
+    (this.route.queryParamMap ?? this.route.paramMap).pipe(
+      map((params) => params.get('liveChatPlan') ?? ''),
+    ),
+    { initialValue: this.route.snapshot.queryParamMap?.get('liveChatPlan') ?? '' },
   );
 
   protected readonly model = computed(
@@ -259,11 +271,14 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected readonly bookingOpen = signal(false);
 
   /**
-   * The live AI chat window — the **Chat with me** button above **Rent Me**. The session itself
-   * (its two hours, its transcript and its strikes) lives in `AiModelChatService`, so closing the
-   * window and opening it again continues the same conversation.
+   * The Live Chat access choice sits before the session. Only after its Free or Registered User
+   * rules are selected do we mount the chat itself.
    */
   protected readonly chatOpen = signal(false);
+  protected readonly chatPlan = signal<LiveChatPlan | null>(null);
+  protected readonly registeredChatIdentity = signal<ChatIdentity | null>(null);
+  protected readonly resumeRegisteredChat = signal(false);
+  private liveChatReturnHandled = false;
 
   /**
    * Normalised availability for this model — kept in step with the directory listing so a
@@ -347,6 +362,22 @@ export class AiModelPortfolioPage implements OnDestroy {
         ]);
       }
       this.commentsTarget.set(null);
+    });
+
+    // OAuth / registration comes back to this exact portfolio with the selected chat plan in its
+    // query string. Re-open the access review rather than losing the model the member chose.
+    effect(() => {
+      if (
+        this.liveChatReturnHandled ||
+        this.returnedLiveChatPlan() !== 'registered' ||
+        !this.model()
+      )
+        return;
+      this.liveChatReturnHandled = true;
+      this.chatPlan.set(null);
+      this.registeredChatIdentity.set(null);
+      this.resumeRegisteredChat.set(true);
+      this.chatOpen.set(true);
     });
 
     // Keep the page behind the pop-up from scrolling while it is open.
@@ -697,14 +728,35 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.rentButton()?.nativeElement.focus({ preventScroll: true });
   }
 
-  /** Opens the real-time chat with this model. */
+  /** Opens the modern Free / Registered User Live Chat access screen for this model. */
   protected openChat(): void {
     if (!this.model()) return;
+    this.chatPlan.set(null);
+    this.registeredChatIdentity.set(null);
+    this.resumeRegisteredChat.set(false);
     this.chatOpen.set(true);
+  }
+
+  protected startFreeChat(): void {
+    this.chatPlan.set('free');
+    this.registeredChatIdentity.set(null);
+  }
+
+  protected startRegisteredChat(identity: ChatIdentity): void {
+    this.chatPlan.set('registered');
+    this.registeredChatIdentity.set(identity);
+    this.resumeRegisteredChat.set(false);
+  }
+
+  protected liveChatReturnPath(profile: AiModelProfile): string {
+    return `/ai-models/${encodeURIComponent(profile.slug)}?liveChatPlan=registered`;
   }
 
   protected closeChat(): void {
     this.chatOpen.set(false);
+    this.chatPlan.set(null);
+    this.registeredChatIdentity.set(null);
+    this.resumeRegisteredChat.set(false);
     this.chatButton()?.nativeElement.focus({ preventScroll: true });
   }
 

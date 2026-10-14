@@ -49,8 +49,49 @@ export function reactionEmoji(reaction: AiChatReaction | null): string {
   return reaction ? reactionOption(reaction).emoji : '';
 }
 
-/** How the visitor attached a picture or a document to a message. */
-export type AiChatAttachmentKind = 'photo' | 'document';
+/** The access choice made before a Live Chat starts. */
+export type LiveChatPlan = 'free' | 'registered';
+
+/**
+ * One plan's fixed rules. These values live alongside the session types so the picker, the chat
+ * window and the session clock cannot drift apart.
+ */
+export interface LiveChatPlanDefinition {
+  id: LiveChatPlan;
+  label: string;
+  durationMs: number;
+  durationLabel: string;
+  allowsMedia: boolean;
+  memoryLabel: string;
+  speedLabel: string;
+}
+
+export const FREE_LIVE_CHAT_DURATION_MS = 2 * 60 * 1000;
+export const REGISTERED_LIVE_CHAT_DURATION_MS = 45 * 60 * 1000;
+
+export const LIVE_CHAT_PLANS: Record<LiveChatPlan, LiveChatPlanDefinition> = {
+  free: {
+    id: 'free',
+    label: 'Free Chat',
+    durationMs: FREE_LIVE_CHAT_DURATION_MS,
+    durationLabel: '2 minutes',
+    allowsMedia: false,
+    memoryLabel: 'Basic conversational memory',
+    speedLabel: 'Standard response speed',
+  },
+  registered: {
+    id: 'registered',
+    label: 'Registered User',
+    durationMs: REGISTERED_LIVE_CHAT_DURATION_MS,
+    durationLabel: '45 minutes',
+    allowsMedia: true,
+    memoryLabel: 'Advanced conversation memory',
+    speedLabel: 'Faster response speed',
+  },
+};
+
+/** How the visitor attached media or a document to a message. */
+export type AiChatAttachmentKind = 'photo' | 'video' | 'document';
 
 /** Where a photo came from: the file picker or the camera. */
 export type AiChatAttachmentSource = 'upload' | 'camera' | 'file';
@@ -189,8 +230,12 @@ export interface AiChatSession {
    */
   identity: ChatIdentity | null;
   startedAt: number;
-  /** `startedAt` + `AI_CHAT_SESSION_MS` — the two-hour limit. */
+  /** The absolute time at which the selected plan closes this chat. */
   endsAt: number;
+  /** The plan that fixed this session's capabilities and duration. `legacy` keeps old saved chats valid. */
+  plan?: LiveChatPlan | 'legacy';
+  /** Fixed at session creation, so reopening a chat can never restart or extend its time. */
+  durationMs?: number;
   messages: AiChatMessage[];
   /**
    * The three-strike escalation: a warning is served at 1 and 2, and she says goodbye at 3.
@@ -354,6 +399,7 @@ export const AI_CHAT_INTRO_MAX_MS = 5_000;
  */
 export const AI_CHAT_FEEDBACK_COMMENT_LIMIT = 600;
 
-/** Boundaries of one attachment: 8 MB for a picture, 16 MB for a document. */
+/** Boundaries of one attachment: 8 MB for a picture, 32 MB for a video, 16 MB for a document. */
 export const AI_CHAT_PHOTO_LIMIT_BYTES = 8 * 1024 * 1024;
+export const AI_CHAT_VIDEO_LIMIT_BYTES = 32 * 1024 * 1024;
 export const AI_CHAT_DOCUMENT_LIMIT_BYTES = 16 * 1024 * 1024;

@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ModelLiveChatService } from '../../services/model-live-chat.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
@@ -14,6 +14,9 @@ import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popove
 import { ModelLiveChatPill } from '../../shared/model-live-chat-pill/model-live-chat-pill';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelChatDialog } from './chat/ai-model-chat';
+import { LiveChatAccess } from './chat/live-chat-access';
+import { ChatIdentity } from './chat/chat-identity';
+import { LiveChatPlan } from './chat/chat-types';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
 type SortMode = 'default' | 'price-asc' | 'price-desc';
@@ -55,20 +58,31 @@ export function drawCover(model: AiModelProfile): string {
 
 @Component({
   selector: 'app-ai-models-page',
-  imports: [RouterLink, CompactCount, ExactCountPopover, AiModelChatDialog, ModelLiveChatPill],
+  imports: [
+    RouterLink,
+    CompactCount,
+    ExactCountPopover,
+    AiModelChatDialog,
+    LiveChatAccess,
+    ModelLiveChatPill,
+  ],
   templateUrl: './ai-models.html',
   styleUrl: './ai-models.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AiModelsPage {
   protected readonly models = aiModelProfiles;
+  private readonly route = inject(ActivatedRoute);
   private readonly engagement = inject(ModelMediaEngagementService);
   /** Loads and polls each model's Live Now and past-chat counts for the split pills on the cards. */
   private readonly liveChats = inject(ModelLiveChatService);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** The model whose live chat window is open, or null. The session lives in the chat service. */
+  /** The selected model moves through the access screen before the actual chat mounts. */
   protected readonly chatModel = signal<AiModelProfile | null>(null);
+  protected readonly chatPlan = signal<LiveChatPlan | null>(null);
+  protected readonly registeredChatIdentity = signal<ChatIdentity | null>(null);
+  protected readonly resumeRegisteredChat = signal(false);
   private readonly testimonialsApi = inject(ModelTestimonialsService);
 
   /** Per-model averages and review counts from the complete public testimonial feeds. */
@@ -156,6 +170,17 @@ export class AiModelsPage {
   });
 
   constructor() {
+    // Google / registration returns here when a directory card initiated Registered User access.
+    const returnedPlan = this.route.snapshot.queryParamMap?.get('liveChatPlan') ?? null;
+    const returnedModel = this.route.snapshot.queryParamMap?.get('liveChatModel') ?? null;
+    if (returnedPlan === 'registered' && returnedModel) {
+      const model = this.models.find((candidate) => candidate.slug === returnedModel) ?? null;
+      if (model) {
+        this.chatModel.set(model);
+        this.resumeRegisteredChat.set(true);
+      }
+    }
+
     // Load engagement for both media types so each directory card can show album-wide totals.
     for (const model of this.models) {
       this.engagement.registerModel(model.slug, [
@@ -200,13 +225,34 @@ export class AiModelsPage {
     this.search.set('');
   }
 
-  /** Opens the live chat with a model straight from her card in the directory. */
+  /** Opens the Free / Registered User access screen from a directory card. */
   protected openChat(model: AiModelProfile): void {
+    this.chatPlan.set(null);
+    this.registeredChatIdentity.set(null);
+    this.resumeRegisteredChat.set(false);
     this.chatModel.set(model);
+  }
+
+  protected startFreeChat(): void {
+    this.chatPlan.set('free');
+    this.registeredChatIdentity.set(null);
+  }
+
+  protected startRegisteredChat(identity: ChatIdentity): void {
+    this.chatPlan.set('registered');
+    this.registeredChatIdentity.set(identity);
+    this.resumeRegisteredChat.set(false);
+  }
+
+  protected liveChatReturnPath(model: AiModelProfile): string {
+    return `/ai-models?liveChatPlan=registered&liveChatModel=${encodeURIComponent(model.slug)}`;
   }
 
   protected closeChat(): void {
     this.chatModel.set(null);
+    this.chatPlan.set(null);
+    this.registeredChatIdentity.set(null);
+    this.resumeRegisteredChat.set(false);
   }
 
   protected indexLabel(index: number): string {

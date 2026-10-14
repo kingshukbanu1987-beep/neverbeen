@@ -866,7 +866,23 @@
 }
 
 @if (chatOpen() && model(); as chatting) {
-  <app-ai-model-chat [model]="chatting" (closed)="closeChat()" />
+  @if (chatPlan(); as plan) {
+    <app-ai-model-chat
+      [model]="chatting"
+      [plan]="plan"
+      [registeredIdentity]="registeredChatIdentity()"
+      (closed)="closeChat()"
+    />
+  } @else {
+    <app-live-chat-access
+      [model]="chatting"
+      [returnTo]="liveChatReturnPath(chatting)"
+      [resumeRegistered]="resumeRegisteredChat()"
+      (freeStarted)="startFreeChat()"
+      (registeredStarted)="startRegisteredChat($event)"
+      (closed)="closeChat()"
+    />
+  }
 }
 
 @if (lightboxOpen()) {

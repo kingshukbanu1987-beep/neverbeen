@@ -1,8 +1,8 @@
-<aside class="community-auth-card" aria-labelledby="testimonial-sign-in-title">
+<aside class="community-auth-card" aria-labelledby="community-sign-in-title">
   <div class="auth-card-mark" aria-hidden="true">NB</div>
-  <p class="auth-eyebrow">NeverBeen Community</p>
-  <h3 id="testimonial-sign-in-title">Your experience belongs here.</h3>
-  <p class="auth-copy">Sign in to share a testimonial with the community.</p>
+  <p class="auth-eyebrow">{{ eyebrow() }}</p>
+  <h3 id="community-sign-in-title">{{ title() }}</h3>
+  <p class="auth-copy">{{ copy() }}</p>
 
   <button
     type="button"
@@ -49,5 +49,5 @@
     <p class="auth-error" role="alert">{{ errorMessage() }}</p>
   }
 
-  <p class="auth-note">Community sign-in only · Guest access cannot post testimonials</p>
+  <p class="auth-note">{{ note() }}</p>
 </aside>

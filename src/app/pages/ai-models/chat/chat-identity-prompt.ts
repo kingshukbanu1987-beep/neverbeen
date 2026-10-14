@@ -15,6 +15,7 @@ import {
   CHAT_FACE_CHECK_ERROR,
 } from './chat-face-detection';
 import { AiModelProfile } from '../ai-model-data';
+import { LIVE_CHAT_PLANS, LiveChatPlan } from './chat-types';
 import {
   CHAT_IDENTITY_AVATAR_BYTES,
   CHAT_NAME_MAX_LENGTH,
@@ -43,6 +44,7 @@ import {
 })
 export class ChatIdentityPrompt {
   readonly model = input.required<AiModelProfile>();
+  readonly plan = input<LiveChatPlan | 'legacy'>('legacy');
   readonly confirmed = output<ChatIdentity>();
   /** The visitor closed the form: the chat window goes with it. */
   readonly cancelled = output<void>();
@@ -68,6 +70,11 @@ export class ChatIdentityPrompt {
   protected readonly ready = computed(
     () => !this.working() && isValidChatName(this.name()) && this.avatar().length > 0,
   );
+
+  protected readonly durationLabel = computed(() => {
+    const plan = this.plan();
+    return plan === 'legacy' ? '2 hours' : LIVE_CHAT_PLANS[plan].durationLabel;
+  });
 
   protected readonly firstName = computed(() => {
     const name = cleanChatName(this.name());

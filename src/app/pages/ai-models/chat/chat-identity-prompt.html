@@ -22,7 +22,7 @@
         }
         <i class="gate-live" aria-hidden="true"></i>
       </span>
-      <p class="gate-kicker">Live chat · 2 hours</p>
+      <p class="gate-kicker">{{ plan() === 'free' ? 'Free Chat' : 'Live Chat' }} · {{ durationLabel() }}</p>
       <h2 id="chat-gate-title">Before we start</h2>
       <p class="gate-lede">
         <b>{{ model().name }}</b> would like to know who she is talking to. Your name and one

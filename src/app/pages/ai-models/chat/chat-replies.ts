@@ -1281,7 +1281,8 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
   // reaction to what is in it. A document is acknowledged and a line about it is asked for.
   if (message.attachment) {
     const attachment = message.attachment;
-    const article = attachment.kind === 'document' ? 'document' : 'photograph';
+    const article =
+      attachment.kind === 'document' ? 'document' : attachment.kind === 'video' ? 'video' : 'photograph';
     const origin =
       attachment.source === 'camera'
         ? 'You took that one right here —'
@@ -1293,11 +1294,13 @@ export function composeChatReply(request: AiChatReplyRequest): AiChatReply {
         ? deskAttachment
           ? `${origin} “${attachment.name}”, and I have been through it: ${deskAttachment} Tell me what you want me to do with it and I will answer properly.`
           : `${origin} “${attachment.name}”. It is in our chat now, and I am keeping it. Tell me what is inside it and I will answer properly — the studio reads everything you attach to a booking.`
-        : deskAttachment
-          ? `${origin} “${attachment.name}”. ${deskAttachment} ${photoQuestion(`${seed}|desk`)}`
-          : photo
-            ? `${origin} “${attachment.name}”. ${photoObservation(photo, { name: firstName, seed })}`
-            : `${origin} “${attachment.name}”, and I looked properly. Tell me where you were standing when you took it — I want the whole story, not just the picture.`;
+        : attachment.kind === 'video'
+          ? `${origin} “${attachment.name}”. I can see you shared a video in our private chat — tell me the moment you wanted me to notice, and I will stay with the whole story.`
+          : deskAttachment
+            ? `${origin} “${attachment.name}”. ${deskAttachment} ${photoQuestion(`${seed}|desk`)}`
+            : photo
+              ? `${origin} “${attachment.name}”. ${photoObservation(photo, { name: firstName, seed })}`
+              : `${origin} “${attachment.name}”, and I looked properly. Tell me where you were standing when you took it — I want the whole story, not just the picture.`;
     return {
       ...base,
       text: inVoice(
