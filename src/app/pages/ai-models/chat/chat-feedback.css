@@ -21,7 +21,7 @@
 
 .feedback {
   position: absolute;
-  z-index: 3;
+  z-index: 10;
   inset: 0;
   display: grid;
   place-items: center;
@@ -634,5 +634,12 @@
   .feedback-star.is-picked {
     animation: none;
     transition: none;
+  }
+}
+
+/* A field under 16px makes a phone zoom the page when it is focused: keep the comments box at 16px. */
+@media (max-width: 899.98px), (pointer: coarse) {
+  .feedback-comments-box {
+    font-size: 16px;
   }
 }

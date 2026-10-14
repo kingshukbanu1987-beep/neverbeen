@@ -37,7 +37,7 @@ export type LiveChatCountStatus = 'idle' | 'loading' | 'ready' | 'error';
  * How often the directory asks the API for fresh counts while it is on screen. A chat started or
  * ended on any other device shows up on every open directory within this window — no refresh.
  */
-export const LIVE_CHAT_POLL_MS = 10_000;
+export const LIVE_CHAT_POLL_MS = 2_000;
 
 /**
  * The Live Now and past-chat counters of every AI model, shown in the split pill beside each
@@ -45,7 +45,7 @@ export const LIVE_CHAT_POLL_MS = 10_000;
  *
  * - **Reads.** One request loads every model's counts for the directory
  *   (`GET /api/models/live-chats`, see docs/patches/neverbeen-api-model-live-chat-count.patch),
- *   and `startPolling()` keeps re-reading it every {@link LIVE_CHAT_POLL_MS} while the directory
+ *   and `startPolling()` keeps re-reading it every {@link LIVE_CHAT_POLL_MS} (two seconds) while the directory
  *   is open, so a session started or ended anywhere else moves the counters without a refresh.
  * - **Writes.** The chat window records one start when a visitor's two-hour session begins
  *   (`POST /api/models/{slug}/live-chats`) and one end when that session is over

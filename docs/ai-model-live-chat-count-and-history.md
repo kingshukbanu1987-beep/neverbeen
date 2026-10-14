@@ -9,7 +9,7 @@
   total** (`0 past chats`, `1 past chat`, `12 past chats`). On a phone the pill shrinks so it
   shares one row with the Live Chat button.
 - **The counters are live.** They are read from `GET /api/models/live-chats` when the directory
-  opens, and the directory keeps polling the same endpoint every ten seconds while it is on
+  opens, and the directory keeps polling the same endpoint every two seconds while it is on
   screen (a hidden tab pauses, and catches up the moment it returns). A chat started or ended on
   any other device — or in another tab — moves the counters by themselves, with no refresh.
 - **One count per chat, up and down.** The chat window records a start when the visitor's

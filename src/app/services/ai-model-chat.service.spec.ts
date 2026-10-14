@@ -543,6 +543,25 @@ describe('AiModelChatService', () => {
     expect(chat.session()!.messages.length).toBe(written);
   });
 
+  it('freezes the timer the moment a session ends and never counts on afterwards', async () => {
+    vi.useFakeTimers();
+    const chat = service();
+    open(chat);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    chat.endVisitorSession();
+    expect(chat.session()!.closed).toBe('visitor');
+
+    const frozen = chat.timeLeftLabel();
+    const frozenMs = chat.remainingMs();
+    expect(frozenMs).toBeGreaterThan(0);
+
+    // Neither the clock nor the passing minutes move a session that is over.
+    await vi.advanceTimersByTimeAsync(5 * 60_000);
+    expect(chat.timeLeftLabel()).toBe(frozen);
+    expect(chat.remainingMs()).toBe(frozenMs);
+  });
+
   it('does not fill a silence the conversation has not earned (requirements A and B)', async () => {
     vi.useFakeTimers();
     const chat = service();

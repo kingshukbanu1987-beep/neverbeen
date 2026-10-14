@@ -1,6 +1,8 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   OnInit,
   computed,
@@ -67,10 +69,11 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
     '(document:keydown)': 'onDocumentKeydown($event)',
   },
 })
-export class AiModelChatDialog implements OnInit {
+export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly chat = inject(AiModelChatService);
   /** The window itself, so a click on a reply quote can jump back to the quoted bubble. */
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly model = input.required<AiModelProfile>();
   readonly closed = output<void>();
@@ -79,6 +82,8 @@ export class AiModelChatDialog implements OnInit {
   protected readonly welcomeLine = CHAT_WELCOME_LINE;
   protected readonly reactionEmoji = reactionEmoji;
 
+  private readonly infoToggle = viewChild<ElementRef<HTMLButtonElement>>('infoToggle');
+  private readonly infoBack = viewChild<ElementRef<HTMLButtonElement>>('infoBack');
   private readonly composer = viewChild<ElementRef<HTMLTextAreaElement>>('composer');
   private readonly photoInput = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private readonly cameraInput = viewChild<ElementRef<HTMLInputElement>>('cameraInput');
@@ -89,6 +94,8 @@ export class AiModelChatDialog implements OnInit {
   protected readonly draft = signal('');
   /** The whole chat history sheet, open over the window. */
   protected readonly historyOpen = signal(false);
+  /** Phones: her information sheet, opened by the "›" beside her name in the header. */
+  protected readonly infoOpen = signal(false);
   protected readonly pickerFor = signal<string | null>(null);
   /** The message the visitor has chosen to reply over — the quote the composer will send. */
   protected readonly replyingTo = signal<AiChatReplyQuote | null>(null);
@@ -111,6 +118,45 @@ export class AiModelChatDialog implements OnInit {
   protected readonly remaining = computed(() => this.chat.remainingMs());
   protected readonly urgent = computed(() => this.remaining() <= 5 * 60 * 1000);
   protected readonly warning = computed(() => this.remaining() <= 15 * 60 * 1000);
+
+  /** The same availability wording as her card and her profile page. */
+  protected readonly availabilityState = computed<'available' | 'unavailable' | 'future'>(() => {
+    const availability = (this.model().availability ?? '').trim().toLocaleLowerCase();
+    if (/unavailable|fully booked|not accepting/.test(availability)) return 'unavailable';
+    if (/future|looking for|coming soon/.test(availability)) return 'future';
+    return 'available';
+  });
+
+  protected readonly availabilityLabel = computed(() => {
+    switch (this.availabilityState()) {
+      case 'unavailable':
+        return 'Currently Unavailable';
+      case 'future':
+        return 'Looking for Future Contract';
+      default:
+        return 'Available for Contract';
+    }
+  });
+
+  /** Her personal details for the information sheet — only the ones that have a value. */
+  protected readonly infoDetails = computed(() => {
+    const model = this.model();
+    return [
+      { label: 'Age', value: model.age ? `${model.age} years` : '' },
+      { label: 'Height', value: model.height },
+      { label: 'Weight', value: model.weight },
+      { label: 'Body shape', value: model.bodyShape },
+    ].filter((detail) => detail.value);
+  });
+
+  protected readonly infoMeasurements = computed(() => {
+    const model = this.model();
+    return [
+      { label: 'Bust', value: model.bust },
+      { label: 'Waist', value: model.waist },
+      { label: 'Hip', value: model.hip },
+    ].filter((detail) => detail.value);
+  });
 
   /** A — the form in front of the window, until the visitor has introduced themselves. */
   protected readonly needsIdentity = computed(() => !this.chat.identified());
@@ -150,6 +196,56 @@ export class AiModelChatDialog implements OnInit {
    */
   ngOnInit(): void {
     this.chat.openChat(this.model());
+  }
+
+  /**
+   * On a phone her card scrolls away with the messages (see the phone block of the stylesheet):
+   * the component measures the card so the transcript can be padded by its height, and keeps the
+   * window the size of the visible screen while the keyboard is up.
+   */
+  ngAfterViewInit(): void {
+    const root = this.host.nativeElement as HTMLElement;
+    const panel = root.querySelector<HTMLElement>('.chat-panel');
+    const profile = root.querySelector<HTMLElement>('.chat-profile');
+
+    if (panel && profile && typeof ResizeObserver !== 'undefined') {
+      const measure = (): void =>
+        panel.style.setProperty('--chat-profile-h', `${profile.offsetHeight}px`);
+      const observer = new ResizeObserver(measure);
+      observer.observe(profile);
+      measure();
+      this.destroyRef.onDestroy(() => observer.disconnect());
+    }
+
+    const viewport = typeof window !== 'undefined' ? window.visualViewport : null;
+    const backdrop = root.querySelector<HTMLElement>('.chat-backdrop');
+    if (viewport && backdrop) {
+      const follow = (): void => {
+        // A pinch-zoom is the visitor's own doing: only the keyboard resizes the window.
+        if (viewport.scale > 1.01) {
+          backdrop.style.removeProperty('--chat-viewport-height');
+          backdrop.style.removeProperty('--chat-viewport-top');
+          return;
+        }
+        backdrop.style.setProperty('--chat-viewport-height', `${viewport.height}px`);
+        backdrop.style.setProperty('--chat-viewport-top', `${viewport.offsetTop}px`);
+      };
+      viewport.addEventListener('resize', follow);
+      viewport.addEventListener('scroll', follow);
+      follow();
+      this.destroyRef.onDestroy(() => {
+        viewport.removeEventListener('resize', follow);
+        viewport.removeEventListener('scroll', follow);
+      });
+    }
+  }
+
+  /** Moves her card up with the transcript: it leaves the screen exactly as fast as the messages. */
+  protected onMessagesScroll(event: Event): void {
+    const profile = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>(
+      '.chat-profile',
+    );
+    profile?.style.setProperty('--chat-scroll', `${(event.target as HTMLElement).scrollTop}px`);
   }
 
   /** Focus the composer when the window opens, so typing starts straight away. */
@@ -194,6 +290,18 @@ export class AiModelChatDialog implements OnInit {
     this.feedbackCard()?.close();
   }
 
+  /** Phones: shows her information over the chat. */
+  protected openInfo(): void {
+    this.infoOpen.set(true);
+    setTimeout(() => this.infoBack()?.nativeElement.focus(), 0);
+  }
+
+  /** Back to the conversation, with focus where the visitor left it. */
+  protected closeInfo(): void {
+    this.infoOpen.set(false);
+    setTimeout(() => this.infoToggle()?.nativeElement.focus(), 0);
+  }
+
   /** Opens the whole chat history over the window. */
   protected openHistory(): void {
     if (this.session()) this.historyOpen.set(true);
@@ -222,6 +330,11 @@ export class AiModelChatDialog implements OnInit {
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
+    // The information sheet is a layer of its own: Escape takes the visitor back to the chat.
+    if (this.infoOpen()) {
+      this.closeInfo();
+      return;
+    }
     // The history sheet is the top layer: Escape takes the visitor back to the conversation.
     if (this.historyOpen()) {
       this.closeHistory();
