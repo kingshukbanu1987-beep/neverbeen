@@ -19,8 +19,9 @@ import {
   compressCommunityImage,
 } from '../../../shared/community-image-compression';
 import { ChatAutoScroll } from '../../../shared/chat-auto-scroll/chat-auto-scroll';
-import { AiModelProfile } from '../ai-model-data';
+import { AiModelProfile, aiModelProfiles } from '../ai-model-data';
 import { CHAT_WELCOME_LINE } from './chat-replies';
+import { AiChatMessageAction, AiChatMessageMenuItem, chatMessageMenu } from './chat-message-menu';
 import { readDocumentBytes } from './chat-analysis';
 import { splitLocation } from './chat-knowledge';
 import { buildChatFeedbackFacts } from './chat-summary';
@@ -30,6 +31,7 @@ import { ChatFeedbackCard } from './chat-feedback';
 import { ChatHistory } from './chat-history';
 import {
   AI_CHAT_DOCUMENT_LIMIT_BYTES,
+  AI_CHAT_LONG_PRESS_MS,
   AI_CHAT_PHOTO_LIMIT_BYTES,
   AI_CHAT_VIDEO_LIMIT_BYTES,
   AI_CHAT_REACTIONS,
@@ -40,9 +42,27 @@ import {
   AiChatReplyQuote,
   LIVE_CHAT_PLANS,
   LiveChatPlan,
+  chatMessageBody,
   reactionEmoji,
   replyQuoteOf,
 } from './chat-types';
+
+/** The message menu as it is open: where it sits on the window, and the actions it offers. */
+interface ActionMenuState {
+  messageId: string;
+  left: number;
+  top: number;
+  /** True when the menu opens above the point it was called from, because there is no room below. */
+  above: boolean;
+  items: readonly AiChatMessageMenuItem[];
+}
+
+/** How far a finger may wander before a press stops being a long press (it has become a scroll). */
+const LONG_PRESS_SLOP_PX = 10;
+/** The menu's width and the height of one of its rows, for placing it inside the window. */
+const ACTION_MENU_WIDTH_PX = 220;
+const ACTION_MENU_ROW_PX = 44;
+const ACTION_MENU_EDGE_PX = 8;
 
 /** The largest picture kept in a session: big enough to look sharp in the bubble. */
 const CHAT_PREVIEW_BYTES = 320 * 1024;
@@ -70,6 +90,8 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:keydown)': 'onDocumentKeydown($event)',
+    '(document:pointerdown)': 'onDocumentPointerDown($event)',
+    '(window:resize)': 'closeActionMenu()',
   },
 })
 export class AiModelChatDialog implements OnInit, AfterViewInit {
@@ -78,12 +100,19 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
 
+  /** The window's own element, typed, for the few places that look inside it. */
+  private get root(): HTMLElement {
+    return this.host.nativeElement as HTMLElement;
+  }
+
   readonly model = input.required<AiModelProfile>();
   /** Access is selected before this dialog mounts; legacy preserves direct integrations and old tests. */
   readonly plan = input<LiveChatPlan | 'legacy'>('legacy');
   /** A completed Community profile skips the public name-and-photo prompt for Registered User chat. */
   readonly registeredIdentity = input<ChatIdentity | null>(null);
   readonly closed = output<void>();
+  /** Instagram's Forward: the visitor sent a message on to another model. The host opens her chat. */
+  readonly forwardTo = output<AiModelProfile>();
 
   protected readonly reactions = AI_CHAT_REACTIONS;
   protected readonly welcomeLine = CHAT_WELCOME_LINE;
@@ -107,6 +136,14 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly pickerFor = signal<string | null>(null);
   /** The message the visitor has chosen to reply over — the quote the composer will send. */
   protected readonly replyingTo = signal<AiChatReplyQuote | null>(null);
+  /** The message menu (right click, long press, or ⋯), while it is open. */
+  protected readonly actionMenu = signal<ActionMenuState | null>(null);
+  /** The message being forwarded, while the "Forward to" sheet is open. */
+  protected readonly forwarding = signal<AiChatMessage | null>(null);
+  /** The words in the composer that were forwarded from another chat, until they are sent. */
+  private readonly forwardedDraft = signal<string | null>(null);
+  /** A short confirmation ("Message copied") that fades on its own. */
+  protected readonly toast = signal('');
   protected readonly readError = signal('');
   protected readonly sending = signal(false);
 
@@ -115,9 +152,24 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
    * out a fresh copy: a computed that returned the same array would keep its cached value and never
    * wake up the welcome card, the typing row or the auto-scroll directive.
    */
-  protected readonly messages = computed<readonly AiChatMessage[]>(() => [
-    ...(this.chat.session()?.messages ?? []),
-  ]);
+  protected readonly messages = computed<readonly AiChatMessage[]>(() =>
+    (this.chat.session()?.messages ?? []).filter((message) => message.deletedForYou !== true),
+  );
+
+  /** The messages pinned to the top of the chat, oldest first; the banner shows the newest. */
+  protected readonly pinnedMessages = computed<readonly AiChatMessage[]>(() =>
+    this.messages().filter((message) => message.pinned && !message.unsent),
+  );
+
+  /** The newest pinned message, which the banner at the top of the chat shows. */
+  protected readonly latestPinned = computed<AiChatMessage | null>(
+    () => this.pinnedMessages().at(-1) ?? null,
+  );
+
+  /** The other models the visitor can forward a message to: every one but this model. */
+  protected readonly forwardTargets = computed(() =>
+    aiModelProfiles.filter((model) => model.slug !== this.model().slug),
+  );
 
   protected readonly session = computed(() => this.chat.session());
   protected readonly activePlan = computed(() => this.session()?.plan ?? this.plan());
@@ -216,6 +268,17 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     this.chat.openChat(this.model(), this.plan());
     const identity = this.registeredIdentity();
     if (identity) this.chat.setIdentity(this.model(), identity);
+    // A message forwarded from another model's chat waits in the composer, ready to be sent here.
+    const forwarded = this.chat.takeForward(this.model().slug);
+    if (forwarded) {
+      this.draft.set(forwarded);
+      this.forwardedDraft.set(forwarded);
+    }
+    // The press and toast timers belong to this window: none of them may fire after it is gone.
+    this.destroyRef.onDestroy(() => {
+      this.cancelPress();
+      if (this.toastTimer !== null) clearTimeout(this.toastTimer);
+    });
   }
 
   /**
@@ -262,6 +325,8 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
 
   /** Moves her card up with the transcript: it leaves the screen exactly as fast as the messages. */
   protected onMessagesScroll(event: Event): void {
+    // The menu is pinned to a point on the screen: a scrolled transcript leaves it behind.
+    this.closeActionMenu();
     const profile = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>(
       '.chat-profile',
     );
@@ -279,14 +344,15 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   }
 
   /**
-   * E — the ✕, the backdrop and Escape all ask the same question before the window goes: has this
-   * visitor been in a chat that has started? Then the close form comes up first, with the two faces,
-   * the counts, the stars and the comments box, and the window closes when they close it.
+   * E — the ✕ asks the same question before the window goes: has this visitor been in a chat that
+   * has started? Then the close form comes up first, with the two faces, the counts, the stars and
+   * the comments box, and the window closes when they close it. A chat that has started can only be
+   * left through that form: while it is open, ✕ does nothing, so the session is always ended.
    */
   protected requestClose(): void {
     const session = this.session();
-    if (session?.identity && !session.closed && !this.chat.feedbackOpen()) {
-      this.chat.openFeedback();
+    if (session?.identity && !session.closed) {
+      if (!this.chat.feedbackOpen()) this.chat.openFeedback();
       return;
     }
     this.close();
@@ -344,12 +410,17 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     this.focusComposer();
   }
 
-  protected onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.requestClose();
-  }
-
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
+    // The message menu and the forward sheet are the topmost layers: Escape closes them first.
+    if (this.actionMenu()) {
+      this.closeActionMenu();
+      return;
+    }
+    if (this.forwarding()) {
+      this.closeForward();
+      return;
+    }
     // The information sheet is a layer of its own: Escape takes the visitor back to the chat.
     if (this.infoOpen()) {
       this.closeInfo();
@@ -366,7 +437,8 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
       this.closeFeedback();
       return;
     }
-    this.requestClose();
+    // Escape does not close the window. Only the ✕ does (or the Close button of the form), so a
+    // stray key press cannot leave a live chat running with nothing on screen.
   }
 
   protected updateDraft(event: Event): void {
@@ -384,11 +456,15 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     if (!this.canSend()) return;
     const text = this.draft();
     const replyTo = this.replyingTo();
+    // A forwarded message stays marked as forwarded, unless the visitor has changed its words.
+    const forwardedText = this.forwardedDraft();
+    const forwarded = forwardedText !== null && text.trim() === forwardedText.trim();
+    this.forwardedDraft.set(null);
     this.draft.set('');
     this.replyingTo.set(null);
     this.sending.set(true);
     try {
-      await this.chat.sendMessage(this.model(), text, replyTo);
+      await this.chat.sendMessage(this.model(), text, replyTo, { forwarded });
     } finally {
       this.sending.set(false);
       this.focusComposer();
@@ -523,6 +599,220 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     this.chat.reactToMessage(this.model(), message.id, reaction);
   }
 
+  // ------------------------------------------------------------------ message menu
+
+  /** The actions a message offers right now. Empty when it has no menu (typing, notices, reminders). */
+  private menuItemsFor(message: AiChatMessage): AiChatMessageMenuItem[] {
+    return chatMessageMenu(message, { canReply: !this.sessionOver(), now: Date.now() });
+  }
+
+  protected hasMenu(message: AiChatMessage): boolean {
+    return this.menuItemsFor(message).length > 0;
+  }
+
+  /** Opens the menu of one message, with its top-left corner placed near the point it was asked from. */
+  private openActionMenu(message: AiChatMessage, x: number, y: number): void {
+    const items = this.menuItemsFor(message);
+    if (items.length === 0) return;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const height = items.length * ACTION_MENU_ROW_PX + 12;
+    const left = Math.min(
+      Math.max(ACTION_MENU_EDGE_PX, x - ACTION_MENU_WIDTH_PX / 2),
+      Math.max(ACTION_MENU_EDGE_PX, viewportWidth - ACTION_MENU_WIDTH_PX - ACTION_MENU_EDGE_PX),
+    );
+    const above = y + ACTION_MENU_EDGE_PX + height > viewportHeight;
+    const top = above
+      ? Math.max(ACTION_MENU_EDGE_PX, y - ACTION_MENU_EDGE_PX)
+      : y + ACTION_MENU_EDGE_PX;
+    this.pickerFor.set(null);
+    this.actionMenu.set({ messageId: message.id, left, top, above, items });
+    // The first action takes the focus, so the keyboard can carry on from the menu.
+    setTimeout(() => this.root.querySelector<HTMLElement>('.chat-action-item')?.focus(), 0);
+  }
+
+  protected closeActionMenu(): void {
+    if (this.actionMenu()) this.actionMenu.set(null);
+  }
+
+  /** A right click on a bubble opens its menu in place of the browser's own. */
+  protected onBubbleContextMenu(event: MouseEvent, message: AiChatMessage): void {
+    if (!this.hasMenu(message)) return;
+    event.preventDefault();
+    this.cancelPress();
+    this.openActionMenu(message, event.clientX, event.clientY);
+  }
+
+  /** The ⋯ beside the message: the same menu for a keyboard, or for anyone who finds it there. */
+  protected openMenuFromButton(event: Event, message: AiChatMessage): void {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.openActionMenu(message, rect.left + rect.width / 2, rect.bottom);
+  }
+
+  /**
+   * A long press — about half a second with the finger (or the mouse button) held on a bubble — opens
+   * its menu. A press that moves has become a scroll or a text selection, and is left alone.
+   */
+  private pressTimer: ReturnType<typeof setTimeout> | null = null;
+  private pressOrigin: { x: number; y: number } | null = null;
+
+  protected onBubblePointerDown(event: PointerEvent, message: AiChatMessage): void {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    this.cancelPress();
+    if (!this.hasMenu(message)) return;
+    const bubble = event.currentTarget as HTMLElement;
+    this.pressOrigin = { x: event.clientX, y: event.clientY };
+    this.pressTimer = setTimeout(() => {
+      this.pressTimer = null;
+      this.pressOrigin = null;
+      const rect = bubble.getBoundingClientRect();
+      this.openActionMenu(message, rect.left + rect.width / 2, rect.top);
+    }, AI_CHAT_LONG_PRESS_MS);
+  }
+
+  protected onBubblePointerMove(event: PointerEvent): void {
+    if (!this.pressOrigin) return;
+    const dx = event.clientX - this.pressOrigin.x;
+    const dy = event.clientY - this.pressOrigin.y;
+    if (Math.hypot(dx, dy) > LONG_PRESS_SLOP_PX) this.cancelPress();
+  }
+
+  /** Lifting the finger, or the browser taking over the gesture, ends the press. */
+  protected cancelPress(): void {
+    if (this.pressTimer !== null) clearTimeout(this.pressTimer);
+    this.pressTimer = null;
+    this.pressOrigin = null;
+  }
+
+  /** A press anywhere outside the open menu closes it. */
+  protected onDocumentPointerDown(event: Event): void {
+    if (!this.actionMenu()) return;
+    const target = event.target as Element | null;
+    if (target?.closest?.('.chat-action-menu')) return;
+    this.closeActionMenu();
+  }
+
+  /** Up and down move between the actions, as they do on a native menu. */
+  protected onActionMenuKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    const items = Array.from(this.root.querySelectorAll<HTMLElement>('.chat-action-item'));
+    if (items.length === 0) return;
+    event.preventDefault();
+    const current = items.indexOf(document.activeElement as HTMLElement);
+    const step = event.key === 'ArrowDown' ? 1 : -1;
+    const next = (current + step + items.length) % items.length;
+    items[next].focus();
+  }
+
+  /** Runs one action of the open menu on the message it was opened for. */
+  protected runMenuAction(item: AiChatMessageMenuItem): void {
+    const menu = this.actionMenu();
+    this.closeActionMenu();
+    const message = menu
+      ? this.messages().find((candidate) => candidate.id === menu.messageId)
+      : null;
+    if (!message) return;
+    this.performAction(item.id, message);
+  }
+
+  private performAction(action: AiChatMessageAction, message: AiChatMessage): void {
+    const model = this.model();
+    switch (action) {
+      case 'reply':
+        this.replyingTo.set(replyQuoteOf(message));
+        this.focusComposer();
+        return;
+      case 'forward':
+        this.forwarding.set(message);
+        setTimeout(() => this.root.querySelector<HTMLElement>('.chat-forward-target')?.focus(), 0);
+        return;
+      case 'copy':
+        void this.copyMessage(message);
+        return;
+      case 'delete':
+        if (this.chat.deleteForYou(model, message.id)) this.dropReplyTo(message.id);
+        return;
+      case 'unsend':
+        if (this.chat.unsendMessage(model, message.id)) this.dropReplyTo(message.id);
+        return;
+      case 'pin':
+      case 'unpin': {
+        const result = this.chat.togglePin(model, message.id);
+        if (result === 'pinned') this.flashToast('Message pinned');
+        if (result === 'unpinned') this.flashToast('Message unpinned');
+        return;
+      }
+    }
+  }
+
+  /** A message that is gone cannot stay the one being replied to. */
+  private dropReplyTo(messageId: string): void {
+    if (this.replyingTo()?.id === messageId) this.replyingTo.set(null);
+  }
+
+  /** Copy: the words of the message go to the clipboard, and the visitor is told so. */
+  protected async copyMessage(message: AiChatMessage): Promise<void> {
+    const body = chatMessageBody(message);
+    if (!body) return;
+    try {
+      await navigator.clipboard.writeText(body);
+      this.flashToast('Message copied');
+    } catch {
+      this.chat.notice.set(
+        'This browser would not copy the message. Select it and copy it by hand.',
+      );
+    }
+  }
+
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private flashToast(text: string): void {
+    this.toast.set(text);
+    if (this.toastTimer !== null) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.toast.set('');
+      this.toastTimer = null;
+    }, 1800);
+  }
+
+  // ------------------------------------------------------------------ forwarding
+
+  protected closeForward(): void {
+    this.forwarding.set(null);
+  }
+
+  /**
+   * Forward to another model: her words wait in that model's chat, and this window hands over to
+   * it. The host opens that model's chat (through its access screen), and the words are in the
+   * composer there, ready for the visitor to send.
+   */
+  protected chooseForwardTarget(target: AiModelProfile): void {
+    const message = this.forwarding();
+    const body = message ? chatMessageBody(message) : '';
+    this.forwarding.set(null);
+    if (!body) return;
+    this.chat.stageForward(target.slug, body);
+    this.chat.closeChat();
+    this.forwardTo.emit(target);
+  }
+
+  /** The words of a message as the banners and the forward sheet show them. */
+  protected previewOf(message: AiChatMessage): string {
+    const body = chatMessageBody(message);
+    if (body) return body;
+    if (message.unsent) return 'Message unsent';
+    switch (message.attachment?.kind) {
+      case 'photo':
+        return '📷 Photograph';
+      case 'video':
+        return '🎬 Video';
+      case 'document':
+        return `📄 ${message.attachment.name}`;
+      default:
+        return 'Message';
+    }
+  }
+
   // ------------------------------------------------------------------ replies
 
   /** Choosing a message to reply over — the Instagram reply, quote and all. */
@@ -568,6 +858,12 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
    * the second brief).
    */
   protected readonly typingNow = computed(() => this.thinking() && !this.chat.away());
+
+  /** The line an unsent message leaves in its place, as Instagram words it. */
+  protected unsentLabel(message: AiChatMessage): string {
+    if (message.author === 'user') return 'You unsent a message';
+    return `${this.model().name.split(' ')[0]} unsent a message`;
+  }
 
   protected isTypingBubble(message: AiChatMessage): boolean {
     return message.pending && message.revealedChars === 0;

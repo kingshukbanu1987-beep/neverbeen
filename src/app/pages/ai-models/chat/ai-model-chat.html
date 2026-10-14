@@ -1,4 +1,5 @@
-<div class="chat-backdrop" (click)="onBackdropClick($event)">
+<!-- A click outside the window does nothing: only ✕ or the form's Close button leaves the chat. -->
+<div class="chat-backdrop">
   <section
     class="chat-panel"
     role="dialog"
@@ -125,6 +126,26 @@
         [nbChatAutoScroll]="messages()"
         (scroll)="onMessagesScroll($event)"
       >
+        <!-- Instagram's pinned message: the newest pin stays at the top while the chat scrolls. -->
+        @if (latestPinned(); as pinned) {
+          <button
+            type="button"
+            class="chat-pinned"
+            (click)="scrollToMessage(pinned.id)"
+            [attr.aria-label]="'Go to the pinned message: ' + previewOf(pinned)"
+          >
+            <span class="chat-pinned-mark" aria-hidden="true">📌</span>
+            <span class="chat-pinned-copy">
+              <b>{{
+                pinnedMessages().length > 1
+                  ? pinnedMessages().length + ' pinned messages'
+                  : 'Pinned message'
+              }}</b>
+              <i>{{ previewOf(pinned) }}</i>
+            </span>
+          </button>
+        }
+
         @for (message of messages(); track message.id; let index = $index) {
           @if (daySeparatorFor(index); as separator) {
             <p class="chat-day">{{ separator }}</p>
@@ -164,8 +185,20 @@
                   [class.is-outgoing]="message.author === 'user'"
                   [class.is-document]="message.attachment?.kind === 'document'"
                   [class.is-selfie]="message.attachment?.selfie === true"
+                  [class.is-unsent]="message.unsent === true"
                   (dblclick)="onBubbleDoubleClick(message)"
+                  (contextmenu)="onBubbleContextMenu($event, message)"
+                  (pointerdown)="onBubblePointerDown($event, message)"
+                  (pointermove)="onBubblePointerMove($event)"
+                  (pointerup)="cancelPress()"
+                  (pointercancel)="cancelPress()"
+                  (pointerleave)="cancelPress()"
                 >
+                  <!-- Instagram's "Forwarded" label: the words were passed on from another chat. -->
+                  @if (message.forwarded) {
+                    <i class="chat-forwarded">↪ Forwarded</i>
+                  }
+
                   <!-- The Instagram reply: the message this one answers, quoted at the top. -->
                   @if (message.replyTo; as quoted) {
                     <button
@@ -223,6 +256,15 @@
                        letter at a time. -->
                     <span class="chat-typing-copy" role="status">{{ typingLabel() }}</span>
                     <span class="chat-typing" aria-hidden="true"><i></i><i></i><i></i></span>
+                  } @else if (message.unsent) {
+                    <!-- Unsent: the words and the photograph are gone, and the bubble says so. -->
+                    <span class="chat-unsent">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M4.6 4.6l14.8 14.8" />
+                      </svg>
+                      {{ unsentLabel(message) }}
+                    </span>
                   } @else if (bubbleText(message)) {
                     <span class="chat-bubble-text">{{ bubbleText(message) }}</span>
                   }
@@ -253,6 +295,15 @@
                   @if (message.reactionBy === 'model') {
                     <span class="chat-reaction-note">{{ reactionLabel(message) }}</span>
                   }
+                  @if (message.pinned) {
+                    <span
+                      class="chat-pin-note"
+                      title="Pinned to the top of this chat"
+                      role="img"
+                      aria-label="Pinned"
+                      >📌</span
+                    >
+                  }
                   @if (!message.pending) {
                     <button
                       type="button"
@@ -272,6 +323,19 @@
                     >
                       ☺+
                     </button>
+                    @if (hasMenu(message)) {
+                      <button
+                        type="button"
+                        class="chat-more-button"
+                        aria-haspopup="menu"
+                        [attr.aria-expanded]="actionMenu()?.messageId === message.id"
+                        [attr.aria-label]="'More options for this message'"
+                        title="More options"
+                        (click)="openMenuFromButton($event, message)"
+                      >
+                        ⋯
+                      </button>
+                    }
                   }
                 </div>
 
@@ -556,6 +620,114 @@
       @if (session(); as current) {
         <app-chat-history [model]="model()" [session]="current" (closed)="closeHistory()" />
       }
+    }
+
+    <!-- Instagram's message menu: opened by a right click, a long press, or the ⋯ beside a message. -->
+    @if (actionMenu(); as menu) {
+      <div
+        class="chat-action-menu"
+        role="menu"
+        aria-label="Message options"
+        [class.is-above]="menu.above"
+        [style.left.px]="menu.left"
+        [style.top.px]="menu.top"
+        (keydown)="onActionMenuKeydown($event)"
+      >
+        @for (item of menu.items; track item.id) {
+          <button
+            type="button"
+            role="menuitem"
+            class="chat-action-item"
+            [class.is-danger]="item.id === 'delete' || item.id === 'unsend'"
+            (click)="runMenuAction(item)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              @switch (item.id) {
+                @case ('reply') {
+                  <path d="M9 17 4 12l5-5" />
+                  <path d="M4 12h10a6 6 0 0 1 6 6v2" />
+                }
+                @case ('forward') {
+                  <path d="m15 17 5-5-5-5" />
+                  <path d="M4 12h11a4 4 0 0 1 4 4v2" />
+                }
+                @case ('copy') {
+                  <rect x="9" y="9" width="11" height="11" rx="2.5" />
+                  <path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15" />
+                }
+                @case ('delete') {
+                  <path d="M4 7h16" />
+                  <path d="M9.5 7V4.8h5V7" />
+                  <path d="M6.5 7l1 12.2a1.8 1.8 0 0 0 1.8 1.6h5.4a1.8 1.8 0 0 0 1.8-1.6L17.5 7" />
+                  <path d="M10 11v5.5M14 11v5.5" />
+                }
+                @case ('unsend') {
+                  <path d="M3.5 12a8.5 8.5 0 1 0 2.5-6" />
+                  <path d="M3.5 4.5V9h4.5" />
+                }
+                @case ('pin') {
+                  <path d="M9 3.5h6l-1 5.5 3 3H7l3-3z" />
+                  <path d="M12 12v8.5" />
+                }
+                @case ('unpin') {
+                  <path d="M9 3.5h6l-1 5.5 3 3H7l3-3z" />
+                  <path d="M12 12v8.5" />
+                  <path d="M4 4l16 16" />
+                }
+              }
+            </svg>
+            <span>{{ item.label }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Instagram's Forward: pick another model, and her chat opens with the message in its composer. -->
+    @if (forwarding(); as forwarded) {
+      <section
+        class="chat-forward"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chat-forward-title"
+      >
+        <header class="chat-forward-bar">
+          <button type="button" class="chat-forward-cancel" (click)="closeForward()">Cancel</button>
+          <h3 id="chat-forward-title">Forward to</h3>
+          <span aria-hidden="true"></span>
+        </header>
+        <blockquote class="chat-forward-preview">
+          <span aria-hidden="true">↪</span>
+          <span>{{ previewOf(forwarded) }}</span>
+        </blockquote>
+        <ul class="chat-forward-list" aria-label="Models to forward this message to">
+          @for (target of forwardTargets(); track target.slug) {
+            <li>
+              <button
+                type="button"
+                class="chat-forward-target"
+                [attr.aria-label]="'Forward to ' + target.name"
+                (click)="chooseForwardTarget(target)"
+              >
+                <span class="chat-forward-photo">
+                  @if (target.cover) {
+                    <img [src]="target.cover" alt="" loading="lazy" />
+                  } @else {
+                    <span aria-hidden="true">✳</span>
+                  }
+                </span>
+                <span class="chat-forward-name">
+                  <b>{{ target.name }}</b>
+                  <i>{{ target.handle }}</i>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (toast(); as text) {
+      <p class="chat-toast" role="status">{{ text }}</p>
     }
 
     @if (needsIdentity()) {

@@ -77,6 +77,8 @@ import {
   AI_CHAT_INTEREST_MS,
   AI_CHAT_REMINDER_MARKS,
   AI_CHAT_SESSION_MS,
+  AI_CHAT_PIN_LIMIT,
+  AI_CHAT_UNSEND_WINDOW_MS,
   LIVE_CHAT_PLANS,
   LiveChatPlan,
   AI_CHAT_AWAY_CHANCE,
@@ -103,6 +105,7 @@ import {
   AiChatReplyQuote,
   AiChatSession,
   AiChatSource,
+  canUnsendMessage,
   replyQuoteOf,
 } from '../pages/ai-models/chat/chat-types';
 import { ChatInitiative, chatInitiative } from '../pages/ai-models/chat/chat-initiative';
@@ -338,6 +341,8 @@ export class AiModelChatService {
   private readonly liveChats = inject(ModelLiveChatService);
   private readonly sessions = new Map<string, AiChatSession>();
   private readonly dossiers = new Map<string, string>();
+  /** Text forwarded from another model's chat, waiting for that model's window to open. */
+  private readonly forwards = new Map<string, string>();
   private timer: ReturnType<typeof setInterval> | null = null;
   private revealTimer: ReturnType<typeof setTimeout> | null = null;
   /** Until when the backend is left alone after saying it cannot answer (see `requestBackendReply`). */
@@ -564,6 +569,7 @@ export class AiModelChatService {
     model: AiModelProfile,
     rawText: string,
     replyTo: AiChatReplyQuote | null = null,
+    options: { forwarded?: boolean } = {},
   ): Promise<void> {
     const session = this.sessionFor(model);
     if (this.openSlug() !== model.slug || session.closed) return;
@@ -608,6 +614,7 @@ export class AiModelChatService {
         }`,
       attachment,
       replyTo,
+      ...(options.forwarded ? { forwarded: true } : {}),
     });
     this.appendMessage(session, userMessage);
     this.draftAttachment.set(null);
@@ -686,6 +693,92 @@ export class AiModelChatService {
       lastModelMessage.reactionBy = 'model';
       this.touch(session);
     }
+  }
+
+  // ------------------------------------------------------------------ message actions
+
+  /**
+   * Instagram's "Forward": the words of a message wait here for another model's chat to open, and
+   * that window puts them in its composer, ready for the visitor to send. Nothing is sent by this.
+   */
+  stageForward(slug: string, text: string): void {
+    const body = text.trim();
+    if (body) this.forwards.set(slug, body);
+  }
+
+  /** The forwarded words waiting for this model's window, taken once so they are used once. */
+  takeForward(slug: string): string | null {
+    const text = this.forwards.get(slug) ?? null;
+    this.forwards.delete(slug);
+    return text;
+  }
+
+  /**
+   * Instagram's "Delete for you": the message leaves the visitor's own window and history. The
+   * model keeps it, as the other side of an Instagram chat does.
+   */
+  deleteForYou(model: AiModelProfile, messageId: string): boolean {
+    const session = this.sessions.get(model.slug);
+    const target = session?.messages.find((message) => message.id === messageId);
+    if (!session || !target || target.kind !== 'message' || target.pending) return false;
+    target.deletedForYou = true;
+    delete target.pinned;
+    this.touch(session);
+    return true;
+  }
+
+  /**
+   * Instagram's "Unsend": the visitor takes back their own message, inside the two-minute window
+   * (`AI_CHAT_UNSEND_WINDOW_MS`). Its words, its photograph and its reactions go; the bubble stays
+   * as "unsent" on both sides, and any reply quoting it quotes nothing.
+   */
+  unsendMessage(model: AiModelProfile, messageId: string, now: number = Date.now()): boolean {
+    const session = this.sessions.get(model.slug);
+    const target = session?.messages.find((message) => message.id === messageId);
+    if (!session || !target || !canUnsendMessage(target, now)) return false;
+
+    target.unsent = true;
+    target.text = '';
+    target.revealedChars = 0;
+    target.attachment = null;
+    target.sources = [];
+    target.reaction = null;
+    target.reactionBy = null;
+    target.forwarded = false;
+    delete target.pinned;
+    target.replyTo = null;
+    for (const message of session.messages) {
+      if (message.replyTo?.id === messageId) {
+        message.replyTo = { ...message.replyTo, text: '', photo: false };
+      }
+    }
+    this.touch(session);
+    return true;
+  }
+
+  /**
+   * Instagram's "Pin" and "Unpin". Up to `AI_CHAT_PIN_LIMIT` messages stay pinned at the top of
+   * the chat; a message past that limit is refused with a notice, as Instagram does.
+   */
+  togglePin(model: AiModelProfile, messageId: string): 'pinned' | 'unpinned' | 'limit' | '' {
+    const session = this.sessions.get(model.slug);
+    const target = session?.messages.find((message) => message.id === messageId);
+    if (!session || !target || target.kind !== 'message' || target.pending) return '';
+    if (target.unsent || target.deletedForYou) return '';
+
+    if (target.pinned) {
+      delete target.pinned;
+      this.touch(session);
+      return 'unpinned';
+    }
+    const pinned = session.messages.filter((message) => message.pinned).length;
+    if (pinned >= AI_CHAT_PIN_LIMIT) {
+      this.notice.set(`You can pin up to ${AI_CHAT_PIN_LIMIT} messages in one chat.`);
+      return 'limit';
+    }
+    target.pinned = true;
+    this.touch(session);
+    return 'pinned';
   }
 
   // ------------------------------------------------------------------ clock

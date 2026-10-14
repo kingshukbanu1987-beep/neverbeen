@@ -39,6 +39,12 @@ export interface ChatHistoryEntry {
   reactionBy: string;
   /** The Google results behind her answer, if any. */
   sources: { title: string; url: string }[];
+  /** Unsent by its writer: `text` then says so, and nothing else of the message is kept. */
+  unsent: boolean;
+  /** Pinned to the top of the chat when it was last seen. */
+  pinned: boolean;
+  /** Passed on from another model's chat, and labelled "Forwarded" in the window. */
+  forwarded: boolean;
 }
 
 const DATE_FORMAT = new Intl.DateTimeFormat('en-GB', {
@@ -78,7 +84,10 @@ export function buildChatHistory(
   };
 
   let previousDay = '';
-  return session.messages.map((message) => {
+  // A message the visitor deleted for themselves is not part of what they see of the chat, so it is
+  // not part of its history either.
+  const visible = session.messages.filter((message) => message.deletedForYou !== true);
+  return visible.map((message) => {
     const day = new Date(message.at);
     const dayKey = day.toDateString();
     const dayLabel = dayKey === previousDay ? '' : dayLabelOf(day, now);
@@ -116,7 +125,13 @@ export function buildChatHistory(
       kind: message.kind,
       author: message.author,
       authorName: authorNameOf(message.author),
-      text: message.text,
+      // An unsent message keeps its place in the history, the way the window keeps its bubble.
+      text: message.unsent
+        ? `${message.author === 'user' ? 'You' : authorNameOf(message.author)} unsent a message`
+        : message.text,
+      unsent: message.unsent === true,
+      pinned: message.pinned === true,
+      forwarded: message.forwarded === true,
       at: message.at,
       dayLabel,
       timeLabel: TIME_FORMAT.format(day),
