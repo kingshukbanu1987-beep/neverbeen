@@ -429,11 +429,33 @@ prompt, so the same rule survives on the OpenAI path.
 
 ## L. Never a bot line
 
-Her engine is written so that no answer sounds like software: those three lines are the ones the code
-never produces, and the same rule is stated to the live model ("Never sound like software: do not say
-that you are an AI model, do not mention a dossier, a database, a biography or a knowledge base, and
-do not offer to search anything"). The tests assert the absence of the phrases wherever they used to
-appear.
+Her answers are written by Gemini, so the rule is enforced three times over — on the server, on the
+way in, and once more before she says anything:
+
+1. **The rules** (`Services/AiChatPrompt.cs`, in
+   [`neverbeen-api-ai-chat-her-voice.patch`](patches/neverbeen-api-ai-chat-her-voice.patch)) no longer
+   open with "You are an AI model…". They say, in her own name: no "AI", no "AI model", no
+   "assistant", no "chatbot", no "language model", no "program"; no "How can I help you
+   today?", no "Is there anything else?", no "Feel free to ask", no "I hope this helps", no
+   labels such as "Assistant:" or "Answer:"; nothing a thumb cannot type — no asterisks, no bold
+   markers, no code. A visitor who asks whether she is a bot gets one light line and back to the two
+   of them, and her biography's disclosure is in her own words ("a NeverBeen model — not a woman in
+   your city") rather than software's.
+2. **The scrub** — `AiChatPrompt.InHerVoice()` runs on the API after Gemini answers: the sentences
+   that read like software are taken out, the markdown is taken off, and the rest of what she said
+   travels. A text that is already hers is returned character for character; an answer that was
+   nothing but bot lines answers `502 ai-empty`, and the window answers in her own voice instead.
+3. **The window's own guard** — `src/app/pages/ai-models/chat/chat-her-voice.ts` keeps the same list
+   of phrases (`BOT_LINE_PATTERNS`, the same 27 labels as the API's `AiChatPrompt.BotLinePatterns`)
+   and reads **every** answer before it is typed out, whoever wrote it: `botLineIn()` names the
+   phrase, `herOwnWords()` takes those sentences out and keeps the rest, `readsLikeABot()` is the
+   question the service asks, and an answer that does not survive it is replaced by her own engine's
+   line. Her own engine (`chat-replies.ts`) is written so that no answer of its own sounds like
+   software; the tests assert the absence of the phrases wherever they used to appear, in both
+   languages of the conversation.
+
+The guard is quiet about what it did: nothing tells the visitor that an answer was filtered, exactly
+as nothing ever tells them where an answer came from (requirement B).
 
 ## K. Her note, and the form that closes a session
 
@@ -661,9 +683,10 @@ finally to her album. Every request is two images, so the throttle is the strict
 | `src/app/pages/ai-models/chat/chat-knowledge.ts`                   | her persona, the fact lines and the dossier index that answers use                                                                                                                                                                                           |
 | `src/app/pages/ai-models/chat/chat-world.ts`, `world-countries.ts` | the built-in world file behind requirement C                                                                                                                                                                                                                 |
 | `src/app/pages/ai-models/chat/chat-replies.ts`                     | her own engine: introduction, every topic, small talk, compliments, personal questions, the Romanised answer, the cascade of answers                                                                                                                         |
+| `src/app/pages/ai-models/chat/chat-her-voice.ts`                   | requirement L: `BOT_LINE_PATTERNS` (the API's own list), `botLineIn`, `readsLikeABot` and `herOwnWords` — the answer is read before she says it                                                                                                              |
 | `src/app/pages/ai-models/chat/chat-input.ts`                       | reading a typed message: stretched letters, short forms and spelling mistakes (one or two edits of room)                                                                                                                                                     |
 | `src/app/pages/ai-models/chat/chat-language.ts`                    | the eight Romanised language books, the detection, the English gloss, Google Translate as the second reader, and her answer in the visitor's own language                                                                                                    |
-| `src/app/services/ai-model-chat.service.ts`                        | the session store, the clock, the sent messages, the typing, the messages of one answer, the storage mirror                                                                                                                                                  |
+| `src/app/services/ai-model-chat.service.ts`                        | the session store, the clock, the sent messages, the typing, the messages of one answer, the storage mirror, and the turn to the backend (`requestBackendReply` — every message, with her `characterdatabase.json` and `biography.json`)                    |
 | `src/app/services/ai-model-chat.testing.ts`                        | `silenceChatPacing()` — switches every wait off for the tests, which then delivers her messages in one go                                                                                                                                                    |
 | `worker/ai-chat-core.mjs` (+ `.d.mts`)                             | the live endpoint: validation, persona, Google search, OpenAI streaming, and the reading of the turn in her instructions                                                                                                                                     |
 | `worker/ai-read-core.mjs` (+ `.d.mts`)                             | the reading desk: Google Translate, the Gemini reading, the OpenAI reading, the JSON contract and the fallbacks                                                                                                                                              |
@@ -696,9 +719,19 @@ Her open-ended answers come from the **NeverBeen Web API**, never from a key in 
      "history": [{ "role": "model", "text": "…" }, { "role": "user", "text": "…" }],
      "dossier": "…the first 12 000 characters of her dossier…",
      "reading": { "english": "…", "intent": "question" },
+     "language": { "code": "bn", "label": "Bengali", "romanised": true },
      "personal": { "answers": {}, "nextTopic": "" }
    }
    ```
+
+   **Every message the visitor sends travels this way** — a greeting, a question, a photograph with a
+   line about it, a message in their own language — and the answer that comes back is what she says.
+   The two turns the window keeps for itself are a **warning** (requirement L: the strike texts are
+   the studio's own words) and **a photograph** (her "just a photo, or one from right now?" question
+   and the selfie service behind the word *selfie*), because those are actions rather than sentences.
+   `language` is the Romanised language the reading desk read, when it read one: with it the API
+   answers in that language instead of in English, so a visitor writing Romanised Bengali still
+   hears her in it.
 
 3. The API (`Controllers/AiChatController.cs`, `Services/GeminiChatService.cs`,
    `Services/AiChatPrompt.cs`) builds the system instruction — the studio's fixed rules, then the
@@ -708,22 +741,35 @@ Her open-ended answers come from the **NeverBeen Web API**, never from a key in 
    **`gemini-2.5-flash`** with the key from its **`GEMINI_API_KEY` environment variable**, sent in
    the `x-goog-api-key` header.
 4. It answers `200 { "ok": true, "reply": "…", "provider": "gemini", "model": "gemini-2.5-flash" }`;
-   the window types the reply out like her own and splits it on blank lines (intent `gemini`).
+   the window types the reply out like her own and splits it on blank lines (intent `gemini`). The
+   reply is **read before she says it** — by the API first (`AiChatPrompt.InHerVoice()`, which takes
+   out the sentences that read like software) and by the window again (requirement **L**, below) —
+   so the visitor never reads an "As an AI…" from her.
 
-| Backend answer                          | The window                                                              |
-| --------------------------------------- | ----------------------------------------------------------------------- |
-| `200` with a reply                      | her answer                                                              |
-| `503` (no key) / `404` / `405` / `501`  | her own engine answers, and the backend is not asked again on this visit |
-| `429`, `502`, network error, empty text | her own engine answers this turn; the next turn asks the backend again   |
+| Backend answer                          | The window                                                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------- |
+| `200` with a reply                      | her answer (its bot lines taken out, the rest of it kept)                      |
+| `502 ai-empty` (nothing of it was hers) | her own engine answers this turn; the next turn asks the backend again          |
+| `503` (no key) / `404` / `405` / `501`  | her own engine answers this turn; the backend is asked again after 60 s         |
+| `429`, `502`, network error, empty text | her own engine answers this turn; the next turn asks the backend again          |
+
+   An answer of the `503`/`404` kind never gives up on the backend for the visit: it quiets it for
+   `AI_CHAT_BACKEND_RETRY_MS` (60 s) at a time, so the moment the studio sets `GEMINI_API_KEY` on the
+   API — or deploys it — the very next message is answered by Gemini, with no reload.
 
 Setting it up on the API: apply
 [`docs/patches/neverbeen-api-ai-chat-gemini.patch`](patches/neverbeen-api-ai-chat-gemini.patch) to
-`neverbeen-api` and then
-[`docs/patches/neverbeen-api-ai-chat-biography.patch`](patches/neverbeen-api-ai-chat-biography.patch)
-on top of it (check them with `neverbeen-api-ai-chat-gemini-verification.py` and
-`neverbeen-api-ai-chat-biography-verification.py`), deploy, and add the
-Application setting **`GEMINI_API_KEY`** in Azure App Service → Configuration. No database change is
-needed — chat turns are not stored.
+`neverbeen-api`, then
+[`docs/patches/neverbeen-api-ai-chat-biography.patch`](patches/neverbeen-api-ai-chat-biography.patch),
+then
+[`docs/patches/neverbeen-api-ai-chat-her-voice.patch`](patches/neverbeen-api-ai-chat-her-voice.patch)
+— the last one is requirement **L** on the server: the studio rules that forbid the software voice,
+the visitor's `language`, and the scrub that keeps a bot line from ever leaving the API. Check them
+with `neverbeen-api-ai-chat-gemini-verification.py`,
+`neverbeen-api-ai-chat-biography-verification.py` and
+`neverbeen-api-ai-chat-her-voice-verification.py`, deploy, and add the Application setting
+**`GEMINI_API_KEY`** in Azure App Service → Configuration. No database change is needed — chat turns
+are not stored.
 
 The Worker's older OpenAI endpoint (`POST /api/ai-chat`, `worker/ai-chat-core.mjs`) is no longer
 called by the window; it stays in the Worker untouched.

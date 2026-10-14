@@ -246,20 +246,32 @@ remaining time sits in the top-right corner of the window, and reminders appear 
 the conversation** at fifteen, ten, five and one minutes left as a glowing violet glass pill. At zero
 the two hours are up and the window closes.
 
-Her open-ended answers come from the **NeverBeen Web API** with **Google Gemini
-`gemini-2.5-flash`**: the window sends the visitor's message together with the model's character
-profile — `public/NeverBeenModels/<Album>/personality/characterdatabase.json` — and her biography —
+**Every message the visitor sends** goes from `POST /neverbeen-api/api/ai-chat` (the Worker's
+same-origin proxy to the API) to the **NeverBeen Web API** with **Google Gemini `gemini-2.5-flash`**:
+the window sends their message together with the model's character profile —
+`public/NeverBeenModels/<Album>/personality/characterdatabase.json` — and her biography —
 `personality/biography.json`, her own profile plus the details of her life, written by
-`npm run personality:biography` ([docs/ai-model-biography.md](docs/ai-model-biography.md)) — to
-`POST /neverbeen-api/api/ai-chat` (the Worker's same-origin proxy to the API), the API calls Gemini
-with its secret **`GEMINI_API_KEY` environment variable**, and returns her finished answer. The key
+`npm run personality:biography` ([docs/ai-model-biography.md](docs/ai-model-biography.md)) — and
+**the answer the API sends back is what she says**. The API calls Gemini with its secret
+**`GEMINI_API_KEY` environment variable** and returns her finished answer, read before she says it:
+`AiChatPrompt.InHerVoice()` on the API and `chat-her-voice.ts` in the window take out any line that
+reads like a chatbot ("As an AI…", "How can I help you today?", a bulleted list, a database that got
+mentioned) — she never answers like an AI bot. Only two kinds of turn stay with the window: a safety
+**warning**, which must arrive word for word, and a **photograph** — her open "just a photo, or one
+from right now?" question and the selfie service behind it — because those are actions rather than
+sentences. The key
 is **never** in this repository or in the browser — set it on the API (Azure App Service →
 Configuration → Application settings → `GEMINI_API_KEY`). The same request carries the reading of
 the visitor's message, so she answers what they meant rather than what they typed. Without the key
 the API answers `503 ai-unavailable` and the window answers from her own engine and a built-in world
-file instead, so the chat always works. The API change is
+file instead, so the chat always works — and it keeps asking the API (once a minute,
+`AI_CHAT_BACKEND_RETRY_MS`), so the moment the key is set the very next message is Gemini's. The API
+changes are
 [`docs/patches/neverbeen-api-ai-chat-gemini.patch`](docs/patches/neverbeen-api-ai-chat-gemini.patch),
-then [`docs/patches/neverbeen-api-ai-chat-biography.patch`](docs/patches/neverbeen-api-ai-chat-biography.patch).
+then [`docs/patches/neverbeen-api-ai-chat-biography.patch`](docs/patches/neverbeen-api-ai-chat-biography.patch),
+then [`docs/patches/neverbeen-api-ai-chat-her-voice.patch`](docs/patches/neverbeen-api-ai-chat-her-voice.patch)
+(requirement **L** on the server: the rules, the visitor's `language`, and the scrub), each with its
+own `*-verification.py`.
 The Worker's reading desk (`/api/ai-read`) and camera (`/api/ai-selfie`,
 `/api/livechatselfiesandphotos`) read an optional Worker **secret** of the same name
 (`npx wrangler secret put GEMINI_API_KEY`), `GOOGLE_TRANSLATE_API_KEY` upgrades the reader to the

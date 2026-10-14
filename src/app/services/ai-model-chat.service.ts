@@ -13,13 +13,18 @@
  *   read: `chat-analysis.ts` reads the words (the studio's own books, and `POST /api/ai-read` —
  *   Google Translate, Gemini, OpenAI — when the studio has those keys), the frame of an attached
  *   photograph and the bytes of an attached document. The reading is what her answer is built from.
- * - **The answer (requirements A, B, C, D, F).** The model's own engine (`chat-replies.ts`) answers
- *   instantly. When the NeverBeen Web API has its `GEMINI_API_KEY`, the backend answers instead:
- *   the visitor's message travels with the model's character profile (her
+ * - **The answer (requirements A, B, C, D, F and L).** Every message the visitor sends goes to the
+ *   NeverBeen Web API: their words travel with the model's character profile (her
  *   `personality/characterdatabase.json`) and her biography (`personality/biography.json` — her
  *   profile and her life story) to `POST /neverbeen-api/api/ai-chat`, the API calls
- *   Google Gemini (`gemini-2.5-flash`) with the key that only the server knows, and returns her
- *   finished answer. Every failure lands back on the local engine, so the chat always answers.
+ *   Google Gemini (`gemini-2.5-flash`) with the key that only the server knows, and **the answer it
+ *   sends back is what she says** — never a canned line, never a menu of what she can do. Her own
+ *   engine (`chat-replies.ts`) writes a turn only when the API cannot be reached at all (no key, no
+ *   endpoint, offline), or when the turn is one the window itself carries out (a warning, her
+ *   photographs), so the chat always answers and never stops mid-conversation. Whatever the answer
+ *   came from, it is read before she says it: a line that reads like a chatbot — *"As an AI…"*,
+ *   *"How can I help you today?"*, a bulleted list, a database that got mentioned — is taken out by
+ *   `chat-her-voice.ts`, and an answer that was nothing but such lines is replaced by her own.
  * - **Her selfies (requirement E).** When the visitor asks for a selfie by name, the window calls
  *   the **`livechatselfiesandphotos`** service (`POST /api/livechatselfiesandphotos`) and it
  *   generates **two fresh photographs of her**: same
@@ -143,6 +148,7 @@ import {
   readChatLanguage,
   romanisedIdleLine,
 } from '../pages/ai-models/chat/chat-language';
+import { herOwnWords } from '../pages/ai-models/chat/chat-her-voice';
 
 /** Where a session is kept between visits: one browser tab, and gone when it closes. */
 export const AI_CHAT_STORAGE_KEY = 'nb.ai-model-chat.v1';
@@ -152,7 +158,8 @@ const PREVIEW_PERSIST_LIMIT = 180_000;
 
 /** The reminder she writes in the middle of the transcript, in her own voice. */
 export function chatReminderText(minutes: number, durationMinutes = 120): string {
-  const duration = durationMinutes === 120 ? 'two hours' : `${Math.round(durationMinutes)}-minute chat`;
+  const duration =
+    durationMinutes === 120 ? 'two hours' : `${Math.round(durationMinutes)}-minute chat`;
   if (minutes === 1) {
     return `⏳ One minute left. Our ${duration} is nearly gone — say the important thing now, and rent me for a shoot if you want the real thing.`;
   }
@@ -172,6 +179,11 @@ export interface AiChatRemoteReply {
  * The AI Chat endpoint of the NeverBeen Web API, through the site's same-origin `/neverbeen-api`
  * proxy (the Cloudflare Worker in production, `proxy.conf.json` in development). The Gemini key
  * lives only in the API's `GEMINI_API_KEY` environment variable — never in the website.
+ *
+ * It is where **every** message the visitor sends goes, and where her answers come from: the turn
+ * carries their words, her `characterdatabase.json` and her `biography.json`, and the answer the
+ * API sends back is what she says. Her own engine (`chat-replies.ts`) only ever steps in when the
+ * API cannot be reached at all, so a conversation is never lost to a dropped connection.
  */
 export const AI_CHAT_BACKEND_ENDPOINT = '/neverbeen-api/api/ai-chat';
 
@@ -180,10 +192,19 @@ export const AI_CHAT_BACKEND_DOSSIER_LIMIT = 12_000;
 
 /**
  * Answers that mean the backend cannot answer at all right now — no key configured (503), or the
- * endpoint is not deployed yet (404/405). The window stops asking for the rest of the visit. Any
- * other failure (a busy minute, a timeout, a refused answer) only skips the backend for that turn.
+ * endpoint is not deployed yet (404/405). The window keeps asking anyway: the studio adds its
+ * `GEMINI_API_KEY` to the API and the very next message can be answered by Gemini, so an answer of
+ * this kind only quiets the endpoint for `AI_CHAT_BACKEND_RETRY_MS` at a time. Any other failure
+ * (a busy minute, a timeout, a refused answer) only skips the backend for that turn.
  */
 const AI_CHAT_BACKEND_OFF_STATUSES = new Set([404, 405, 501, 503]);
+
+/**
+ * How long the window stops asking a backend that has said it cannot answer. Every message still
+ * belongs to the backend — this is the pause between two attempts, never a decision to give up on
+ * it: once the studio sets `GEMINI_API_KEY` (or deploys the endpoint), the next attempt answers.
+ */
+export const AI_CHAT_BACKEND_RETRY_MS = 60_000;
 
 interface PersistedChat {
   version: number;
@@ -232,7 +253,9 @@ export class AiModelChatService {
 
   /**
    * True once the backend AI Chat (`POST /neverbeen-api/api/ai-chat`) has said it cannot answer —
-   * no `GEMINI_API_KEY` configured, or the endpoint is missing — so the local engine takes over.
+   * no `GEMINI_API_KEY` configured, or the endpoint is missing. Her own engine answers the turn; the
+   * backend is asked again on the next message after `AI_CHAT_BACKEND_RETRY_MS`, so the moment the
+   * studio configures the API, Gemini is the one answering again.
    */
   readonly remoteUnavailable = signal(false);
 
@@ -317,6 +340,8 @@ export class AiModelChatService {
   private readonly dossiers = new Map<string, string>();
   private timer: ReturnType<typeof setInterval> | null = null;
   private revealTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Until when the backend is left alone after saying it cannot answer (see `requestBackendReply`). */
+  private backendRetryAt = 0;
 
   constructor() {
     this.restore();
@@ -458,7 +483,10 @@ export class AiModelChatService {
     // The session being replaced comes off the model's Live Now counter if it never did.
     const previous = this.sessions.get(model.slug);
     if (previous) this.recordLiveChatEnd(previous);
-    const session = this.createSession(model.slug, previous ? this.sessionPlan(previous) : 'legacy');
+    const session = this.createSession(
+      model.slug,
+      previous ? this.sessionPlan(previous) : 'legacy',
+    );
     this.sessions.set(model.slug, session);
     this.openSlug.set(model.slug);
     this.view(session);
@@ -554,7 +582,9 @@ export class AiModelChatService {
       // a stale draft or a crafted event must not bypass the plan boundary.
       attachment = null;
       this.draftAttachment.set(null);
-      this.notice.set('Free Chat is text-only. Photos and videos are available to registered members.');
+      this.notice.set(
+        'Free Chat is text-only. Photos and videos are available to registered members.',
+      );
     }
     const text = rawText.trim();
     if (!text && !attachment) return;
@@ -943,26 +973,23 @@ export class AiModelChatService {
       now: new Date(),
     });
     session.strikes = local.strikes;
-    const wasIntroduced = session.introduced;
     session.introduced = local.introduced;
     // Her "photo or a current selfie?" question opens when she asks it, and closes the moment the
     // visitor answers with either of them.
     if (local.photoAsk) session.pendingPhotoAsk = true;
     else if (local.intent === 'selfie') session.pendingPhotoAsk = false;
 
-    // Safety and identity come first and are never delegated: a warning must not be reworded, and
-    // the first answer of the session is always her scripted introduction (requirement D).
+    // Every message the visitor sends goes to the backend (`requestBackendReply`), with her
+    // character profile and her biography, and Gemini's answer is what she says. Only the two
+    // turns the window itself carries out stay hers:
+    //
+    // - a **warning** (requirement L, `chat-moderation.ts`) must arrive word for word, exactly as
+    //   the studio wrote it — a reworded strike is a different strike;
+    // - a **photograph** is an action, not a sentence: her open "just a photo, or one from right
+    //   now?" question, and the trip to `livechatselfiesandphotos` behind the word *selfie* (the
+    //   frames and their caption) can only be written by the window.
     const mustBeLocal =
-      local.intent.startsWith('moderation:') ||
-      // Her answer in the visitor's own Romanised language is written by her own books: an English
-      // answer from the studio's OpenAI model would break the language she has settled into.
-      local.intent.startsWith('language:') ||
-      // A photograph is a decision the window carries out — her open photo question, and the trip
-      // to `livechatselfiesandphotos` behind the word "selfie" — so neither may be reworded away.
-      Boolean(local.photoAsk) ||
-      Boolean(local.selfie) ||
-      !wasIntroduced ||
-      userMessage.attachment !== null;
+      local.intent.startsWith('moderation:') || Boolean(local.photoAsk) || Boolean(local.selfie);
 
     const memory = (session.personalMemory ??= newPersonalMemory());
     const safeTurn = !local.intent.startsWith('moderation:');
@@ -987,16 +1014,36 @@ export class AiModelChatService {
     let answerSources: readonly AiChatSource[] = [];
     let intent = local.intent;
     if (!mustBeLocal) {
-      const remote = await this.requestBackendReply(model, session, userMessage, reading, topic);
+      const remote = await this.requestBackendReply(
+        model,
+        session,
+        userMessage,
+        reading,
+        topic,
+        language,
+      );
       if (remote) {
-        answerText = remote.text;
-        answerSources = remote.sources;
-        intent = 'gemini';
+        // L — her answer is read before she says it, whoever wrote it: a model that slipped into
+        // "As an AI…" or into a bulleted list has that line taken out (the rest of what it said
+        // stays). When a bot line was all it had, the window answers from her own engine instead —
+        // the visitor never reads a line that no woman texting would ever send.
+        const hers = herOwnWords(remote.text);
+        if (hers.length > 0) {
+          answerText = hers;
+          answerSources = remote.sources;
+          intent = 'gemini';
+        }
+        // Nothing of the answer survived the guard: `answerText` stays the local engine's own
+        // line, which is written in her voice by construction.
       }
     }
 
     // The fallback asks the same single question as the AI, never a questionnaire.
     if (personalQuestion && intent !== 'gemini') answerText += `\n\n${personalQuestion}`;
+
+    // L — the last read before she says it: no bot line reaches the visitor, whatever wrote the
+    // answer. A text that is already hers comes back untouched, character for character.
+    answerText = herOwnWords(answerText);
 
     // E — a selfie goes out as photographs, not as a promise of one: `livechatselfiesandphotos`
     // generates two of them (same outfit, same ambience, different poses), and they are sent as
@@ -1491,21 +1538,24 @@ export class AiModelChatService {
   /**
    * Asks the NeverBeen Web API for her answer (`POST /neverbeen-api/api/ai-chat`).
    *
-   * Every request carries the visitor's input together with two files from the model's
-   * `public/NeverBeenModels/<Album>/personality/` folder, both cached per album and sent without
-   * the editor's `_doc` notes:
+   * **Every message the visitor sends comes here.** The request carries their input together with
+   * two files from the model's `public/NeverBeenModels/<Album>/personality/` folder, both cached per
+   * album and sent without the editor's `_doc` notes:
    *
    * - her **character profile**, `characterdatabase.json` (`loadCharacterDatabase()`) — how she
    *   talks and behaves;
    * - her **biography**, `biography.json` (`loadModelBiography()`) — her own profile and the
    *   details of her life.
    *
-   * Her card, the visitor, the reading of the turn and the recent conversation travel with them. The backend calls Google Gemini
-   * (`gemini-2.5-flash`) with its secret `GEMINI_API_KEY` and answers
-   * `{ ok: true, reply, provider: 'gemini', model }`.
+   * Her card, the visitor, the reading of the turn (meaning, language, tone, what an attachment
+   * held), the personal answers they have given so far and the recent conversation travel with them.
+   * The backend calls Google Gemini (`gemini-2.5-flash`) with its secret `GEMINI_API_KEY` and
+   * answers `{ ok: true, reply, provider: 'gemini', model }` — and that reply is what she says.
    *
-   * Returns `null` — so the local engine answers — when the backend is not configured, unreachable,
-   * refuses, or sends back no text.
+   * Returns `null` — so the local engine writes this one turn — only when the backend cannot be
+   * reached at all: no network, no endpoint, no key, a refusal, or an empty answer. A backend that
+   * has said so is asked again a minute later (`AI_CHAT_BACKEND_RETRY_MS`), never for the rest of
+   * the visit.
    */
   private async requestBackendReply(
     model: AiModelProfile,
@@ -1513,8 +1563,9 @@ export class AiModelChatService {
     userMessage: AiChatMessage,
     reading: ChatTurnReading | null = null,
     personalTopic: PersonalTopic | '' = '',
+    language: ChatVisitorLanguage | null = null,
   ): Promise<AiChatRemoteReply | null> {
-    if (this.remoteUnavailable() || typeof fetch !== 'function') return null;
+    if (typeof fetch !== 'function' || Date.now() < this.backendRetryAt) return null;
 
     const identity = session.identity;
     // Free Chat carries a short, basic working context; registered conversations retain a deeper
@@ -1549,6 +1600,11 @@ export class AiModelChatService {
       dossier: this.dossierFor(model).slice(0, AI_CHAT_BACKEND_DOSSIER_LIMIT),
       // What the reading desk made of this turn: the answer is to the meaning, not the letters.
       reading: reading ? readingForAnswer(reading) : null,
+      // The visitor's own Romanised language, when she has settled into one: her answer comes back
+      // in it instead of in English (`AiChatPrompt`, language rule).
+      language: language?.romanised
+        ? { code: language.code, label: language.label, romanised: true }
+        : null,
       history: session.messages
         .filter(
           (message) =>
@@ -1574,7 +1630,12 @@ export class AiModelChatService {
     }
 
     if (!response.ok) {
-      if (AI_CHAT_BACKEND_OFF_STATUSES.has(response.status)) this.remoteUnavailable.set(true);
+      if (AI_CHAT_BACKEND_OFF_STATUSES.has(response.status)) {
+        // It has no key, or it is not deployed: she answers this one herself and the window asks
+        // again in a minute — the moment the studio configures the API, Gemini is answering again.
+        this.remoteUnavailable.set(true);
+        this.backendRetryAt = Date.now() + AI_CHAT_BACKEND_RETRY_MS;
+      }
       return null;
     }
 
@@ -1587,6 +1648,9 @@ export class AiModelChatService {
 
     const text = typeof payload?.reply === 'string' ? payload.reply.trim() : '';
     if (payload?.ok === false || text.length === 0) return null;
+    // An answer came back: the backend is up, whatever it said about itself a minute ago.
+    this.remoteUnavailable.set(false);
+    this.backendRetryAt = 0;
     return { text, sources: [] };
   }
 
