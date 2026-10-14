@@ -43,7 +43,7 @@
           </span>
         </div>
 
-        <!-- The two-hour limit, right where the requirement puts it: the top-right corner. -->
+        <!-- The plan's fixed countdown is visible throughout the chat. -->
         <div
           class="chat-clock"
           role="timer"
@@ -52,12 +52,12 @@
           [attr.aria-label]="'Chat session time remaining: ' + chat.timeLeftLabel()"
         >
           <span class="chat-clock-dot" aria-hidden="true"></span>
-          <span class="chat-clock-label">{{ sessionOver() ? 'Session ended' : 'Time left' }}</span>
+          <span class="chat-clock-label">{{ sessionOver() ? 'Session ended' : (planDefinition()?.label || 'Time left') }}</span>
           <b class="chat-clock-value">{{ chat.timeLeftLabel() }}</b>
           <span
             class="chat-clock-bar"
             aria-hidden="true"
-            [style.--left]="(remaining() / 7200000) * 100 + '%'"
+            [style.--left]="(remaining() / sessionDuration()) * 100 + '%'"
           ></span>
         </div>
 
@@ -197,6 +197,17 @@
                         <span aria-hidden="true">📷</span>
                         <i>Photograph — deleted when this chat session ended</i>
                       </span>
+                    } @else if (attachment.kind === 'video' && attachment.preview) {
+                      <span class="chat-bubble-video">
+                        <video [src]="attachment.preview" controls playsinline preload="metadata"></video>
+                        <i>▶ {{ attachment.name }}</i>
+                      </span>
+                    } @else if (attachment.kind === 'video') {
+                      <span class="chat-bubble-file">
+                        <span aria-hidden="true">🎬</span>
+                        <b>{{ attachment.name }}</b>
+                        <i>Video shared in this chat</i>
+                      </span>
                     } @else {
                       <span class="chat-bubble-file">
                         <span aria-hidden="true">📄</span>
@@ -322,6 +333,8 @@
             <div class="chat-draft" role="status">
               @if (attachment.kind === 'photo' && attachment.preview) {
                 <img [src]="attachment.preview" [alt]="attachment.name" />
+              } @else if (attachment.kind === 'video') {
+                <span aria-hidden="true">🎬</span>
               } @else {
                 <span aria-hidden="true">📄</span>
               }
@@ -340,55 +353,76 @@
           }
 
           <form class="chat-composer" (submit)="submit(); $event.preventDefault()">
-            <input
-              #photoInput
-              class="chat-file"
-              type="file"
-              accept="image/*"
-              (change)="onPhotoPicked($event, 'upload')"
-            />
-            <input
-              #cameraInput
-              class="chat-file"
-              type="file"
-              accept="image/*"
-              capture="environment"
-              (change)="onPhotoPicked($event, 'camera')"
-            />
-            <input
-              #documentInput
-              class="chat-file"
-              type="file"
-              accept=".pdf,.doc,.docx,.txt,.rtf,.csv,.xls,.xlsx,.ppt,.pptx,.zip"
-              (change)="onDocumentPicked($event)"
-            />
+            @if (mediaAllowed()) {
+              <input
+                #photoInput
+                class="chat-file"
+                type="file"
+                accept="image/*"
+                (change)="onPhotoPicked($event, 'upload')"
+              />
+              <input
+                #cameraInput
+                class="chat-file"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                (change)="onPhotoPicked($event, 'camera')"
+              />
+              @if (activePlan() === 'registered') {
+                <input
+                  #videoInput
+                  class="chat-file"
+                  type="file"
+                  accept="video/*"
+                  (change)="onVideoPicked($event)"
+                />
+              }
+              <input
+                #documentInput
+                class="chat-file"
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.rtf,.csv,.xls,.xlsx,.ppt,.pptx,.zip"
+                (change)="onDocumentPicked($event)"
+              />
 
-            <div class="chat-composer-tools">
-              <button
-                type="button"
-                (click)="takePhoto()"
-                aria-label="Take a photo with the camera"
-                title="Camera"
-              >
-                📷
-              </button>
-              <button
-                type="button"
-                (click)="pickPhoto()"
-                aria-label="Attach a photograph"
-                title="Photo"
-              >
-                🖼
-              </button>
-              <button
-                type="button"
-                (click)="pickDocument()"
-                aria-label="Attach a document"
-                title="Document"
-              >
-                📎
-              </button>
-            </div>
+              <div class="chat-composer-tools">
+                <button
+                  type="button"
+                  (click)="takePhoto()"
+                  aria-label="Take a photo with the camera"
+                  title="Camera"
+                >
+                  📷
+                </button>
+                <button
+                  type="button"
+                  (click)="pickPhoto()"
+                  aria-label="Attach a photograph"
+                  title="Photo"
+                >
+                  🖼
+                </button>
+                @if (activePlan() === 'registered') {
+                  <button
+                    type="button"
+                    (click)="pickVideo()"
+                    aria-label="Attach a video"
+                    title="Video"
+                  >
+                    🎬
+                  </button>
+                }
+                <button
+                  type="button"
+                  (click)="pickDocument()"
+                  aria-label="Attach a document"
+                  title="Document"
+                >
+                  📎
+                </button>
+              </div>
+            }
 
             <textarea
               #composer
@@ -397,7 +431,7 @@
               [value]="draft()"
               (input)="updateDraft($event)"
               (keydown)="onComposerKeydown($event)"
-              [attr.placeholder]="'Message ' + model().name + '…'"
+              [attr.placeholder]="mediaAllowed() ? 'Message ' + model().name + '…' : 'Free Chat is text-only…'"
               [attr.aria-label]="'Message ' + model().name"
               maxlength="2000"
             ></textarea>
@@ -527,6 +561,7 @@
     @if (needsIdentity()) {
       <app-chat-identity-prompt
         [model]="model()"
+        [plan]="activePlan()"
         (confirmed)="confirmIdentity($event)"
         (cancelled)="close()"
       />

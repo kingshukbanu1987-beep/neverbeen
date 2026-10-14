@@ -26,6 +26,13 @@ type GoogleButtonStep = Extract<
 })
 export class CommunitySignInCard {
   readonly returnTo = input.required<string>();
+  /** Optional context lets the same trusted Google flow serve member-only destinations beyond testimonials. */
+  readonly eyebrow = input('NeverBeen Community');
+  readonly title = input('Your experience belongs here.');
+  readonly copy = input('Sign in to share a testimonial with the community.');
+  readonly note = input('Community sign-in only · Guest access cannot post testimonials');
+  /** Lets image-backed flows reveal their backdrop while testimonial sign-in keeps its standard surface. */
+  readonly translucent = input(false);
 
   private readonly service = inject(CommunityService);
   private readonly router = inject(Router);

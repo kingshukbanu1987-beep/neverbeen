@@ -69,6 +69,8 @@ import {
   AI_CHAT_INTEREST_MS,
   AI_CHAT_REMINDER_MARKS,
   AI_CHAT_SESSION_MS,
+  LIVE_CHAT_PLANS,
+  LiveChatPlan,
   AI_CHAT_AWAY_CHANCE,
   AI_CHAT_AWAY_MAX_MS,
   AI_CHAT_AWAY_MIN_MS,
@@ -144,14 +146,15 @@ export const AI_CHAT_STORAGE_KEY = 'nb.ai-model-chat.v1';
 const PREVIEW_PERSIST_LIMIT = 180_000;
 
 /** The reminder she writes in the middle of the transcript, in her own voice. */
-export function chatReminderText(minutes: number): string {
+export function chatReminderText(minutes: number, durationMinutes = 120): string {
+  const duration = durationMinutes === 120 ? 'two hours' : `${Math.round(durationMinutes)}-minute chat`;
   if (minutes === 1) {
-    return '⏳ One minute left. Our two hours are nearly gone — say the important thing now, and rent me for a shoot if you want the real thing.';
+    return `⏳ One minute left. Our ${duration} is nearly gone — say the important thing now, and rent me for a shoot if you want the real thing.`;
   }
-  return `⏳ ${minutes} minutes remaining of our two hours. If you want me for a shoot, tell me now and I will keep the light on for you.`;
+  return `⏳ ${minutes} minutes remaining of our ${duration}. If you want me for a shoot, tell me now and I will keep the light on for you.`;
 }
 
-/** The notice that ends the session when the two hours are up. */
+/** The legacy notice that ends a two-hour session; current plans use `timeoutTextFor`. */
 export const CHAT_TIMEOUT_TEXT =
   '⌛ Our two hours are up, so this chat closes here. Start a new chat whenever you like — I will be exactly this pleased to see you.';
 
@@ -296,24 +299,41 @@ export class AiModelChatService {
 
   // ------------------------------------------------------------------ window
 
-  /** Opens one model's chat window, resuming an active session or replacing a completed one. */
-  openChat(model: AiModelProfile): void {
+  /**
+   * Opens one model's chat window. A plan is fixed before the identity form appears: this is what
+   * makes a Free Chat two minutes and a Community member chat forty-five minutes, even after the
+   * window is closed and reopened. The default keeps pre-plan saved sessions and direct embeds
+   * compatible with the original two-hour experience.
+   */
+  openChat(model: AiModelProfile, plan: LiveChatPlan | 'legacy' = 'legacy'): void {
     const previous = this.sessions.get(model.slug);
-    if (this.openSlug() === model.slug && !previous?.closed) return;
-    // A completed or expired conversation must never reuse its identity or personal memory.
-    if (previous && (previous.closed || (previous.endsAt > 0 && previous.endsAt <= Date.now()))) {
-      // A session that expired while its window was shut still comes off the Live Now counter.
+    if (
+      previous &&
+      this.openSlug() === model.slug &&
+      !previous.closed &&
+      this.sessionPlan(previous) === plan
+    )
+      return;
+
+    // A completed, expired, or differently entitled conversation must never reuse an identity or
+    // its clock. The previous live count is retired before a new plan can begin.
+    if (
+      previous &&
+      (previous.closed ||
+        (previous.endsAt > 0 && previous.endsAt <= Date.now()) ||
+        this.sessionPlan(previous) !== plan)
+    ) {
       this.recordLiveChatEnd(previous);
-      this.sessions.set(model.slug, this.createSession(model.slug));
+      this.sessions.set(model.slug, this.createSession(model.slug, plan));
     }
     this.feedbackOpen.set(false);
-    const session = this.sessionFor(model);
+    const session = this.sessionFor(model, plan);
     this.openSlug.set(model.slug);
     this.view(session);
     this.draftAttachment.set(null);
     this.notice.set('');
     // Opening an older session catches its clock up: the countdown, the reminders it has not
-    // announced yet, and the two-hour close if the time ran out while the window was shut.
+    // announced yet, and a timeout that elapsed while the window was shut.
     this.tick();
     this.startClock();
     this.persist();
@@ -341,7 +361,7 @@ export class AiModelChatService {
     const now = Date.now();
     session.identity = { name: identity.name, avatar: identity.avatar };
     session.startedAt = now;
-    session.endsAt = now + AI_CHAT_SESSION_MS;
+    session.endsAt = now + this.sessionDuration(session);
     // A and D — the three minutes she gives the visitor to answer her hello start now.
     session.lastVisitorAt = now;
     session.followUpAt = now + this.followUpDelay(1);
@@ -355,7 +375,7 @@ export class AiModelChatService {
       session.liveChatKey = newLiveChatSessionKey();
       void this.liveChats.recordStart(model.slug, session.liveChatKey);
     }
-    this.remainingMs.set(AI_CHAT_SESSION_MS);
+    this.remainingMs.set(this.sessionDuration(session));
     this.feedbackOpen.set(false);
     this.touch(session);
     this.startClock();
@@ -406,21 +426,21 @@ export class AiModelChatService {
   }
 
   /**
-   * Starts a fresh two-hour session for a model, from the "start a new chat" button. The visitor's
+   * Starts a fresh session with the same entitlement already selected for this model. The visitor's
    * name and photograph are asked for again — a new session is a new introduction.
    */
   startNewSession(model: AiModelProfile): void {
     // The session being replaced comes off the model's Live Now counter if it never did.
     const previous = this.sessions.get(model.slug);
     if (previous) this.recordLiveChatEnd(previous);
-    const session = this.createSession(model.slug);
+    const session = this.createSession(model.slug, previous ? this.sessionPlan(previous) : 'legacy');
     this.sessions.set(model.slug, session);
     this.openSlug.set(model.slug);
     this.view(session);
     this.draftAttachment.set(null);
     this.notice.set('');
     this.feedbackOpen.set(false);
-    this.remainingMs.set(AI_CHAT_SESSION_MS);
+    this.remainingMs.set(this.sessionDuration(session));
     this.startClock();
     this.persist();
   }
@@ -472,8 +492,14 @@ export class AiModelChatService {
 
   // ------------------------------------------------------------------ the composer
 
-  /** Puts a picked picture or document into the composer. */
+  /** Puts a picked attachment into the composer, enforcing the Free Chat text-only boundary. */
   setDraftAttachment(attachment: AiChatAttachment | null): void {
+    const session = this.session();
+    if (attachment && session && this.sessionPlan(session) === 'free') {
+      this.draftAttachment.set(null);
+      this.notice.set('Free Chat is text-only. Choose Registered User to share photos or videos.');
+      return;
+    }
     this.draftAttachment.set(attachment);
     if (attachment) this.notice.set('');
   }
@@ -488,12 +514,23 @@ export class AiModelChatService {
   ): Promise<void> {
     const session = this.sessionFor(model);
     if (this.openSlug() !== model.slug || session.closed) return;
+    if (session.endsAt > 0 && session.endsAt <= Date.now()) {
+      this.endSession(session, 'timeout', this.timeoutTextFor(session));
+      return;
+    }
     if (!session.identity) {
       this.notice.set('Your name and one photograph first — then I am all yours.');
       return;
     }
 
-    const attachment = this.draftAttachment();
+    let attachment = this.draftAttachment();
+    if (attachment && this.sessionPlan(session) === 'free') {
+      // This is deliberately checked again at send time: the UI hides controls for Free Chat, but
+      // a stale draft or a crafted event must not bypass the plan boundary.
+      attachment = null;
+      this.draftAttachment.set(null);
+      this.notice.set('Free Chat is text-only. Photos and videos are available to registered members.');
+    }
     const text = rawText.trim();
     if (!text && !attachment) return;
 
@@ -505,7 +542,15 @@ export class AiModelChatService {
 
     const userMessage = newMessage({
       author: 'user',
-      text: text || `Sent a ${attachment?.kind === 'document' ? 'document' : 'photograph'}`,
+      text:
+        text ||
+        `Sent a ${
+          attachment?.kind === 'document'
+            ? 'document'
+            : attachment?.kind === 'video'
+              ? 'video'
+              : 'photograph'
+        }`,
       attachment,
       replyTo,
     });
@@ -597,10 +642,10 @@ export class AiModelChatService {
     const session = this.sessions.get(slug);
     if (!session) return;
 
-    // The two hours have not started: the visitor is still filling in the form in front of the
-    // window, and there is nothing for her to do but wait for them.
+    // The clock has not started: the visitor is still filling in the form in front of the
+    // window, and there is nothing for her to do but wait for their plan's allotted time.
     if (session.endsAt === 0) {
-      this.remainingMs.set(AI_CHAT_SESSION_MS);
+      this.remainingMs.set(this.sessionDuration(session));
       return;
     }
 
@@ -614,20 +659,24 @@ export class AiModelChatService {
     const remaining = session.endsAt - Date.now();
     this.remainingMs.set(Math.max(0, remaining));
     if (remaining <= 0) {
-      this.endSession(session, 'timeout', CHAT_TIMEOUT_TEXT);
+      this.endSession(session, 'timeout', this.timeoutTextFor(session));
       return;
     }
 
     const minutesLeft = remaining / 60_000;
-    const due = AI_CHAT_REMINDER_MARKS.filter(
-      (mark) => minutesLeft <= mark && !session.reminders.includes(mark),
-    ).sort((a, b) => b - a);
+    const due = this.reminderMarksFor(session)
+      .filter((mark) => minutesLeft <= mark && !session.reminders.includes(mark))
+      .sort((a, b) => b - a);
 
     for (const mark of due) {
       session.reminders.push(mark);
       this.appendMessage(
         session,
-        newMessage({ author: 'system', text: chatReminderText(mark), kind: 'reminder' }),
+        newMessage({
+          author: 'system',
+          text: chatReminderText(mark, this.sessionDuration(session) / 60_000),
+          kind: 'reminder',
+        }),
       );
     }
     if (due.length > 0) this.syncClock();
@@ -1146,7 +1195,7 @@ export class AiModelChatService {
     message.revealedChars = 0;
     this.touch(session);
 
-    const typing = this.typingMsFor(text);
+    const typing = this.typingMsFor(text, session);
     const half = Math.round(typing / 2);
     const stops = typing >= 2_000 && this.midPauseChance() > 0;
 
@@ -1365,11 +1414,15 @@ export class AiModelChatService {
   }
 
   /** A — how long she needs to type this message, with the salt of requirement D on every wait. */
-  private typingMsFor(text: string): number {
+  private typingMsFor(text: string, session: AiChatSession): number {
     const { perCharMs, floorMs, ceilingMs, jitterMs } = this.pacing;
     const base = typingTimeFor(text.length, perCharMs, floorMs, ceilingMs);
-    if (jitterMs <= 0) return base;
-    return Math.max(0, base + Math.round((Math.random() * 2 - 1) * jitterMs));
+    // Registered User sessions are deliberately more responsive, while the same natural pacing is
+    // retained for Free and legacy sessions. A test can still silence every wait through `pacing`.
+    const entitlementSpeed = this.sessionPlan(session) === 'registered' ? 0.65 : 1;
+    const paced = Math.round(base * entitlementSpeed);
+    if (jitterMs <= 0) return paced;
+    return Math.max(0, paced + Math.round((Math.random() * 2 - 1) * jitterMs * entitlementSpeed));
   }
 
   /**
@@ -1426,6 +1479,9 @@ export class AiModelChatService {
 
     const attachment = userMessage.attachment;
     const identity = session.identity;
+    // Free Chat carries a short, basic working context; registered conversations retain a deeper
+    // context for the model's answer. The transcript remains visible to both plans.
+    const historyLimit = this.sessionPlan(session) === 'registered' ? 24 : 6;
     const body = {
       personal: { answers: session.personalMemory?.answers ?? {}, nextTopic: personalTopic },
       // A — the visitor travels with every turn, so the answer comes back addressed to them.
@@ -1449,7 +1505,7 @@ export class AiModelChatService {
           (message) =>
             message.kind === 'message' && message.text.trim().length > 0 && !message.pending,
         )
-        .slice(-12)
+        .slice(-historyLimit)
         .map((message) => ({
           role: message.author === 'user' ? ('user' as const) : ('model' as const),
           text: message.text.slice(0, 800),
@@ -1531,11 +1587,15 @@ export class AiModelChatService {
 
   // ------------------------------------------------------------------ sessions
 
-  private createSession(slug: string): AiChatSession {
-    // The clock does not start here: it starts when the visitor has introduced themselves
-    // (requirement A), so nobody loses their two hours to a form.
+  private createSession(slug: string, plan: LiveChatPlan | 'legacy' = 'legacy'): AiChatSession {
+    // The clock does not start here: it starts when the visitor has introduced themselves, so no
+    // one loses their selected chat time to a form.
+    const durationMs = plan === 'legacy' ? AI_CHAT_SESSION_MS : LIVE_CHAT_PLANS[plan].durationMs;
+    const durationLabel = plan === 'legacy' ? 'two-hour' : LIVE_CHAT_PLANS[plan].durationLabel;
     return {
       slug,
+      plan,
+      durationMs,
       identity: null,
       personalMemory: newPersonalMemory(),
       startedAt: 0,
@@ -1543,7 +1603,7 @@ export class AiModelChatService {
       messages: [
         newMessage({
           author: 'system',
-          text: '🔒 This is a private two-hour chat with an AI model of the NeverBeen Multiverse. Nothing here is real outside NeverBeen, and the studio reads nothing of it.',
+          text: `🔒 This is a private ${durationLabel} chat with an AI model of the NeverBeen Multiverse. Nothing here is real outside NeverBeen, and the studio reads nothing of it.`,
           kind: 'notice',
         }),
       ],
@@ -1562,14 +1622,42 @@ export class AiModelChatService {
     };
   }
 
-  private sessionFor(model: AiModelProfile): AiChatSession {
+  private sessionFor(
+    model: AiModelProfile,
+    plan: LiveChatPlan | 'legacy' = 'legacy',
+  ): AiChatSession {
     let session = this.sessions.get(model.slug);
     if (!session) {
-      session = this.createSession(model.slug);
+      session = this.createSession(model.slug, plan);
       this.sessions.set(model.slug, session);
       this.persist();
     }
     return session;
+  }
+
+  /** Backward-compatible plan lookup for conversations stored before access plans existed. */
+  private sessionPlan(session: AiChatSession): LiveChatPlan | 'legacy' {
+    return session.plan === 'free' || session.plan === 'registered' ? session.plan : 'legacy';
+  }
+
+  private sessionDuration(session: AiChatSession): number {
+    if (Number.isFinite(session.durationMs) && (session.durationMs ?? 0) > 0) {
+      return Math.floor(session.durationMs!);
+    }
+    const plan = this.sessionPlan(session);
+    return plan === 'legacy' ? AI_CHAT_SESSION_MS : LIVE_CHAT_PLANS[plan].durationMs;
+  }
+
+  private reminderMarksFor(session: AiChatSession): readonly number[] {
+    const durationMinutes = this.sessionDuration(session) / 60_000;
+    return AI_CHAT_REMINDER_MARKS.filter((mark) => mark < durationMinutes);
+  }
+
+  private timeoutTextFor(session: AiChatSession): string {
+    const plan = this.sessionPlan(session);
+    if (plan === 'legacy') return CHAT_TIMEOUT_TEXT;
+    const label = LIVE_CHAT_PLANS[plan].durationLabel;
+    return `⌛ Your ${label} ${LIVE_CHAT_PLANS[plan].label.toLocaleLowerCase()} is up, so this chat closes here. Start another chat whenever you are ready.`;
   }
 
   private appendMessage(session: AiChatSession, message: AiChatMessage): void {
@@ -1663,8 +1751,17 @@ export class AiModelChatService {
       for (const [slug, session] of Object.entries(parsed.sessions ?? {})) {
         if (!session || typeof session.endsAt !== 'number' || !Array.isArray(session.messages))
           continue;
+        const restoredPlan: LiveChatPlan | 'legacy' =
+          session.plan === 'free' || session.plan === 'registered' ? session.plan : 'legacy';
         this.sessions.set(slug, {
           slug,
+          plan: restoredPlan,
+          durationMs:
+            Number.isFinite(session.durationMs) && (session.durationMs ?? 0) > 0
+              ? session.durationMs
+              : restoredPlan === 'legacy'
+                ? AI_CHAT_SESSION_MS
+                : LIVE_CHAT_PLANS[restoredPlan].durationMs,
           identity: session.identity ?? null,
           personalMemory: restorePersonalMemory(session.personalMemory),
           startedAt: session.startedAt ?? Date.now(),

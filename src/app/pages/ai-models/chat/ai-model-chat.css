@@ -507,6 +507,39 @@
   object-fit: cover;
 }
 
+.chat-bubble-video {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  margin: -0.2rem -0.35rem 0.4rem;
+  border-radius: 14px;
+  background: #111018;
+}
+
+.chat-bubble-video video {
+  display: block;
+  width: min(17rem, 66vw);
+  max-height: 260px;
+  background: #111018;
+}
+
+.chat-bubble-video i {
+  position: absolute;
+  right: 0.45rem;
+  bottom: 0.45rem;
+  max-width: calc(100% - 0.9rem);
+  overflow: hidden;
+  padding: 0.18rem 0.42rem;
+  border-radius: 999px;
+  background: rgb(11 11 15 / 64%);
+  color: #fff;
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* The visitor's own photograph, in the round frame the visitor sent with their name. */
 .chat-row-photo.is-visitor {
   background: linear-gradient(140deg, #eafff0, #ffffff);

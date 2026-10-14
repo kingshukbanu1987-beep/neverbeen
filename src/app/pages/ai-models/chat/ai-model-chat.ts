@@ -31,12 +31,15 @@ import { ChatHistory } from './chat-history';
 import {
   AI_CHAT_DOCUMENT_LIMIT_BYTES,
   AI_CHAT_PHOTO_LIMIT_BYTES,
+  AI_CHAT_VIDEO_LIMIT_BYTES,
   AI_CHAT_REACTIONS,
   AiChatAttachment,
   AiChatFeedback,
   AiChatMessage,
   AiChatReaction,
   AiChatReplyQuote,
+  LIVE_CHAT_PLANS,
+  LiveChatPlan,
   reactionEmoji,
   replyQuoteOf,
 } from './chat-types';
@@ -76,6 +79,10 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly model = input.required<AiModelProfile>();
+  /** Access is selected before this dialog mounts; legacy preserves direct integrations and old tests. */
+  readonly plan = input<LiveChatPlan | 'legacy'>('legacy');
+  /** A completed Community profile skips the public name-and-photo prompt for Registered User chat. */
+  readonly registeredIdentity = input<ChatIdentity | null>(null);
   readonly closed = output<void>();
 
   protected readonly reactions = AI_CHAT_REACTIONS;
@@ -87,6 +94,7 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   private readonly composer = viewChild<ElementRef<HTMLTextAreaElement>>('composer');
   private readonly photoInput = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private readonly cameraInput = viewChild<ElementRef<HTMLInputElement>>('cameraInput');
+  private readonly videoInput = viewChild<ElementRef<HTMLInputElement>>('videoInput');
   private readonly documentInput = viewChild<ElementRef<HTMLInputElement>>('documentInput');
   /** E and F — the close form itself, so Escape can be handed to its Close button. */
   private readonly feedbackCard = viewChild(ChatFeedbackCard);
@@ -112,12 +120,23 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   ]);
 
   protected readonly session = computed(() => this.chat.session());
+  protected readonly activePlan = computed(() => this.session()?.plan ?? this.plan());
+  protected readonly planDefinition = computed(() => {
+    const plan = this.activePlan();
+    return plan === 'legacy' ? null : LIVE_CHAT_PLANS[plan];
+  });
+  protected readonly mediaAllowed = computed(() => this.planDefinition()?.allowsMedia !== false);
+  protected readonly sessionDuration = computed(() => this.session()?.durationMs ?? 2 * 60 * 60 * 1000);
   protected readonly thinking = computed(() => this.chat.thinking());
   protected readonly closedReason = computed(() => this.chat.session()?.closed ?? '');
   protected readonly sessionOver = computed(() => Boolean(this.chat.session()?.closed));
   protected readonly remaining = computed(() => this.chat.remainingMs());
-  protected readonly urgent = computed(() => this.remaining() <= 5 * 60 * 1000);
-  protected readonly warning = computed(() => this.remaining() <= 15 * 60 * 1000);
+  protected readonly urgent = computed(() =>
+    this.remaining() <= Math.min(5 * 60 * 1000, this.sessionDuration() * 0.15),
+  );
+  protected readonly warning = computed(() =>
+    this.remaining() <= Math.min(15 * 60 * 1000, this.sessionDuration() * 0.34),
+  );
 
   /** The same availability wording as her card and her profile page. */
   protected readonly availabilityState = computed<'available' | 'unavailable' | 'future'>(() => {
@@ -189,13 +208,14 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   );
 
   /**
-   * The window opens its own two-hour session the moment it is mounted: a page only has to render
-   * `<app-ai-model-chat [model]>` and everything else — the clock, the reminders, her answers —
-   * follows. `openChat()` is idempotent per model, so closing and reopening the window continues the
-   * same active session. Completed sessions reopen with a fresh identity form.
+   * The window opens the session entitlement chosen in the access screen. Free Chat continues to
+   * the existing name-and-photo form; Registered User gets its identity from the verified Community
+   * profile and can begin immediately after the profile review.
    */
   ngOnInit(): void {
-    this.chat.openChat(this.model());
+    this.chat.openChat(this.model(), this.plan());
+    const identity = this.registeredIdentity();
+    if (identity) this.chat.setIdentity(this.model(), identity);
   }
 
   /**
@@ -385,6 +405,10 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     this.cameraInput()?.nativeElement.click();
   }
 
+  protected pickVideo(): void {
+    this.videoInput()?.nativeElement.click();
+  }
+
   protected pickDocument(): void {
     this.documentInput()?.nativeElement.click();
   }
@@ -420,6 +444,38 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     } catch {
       this.readError.set('That picture could not be read. Try a JPEG, PNG or WebP file.');
     }
+  }
+
+  /** Registered User sessions may share a short video. Object URLs are intentionally transient and
+   * never copied into session storage or sent to an AI reader. */
+  protected onVideoPicked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!this.mediaAllowed()) {
+      this.readError.set('Free Chat is text-only. Choose Registered User to share photos or videos.');
+      return;
+    }
+    if (!file.type.startsWith('video/')) {
+      this.readError.set('Choose a video file to share with this registered chat.');
+      return;
+    }
+    if (file.size > AI_CHAT_VIDEO_LIMIT_BYTES) {
+      this.readError.set('That video is larger than 32 MB — choose a shorter or smaller video.');
+      return;
+    }
+    this.chat.setDraftAttachment({
+      kind: 'video',
+      name: file.name || 'Video',
+      type: file.type,
+      size: file.size,
+      source: 'upload',
+      preview: URL.createObjectURL(file),
+      // An object URL only works in this browser session and must never be persisted.
+      ephemeral: true,
+    });
+    this.readError.set('');
   }
 
   protected async onDocumentPicked(event: Event): Promise<void> {
