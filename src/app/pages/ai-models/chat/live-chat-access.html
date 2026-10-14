@@ -16,11 +16,29 @@
           }
         </span>
         <span class="access-model-copy">
-          <i>Selected NeverBeen model</i>
+          <i>NeverBeen model</i>
           <b>{{ model().name }}</b>
           <small>{{ modelLocation() || 'NeverBeen Multiverse' }}</small>
         </span>
       </div>
+
+      <!-- The selected chat mode and a concise model profile stay centred at the top, so a visitor
+           always sees exactly who they are about to meet and which access rules are in play. -->
+      <div class="access-selected-summary" aria-live="polite">
+        <span class="selected-mode" [class.is-free]="selected() === 'free'" [class.is-registered]="selected() === 'registered'">
+          <i aria-hidden="true"></i> Selected mode · {{ plans[selected()].label }}
+        </span>
+        <span class="selected-model-detail">
+          <b>{{ model().name }}</b>
+          <small>
+            {{ model().handle }} · {{ modelLocation() || 'NeverBeen Multiverse' }}
+            @if (model().age) {
+              · {{ model().age }} yrs
+            }
+          </small>
+        </span>
+      </div>
+
       <button type="button" class="access-close" aria-label="Close Live Chat options" (click)="closed.emit()">
         <span aria-hidden="true">✕</span>
       </button>
@@ -37,8 +55,17 @@
           </p>
         </div>
 
-        <div class="plan-grid" role="list" aria-label="Live Chat plans">
-          <article class="plan-card plan-card-free" [class.is-selected]="selected() === 'free'" role="listitem">
+        <div class="plan-grid" role="listbox" aria-label="Live Chat plans">
+          <article
+            class="plan-card plan-card-free"
+            [class.is-selected]="selected() === 'free'"
+            role="option"
+            [attr.aria-selected]="selected() === 'free'"
+            tabindex="0"
+            (click)="choose('free')"
+            (keydown.enter)="choose('free')"
+            (keydown.space)="choose('free'); $event.preventDefault()"
+          >
             <div class="plan-card-top">
               <span class="plan-orbit plan-orbit-free" aria-hidden="true">⌁</span>
               <span class="plan-choice"><i aria-hidden="true"></i> Open access</span>
@@ -66,7 +93,12 @@
           <article
             class="plan-card plan-card-registered"
             [class.is-selected]="selected() === 'registered'"
-            role="listitem"
+            role="option"
+            [attr.aria-selected]="selected() === 'registered'"
+            tabindex="0"
+            (click)="choose('registered')"
+            (keydown.enter)="choose('registered')"
+            (keydown.space)="choose('registered'); $event.preventDefault()"
           >
             <div class="plan-glow" aria-hidden="true"></div>
             <div class="plan-card-top">

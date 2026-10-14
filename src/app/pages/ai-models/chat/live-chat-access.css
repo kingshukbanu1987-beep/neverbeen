@@ -137,6 +137,82 @@
   white-space: nowrap;
 }
 
+/* Desktop keeps this profile snapshot perfectly centred, independent of the model card and close
+   control at either edge. It makes the chosen mode and the woman behind it unmistakable. */
+.access-selected-summary {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  min-width: min(360px, 42vw);
+  max-width: 48vw;
+  gap: 0.22rem;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.selected-mode {
+  display: inline-flex;
+  justify-self: center;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.28rem 0.58rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  color: #c8c1d2;
+  font-size: 0.54rem;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.selected-mode i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #64bd27;
+  box-shadow: 0 0 0 4px rgb(100 189 39 / 15%), 0 0 12px #64bd27;
+}
+
+.selected-mode.is-free {
+  border-color: rgb(100 189 39 / 42%);
+  background: rgb(100 189 39 / 12%);
+  color: #b9ed99;
+}
+
+.selected-mode.is-registered {
+  border-color: rgb(207 147 255 / 38%);
+  background: rgb(203 93 255 / 11%);
+  color: #eed3ff;
+}
+
+.selected-model-detail {
+  display: grid;
+  min-width: 0;
+  gap: 0.08rem;
+}
+
+.selected-model-detail b,
+.selected-model-detail small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-model-detail b {
+  color: #fff;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.selected-model-detail small {
+  color: #aaa3b8;
+  font-size: 0.58rem;
+}
+
 .access-close {
   display: grid;
   width: 36px;
@@ -179,20 +255,22 @@
 .access-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 0.42rem;
-  color: #d6b8ff;
+  gap: 0.5rem;
+  color: #8dde57;
   font-size: 0.64rem;
   font-weight: 850;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
+/* A small neon pulse makes the Live Chat state read at a glance without resorting to a large badge. */
 .access-kicker i {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #a773ff;
-  box-shadow: 0 0 0 4px rgb(167 115 255 / 17%), 0 0 14px #bc8aff;
+  background: #64bd27;
+  box-shadow: 0 0 0 4px rgb(100 189 39 / 16%), 0 0 16px #64bd27;
+  animation: live-access-pulse 1.8s ease-in-out infinite;
 }
 
 .access-heading h2,
@@ -252,11 +330,27 @@
   transform: translateY(-3px);
 }
 
+.plan-card-free {
+  border-color: rgb(100 189 39 / 36%);
+  background:
+    radial-gradient(circle at 0 0, rgb(100 189 39 / 21%), transparent 46%),
+    linear-gradient(155deg, rgb(57 111 26 / 30%), rgb(255 255 255 / 3%));
+}
+
+.plan-card-free.is-selected {
+  border-color: rgb(139 229 80 / 78%);
+  box-shadow: 0 20px 44px rgb(25 86 6 / 24%), inset 0 1px 0 rgb(226 255 211 / 18%);
+}
+
 .plan-card-registered {
   border-color: rgb(207 147 255 / 37%);
   background:
     radial-gradient(circle at 100% 0, rgb(203 93 255 / 22%), transparent 44%),
     linear-gradient(155deg, rgb(126 54 201 / 26%), rgb(255 255 255 / 4%));
+}
+
+.plan-card-registered.is-selected {
+  border-color: rgb(225 177 255 / 74%);
 }
 
 .plan-glow {
@@ -293,8 +387,8 @@
 }
 
 .plan-orbit-free {
-  background: linear-gradient(145deg, #355674, #1b2a43);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 21%);
+  background: linear-gradient(145deg, #83d34d, #64bd27 55%, #3c8916);
+  box-shadow: 0 8px 22px rgb(100 189 39 / 29%), inset 0 1px 0 rgb(240 255 229 / 34%);
 }
 
 .plan-orbit-registered {
@@ -317,7 +411,12 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #7fa5c5;
+  background: #64bd27;
+  box-shadow: 0 0 9px rgb(100 189 39 / 74%);
+}
+
+.plan-card-free .plan-choice {
+  color: #aee78b;
 }
 
 .plan-choice.is-member {
@@ -430,6 +529,18 @@
   color: #f0cbff;
 }
 
+.plan-card-free .plan-features li > span {
+  border-color: rgb(132 223 76 / 49%);
+  background: rgb(100 189 39 / 15%);
+  color: #baf29a;
+}
+
+.plan-card-free .plan-features li.is-emphasis > span {
+  border-color: rgb(160 237 112 / 62%);
+  background: rgb(100 189 39 / 23%);
+  color: #ddffca;
+}
+
 .plan-features li.is-unavailable {
   color: #9893a2;
 }
@@ -477,8 +588,8 @@
 }
 
 .plan-start-free {
-  background: linear-gradient(135deg, #2f5b7c, #19334d);
-  box-shadow: 0 9px 22px rgb(12 31 55 / 33%);
+  background: linear-gradient(125deg, #79cf41, #64bd27 54%, #438d17);
+  box-shadow: 0 11px 25px rgb(57 125 17 / 38%), inset 0 1px 0 rgb(239 255 225 / 25%);
 }
 
 .plan-start-registered {
@@ -729,6 +840,11 @@
   from { opacity: 0; transform: translateY(14px) scale(0.985); }
 }
 
+@keyframes live-access-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgb(100 189 39 / 16%), 0 0 16px #64bd27; }
+  50% { box-shadow: 0 0 0 7px rgb(100 189 39 / 4%), 0 0 22px #8dde57; }
+}
+
 @media (max-width: 680px) {
   .access-backdrop {
     display: block;
@@ -739,6 +855,30 @@
     min-height: 100%;
     border-width: 0;
     border-radius: 0;
+  }
+
+  .access-model-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.7rem;
+  }
+
+  .access-selected-summary {
+    position: static;
+    grid-row: 1;
+    grid-column: 1 / -1;
+    max-width: 100%;
+    min-width: 0;
+    transform: none;
+  }
+
+  .access-model {
+    grid-row: 2;
+    min-width: 0;
+  }
+
+  .access-close {
+    grid-row: 2;
   }
 
   .access-content,
@@ -768,7 +908,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .access-backdrop,
-  .access-shell { animation: none; }
+  .access-shell,
+  .access-kicker i { animation: none; }
   .plan-card,
   .access-close,
   .plan-start,

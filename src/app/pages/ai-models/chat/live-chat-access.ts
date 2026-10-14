@@ -48,7 +48,8 @@ export class LiveChatAccess {
 
   protected readonly plans = LIVE_CHAT_PLANS;
   protected readonly stage = signal<AccessStage>('plans');
-  protected readonly selected = signal<LiveChatPlan>('registered');
+  /** Free Chat is the open default; selecting either card updates the summary in the top centre. */
+  protected readonly selected = signal<LiveChatPlan>('free');
   protected readonly registrationMessage = signal('');
 
   private readonly community = inject(CommunityService);
@@ -126,7 +127,7 @@ export class LiveChatAccess {
   protected readonly registeredFeatures: readonly PlanFeature[] = [
     { text: 'Text-based chat conversations', included: true },
     { text: 'Photo or video sharing', included: true, emphasis: true },
-    { text: 'Access to the selected NeverBeen model', included: true },
+    { text: 'Access to all NeverBeen models', included: true },
     { text: 'More chat duration up to 45 minutes', included: true, emphasis: true },
     { text: 'Advanced conversation memory', included: true },
     { text: 'Faster response speed', included: true },
