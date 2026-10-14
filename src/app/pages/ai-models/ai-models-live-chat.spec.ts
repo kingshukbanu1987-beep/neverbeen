@@ -72,7 +72,7 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     TestBed.inject(HttpTestingController).verify();
   });
 
-  it('shows the split pill beside the Live Chat button: Live Now with a pulse, and the past chats', async () => {
+  it('shows the split pill on a line of its own under the Live Chat button: Live Now with a pulse, and the past chats', async () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
@@ -86,9 +86,16 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     const card = cardFor(fixture.nativeElement, profile.name);
     const pill = card.querySelector<HTMLElement>('.card-live-pill')!;
     expect(pill).not.toBeNull();
+    // The button leads, the pill follows it on the next line — both in the one chat row.
+    const row = pill.closest<HTMLElement>('.card-chat-row')!;
+    expect(row.parentElement?.classList.contains('card-copy')).toBe(true);
+    expect(row.children[0]?.classList.contains('card-action-chat')).toBe(true);
+    expect(row.children[1]?.tagName).toBe('APP-MODEL-LIVE-CHAT-PILL');
     expect(pill.parentElement?.previousElementSibling?.classList.contains('card-action-chat')).toBe(
       true,
     );
+    // Stacked, not side by side: the row runs top to bottom, so the pill starts a line of its own.
+    expect(getComputedStyle(row).flexDirection).toBe('column');
     expect(pill.classList.contains('is-live')).toBe(true);
     expect(pill.querySelector('.card-live-pill-dot')).not.toBeNull();
     expect(pill.querySelector('.card-live-pill-divider')).not.toBeNull();
@@ -99,8 +106,9 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     // The chat bubble belongs to the past half only, and stands in front of its total.
     expect(pill.querySelector('.is-now .card-live-pill-bubble')).toBeNull();
 
+    // A long total reads compactly on the pill (1.28K), exactly as the card's engagement counters do.
     const past = pillTextOf(pill, 'is-past');
-    expect(past.value).toBe('1,284');
+    expect(past.value).toBe('1.28K');
     expect(past.word).toBe('past chats');
     const pastSeg = pill.querySelector('.card-live-pill-seg.is-past')!;
     const bubble = pastSeg.querySelector('.card-live-pill-bubble svg');
@@ -109,6 +117,61 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
 
     expect(pill.getAttribute('aria-label')).toBe(
       `3 live now and 1,284 past chats with ${profile.name}`,
+    );
+    fixture.destroy();
+  });
+
+  it('writes the totals of every model compactly on her card — 1.4K, 1.7M, 1.4B, 1.9T', async () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+
+    http.expectOne(`${API}/api/models/live-chats`).flush([
+      { modelSlug: profile.slug, liveNowCount: 1400, pastChatCount: 1_700_000 },
+      {
+        modelSlug: aiModelProfiles[1].slug,
+        liveNowCount: 1_400_000_000,
+        pastChatCount: 1_900_000_000_000,
+      },
+    ]);
+    await settle();
+    fixture.detectChanges();
+
+    const card = cardFor(fixture.nativeElement, profile.name);
+    const pill = card.querySelector<HTMLElement>('.card-live-pill')!;
+    expect(pillTextOf(pill, 'is-now').value).toBe('1.4K');
+    expect(pillTextOf(pill, 'is-past').value).toBe('1.7M');
+    // The shortened figure never hides the real one: assistive tech and the tool-tip still get it.
+    expect(pill.getAttribute('aria-label')).toBe(
+      `1,400 live now and 1,700,000 past chats with ${profile.name}`,
+    );
+    expect(pill.querySelector('.card-live-pill-seg.is-past')?.getAttribute('title')).toBe(
+      '1,700,000 past chats in all',
+    );
+
+    const other = cardFor(
+      fixture.nativeElement,
+      aiModelProfiles[1].name,
+    ).querySelector<HTMLElement>('.card-live-pill')!;
+    expect(pillTextOf(other, 'is-now').value).toBe('1.4B');
+    expect(pillTextOf(other, 'is-past').value).toBe('1.9T');
+    fixture.destroy();
+  });
+
+  it('sets the rating figure 1.3× bigger than it was, and leaves the stars their own size', async () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    TestBed.inject(HttpTestingController).expectOne(`${API}/api/models/live-chats`).flush([]);
+    fixture.detectChanges();
+    await settle();
+    fixture.detectChanges();
+
+    const card = cardFor(fixture.nativeElement, profile.name);
+    // 1.08rem → 1.4rem: the number of the rating reads first, the five stars stay as they were.
+    expect(getComputedStyle(card.querySelector<HTMLElement>('.card-rating-value')!).fontSize).toBe(
+      '1.4rem',
+    );
+    expect(getComputedStyle(card.querySelector<HTMLElement>('.card-rating-star')!).fontSize).toBe(
+      '1.04rem',
     );
     fixture.destroy();
   });
