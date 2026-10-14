@@ -671,6 +671,54 @@ finally to her album. Every request is two images, so the throttle is the strict
 | `worker/index.ts`                                                  | `POST /api/ai-chat`, `POST /api/ai-read` and `POST /api/ai-selfie`, their throttles, and the optional secrets                                                                                                                                                |
 | `scripts/dev-api.mjs`                                              | the local stand-in for `/api/ai-chat`, `/api/ai-read` and `/api/ai-selfie` on port 8787                                                                                                                                                                      |
 
+## AI Chat through the backend (Gemini)
+
+Her open-ended answers come from the **NeverBeen Web API**, never from a key in the website:
+
+1. The window (`AiModelChatService.requestBackendReply()`) loads the model's character profile —
+   `public/NeverBeenModels/<Album>/personality/characterdatabase.json`, through
+   `loadCharacterDatabase()` (cached per album, `_doc` notes dropped, merged over the built-in
+   joyful default so a missing file still yields a complete profile).
+2. It posts the turn to **`POST /neverbeen-api/api/ai-chat`** — the Cloudflare Worker proxies
+   `/neverbeen-api/*` to the API (`proxy.conf.json` does the same under `npm start`):
+
+   ```json
+   {
+     "message": "What is the capital of India?",
+     "characterProfile": { "meta": {}, "ruleEngine": {}, "corePersonality": {}, "…": {} },
+     "model": { "slug": "alisha-bhattacharya", "name": "Alisha Bhattacharya", "handle": "@alisha.bhattacharya", "location": "Kolkata, India", "age": "24" },
+     "user": { "name": "Rahul Verma", "firstName": "Rahul" },
+     "history": [{ "role": "model", "text": "…" }, { "role": "user", "text": "…" }],
+     "dossier": "…the first 12 000 characters of her dossier…",
+     "reading": { "english": "…", "intent": "question" },
+     "personal": { "answers": {}, "nextTopic": "" }
+   }
+   ```
+
+3. The API (`Controllers/AiChatController.cs`, `Services/GeminiChatService.cs`,
+   `Services/AiChatPrompt.cs`) builds the system instruction — the studio's fixed rules, then the
+   character profile as her main rule engine (its `hardLimits` absolute; it cannot switch the
+   studio rules off), her card, the visitor, the reading and the dossier — and calls
+   **`gemini-2.5-flash`** with the key from its **`GEMINI_API_KEY` environment variable**, sent in
+   the `x-goog-api-key` header.
+4. It answers `200 { "ok": true, "reply": "…", "provider": "gemini", "model": "gemini-2.5-flash" }`;
+   the window types the reply out like her own and splits it on blank lines (intent `gemini`).
+
+| Backend answer                          | The window                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------- |
+| `200` with a reply                      | her answer                                                              |
+| `503` (no key) / `404` / `405` / `501`  | her own engine answers, and the backend is not asked again on this visit |
+| `429`, `502`, network error, empty text | her own engine answers this turn; the next turn asks the backend again   |
+
+Setting it up on the API: apply
+[`docs/patches/neverbeen-api-ai-chat-gemini.patch`](patches/neverbeen-api-ai-chat-gemini.patch) to
+`neverbeen-api` (check it with `neverbeen-api-ai-chat-gemini-verification.py`), deploy, and add the
+Application setting **`GEMINI_API_KEY`** in Azure App Service → Configuration. No database change is
+needed — chat turns are not stored.
+
+The Worker's older OpenAI endpoint (`POST /api/ai-chat`, `worker/ai-chat-core.mjs`) is no longer
+called by the window; it stays in the Worker untouched.
+
 ## Running it locally
 
 ```bash
@@ -698,9 +746,11 @@ npx wrangler secret put GEMINI_API_KEY            # the reading desk, and the ca
 npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # optional: the Cloud Translation API
 ```
 
-Live Chat's Gemini configuration currently lives in `wrangler.jsonc` (`vars`): `GEMINI_API_KEY`
-holds the key, and both `GEMINI_MODEL` and `GEMINI_IMAGE_MODEL` are pinned to `gemini-2.5-flash`,
-so the reading desk and the live-chat selfies run on that model.
+**No Gemini key lives in `wrangler.jsonc` any more** — the file is public. `GEMINI_MODEL` and
+`GEMINI_IMAGE_MODEL` stay there (model names are not secrets) and are pinned to `gemini-2.5-flash`
+for the reading desk and the live-chat selfies; those Worker endpoints read the key from an
+optional Worker secret (`npx wrangler secret put GEMINI_API_KEY` above). The chat's answer itself
+comes from the backend — see [AI Chat through the backend (Gemini)](#ai-chat-through-the-backend-gemini).
 
 `npm start` prints a line for each of the three endpoints and says what is configured: the chat, the
 reading desk, and her camera.

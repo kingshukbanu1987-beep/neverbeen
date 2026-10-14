@@ -14,9 +14,11 @@
  *   Google Translate, Gemini, OpenAI — when the studio has those keys), the frame of an attached
  *   photograph and the bytes of an attached document. The reading is what her answer is built from.
  * - **The answer (requirements A, B, C, D, F).** The model's own engine (`chat-replies.ts`) answers
- *   instantly. When the studio has configured its OpenAI key, `POST /api/ai-chat` answers instead —
- *   streamed, word by word, with live Google results when a search key is configured — and every
- *   failure lands back on the local engine, so the chat always answers.
+ *   instantly. When the NeverBeen Web API has its `GEMINI_API_KEY`, the backend answers instead:
+ *   the visitor's message travels with the model's character profile (her
+ *   `personality/characterdatabase.json`) to `POST /neverbeen-api/api/ai-chat`, the API calls
+ *   Google Gemini (`gemini-2.5-flash`) with the key that only the server knows, and returns her
+ *   finished answer. Every failure lands back on the local engine, so the chat always answers.
  * - **Her selfies (requirement E).** When the visitor asks for a selfie by name, the window calls
  *   the **`livechatselfiesandphotos`** service (`POST /api/livechatselfiesandphotos`) and it
  *   generates **two fresh photographs of her**: same
@@ -131,6 +133,7 @@ import {
 } from '../pages/ai-models/chat/chat-voice';
 import { seededBetween } from '../pages/ai-models/chat/chat-random';
 import { buildModelDossier } from '../pages/ai-models/chat/chat-knowledge';
+import { loadCharacterDatabase } from '../pages/ai-models/chat/character-database';
 import {
   ChatVisitorLanguage,
   ROMANISED_LANGUAGE_BOOKS,
@@ -162,6 +165,23 @@ export interface AiChatRemoteReply {
   text: string;
   sources: AiChatSource[];
 }
+
+/**
+ * The AI Chat endpoint of the NeverBeen Web API, through the site's same-origin `/neverbeen-api`
+ * proxy (the Cloudflare Worker in production, `proxy.conf.json` in development). The Gemini key
+ * lives only in the API's `GEMINI_API_KEY` environment variable — never in the website.
+ */
+export const AI_CHAT_BACKEND_ENDPOINT = '/neverbeen-api/api/ai-chat';
+
+/** The longest dossier the backend reads; anything after it is never used, so it is not sent. */
+export const AI_CHAT_BACKEND_DOSSIER_LIMIT = 12_000;
+
+/**
+ * Answers that mean the backend cannot answer at all right now — no key configured (503), or the
+ * endpoint is not deployed yet (404/405). The window stops asking for the rest of the visit. Any
+ * other failure (a busy minute, a timeout, a refused answer) only skips the backend for that turn.
+ */
+const AI_CHAT_BACKEND_OFF_STATUSES = new Set([404, 405, 501, 503]);
 
 interface PersistedChat {
   version: number;
@@ -208,7 +228,10 @@ export class AiModelChatService {
   /** Milliseconds left of the two hours, kept up to date while a window is open. */
   readonly remainingMs = signal(AI_CHAT_SESSION_MS);
 
-  /** True once `POST /api/ai-chat` has answered "no key configured" — the local engine takes over. */
+  /**
+   * True once the backend AI Chat (`POST /neverbeen-api/api/ai-chat`) has said it cannot answer —
+   * no `GEMINI_API_KEY` configured, or the endpoint is missing — so the local engine takes over.
+   */
   readonly remoteUnavailable = signal(false);
 
   /**
@@ -952,9 +975,9 @@ export class AiModelChatService {
 
     this.touch(session);
 
-    // B — the studio's OpenAI and Google keys answer when they are configured. The words arrive as
-    // one finished answer here and are typed out like her own; no part of the stream is ever shown
-    // word by word (requirement A of the second brief).
+    // B — the backend answers with Gemini when its `GEMINI_API_KEY` is configured. The words arrive
+    // as one finished answer and are typed out like her own; nothing is ever shown word by word
+    // (requirement A of the second brief).
     let answerText =
       (safeTurn && !local.selfie && !language?.romanised
         ? personalRecall(memory, userMessage.text)
@@ -962,16 +985,16 @@ export class AiModelChatService {
     let answerSources: readonly AiChatSource[] = [];
     let intent = local.intent;
     if (!mustBeLocal) {
-      const remote = await this.streamRemoteReply(model, session, userMessage, reading, topic);
+      const remote = await this.requestBackendReply(model, session, userMessage, reading, topic);
       if (remote) {
         answerText = remote.text;
         answerSources = remote.sources;
-        intent = 'openai';
+        intent = 'gemini';
       }
     }
 
     // The fallback asks the same single question as the AI, never a questionnaire.
-    if (personalQuestion && intent !== 'openai') answerText += `\n\n${personalQuestion}`;
+    if (personalQuestion && intent !== 'gemini') answerText += `\n\n${personalQuestion}`;
 
     // E — a selfie goes out as photographs, not as a promise of one: `livechatselfiesandphotos`
     // generates two of them (same outfit, same ambience, different poses), and they are sent as
@@ -1464,11 +1487,19 @@ export class AiModelChatService {
   }
 
   /**
-   * Streams an answer from `POST /api/ai-chat`. Returns `null` — so the local engine answers — when
-   * the studio has no key configured, when the service is unreachable, or when the stream carries
-   * no text at all.
+   * Asks the NeverBeen Web API for her answer (`POST /neverbeen-api/api/ai-chat`).
+   *
+   * The request carries the visitor's input together with the model's **character profile** — her
+   * `public/NeverBeenModels/<Album>/personality/characterdatabase.json`, loaded (and cached) by
+   * `loadCharacterDatabase()` with the editor's `_doc` notes dropped — plus her card, the visitor,
+   * the reading of the turn and the recent conversation. The backend calls Google Gemini
+   * (`gemini-2.5-flash`) with its secret `GEMINI_API_KEY` and answers
+   * `{ ok: true, reply, provider: 'gemini', model }`.
+   *
+   * Returns `null` — so the local engine answers — when the backend is not configured, unreachable,
+   * refuses, or sends back no text.
    */
-  private async streamRemoteReply(
+  private async requestBackendReply(
     model: AiModelProfile,
     session: AiChatSession,
     userMessage: AiChatMessage,
@@ -1477,12 +1508,18 @@ export class AiModelChatService {
   ): Promise<AiChatRemoteReply | null> {
     if (this.remoteUnavailable() || typeof fetch !== 'function') return null;
 
-    const attachment = userMessage.attachment;
     const identity = session.identity;
     // Free Chat carries a short, basic working context; registered conversations retain a deeper
     // context for the model's answer. The transcript remains visible to both plans.
     const historyLimit = this.sessionPlan(session) === 'registered' ? 24 : 6;
+    // Her character profile never fails to load: a missing or broken file falls back to the
+    // built-in joyful default, exactly as the database's own `fallbackWhenFileMissing` promises.
+    const characterProfile = await loadCharacterDatabase(model);
     const body = {
+      // The visitor's input — what she answers.
+      message: userMessage.text,
+      // Her character profile (`personality/characterdatabase.json`): her main rule engine.
+      characterProfile,
       personal: { answers: session.personalMemory?.answers ?? {}, nextTopic: personalTopic },
       // A — the visitor travels with every turn, so the answer comes back addressed to them.
       user: identity
@@ -1495,10 +1532,8 @@ export class AiModelChatService {
         location: model.location,
         age: model.age,
       },
-      dossier: this.dossierFor(model),
-      question: userMessage.text,
-      // What the reading desk made of this turn: the studio's model answers the meaning rather than
-      // the letters, and it is told what an attached picture or document actually contained.
+      dossier: this.dossierFor(model).slice(0, AI_CHAT_BACKEND_DOSSIER_LIMIT),
+      // What the reading desk made of this turn: the answer is to the meaning, not the letters.
       reading: reading ? readingForAnswer(reading) : null,
       history: session.messages
         .filter(
@@ -1510,79 +1545,35 @@ export class AiModelChatService {
           role: message.author === 'user' ? ('user' as const) : ('model' as const),
           text: message.text.slice(0, 800),
         })),
-      attachment:
-        attachment && attachment.kind === 'photo' && attachment.preview.startsWith('data:')
-          ? {
-              kind: attachment.kind,
-              name: attachment.name,
-              type: attachment.type,
-              dataUrl: attachment.preview,
-            }
-          : attachment
-            ? { kind: attachment.kind, name: attachment.name, type: attachment.type, dataUrl: '' }
-            : null,
     };
 
     let response: Response;
     try {
-      response = await fetch('/api/ai-chat', {
+      response = await fetch(AI_CHAT_BACKEND_ENDPOINT, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify(body),
       });
     } catch {
-      this.remoteUnavailable.set(true);
+      // Offline for a moment: this turn is hers alone, the next one asks the backend again.
       return null;
     }
 
-    if (!response.ok || !response.body) {
-      // 503 is the studio saying "no key configured"; anything else is treated the same way — the
-      // chat keeps working, it simply answers from the model's own engine.
-      this.remoteUnavailable.set(true);
+    if (!response.ok) {
+      if (AI_CHAT_BACKEND_OFF_STATUSES.has(response.status)) this.remoteUnavailable.set(true);
       return null;
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    const sources: AiChatSource[] = [];
-    let buffer = '';
-    let text = '';
-
+    let payload: { ok?: boolean; reply?: unknown } | null = null;
     try {
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split('\n\n');
-        buffer = events.pop() ?? '';
-        for (const event of events) {
-          for (const line of event.split('\n')) {
-            if (!line.startsWith('data:')) continue;
-            const payload = line.slice(5).trim();
-            if (!payload || payload === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(payload) as {
-                delta?: string;
-                sources?: AiChatSource[];
-                error?: string;
-              };
-              if (parsed.error) return null;
-              // The deltas are collected into one finished answer; the window never shows them
-              // arriving one at a time (requirement A of the second brief).
-              if (parsed.delta) text += parsed.delta;
-              if (parsed.sources) sources.splice(0, sources.length, ...parsed.sources);
-            } catch {
-              // A partial or unknown event is ignored; the next chunk completes it.
-            }
-          }
-        }
-      }
+      payload = (await response.json()) as { ok?: boolean; reply?: unknown };
     } catch {
-      if (text.length === 0) return null;
+      return null;
     }
 
-    if (text.trim().length === 0) return null;
-    return { text: text.trim(), sources };
+    const text = typeof payload?.reply === 'string' ? payload.reply.trim() : '';
+    if (payload?.ok === false || text.length === 0) return null;
+    return { text, sources: [] };
   }
 
   // ------------------------------------------------------------------ sessions

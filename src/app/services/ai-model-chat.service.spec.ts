@@ -9,7 +9,10 @@ import {
   AI_CHAT_SESSION_MS,
   replyQuoteOf,
 } from '../pages/ai-models/chat/chat-types';
+import { clearCharacterDatabaseCache } from '../pages/ai-models/chat/character-database';
 import {
+  AI_CHAT_BACKEND_DOSSIER_LIMIT,
+  AI_CHAT_BACKEND_ENDPOINT,
   AI_CHAT_STORAGE_KEY,
   AiModelChatService,
   chatReminderText,
@@ -19,7 +22,7 @@ import { silenceChatPacing } from './ai-model-chat.testing';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
 
-/** The studio with no OpenAI key: every request to the chat endpoint fails, so her own engine answers. */
+/** The backend with no Gemini key: every request to the chat endpoint fails, so her own engine answers. */
 function withoutStudioAi(): void {
   vi.stubGlobal(
     'fetch',
@@ -952,32 +955,37 @@ describe('AiModelChatService', () => {
     expect(userMessage.reactionBy).toBe('model');
   });
 
-  it('answers through the studio’s OpenAI service when it is configured, with sources', async () => {
-    // Every request gets its own stream — one Response cannot be read twice.
-    const studioReply = (): Response => {
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.enqueue(
-            encoder.encode(
-              'data: {"sources":[{"title":"Google result","url":"https://example.com"}]}\n\n',
-            ),
-          );
-          controller.enqueue(encoder.encode('data: {"delta":"Delhi"}\n\n'));
-          controller.enqueue(
-            encoder.encode('data: {"delta":", of course."}\n\ndata: {"done":true}\n\n'),
-          );
-          controller.close();
-        },
-      });
-      return new Response(stream, {
-        status: 200,
-        headers: { 'content-type': 'text/event-stream' },
-      });
+  it('answers through the backend’s Gemini chat, sending the message and her character profile', async () => {
+    clearCharacterDatabaseCache();
+    const chatBodies: Record<string, any>[] = [];
+    const profile = {
+      _doc: 'editor notes are never sent',
+      meta: { personaName: 'Joyful Sunshine' },
+      corePersonality: { archetype: 'the joyful sunshine companion' },
     };
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation(() => Promise.resolve(studioReply())),
+      vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.endsWith('/AlishaBhattacharya/personality/characterdatabase.json')) {
+          return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
+        }
+        if (url === AI_CHAT_BACKEND_ENDPOINT) {
+          chatBodies.push(JSON.parse(String(init?.body)));
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                ok: true,
+                reply: 'Delhi, of course.',
+                provider: 'gemini',
+                model: 'gemini-2.5-flash',
+              }),
+              { status: 200, headers: { 'content-type': 'application/json' } },
+            ),
+          );
+        }
+        return Promise.resolve(new Response('{}', { status: 503 }));
+      }),
     );
 
     const chat = service();
@@ -990,8 +998,62 @@ describe('AiModelChatService', () => {
       .messages.filter((message) => message.author === 'model')
       .at(-1)!;
     expect(answer.text).toBe('Delhi, of course.');
-    expect(answer.sources).toEqual([{ title: 'Google result', url: 'https://example.com' }]);
-    expect(answer.intent).toBe('openai');
+    expect(answer.intent).toBe('gemini');
+
+    // The browser never holds the key: the turn goes to the backend, through the same-origin proxy.
+    expect(AI_CHAT_BACKEND_ENDPOINT).toBe('/neverbeen-api/api/ai-chat');
+    const sent = chatBodies.at(-1)!;
+    expect(sent['message']).toBe('What is the capital of India?');
+    expect(sent['characterProfile'].meta.personaName).toBe('Joyful Sunshine');
+    expect(sent['characterProfile'].corePersonality.archetype).toBe(
+      'the joyful sunshine companion',
+    );
+    expect(sent['characterProfile'].meta.model.slug).toBe('alisha-bhattacharya');
+    expect(sent['characterProfile']._doc).toBeUndefined();
+    expect(sent['model'].slug).toBe('alisha-bhattacharya');
+    expect(sent['user'].firstName).toBe('Rahul');
+    expect(sent['dossier'].length).toBeLessThanOrEqual(AI_CHAT_BACKEND_DOSSIER_LIMIT);
+    expect(JSON.stringify(sent)).not.toMatch(/GEMINI_API_KEY|x-goog-api-key/i);
+    expect(chat.remoteUnavailable()).toBe(false);
+  });
+
+  it('skips the backend for one turn on a passing failure, and keeps asking it afterwards', async () => {
+    clearCharacterDatabaseCache();
+    let chatCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+        if (String(input) === AI_CHAT_BACKEND_ENDPOINT) {
+          chatCalls += 1;
+          return Promise.resolve(
+            chatCalls === 1
+              ? new Response(JSON.stringify({ ok: false, error: 'ai-failed' }), { status: 502 })
+              : new Response(JSON.stringify({ ok: true, reply: 'Back again!' }), { status: 200 }),
+          );
+        }
+        return Promise.resolve(new Response('{}', { status: 503 }));
+      }),
+    );
+
+    const chat = service();
+    open(chat);
+    await chat.sendMessage(alisha, 'What is the capital of India?');
+    expect(chatCalls).toBe(1);
+    expect(chat.remoteUnavailable()).toBe(false);
+    const fallback = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model')
+      .at(-1)!;
+    expect(fallback.intent).not.toBe('gemini');
+    expect(fallback.text).toContain('Delhi');
+
+    await chat.sendMessage(alisha, 'And what about France?');
+    const answer = chat
+      .session()!
+      .messages.filter((message) => message.author === 'model')
+      .at(-1)!;
+    expect(answer.text).toBe('Back again!');
+    expect(chatCalls).toBe(2);
   });
 
   it('falls back to her own engine when the studio has no key, and remembers that', async () => {

@@ -16,9 +16,13 @@
  *   npx wrangler secret put WHATSAPP_PHONE_NUMBER_ID   # sender phone number id
  *   npx wrangler secret put FOUNDER_WHATSAPP_NUMBER    # where the bookings go
  *
- * `/api/ai-chat` is the AI model chat: her answers to questions from outside NeverBeen stream from
- * OpenAI with live Google results. It needs its own optional secrets — without them the website
- * answers from the model's own engine, so the chat always works:
+ * The AI model chat's answers come from the NeverBeen Web API (`/neverbeen-api/api/ai-chat`, proxied
+ * below): the website sends the visitor's message and the model's `characterdatabase.json`, and the
+ * API calls Gemini `gemini-2.5-flash` with its own `GEMINI_API_KEY` environment variable. No Gemini
+ * key belongs in `wrangler.jsonc`.
+ *
+ * `/api/ai-chat` is the older OpenAI chat endpoint, no longer called by the website. It needs its
+ * own optional secrets — without them it answers 503:
  *
  *   npx wrangler secret put OPENAI_API_KEY         # OpenAI key
  *   npx wrangler secret put GOOGLE_SEARCH_API_KEY  # Google Custom Search JSON API key
@@ -28,7 +32,8 @@
  * document — is read before she answers it. Google Translate reads the language, and Gemini (or
  * OpenAI) does the structured reading. Optional, and the window reads the turn itself without them:
  *
- *   npx wrangler secret put GEMINI_API_KEY            # Google Gemini key (reading + selfies)
+ *   npx wrangler secret put GEMINI_API_KEY            # Google Gemini key (reading + selfies) —
+ *                                                     # a Worker secret, never a wrangler.jsonc var
  *   npx wrangler secret put GOOGLE_TRANSLATE_API_KEY  # Cloud Translation key (optional)
  *
  * `/api/ai-selfie` takes her selfie: Gemini's image model photographs her from her own profile
