@@ -112,6 +112,46 @@ describe('AiModelChatDialog', () => {
     expect(element.querySelector('.chat-clock')?.getAttribute('aria-label')).toContain('02:00:00');
   });
 
+  it('shows a "›" beside her name that opens her information sheet, with a way back to the chat', async () => {
+    const harness = await openChat();
+    const { element, fixture } = harness;
+
+    const more = element.querySelector<HTMLButtonElement>('.chat-bar-name .chat-bar-more')!;
+    expect(more).not.toBeNull();
+    expect(more.getAttribute('aria-label')).toContain('Alisha Bhattacharya');
+    expect(element.querySelector('.chat-info')).toBeNull();
+
+    more.click();
+    fixture.detectChanges();
+    const sheet = element.querySelector<HTMLElement>('.chat-info')!;
+    expect(sheet).not.toBeNull();
+    expect(sheet.querySelector('h2')?.textContent?.trim()).toBe('Alisha Bhattacharya');
+    expect(sheet.textContent).toContain(alisha.height);
+    expect(sheet.textContent).toContain(alisha.bodyShape);
+    expect(sheet.querySelector('.chat-info-profile')?.getAttribute('href')).toBe(
+      '/ai-models/alisha-bhattacharya',
+    );
+
+    // Back — by the button in the bar, and by the one at the foot of the sheet.
+    sheet.querySelector<HTMLButtonElement>('.chat-info-back')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-info')).toBeNull();
+
+    more.click();
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('.chat-info-return')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-info')).toBeNull();
+
+    // Escape goes back to the chat as well, instead of closing the window.
+    more.click();
+    fixture.detectChanges();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-info')).toBeNull();
+    expect(element.querySelector('.chat-panel')).not.toBeNull();
+  });
+
   it('puts her information in a side column and keeps the chat alone on the right (wide screens)', async () => {
     const harness = await openChat();
     const element = harness.element;

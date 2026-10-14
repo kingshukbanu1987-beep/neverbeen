@@ -82,6 +82,8 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly welcomeLine = CHAT_WELCOME_LINE;
   protected readonly reactionEmoji = reactionEmoji;
 
+  private readonly infoToggle = viewChild<ElementRef<HTMLButtonElement>>('infoToggle');
+  private readonly infoBack = viewChild<ElementRef<HTMLButtonElement>>('infoBack');
   private readonly composer = viewChild<ElementRef<HTMLTextAreaElement>>('composer');
   private readonly photoInput = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private readonly cameraInput = viewChild<ElementRef<HTMLInputElement>>('cameraInput');
@@ -92,6 +94,8 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly draft = signal('');
   /** The whole chat history sheet, open over the window. */
   protected readonly historyOpen = signal(false);
+  /** Phones: her information sheet, opened by the "›" beside her name in the header. */
+  protected readonly infoOpen = signal(false);
   protected readonly pickerFor = signal<string | null>(null);
   /** The message the visitor has chosen to reply over — the quote the composer will send. */
   protected readonly replyingTo = signal<AiChatReplyQuote | null>(null);
@@ -114,6 +118,45 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly remaining = computed(() => this.chat.remainingMs());
   protected readonly urgent = computed(() => this.remaining() <= 5 * 60 * 1000);
   protected readonly warning = computed(() => this.remaining() <= 15 * 60 * 1000);
+
+  /** The same availability wording as her card and her profile page. */
+  protected readonly availabilityState = computed<'available' | 'unavailable' | 'future'>(() => {
+    const availability = (this.model().availability ?? '').trim().toLocaleLowerCase();
+    if (/unavailable|fully booked|not accepting/.test(availability)) return 'unavailable';
+    if (/future|looking for|coming soon/.test(availability)) return 'future';
+    return 'available';
+  });
+
+  protected readonly availabilityLabel = computed(() => {
+    switch (this.availabilityState()) {
+      case 'unavailable':
+        return 'Currently Unavailable';
+      case 'future':
+        return 'Looking for Future Contract';
+      default:
+        return 'Available for Contract';
+    }
+  });
+
+  /** Her personal details for the information sheet — only the ones that have a value. */
+  protected readonly infoDetails = computed(() => {
+    const model = this.model();
+    return [
+      { label: 'Age', value: model.age ? `${model.age} years` : '' },
+      { label: 'Height', value: model.height },
+      { label: 'Weight', value: model.weight },
+      { label: 'Body shape', value: model.bodyShape },
+    ].filter((detail) => detail.value);
+  });
+
+  protected readonly infoMeasurements = computed(() => {
+    const model = this.model();
+    return [
+      { label: 'Bust', value: model.bust },
+      { label: 'Waist', value: model.waist },
+      { label: 'Hip', value: model.hip },
+    ].filter((detail) => detail.value);
+  });
 
   /** A — the form in front of the window, until the visitor has introduced themselves. */
   protected readonly needsIdentity = computed(() => !this.chat.identified());
@@ -247,6 +290,18 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     this.feedbackCard()?.close();
   }
 
+  /** Phones: shows her information over the chat. */
+  protected openInfo(): void {
+    this.infoOpen.set(true);
+    setTimeout(() => this.infoBack()?.nativeElement.focus(), 0);
+  }
+
+  /** Back to the conversation, with focus where the visitor left it. */
+  protected closeInfo(): void {
+    this.infoOpen.set(false);
+    setTimeout(() => this.infoToggle()?.nativeElement.focus(), 0);
+  }
+
   /** Opens the whole chat history over the window. */
   protected openHistory(): void {
     if (this.session()) this.historyOpen.set(true);
@@ -275,6 +330,11 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
+    // The information sheet is a layer of its own: Escape takes the visitor back to the chat.
+    if (this.infoOpen()) {
+      this.closeInfo();
+      return;
+    }
     // The history sheet is the top layer: Escape takes the visitor back to the conversation.
     if (this.historyOpen()) {
       this.closeHistory();

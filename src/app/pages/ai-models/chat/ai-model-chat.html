@@ -17,7 +17,22 @@
             }
           </span>
           <span class="chat-bar-copy">
-            <b>{{ model().name }}</b>
+            <span class="chat-bar-name">
+              <b>{{ model().name }}</b>
+              <!-- Instagram's "›" beside the name: on a phone it opens her information. -->
+              <button
+                #infoToggle
+                type="button"
+                class="chat-bar-more"
+                (click)="openInfo()"
+                [attr.aria-label]="'See information about ' + model().name"
+                aria-haspopup="true"
+              >
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                  <path d="M9 5.5 15.5 12 9 18.5" />
+                </svg>
+              </button>
+            </span>
             @if (typingNow()) {
               <i class="is-typing" role="status">{{ typingLabel() }}…</i>
             } @else if (visitorFirstName()) {
@@ -399,6 +414,108 @@
         }
       </div>
     </div>
+
+    <!-- Phones: her information, on a clean white sheet over the chat, with a way back. -->
+    @if (infoOpen()) {
+      <section class="chat-info" role="region" [attr.aria-label]="'About ' + model().name">
+        <header class="chat-info-bar">
+          <button
+            #infoBack
+            type="button"
+            class="chat-info-back"
+            (click)="closeInfo()"
+            aria-label="Back to the chat"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M15 5.5 8.5 12 15 18.5" />
+            </svg>
+            <span>Chat</span>
+          </button>
+          <b class="chat-info-title">Profile</b>
+          <span class="chat-info-spacer" aria-hidden="true"></span>
+        </header>
+
+        <div class="chat-info-scroll">
+          <div class="chat-info-hero">
+            <span class="chat-info-photo">
+              @if (model().cover) {
+                <img [src]="model().cover" [alt]="model().name" />
+              } @else {
+                <span aria-hidden="true">✳</span>
+              }
+            </span>
+            <h2>{{ model().name }}</h2>
+            <p class="chat-info-handle">{{ model().handle }}</p>
+            <p class="chat-info-place">
+              <span aria-hidden="true">⌖</span>
+              {{ country() }}
+              @if (country() && city()) {
+                <i aria-hidden="true">·</i>
+              }
+              {{ city() }}
+            </p>
+            <p class="chat-info-availability" [attr.data-state]="availabilityState()">
+              <i aria-hidden="true"></i>{{ availabilityLabel() }}
+            </p>
+          </div>
+
+          @if (infoDetails().length > 0) {
+            <dl class="chat-info-grid">
+              @for (detail of infoDetails(); track detail.label) {
+                <div>
+                  <dt>{{ detail.label }}</dt>
+                  <dd>{{ detail.value }}</dd>
+                </div>
+              }
+            </dl>
+          }
+
+          @if (infoMeasurements().length > 0) {
+            <h3 class="chat-info-heading">Measurements</h3>
+            <dl class="chat-info-grid is-three">
+              @for (detail of infoMeasurements(); track detail.label) {
+                <div>
+                  <dt>{{ detail.label }}</dt>
+                  <dd>{{ detail.value }}</dd>
+                </div>
+              }
+            </dl>
+          }
+
+          @if (model().bio) {
+            <h3 class="chat-info-heading">About</h3>
+            <p class="chat-info-bio">{{ model().bio }}</p>
+          }
+
+          @if (model().tags.length > 0) {
+            <ul class="chat-info-tags" aria-label="Her work">
+              @for (tag of model().tags; track tag) {
+                <li>{{ tag }}</li>
+              }
+            </ul>
+          }
+
+          @if (model().illustrative) {
+            <p class="chat-info-note" role="note">
+              She is an AI model of the NeverBeen studio. Her details are illustrative.
+            </p>
+          }
+
+          <div class="chat-info-actions">
+            <a
+              class="chat-info-profile"
+              [routerLink]="['/ai-models', model().slug]"
+              (click)="close()"
+              [attr.aria-label]="'View the full profile of ' + model().name"
+              >View full profile</a
+            >
+            <button type="button" class="chat-info-return" (click)="closeInfo()">
+              Back to chat
+            </button>
+          </div>
+        </div>
+      </section>
+    }
 
     <!-- The whole chat history: every line of this session, with Print and Save as PDF. -->
     @if (historyOpen()) {
