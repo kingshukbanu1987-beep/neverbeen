@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -26,15 +27,8 @@ import {
   LiveChatPlanFeature,
   LiveChatPlanDefinition,
 } from './chat-types';
-import {
-  NEVERBEEN_UPI_ID,
-  PREMIUM_PAYMENT_GATEWAY_NOTE,
-  UPI_APPS,
-  UpiApp,
-  isValidUpiTransactionId,
-  premiumPriceLabel,
-  verifyPremiumTransaction,
-} from './premium-payment';
+import { PREMIUM_PAYMENT_NOTE, UPI_APPS, UpiApp, premiumPriceLabel } from './premium-payment';
+import { UpiAppLauncher } from './upi-app-launcher';
 
 type AccessStage = 'plans' | 'sign-in' | 'member-check' | 'payment';
 
@@ -46,8 +40,9 @@ const PLAN_ORDER: readonly LiveChatPlan[] = ['free', 'registered', 'premium'];
 /**
  * The deliberate access step placed in front of every Live Chat. It presents the three
  * entitlements — Free Chat, Registered User and the paid Premium plan — then passes Free Chat to
- * the existing identity form, or verifies a Community member and, for a Premium chat with a
- * priced model, verifies the UPI payment before the chat opens.
+ * the existing identity form, or checks a Community member and, for a priced Premium chat,
+ * opens their chosen UPI app. Payment verification is temporarily disabled by the owner:
+ * returning from that app opens the chat without claiming payment was successful.
  */
 @Component({
   selector: 'app-live-chat-access',
@@ -95,19 +90,26 @@ export class LiveChatAccess {
   /** Incremented as the member sign-in form opens, so its album backdrop is newly randomised. */
   private readonly signInPhotoSelection = signal(0);
 
-  /** The Premium payment step: chosen UPI app, its transaction reference and the verification. */
+  /** Temporary app handoff only: none of these states assert that a payment was received. */
   protected readonly upiApps = UPI_APPS;
-  protected readonly upiId = NEVERBEEN_UPI_ID;
-  protected readonly gatewayNote = PREMIUM_PAYMENT_GATEWAY_NOTE;
+  protected readonly paymentNote = PREMIUM_PAYMENT_NOTE;
   protected readonly paymentMethod = signal<UpiApp>('gpay');
-  protected readonly transactionId = signal('');
-  protected readonly paymentState = signal<'idle' | 'verifying' | 'verified' | 'error'>('idle');
+  protected readonly paymentState = signal<'idle' | 'opening' | 'continuing' | 'error'>('idle');
+  protected readonly paymentBusy = computed(
+    () => this.paymentState() === 'opening' || this.paymentState() === 'continuing',
+  );
+  protected readonly paymentAppName = computed(
+    () => UPI_APPS.find((app) => app.id === this.paymentMethod())!.label,
+  );
   protected readonly paymentError = signal('');
 
   private readonly community = inject(CommunityService);
+  private readonly upiLauncher = inject(UpiAppLauncher);
+  private activePayment: AbortController | null = null;
   private resumeHandled = false;
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.stopPaymentHandoff());
     // The Google callback and Community registration return to this same component. Once the
     // member session is available, take them straight to the requested profile review rather than
     // making them choose the plan a second time.
@@ -236,8 +238,7 @@ export class LiveChatAccess {
         this.premiumStarted.emit(identity);
         return;
       }
-      this.paymentState.set('idle');
-      this.paymentError.set('');
+      this.resetPayment();
       this.stage.set('payment');
       return;
     }
@@ -249,61 +250,92 @@ export class LiveChatAccess {
   }
 
   protected backToReview(): void {
-    this.paymentError.set('');
-    this.paymentState.set('idle');
+    this.resetPayment();
     this.stage.set('member-check');
   }
 
-  protected selectUpiApp(method: UpiApp): void {
-    this.paymentMethod.set(method);
+  protected close(): void {
+    this.resetPayment();
+    this.closed.emit();
   }
 
-  protected onTransactionId(event: Event): void {
-    this.transactionId.set((event.target as HTMLInputElement).value.slice(0, 40));
+  protected selectUpiApp(method: UpiApp): void {
+    if (this.paymentBusy()) return;
+    this.paymentMethod.set(method);
+    this.resetPayment();
   }
 
   /**
-   * Verifies the UPI transaction the member paid with. Only a verified payment opens the Premium
-   * chat; the Razorpay gateway replaces this check later without changing the screen.
+   * The owner explicitly opted out of payment verification for now. A return from the app opens
+   * the chat automatically, even if payment was cancelled there. Do not label this as verified or
+   * use this return signal as evidence of payment when a merchant gateway is added later.
    */
-  protected verifyPayment(): void {
-    if (this.paymentState() === 'verifying') return;
-    const amount = this.premiumPrice();
-    const reference = this.transactionId().trim();
-    if (!isValidUpiTransactionId(reference)) {
-      this.paymentState.set('error');
-      this.paymentError.set(
-        'Enter the UPI transaction reference (6–32 letters and digits) shown in your payment app.',
+  protected payAndChat(): void {
+    if (this.stage() !== 'payment' || this.paymentBusy()) return;
+    if (!this.canStartRegistered()) {
+      this.failPayment(
+        'Your Community session has changed. Go back to chat details and sign in again.',
       );
       return;
     }
-    this.paymentState.set('verifying');
+    const amount = this.premiumPrice();
+    if (this.selected() !== 'premium' || amount === null) return;
+    const modelSlug = this.model().slug;
+    const memberId = this.community.currentUser()?.id;
+    const controller = new AbortController();
+    this.activePayment = controller;
+    this.paymentState.set('opening');
     this.paymentError.set('');
-    void verifyPremiumTransaction({
-      modelSlug: this.model().slug,
-      amount: amount ?? 0,
-      method: this.paymentMethod(),
-      transactionId: reference,
-    })
+
+    void this.upiLauncher
+      .open({ modelSlug, amount, method: this.paymentMethod() }, controller.signal)
       .then(() => {
-        this.paymentState.set('verified');
+        if (this.activePayment !== controller || controller.signal.aborted) return;
+        this.activePayment = null;
+        if (
+          this.stage() !== 'payment' ||
+          this.model().slug !== modelSlug ||
+          this.community.currentUser()?.id !== memberId ||
+          !this.canStartRegistered()
+        ) {
+          this.failPayment(
+            'Your chat details or Community session changed. Review them before trying again.',
+          );
+          return;
+        }
+        this.paymentState.set('continuing');
+        this.premiumStarted.emit({ name: this.memberName(), avatar: this.memberPhoto() });
       })
       .catch((error: unknown) => {
-        this.paymentState.set('error');
-        this.paymentError.set(
-          error instanceof Error ? error.message : 'That payment could not be verified. Try again.',
+        if (this.activePayment !== controller || controller.signal.aborted) return;
+        this.activePayment = null;
+        this.failPayment(
+          error instanceof Error
+            ? error.message
+            : 'The payment app could not be opened. Try again.',
         );
       });
   }
 
-  /** The chat opens only after a verified payment. */
-  protected startPremiumChat(): void {
-    if (this.paymentState() !== 'verified') {
-      this.verifyPayment();
-      return;
-    }
-    if (!this.canStartRegistered()) return;
-    this.premiumStarted.emit({ name: this.memberName(), avatar: this.memberPhoto() });
+  protected cancelPayment(): void {
+    this.stopPaymentHandoff();
+    this.failPayment('The payment app handoff was cancelled. Try again when you are ready.');
+  }
+
+  private failPayment(message: string): void {
+    this.paymentState.set('error');
+    this.paymentError.set(message);
+  }
+
+  private stopPaymentHandoff(): void {
+    this.activePayment?.abort();
+    this.activePayment = null;
+  }
+
+  private resetPayment(): void {
+    this.stopPaymentHandoff();
+    this.paymentState.set('idle');
+    this.paymentError.set('');
   }
 
   private openSignIn(): void {

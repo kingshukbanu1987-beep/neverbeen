@@ -163,6 +163,14 @@ by an upload is renamed in place.
 
 ### Chatting with a model
 
+**Premium checkout:** members choose Google Pay or PhonePe and click **Pay & Chat**. There is no
+UTR field, and the page shows the NeverBeen name rather than the receiver UPI ID. Payment
+verification is temporarily disabled at the owner's request: returning from the app automatically
+opens Live Chat, including after an in-app cancellation. App-launch failures stay on the payment
+page with **Payment Failed / Try again**. See
+[`docs/premium-live-chat-payment.md`](docs/premium-live-chat-payment.md) for the device links,
+limitations, tests and the merchant verification needed before enforcing paid access.
+
 A green **Live Chat** button (white text, `#74C476`) stands **directly under the model's name** in
 every model profile — a quiet pill, 1.7× smaller than the two-and-a-half-times button of the first
 brief, with a slow breathing glow, a band of light crossing it every few seconds and a small lift on

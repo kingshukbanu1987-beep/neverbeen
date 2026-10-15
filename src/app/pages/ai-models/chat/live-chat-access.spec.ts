@@ -6,6 +6,8 @@ import { CommunityService } from '../../../services/community.service';
 import { aiModelProfiles } from '../ai-model-data';
 import { LiveChatAccess } from './live-chat-access';
 import { allowsLiveChatPlan, requiresRegisteredChat } from './live-chat-policy';
+import { PremiumPaymentRequest } from './premium-payment';
+import { UpiAppLauncher } from './upi-app-launcher';
 
 const exclusiveSlugs = [
   'rozalin-el-masry',
@@ -25,6 +27,10 @@ const premiumPrices: Readonly<Record<string, number>> = {
   'fatima-sana-hussaini': 109,
 };
 
+const upiLauncher = {
+  open: vi.fn<(request: PremiumPaymentRequest, signal: AbortSignal) => Promise<void>>(),
+};
+
 const community = {
   currentUser: signal<unknown>(null),
   isAuthenticated: signal(false),
@@ -33,7 +39,12 @@ const community = {
 };
 
 function signInAsMember(): void {
-  community.currentUser.set({ profileComplete: true, status: 'Active', fullName: 'Test Member' });
+  community.currentUser.set({
+    id: 42,
+    profileComplete: true,
+    status: 'Active',
+    fullName: 'Test Member',
+  });
   community.isAuthenticated.set(true);
   community.profile.set({ fullName: 'Test Member', profilePhotoUrl: '/member.jpg' });
 }
@@ -53,6 +64,32 @@ function chooser(slug: string) {
   fixture.detectChanges();
   const element = fixture.nativeElement as HTMLElement;
   return { fixture, element, model, started, registered, premium };
+}
+
+function paymentPage(slug = 'nourhan-durrani') {
+  signInAsMember();
+  const result = chooser(slug);
+  result.element.querySelector<HTMLButtonElement>('.plan-start-premium')!.click();
+  result.fixture.detectChanges();
+  result.element.querySelector<HTMLButtonElement>('.review-start')!.click();
+  result.fixture.detectChanges();
+  return result;
+}
+
+function appHandoff() {
+  let returned!: () => void;
+  let failed!: (error: Error) => void;
+  const pending = new Promise<void>((resolve, reject) => {
+    returned = resolve;
+    failed = reject;
+  });
+  upiLauncher.open.mockReturnValue(pending);
+  return { returned, failed };
+}
+
+async function flushHandoff() {
+  await Promise.resolve();
+  await Promise.resolve();
 }
 
 function card(element: HTMLElement, plan: 'free' | 'registered' | 'premium'): HTMLElement {
@@ -83,7 +120,11 @@ describe('the three Live Chat plan blocks', () => {
     community.profile.set(null);
     await TestBed.configureTestingModule({
       imports: [LiveChatAccess],
-      providers: [provideRouter([]), { provide: CommunityService, useValue: community }],
+      providers: [
+        provideRouter([]),
+        { provide: CommunityService, useValue: community },
+        { provide: UpiAppLauncher, useValue: upiLauncher },
+      ],
     }).compileComponents();
   });
 
@@ -182,7 +223,11 @@ describe('exclusive model access', () => {
     community.profile.set(null);
     await TestBed.configureTestingModule({
       imports: [LiveChatAccess],
-      providers: [provideRouter([]), { provide: CommunityService, useValue: community }],
+      providers: [
+        provideRouter([]),
+        { provide: CommunityService, useValue: community },
+        { provide: UpiAppLauncher, useValue: upiLauncher },
+      ],
     }).compileComponents();
   });
 
@@ -253,7 +298,11 @@ describe('premium model access and UPI payment', () => {
     community.profile.set(null);
     await TestBed.configureTestingModule({
       imports: [LiveChatAccess],
-      providers: [provideRouter([]), { provide: CommunityService, useValue: community }],
+      providers: [
+        provideRouter([]),
+        { provide: CommunityService, useValue: community },
+        { provide: UpiAppLauncher, useValue: upiLauncher },
+      ],
     }).compileComponents();
   });
 
@@ -292,68 +341,190 @@ describe('premium model access and UPI payment', () => {
     fixture.destroy();
   });
 
-  it('verifies the UPI payment, then — and only then — starts the Premium chat', async () => {
-    vi.useFakeTimers();
-    try {
-      signInAsMember();
-      const { fixture, element, premium } = chooser('fiadh-dara');
-      expect(element.querySelector('.plan-price-value')?.textContent?.trim()).toBe('₹129');
-
-      element.querySelector<HTMLButtonElement>('.plan-start-premium')!.click();
-      fixture.detectChanges();
-      expect(element.querySelector('.access-review')).not.toBeNull();
-      expect(element.querySelector('.review-price')?.textContent).toContain('₹129');
-
-      element.querySelector<HTMLButtonElement>('.review-start')!.click();
-      fixture.detectChanges();
-      const payment = element.querySelector('.access-payment')!;
-      expect(payment).not.toBeNull();
-      expect(payment.querySelector('.payment-price-value')?.textContent?.trim()).toBe('₹129');
-      expect(payment.querySelectorAll('.payment-method').length).toBe(2);
-      expect(payment.textContent).toContain('neverbeen@upi');
-      expect(payment.textContent?.toLowerCase()).toContain('razorpay');
-
-      // Pay with PhonePe, then paste the UPI transaction reference from the payment app.
-      payment.querySelectorAll<HTMLButtonElement>('.payment-method')[1].click();
-      const input = payment.querySelector<HTMLInputElement>('.payment-field input')!;
-      input.value = '415902783146';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-
-      const verify = element.querySelector<HTMLButtonElement>('.access-payment .review-start')!;
-      verify.click();
-      fixture.detectChanges();
-      expect(verify.textContent).toContain('Verifying');
-      expect(premium).not.toHaveBeenCalled();
-
-      await vi.advanceTimersByTimeAsync(1_300);
-      fixture.detectChanges();
-      expect(element.querySelector('.payment-verified')?.textContent).toContain('Payment verified');
-      const start = element.querySelector<HTMLButtonElement>('.access-payment .review-start')!;
-      start.click();
-      expect(premium).toHaveBeenCalledWith({ name: 'Test Member', avatar: '/member.jpg' });
-      fixture.destroy();
-    } finally {
-      vi.useRealTimers();
-    }
+  it('shows only the app choices and Pay & Chat, with NeverBeen instead of receiver IDs', () => {
+    const { fixture, element, premium } = paymentPage();
+    const payment = element.querySelector('.access-payment')!;
+    expect(payment.querySelector('.payment-price-value')?.textContent?.trim()).toBe('₹119');
+    expect(payment.querySelectorAll('.payment-method').length).toBe(2);
+    expect(
+      payment.querySelector('.payment-summary')?.textContent?.replace(/\s+/g, ' ').trim(),
+    ).toBe('Pay ₹119 to NeverBeen with Google Pay or PhonePe.');
+    expect(payment.querySelector('.review-start')?.textContent).toContain('Pay & Chat');
+    expect(payment.querySelector('input')).toBeNull();
+    expect(payment.textContent).not.toMatch(/@|UTR|transaction reference|Verify payment|Razorpay/i);
+    expect(payment.textContent).toContain('verification is temporarily disabled');
+    expect(premium).not.toHaveBeenCalled();
+    fixture.destroy();
   });
 
-  it('refuses a malformed transaction reference before any verification round trip', () => {
-    signInAsMember();
-    const { fixture, element, premium } = chooser('fiadh-dara');
-    element.querySelector<HTMLButtonElement>('.plan-start-premium')!.click();
+  it.each(['gpay', 'phonepe'] as const)(
+    'opens %s with the model’s amount, then automatically starts chat on return (unverified)',
+    async (method) => {
+      const handoff = appHandoff();
+      const { fixture, element, premium } = paymentPage();
+      element
+        .querySelectorAll<HTMLButtonElement>('.payment-method')
+        [method === 'gpay' ? 0 : 1].click();
+      fixture.detectChanges();
+      const pay = element.querySelector<HTMLButtonElement>('.access-payment .review-start')!;
+      pay.click();
+      fixture.detectChanges();
+      expect(upiLauncher.open).toHaveBeenCalledWith(
+        { modelSlug: 'nourhan-durrani', amount: 119, method },
+        expect.any(AbortSignal),
+      );
+      expect(pay.disabled).toBe(true);
+      expect(pay.textContent).toContain(method === 'gpay' ? 'Google Pay' : 'PhonePe');
+      expect(premium).not.toHaveBeenCalled();
+      // A second click or switching apps while opening cannot create a duplicate handoff.
+      pay.click();
+      element.querySelectorAll<HTMLButtonElement>('.payment-method')[1].click();
+      expect(upiLauncher.open).toHaveBeenCalledOnce();
+
+      handoff.returned();
+      await flushHandoff();
+      fixture.detectChanges();
+      // No UTR or second "Start chat" click. Returning is deliberately NOT bank verification.
+      expect(premium).toHaveBeenCalledExactlyOnceWith({
+        name: 'Test Member',
+        avatar: '/member.jpg',
+      });
+      expect(element.querySelector('.payment-verified')).toBeNull();
+      expect(element.textContent).not.toContain('Payment verified');
+      pay.click();
+      expect(premium).toHaveBeenCalledOnce();
+      fixture.destroy();
+    },
+  );
+
+  it('keeps a failed launch on the same page with Payment Failed and a working Try again', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    handoff.failed(new Error('We couldn’t open Google Pay. Make sure the app is installed.'));
+    await flushHandoff();
     fixture.detectChanges();
-    element.querySelector<HTMLButtonElement>('.review-start')!.click();
+    expect(element.querySelector('.access-payment')).not.toBeNull();
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain('Payment Failed');
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+      'Make sure the app is installed',
+    );
+    const retry = element.querySelector<HTMLButtonElement>('.access-payment .review-start')!;
+    expect(retry.disabled).toBe(false);
+    expect(retry.textContent).toContain('Try again');
+    expect(premium).not.toHaveBeenCalled();
+
+    const retryHandoff = appHandoff();
+    retry.click();
     fixture.detectChanges();
-    const input = element.querySelector<HTMLInputElement>('.payment-field input')!;
-    input.value = 'oops';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(upiLauncher.open).toHaveBeenCalledTimes(2);
+    expect(element.querySelector('[role="alert"]')).toBeNull();
+    retryHandoff.returned();
+    await flushHandoff();
+    expect(premium).toHaveBeenCalledOnce();
+    fixture.destroy();
+  });
+
+  it('can cancel the handoff on this page and ignores a late return', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
     element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
     fixture.detectChanges();
-    expect(element.querySelector('.flow-error')?.textContent).toContain(
-      'UPI transaction reference',
+    const signal = upiLauncher.open.mock.calls[0][1];
+    element.querySelector<HTMLButtonElement>('.payment-cancel')!.click();
+    fixture.detectChanges();
+    expect(signal.aborted).toBe(true);
+    expect(element.querySelector('.payment-error')?.textContent).toContain('Payment Failed');
+    expect(element.querySelector('.access-payment .review-start')?.textContent).toContain(
+      'Try again',
     );
-    expect(element.querySelector('.payment-verified')).toBeNull();
+    handoff.returned();
+    await flushHandoff();
     expect(premium).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it.each(['back', 'close', 'destroy'] as const)(
+    'aborts a pending handoff on %s, without starting a hidden chat later',
+    async (action) => {
+      const handoff = appHandoff();
+      const { fixture, element, premium } = paymentPage();
+      element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+      const signal = upiLauncher.open.mock.calls[0][1];
+      if (action === 'back')
+        element.querySelector<HTMLButtonElement>('.access-payment .flow-back')!.click();
+      if (action === 'close') element.querySelector<HTMLButtonElement>('.access-close')!.click();
+      if (action === 'destroy') fixture.destroy();
+      expect(signal.aborted).toBe(true);
+      handoff.returned();
+      await flushHandoff();
+      expect(premium).not.toHaveBeenCalled();
+      if (action !== 'destroy') fixture.destroy();
+    },
+  );
+
+  it('does not apply a returning handoff to a different model', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    fixture.componentRef.setInput(
+      'model',
+      aiModelProfiles.find((model) => model.slug === 'fiadh-dara')!,
+    );
+    fixture.detectChanges();
+    handoff.returned();
+    await flushHandoff();
+    fixture.detectChanges();
+    expect(premium).not.toHaveBeenCalled();
+    expect(element.querySelector('.payment-error')?.textContent).toContain('chat details');
+    fixture.destroy();
+  });
+
+  it('requires the same active Community member when returning from the payment app', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    community.isAuthenticated.set(false);
+    handoff.returned();
+    await flushHandoff();
+    fixture.detectChanges();
+    expect(premium).not.toHaveBeenCalled();
+    expect(element.querySelector('.payment-error')?.textContent).toContain('Community session');
+    fixture.destroy();
+  });
+
+  it('keeps automatic continuation working when the same member’s presence data refreshes', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    community.currentUser.set({
+      id: 42,
+      profileComplete: true,
+      status: 'Active',
+      fullName: 'Test Member',
+      lastSeenUtc: new Date().toISOString(),
+    });
+    handoff.returned();
+    await flushHandoff();
+    expect(premium).toHaveBeenCalledOnce();
+    fixture.destroy();
+  });
+
+  it('does not give a different member access from the previous member’s handoff', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    community.currentUser.set({
+      id: 99,
+      profileComplete: true,
+      status: 'Active',
+      fullName: 'Other Member',
+    });
+    handoff.returned();
+    await flushHandoff();
+    fixture.detectChanges();
+    expect(premium).not.toHaveBeenCalled();
+    expect(element.querySelector('.payment-error')?.textContent).toContain('Community session');
     fixture.destroy();
   });
 
@@ -399,7 +570,11 @@ describe('blue tick beside Exclusive and Premium model names', () => {
     community.profile.set(null);
     await TestBed.configureTestingModule({
       imports: [LiveChatAccess],
-      providers: [provideRouter([]), { provide: CommunityService, useValue: community }],
+      providers: [
+        provideRouter([]),
+        { provide: CommunityService, useValue: community },
+        { provide: UpiAppLauncher, useValue: upiLauncher },
+      ],
     }).compileComponents();
   });
 
@@ -450,7 +625,11 @@ describe('availability follows the model in front of the chooser', () => {
     community.profile.set(null);
     await TestBed.configureTestingModule({
       imports: [LiveChatAccess],
-      providers: [provideRouter([]), { provide: CommunityService, useValue: community }],
+      providers: [
+        provideRouter([]),
+        { provide: CommunityService, useValue: community },
+        { provide: UpiAppLauncher, useValue: upiLauncher },
+      ],
     }).compileComponents();
   });
 
@@ -504,6 +683,7 @@ describe('availability follows the model in front of the chooser', () => {
 });
 
 afterEach(() => {
+  upiLauncher.open.mockReset();
   community.currentUser.set(null);
   community.isAuthenticated.set(false);
   community.guestBrowsing.set(false);
