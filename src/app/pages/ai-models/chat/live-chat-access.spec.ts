@@ -367,10 +367,28 @@ describe('premium model access and UPI payment', () => {
     const { fixture, element, premium } = paymentPage(); // Nourhan Durrani: ₹119
 
     // The coverage block sits after the package selection, with None selected by default.
+    expect(
+      Array.from(element.querySelectorAll('.access-payment .package-heading h3')).map((heading) =>
+        heading.textContent?.trim(),
+      ),
+    ).toContain('Premium Content Coverage');
     const coverages = element.querySelectorAll<HTMLButtonElement>('.payment-coverage');
     expect(coverages.length).toBe(2);
-    expect(coverages[0].textContent).toContain('None');
-    expect(coverages[1].textContent).toContain('Premium Content Coverage');
+    expect(
+      Array.from(coverages).map((coverage) =>
+        coverage.querySelector('.package-top b')?.textContent?.trim(),
+      ),
+    ).toEqual(['None', 'Access Premium Content']);
+    // Each option shows only its price — no 'base price + ₹51' or 'no extra cost' caption — and
+    // no taxation note follows the block.
+    expect(coverages[0].querySelector('.package-price small')).toBeNull();
+    expect(coverages[1].querySelector('.package-price small')).toBeNull();
+    expect(coverages[0].textContent).not.toContain('no extra cost');
+    expect(coverages[1].textContent).not.toContain('base price + ₹51');
+    expect(element.querySelector('.coverage-note')).toBeNull();
+    expect(element.querySelector('.access-payment')?.textContent).not.toContain(
+      'is taxable under the same',
+    );
     expect(coverages[0].getAttribute('aria-checked')).toBe('true');
     expect(coverages[1].getAttribute('aria-checked')).toBe('false');
     // Her coverage price card: the Base Price + ₹51.

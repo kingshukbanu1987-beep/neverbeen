@@ -217,9 +217,9 @@ underneath. In the `/ai-models` directory every Premium-plan model wears a
 lettered in champagne gold, the brand word in white with the tier in brushed-gold capitals and a
 slow sheen of light crossing it. The premium
 checkout adds a **Premium Content Coverage** block after the package choice — **None** selected by
-default — whose coverage costs the model's Base Price + ₹51, joins the package subtotal before the
-Service tax · 5%, SGST · 9% and CGST · 9% are calculated, and appears as its own line in the price
-breakdown.
+default — whose **Access Premium Content** option costs the model's Base Price + ₹51, joins the
+package subtotal before the Service tax · 5%, SGST · 9% and CGST · 9% are calculated, and appears as
+its own line in the price breakdown.
 
 **Nothing is answered before it has been read.** Every message — the words, a photograph, a document —
 goes through a reading first: her own engine repairs what people actually type (stretched letters,

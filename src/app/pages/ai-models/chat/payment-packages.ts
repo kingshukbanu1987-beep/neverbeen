@@ -61,7 +61,7 @@ export const PREMIUM_CONTENT_COVERAGES = [
   },
   {
     id: 'coverage',
-    label: 'Premium Content Coverage',
+    label: 'Access Premium Content',
     hint: 'Unlock her exclusive Premium Content frames in this chat',
   },
 ] as const;

@@ -1863,7 +1863,7 @@
 }
 
 .payment-coverage.coverage-full .package-top > b {
-  color: #cc17b1;
+  color: #000;
 }
 
 .payment-coverage .package-top i {
@@ -1893,23 +1893,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-.payment-coverage .package-price small {
-  color: #758095;
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.025em;
-}
-
 .payment-coverage:disabled {
   opacity: 0.65;
   cursor: wait;
-}
-
-.coverage-note {
-  margin: 10px 0 0;
-  color: #737d91;
-  font-size: 0.66rem;
-  line-height: 1.55;
 }
 
 /* The coverage's own line in the price ledger, between the duration upgrade and the subtotal. */
