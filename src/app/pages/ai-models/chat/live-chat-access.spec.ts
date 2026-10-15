@@ -378,6 +378,8 @@ describe('premium model access and UPI payment', () => {
     expect(element.querySelector('.coupon-panel-heading p')?.textContent?.trim()).toBe(
       'Discount applies to your package subtotal.',
     );
+    expect(element.querySelector('.coupon-input-wrap > span')).toBeNull();
+    expect(element.querySelector('.coupon-input-wrap')?.textContent).not.toContain('#');
     expect(element.querySelector('.coupon-panel-icon')).toBeNull();
     expect(element.querySelector('.coupon-hint')).toBeNull();
     expect(element.querySelector('#premium-coupon-code')?.getAttribute('aria-describedby')).toBeNull();

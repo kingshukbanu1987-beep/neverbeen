@@ -2157,9 +2157,7 @@
 }
 
 .access-payment .coupon-panel-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  display: block;
   margin-bottom: 0.9rem;
 }
 
@@ -2172,6 +2170,7 @@
 }
 
 .access-payment .coupon-panel-heading p {
+  text-align: center;
   margin: 0.16rem 0 0;
   color: #737d91;
   font-size: 0.7rem;
@@ -2201,19 +2200,6 @@
 .access-payment .coupon-input-wrap:focus-within {
   border-color: #8067df;
   box-shadow: 0 0 0 3px rgb(109 74 224 / 12%);
-}
-
-.access-payment .coupon-input-wrap > span {
-  display: grid;
-  width: 24px;
-  height: 24px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 8px;
-  background: #f5f2ff;
-  color: #7155d0;
-  font-size: 0.88rem;
-  font-weight: 800;
 }
 
 .access-payment .coupon-input {
