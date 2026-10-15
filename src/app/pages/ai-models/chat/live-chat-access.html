@@ -1,4 +1,9 @@
-<div class="access-backdrop" [class.is-payment]="stage() === 'payment'" (click)="close()">
+<div
+  #accessBackdrop
+  class="access-backdrop"
+  [class.is-payment]="stage() === 'payment'"
+  (click)="close()"
+>
   <section
     class="access-shell"
     [class.is-sign-in]="stage() === 'sign-in'"
@@ -378,161 +383,364 @@
         </div>
       </div>
     } @else if (stage() === 'payment') {
-      <div class="access-flow access-payment">
-        <button type="button" class="flow-back" (click)="backToReview()">
-          <span aria-hidden="true">←</span> Back to chat details
-        </button>
-        <span class="access-kicker"><i aria-hidden="true"></i> Premium · UPI payment</span>
-        <h2 id="live-chat-access-title">Complete your payment to begin.</h2>
-        <p class="flow-lede">
-          Complete your payment in your chosen app, then return here to open your Premium Live Chat
-          with <b>{{ model().name }}</b
-          ><app-model-verified-tick [slug]="model().slug" />.
-        </p>
-
-        <div class="payment-price-card">
-          <span class="payment-price-label">Your private session · {{ model().name }}</span>
-          <span class="payment-price-value">{{ durationMinutes() }} <small>minutes</small></span>
-          <span class="payment-price-meta"
-            >Premium Live Chat · photo &amp; video sharing · ultimate memory</span
-          >
-        </div>
-
-        <div class="package-heading">
-          <h3>Make time for connection</h3>
-          <span>Choose your duration</span>
-        </div>
-        <div class="payment-packages" role="radiogroup" aria-label="Chat duration package">
-          @for (package of paymentPackages; track package.id) {
-            <button
-              type="button"
-              class="payment-package"
-              role="radio"
-              [class.is-selected]="selectedPackage() === package.id"
-              [attr.aria-checked]="selectedPackage() === package.id"
-              [disabled]="paymentBusy()"
-              (click)="selectPackage(package.id)"
-            >
-              <span class="package-top"
-                ><b>{{ package.label }}</b
-                ><i aria-hidden="true">{{ selectedPackage() === package.id ? '●' : '○' }}</i></span
-              >
-              <span class="package-duration"
-                >{{ packageDuration(package.id) }} <small>min</small></span
-              >
-              <span class="package-tagline">{{ package.tagline }}</span>
-              <span class="package-price"
-                >{{
-                  package.extraMinutes
-                    ? '+' + money(packageExtra(package.id))
-                    : money(premiumPrice() ?? 0)
-                }}
-                <small>{{ package.extraMinutes ? 'upgrade' : 'base price' }}</small></span
-              >
-              <span class="package-extra">{{
-                package.extraMinutes
-                  ? '+' + package.extraMinutes + ' extra minutes'
-                  : 'Selected by default · 15 minutes'
-              }}</span>
-            </button>
-          }
-        </div>
-
-        <div class="payment-breakdown" aria-live="polite" aria-label="Payment breakdown">
-          <div>
-            <span>Basic package · 15 minutes</span><b>{{ money(breakdown().base) }}</b>
-          </div>
-          <div>
-            <span>Duration upgrade · +{{ durationMinutes() - 15 }} minutes</span
-            ><b>{{ money(breakdown().upgrade) }}</b>
-          </div>
-          <div>
-            <span>Subtotal</span><b>{{ money(breakdown().subtotal) }}</b>
-          </div>
-          <div>
-            <span>Service tax · 5%</span><b>{{ money(breakdown().tax) }}</b>
-          </div>
-          <div class="payment-total">
-            <span>Total payable <small>INR · all taxes included</small></span
-            ><b>{{ money(breakdown().total) }}</b>
-          </div>
-        </div>
-
-        <div class="package-heading">
-          <h3>Payment method</h3>
-          <span>Choose your UPI app</span>
-        </div>
-        <div class="payment-methods" role="radiogroup" aria-label="UPI payment app">
-          @for (app of upiApps; track app.id) {
-            <button
-              type="button"
-              class="payment-method"
-              [class.is-selected]="paymentMethod() === app.id"
-              [attr.aria-checked]="paymentMethod() === app.id"
-              role="radio"
-              [disabled]="paymentBusy()"
-              (click)="selectUpiApp(app.id)"
-            >
-              <span class="payment-method-mark" aria-hidden="true"
-                ><img
-                  [src]="
-                    app.id === 'gpay'
-                      ? '/payment-icons/google-pay.svg'
-                      : '/payment-icons/phonepe.svg'
-                  "
-                  alt=""
-              /></span>
-              <span class="payment-method-copy">
-                <b>{{ app.label }}</b>
-                <small>{{ app.hint }}</small>
-              </span>
-              <span class="payment-method-choice" aria-hidden="true"></span>
-            </button>
-          }
-        </div>
-
-        <p class="payment-summary">
-          Pay <b>{{ money(breakdown().total) }}</b> to <b>NeverBeen</b> with Google Pay or PhonePe.
-        </p>
-
-        @if (paymentState() === 'error') {
-          <div class="flow-error payment-error" role="alert">
-            <b>Payment Failed</b>
-            <span>{{ paymentError() }}</span>
+      <div class="access-flow access-payment" [class.is-desktop]="desktopPayment">
+        <!-- Ultra-modern white checkout over one of the model's own album photographs: the photo is
+             layered at 90% opacity and pinned behind the page while the checkout scrolls. On wide
+             screens a soft wash of the same photo continues behind the sheet. -->
+        @if (paymentBackdrop()) {
+          <div class="payment-photo-layer" aria-hidden="true">
+            <img class="payment-photo-wash" [src]="paymentBackdrop()" alt="" />
+            <img class="payment-model-photo" [src]="paymentBackdrop()" alt="" />
           </div>
         }
 
-        @if (paymentState() === 'opening') {
-          <p class="payment-status" role="status">
-            Complete your payment in {{ paymentAppName() }}, then return to this page. Your Live
-            Chat will open automatically.
-          </p>
-        }
-
-        <button
-          type="button"
-          class="review-start"
-          [disabled]="paymentBusy()"
-          (click)="payAndChat()"
-        >
-          <span class="review-start-dot" aria-hidden="true"></span>
-          @if (paymentState() === 'opening') {
-            Opening {{ paymentAppName() }}…
-          } @else if (paymentState() === 'continuing') {
-            Opening Live Chat…
-          } @else if (paymentState() === 'error') {
-            Try again
-          } @else {
-            Pay {{ money(breakdown().total) }} &amp; Chat
-          }
-          <i aria-hidden="true">→</i>
-        </button>
-        @if (paymentState() === 'opening') {
-          <button type="button" class="payment-cancel" (click)="cancelPayment()">
-            Cancel payment
+        <div class="payment-sheet">
+          <button type="button" class="flow-back" (click)="backToReview()">
+            <span aria-hidden="true">←</span> Back to chat details
           </button>
-        }
-        <p class="plan-footnote">{{ paymentNote }}</p>
+          <span class="access-kicker"><i aria-hidden="true"></i> Premium · UPI payment</span>
+          <h2 id="live-chat-access-title">Complete your payment to begin.</h2>
+          <p class="flow-lede">
+            @if (desktopPayment) {
+              Choose Google Pay or PhonePe, enter your UPI ID and scan the payment QR code with your
+              phone or tablet. Your Premium Live Chat with <b>{{ model().name }}</b
+              ><app-model-verified-tick [slug]="model().slug" /> opens
+              {{ chatStartSeconds }} seconds later.
+            } @else {
+              Complete your payment in your chosen app, then return here to open your Premium Live
+              Chat with <b>{{ model().name }}</b
+              ><app-model-verified-tick [slug]="model().slug" />.
+            }
+          </p>
+
+          <div class="payment-price-card">
+            <span class="payment-price-label">Your private session · {{ model().name }}</span>
+            <span class="payment-price-value">{{ durationMinutes() }} <small>minutes</small></span>
+            <span class="payment-price-meta"
+              >Premium Live Chat · photo &amp; video sharing · ultimate memory</span
+            >
+          </div>
+
+          <div class="package-heading">
+            <h3>Make time for connection</h3>
+            <span>Choose your duration</span>
+          </div>
+          <div class="payment-packages" role="radiogroup" aria-label="Chat duration package">
+            @for (package of paymentPackages; track package.id) {
+              <button
+                type="button"
+                class="payment-package"
+                role="radio"
+                [class.is-selected]="selectedPackage() === package.id"
+                [attr.aria-checked]="selectedPackage() === package.id"
+                [disabled]="paymentBusy()"
+                (click)="selectPackage(package.id)"
+              >
+                <span class="package-top"
+                  ><b>{{ package.label }}</b
+                  ><i aria-hidden="true">{{
+                    selectedPackage() === package.id ? '●' : '○'
+                  }}</i></span
+                >
+                <span class="package-duration"
+                  >{{ packageDuration(package.id) }} <small>min</small></span
+                >
+                <span class="package-tagline">{{ package.tagline }}</span>
+                <span class="package-price"
+                  >{{
+                    package.extraMinutes
+                      ? '+' + money(packageExtra(package.id))
+                      : money(premiumPrice() ?? 0)
+                  }}
+                  <small>{{ package.extraMinutes ? 'upgrade' : 'base price' }}</small></span
+                >
+                <span class="package-extra">{{
+                  package.extraMinutes
+                    ? '+' + package.extraMinutes + ' extra minutes'
+                    : 'Selected by default · 15 minutes'
+                }}</span>
+              </button>
+            }
+          </div>
+
+          <div class="payment-breakdown" aria-live="polite" aria-label="Payment breakdown">
+            <div>
+              <span>Basic package · 15 minutes</span><b>{{ money(breakdown().base) }}</b>
+            </div>
+            <div>
+              <span>Duration upgrade · +{{ durationMinutes() - 15 }} minutes</span
+              ><b>{{ money(breakdown().upgrade) }}</b>
+            </div>
+            <div>
+              <span>Subtotal</span><b>{{ money(breakdown().subtotal) }}</b>
+            </div>
+            <div>
+              <span>Service tax · 5%</span><b>{{ money(breakdown().tax) }}</b>
+            </div>
+            <div class="payment-total">
+              <span>Total payable <small>INR · all taxes included</small></span
+              ><b>{{ money(breakdown().total) }}</b>
+            </div>
+          </div>
+
+          <div class="package-heading">
+            <h3>Payment method</h3>
+            <span>{{
+              desktopPayment ? 'Choose the UPI app on your phone' : 'Choose your UPI app'
+            }}</span>
+          </div>
+          <div
+            class="payment-methods"
+            role="radiogroup"
+            aria-label="UPI payment app"
+            [attr.aria-describedby]="paymentMethodError() ? 'payment-method-error' : null"
+          >
+            @for (app of upiApps; track app.id) {
+              <button
+                type="button"
+                class="payment-method"
+                [class.is-selected]="paymentMethod() === app.id"
+                [attr.aria-checked]="paymentMethod() === app.id"
+                role="radio"
+                [disabled]="paymentBusy()"
+                (click)="selectUpiApp(app.id)"
+              >
+                <span class="payment-method-mark" aria-hidden="true"
+                  ><img [src]="app.icon" alt=""
+                /></span>
+                <span class="payment-method-copy">
+                  <b>{{ app.label }}</b>
+                  <small>{{ desktopPayment ? 'Scan with your phone' : app.hint }}</small>
+                </span>
+                <span class="payment-method-choice" aria-hidden="true"></span>
+              </button>
+            }
+          </div>
+          @if (paymentMethodError()) {
+            <p id="payment-method-error" class="field-error payment-method-error" role="alert">
+              {{ paymentMethodError() }}
+            </p>
+          }
+
+          <!-- Laptop / desktop only: the member's own UPI ID is mandatory before the QR appears. -->
+          @if (desktopPayment && selectedUpiApp(); as app) {
+            <div class="payment-upi-field" [class.has-error]="payerUpiIdError()">
+              <label class="payment-upi-label" for="payment-upi-id">
+                <span>Your UPI ID</span>
+                <span class="field-required" aria-hidden="true">Required</span>
+              </label>
+              <div class="upi-input-wrap">
+                <svg
+                  class="upi-input-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  aria-hidden="true"
+                >
+                  <rect x="6.5" y="2.75" width="11" height="18.5" rx="2.6" />
+                  <path d="M10.5 5.75h3" stroke-linecap="round" />
+                  <path d="M12 17.6h.01" stroke-width="2.4" stroke-linecap="round" />
+                </svg>
+                <input
+                  #upiIdInput
+                  id="payment-upi-id"
+                  class="upi-input"
+                  name="upiId"
+                  type="text"
+                  inputmode="email"
+                  autocomplete="off"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  maxlength="100"
+                  required
+                  aria-required="true"
+                  [attr.aria-invalid]="payerUpiIdError() ? 'true' : 'false'"
+                  [attr.aria-describedby]="
+                    payerUpiIdError()
+                      ? 'payment-upi-id-error payment-upi-id-hint'
+                      : 'payment-upi-id-hint'
+                  "
+                  [placeholder]="'e.g. ' + app.upiIdExample"
+                  [value]="payerUpiId()"
+                  [disabled]="paymentBusy()"
+                  (input)="onPayerUpiIdInput($event)"
+                  (keydown.enter)="payAndChat()"
+                />
+              </div>
+              @if (payerUpiIdError()) {
+                <p id="payment-upi-id-error" class="field-error" role="alert">
+                  {{ payerUpiIdError() }}
+                </p>
+              }
+              <p id="payment-upi-id-hint" class="field-hint">
+                The UPI ID of the {{ app.label }} account you will pay from. After you press Pay and
+                Chat, scan the payment QR code with {{ app.label }} on your phone or tablet.
+              </p>
+            </div>
+          }
+
+          <p class="payment-summary">
+            Pay <b>{{ money(breakdown().total) }}</b> to <b>NeverBeen</b> with Google Pay or
+            PhonePe.
+          </p>
+
+          @if (paymentState() === 'error') {
+            <div class="flow-error payment-error" role="alert">
+              <b>Payment Failed</b>
+              <span>{{ paymentError() }}</span>
+            </div>
+          }
+
+          @if (paymentState() === 'opening') {
+            <p class="payment-status" role="status">
+              Complete your payment in {{ paymentAppName() }}, then return to this page. Your Live
+              Chat will open automatically.
+            </p>
+          }
+
+          @if (paymentState() === 'continuing') {
+            <p class="payment-status" role="status">Opening your Live Chat…</p>
+          }
+
+          @if (paymentQr(); as qr) {
+            <section
+              #paymentQrPanel
+              class="payment-qr"
+              tabindex="-1"
+              aria-labelledby="payment-qr-title"
+              aria-describedby="payment-qr-steps"
+            >
+              <header class="payment-qr-head">
+                <span class="payment-qr-kicker"
+                  ><i aria-hidden="true"></i> Payment QR code ready</span
+                >
+                <h3 id="payment-qr-title">Scan to pay with {{ paymentAppName() }}</h3>
+                <p class="payment-qr-payer">
+                  Paying from <b>{{ payerUpiId() }}</b>
+                </p>
+              </header>
+
+              <div class="payment-qr-body">
+                <figure class="payment-qr-code">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    role="img"
+                    [attr.viewBox]="qr.viewBox"
+                    [attr.aria-label]="
+                      'UPI payment QR code for ' + money(breakdown().total) + ' to NeverBeen'
+                    "
+                  >
+                    <rect [attr.width]="qr.extent" [attr.height]="qr.extent" fill="#ffffff" />
+                    <path
+                      class="payment-qr-modules"
+                      [attr.d]="qr.modulesPath"
+                      shape-rendering="crispEdges"
+                    />
+                    @for (eye of qr.finders; track $index) {
+                      <rect
+                        class="payment-qr-eye"
+                        [attr.x]="eye.x + 0.5"
+                        [attr.y]="eye.y + 0.5"
+                        width="6"
+                        height="6"
+                        rx="1.7"
+                      />
+                      <rect
+                        class="payment-qr-pupil"
+                        [attr.x]="eye.x + 2"
+                        [attr.y]="eye.y + 2"
+                        width="3"
+                        height="3"
+                        rx="0.85"
+                      />
+                    }
+                  </svg>
+                  <span
+                    class="payment-qr-logo"
+                    [class.is-wordmark]="paymentMethod() === 'gpay'"
+                    [style.width.%]="qr.logoPercent"
+                    [style.height.%]="qr.logoPercent"
+                    aria-hidden="true"
+                    ><img [src]="selectedUpiApp()?.icon" alt=""
+                  /></span>
+                </figure>
+
+                <div class="payment-qr-details">
+                  <dl class="payment-qr-facts">
+                    <div>
+                      <dt>Amount</dt>
+                      <dd>{{ money(breakdown().total) }}</dd>
+                    </div>
+                    <div>
+                      <dt>Pay to</dt>
+                      <dd>NeverBeen</dd>
+                    </div>
+                  </dl>
+                  <ol id="payment-qr-steps" class="payment-qr-steps">
+                    <li>
+                      Open <b>{{ paymentAppName() }}</b> on your phone or tablet.
+                    </li>
+                    <li>Tap <b>Scan QR</b> and point the camera at this code.</li>
+                    <li>
+                      Check <b>{{ money(breakdown().total) }}</b> and approve it with your UPI PIN.
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              <div
+                class="payment-countdown"
+                role="timer"
+                aria-live="off"
+                [attr.aria-label]="'Live Chat opens in ' + chatCountdown() + ' seconds'"
+              >
+                <span class="countdown-ring" aria-hidden="true">
+                  <svg viewBox="0 0 44 44">
+                    <circle class="countdown-track" cx="22" cy="22" r="19" />
+                    <circle
+                      class="countdown-progress"
+                      cx="22"
+                      cy="22"
+                      r="19"
+                      pathLength="100"
+                      [style.animation-duration.ms]="chatStartDelayMs"
+                    />
+                  </svg>
+                  <b>{{ chatCountdown() }}</b>
+                </span>
+                <span class="countdown-copy">
+                  <b
+                    >Your Live Chat with {{ model().name }} opens in
+                    <span class="countdown-seconds">{{ chatCountdown() }}</span> s</b
+                  >
+                  <small>Keep this page open while you pay on your phone or tablet.</small>
+                </span>
+              </div>
+              <p class="sr-only" role="status">
+                Payment QR code ready. Your Live Chat opens in {{ chatStartSeconds }} seconds.
+              </p>
+            </section>
+          }
+
+          <button
+            type="button"
+            class="review-start pay-and-chat"
+            [class.is-busy]="paymentBusy()"
+            [disabled]="paymentBusy()"
+            [attr.aria-busy]="paymentBusy() ? 'true' : null"
+            (click)="payAndChat()"
+          >
+            <span class="review-start-dot" aria-hidden="true"></span>
+            Pay and Chat
+          </button>
+          @if (paymentState() === 'opening' || paymentState() === 'scanning') {
+            <button type="button" class="payment-cancel" (click)="cancelPayment()">
+              Cancel payment
+            </button>
+          }
+          <p class="plan-footnote">{{ paymentNote }}</p>
+        </div>
       </div>
     } @else {
       <div class="access-flow access-review">

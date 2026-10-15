@@ -163,11 +163,16 @@ by an upload is renamed in place.
 
 ### Chatting with a model
 
-**Premium checkout:** members choose Google Pay or PhonePe and click **Pay & Chat**. There is no
-UTR field, and the page shows the NeverBeen name rather than the receiver UPI ID. Payment
-verification is temporarily disabled at the owner's request: returning from the app automatically
-opens Live Chat, including after an in-app cancellation. App-launch failures stay on the payment
-page with **Payment Failed / Try again**. See
+**Premium checkout:** an ultra-modern white checkout over one of the model's album photographs
+(90% opacity). Members choose Google Pay or PhonePe and click **Pay and Chat** — the button never
+shows the amount. On a laptop or desktop they must also enter their own UPI ID; **Pay and Chat** then
+shows a UPI QR code with the exact amount to scan with Google Pay or PhonePe on their phone or
+tablet, and Live Chat opens ten seconds later (NPCI no longer allows a website to push a collect
+request to a typed UPI ID). There is no UTR field, and the page shows the NeverBeen name rather than
+the receiver UPI ID. Payment verification is temporarily disabled at the owner's request: returning
+from the app (or the desktop timer) automatically opens Live Chat, including after an in-app
+cancellation. App-launch failures stay on the payment page with **Payment Failed**, and **Pay and
+Chat** retries. See
 [`docs/premium-live-chat-payment.md`](docs/premium-live-chat-payment.md) for the device links,
 limitations, tests and the merchant verification needed before enforcing paid access.
 
