@@ -195,6 +195,9 @@ what the message deserves.
 On a laptop or a tablet held sideways the window opens landscape and wide (`min(1240px, 95vw)`), with
 her photograph, her name, her city and country and **View Profile** moved into a side panel on the
 left, and the conversation alone on the right; on a phone it is the same portrait column as before.
+The **›** right after her name opens her details — over the conversation on a wide screen, over the
+chat on a phone — with **Show Premium Content**, **Chat History** and **Back to chat** at the foot;
+on a wide screen **View Profile** opens the same details.
 
 **Nothing is answered before it has been read.** Every message — the words, a photograph, a document —
 goes through a reading first: her own engine repairs what people actually type (stretched letters,

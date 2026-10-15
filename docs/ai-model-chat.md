@@ -42,8 +42,10 @@ the two-hour session itself in `ngOnInit` — the pages only render it
 window is the booking dialog's own pattern — a `.chat-backdrop` with `role="dialog"`, `z-index` 240, `:host { display: contents }` — no CDK overlay. **A chat that has started is not thrown away
 by a stray click**: the backdrop, Escape and ✕ all go through `requestClose()`, which puts the close
 form of requirement E up instead of closing — the window only goes when the visitor's own **Close**
-button in that form goes (E and F). **View Profile** still leaves for the profile page, and a window
-with nothing in it yet (the ✕ on the "Before we start" form) still closes straight away. Nothing
+button in that form goes (E and F). **View Profile** opens her information sheet on the chat panel of
+a wide window (the same as the **›** beside her name) and, on a phone, still leaves for the profile
+page — and a window with nothing in it yet (the ✕ on the "Before we start" form) still closes
+straight away. Nothing
 closes itself any more: **F** took the 7 s `CHAT_AUTO_CLOSE_MS` timer that used to take the report
 card away, so the form she raises by ending a chat herself stays until the visitor closes it.
 
@@ -69,12 +71,24 @@ of requirement E both still cover the whole window, side panel included.
 - her name in bold, large, black type, and under it her model id in small italic black type
   (`@alisha.bhattacharya` for **Alisha Bhattacharya**) — `model.name` and `model.handle`;
 - her country and city in normal small black type, split out of `model.location`;
-- **View Profile** — grey `#e6e6ea` background, black text, `routerLink` to `/ai-models/:slug`;
+- **View Profile** — grey `#e6e6ea` background, black text; on a phone it goes to
+  `/ai-models/:slug`, and on a wide window it opens her information sheet on the chat panel — the
+  same as the **›** beside her name;
 - the conversation, then the composer. The window opens on the conversation itself: no welcome copy
   and no canned starter questions, so the first thing her visitor reads is what she has to say.
 
 On a wide screen the whole block above the conversation line — the bar and her card — sits in the
 side panel on the left instead (see _Where the window opens, and how wide_).
+
+The **›** right after her name (`.chat-bar-more`) opens her information sheet (`.chat-info`) — her
+round photograph, name, handle, place, availability, the detail and measurement grids, her bio and
+her tags. On a phone it is a white sheet over the chat; from 900px up the same sheet opens over the
+conversation column alone, so her card stays visible in the side panel. The foot of the sheet offers
+three buttons, in this order: **Show Premium Content** (background `#c920a6`, white text — for now
+it opens nothing), **Chat History** (the whole-history sheet of `app-chat-history`, the same one the
+side panel opens) and **Back to chat**. On a phone **View Profile** leaves the window for
+`/ai-models/:slug`; on a wide window **View Profile** opens this same sheet, exactly as the **›**
+does.
 
 In front of it, until the visitor has introduced themselves, the window is covered by the form of
 requirement **A** (`chat-identity-prompt.{ts,html,css}`, `.gate`): her portrait with a live dot, a

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AiModelChatService } from '../../../services/ai-model-chat.service';
 import { silenceChatPacing } from '../../../services/ai-model-chat.testing';
@@ -104,9 +104,8 @@ describe('AiModelChatDialog', () => {
     expect(place).toContain('India');
     expect(place).toContain('Darjeeling');
 
-    const viewProfile = element.querySelector<HTMLAnchorElement>('.chat-view-profile')!;
+    const viewProfile = element.querySelector<HTMLButtonElement>('.chat-view-profile')!;
     expect(viewProfile.textContent).toContain('View Profile');
-    expect(viewProfile.getAttribute('href')).toBe('/ai-models/alisha-bhattacharya');
 
     // The two-hour countdown sits in the top-right corner of the window.
     expect(element.querySelector('.chat-clock-value')?.textContent?.trim()).toBe('02:00:00');
@@ -129,9 +128,10 @@ describe('AiModelChatDialog', () => {
     expect(sheet.querySelector('h2')?.textContent?.trim()).toBe('Alisha Bhattacharya');
     expect(sheet.textContent).toContain(alisha.height);
     expect(sheet.textContent).toContain(alisha.bodyShape);
-    expect(sheet.querySelector('.chat-info-profile')?.getAttribute('href')).toBe(
-      '/ai-models/alisha-bhattacharya',
-    );
+    const actions = Array.from(
+      sheet.querySelectorAll<HTMLButtonElement>('.chat-info-actions button'),
+    ).map((button) => button.textContent!.trim());
+    expect(actions).toEqual(['Show Premium Content', 'Chat History', 'Back to chat']);
 
     // Back — by the button in the bar, and by the one at the foot of the sheet.
     sheet.querySelector<HTMLButtonElement>('.chat-info-back')!.click();
@@ -151,6 +151,88 @@ describe('AiModelChatDialog', () => {
     fixture.detectChanges();
     expect(element.querySelector('.chat-info')).toBeNull();
     expect(element.querySelector('.chat-panel')).not.toBeNull();
+  });
+
+  it('offers Show Premium Content, Chat History and Back to chat on her information sheet', async () => {
+    const harness = await openChat();
+    const { element, fixture } = harness;
+
+    element.querySelector<HTMLButtonElement>('.chat-bar-more')!.click();
+    fixture.detectChanges();
+    const sheet = element.querySelector<HTMLElement>('.chat-info')!;
+
+    // First: the premium door. For now pressing it does nothing at all.
+    const premium = sheet.querySelector<HTMLButtonElement>('.chat-info-premium')!;
+    expect(premium.textContent).toContain('Show Premium Content');
+    premium.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-info')).not.toBeNull();
+    expect(element.querySelector('app-chat-history')).toBeNull();
+    expect(harness.chat.openSlug()).toBe('alisha-bhattacharya');
+
+    // Second: the whole chat history, the same sheet the wide screen opens from its side panel.
+    const history = sheet.querySelector<HTMLButtonElement>('.chat-info-history')!;
+    expect(history.textContent).toContain('Chat History');
+    history.click();
+    fixture.detectChanges();
+    expect(element.querySelector('app-chat-history')).not.toBeNull();
+
+    // Its Escape closes the history first and leaves her information open under it.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(element.querySelector('app-chat-history')).toBeNull();
+    expect(element.querySelector('.chat-info')).not.toBeNull();
+
+    // Third: back to the chat itself.
+    element.querySelector<HTMLButtonElement>('.chat-info-return')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.chat-info')).toBeNull();
+    expect(element.querySelector('.chat-panel')).not.toBeNull();
+  });
+
+  it('opens her information from View Profile on a wide window, the same as the "›"', async () => {
+    // jsdom's matchMedia never matches, so stub a wide screen for this test.
+    const previousMatchMedia = window.matchMedia;
+    const wideScreenList: MediaQueryList = {
+      matches: true,
+      media: '(min-width: 900px)',
+      onchange: null,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => false,
+    } as unknown as MediaQueryList;
+    window.matchMedia = (() => wideScreenList) as unknown as typeof window.matchMedia;
+    try {
+      const harness = await openChat();
+      const { element, fixture } = harness;
+
+      element.querySelector<HTMLButtonElement>('.chat-view-profile')!.click();
+      fixture.detectChanges();
+      const sheet = element.querySelector<HTMLElement>('.chat-info')!;
+      expect(sheet).not.toBeNull();
+      expect(sheet.querySelector('h2')?.textContent?.trim()).toBe('Alisha Bhattacharya');
+
+      // Back to chat returns to the conversation, and the window stays open.
+      sheet.querySelector<HTMLButtonElement>('.chat-info-return')!.click();
+      fixture.detectChanges();
+      expect(element.querySelector('.chat-info')).toBeNull();
+      expect(element.querySelector('.chat-panel')).not.toBeNull();
+    } finally {
+      window.matchMedia = previousMatchMedia;
+    }
+  });
+
+  it('takes View Profile to her full profile page on a phone', async () => {
+    const harness = await openChat();
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    harness.element.querySelector<HTMLButtonElement>('.chat-view-profile')!.click();
+    harness.fixture.detectChanges();
+    expect(navigate).toHaveBeenCalledWith(['/ai-models', 'alisha-bhattacharya']);
+    expect(harness.element.querySelector('.chat-info')).toBeNull();
   });
 
   it('puts her information in a side column and keeps the chat alone on the right (wide screens)', async () => {
