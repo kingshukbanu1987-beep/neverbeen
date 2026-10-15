@@ -125,9 +125,10 @@
               Premium plan. Your time, sharing controls and conversation experience are set before
               the chat begins.
             } @else {
-              Three thoughtful ways to meet <b>{{ model().name }}</b
-              ><app-model-verified-tick [slug]="model().slug" />. Your time, sharing controls and
-              conversation experience are set before the chat begins.
+              Chat with <b>{{ model().name }}</b
+              ><app-model-verified-tick [slug]="model().slug" /> on Free Chat — a quick, text-first
+              hello with no Community registration. The Registered User and Premium plans open the
+              Exclusive and Premium NeverBeen models.
             }
           </p>
         </div>
@@ -293,17 +294,13 @@
               <span class="plan-duration-figures"><b>15</b><em>MINUTES</em></span>
             </div>
             <!-- The Premium amount in big font, exactly as this model's price lists it. -->
-            <div class="plan-price" [class.is-included]="premiumPrice() === null">
-              @if (premiumPrice() !== null) {
+            @if (premiumPrice() !== null) {
+              <div class="plan-price">
                 <span class="plan-price-label">Premium amount · {{ model().name }}</span>
                 <span class="plan-price-value">{{ premiumPriceLabel() }}</span>
                 <span class="plan-price-note">One UPI payment · GPay or PhonePe</span>
-              } @else {
-                <span class="plan-price-label">Premium session</span>
-                <span class="plan-price-value is-included">Included</span>
-                <span class="plan-price-note">No extra amount for this model</span>
-              }
-            </div>
+              </div>
+            }
             <p class="plan-summary">
               The fullest conversation — photo and video sharing, ultimate memory and realtime
               replies.

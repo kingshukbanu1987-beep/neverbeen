@@ -66,8 +66,8 @@ export function requiresRegisteredChat(model: Pick<AiModelProfile, 'slug'>): boo
 
 /**
  * Whether this plan may start a chat with this model: the Free Chat plan reaches Free models
- * only, the Registered User plan reaches Free and Exclusive models, and the Premium plan — once
- * paid — reaches every NeverBeen model.
+ * only, the Registered User plan reaches Exclusive models, and the Premium plan — once paid —
+ * reaches Exclusive and Premium models. A Free model never leaves the Free Chat plan.
  */
 export function allowsLiveChatPlan(
   model: Pick<AiModelProfile, 'slug'>,
@@ -78,8 +78,8 @@ export function allowsLiveChatPlan(
     case 'free':
       return tier === 'free';
     case 'registered':
-      return tier === 'free' || tier === 'exclusive';
+      return tier === 'exclusive';
     case 'premium':
-      return true;
+      return tier !== 'free';
   }
 }

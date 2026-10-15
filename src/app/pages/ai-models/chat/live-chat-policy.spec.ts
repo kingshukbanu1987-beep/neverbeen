@@ -117,8 +117,8 @@ describe('plan-to-model access matrix', () => {
   const matrix: ReadonlyArray<[LiveChatPlan, boolean, boolean, boolean]> = [
     // plan          free model  exclusive model  premium model
     ['free', true, false, false],
-    ['registered', true, true, false],
-    ['premium', true, true, true],
+    ['registered', false, true, false],
+    ['premium', false, true, true],
   ];
 
   it.each(matrix)(
@@ -129,4 +129,10 @@ describe('plan-to-model access matrix', () => {
       expect(allowsLiveChatPlan(premium, plan)).toBe(premiumOk);
     },
   );
+
+  it('keeps a Free model on the Free Chat plan alone', () => {
+    expect(allowsLiveChatPlan(free, 'free')).toBe(true);
+    expect(allowsLiveChatPlan(free, 'registered')).toBe(false);
+    expect(allowsLiveChatPlan(free, 'premium')).toBe(false);
+  });
 });

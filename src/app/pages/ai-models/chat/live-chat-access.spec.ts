@@ -128,7 +128,7 @@ describe('the three Live Chat plan blocks', () => {
       '✓ Text-based Chat Conversations',
       '— No Photo or Video Sharing is Allowed',
       '✓ Chat Duration is Limited to 2 Minutes',
-      '✓ Access to Free NeverBeen Models',
+      '— No Access to Free NeverBeen Models',
       '✓ Access to Exclusive NeverBeen Models',
       '— No Access to Premium NeverBeen Models',
       '✓ Moderate Response Speed',
@@ -143,7 +143,7 @@ describe('the three Live Chat plan blocks', () => {
       '✓ User Registration to Community is Required',
       '✓ Text-based Chat Conversations',
       '✓ Photo & Video sharing is Allowed',
-      '✓ Access to Free NeverBeen Models',
+      '— No Access to Free NeverBeen Models',
       '✓ Access to Exclusive NeverBeen Models',
       '✓ Access to Premium NeverBeen Models',
       '✓ More Chat Duration Upto 15 Minutes',
@@ -154,9 +154,20 @@ describe('the three Live Chat plan blocks', () => {
     fixture.destroy();
   });
 
-  it('starts Free Chat for a Free model with no registration', () => {
-    const { fixture, element, started } = chooser('sereenah-noorzai');
+  it('locks a Free model to Free Chat alone — the other two plans are Not Available', () => {
+    const { fixture, element, started, registered, premium } = chooser('sereenah-noorzai');
     expect(card(element, 'free').classList.contains('is-disabled')).toBe(false);
+    for (const plan of ['registered', 'premium'] as const) {
+      const block = card(element, plan);
+      expect(block.classList.contains('is-disabled')).toBe(true);
+      expect(block.getAttribute('aria-disabled')).toBe('true');
+      expect(block.querySelector('.plan-unavailable-overlay')?.textContent?.trim()).toBe(
+        'Not Available',
+      );
+      block.querySelector<HTMLButtonElement>('button')!.click();
+    }
+    expect(registered).not.toHaveBeenCalled();
+    expect(premium).not.toHaveBeenCalled();
     element.querySelector<HTMLButtonElement>('.plan-start-free')!.click();
     expect(started).toHaveBeenCalledOnce();
     fixture.destroy();
@@ -378,23 +389,6 @@ describe('premium model access and UPI payment', () => {
     expect(registered).not.toHaveBeenCalled();
     fixture.destroy();
   });
-
-  it('runs the Premium plan for a Free model exactly like the Registered User flow', () => {
-    signInAsMember();
-    const { fixture, element, premium, registered } = chooser('sereenah-noorzai');
-    expect(element.querySelector('.plan-price-value')?.textContent?.trim()).toBe('Included');
-    element.querySelector<HTMLButtonElement>('.plan-start-premium')!.click();
-    fixture.detectChanges();
-    expect(element.querySelector('.access-review')).not.toBeNull();
-    expect(element.querySelector('.review-price')).toBeNull();
-    const start = element.querySelector<HTMLButtonElement>('.review-start')!;
-    expect(start.textContent).toContain('Premium');
-    expect(start.textContent).toContain('15 minutes');
-    start.click();
-    expect(premium).toHaveBeenCalledWith({ name: 'Test Member', avatar: '/member.jpg' });
-    expect(registered).not.toHaveBeenCalled();
-    fixture.destroy();
-  });
 });
 
 describe('blue tick beside Exclusive and Premium model names', () => {
@@ -434,13 +428,15 @@ describe('blue tick beside Exclusive and Premium model names', () => {
     fixture.destroy();
   });
 
-  it('shows no tick and no sign-in name chip for an ordinary model', () => {
+  it('shows no tick for a Free model, whose disabled member plans open no sign-in', () => {
     const ordinary = aiModelProfiles.find((model) => !requiresRegisteredChat(model))!;
     const { fixture, element } = chooser(ordinary.slug);
     expect(element.querySelector('app-model-verified-tick')).not.toBeNull();
     expect(element.querySelector('.model-verified-tick')).toBeNull();
+    expect(element.querySelector<HTMLButtonElement>('.plan-start-registered')!.disabled).toBe(true);
     element.querySelector<HTMLButtonElement>('.plan-start-registered')!.click();
     fixture.detectChanges();
+    expect(element.querySelector('app-community-sign-in-card')).toBeNull();
     expect(element.querySelector('.sign-in-model-tag')).toBeNull();
     fixture.destroy();
   });

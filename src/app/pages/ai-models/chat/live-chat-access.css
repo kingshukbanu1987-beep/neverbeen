@@ -661,24 +661,11 @@
   text-shadow: 0 6px 18px rgb(245 158 11 / 26%);
 }
 
-.plan-price-value.is-included {
-  color: #4c8b23;
-  font-size: clamp(1.9rem, 3.2vw, 2.45rem);
-  text-shadow: none;
-}
-
 .plan-price-note {
   margin-top: 0.22rem;
   color: #97671a;
   font-size: 0.6rem;
   font-weight: 700;
-}
-
-.plan-price.is-included {
-  border-color: rgb(100 189 39 / 34%);
-  background:
-    radial-gradient(circle at 100% 0, rgb(140 220 88 / 22%), transparent 70%),
-    linear-gradient(150deg, #fbfff6, #f4fbe9);
 }
 
 .plan-summary {
