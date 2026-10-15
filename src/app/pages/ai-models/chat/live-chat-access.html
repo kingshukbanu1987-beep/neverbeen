@@ -552,7 +552,7 @@
                 <b>{{ money(breakdown().totalBeforeDiscount) }}</b>
               </div>
               <div class="payment-discount">
-                <span>Discount · {{ coupon.code }} ({{ coupon.percentOff }}% off)</span>
+                <span>{{ coupon.code }} ({{ coupon.percentOff }}% off)</span>
                 <b>−{{ money(breakdown().discount) }}</b>
               </div>
             }
