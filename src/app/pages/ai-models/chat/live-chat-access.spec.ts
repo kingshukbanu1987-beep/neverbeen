@@ -344,12 +344,12 @@ describe('premium model access and UPI payment', () => {
   it('shows only the app choices and Pay & Chat, with NeverBeen instead of receiver IDs', () => {
     const { fixture, element, premium } = paymentPage();
     const payment = element.querySelector('.access-payment')!;
-    expect(payment.querySelector('.payment-price-value')?.textContent?.trim()).toBe('₹119');
+    expect(payment.querySelector('.payment-price-value')?.textContent?.trim()).toBe('15 minutes');
     expect(payment.querySelectorAll('.payment-method').length).toBe(2);
     expect(
       payment.querySelector('.payment-summary')?.textContent?.replace(/\s+/g, ' ').trim(),
-    ).toBe('Pay ₹119 to NeverBeen with Google Pay or PhonePe.');
-    expect(payment.querySelector('.review-start')?.textContent).toContain('Pay & Chat');
+    ).toBe('Pay ₹124.95 to NeverBeen with Google Pay or PhonePe.');
+    expect(payment.querySelector('.review-start')?.textContent).toContain('Pay ₹124.95 & Chat');
     expect(payment.querySelector('input')).toBeNull();
     expect(payment.textContent).not.toMatch(/@|UTR|transaction reference|Verify payment|Razorpay/i);
     expect(payment.textContent).toContain('verification is temporarily disabled');
@@ -370,7 +370,7 @@ describe('premium model access and UPI payment', () => {
       pay.click();
       fixture.detectChanges();
       expect(upiLauncher.open).toHaveBeenCalledWith(
-        { modelSlug: 'nourhan-durrani', amount: 119, method },
+        { modelSlug: 'nourhan-durrani', amount: 124.95, method },
         expect.any(AbortSignal),
       );
       expect(pay.disabled).toBe(true);
@@ -388,6 +388,7 @@ describe('premium model access and UPI payment', () => {
       expect(premium).toHaveBeenCalledExactlyOnceWith({
         name: 'Test Member',
         avatar: '/member.jpg',
+        paymentPackageId: 'basic',
       });
       expect(element.querySelector('.payment-verified')).toBeNull();
       expect(element.textContent).not.toContain('Payment verified');
@@ -396,6 +397,35 @@ describe('premium model access and UPI payment', () => {
       fixture.destroy();
     },
   );
+
+  it('updates upgrade pricing, freezes selection during handoff and emits its duration package', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
+    const packages = element.querySelectorAll<HTMLButtonElement>('.payment-package');
+    expect(packages.length).toBe(4);
+    expect(packages[0].getAttribute('aria-checked')).toBe('true');
+    expect(element.querySelectorAll('.payment-method-mark img').length).toBe(2);
+    packages[1].click();
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-price-value')?.textContent).toContain('45');
+    expect(element.querySelector('.payment-total b')?.textContent).toBe('₹437.85');
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    fixture.detectChanges();
+    expect(upiLauncher.open).toHaveBeenCalledWith(
+      { modelSlug: 'nourhan-durrani', amount: 437.85, method: 'gpay' },
+      expect.any(AbortSignal),
+    );
+    expect(packages[2].disabled).toBe(true);
+    packages[2].click();
+    handoff.returned();
+    await flushHandoff();
+    expect(premium).toHaveBeenCalledExactlyOnceWith({
+      name: 'Test Member',
+      avatar: '/member.jpg',
+      paymentPackageId: 'extended',
+    });
+    fixture.destroy();
+  });
 
   it('keeps a failed launch on the same page with Payment Failed and a working Try again', async () => {
     const handoff = appHandoff();
@@ -555,7 +585,7 @@ describe('premium model access and UPI payment', () => {
     element.querySelector<HTMLButtonElement>('.review-start')!.click();
     fixture.detectChanges();
     expect(element.querySelector('.access-payment')).not.toBeNull();
-    expect(element.querySelector('.payment-price-value')?.textContent?.trim()).toBe('₹99');
+    expect(element.querySelector('.payment-total b')?.textContent?.trim()).toBe('₹103.95');
     expect(premium).not.toHaveBeenCalled();
     expect(registered).not.toHaveBeenCalled();
     fixture.destroy();

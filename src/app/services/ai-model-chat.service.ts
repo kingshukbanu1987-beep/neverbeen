@@ -1,3 +1,4 @@
+import { paymentDurationMs } from '../pages/ai-models/chat/payment-packages';
 /**
  * One chat session per model: the memory of the conversation, the two-hour clock, the removal
  * notices, the reactions and the trip to the studio's AI service.
@@ -413,6 +414,10 @@ export class AiModelChatService {
     if (session.identity || session.closed || !isValidChatName(identity.name) || !identity.avatar)
       return;
 
+    if (this.sessionPlan(session) === 'premium') {
+      session.durationMs = paymentDurationMs(identity.paymentPackageId ?? 'basic');
+      session.messages[0].text = `🔒 This is a private Premium Live Chat of ${session.durationMs / 60_000} minutes with an AI model of the NeverBeen Multiverse. Nothing here is real outside NeverBeen, and the studio reads nothing of it.`;
+    }
     const now = Date.now();
     session.identity = { name: identity.name, avatar: identity.avatar };
     session.startedAt = now;
@@ -1823,7 +1828,10 @@ export class AiModelChatService {
   private timeoutTextFor(session: AiChatSession): string {
     const plan = this.sessionPlan(session);
     if (plan === 'legacy') return CHAT_TIMEOUT_TEXT;
-    const label = LIVE_CHAT_PLANS[plan].durationLabel;
+    const label =
+      plan === 'premium'
+        ? `${this.sessionDuration(session) / 60_000} minutes`
+        : LIVE_CHAT_PLANS[plan].durationLabel;
     return `⌛ Your ${label} ${LIVE_CHAT_PLANS[plan].chatNoun} is up, so this chat closes here. Start another chat whenever you are ready.`;
   }
 

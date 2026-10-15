@@ -1,3 +1,4 @@
+import type { PaymentPackageId } from './payment-packages';
 /**
  * Who the visitor is (requirement A): the name she uses for them and the photograph that stands
  * beside their messages in the chat window.
@@ -16,6 +17,8 @@ export const CHAT_NAME_MAX_LENGTH = 14;
 export const CHAT_IDENTITY_AVATAR_BYTES = 100 * 1024;
 
 export interface ChatIdentity {
+  /** Selected checkout duration; only used for Premium sessions. */
+  paymentPackageId?: PaymentPackageId;
   /** What the visitor typed, cleaned up: "Alisha Bhattacharya". */
   name: string;
   /** Data URL of their photograph, already reduced to about 100 KB. */

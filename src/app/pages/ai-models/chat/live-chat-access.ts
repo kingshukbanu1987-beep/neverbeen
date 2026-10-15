@@ -28,6 +28,12 @@ import {
   LiveChatPlanDefinition,
 } from './chat-types';
 import { PREMIUM_PAYMENT_NOTE, UPI_APPS, UpiApp, premiumPriceLabel } from './premium-payment';
+import {
+  PAYMENT_PACKAGES,
+  PaymentPackageId,
+  paymentBreakdown,
+  paymentDurationMs,
+} from './payment-packages';
 import { UpiAppLauncher } from './upi-app-launcher';
 
 type AccessStage = 'plans' | 'sign-in' | 'member-check' | 'payment';
@@ -101,6 +107,28 @@ export class LiveChatAccess {
   protected readonly paymentAppName = computed(
     () => UPI_APPS.find((app) => app.id === this.paymentMethod())!.label,
   );
+  protected readonly paymentPackages = PAYMENT_PACKAGES;
+  protected readonly selectedPackage = signal<PaymentPackageId>('basic');
+  protected readonly breakdown = computed(() =>
+    paymentBreakdown(this.premiumPrice() ?? 0, this.selectedPackage()),
+  );
+  protected readonly durationMinutes = computed(
+    () => paymentDurationMs(this.selectedPackage()) / 60_000,
+  );
+  protected money(amount: number): string {
+    return `₹${amount.toFixed(2)}`;
+  }
+  protected packageDuration(id: PaymentPackageId): number {
+    return paymentDurationMs(id) / 60_000;
+  }
+  protected packageExtra(id: PaymentPackageId): number {
+    return paymentBreakdown(this.premiumPrice() ?? 0, id).upgrade;
+  }
+  protected selectPackage(id: PaymentPackageId): void {
+    if (this.paymentBusy()) return;
+    this.selectedPackage.set(id);
+    this.resetPayment();
+  }
   protected readonly paymentError = signal('');
 
   private readonly community = inject(CommunityService);
@@ -239,6 +267,7 @@ export class LiveChatAccess {
         return;
       }
       this.resetPayment();
+      this.selectedPackage.set('basic');
       this.stage.set('payment');
       return;
     }
@@ -278,7 +307,8 @@ export class LiveChatAccess {
       );
       return;
     }
-    const amount = this.premiumPrice();
+    const amount = this.premiumPrice() === null ? null : this.breakdown().total;
+    const paymentPackageId = this.selectedPackage();
     if (this.selected() !== 'premium' || amount === null) return;
     const modelSlug = this.model().slug;
     const memberId = this.community.currentUser()?.id;
@@ -304,7 +334,11 @@ export class LiveChatAccess {
           return;
         }
         this.paymentState.set('continuing');
-        this.premiumStarted.emit({ name: this.memberName(), avatar: this.memberPhoto() });
+        this.premiumStarted.emit({
+          name: this.memberName(),
+          avatar: this.memberPhoto(),
+          paymentPackageId,
+        });
       })
       .catch((error: unknown) => {
         if (this.activePayment !== controller || controller.signal.aborted) return;
