@@ -24,7 +24,7 @@ export const PAYMENT_PACKAGES = [
   },
   {
     id: 'ultimate',
-    label: 'Unhurried',
+    label: 'Intimate',
     extraMinutes: 120,
     multiplier: 7.5,
     tagline: 'Make time for everything',
@@ -40,10 +40,25 @@ export function paymentDurationMs(id: PaymentPackageId): number {
   return LIVE_CHAT_PLANS.premium.durationMs + paymentPackage(id).extraMinutes * 60_000;
 }
 
-/** Round the additional charge to whole rupees, then calculate tax in paise. */
+/** Charged on the package subtotal: a 5% service tax plus 9% each of SGST and CGST. */
+export const SERVICE_TAX_PERCENT = 5;
+export const SGST_PERCENT = 9;
+export const CGST_PERCENT = 9;
+
+/** Round the additional charge to whole rupees, then calculate each tax in paise. */
 export function paymentBreakdown(base: number, id: PaymentPackageId) {
   const upgrade = Math.round(base * paymentPackage(id).multiplier);
   const subtotal = base + upgrade;
-  const tax = Math.round(subtotal * 5) / 100;
-  return { base, upgrade, subtotal, tax, total: Math.round((subtotal + tax) * 100) / 100 };
+  const serviceTax = Math.round(subtotal * SERVICE_TAX_PERCENT) / 100;
+  const sgst = Math.round(subtotal * SGST_PERCENT) / 100;
+  const cgst = Math.round(subtotal * CGST_PERCENT) / 100;
+  return {
+    base,
+    upgrade,
+    subtotal,
+    serviceTax,
+    sgst,
+    cgst,
+    total: Math.round((subtotal + serviceTax + sgst + cgst) * 100) / 100,
+  };
 }

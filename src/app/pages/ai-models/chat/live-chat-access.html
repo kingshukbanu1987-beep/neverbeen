@@ -457,7 +457,7 @@
                 <span class="package-extra">{{
                   package.extraMinutes
                     ? '+' + package.extraMinutes + ' extra minutes'
-                    : 'Selected by default · 15 minutes'
+                    : '15 minutes'
                 }}</span>
               </button>
             }
@@ -475,7 +475,13 @@
               <span>Subtotal</span><b>{{ money(breakdown().subtotal) }}</b>
             </div>
             <div>
-              <span>Service tax · 5%</span><b>{{ money(breakdown().tax) }}</b>
+              <span>Service tax · 5%</span><b>{{ money(breakdown().serviceTax) }}</b>
+            </div>
+            <div>
+              <span>SGST · 9%</span><b>{{ money(breakdown().sgst) }}</b>
+            </div>
+            <div>
+              <span>CGST · 9%</span><b>{{ money(breakdown().cgst) }}</b>
             </div>
             <div class="payment-total">
               <span>Total payable <small>INR · all taxes included</small></span

@@ -351,7 +351,7 @@ describe('premium model access and UPI payment', () => {
     expect(payment.querySelectorAll('.payment-method').length).toBe(2);
     expect(
       payment.querySelector('.payment-summary')?.textContent?.replace(/\s+/g, ' ').trim(),
-    ).toBe('Pay ₹124.95 to NeverBeen with Google Pay or PhonePe.');
+    ).toBe('Pay ₹146.37 to NeverBeen with Google Pay or PhonePe.');
     // The button never carries the amount: the total is in the breakdown and summary above it.
     expect(payment.querySelector('.review-start')?.textContent?.trim()).toBe('Pay and Chat');
     expect(payment.querySelector('input')).toBeNull();
@@ -375,7 +375,7 @@ describe('premium model access and UPI payment', () => {
       pay.click();
       fixture.detectChanges();
       expect(upiLauncher.open).toHaveBeenCalledWith(
-        { modelSlug: 'nourhan-durrani', amount: 124.95, method },
+        { modelSlug: 'nourhan-durrani', amount: 146.37, method },
         expect.any(AbortSignal),
       );
       expect(pay.disabled).toBe(true);
@@ -416,11 +416,11 @@ describe('premium model access and UPI payment', () => {
     packages[1].click();
     fixture.detectChanges();
     expect(element.querySelector('.payment-price-value')?.textContent).toContain('45');
-    expect(element.querySelector('.payment-total b')?.textContent).toBe('₹437.85');
+    expect(element.querySelector('.payment-total b')?.textContent).toBe('₹512.91');
     element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
     fixture.detectChanges();
     expect(upiLauncher.open).toHaveBeenCalledWith(
-      { modelSlug: 'nourhan-durrani', amount: 437.85, method: 'gpay' },
+      { modelSlug: 'nourhan-durrani', amount: 512.91, method: 'gpay' },
       expect.any(AbortSignal),
     );
     expect(packages[2].disabled).toBe(true);
@@ -613,7 +613,7 @@ describe('premium model access and UPI payment', () => {
     element.querySelector<HTMLButtonElement>('.review-start')!.click();
     fixture.detectChanges();
     expect(element.querySelector('.access-payment')).not.toBeNull();
-    expect(element.querySelector('.payment-total b')?.textContent?.trim()).toBe('₹103.95');
+    expect(element.querySelector('.payment-total b')?.textContent?.trim()).toBe('₹121.77');
     expect(premium).not.toHaveBeenCalled();
     expect(registered).not.toHaveBeenCalled();
     fixture.destroy();
@@ -818,7 +818,7 @@ describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () 
       const panel = element.querySelector<HTMLElement>('.payment-qr')!;
       expect(panel).not.toBeNull();
       expect(panel.querySelector('h3')?.textContent).toContain(`Scan to pay with ${appName}`);
-      expect(panel.textContent).toContain('₹124.95');
+      expect(panel.textContent).toContain('₹146.37');
       expect(panel.textContent).toContain('member.name@okaxis');
       expect(panel.querySelector('.payment-qr-logo img')?.getAttribute('src')).toContain(
         method === 'gpay' ? 'google-pay' : 'phonepe',
@@ -827,16 +827,16 @@ describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () 
       // The drawing is exactly the QR code of the standard UPI link for this payment.
       const payload = upiQrPayload({
         modelSlug: 'nourhan-durrani',
-        amount: 124.95,
+        amount: 146.37,
         method,
         payerUpiId: 'member.name@okaxis',
       });
       expect(new URL(payload).searchParams.get('pa')).toBe(receivers[method]);
-      expect(new URL(payload).searchParams.get('am')).toBe('124.95');
+      expect(new URL(payload).searchParams.get('am')).toBe('146.37');
       const expected = upiQrCode(payload);
       const svg = panel.querySelector('.payment-qr-code svg')!;
       expect(svg.getAttribute('role')).toBe('img');
-      expect(svg.getAttribute('aria-label')).toContain('₹124.95');
+      expect(svg.getAttribute('aria-label')).toContain('₹146.37');
       expect(svg.getAttribute('viewBox')).toBe(expected.viewBox);
       expect(svg.querySelector('.payment-qr-modules')?.getAttribute('d')).toBe(
         expected.modulesPath,
@@ -960,14 +960,14 @@ describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () 
     fixture.detectChanges();
     const payload = upiQrPayload({
       modelSlug: 'nourhan-durrani',
-      amount: 437.85,
+      amount: 512.91,
       method: 'gpay',
       payerUpiId: '9876543210@ybl',
     });
     expect(element.querySelector('.payment-qr-modules')?.getAttribute('d')).toBe(
       upiQrCode(payload).modulesPath,
     );
-    expect(element.querySelector('.payment-qr')?.textContent).toContain('₹437.85');
+    expect(element.querySelector('.payment-qr')?.textContent).toContain('₹512.91');
     // Duration, app and UPI ID are frozen while the code is on screen.
     expect(element.querySelectorAll<HTMLButtonElement>('.payment-package')[2].disabled).toBe(true);
     expect(element.querySelector<HTMLButtonElement>('.payment-method')!.disabled).toBe(true);
