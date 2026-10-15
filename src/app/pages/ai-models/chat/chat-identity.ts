@@ -19,6 +19,11 @@ export const CHAT_IDENTITY_AVATAR_BYTES = 100 * 1024;
 export interface ChatIdentity {
   /** Selected checkout duration; only used for Premium sessions. */
   paymentPackageId?: PaymentPackageId;
+  /**
+   * True when the visitor added Premium Content Coverage at checkout; only used for Premium
+   * sessions, where it alone unlocks "Show Premium Content" — whatever the model's own tier.
+   */
+  premiumContentCoverage?: boolean;
   /** What the visitor typed, cleaned up: "Alisha Bhattacharya". */
   name: string;
   /** Data URL of their photograph, already reduced to about 100 KB. */

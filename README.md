@@ -202,8 +202,9 @@ on a wide screen **View Profile** opens the same details.
 **Premium Content:** every model may carry a `PremiumContent` folder inside her model folder
 (`public/NeverBeenModels/<Model>/PremiumContent`); the photographs inside are her Premium Content,
 and `npm run ai-models:sync` picks them up like album photographs. They are never shown in the
-clear anywhere outside the chat: **Show Premium Content** — enabled only for Premium-plan models,
-greyed out for everyone else — opens a dark studio gallery page over the chat window with every
+clear anywhere outside the chat: **Show Premium Content** — enabled only when the visitor added
+**Premium Content Coverage** at payment, whatever the model's tier (Premium, Exclusive or any other),
+and greyed out otherwise — opens a dark studio gallery page over the chat window with every
 frame in a mosaic of differently sized tiles. The page carries all the photograph features — seen,
 comments, likes and share with counts, zoom in and out — and a double-tap (or double-click) opens a
 full-screen viewer with its close button top right and a download to the visitor's device; a
@@ -217,9 +218,13 @@ underneath. In the `/ai-models` directory every Premium-plan model wears a
 lettered in champagne gold, the brand word in white with the tier in brushed-gold capitals and a
 slow sheen of light crossing it. The premium
 checkout adds a **Premium Content Coverage** block after the package choice — **None** selected by
-default — whose **Access Premium Content** option costs the model's Base Price + ₹51, joins the
+default — whose **Access Premium Content** option costs a flat ₹100 for every model, joins the
 package subtotal before the Service tax · 5%, SGST · 9% and CGST · 9% are calculated, and appears as
-its own line in the price breakdown.
+its own _Premium Content Coverage_ line in the price breakdown; the coverage travels into the chat
+(and survives a reload) as the key to **Show Premium Content**. The **Make time for connection** and
+**Premium Content Coverage** sections are collapsible cards, expanded by default: the whole heading
+— the title on one line, its line of help on the next — is the toggle, and a collapsed card shows
+the selected option's name in a small chip under it.
 
 **Nothing is answered before it has been read.** Every message — the words, a photograph, a document —
 goes through a reading first: her own engine repairs what people actually type (stretched letters,

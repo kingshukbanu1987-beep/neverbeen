@@ -4,8 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AiModelChatService } from '../../../services/ai-model-chat.service';
 import { silenceChatPacing } from '../../../services/ai-model-chat.testing';
 import { aiModelProfiles } from '../ai-model-data';
-import { requiresRegisteredChat } from './live-chat-policy';
+import { modelChatTier, requiresRegisteredChat } from './live-chat-policy';
 import { AiModelChatDialog } from './ai-model-chat';
+import { LiveChatPlan } from './chat-types';
 
 const alisha = aiModelProfiles.find((model) => model.slug === 'alisha-bhattacharya')!;
 
@@ -24,20 +25,34 @@ const VISITOR_PHOTO =
 
 /**
  * Opens the window the way a page does, and — unless asked otherwise — fills in the form in front
- * of it, so the two hours start and she opens the conversation.
+ * of it, so the two hours start and she opens the conversation. A `premium` plan stands for a paid
+ * checkout; `coverage` says whether that checkout included Premium Content Coverage.
  */
-async function openChat(model = alisha, { identify = true } = {}): Promise<Harness> {
+async function openChat(
+  model = alisha,
+  {
+    identify = true,
+    plan = 'legacy' as LiveChatPlan | 'legacy',
+    coverage = undefined as boolean | undefined,
+  } = {},
+): Promise<Harness> {
   const chat = TestBed.inject(AiModelChatService);
   silenceChatPacing(chat);
-  chat.openChat(model);
+  chat.openChat(model, plan);
 
   const fixture = TestBed.createComponent(AiModelChatDialog);
   fixture.componentRef.setInput('model', model);
+  fixture.componentRef.setInput('plan', plan);
   fixture.detectChanges();
   const harness: Harness = { fixture, element: fixture.nativeElement as HTMLElement, chat };
 
   if (identify) {
-    chat.setIdentity(model, { name: VISITOR_NAME, avatar: VISITOR_PHOTO });
+    chat.setIdentity(model, {
+      name: VISITOR_NAME,
+      avatar: VISITOR_PHOTO,
+      ...(plan === 'premium' ? { paymentPackageId: 'basic' as const } : {}),
+      ...(coverage === undefined ? {} : { premiumContentCoverage: coverage }),
+    });
     fixture.detectChanges();
     await vi.waitFor(() => {
       fixture.detectChanges();
@@ -154,15 +169,15 @@ describe('AiModelChatDialog', () => {
   });
 
   it('offers Show Premium Content, Chat History and Back to chat on her information sheet', async () => {
-    const harness = await openChat();
+    const harness = await openChat(alisha, { plan: 'premium', coverage: true });
     const { element, fixture } = harness;
 
     element.querySelector<HTMLButtonElement>('.chat-bar-more')!.click();
     fixture.detectChanges();
     const sheet = element.querySelector<HTMLElement>('.chat-info')!;
 
-    // First: the premium door. Alisha is a Premium model with Premium Content, so the button
-    // opens her Premium Content page over the chat window, with a floating way back.
+    // First: the premium door. This chat's checkout included Premium Content Coverage, so the
+    // button opens her Premium Content page over the chat window, with a floating way back.
     const premium = sheet.querySelector<HTMLButtonElement>('.chat-info-premium')!;
     expect(premium.textContent).toContain('Show Premium Content');
     expect(premium.disabled).toBe(false);
@@ -230,22 +245,60 @@ describe('AiModelChatDialog', () => {
     expect(element.querySelector('.chat-panel')).not.toBeNull();
   });
 
-  it('keeps Show Premium Content disabled for a model who is not a Premium model', async () => {
-    // A Free model: her chat exists, but the premium door stays shut.
-    const freeModel =
-      aiModelProfiles.find((model) => model.slug === 'fatima-al-mansoor') ?? aiModelProfiles[0];
-    const harness = await openChat(freeModel);
+  it('keeps Show Premium Content disabled for a Premium model when the checkout had no coverage', async () => {
+    // Alisha is a Premium model with Premium Content, but this checkout left the coverage out:
+    // the premium door stays shut.
+    expect(modelChatTier(alisha)).toBe('premium');
+    expect(alisha.premiumPhotos?.length ?? 0).toBeGreaterThan(0);
+    const harness = await openChat(alisha, { plan: 'premium', coverage: false });
     const { element, fixture } = harness;
+    expect(harness.chat.session()?.premiumContentCoverage).toBe(false);
 
     element.querySelector<HTMLButtonElement>('.chat-bar-more')!.click();
     fixture.detectChanges();
     const premium = element.querySelector<HTMLButtonElement>('.chat-info-premium')!;
     expect(premium.textContent).toContain('Show Premium Content');
     expect(premium.disabled).toBe(true);
+    expect(premium.getAttribute('title')).toBe(
+      'Premium Content opens when Premium Content Coverage is added at payment',
+    );
     premium.click();
     fixture.detectChanges();
     expect(element.querySelector('app-chat-premium-content')).toBeNull();
     expect(element.querySelector('.chat-info')).not.toBeNull();
+  });
+
+  it('keeps Show Premium Content disabled for every chat that never paid for the coverage', async () => {
+    // A chat opened without any checkout — whatever the model — has no coverage either.
+    const harness = await openChat(alisha);
+    const { element, fixture } = harness;
+    element.querySelector<HTMLButtonElement>('.chat-bar-more')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector<HTMLButtonElement>('.chat-info-premium')!.disabled).toBe(true);
+  });
+
+  it('enables Show Premium Content for an Exclusive model when the checkout included the coverage', async () => {
+    // Not a Premium model: the coverage alone decides, irrespective of her tier.
+    const exclusive = aiModelProfiles.find((model) => model.slug === 'fatima-al-mansoor')!;
+    expect(modelChatTier(exclusive)).toBe('exclusive');
+    const harness = await openChat(exclusive, { plan: 'premium', coverage: true });
+    const { element, fixture } = harness;
+
+    element.querySelector<HTMLButtonElement>('.chat-bar-more')!.click();
+    fixture.detectChanges();
+    const premium = element.querySelector<HTMLButtonElement>('.chat-info-premium')!;
+    expect(premium.disabled).toBe(false);
+    expect(premium.getAttribute('title')).toBe('Open the Premium Content gallery of this chat');
+    premium.click();
+    fixture.detectChanges();
+    const premiumPage = element.querySelector<HTMLElement>('app-chat-premium-content')!;
+    expect(premiumPage).not.toBeNull();
+    // Her folder holds no frames yet, so the page says so instead of showing an empty mosaic.
+    if ((exclusive.premiumPhotos?.length ?? 0) === 0) {
+      expect(premiumPage.querySelector('.chat-premium-empty')?.textContent).toContain(
+        'No Premium Content yet',
+      );
+    }
   });
 
   it('opens her information from View Profile on a wide window, the same as the "›"', async () => {

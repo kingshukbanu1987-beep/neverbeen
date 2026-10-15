@@ -46,13 +46,15 @@ export const SGST_PERCENT = 9;
 export const CGST_PERCENT = 9;
 
 /**
- * The flat addition the Premium Content Coverage option charges on top of the model's own base
- * price: the coverage costs the Base Price + ₹51, and it is taxed exactly like the rest of the
- * package subtotal.
+ * The price of the Premium Content Coverage option: a flat ₹100, the same for every model whatever
+ * her own base price. It is taxed exactly like the rest of the package subtotal.
  */
-export const PREMIUM_CONTENT_COVERAGE_FLAT_PRICE = 51;
+export const PREMIUM_CONTENT_COVERAGE_PRICE = 100;
 
-/** The Premium Content Coverage choices of the checkout, in their laid-out order. */
+/**
+ * The Premium Content Coverage choices of the checkout, in their laid-out order. Choosing the
+ * coverage is what unlocks "Show Premium Content" inside the Live Chat that follows the payment.
+ */
 export const PREMIUM_CONTENT_COVERAGES = [
   {
     id: 'none',
@@ -68,16 +70,11 @@ export const PREMIUM_CONTENT_COVERAGES = [
 export type PremiumContentCoverageId = (typeof PREMIUM_CONTENT_COVERAGES)[number]['id'];
 
 /**
- * The rupee amount of the Premium Content Coverage for one model: her own Base Price plus ₹51 —
- * ₹0 when no coverage was selected.
+ * The rupee amount a Premium Content Coverage choice adds: the flat ₹100 for every model, or ₹0
+ * when no coverage was selected.
  */
-export function premiumContentCoveragePrice(
-  base: number,
-  coverage: PremiumContentCoverageId,
-): number {
-  return coverage === 'coverage'
-    ? Math.round(base) + PREMIUM_CONTENT_COVERAGE_FLAT_PRICE
-    : 0;
+export function premiumContentCoveragePrice(coverage: PremiumContentCoverageId): number {
+  return coverage === 'coverage' ? PREMIUM_CONTENT_COVERAGE_PRICE : 0;
 }
 
 /**

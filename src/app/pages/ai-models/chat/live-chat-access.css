@@ -1913,6 +1913,253 @@
   }
 }
 
+/* ── Collapsible checkout sections ──────────────────────────────────────────────────────────────
+   "Make time for connection" and "Premium Content Coverage" are accordion cards on the checkout
+   sheet: a soft grey surface that lets the white option cards stand out, whose whole heading is
+   the toggle — the title on one line, its line of help on the next, and a round chevron control
+   at the right that turns as the section opens. A collapsed card keeps that heading and adds one
+   small chip naming the selected option. The panel opens and closes with a height-and-fade
+   transition, and leaves the tab order while it is shut. Both sections start expanded. */
+.checkout-section {
+  margin-top: 1.6rem;
+  border: 1px solid #e9ebf2;
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 160% at 100% 0%, rgb(124 92 255 / 5%), transparent 52%),
+    linear-gradient(180deg, #f7f8fb, #f4f5f9);
+  box-shadow:
+    0 1px 2px rgb(14 21 37 / 4%),
+    inset 0 1px 0 rgb(255 255 255 / 80%);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.checkout-section + .checkout-section {
+  margin-top: 0.85rem;
+}
+
+.checkout-section:has(.checkout-section-toggle:hover) {
+  border-color: #dcd5f6;
+  box-shadow:
+    0 1px 2px rgb(14 21 37 / 4%),
+    0 14px 30px -24px rgb(91 63 209 / 45%),
+    inset 0 1px 0 rgb(255 255 255 / 80%);
+}
+
+.checkout-section-heading {
+  margin: 0;
+  font: inherit;
+}
+
+.checkout-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 1rem 1rem 1rem 1.2rem;
+  border: 0;
+  border-radius: 23px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.checkout-section-toggle:focus-visible {
+  outline: 2px solid #6d4ae0;
+  outline-offset: -2px;
+}
+
+/*
+ * The column is a size container, so the heading can size itself to the room it actually has:
+ * the title shrinks only as far as needed to stay whole on one line — on the narrowest phones —
+ * and its line of help and the chip shrink in proportion. Browsers without container units keep
+ * the first, fixed declarations.
+ */
+.checkout-section-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+/* The title keeps to one line, and its line of help keeps to the next one. */
+.checkout-section-title,
+.checkout-section-subtitle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkout-section-title {
+  color: #0e1525;
+  font-size: clamp(0.9rem, 0.3rem + 3vw, 1.05rem);
+  font-size: min(1.05rem, 7.1cqi);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.checkout-section-subtitle {
+  margin-top: 0.18rem;
+  color: #6b7488;
+  font-size: 0.78rem;
+  font-size: min(0.78rem, 6.6cqi);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* The collapsed card's summary: only the selected option's name, small, in its own colour. */
+.checkout-section-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  max-width: 100%;
+  margin-top: 0.62rem;
+  padding: 0.3rem 0.72rem 0.3rem 0.58rem;
+  border: 1px solid #e4e1f1;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(14 21 37 / 5%);
+  color: #000;
+  font-size: 0.72rem;
+  font-size: min(0.72rem, 5.6cqi);
+  font-weight: 750;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  white-space: nowrap;
+  animation: checkout-choice-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.checkout-section-choice-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A whole-pixel dot stays perfectly round, where a fractional one blurs into an oval. */
+.checkout-section-choice::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.checkout-section-choice[data-choice='extended'] {
+  color: #7742cc;
+}
+
+.checkout-section-choice[data-choice='deep'] {
+  color: #cc0b2e;
+}
+
+.checkout-section-choice[data-choice='ultimate'] {
+  color: #cc2baa;
+}
+
+.checkout-section-chevron {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid #e4e1f1;
+  border-radius: 50%;
+  background: #fff;
+  color: #5b3fd1;
+  box-shadow:
+    0 1px 2px rgb(14 21 37 / 6%),
+    0 8px 18px -12px rgb(91 63 209 / 50%);
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* An open section points its chevron up, ready to fold away; a shut one points it down. */
+.checkout-section:not(.is-collapsed) .checkout-section-chevron {
+  transform: rotate(180deg);
+}
+
+.checkout-section-toggle:hover .checkout-section-chevron {
+  border-color: #cdc3f6;
+  background: #f5f2ff;
+}
+
+.checkout-section-panel {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.32s ease,
+    visibility 0s linear 0s;
+}
+
+.checkout-section.is-collapsed .checkout-section-panel {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease,
+    visibility 0s linear 0.42s;
+}
+
+/* Inside the clipped panel: room for the option cards' focus rings, lift and shadows. */
+.checkout-section-body {
+  min-height: 0;
+  padding: 0.35rem 0.6rem 0.6rem;
+  transition: padding 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A 0fr row can't shrink below its item's padding, so a shut body gives up its vertical padding. */
+.checkout-section.is-collapsed .checkout-section-body {
+  padding-block: 0;
+}
+
+@keyframes checkout-choice-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 420px) {
+  .checkout-section-toggle {
+    gap: 0.7rem;
+    padding: 0.9rem 0.8rem 0.9rem 0.95rem;
+  }
+
+  .checkout-section-body {
+    padding: 0.35rem 0.45rem 0.45rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-section-panel,
+  .checkout-section.is-collapsed .checkout-section-panel,
+  .checkout-section-body,
+  .checkout-section-chevron {
+    transition: none;
+  }
+
+  .checkout-section-choice {
+    animation: none;
+  }
+}
+
 .payment-breakdown {
   display: grid;
   gap: 13px;

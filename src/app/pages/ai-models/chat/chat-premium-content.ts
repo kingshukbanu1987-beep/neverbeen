@@ -36,8 +36,8 @@ const EAGER_TILES = 4;
  * to whatever the visitor had open before (her information sheet).
  *
  * The page is a layer of the chat window itself: over the whole window on a phone, over the wide
- * conversation column on a laptop. It mounts only for a Premium model, and only from her
- * information sheet's "Show Premium Content" button.
+ * conversation column on a laptop. It mounts only from her information sheet's "Show Premium
+ * Content" button, which opens only for a chat whose checkout included Premium Content Coverage.
  */
 @Component({
   selector: 'app-chat-premium-content',
@@ -53,7 +53,7 @@ const EAGER_TILES = 4;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatPremiumContent implements OnDestroy {
-  /** The Premium model whose exclusive frames these are. */
+  /** The model whose exclusive frames these are. */
   readonly model = input.required<AiModelProfile>();
   /** Back to the page underneath — her information sheet. */
   readonly closed = output<void>();

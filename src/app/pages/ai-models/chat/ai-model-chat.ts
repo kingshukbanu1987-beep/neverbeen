@@ -28,7 +28,7 @@ import { splitLocation } from './chat-knowledge';
 import { buildChatFeedbackFacts } from './chat-summary';
 import { ChatIdentity } from './chat-identity';
 import { ChatIdentityPrompt } from './chat-identity-prompt';
-import { modelChatTier, requiresRegisteredChat } from './live-chat-policy';
+import { requiresRegisteredChat } from './live-chat-policy';
 import { ChatPremiumContent } from './chat-premium-content';
 import { ChatFeedbackCard } from './chat-feedback';
 import { ChatHistory } from './chat-history';
@@ -430,21 +430,17 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   }
 
   /**
-   * True for a Premium model with at least one photograph in her `PremiumContent/` folder — the
-   * only models whose "Show Premium Content" button can be pressed. Every other model keeps the
-   * button disabled: there is nothing behind it for her.
+   * True only when this chat's checkout included Premium Content Coverage — the one key to the
+   * "Show Premium Content" button, whatever the model's own tier (Premium, Exclusive or any
+   * other). Every chat without the coverage keeps the button disabled.
    */
   protected readonly canShowPremiumContent = computed(
-    () =>
-      modelChatTier(this.model()) === 'premium' && (this.model().premiumPhotos?.length ?? 0) > 0,
+    () => this.session()?.premiumContentCoverage === true,
   );
 
-  /** The label that explains a disabled button: why this chat has no Premium Content to show. */
-  protected readonly premiumDisabledLabel = computed(() =>
-    modelChatTier(this.model()) === 'premium'
-      ? 'Premium Content is being prepared for this chat'
-      : 'Only Premium models have Premium Content',
-  );
+  /** The label that explains a disabled button: how this chat's Premium Content is unlocked. */
+  protected readonly premiumDisabledLabel =
+    'Premium Content opens when Premium Content Coverage is added at payment';
 
   /**
    * "Show Premium Content" on her information sheet: the Premium Content page opens over the chat

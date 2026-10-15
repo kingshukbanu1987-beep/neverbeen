@@ -421,93 +421,186 @@
             >
           </div>
 
-          <div class="package-heading">
-            <h3>Make time for connection</h3>
-            <span>Choose your duration</span>
-          </div>
-          <div class="payment-packages" role="radiogroup" aria-label="Chat duration package">
-            @for (package of paymentPackages; track package.id) {
+          <!-- The duration packages and the Premium Content Coverage are collapsible sections. Both
+               open expanded; the whole heading is the toggle — the title on one line, its line of
+               help on the next — and a collapsed section shows the name of its selected option
+               under that heading. -->
+          <section class="checkout-section" [class.is-collapsed]="!durationSectionOpen()">
+            <h3 class="checkout-section-heading">
               <button
                 type="button"
-                class="payment-package"
-                [class.package-basic]="package.id === 'basic'"
-                [class.package-extended]="package.id === 'extended'"
-                [class.package-deep]="package.id === 'deep'"
-                [class.package-ultimate]="package.id === 'ultimate'"
-                role="radio"
-                [class.is-selected]="selectedPackage() === package.id"
-                [attr.aria-checked]="selectedPackage() === package.id"
-                [disabled]="paymentBusy()"
-                (click)="selectPackage(package.id)"
+                id="payment-duration-toggle"
+                class="checkout-section-toggle"
+                [attr.aria-expanded]="durationSectionOpen()"
+                aria-controls="payment-duration-panel"
+                (click)="toggleDurationSection()"
               >
-                <span class="package-top"
-                  ><b>{{ package.label }}</b
-                  ><i aria-hidden="true">{{
-                    selectedPackage() === package.id ? '●' : '○'
-                  }}</i></span
-                >
-                <span class="package-duration"
-                  >{{ packageDuration(package.id) }} <small>min</small></span
-                >
-                <span class="package-tagline">{{ package.tagline }}</span>
-                <span class="package-price">
-                  <b>{{
-                    package.extraMinutes
-                      ? '+' + money(packageExtra(package.id))
-                      : money(premiumPrice() ?? 0)
-                  }}</b>
-                  <small>{{ package.extraMinutes ? 'upgrade' : 'base price' }}</small>
+                <span class="checkout-section-copy">
+                  <span class="checkout-section-title">Make time for connection</span>
+                  <span class="checkout-section-subtitle">Choose your duration</span>
+                  @if (!durationSectionOpen()) {
+                    <span class="checkout-section-choice" [attr.data-choice]="selectedPackage()"
+                      ><span class="sr-only">Selected: </span
+                      ><span class="checkout-section-choice-label">{{
+                        selectedPackageLabel()
+                      }}</span></span
+                    >
+                  }
                 </span>
-                <span class="package-extra">{{
-                  package.extraMinutes
-                    ? '+' + package.extraMinutes + ' extra minutes'
-                    : '15 minutes'
-                }}</span>
+                <span class="checkout-section-chevron" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </span>
               </button>
-            }
-          </div>
+            </h3>
+            <div
+              id="payment-duration-panel"
+              class="checkout-section-panel"
+              role="region"
+              aria-labelledby="payment-duration-toggle"
+              [attr.inert]="durationSectionOpen() ? null : ''"
+            >
+              <div class="checkout-section-body">
+                <div class="payment-packages" role="radiogroup" aria-label="Chat duration package">
+                  @for (package of paymentPackages; track package.id) {
+                    <button
+                      type="button"
+                      class="payment-package"
+                      [class.package-basic]="package.id === 'basic'"
+                      [class.package-extended]="package.id === 'extended'"
+                      [class.package-deep]="package.id === 'deep'"
+                      [class.package-ultimate]="package.id === 'ultimate'"
+                      role="radio"
+                      [class.is-selected]="selectedPackage() === package.id"
+                      [attr.aria-checked]="selectedPackage() === package.id"
+                      [disabled]="paymentBusy()"
+                      (click)="selectPackage(package.id)"
+                    >
+                      <span class="package-top"
+                        ><b>{{ package.label }}</b
+                        ><i aria-hidden="true">{{
+                          selectedPackage() === package.id ? '●' : '○'
+                        }}</i></span
+                      >
+                      <span class="package-duration"
+                        >{{ packageDuration(package.id) }} <small>min</small></span
+                      >
+                      <span class="package-tagline">{{ package.tagline }}</span>
+                      <span class="package-price">
+                        <b>{{
+                          package.extraMinutes
+                            ? '+' + money(packageExtra(package.id))
+                            : money(premiumPrice() ?? 0)
+                        }}</b>
+                        <small>{{ package.extraMinutes ? 'upgrade' : 'base price' }}</small>
+                      </span>
+                      <span class="package-extra">{{
+                        package.extraMinutes
+                          ? '+' + package.extraMinutes + ' extra minutes'
+                          : '15 minutes'
+                      }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
 
-          <!-- Premium Content Coverage: 'None' is selected by default. Choosing the coverage adds
-               the Base Price + ₹51 to the package subtotal, taxed under the same Service tax · 5%,
-               SGST · 9% and CGST · 9% as the rest of the package. -->
-          <div class="package-heading">
-            <h3>Premium Content Coverage</h3>
-            <span>Unlock her exclusive frames</span>
-          </div>
-          <div
-            class="payment-coverages"
-            role="radiogroup"
-            aria-label="Premium Content Coverage"
-          >
-            @for (coverage of premiumCoverages; track coverage.id) {
+          <!-- Premium Content Coverage: 'None' is selected by default. Choosing the coverage adds a
+               flat ₹100 to the package subtotal, taxed under the same Service tax · 5%, SGST · 9%
+               and CGST · 9% as the rest of the package, and unlocks Show Premium Content in the
+               Live Chat that follows. -->
+          <section class="checkout-section" [class.is-collapsed]="!coverageSectionOpen()">
+            <h3 class="checkout-section-heading">
               <button
                 type="button"
-                class="payment-coverage"
-                [class.coverage-none]="coverage.id === 'none'"
-                [class.coverage-full]="coverage.id === 'coverage'"
-                role="radio"
-                [class.is-selected]="premiumCoverage() === coverage.id"
-                [attr.aria-checked]="premiumCoverage() === coverage.id"
-                [disabled]="paymentBusy()"
-                (click)="selectCoverage(coverage.id)"
+                id="payment-coverage-toggle"
+                class="checkout-section-toggle"
+                [attr.aria-expanded]="coverageSectionOpen()"
+                aria-controls="payment-coverage-panel"
+                (click)="toggleCoverageSection()"
               >
-                <span class="package-top"
-                  ><b>{{ coverage.label }}</b
-                  ><i aria-hidden="true">{{
-                    premiumCoverage() === coverage.id ? '●' : '○'
-                  }}</i></span
-                >
-                <span class="coverage-hint">{{ coverage.hint }}</span>
-                <span class="package-price">
-                  <b>{{
-                    coverage.id === 'coverage'
-                      ? '+' + money(coveragePrice())
-                      : money(0)
-                  }}</b>
+                <span class="checkout-section-copy">
+                  <span class="checkout-section-title">Premium Content Coverage</span>
+                  <span class="checkout-section-subtitle">Unlock her exclusive frames</span>
+                  @if (!coverageSectionOpen()) {
+                    <span class="checkout-section-choice" [attr.data-choice]="premiumCoverage()"
+                      ><span class="sr-only">Selected: </span
+                      ><span class="checkout-section-choice-label">{{
+                        selectedCoverageLabel()
+                      }}</span></span
+                    >
+                  }
+                </span>
+                <span class="checkout-section-chevron" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
                 </span>
               </button>
-            }
-          </div>
+            </h3>
+            <div
+              id="payment-coverage-panel"
+              class="checkout-section-panel"
+              role="region"
+              aria-labelledby="payment-coverage-toggle"
+              [attr.inert]="coverageSectionOpen() ? null : ''"
+            >
+              <div class="checkout-section-body">
+                <div
+                  class="payment-coverages"
+                  role="radiogroup"
+                  aria-label="Premium Content Coverage"
+                >
+                  @for (coverage of premiumCoverages; track coverage.id) {
+                    <button
+                      type="button"
+                      class="payment-coverage"
+                      [class.coverage-none]="coverage.id === 'none'"
+                      [class.coverage-full]="coverage.id === 'coverage'"
+                      role="radio"
+                      [class.is-selected]="premiumCoverage() === coverage.id"
+                      [attr.aria-checked]="premiumCoverage() === coverage.id"
+                      [disabled]="paymentBusy()"
+                      (click)="selectCoverage(coverage.id)"
+                    >
+                      <span class="package-top"
+                        ><b>{{ coverage.label }}</b
+                        ><i aria-hidden="true">{{
+                          premiumCoverage() === coverage.id ? '●' : '○'
+                        }}</i></span
+                      >
+                      <span class="coverage-hint">{{ coverage.hint }}</span>
+                      <span class="package-price">
+                        <b>{{
+                          coverage.id === 'coverage' ? '+' + money(coveragePrice()) : money(0)
+                        }}</b>
+                      </span>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
 
           <section class="coupon-panel" aria-labelledby="premium-coupon-title">
             <div class="coupon-panel-heading">
@@ -578,8 +671,7 @@
             </div>
             @if (breakdown().coverage > 0) {
               <div class="payment-coverage-line">
-                <span>Premium Content Coverage · Base Price + ₹51</span
-                ><b>{{ money(breakdown().coverage) }}</b>
+                <span>Premium Content Coverage</span><b>{{ money(breakdown().coverage) }}</b>
               </div>
             }
             <div>

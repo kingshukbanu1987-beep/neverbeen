@@ -50,6 +50,7 @@ import {
   PremiumContentCoverageId,
   paymentBreakdown,
   paymentDurationMs,
+  paymentPackage,
   premiumContentCoveragePrice,
 } from './payment-packages';
 import { UpiAppLauncher } from './upi-app-launcher';
@@ -158,17 +159,33 @@ export class LiveChatAccess {
   protected readonly selectedPackage = signal<PaymentPackageId>('basic');
   /**
    * The Premium Content Coverage choice of the checkout. `None` is selected by default; the
-   * coverage itself adds the Base Price + ₹51 to the package subtotal, under the same taxes.
+   * coverage itself adds a flat ₹100 to the package subtotal, under the same taxes, and unlocks
+   * "Show Premium Content" in the Live Chat that follows.
    */
   protected readonly premiumCoverages = PREMIUM_CONTENT_COVERAGES;
   protected readonly premiumCoverage = signal<PremiumContentCoverageId>('none');
   /** The rupee amount the selected coverage adds — ₹0 while `None` stays selected. */
   protected readonly coverageAmount = computed(() =>
-    premiumContentCoveragePrice(this.premiumPrice() ?? 0, this.premiumCoverage()),
+    premiumContentCoveragePrice(this.premiumCoverage()),
   );
-  /** The coverage's own price card: the Base Price + ₹51, exactly what selecting it adds. */
-  protected readonly coveragePrice = computed(() =>
-    premiumContentCoveragePrice(this.premiumPrice() ?? 0, 'coverage'),
+  /** The coverage's own price card: the flat ₹100, exactly what selecting it adds. */
+  protected readonly coveragePrice = computed(() => premiumContentCoveragePrice('coverage'));
+  /**
+   * The two collapsible sections of the checkout — the duration packages and the Premium Content
+   * Coverage. Both open expanded on every visit; a collapsed section keeps its heading and shows
+   * the name of the option selected in it.
+   */
+  protected readonly durationSectionOpen = signal(true);
+  protected readonly coverageSectionOpen = signal(true);
+  /** The name of the selected duration package, shown under its collapsed section. */
+  protected readonly selectedPackageLabel = computed(
+    () => paymentPackage(this.selectedPackage()).label,
+  );
+  /** The name of the selected coverage choice, shown under its collapsed section. */
+  protected readonly selectedCoverageLabel = computed(
+    () =>
+      PREMIUM_CONTENT_COVERAGES.find((coverage) => coverage.id === this.premiumCoverage())?.label ??
+      PREMIUM_CONTENT_COVERAGES[0].label,
   );
   protected readonly couponCode = signal('');
   protected readonly appliedCoupon = signal<PaymentCoupon | null>(null);
@@ -202,6 +219,14 @@ export class LiveChatAccess {
     if (this.paymentBusy()) return;
     this.premiumCoverage.set(id);
     this.resetPayment();
+  }
+  /** Collapses or expands the "Make time for connection" section. */
+  protected toggleDurationSection(): void {
+    this.durationSectionOpen.update((open) => !open);
+  }
+  /** Collapses or expands the "Premium Content Coverage" section. */
+  protected toggleCoverageSection(): void {
+    this.coverageSectionOpen.update((open) => !open);
   }
   protected onCouponCodeInput(event: Event): void {
     this.couponCode.set((event.target as HTMLInputElement).value);
@@ -377,6 +402,9 @@ export class LiveChatAccess {
       this.selectedPackage.set('basic');
       // Every fresh checkout starts with no coverage: 'None' is selected by default.
       this.premiumCoverage.set('none');
+      // ...and with both collapsible sections expanded.
+      this.durationSectionOpen.set(true);
+      this.coverageSectionOpen.set(true);
       // A fresh album photograph becomes the checkout's background on every visit.
       this.paymentPhotoSelection.update((selection) => selection + 1);
       this.stage.set('payment');
@@ -428,6 +456,8 @@ export class LiveChatAccess {
     }
     const amount = this.premiumPrice() === null ? null : this.breakdown().total;
     const paymentPackageId = this.selectedPackage();
+    // The coverage paid for travels into the chat, where it alone unlocks Show Premium Content.
+    const premiumContentCoverage = this.premiumCoverage() === 'coverage';
     if (this.selected() !== 'premium' || amount === null) return;
     const method = this.paymentMethod();
     if (!method) {
@@ -435,7 +465,7 @@ export class LiveChatAccess {
       return;
     }
     if (this.desktopPayment) {
-      this.showPaymentQr(method, amount, paymentPackageId);
+      this.showPaymentQr(method, amount, paymentPackageId, premiumContentCoverage);
       return;
     }
     const modelSlug = this.model().slug;
@@ -466,6 +496,7 @@ export class LiveChatAccess {
           name: this.memberName(),
           avatar: this.memberPhoto(),
           paymentPackageId,
+          premiumContentCoverage,
         });
       })
       .catch((error: unknown) => {
@@ -485,7 +516,12 @@ export class LiveChatAccess {
    * The chat opens automatically ten seconds later. No collect request is sent to the UPI ID
    * (NPCI no longer permits one from a desktop website), and the timer is not payment proof.
    */
-  private showPaymentQr(method: UpiApp, amount: number, paymentPackageId: PaymentPackageId): void {
+  private showPaymentQr(
+    method: UpiApp,
+    amount: number,
+    paymentPackageId: PaymentPackageId,
+    premiumContentCoverage: boolean,
+  ): void {
     const problem = upiIdError(this.payerUpiId());
     if (problem) {
       this.payerUpiIdError.set(problem);
@@ -540,6 +576,7 @@ export class LiveChatAccess {
         name: this.memberName(),
         avatar: this.memberPhoto(),
         paymentPackageId,
+        premiumContentCoverage,
       });
     };
     tick();
