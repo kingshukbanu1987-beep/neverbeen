@@ -469,10 +469,8 @@
 
           <section class="coupon-panel" aria-labelledby="premium-coupon-title">
             <div class="coupon-panel-heading">
-              <div>
-                <h3 id="premium-coupon-title">Have a coupon?</h3>
-                <p>Discount applies to your package subtotal.</p>
-              </div>
+              <h3 id="premium-coupon-title">Have a coupon?</h3>
+              <p class="coupon-subtotal-note">Discount applies to your package subtotal.</p>
             </div>
             @if (appliedCoupon(); as coupon) {
               <div class="coupon-applied" role="status">
