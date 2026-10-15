@@ -1,6 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
-import { PremiumPaymentRequest, UPI_APPS, upiPaymentUrl, upiPlatform } from './premium-payment';
+import {
+  PremiumPaymentRequest,
+  UPI_APPS,
+  UpiPlatform,
+  upiPaymentUrl,
+  upiPlatform,
+} from './premium-payment';
 
 /** No handoff within this window means the app is missing or the browser blocked the link. */
 export const UPI_APP_LAUNCH_TIMEOUT_MS = 4_000;
@@ -10,13 +16,22 @@ export class UpiAppLauncher {
   private readonly document = inject(DOCUMENT);
 
   /**
+   * The phone/tablet platform whose payment app this browser can open, or `null` on a laptop or
+   * desktop — those pay by scanning a UPI QR code with their phone or tablet instead.
+   */
+  platform(): UpiPlatform | null {
+    const browser = this.document.defaultView;
+    return browser ? upiPlatform(browser.navigator) : null;
+  }
+
+  /**
    * Resolves on a browser return after the page was actually hidden, NOT on payment success.
    * A blur/focus pair alone (e.g. dismissing an app-opening prompt) must not start a chat.
    * The temporary unverified access policy is applied by LiveChatAccess, not by this launcher.
    */
   async open(request: PremiumPaymentRequest, signal: AbortSignal): Promise<void> {
     const browser = this.document.defaultView;
-    const platform = browser ? upiPlatform(browser.navigator) : null;
+    const platform = this.platform();
     const appName = UPI_APPS.find((app) => app.id === request.method)?.label ?? 'your UPI app';
     if (!browser || !platform) {
       throw new Error(

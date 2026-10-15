@@ -1107,10 +1107,8 @@
   font-style: normal;
 }
 
-/* The Premium payment step: amount, chosen app, and the temporary unverified handoff. */
-.access-payment {
-  max-width: 620px;
-}
+/* The Premium payment step: amount, chosen app, and the temporary unverified payment. Its
+   ultra-modern white finish over the model's photograph is defined at the end of this file. */
 
 .payment-price-card {
   display: grid;
@@ -1868,17 +1866,27 @@
     transition: none;
   }
 }
-/* Keep the light finish exclusive to checkout; other access stages retain their theme. */
+/* ── Premium checkout: an ultra-modern white finish over the model's own photograph ──────────
+   One of her album photographs fills the payment step at 90% opacity (10% of the white page
+   shows through) and stays pinned behind the checkout while it scrolls. Every control sits on a
+   frosted white sheet, so the photo frames the page without competing with the payment details.
+   Other access stages keep their own theme. */
 .access-backdrop.is-payment {
-  background: rgb(240 242 248 / 94%);
-  backdrop-filter: blur(12px);
+  background:
+    radial-gradient(circle at 16% 10%, rgb(255 255 255 / 72%), transparent 38rem),
+    rgb(234 237 245 / 94%);
+  backdrop-filter: blur(14px);
 }
 
 .access-shell.is-payment {
-  border-color: #e3e6ee;
+  /* `clip`, unlike `hidden`, is not a scroll container, so the photograph layer can stay pinned to
+     the viewport while the backdrop scrolls. Browsers without `clip` keep `hidden`, and the photo
+     then simply scrolls with the top of the checkout. */
+  overflow: clip;
+  border-color: rgb(255 255 255 / 80%);
   background: #fff;
-  color: #202536;
-  box-shadow: 0 24px 80px rgb(32 37 54 / 12%);
+  color: #0e1525;
+  box-shadow: 0 30px 90px rgb(14 21 37 / 18%);
   color-scheme: light;
 }
 
@@ -1887,118 +1895,731 @@
 }
 
 .access-shell.is-payment .access-model-bar {
+  border-color: #eceff5;
   background: #fff;
-  border-color: #e3e6ee;
 }
 
 .access-payment {
-  max-width: 720px;
-  color: #202536;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   background: #fff;
+  color: #0e1525;
+}
+
+.payment-photo-layer {
+  position: sticky;
+  z-index: 0;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  margin-bottom: -100vh;
+  margin-bottom: -100dvh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.payment-model-photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 42% 20%;
+  opacity: 0.9;
+  animation: payment-photo-in 700ms ease both;
+}
+
+.payment-photo-wash {
+  display: none;
+}
+
+.payment-sheet {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  width: min(640px, calc(100% - 2.5rem));
+  margin: clamp(6rem, 16vh, 10rem) auto clamp(1.5rem, 4vw, 2.75rem);
+  padding: clamp(1.5rem, 3.6vw, 2.6rem);
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 94%), rgb(255 255 255 / 88%));
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  box-shadow:
+    0 50px 100px -40px rgb(14 21 37 / 50%),
+    0 18px 40px -18px rgb(14 21 37 / 22%),
+    inset 0 1px 0 rgb(255 255 255 / 95%);
+  animation: payment-sheet-in 520ms cubic-bezier(0.22, 0.7, 0.27, 1) both;
+}
+
+/* Laptops and desktops: the checkout floats on the right and the photograph is framed in the
+   space to its left, so the model stays in view whatever the album photo's composition. A soft
+   wash of the same photograph continues behind the sheet; both layers stay at 90% opacity. */
+@media (min-width: 1100px) {
+  .payment-sheet {
+    width: min(600px, 54%);
+    margin: clamp(1.75rem, 3vw, 2.75rem) clamp(1.5rem, 3.4vw, 2.75rem) clamp(1.75rem, 3vw, 2.75rem)
+      auto;
+  }
+
+  .payment-model-photo {
+    width: 66%;
+    object-position: 50% 20%;
+    -webkit-mask-image: linear-gradient(to right, #000 72%, transparent);
+    mask-image: linear-gradient(to right, #000 72%, transparent);
+  }
+
+  .payment-photo-wash {
+    position: absolute;
+    top: -48px;
+    left: -48px;
+    display: block;
+    width: calc(100% + 96px);
+    height: calc(100% + 96px);
+    object-fit: cover;
+    opacity: 0.9;
+    filter: blur(40px) saturate(1.2);
+    -webkit-mask-image: linear-gradient(to right, transparent 40%, #000 66%);
+    mask-image: linear-gradient(to right, transparent 40%, #000 66%);
+    animation: payment-photo-in 700ms ease both;
+  }
 }
 
 .access-payment h2 {
-  color: #202536;
+  color: #0e1525;
   font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  font-weight: 700;
+  font-size: clamp(1.85rem, 3.4vw, 2.55rem);
+  font-weight: 750;
   letter-spacing: -0.045em;
+  line-height: 1.05;
 }
 
 .access-payment .access-kicker,
 .access-payment .flow-back {
-  color: #6545b5;
+  color: #5b3fd1;
+}
+
+.access-payment .flow-back:hover {
+  color: #3f27a8;
 }
 
 .access-payment .access-kicker i {
-  background: #7052c8;
-  box-shadow: 0 0 0 4px rgb(112 82 200 / 10%);
+  background: #6d4ae0;
+  box-shadow: 0 0 0 4px rgb(109 74 224 / 12%);
+  animation: payment-kicker-pulse 1.8s ease-in-out infinite;
 }
 
 .access-payment .flow-lede,
 .access-payment .plan-footnote,
 .access-payment .payment-summary,
 .access-payment .payment-status {
-  color: #626b7e;
+  color: #5f6b80;
 }
 
 .access-payment .flow-lede b,
 .access-payment .payment-summary b {
-  color: #202536;
+  color: #0e1525;
 }
 
 .access-payment .payment-price-card {
   width: auto;
-  border-color: #e5def6;
-  background: linear-gradient(120deg, #faf8ff, #f8fafc);
-  box-shadow: none;
+  margin: 1.5rem 0 0.25rem;
+  padding: 1.3rem 1.5rem 1.4rem;
+  border: 1px solid #eceff5;
+  border-radius: 22px;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgb(124 92 255 / 11%), transparent 55%),
+    linear-gradient(180deg, #fff, #fcfcff);
+  box-shadow:
+    0 1px 2px rgb(14 21 37 / 4%),
+    0 16px 36px -22px rgb(14 21 37 / 26%);
 }
 
 .access-payment .payment-price-label,
 .access-payment .payment-price-meta {
-  color: #626b7e;
+  color: #5f6b80;
   line-height: 1.6;
 }
 
 .access-payment .payment-price-value {
-  color: #6545b5;
+  color: #0e1525;
   text-shadow: none;
 }
 
+.access-payment .payment-price-value small {
+  color: #6d4ae0;
+}
+
+.access-payment .package-heading h3 {
+  color: #0e1525;
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.access-payment .package-heading > span {
+  color: #6b7488;
+}
+
+.access-payment .payment-package {
+  border-color: #eceff5;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(14 21 37 / 4%);
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.access-payment .payment-package:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -20px rgb(14 21 37 / 34%);
+}
+
+.access-payment .payment-package:hover:not(:disabled):not(:focus-visible) {
+  outline: none;
+}
+
+.access-payment .payment-package.is-selected {
+  border-color: #6d4ae0;
+  background: linear-gradient(180deg, #fff, #faf8ff);
+  box-shadow:
+    0 0 0 1px #6d4ae0,
+    0 18px 36px -22px rgb(91 63 209 / 55%);
+}
+
+.access-payment .package-top i,
+.access-payment .package-extra {
+  color: #5b3fd1;
+}
+
+.access-payment .payment-breakdown {
+  border-color: #eceff5;
+  border-radius: 22px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 1px 2px rgb(14 21 37 / 4%);
+}
+
+.access-payment .payment-breakdown .payment-total {
+  border-color: #eceff5;
+}
+
+.access-payment .payment-breakdown b {
+  color: #0e1525;
+}
+
 .access-payment .payment-method {
-  border-color: #e3e6ee;
-  color: #202536;
-  box-shadow: none;
+  padding: 0.95rem 1rem;
+  text-align: left;
+  border-color: #eceff5;
+  border-radius: 18px;
+  background: #fff;
+  color: #0e1525;
+  box-shadow: 0 1px 2px rgb(14 21 37 / 4%);
 }
 
 .access-payment .payment-method.is-selected {
-  border-color: #7052c8;
-  background: #f6f3ff;
-  box-shadow: inset 0 0 0 1px #7052c8;
+  border-color: #6d4ae0;
+  background: linear-gradient(180deg, #fff, #faf8ff);
+  box-shadow:
+    0 0 0 1px #6d4ae0,
+    0 18px 36px -22px rgb(91 63 209 / 55%);
 }
 
 .access-payment .payment-method:hover:not(:disabled),
 .access-payment .payment-method:focus-visible {
-  border-color: #7052c8;
+  border-color: #6d4ae0;
+}
+
+.access-payment .payment-method-mark {
+  width: 48px;
+  height: 40px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #eceff5;
 }
 
 .access-payment .payment-method-copy small {
-  color: #626b7e;
+  color: #6b7488;
 }
 
 .access-payment .payment-method-choice {
-  border-color: #a5adbd;
+  border-color: #b9c0cf;
 }
 
 .access-payment .payment-method.is-selected .payment-method-choice {
-  border-color: #7052c8;
-  background: radial-gradient(circle, #7052c8 42%, transparent 46%);
-  box-shadow: 0 0 0 3px rgb(112 82 200 / 10%);
+  border-color: #6d4ae0;
+  background: radial-gradient(circle, #6d4ae0 42%, transparent 46%);
+  box-shadow: 0 0 0 3px rgb(109 74 224 / 12%);
 }
 
-.access-payment .review-start {
-  border: 1px solid #6545b5;
-  color: #fff;
-  background: #7052c8;
-  box-shadow: 0 8px 20px rgb(112 82 200 / 16%);
+.access-payment .payment-summary {
+  margin-top: 1.1rem;
 }
 
-.access-payment .review-start:hover:not(:disabled) {
-  background: #6545b5;
-  box-shadow: 0 10px 24px rgb(112 82 200 / 22%);
-}
-
-.access-payment .review-start .review-start-dot {
+/* Laptop / desktop: the member's own UPI ID, required before the payment QR code appears. */
+.payment-upi-field {
+  margin-top: 1rem;
+  padding: 1.05rem 1.1rem 1rem;
+  border: 1px solid #eceff5;
+  border-radius: 20px;
   background: #fff;
-  box-shadow: 0 0 0 4px rgb(255 255 255 / 16%);
+  box-shadow:
+    0 1px 2px rgb(14 21 37 / 4%),
+    0 14px 30px -22px rgb(14 21 37 / 24%);
+  text-align: left;
+  animation: payment-reveal 280ms cubic-bezier(0.22, 0.7, 0.27, 1) both;
+}
+
+.payment-upi-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: #0e1525;
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.field-required {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #f2efff;
+  color: #5b3fd1;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.upi-input-wrap {
+  position: relative;
+  margin-top: 0.65rem;
+}
+
+.upi-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.95rem;
+  width: 20px;
+  height: 20px;
+  color: #8a93a6;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.upi-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 54px;
+  padding: 0 1rem 0 2.85rem;
+  border: 1px solid #dde2ec;
+  border-radius: 15px;
+  background: #fafbfd;
+  color: #0e1525;
+  font: inherit;
+  font-size: 0.98rem;
+  font-weight: 560;
+  letter-spacing: 0.01em;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.upi-input::placeholder {
+  color: #a0a8b8;
+  font-weight: 450;
+}
+
+.upi-input:hover:not(:disabled) {
+  border-color: #c9cfdc;
+}
+
+.upi-input:focus {
+  border-color: #6d4ae0;
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgb(109 74 224 / 14%);
+}
+
+.upi-input:focus + .upi-input-icon,
+.upi-input-wrap:focus-within .upi-input-icon {
+  color: #6d4ae0;
+}
+
+.upi-input:disabled {
+  border-color: #e6e9f0;
+  background: #f4f6fa;
+  color: #3d4659;
+  cursor: not-allowed;
+}
+
+.payment-upi-field.has-error .upi-input {
+  border-color: #e5484d;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgb(229 72 77 / 12%);
+}
+
+.payment-upi-field.has-error .upi-input-icon {
+  color: #e5484d;
+}
+
+.access-payment .field-error {
+  margin: 0.55rem 0 0;
+  color: #c6303a;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.payment-method-error {
+  text-align: left;
+}
+
+.field-hint {
+  margin: 0.55rem 0 0;
+  color: #6b7488;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+/* Laptop / desktop: the payment QR code and the ten-second countdown to the chat. */
+.payment-qr {
+  margin-top: 1.1rem;
+  padding: clamp(1.1rem, 2.6vw, 1.45rem);
+  border: 1px solid #eceff5;
+  border-radius: 24px;
+  background: radial-gradient(120% 100% at 0% 0%, rgb(124 92 255 / 8%), transparent 50%), #fff;
+  box-shadow:
+    0 1px 2px rgb(14 21 37 / 4%),
+    0 26px 50px -30px rgb(14 21 37 / 38%);
+  text-align: left;
+  animation: payment-reveal 360ms cubic-bezier(0.22, 0.7, 0.27, 1) both;
+}
+
+.payment-qr:focus {
+  outline: none;
+}
+
+.payment-qr:focus-visible {
+  outline: 2px solid #6d4ae0;
+  outline-offset: 4px;
+}
+
+.payment-qr-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #11845b;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.payment-qr-kicker i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1fbf7a;
+  box-shadow: 0 0 0 4px rgb(31 191 122 / 16%);
+}
+
+.payment-qr-head h3 {
+  margin: 0.4rem 0 0;
+  color: #0e1525;
+  font-size: 1.2rem;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+}
+
+.payment-qr-payer {
+  margin: 0.3rem 0 0;
+  color: #5f6b80;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.payment-qr-payer b {
+  color: #0e1525;
+  font-weight: 700;
+}
+
+.payment-qr-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1rem, 3vw, 1.5rem);
+  margin-top: 1rem;
+}
+
+.payment-qr-code {
+  position: relative;
+  width: clamp(200px, 24vw, 236px);
+  aspect-ratio: 1;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px #eceff5,
+    0 20px 40px -22px rgb(14 21 37 / 45%);
+}
+
+.payment-qr-code svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Near-black modules keep the strongest contrast for phone cameras. */
+.payment-qr-modules,
+.payment-qr-pupil {
+  fill: #0b1020;
+}
+
+.payment-qr-eye {
+  fill: none;
+  stroke: #0b1020;
+  stroke-width: 1;
+}
+
+.payment-qr-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 24%;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgb(14 21 37 / 6%),
+    0 4px 12px rgb(14 21 37 / 16%);
+  transform: translate(-50%, -50%);
+}
+
+.payment-qr-logo img {
+  display: block;
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+}
+
+.payment-qr-logo.is-wordmark img {
+  width: 86%;
+}
+
+.payment-qr-facts {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.payment-qr-facts > div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid #f0f2f7;
+}
+
+.payment-qr-facts dt {
+  color: #6b7488;
+  font-size: 0.7rem;
+}
+
+.payment-qr-facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #0e1525;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payment-qr-facts > div:first-child dd {
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-qr-steps {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  counter-reset: payment-step;
+  list-style: none;
+}
+
+.payment-qr-steps li {
+  position: relative;
+  padding-left: 1.85rem;
+  color: #4b5568;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  counter-increment: payment-step;
+}
+
+.payment-qr-steps li::before {
+  position: absolute;
+  top: 0.05rem;
+  left: 0;
+  display: grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  place-items: center;
+  border-radius: 50%;
+  background: #f2efff;
+  color: #5b3fd1;
+  content: counter(payment-step);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.payment-qr-steps b {
+  color: #0e1525;
+}
+
+.payment-countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 1.1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 18px;
+  background: linear-gradient(120deg, #f4f1ff, #f7f9fc);
+}
+
+.countdown-ring {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.countdown-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.countdown-track,
+.countdown-progress {
+  fill: none;
+  stroke-width: 3.5;
+}
+
+.countdown-track {
+  stroke: rgb(109 74 224 / 16%);
+}
+
+.countdown-progress {
+  stroke: #6d4ae0;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  animation-name: payment-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.countdown-ring b {
+  position: relative;
+  color: #3f27a8;
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.countdown-copy b {
+  color: #0e1525;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.countdown-copy small {
+  color: #6b7488;
+  font-size: 0.68rem;
+}
+
+/* Pay and Chat: a full-width call to action whose label never changes or shows the amount. */
+.access-payment .pay-and-chat {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 1.25rem;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #8a6dff 0%, #6d4ae0 45%, #4f33c4 100%);
+  color: #fff;
+  font-size: 0.98rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 18px 36px -14px rgb(79 51 196 / 60%),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+}
+
+.access-payment .pay-and-chat:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8a6dff 0%, #6d4ae0 45%, #4f33c4 100%);
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow:
+    0 22px 40px -14px rgb(79 51 196 / 66%),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+}
+
+.access-payment .pay-and-chat:disabled {
+  cursor: progress;
+  filter: none;
+  opacity: 0.8;
+}
+
+.access-payment .pay-and-chat .review-start-dot {
+  background: #fff;
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 18%);
+}
+
+.access-payment .pay-and-chat.is-busy .review-start-dot {
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid rgb(255 255 255 / 38%);
+  border-top-color: #fff;
+  background: transparent;
+  box-shadow: none;
+  animation: payment-spin 0.8s linear infinite;
 }
 
 .access-payment .payment-cancel {
-  color: #6545b5;
+  color: #5b3fd1;
 }
 
 .access-payment .payment-cancel:hover,
 .access-payment .payment-cancel:focus-visible {
-  background: #f6f3ff;
+  background: #f4f1ff;
 }
 
 .access-payment .plan-footnote {
@@ -2011,6 +2632,111 @@
 .access-payment .payment-method:focus-visible,
 .access-payment .review-start:focus-visible,
 .access-payment .payment-cancel:focus-visible {
-  outline: 2px solid #7052c8;
+  outline: 2px solid #6d4ae0;
   outline-offset: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+  /* Phones: a portrait of the model shows above the sheet before it scrolls over her photo. */
+  .payment-sheet {
+    width: calc(100% - 1.25rem);
+    margin: clamp(9rem, 30svh, 16rem) auto max(0.75rem, env(safe-area-inset-bottom));
+    padding: 1.35rem 1.1rem 1.4rem;
+    border-radius: 26px;
+  }
+
+  .payment-model-photo {
+    object-position: 42% top;
+  }
+}
+
+@media (max-width: 560px) {
+  .payment-qr-body {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .payment-qr-details {
+    width: 100%;
+  }
+}
+
+@keyframes payment-photo-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes payment-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes payment-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes payment-countdown {
+  to {
+    stroke-dashoffset: 100;
+  }
+}
+
+@keyframes payment-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes payment-kicker-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgb(109 74 224 / 14%);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgb(109 74 224 / 4%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-model-photo,
+  .payment-photo-wash,
+  .payment-sheet,
+  .payment-upi-field,
+  .payment-qr,
+  .access-payment .access-kicker i {
+    animation: none;
+  }
+
+  /* The number still counts down; only the draining ring stops moving. */
+  .countdown-progress {
+    animation: none;
+  }
+
+  .access-payment .pay-and-chat.is-busy .review-start-dot {
+    animation-duration: 2.4s;
+  }
+
+  .access-payment .payment-package,
+  .upi-input {
+    transition: none;
+  }
 }

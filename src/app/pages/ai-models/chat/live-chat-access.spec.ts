@@ -6,8 +6,9 @@ import { CommunityService } from '../../../services/community.service';
 import { aiModelProfiles } from '../ai-model-data';
 import { LiveChatAccess } from './live-chat-access';
 import { allowsLiveChatPlan, requiresRegisteredChat } from './live-chat-policy';
-import { PremiumPaymentRequest } from './premium-payment';
+import { PremiumPaymentRequest, UpiPlatform, upiQrPayload } from './premium-payment';
 import { UpiAppLauncher } from './upi-app-launcher';
+import { upiQrCode } from './upi-qr';
 
 const exclusiveSlugs = [
   'rozalin-el-masry',
@@ -29,6 +30,8 @@ const premiumPrices: Readonly<Record<string, number>> = {
 
 const upiLauncher = {
   open: vi.fn<(request: PremiumPaymentRequest, signal: AbortSignal) => Promise<void>>(),
+  /** A phone by default; `null` puts the payment page in its laptop/desktop QR flow. */
+  platform: vi.fn<() => UpiPlatform | null>(() => 'android'),
 };
 
 const community = {
@@ -341,7 +344,7 @@ describe('premium model access and UPI payment', () => {
     fixture.destroy();
   });
 
-  it('shows only the app choices and Pay & Chat, with NeverBeen instead of receiver IDs', () => {
+  it('shows only the app choices and Pay and Chat, with NeverBeen instead of receiver IDs', () => {
     const { fixture, element, premium } = paymentPage();
     const payment = element.querySelector('.access-payment')!;
     expect(payment.querySelector('.payment-price-value')?.textContent?.trim()).toBe('15 minutes');
@@ -349,8 +352,10 @@ describe('premium model access and UPI payment', () => {
     expect(
       payment.querySelector('.payment-summary')?.textContent?.replace(/\s+/g, ' ').trim(),
     ).toBe('Pay ₹124.95 to NeverBeen with Google Pay or PhonePe.');
-    expect(payment.querySelector('.review-start')?.textContent).toContain('Pay ₹124.95 & Chat');
+    // The button never carries the amount: the total is in the breakdown and summary above it.
+    expect(payment.querySelector('.review-start')?.textContent?.trim()).toBe('Pay and Chat');
     expect(payment.querySelector('input')).toBeNull();
+    expect(payment.querySelector('.payment-qr')).toBeNull();
     expect(payment.textContent).not.toMatch(/@|UTR|transaction reference|Verify payment|Razorpay/i);
     expect(payment.textContent).toContain('verification is temporarily disabled');
     expect(premium).not.toHaveBeenCalled();
@@ -374,7 +379,10 @@ describe('premium model access and UPI payment', () => {
         expect.any(AbortSignal),
       );
       expect(pay.disabled).toBe(true);
-      expect(pay.textContent).toContain(method === 'gpay' ? 'Google Pay' : 'PhonePe');
+      expect(pay.textContent?.trim()).toBe('Pay and Chat');
+      expect(element.querySelector('.payment-status')?.textContent).toContain(
+        method === 'gpay' ? 'Google Pay' : 'PhonePe',
+      );
       expect(premium).not.toHaveBeenCalled();
       // A second click or switching apps while opening cannot create a duplicate handoff.
       pay.click();
@@ -427,7 +435,7 @@ describe('premium model access and UPI payment', () => {
     fixture.destroy();
   });
 
-  it('keeps a failed launch on the same page with Payment Failed and a working Try again', async () => {
+  it('keeps a failed launch on the same page with Payment Failed and a working Pay and Chat', async () => {
     const handoff = appHandoff();
     const { fixture, element, premium } = paymentPage();
     element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
@@ -441,7 +449,7 @@ describe('premium model access and UPI payment', () => {
     );
     const retry = element.querySelector<HTMLButtonElement>('.access-payment .review-start')!;
     expect(retry.disabled).toBe(false);
-    expect(retry.textContent).toContain('Try again');
+    expect(retry.textContent?.trim()).toBe('Pay and Chat');
     expect(premium).not.toHaveBeenCalled();
 
     const retryHandoff = appHandoff();
@@ -465,8 +473,8 @@ describe('premium model access and UPI payment', () => {
     fixture.detectChanges();
     expect(signal.aborted).toBe(true);
     expect(element.querySelector('.payment-error')?.textContent).toContain('Payment Failed');
-    expect(element.querySelector('.access-payment .review-start')?.textContent).toContain(
-      'Try again',
+    expect(element.querySelector('.access-payment .review-start')?.textContent?.trim()).toBe(
+      'Pay and Chat',
     );
     handoff.returned();
     await flushHandoff();
@@ -612,6 +620,382 @@ describe('premium model access and UPI payment', () => {
   });
 });
 
+describe('Premium checkout photograph and white finish', () => {
+  beforeEach(async () => {
+    community.currentUser.set(null);
+    community.isAuthenticated.set(false);
+    community.guestBrowsing.set(false);
+    community.profile.set(null);
+    await TestBed.configureTestingModule({
+      imports: [LiveChatAccess],
+      providers: [
+        provideRouter([]),
+        { provide: CommunityService, useValue: community },
+        { provide: UpiAppLauncher, useValue: upiLauncher },
+      ],
+    }).compileComponents();
+  });
+
+  it.each(['android', null] as const)(
+    'lays the checkout over one of the model’s own album photographs (platform %s)',
+    (platform) => {
+      upiLauncher.platform.mockReturnValue(platform);
+      const { fixture, element, model } = paymentPage();
+      const layer = element.querySelector('.access-payment > .payment-photo-layer');
+      expect(layer?.getAttribute('aria-hidden')).toBe('true');
+      const photo = layer?.querySelector<HTMLImageElement>('img.payment-model-photo');
+      expect(photo?.getAttribute('alt')).toBe('');
+      const albumPhotos = model.photos.map((p) => p.src).filter((src) => src !== model.cover);
+      expect(albumPhotos).toContain(photo?.getAttribute('src'));
+      // Every control sits on the white sheet in front of the photograph.
+      const sheet = element.querySelector('.access-payment > .payment-sheet')!;
+      expect(sheet.querySelector('.pay-and-chat')).not.toBeNull();
+      expect(sheet.querySelector('.payment-methods')).not.toBeNull();
+
+      element.querySelector<HTMLButtonElement>('.access-payment .flow-back')!.click();
+      fixture.detectChanges();
+      expect(element.querySelector('.payment-model-photo')).toBeNull();
+      fixture.destroy();
+    },
+  );
+
+  it('opens the payment step at its top, wherever the chat details were scrolled to', () => {
+    signInAsMember();
+    const { fixture, element } = chooser('nourhan-durrani');
+    element.querySelector<HTMLButtonElement>('.plan-start-premium')!.click();
+    fixture.detectChanges();
+    const backdrop = element.querySelector<HTMLElement>('.access-backdrop')!;
+    let scrollTop = 640;
+    Object.defineProperty(backdrop, 'scrollTop', {
+      configurable: true,
+      get: () => scrollTop,
+      set: (value: number) => (scrollTop = value),
+    });
+    element.querySelector<HTMLButtonElement>('.review-start')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.access-payment')).not.toBeNull();
+    expect(scrollTop).toBe(0);
+    fixture.destroy();
+  });
+});
+
+describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () => {
+  beforeEach(async () => {
+    community.currentUser.set(null);
+    community.isAuthenticated.set(false);
+    community.guestBrowsing.set(false);
+    community.profile.set(null);
+    upiLauncher.platform.mockReturnValue(null);
+    await TestBed.configureTestingModule({
+      imports: [LiveChatAccess],
+      providers: [
+        provideRouter([]),
+        { provide: CommunityService, useValue: community },
+        { provide: UpiAppLauncher, useValue: upiLauncher },
+      ],
+    }).compileComponents();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const receivers = {
+    gpay: 'kingshuk.banu.temp@okhdfcbank',
+    phonepe: 'kingshuk.banu.temp-1@ybl',
+  } as const;
+
+  function payButton(element: HTMLElement): HTMLButtonElement {
+    return element.querySelector<HTMLButtonElement>('.access-payment .pay-and-chat')!;
+  }
+
+  function upiIdInput(element: HTMLElement): HTMLInputElement | null {
+    return element.querySelector<HTMLInputElement>('#payment-upi-id');
+  }
+
+  function chooseApp(page: ReturnType<typeof paymentPage>, method: 'gpay' | 'phonepe'): void {
+    page.element
+      .querySelectorAll<HTMLButtonElement>('.payment-method')
+      [method === 'gpay' ? 0 : 1].click();
+    page.fixture.detectChanges();
+  }
+
+  function typeUpiId(page: ReturnType<typeof paymentPage>, value: string): void {
+    const input = upiIdInput(page.element)!;
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    page.fixture.detectChanges();
+  }
+
+  function showQr(method: 'gpay' | 'phonepe' = 'gpay', upiId = 'member.name@okaxis') {
+    const page = paymentPage();
+    chooseApp(page, method);
+    typeUpiId(page, upiId);
+    payButton(page.element).click();
+    page.fixture.detectChanges();
+    return page;
+  }
+
+  function countdown(element: HTMLElement): string {
+    return element.querySelector('.countdown-ring b')?.textContent?.trim() ?? '';
+  }
+
+  it('asks for Google Pay or PhonePe first, then shows the mandatory UPI ID box', () => {
+    const page = paymentPage();
+    const { fixture, element, premium } = page;
+    expect(element.querySelector('.payment-method.is-selected')).toBeNull();
+    expect(upiIdInput(element)).toBeNull();
+    expect(payButton(element).textContent?.trim()).toBe('Pay and Chat');
+    expect(element.querySelector('.plan-footnote')?.textContent).toContain(
+      '10 seconds after your payment QR code appears',
+    );
+
+    payButton(element).click();
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-method-error')?.textContent).toContain(
+      'Choose Google Pay or PhonePe',
+    );
+    expect(element.querySelector('.payment-qr')).toBeNull();
+
+    chooseApp(page, 'phonepe');
+    const input = upiIdInput(element)!;
+    expect(input).not.toBeNull();
+    expect(input.required).toBe(true);
+    expect(input.getAttribute('aria-required')).toBe('true');
+    expect(input.placeholder).toContain('@ybl');
+    expect(element.querySelector('.payment-upi-field label')?.textContent).toContain('UPI ID');
+    expect(element.querySelector('.payment-method-error')).toBeNull();
+    expect(document.activeElement).toBe(input);
+    chooseApp(page, 'gpay');
+    expect(upiIdInput(element)!.placeholder).toContain('@okaxis');
+
+    expect(upiLauncher.open).not.toHaveBeenCalled();
+    expect(premium).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('will not show the QR code without a valid UPI ID, and points the member to the box', () => {
+    const page = paymentPage();
+    const { fixture, element, premium } = page;
+    chooseApp(page, 'gpay');
+    (document.activeElement as HTMLElement | null)?.blur();
+
+    payButton(element).click();
+    fixture.detectChanges();
+    const input = upiIdInput(element)!;
+    expect(element.querySelector('#payment-upi-id-error')?.textContent).toContain(
+      'Enter your UPI ID',
+    );
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.getAttribute('aria-describedby')).toContain('payment-upi-id-error');
+    expect(document.activeElement).toBe(input);
+    expect(element.querySelector('.payment-qr')).toBeNull();
+
+    typeUpiId(page, 'member');
+    expect(element.querySelector('#payment-upi-id-error')).toBeNull();
+    payButton(element).click();
+    fixture.detectChanges();
+    expect(element.querySelector('#payment-upi-id-error')?.textContent).toContain('valid UPI ID');
+    expect(element.querySelector('.payment-qr')).toBeNull();
+
+    // Enter in the box submits like the button; stray spaces and capitals are tidied.
+    typeUpiId(page, '  Member.Name@OKAXIS ');
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-qr')).not.toBeNull();
+    expect(upiIdInput(element)!.value).toBe('member.name@okaxis');
+    expect(upiLauncher.open).not.toHaveBeenCalled();
+    expect(premium).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it.each(['gpay', 'phonepe'] as const)(
+    'shows a UPI QR code with the exact amount for %s, then opens the chat 10 seconds later',
+    (method) => {
+      vi.useFakeTimers();
+      const { fixture, element, premium } = showQr(method);
+      const appName = method === 'gpay' ? 'Google Pay' : 'PhonePe';
+      const panel = element.querySelector<HTMLElement>('.payment-qr')!;
+      expect(panel).not.toBeNull();
+      expect(panel.querySelector('h3')?.textContent).toContain(`Scan to pay with ${appName}`);
+      expect(panel.textContent).toContain('₹124.95');
+      expect(panel.textContent).toContain('member.name@okaxis');
+      expect(panel.querySelector('.payment-qr-logo img')?.getAttribute('src')).toContain(
+        method === 'gpay' ? 'google-pay' : 'phonepe',
+      );
+
+      // The drawing is exactly the QR code of the standard UPI link for this payment.
+      const payload = upiQrPayload({
+        modelSlug: 'nourhan-durrani',
+        amount: 124.95,
+        method,
+        payerUpiId: 'member.name@okaxis',
+      });
+      expect(new URL(payload).searchParams.get('pa')).toBe(receivers[method]);
+      expect(new URL(payload).searchParams.get('am')).toBe('124.95');
+      const expected = upiQrCode(payload);
+      const svg = panel.querySelector('.payment-qr-code svg')!;
+      expect(svg.getAttribute('role')).toBe('img');
+      expect(svg.getAttribute('aria-label')).toContain('₹124.95');
+      expect(svg.getAttribute('viewBox')).toBe(expected.viewBox);
+      expect(svg.querySelector('.payment-qr-modules')?.getAttribute('d')).toBe(
+        expected.modulesPath,
+      );
+      expect(svg.querySelectorAll('.payment-qr-eye').length).toBe(3);
+      // The receiver is only inside the QR geometry, never in the page.
+      expect(element.innerHTML).not.toContain('kingshuk');
+
+      // The countdown runs while the button keeps its label and no phone app is opened.
+      expect(element.querySelector('[role="timer"]')).not.toBeNull();
+      expect(countdown(element)).toBe('10');
+      const pay = payButton(element);
+      expect(pay.disabled).toBe(true);
+      expect(pay.textContent?.trim()).toBe('Pay and Chat');
+      expect(element.querySelector('.payment-cancel')).not.toBeNull();
+      expect(upiIdInput(element)!.disabled).toBe(true);
+
+      vi.advanceTimersByTime(4_000);
+      fixture.detectChanges();
+      expect(countdown(element)).toBe('6');
+      vi.advanceTimersByTime(5_999);
+      fixture.detectChanges();
+      expect(countdown(element)).toBe('1');
+      expect(premium).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(1);
+      fixture.detectChanges();
+      expect(premium).toHaveBeenCalledExactlyOnceWith({
+        name: 'Test Member',
+        avatar: '/member.jpg',
+        paymentPackageId: 'basic',
+      });
+      expect(element.querySelector('.payment-status')?.textContent).toContain(
+        'Opening your Live Chat',
+      );
+      expect(element.textContent).not.toContain('Payment verified');
+      expect(upiLauncher.open).not.toHaveBeenCalled();
+
+      pay.click();
+      vi.advanceTimersByTime(20_000);
+      expect(premium).toHaveBeenCalledOnce();
+      fixture.destroy();
+    },
+  );
+
+  it('moves focus to the new QR code so keyboard and screen-reader users find it', () => {
+    const { fixture, element } = showQr();
+    expect(document.activeElement).toBe(element.querySelector('.payment-qr'));
+    expect(element.querySelector('.payment-qr [role="status"]')?.textContent).toContain(
+      'opens in 10 seconds',
+    );
+    fixture.destroy();
+  });
+
+  it('can cancel the QR code without starting a chat, then show a new one', () => {
+    vi.useFakeTimers();
+    const { fixture, element, premium } = showQr();
+    vi.advanceTimersByTime(3_000);
+    element.querySelector<HTMLButtonElement>('.payment-cancel')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-qr')).toBeNull();
+    expect(element.querySelector('.payment-error')?.textContent).toContain('Payment Failed');
+    expect(element.querySelector('.payment-error')?.textContent).toContain('cancelled');
+    expect(payButton(element).disabled).toBe(false);
+    expect(payButton(element).textContent?.trim()).toBe('Pay and Chat');
+    vi.advanceTimersByTime(30_000);
+    expect(premium).not.toHaveBeenCalled();
+
+    // The UPI ID is kept, so Pay and Chat shows a fresh code straight away.
+    payButton(element).click();
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-qr')).not.toBeNull();
+    expect(element.querySelector('.payment-error')).toBeNull();
+    expect(countdown(element)).toBe('10');
+    vi.advanceTimersByTime(10_000);
+    expect(premium).toHaveBeenCalledOnce();
+    fixture.destroy();
+  });
+
+  it.each(['back', 'close', 'destroy'] as const)(
+    'stops the countdown on %s, without starting a hidden chat later',
+    (action) => {
+      vi.useFakeTimers();
+      const { fixture, element, premium } = showQr();
+      if (action === 'back')
+        element.querySelector<HTMLButtonElement>('.access-payment .flow-back')!.click();
+      if (action === 'close') element.querySelector<HTMLButtonElement>('.access-close')!.click();
+      if (action === 'destroy') fixture.destroy();
+      vi.advanceTimersByTime(30_000);
+      expect(premium).not.toHaveBeenCalled();
+      if (action !== 'destroy') fixture.destroy();
+    },
+  );
+
+  it('does not start the chat when the Community member changes during the countdown', () => {
+    vi.useFakeTimers();
+    const { fixture, element, premium } = showQr();
+    community.currentUser.set({
+      id: 99,
+      profileComplete: true,
+      status: 'Active',
+      fullName: 'Other Member',
+    });
+    vi.advanceTimersByTime(10_000);
+    fixture.detectChanges();
+    expect(premium).not.toHaveBeenCalled();
+    expect(element.querySelector('.payment-qr')).toBeNull();
+    expect(element.querySelector('.payment-error')?.textContent).toContain('Community session');
+    fixture.destroy();
+  });
+
+  it('puts the selected duration package’s total in the QR code and the chat it opens', () => {
+    vi.useFakeTimers();
+    const page = paymentPage();
+    const { fixture, element, premium } = page;
+    element.querySelectorAll<HTMLButtonElement>('.payment-package')[1].click();
+    fixture.detectChanges();
+    chooseApp(page, 'gpay');
+    typeUpiId(page, '9876543210@ybl');
+    payButton(element).click();
+    fixture.detectChanges();
+    const payload = upiQrPayload({
+      modelSlug: 'nourhan-durrani',
+      amount: 437.85,
+      method: 'gpay',
+      payerUpiId: '9876543210@ybl',
+    });
+    expect(element.querySelector('.payment-qr-modules')?.getAttribute('d')).toBe(
+      upiQrCode(payload).modulesPath,
+    );
+    expect(element.querySelector('.payment-qr')?.textContent).toContain('₹437.85');
+    // Duration, app and UPI ID are frozen while the code is on screen.
+    expect(element.querySelectorAll<HTMLButtonElement>('.payment-package')[2].disabled).toBe(true);
+    expect(element.querySelector<HTMLButtonElement>('.payment-method')!.disabled).toBe(true);
+    vi.advanceTimersByTime(10_000);
+    expect(premium).toHaveBeenCalledExactlyOnceWith({
+      name: 'Test Member',
+      avatar: '/member.jpg',
+      paymentPackageId: 'extended',
+    });
+    fixture.destroy();
+  });
+
+  it('keeps the typed UPI ID when the member switches apps or goes back to the chat details', () => {
+    const page = paymentPage();
+    const { fixture, element } = page;
+    chooseApp(page, 'gpay');
+    typeUpiId(page, 'member.name@okaxis');
+    chooseApp(page, 'phonepe');
+    expect(upiIdInput(element)!.value).toBe('member.name@okaxis');
+    element.querySelector<HTMLButtonElement>('.access-payment .flow-back')!.click();
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('.review-start')!.click();
+    fixture.detectChanges();
+    expect(upiIdInput(element)!.value).toBe('member.name@okaxis');
+    fixture.destroy();
+  });
+});
+
 describe('blue tick beside Exclusive and Premium model names', () => {
   beforeEach(async () => {
     community.currentUser.set(null);
@@ -734,6 +1118,8 @@ describe('availability follows the model in front of the chooser', () => {
 
 afterEach(() => {
   upiLauncher.open.mockReset();
+  upiLauncher.platform.mockReset();
+  upiLauncher.platform.mockReturnValue('android');
   community.currentUser.set(null);
   community.isAuthenticated.set(false);
   community.guestBrowsing.set(false);

@@ -146,6 +146,18 @@ describe('UPI app handoff lifecycle, not payment verification', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it('reports the phone or tablet platform, and null on a laptop or desktop', () => {
+    expect(launcher.platform()).toBe('android');
+    context.browser.navigator.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)';
+    context.browser.navigator.platform = 'MacIntel';
+    expect(launcher.platform()).toBe('ios');
+    context.browser.navigator.maxTouchPoints = 0;
+    expect(launcher.platform()).toBeNull();
+    context.browser.navigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
+    context.browser.navigator.platform = 'Win32';
+    expect(launcher.platform()).toBeNull();
+  });
+
   it('uses the iOS Google Pay scheme for an iPad with a desktop user agent', async () => {
     context.browser.navigator.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)';
     context.browser.navigator.platform = 'MacIntel';

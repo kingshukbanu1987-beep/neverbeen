@@ -2,12 +2,16 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   effect,
   inject,
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
@@ -27,7 +31,17 @@ import {
   LiveChatPlanFeature,
   LiveChatPlanDefinition,
 } from './chat-types';
-import { PREMIUM_PAYMENT_NOTE, UPI_APPS, UpiApp, premiumPriceLabel } from './premium-payment';
+import {
+  DESKTOP_CHAT_START_DELAY_MS,
+  DESKTOP_PAYMENT_NOTE,
+  PREMIUM_PAYMENT_NOTE,
+  UPI_APPS,
+  UpiApp,
+  normalizeUpiId,
+  premiumPriceLabel,
+  upiIdError,
+  upiQrPayload,
+} from './premium-payment';
 import {
   PAYMENT_PACKAGES,
   PaymentPackageId,
@@ -35,8 +49,15 @@ import {
   paymentDurationMs,
 } from './payment-packages';
 import { UpiAppLauncher } from './upi-app-launcher';
+import { UpiQrCode, upiQrCode } from './upi-qr';
 
 type AccessStage = 'plans' | 'sign-in' | 'member-check' | 'payment';
+
+/**
+ * `opening` — a phone/tablet is handing off to its payment app; `scanning` — a laptop/desktop
+ * shows the payment QR code and counts down to the chat. Neither asserts a payment was received.
+ */
+type PaymentState = 'idle' | 'opening' | 'scanning' | 'continuing' | 'error';
 
 type PlanFeature = LiveChatPlanFeature;
 
@@ -47,8 +68,9 @@ const PLAN_ORDER: readonly LiveChatPlan[] = ['free', 'registered', 'premium'];
  * The deliberate access step placed in front of every Live Chat. It presents the three
  * entitlements — Free Chat, Registered User and the paid Premium plan — then passes Free Chat to
  * the existing identity form, or checks a Community member and, for a priced Premium chat,
- * opens their chosen UPI app. Payment verification is temporarily disabled by the owner:
- * returning from that app opens the chat without claiming payment was successful.
+ * opens their chosen UPI app — or, on a laptop or desktop, takes their UPI ID and shows a UPI QR
+ * code to scan with their phone, opening the chat ten seconds later. Payment verification is
+ * temporarily disabled by the owner: neither path claims that a payment was successful.
  */
 @Component({
   selector: 'app-live-chat-access',
@@ -96,17 +118,38 @@ export class LiveChatAccess {
   /** Incremented as the member sign-in form opens, so its album backdrop is newly randomised. */
   private readonly signInPhotoSelection = signal(0);
 
-  /** Temporary app handoff only: none of these states assert that a payment was received. */
+  /** Temporary, unverified payment only: none of these states assert a payment was received. */
   protected readonly upiApps = UPI_APPS;
-  protected readonly paymentNote = PREMIUM_PAYMENT_NOTE;
-  protected readonly paymentMethod = signal<UpiApp>('gpay');
-  protected readonly paymentState = signal<'idle' | 'opening' | 'continuing' | 'error'>('idle');
-  protected readonly paymentBusy = computed(
-    () => this.paymentState() === 'opening' || this.paymentState() === 'continuing',
+  /**
+   * Laptops and desktops cannot open a phone's payment app (and NPCI no longer allows a website
+   * to send a collect request to a typed UPI ID), so they pay by scanning a UPI QR code instead.
+   */
+  protected readonly desktopPayment = inject(UpiAppLauncher).platform() === null;
+  protected readonly paymentNote = this.desktopPayment
+    ? DESKTOP_PAYMENT_NOTE
+    : PREMIUM_PAYMENT_NOTE;
+  protected readonly chatStartDelayMs = DESKTOP_CHAT_START_DELAY_MS;
+  protected readonly chatStartSeconds = DESKTOP_CHAT_START_DELAY_MS / 1000;
+  /** Phones start on Google Pay; a desktop's UPI ID field appears once an app is chosen. */
+  protected readonly paymentMethod = signal<UpiApp | null>(this.desktopPayment ? null : 'gpay');
+  protected readonly paymentState = signal<PaymentState>('idle');
+  protected readonly paymentBusy = computed(() => {
+    const state = this.paymentState();
+    return state === 'opening' || state === 'scanning' || state === 'continuing';
+  });
+  protected readonly selectedUpiApp = computed(
+    () => UPI_APPS.find((app) => app.id === this.paymentMethod()) ?? null,
   );
   protected readonly paymentAppName = computed(
-    () => UPI_APPS.find((app) => app.id === this.paymentMethod())!.label,
+    () => this.selectedUpiApp()?.label ?? 'your UPI app',
   );
+  protected readonly paymentMethodError = signal('');
+  /** The desktop payer's own UPI ID — mandatory before the payment QR code is shown. */
+  protected readonly payerUpiId = signal('');
+  protected readonly payerUpiIdError = signal('');
+  protected readonly paymentQr = signal<UpiQrCode | null>(null);
+  /** Whole seconds until a desktop's Live Chat opens, while its payment QR code is showing. */
+  protected readonly chatCountdown = signal(0);
   protected readonly paymentPackages = PAYMENT_PACKAGES;
   protected readonly selectedPackage = signal<PaymentPackageId>('basic');
   protected readonly breakdown = computed(() =>
@@ -133,7 +176,12 @@ export class LiveChatAccess {
 
   private readonly community = inject(CommunityService);
   private readonly upiLauncher = inject(UpiAppLauncher);
+  private readonly injector = inject(Injector);
+  private readonly accessBackdrop = viewChild<ElementRef<HTMLElement>>('accessBackdrop');
+  private readonly upiIdInput = viewChild<ElementRef<HTMLInputElement>>('upiIdInput');
+  private readonly paymentQrPanel = viewChild<ElementRef<HTMLElement>>('paymentQrPanel');
   private activePayment: AbortController | null = null;
+  private chatCountdownTimer: ReturnType<typeof setTimeout> | undefined;
   private resumeHandled = false;
 
   constructor() {
@@ -268,7 +316,10 @@ export class LiveChatAccess {
       }
       this.resetPayment();
       this.selectedPackage.set('basic');
+      // A fresh album photograph becomes the checkout's background on every visit.
+      this.paymentPhotoSelection.update((selection) => selection + 1);
       this.stage.set('payment');
+      this.scrollAccessToTop();
       return;
     }
     this.registeredStarted.emit(identity);
@@ -290,8 +341,15 @@ export class LiveChatAccess {
 
   protected selectUpiApp(method: UpiApp): void {
     if (this.paymentBusy()) return;
+    const revealsUpiIdField = this.desktopPayment && this.paymentMethod() === null;
     this.paymentMethod.set(method);
     this.resetPayment();
+    if (revealsUpiIdField && !this.payerUpiId()) this.focusUpiIdInput();
+  }
+
+  protected onPayerUpiIdInput(event: Event): void {
+    this.payerUpiId.set((event.target as HTMLInputElement).value);
+    this.payerUpiIdError.set('');
   }
 
   /**
@@ -310,6 +368,15 @@ export class LiveChatAccess {
     const amount = this.premiumPrice() === null ? null : this.breakdown().total;
     const paymentPackageId = this.selectedPackage();
     if (this.selected() !== 'premium' || amount === null) return;
+    const method = this.paymentMethod();
+    if (!method) {
+      this.paymentMethodError.set('Choose Google Pay or PhonePe to continue.');
+      return;
+    }
+    if (this.desktopPayment) {
+      this.showPaymentQr(method, amount, paymentPackageId);
+      return;
+    }
     const modelSlug = this.model().slug;
     const memberId = this.community.currentUser()?.id;
     const controller = new AbortController();
@@ -318,7 +385,7 @@ export class LiveChatAccess {
     this.paymentError.set('');
 
     void this.upiLauncher
-      .open({ modelSlug, amount, method: this.paymentMethod() }, controller.signal)
+      .open({ modelSlug, amount, method }, controller.signal)
       .then(() => {
         if (this.activePayment !== controller || controller.signal.aborted) return;
         this.activePayment = null;
@@ -351,9 +418,81 @@ export class LiveChatAccess {
       });
   }
 
+  /**
+   * Laptop/desktop payment: the mandatory UPI ID is checked, then a UPI QR code with the exact
+   * amount is shown for the member to scan with Google Pay or PhonePe on their phone or tablet.
+   * The chat opens automatically ten seconds later. No collect request is sent to the UPI ID
+   * (NPCI no longer permits one from a desktop website), and the timer is not payment proof.
+   */
+  private showPaymentQr(method: UpiApp, amount: number, paymentPackageId: PaymentPackageId): void {
+    const problem = upiIdError(this.payerUpiId());
+    if (problem) {
+      this.payerUpiIdError.set(problem);
+      this.focusUpiIdInput();
+      return;
+    }
+    const payerUpiId = normalizeUpiId(this.payerUpiId());
+    const modelSlug = this.model().slug;
+    const memberId = this.community.currentUser()?.id;
+    let qr: UpiQrCode;
+    try {
+      qr = upiQrCode(upiQrPayload({ modelSlug, amount, method, payerUpiId }));
+    } catch (error: unknown) {
+      this.failPayment(
+        error instanceof Error ? error.message : 'The payment QR code could not be created.',
+      );
+      return;
+    }
+
+    this.payerUpiId.set(payerUpiId);
+    this.payerUpiIdError.set('');
+    this.paymentError.set('');
+    this.paymentQr.set(qr);
+    this.paymentState.set('scanning');
+    this.revealPaymentQr();
+
+    const deadline = Date.now() + DESKTOP_CHAT_START_DELAY_MS;
+    const tick = () => {
+      const remaining = deadline - Date.now();
+      if (remaining > 0) {
+        this.chatCountdown.set(Math.ceil(remaining / 1000));
+        this.chatCountdownTimer = setTimeout(tick, remaining % 1000 || 1000);
+        return;
+      }
+      this.chatCountdownTimer = undefined;
+      this.chatCountdown.set(0);
+      if (
+        this.paymentState() !== 'scanning' ||
+        this.stage() !== 'payment' ||
+        this.model().slug !== modelSlug ||
+        this.community.currentUser()?.id !== memberId ||
+        !this.canStartRegistered()
+      ) {
+        this.paymentQr.set(null);
+        this.failPayment(
+          'Your chat details or Community session changed. Review them before trying again.',
+        );
+        return;
+      }
+      this.paymentState.set('continuing');
+      this.premiumStarted.emit({
+        name: this.memberName(),
+        avatar: this.memberPhoto(),
+        paymentPackageId,
+      });
+    };
+    tick();
+  }
+
   protected cancelPayment(): void {
+    const scanning = this.paymentState() === 'scanning';
     this.stopPaymentHandoff();
-    this.failPayment('The payment app handoff was cancelled. Try again when you are ready.');
+    this.paymentQr.set(null);
+    this.failPayment(
+      scanning
+        ? 'The payment QR code was cancelled before your Live Chat opened. Press Pay and Chat for a new code when you are ready.'
+        : 'The payment app handoff was cancelled. Try again when you are ready.',
+    );
   }
 
   private failPayment(message: string): void {
@@ -364,12 +503,57 @@ export class LiveChatAccess {
   private stopPaymentHandoff(): void {
     this.activePayment?.abort();
     this.activePayment = null;
+    clearTimeout(this.chatCountdownTimer);
+    this.chatCountdownTimer = undefined;
   }
 
   private resetPayment(): void {
     this.stopPaymentHandoff();
     this.paymentState.set('idle');
     this.paymentError.set('');
+    this.paymentMethodError.set('');
+    this.payerUpiIdError.set('');
+    this.paymentQr.set(null);
+  }
+
+  /**
+   * The payment step opens at its top — heading and photograph first — wherever the member had
+   * scrolled the chat details to when they continued.
+   */
+  private scrollAccessToTop(): void {
+    afterNextRender(
+      () => {
+        const backdrop = this.accessBackdrop()?.nativeElement;
+        if (backdrop) backdrop.scrollTop = 0;
+      },
+      { injector: this.injector },
+    );
+  }
+
+  /** Puts the cursor in the desktop UPI ID field, once it has rendered. */
+  private focusUpiIdInput(): void {
+    const input = this.upiIdInput()?.nativeElement;
+    if (input) {
+      input.focus();
+      return;
+    }
+    afterNextRender(() => this.upiIdInput()?.nativeElement.focus(), { injector: this.injector });
+  }
+
+  /** Brings the new QR code into view and moves keyboard / screen-reader focus to it. */
+  private revealPaymentQr(): void {
+    afterNextRender(
+      () => {
+        const panel = this.paymentQrPanel()?.nativeElement;
+        if (!panel) return;
+        const reduceMotion = panel.ownerDocument.defaultView?.matchMedia?.(
+          '(prefers-reduced-motion: reduce)',
+        ).matches;
+        panel.focus({ preventScroll: true });
+        panel.scrollIntoView?.({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+      },
+      { injector: this.injector },
+    );
   }
 
   private openSignIn(): void {
@@ -393,16 +577,31 @@ export class LiveChatAccess {
    * registration form, without changing it while the member completes their sign-in.
    */
   protected readonly modelAlbumBackdrop = computed(() => {
+    // Depend on the opening counter so the memoized computed picks one new photo per form visit,
+    // while it remains stable for the complete sign-in interaction.
+    this.signInPhotoSelection();
+    return this.randomAlbumPhoto();
+  });
+
+  /** Incremented as the payment step opens, so its photograph background is newly chosen. */
+  private readonly paymentPhotoSelection = signal(0);
+
+  /**
+   * The Premium checkout's background: one of the model's own album photographs, layered at 90%
+   * opacity behind the white checkout and kept for the whole payment visit.
+   */
+  protected readonly paymentBackdrop = computed(() => {
+    this.paymentPhotoSelection();
+    return this.randomAlbumPhoto();
+  });
+
+  private randomAlbumPhoto(): string {
     const model = this.model();
     const albumPhotos = model.photos.filter((photo) => photo.src && photo.src !== model.cover);
     const candidates = albumPhotos.length ? albumPhotos : model.photos;
     if (!candidates.length) return model.cover;
-
-    // Depend on the opening counter so the memoized computed picks one new photo per form visit,
-    // while it remains stable for the complete sign-in interaction.
-    this.signInPhotoSelection();
     return candidates[Math.floor(Math.random() * candidates.length)].src;
-  });
+  }
 
   protected modelLocation(): string {
     return this.modelLocationParts().join(' · ');
