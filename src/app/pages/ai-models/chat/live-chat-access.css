@@ -1702,7 +1702,7 @@
   }
 }
 
-/* Checkout: luminous duration cards and an explicit, live price ledger. */
+/* White checkout: crisp duration cards and an explicit, live price ledger. */
 .payment-price-value small {
   font-size: 0.35em;
   font-weight: 500;
@@ -1718,11 +1718,11 @@
 .package-heading h3 {
   margin: 0;
   font-size: 18px;
-  color: #edf1ff;
+  color: #202536;
 }
 .package-heading > span {
   font-size: 12px;
-  color: #a3abc3;
+  color: #626b7e;
 }
 .payment-packages {
   display: grid;
@@ -1735,10 +1735,10 @@
   align-items: stretch;
   gap: 10px;
   padding: 20px;
-  border: 1px solid #ffffff20;
+  border: 1px solid #e3e6ee;
   border-radius: 20px;
-  color: #edf1ff;
-  background: linear-gradient(145deg, #ffffff08, #ffffff02);
+  color: #202536;
+  background: #fff;
   text-align: left;
   font: inherit;
   cursor: pointer;
@@ -1749,16 +1749,16 @@
 }
 .payment-package:hover:not(:disabled),
 .payment-package:focus-visible {
-  border-color: #a7a4ff;
-  outline: 2px solid #a7a4ff;
+  border-color: #7052c8;
+  outline: 2px solid #7052c8;
   outline-offset: 3px;
 }
 .payment-package.is-selected {
-  border-color: #a7a4ff;
-  background: linear-gradient(145deg, #7972e52e, #40d9c90c);
+  border-color: #7052c8;
+  background: #f6f3ff;
   box-shadow:
-    inset 0 0 24px #9a84ff0e,
-    0 8px 28px #0002;
+    inset 0 0 0 1px #7052c8,
+    0 6px 20px rgb(80 57 145 / 8%);
 }
 .package-top {
   display: flex;
@@ -1768,7 +1768,7 @@
 }
 .package-top i {
   font-style: normal;
-  color: #b8aeff;
+  color: #7052c8;
 }
 .package-duration {
   font-size: 34px;
@@ -1777,11 +1777,11 @@
 }
 .package-duration small {
   font-size: 13px;
-  color: #a9afc9;
+  color: #626b7e;
   letter-spacing: 0;
 }
 .package-tagline {
-  color: #a9afc9;
+  color: #626b7e;
   font-size: 12px;
   min-height: 2em;
 }
@@ -1792,11 +1792,11 @@
 .package-price small {
   font-size: 11px;
   font-weight: 400;
-  color: #a9afc9;
+  color: #626b7e;
 }
 .package-extra {
   font-size: 11px;
-  color: #c1baff;
+  color: #6545b5;
 }
 .payment-package:disabled {
   opacity: 0.65;
@@ -1807,9 +1807,9 @@
   gap: 13px;
   margin: 24px 0;
   padding: 22px;
-  border: 1px solid #ffffff15;
+  border: 1px solid #e3e6ee;
   border-radius: 20px;
-  background: #080d1b50;
+  background: #f8f9fc;
 }
 .payment-breakdown > div {
   display: flex;
@@ -1817,25 +1817,25 @@
   align-items: center;
   gap: 16px;
   font-size: 13px;
-  color: #a9afc9;
+  color: #626b7e;
 }
 .payment-breakdown b {
-  color: #edf1ff;
+  color: #202536;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .payment-breakdown .payment-total {
-  border-top: 1px solid #ffffff20;
+  border-top: 1px solid #e3e6ee;
   padding-top: 18px;
   margin-top: 4px;
-  color: #edf1ff;
+  color: #202536;
   font-size: 16px;
 }
 .payment-total small {
   display: block;
   margin-top: 6px;
   font-size: 10px;
-  color: #a9afc9;
+  color: #626b7e;
 }
 .payment-total b {
   font-size: 26px;
@@ -1868,50 +1868,149 @@
     transition: none;
   }
 }
+/* Keep the light finish exclusive to checkout; other access stages retain their theme. */
+.access-backdrop.is-payment {
+  background: rgb(240 242 248 / 94%);
+  backdrop-filter: blur(12px);
+}
+
+.access-shell.is-payment {
+  border-color: #e3e6ee;
+  background: #fff;
+  color: #202536;
+  box-shadow: 0 24px 80px rgb(32 37 54 / 12%);
+  color-scheme: light;
+}
+
+.access-shell.is-payment::before {
+  display: none;
+}
+
+.access-shell.is-payment .access-model-bar {
+  background: #fff;
+  border-color: #e3e6ee;
+}
+
 .access-payment {
   max-width: 720px;
-  border-radius: 24px;
-  color: #edf1ff;
-  background:
-    radial-gradient(ellipse at 90% 0, #7160bf33, transparent 55%),
-    linear-gradient(155deg, #171d32, #0b1020);
+  color: #202536;
+  background: #fff;
 }
+
 .access-payment h2 {
-  color: #f3f4ff;
+  color: #202536;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.045em;
 }
+
 .access-payment .access-kicker,
 .access-payment .flow-back {
-  color: #c1baff;
+  color: #6545b5;
 }
+
+.access-payment .access-kicker i {
+  background: #7052c8;
+  box-shadow: 0 0 0 4px rgb(112 82 200 / 10%);
+}
+
 .access-payment .flow-lede,
 .access-payment .plan-footnote,
 .access-payment .payment-summary,
 .access-payment .payment-status {
-  color: #adb6ce;
+  color: #626b7e;
 }
+
 .access-payment .flow-lede b,
 .access-payment .payment-summary b {
-  color: #f3f4ff;
+  color: #202536;
 }
+
 .access-payment .payment-price-card {
   width: auto;
-  border-color: #a7a4ff40;
-  background: linear-gradient(135deg, #7972e51f, #40d9c90c);
+  border-color: #e5def6;
+  background: linear-gradient(120deg, #faf8ff, #f8fafc);
   box-shadow: none;
 }
+
 .access-payment .payment-price-label,
 .access-payment .payment-price-meta {
-  color: #c1baff;
+  color: #626b7e;
+  line-height: 1.6;
 }
+
 .access-payment .payment-price-value {
-  color: #f3f4ff;
-  text-shadow: 0 8px 30px #b8aeff25;
+  color: #6545b5;
+  text-shadow: none;
 }
+
+.access-payment .payment-method {
+  border-color: #e3e6ee;
+  color: #202536;
+  box-shadow: none;
+}
+
+.access-payment .payment-method.is-selected {
+  border-color: #7052c8;
+  background: #f6f3ff;
+  box-shadow: inset 0 0 0 1px #7052c8;
+}
+
+.access-payment .payment-method:hover:not(:disabled),
+.access-payment .payment-method:focus-visible {
+  border-color: #7052c8;
+}
+
+.access-payment .payment-method-copy small {
+  color: #626b7e;
+}
+
+.access-payment .payment-method-choice {
+  border-color: #a5adbd;
+}
+
+.access-payment .payment-method.is-selected .payment-method-choice {
+  border-color: #7052c8;
+  background: radial-gradient(circle, #7052c8 42%, transparent 46%);
+  box-shadow: 0 0 0 3px rgb(112 82 200 / 10%);
+}
+
 .access-payment .review-start {
-  color: #111526;
-  background: linear-gradient(110deg, #c1baff, #8ee6dd);
-  box-shadow: 0 8px 28px #8d7aef25;
+  border: 1px solid #6545b5;
+  color: #fff;
+  background: #7052c8;
+  box-shadow: 0 8px 20px rgb(112 82 200 / 16%);
 }
+
+.access-payment .review-start:hover:not(:disabled) {
+  background: #6545b5;
+  box-shadow: 0 10px 24px rgb(112 82 200 / 22%);
+}
+
+.access-payment .review-start .review-start-dot {
+  background: #fff;
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 16%);
+}
+
 .access-payment .payment-cancel {
-  color: #c1baff;
+  color: #6545b5;
+}
+
+.access-payment .payment-cancel:hover,
+.access-payment .payment-cancel:focus-visible {
+  background: #f6f3ff;
+}
+
+.access-payment .plan-footnote {
+  margin-top: 1rem;
+  font-size: 0.68rem;
+  line-height: 1.6;
+}
+
+.access-payment .flow-back:focus-visible,
+.access-payment .payment-method:focus-visible,
+.access-payment .review-start:focus-visible,
+.access-payment .payment-cancel:focus-visible {
+  outline: 2px solid #7052c8;
+  outline-offset: 4px;
 }
