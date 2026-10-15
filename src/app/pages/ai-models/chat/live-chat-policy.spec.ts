@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { aiModelProfiles } from '../ai-model-data';
 import { LiveChatPlan } from './chat-types';
 import {
+  EXCLUSIVE_PREMIUM_CHAT_PRICE,
   allowsLiveChatPlan,
   modelChatTier,
   premiumChatPrice,
@@ -75,19 +76,21 @@ describe('Live Chat model tiers and Premium amounts', () => {
     }
   });
 
-  it('marks exactly the four Exclusive models as registered-only, with no amount', () => {
+  it('prices every Exclusive model at ₹99 on the Premium plan', () => {
+    expect(EXCLUSIVE_PREMIUM_CHAT_PRICE).toBe(99);
     for (const slug of exclusiveSlugs) {
       const model = profileOf(slug);
       expect(modelChatTier(model)).toBe('exclusive');
-      expect(premiumChatPrice(model)).toBeNull();
+      expect(premiumChatPrice(model)).toBe(99);
     }
   });
 
-  it('keeps every listed Free model open to guests', () => {
+  it('keeps every listed Free model open to guests, with no Premium amount', () => {
     for (const slug of freeSlugs) {
       const model = profileOf(slug);
       expect(modelChatTier(model)).toBe('free');
       expect(requiresRegisteredChat(model)).toBe(false);
+      expect(premiumChatPrice(model)).toBeNull();
     }
   });
 

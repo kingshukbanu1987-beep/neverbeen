@@ -360,9 +360,28 @@ describe('premium model access and UPI payment', () => {
     fixture.destroy();
   });
 
-  it('runs the Premium plan for an unpriced model exactly like the Registered User flow', () => {
+  it('prices an Exclusive model at ₹99 for Premium and takes her through UPI payment', () => {
     signInAsMember();
     const { fixture, element, premium, registered } = chooser('rozalin-el-masry');
+    // The Premium card carries the ₹99 Exclusive rate, and the notice names it too.
+    expect(element.querySelector('.plan-price-value')?.textContent?.trim()).toBe('₹99');
+    expect(element.querySelector('.exclusive-notice')?.textContent).toContain('₹99');
+    element.querySelector<HTMLButtonElement>('.plan-start-premium')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.access-review')).not.toBeNull();
+    expect(element.querySelector('.review-price')?.textContent).toContain('₹99');
+    element.querySelector<HTMLButtonElement>('.review-start')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.access-payment')).not.toBeNull();
+    expect(element.querySelector('.payment-price-value')?.textContent?.trim()).toBe('₹99');
+    expect(premium).not.toHaveBeenCalled();
+    expect(registered).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('runs the Premium plan for a Free model exactly like the Registered User flow', () => {
+    signInAsMember();
+    const { fixture, element, premium, registered } = chooser('sereenah-noorzai');
     expect(element.querySelector('.plan-price-value')?.textContent?.trim()).toBe('Included');
     element.querySelector<HTMLButtonElement>('.plan-start-premium')!.click();
     fixture.detectChanges();

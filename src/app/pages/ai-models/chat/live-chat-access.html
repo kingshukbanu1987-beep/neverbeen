@@ -44,7 +44,8 @@
             <p>
               Exclusive models like <strong>{{ model().name }}</strong
               ><app-model-verified-tick [slug]="model().slug" /> are only available to chat with a
-              <strong>Registered User</strong>, or on the paid <strong>Premium</strong> plan. For
+              <strong>Registered User</strong>, or on the paid <strong>Premium</strong> plan —
+              {{ premiumPriceLabel() }} for her {{ plans.premium.durationLabel }} Premium chat. For
               safety and care for our community, please support this policy by signing in or
               registering.
             </p>
