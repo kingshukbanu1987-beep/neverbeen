@@ -193,7 +193,7 @@ export class LiveChatAccess {
     }
     const coupon = findPaymentCoupon(code);
     if (!coupon) {
-      this.couponError.set('That code isn’t valid. Try SPECIAL or NEVERBEEN.');
+      this.couponError.set('That coupon code isn’t valid.');
       return;
     }
     this.appliedCoupon.set(coupon);
