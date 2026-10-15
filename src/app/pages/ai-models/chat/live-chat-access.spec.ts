@@ -354,11 +354,103 @@ describe('premium model access and UPI payment', () => {
     ).toBe('Pay ₹146.37 to NeverBeen with Google Pay or PhonePe.');
     // The button never carries the amount: the total is in the breakdown and summary above it.
     expect(payment.querySelector('.review-start')?.textContent?.trim()).toBe('Pay and Chat');
-    expect(payment.querySelector('input')).toBeNull();
+    expect(payment.querySelector('#payment-upi-id')).toBeNull();
     expect(payment.querySelector('.payment-qr')).toBeNull();
     expect(payment.textContent).not.toMatch(/@|UTR|transaction reference|Verify payment|Razorpay/i);
     expect(payment.textContent).toContain('verification is temporarily disabled');
     expect(premium).not.toHaveBeenCalled();
+    fixture.destroy();
+  });
+
+  it('presents the modern coupon entry and the requested color-coded package names', () => {
+    const { fixture, element } = paymentPage();
+    expect(element.querySelector('.access-payment h2')?.textContent?.trim()).toBe(
+      "You're One Step Away From Something Incredible",
+    );
+    expect(
+      Array.from(element.querySelectorAll('.payment-package .package-top b')).map((name) =>
+        name.textContent?.trim(),
+      ),
+    ).toEqual(['Basic', 'Stay Longer', 'Deep Connection', 'Intimate']);
+    expect(element.querySelector('#premium-coupon-code')?.getAttribute('placeholder')).toBe(
+      'Enter coupon code',
+    );
+    expect(element.querySelector('.coupon-hint')?.textContent).toContain('SPECIAL');
+    expect(element.querySelector('.coupon-hint')?.textContent).toContain('NEVERBEEN');
+    expect(element.querySelector('.package-basic .package-price small')?.textContent?.trim()).toBe(
+      'base price',
+    );
+    expect(
+      element.querySelector('.package-extended .package-price small')?.textContent?.trim(),
+    ).toBe('upgrade');
+    fixture.destroy();
+  });
+
+  it('applies, removes and replaces coupons while keeping taxes based on the full package price', () => {
+    const { fixture, element } = paymentPage();
+    const enterCoupon = (code: string) => {
+      const input = element.querySelector<HTMLInputElement>('#premium-coupon-code')!;
+      input.value = code;
+      input.dispatchEvent(new Event('input'));
+      element.querySelector<HTMLButtonElement>('.coupon-apply')!.click();
+      fixture.detectChanges();
+    };
+
+    enterCoupon('NOT-A-COUPON');
+    expect(element.querySelector('.coupon-error')?.textContent).toContain('isn’t valid');
+    expect(element.querySelector('.payment-total b')?.textContent).toBe('₹146.37');
+
+    enterCoupon(' special ');
+    expect(element.querySelector('.coupon-error')).toBeNull();
+    expect(element.querySelector('.coupon-applied')?.textContent).toContain('SPECIAL');
+    expect(element.querySelector('.payment-pre-discount b')?.textContent).toBe('₹146.37');
+    expect(element.querySelector('.payment-discount span')?.textContent).toBe(
+      'Discount · SPECIAL (15% off)',
+    );
+    expect(element.querySelector('.payment-discount b')?.textContent).toBe('−₹17.85');
+    expect(element.querySelector('.payment-breakdown > div:nth-child(4) b')?.textContent).toBe(
+      '₹5.95',
+    );
+    expect(element.querySelector('.payment-total b')?.textContent).toBe('₹128.52');
+
+    element.querySelector<HTMLButtonElement>('.coupon-remove')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-pre-discount')).toBeNull();
+    expect(element.querySelector('.payment-discount')).toBeNull();
+    expect(element.querySelector('.payment-total b')?.textContent).toBe('₹146.37');
+    expect(element.querySelector('#premium-coupon-code')).not.toBeNull();
+
+    enterCoupon('NEVERBEEN');
+    expect(element.querySelector('.payment-discount span')?.textContent).toBe(
+      'Discount · NEVERBEEN (25% off)',
+    );
+    expect(element.querySelector('.payment-discount b')?.textContent).toBe('−₹29.75');
+    expect(element.querySelector('.payment-pre-discount b')?.textContent).toBe('₹146.37');
+    expect(element.querySelector('.payment-total b')?.textContent).toBe('₹116.62');
+    fixture.destroy();
+  });
+
+  it('sends the discounted amount to the selected UPI app', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage();
+    const input = element.querySelector<HTMLInputElement>('#premium-coupon-code')!;
+    input.value = 'SPECIAL';
+    input.dispatchEvent(new Event('input'));
+    element.querySelector<HTMLButtonElement>('.coupon-apply')!.click();
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    fixture.detectChanges();
+    expect(upiLauncher.open).toHaveBeenCalledWith(
+      { modelSlug: 'nourhan-durrani', amount: 128.52, method: 'gpay' },
+      expect.any(AbortSignal),
+    );
+    handoff.returned();
+    await flushHandoff();
+    expect(premium).toHaveBeenCalledExactlyOnceWith({
+      name: 'Test Member',
+      avatar: '/member.jpg',
+      paymentPackageId: 'basic',
+    });
     fixture.destroy();
   });
 
@@ -971,6 +1063,46 @@ describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () 
     // Duration, app and UPI ID are frozen while the code is on screen.
     expect(element.querySelectorAll<HTMLButtonElement>('.payment-package')[2].disabled).toBe(true);
     expect(element.querySelector<HTMLButtonElement>('.payment-method')!.disabled).toBe(true);
+    vi.advanceTimersByTime(10_000);
+    expect(premium).toHaveBeenCalledExactlyOnceWith({
+      name: 'Test Member',
+      avatar: '/member.jpg',
+      paymentPackageId: 'extended',
+    });
+    fixture.destroy();
+  });
+
+  it('puts the discounted payable amount in the desktop QR without discounting the taxes', () => {
+    vi.useFakeTimers();
+    const page = paymentPage();
+    const { fixture, element, premium } = page;
+    const couponInput = element.querySelector<HTMLInputElement>('#premium-coupon-code')!;
+    couponInput.value = 'SPECIAL';
+    couponInput.dispatchEvent(new Event('input'));
+    element.querySelector<HTMLButtonElement>('.coupon-apply')!.click();
+    fixture.detectChanges();
+    element.querySelectorAll<HTMLButtonElement>('.payment-package')[1].click();
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-pre-discount b')?.textContent).toBe('₹512.91');
+    expect(element.querySelector('.payment-discount b')?.textContent).toBe('−₹62.55');
+    expect(element.querySelector('.payment-breakdown > div:nth-child(4) b')?.textContent).toBe(
+      '₹20.85',
+    );
+
+    chooseApp(page, 'gpay');
+    typeUpiId(page, '9876543210@ybl');
+    payButton(element).click();
+    fixture.detectChanges();
+    const payload = upiQrPayload({
+      modelSlug: 'nourhan-durrani',
+      amount: 450.36,
+      method: 'gpay',
+      payerUpiId: '9876543210@ybl',
+    });
+    expect(element.querySelector('.payment-qr-modules')?.getAttribute('d')).toBe(
+      upiQrCode(payload).modulesPath,
+    );
+    expect(element.querySelector('.payment-qr')?.textContent).toContain('₹450.36');
     vi.advanceTimersByTime(10_000);
     expect(premium).toHaveBeenCalledExactlyOnceWith({
       name: 'Test Member',

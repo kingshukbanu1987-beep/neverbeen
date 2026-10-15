@@ -42,6 +42,7 @@ import {
   upiIdError,
   upiQrPayload,
 } from './premium-payment';
+import { findPaymentCoupon, PaymentCoupon } from './payment-coupons';
 import {
   PAYMENT_PACKAGES,
   PaymentPackageId,
@@ -152,8 +153,15 @@ export class LiveChatAccess {
   protected readonly chatCountdown = signal(0);
   protected readonly paymentPackages = PAYMENT_PACKAGES;
   protected readonly selectedPackage = signal<PaymentPackageId>('basic');
+  protected readonly couponCode = signal('');
+  protected readonly appliedCoupon = signal<PaymentCoupon | null>(null);
+  protected readonly couponError = signal('');
   protected readonly breakdown = computed(() =>
-    paymentBreakdown(this.premiumPrice() ?? 0, this.selectedPackage()),
+    paymentBreakdown(
+      this.premiumPrice() ?? 0,
+      this.selectedPackage(),
+      this.appliedCoupon()?.percentOff ?? 0,
+    ),
   );
   protected readonly durationMinutes = computed(
     () => paymentDurationMs(this.selectedPackage()) / 60_000,
@@ -170,6 +178,34 @@ export class LiveChatAccess {
   protected selectPackage(id: PaymentPackageId): void {
     if (this.paymentBusy()) return;
     this.selectedPackage.set(id);
+    this.resetPayment();
+  }
+  protected onCouponCodeInput(event: Event): void {
+    this.couponCode.set((event.target as HTMLInputElement).value);
+    this.couponError.set('');
+  }
+  protected applyCoupon(): void {
+    if (this.paymentBusy()) return;
+    const code = this.couponCode().trim();
+    if (!code) {
+      this.couponError.set('Enter a coupon code to apply it.');
+      return;
+    }
+    const coupon = findPaymentCoupon(code);
+    if (!coupon) {
+      this.couponError.set('That code isn’t valid. Try SPECIAL or NEVERBEEN.');
+      return;
+    }
+    this.appliedCoupon.set(coupon);
+    this.couponCode.set('');
+    this.couponError.set('');
+    this.resetPayment();
+  }
+  protected removeCoupon(): void {
+    if (this.paymentBusy()) return;
+    this.appliedCoupon.set(null);
+    this.couponCode.set('');
+    this.couponError.set('');
     this.resetPayment();
   }
   protected readonly paymentError = signal('');

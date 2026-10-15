@@ -10,14 +10,14 @@ export const PAYMENT_PACKAGES = [
   },
   {
     id: 'extended',
-    label: 'Stay longer',
+    label: 'Stay Longer',
     extraMinutes: 30,
     multiplier: 2.5,
     tagline: 'Let the conversation unfold',
   },
   {
     id: 'deep',
-    label: 'Deep connection',
+    label: 'Deep Connection',
     extraMinutes: 75,
     multiplier: 5,
     tagline: 'More moments. More connection.',
@@ -45,13 +45,20 @@ export const SERVICE_TAX_PERCENT = 5;
 export const SGST_PERCENT = 9;
 export const CGST_PERCENT = 9;
 
-/** Round the additional charge to whole rupees, then calculate each tax in paise. */
-export function paymentBreakdown(base: number, id: PaymentPackageId) {
+/**
+ * Round the additional charge to whole rupees, then calculate every tax on the full package
+ * subtotal. A coupon is deducted from that same package subtotal after the pre-discount tax has
+ * been calculated; it never reduces the taxable amount.
+ */
+export function paymentBreakdown(base: number, id: PaymentPackageId, discountPercent = 0) {
   const upgrade = Math.round(base * paymentPackage(id).multiplier);
   const subtotal = base + upgrade;
   const serviceTax = Math.round(subtotal * SERVICE_TAX_PERCENT) / 100;
   const sgst = Math.round(subtotal * SGST_PERCENT) / 100;
   const cgst = Math.round(subtotal * CGST_PERCENT) / 100;
+  const totalBeforeDiscount = Math.round((subtotal + serviceTax + sgst + cgst) * 100) / 100;
+  const discount = Math.round(subtotal * discountPercent) / 100;
+
   return {
     base,
     upgrade,
@@ -59,6 +66,8 @@ export function paymentBreakdown(base: number, id: PaymentPackageId) {
     serviceTax,
     sgst,
     cgst,
-    total: Math.round((subtotal + serviceTax + sgst + cgst) * 100) / 100,
+    totalBeforeDiscount,
+    discount,
+    total: Math.round((totalBeforeDiscount - discount) * 100) / 100,
   };
 }
