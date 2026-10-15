@@ -213,7 +213,9 @@ portfolio grid never in the last, View All slot) through the portfolio's photogr
 85% gaussian blur, and through the first rows of the View All mosaic at 75% — each under the same
 diagonal watermark, **Premium Content** in bold red with *Only available in Paid Premium Chat*
 underneath. In the `/ai-models` directory every Premium-plan model wears a
-**✦ NeverBeen Premium Model** wordmark in `#F213E8` beside her Live Chat button. The premium
+**✦ NeverBeen Premium Model** hallmark beside her Live Chat button — an obsidian seal edged and
+lettered in champagne gold, the brand word in white with the tier in brushed-gold capitals and a
+slow sheen of light crossing it. The premium
 checkout adds a **Premium Content Coverage** block after the package choice — **None** selected by
 default — whose coverage costs the model's Base Price + ₹51, joins the package subtotal before the
 Service tax · 5%, SGST · 9% and CGST · 9% are calculated, and appears as its own line in the price

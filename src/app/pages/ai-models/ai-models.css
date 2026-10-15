@@ -477,41 +477,46 @@
 }
 
 /*
- * The NeverBeen Premium Model wordmark — the studio's electric magenta (#F213E8), drawn like a
- * logo: a pulsing spark, the wordmark in its own face, and the tier under the same shine. A slow
- * sheen crosses the letters the way the Live Chat pill's band of light crosses its green.
+ * The NeverBeen Premium Model badge — an obsidian seal set with champagne gold, the quiet
+ * luxury idiom of a premium hallmark: a deep near-black pill against the dark card, edged with a
+ * hairline of gold and lit by a warm glow, the brand word in white, a gold rule, and the tier in
+ * brushed-gold capitals. A slow sheen of light crosses the seal the way the Live Chat pill's band
+ * of light crosses its green.
  */
 .card-premium-mark {
   position: relative;
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.28rem;
-  padding: 0.3rem 0.62rem 0.3rem 0.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.7rem 0.34rem 0.58rem;
   overflow: hidden;
-  border: 1px solid rgb(242 19 232 / 42%);
   border-radius: 999px;
+  /* Obsidian with a whisper of the studio's violet, lighter than the card so the seal separates. */
   background:
-    linear-gradient(120deg, rgb(242 19 232 / 13%), rgb(242 19 232 / 4%)),
-    rgb(255 255 255 / 55%);
+    radial-gradient(130% 170% at 18% 0%, rgb(94 58 138 / 48%), transparent 58%),
+    linear-gradient(135deg, #241736 0%, #150e22 55%, #0c0814 100%);
   box-shadow:
-    0 0 18px -6px rgb(242 19 232 / 55%),
-    inset 0 1px 0 rgb(255 255 255 / 65%);
-  color: #f213e8;
+    inset 0 1px 0 rgb(255 255 255 / 12%),
+    inset 0 -9px 14px -10px rgb(0 0 0 / 60%),
+    0 0 0 1px rgb(226 187 111 / 48%),
+    0 10px 26px -12px rgb(6 4 10 / 70%),
+    0 0 20px -6px rgb(226 187 111 / 32%);
+  color: #f7f3ff;
   line-height: 1.1;
   white-space: nowrap;
 }
 
-/* The sheen that crosses the wordmark. */
+/* The sheen of light that crosses the seal. */
 .card-premium-mark::after {
   content: '';
   position: absolute;
   top: -70%;
   left: -45%;
-  width: 28%;
+  width: 30%;
   height: 240%;
-  background: linear-gradient(90deg, transparent, rgb(242 19 232 / 30%), transparent);
+  background: linear-gradient(100deg, transparent, rgb(255 245 216 / 24%), transparent);
   transform: rotate(14deg);
-  animation: card-premium-beam 4.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  animation: card-premium-beam 5.2s cubic-bezier(0.45, 0, 0.25, 1) infinite;
   pointer-events: none;
 }
 
@@ -526,13 +531,13 @@
   }
 }
 
+/* The gold spark that leads the wordmark, breathing rather than blinking. */
 .card-premium-spark {
-  align-self: center;
-  color: #f213e8;
-  font-size: 0.68rem;
+  color: #ecc377;
+  font-size: 0.62rem;
   font-style: normal;
-  text-shadow: 0 0 10px rgb(242 19 232 / 85%);
-  animation: card-premium-spark 2.6s ease-in-out infinite;
+  text-shadow: 0 0 9px rgb(236 195 119 / 75%);
+  animation: card-premium-spark 3.2s ease-in-out infinite;
 }
 
 @keyframes card-premium-spark {
@@ -542,23 +547,33 @@
     transform: scale(1);
   }
   50% {
-    opacity: 0.6;
-    transform: scale(0.86);
+    opacity: 0.62;
+    transform: scale(0.88);
   }
 }
 
+/* The brand word: white, set a touch larger than its tier — the lockup's anchor. */
 .card-premium-word {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
+  color: #fbf9ff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
+/* The hairline gold rule between the word and the tier, fading out at both ends. */
+.card-premium-seal {
+  width: 1px;
+  height: 0.82em;
+  background: linear-gradient(180deg, transparent, rgb(236 195 119 / 62%), transparent);
+}
+
+/* The tier: brushed-gold capitals, the metallic finish of a hallmark. */
 .card-premium-tier {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  background: linear-gradient(110deg, #f213e8, #ff7ae8 55%, #f213e8);
+  background: linear-gradient(180deg, #fdeec7 2%, #ecc679 46%, #c3923e 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

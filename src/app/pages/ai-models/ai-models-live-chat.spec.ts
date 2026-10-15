@@ -130,7 +130,9 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     await settle();
     fixture.detectChanges();
 
-    // A Premium model carries the NeverBeen Premium Model wordmark in her chat line.
+    // A Premium model carries the NeverBeen Premium Model badge in her chat line: an obsidian
+    // seal — a dark gradient pill against the dark card — with the brand word in white and the
+    // tier in brushed-gold capitals, so the hallmark contrasts instead of clashing.
     const premiumModel = aiModelProfiles.find((model) => model.slug === 'fiadh-dara')!;
     const premiumCard = cardFor(fixture.nativeElement, premiumModel.name);
     const mark = premiumCard.querySelector<HTMLElement>('.card-premium-mark')!;
@@ -139,7 +141,14 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     expect(mark.textContent).toContain('Premium Model');
     expect(mark.closest('.card-chat-line')).not.toBeNull();
     expect(mark.previousElementSibling?.classList.contains('card-action-chat')).toBe(true);
-    expect(getComputedStyle(mark).color).toBe('rgb(242, 19, 232)');
+    expect(getComputedStyle(mark).backgroundImage).toContain('linear-gradient');
+    expect(
+      getComputedStyle(mark.querySelector<HTMLElement>('.card-premium-word')!).color,
+    ).toBe('rgb(251, 249, 255)');
+    expect(
+      getComputedStyle(mark.querySelector<HTMLElement>('.card-premium-tier')!).backgroundImage,
+    ).toContain('linear-gradient');
+    expect(mark.querySelector('.card-premium-seal')).not.toBeNull();
 
     // A model outside the Premium plan carries no wordmark at all.
     const plainModel = aiModelProfiles.find((model) => model.slug === 'fatima-al-mansoor')!;
