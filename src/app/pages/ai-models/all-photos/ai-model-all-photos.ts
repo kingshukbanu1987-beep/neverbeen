@@ -18,12 +18,96 @@ import {
 import { CompactCount, ExactCountPopover } from '../../../shared/exact-count-popover';
 import { ModelMediaCommentsDialog } from '../../../shared/model-media-comments-dialog/model-media-comments-dialog';
 import { ModelMediaEngagementBar } from '../../../shared/model-media-engagement/model-media-engagement';
-import { aiModelProfiles } from '../ai-model-data';
+import { AiModelPhoto, aiModelProfiles } from '../ai-model-data';
+import { PremiumPhotoTeaser } from '../premium-content/premium-photo-teaser';
 import { AiModelPhotoViewer } from '../photo-viewer/ai-model-photo-viewer';
 import { mosaicTileStyles } from './photo-mosaic';
 
 /** Photographs near the top of the page load straight away; the rest wait until they are close. */
 const EAGER_TILES = 6;
+
+/** How many locked Premium Content frames the mosaic teases at most. */
+const PREMIUM_TEASER_LIMIT = 4;
+
+/**
+ * The first rows of the mosaic where the locked Premium Content frames land. The mosaic re-flows
+ * between two, three and four columns, so a fixed tile window is the honest equivalent of "the
+ * first five rows": eight tiles reach the fifth row on a phone's two columns and sit within it on
+ * a desktop's four.
+ */
+const FIRST_ROWS_TILES = 8;
+
+/** One tile of the mosaic: an album photograph, or a locked Premium Content teaser. */
+export interface AlbumTile {
+  photo: AiModelPhoto;
+  /** True when this tile is a locked Premium Content frame rather than an album photograph. */
+  premium: boolean;
+  /**
+   * The photograph's own place in the album — the index the full-screen viewer opens at. `null`
+   * on a locked Premium Content teaser, which never opens.
+   */
+  photoIndex: number | null;
+}
+
+/** Fisher-Yates draw, so the teased Premium Content frames never sit in the same place twice. */
+function drawOrder(length: number): number[] {
+  const positions = Array.from({ length }, (_, index) => index);
+  for (let index = length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [positions[index], positions[swap]] = [positions[swap], positions[index]];
+  }
+  return positions;
+}
+
+/**
+ * The album's photographs with the locked Premium Content teasers woven in: at random, never one
+ * straight after another, and never ahead of the cover that opens the mosaic — within the first
+ * rows of the page, wherever the mosaic's own layout carries them.
+ */
+export function interleavePremiumTeasers(
+  photos: readonly AiModelPhoto[],
+  teasers: readonly AiModelPhoto[],
+): AlbumTile[] {
+  const tiles: AlbumTile[] = photos.map((photo, index) => ({
+    photo,
+    premium: false,
+    photoIndex: index,
+  }));
+  if (teasers.length === 0 || photos.length === 0) return tiles;
+
+  const total = photos.length + teasers.length;
+  // The window never reaches past the first rows, and never in front of the opening cover.
+  const windowEnd = Math.min(FIRST_ROWS_TILES, total);
+  const candidates = Array.from({ length: Math.max(windowEnd - 1, 0) }, (_, index) => index + 1);
+  // `teasers.length` non-adjacent slots need 2·n − 1 candidates to exist at all.
+  const roomForAll = candidates.length >= 2 * teasers.length - 1;
+
+  let slots: number[] = [];
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    for (let index = candidates.length - 1; index > 0; index -= 1) {
+      const swap = Math.floor(Math.random() * (index + 1));
+      [candidates[index], candidates[swap]] = [candidates[swap], candidates[index]];
+    }
+
+    slots = [];
+    for (const slot of candidates) {
+      if (slots.length >= teasers.length) break;
+      if (slots.every((taken) => Math.abs(taken - slot) >= 2)) slots.push(slot);
+    }
+    // Keep drawing until the whole count fits; when it never can, keep the best partial set.
+    if (slots.length >= teasers.length || !roomForAll) break;
+  }
+  slots.sort((a, b) => a - b);
+
+  let nextTeaser = 0;
+  for (const slot of slots) {
+    const teaser = teasers[nextTeaser];
+    if (!teaser) break;
+    tiles.splice(slot, 0, { photo: teaser, premium: true, photoIndex: null });
+    nextTeaser += 1;
+  }
+  return tiles;
+}
 
 /**
  * A model's complete album — `/ai-models/:slug/photos`, opened from the "View All" tile of her
@@ -40,6 +124,7 @@ const EAGER_TILES = 6;
     ExactCountPopover,
     ModelMediaCommentsDialog,
     ModelMediaEngagementBar,
+    PremiumPhotoTeaser,
   ],
   templateUrl: './ai-model-all-photos.html',
   styleUrl: './ai-model-all-photos.css',
@@ -63,11 +148,23 @@ export class AiModelAllPhotosPage implements OnDestroy {
 
   protected readonly photos = computed(() => this.model()?.photos ?? []);
 
-  /** Each photograph with its place in the mosaic for every layout width. */
+  /**
+   * The locked Premium Content frames this visit teases — at least four whenever the model holds
+   * four or more in her `PremiumContent/` folder — drawn afresh on every visit to the album.
+   */
+  protected readonly premiumTeasers = computed(() => {
+    const premium = this.model()?.premiumPhotos ?? [];
+    return drawOrder(premium.length).map((source) => premium[source]).slice(0, PREMIUM_TEASER_LIMIT);
+  });
+
+  /** True when the mosaic carries at least one locked Premium Content teaser. */
+  protected readonly hasPremiumTeasers = computed(() => this.premiumTeasers().length > 0);
+
+  /** Each tile of the mosaic — photograph or locked teaser — with its place in every layout. */
   protected readonly tiles = computed(() => {
-    const photos = this.photos();
-    const styles = mosaicTileStyles(photos.length);
-    return photos.map((photo, index) => ({ photo, style: styles[index] }));
+    const tiles = interleavePremiumTeasers(this.photos(), this.premiumTeasers());
+    const styles = mosaicTileStyles(tiles.length);
+    return tiles.map((tile, index) => ({ ...tile, style: styles[index] }));
   });
 
   protected readonly photoTotal = computed(() => String(this.photos().length).padStart(2, '0'));
@@ -196,8 +293,12 @@ export class AiModelAllPhotosPage implements OnDestroy {
     tile.style.setProperty('--spot-y', `${event.clientY - rect.top}px`);
   }
 
-  protected openViewer(index: number): void {
-    if (index < 0 || index >= this.photos().length) return;
+  /**
+   * Opens a photograph full screen, at its own place in the album. A locked Premium Content teaser
+   * passes `null` and never opens — its complete frame belongs to a paid Premium Live Chat.
+   */
+  protected openViewer(index: number | null): void {
+    if (index === null || index < 0 || index >= this.photos().length) return;
     this.lastFocused =
       typeof document !== 'undefined' ? (document.activeElement as HTMLElement) : null;
     this.activeIndex.set(index);

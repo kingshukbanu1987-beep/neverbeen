@@ -46,8 +46,11 @@ import { findPaymentCoupon, PaymentCoupon } from './payment-coupons';
 import {
   PAYMENT_PACKAGES,
   PaymentPackageId,
+  PREMIUM_CONTENT_COVERAGES,
+  PremiumContentCoverageId,
   paymentBreakdown,
   paymentDurationMs,
+  premiumContentCoveragePrice,
 } from './payment-packages';
 import { UpiAppLauncher } from './upi-app-launcher';
 import { UpiQrCode, upiQrCode } from './upi-qr';
@@ -153,6 +156,20 @@ export class LiveChatAccess {
   protected readonly chatCountdown = signal(0);
   protected readonly paymentPackages = PAYMENT_PACKAGES;
   protected readonly selectedPackage = signal<PaymentPackageId>('basic');
+  /**
+   * The Premium Content Coverage choice of the checkout. `None` is selected by default; the
+   * coverage itself adds the Base Price + ₹51 to the package subtotal, under the same taxes.
+   */
+  protected readonly premiumCoverages = PREMIUM_CONTENT_COVERAGES;
+  protected readonly premiumCoverage = signal<PremiumContentCoverageId>('none');
+  /** The rupee amount the selected coverage adds — ₹0 while `None` stays selected. */
+  protected readonly coverageAmount = computed(() =>
+    premiumContentCoveragePrice(this.premiumPrice() ?? 0, this.premiumCoverage()),
+  );
+  /** The coverage's own price card: the Base Price + ₹51, exactly what selecting it adds. */
+  protected readonly coveragePrice = computed(() =>
+    premiumContentCoveragePrice(this.premiumPrice() ?? 0, 'coverage'),
+  );
   protected readonly couponCode = signal('');
   protected readonly appliedCoupon = signal<PaymentCoupon | null>(null);
   protected readonly couponError = signal('');
@@ -161,6 +178,7 @@ export class LiveChatAccess {
       this.premiumPrice() ?? 0,
       this.selectedPackage(),
       this.appliedCoupon()?.percentOff ?? 0,
+      this.coverageAmount(),
     ),
   );
   protected readonly durationMinutes = computed(
@@ -178,6 +196,11 @@ export class LiveChatAccess {
   protected selectPackage(id: PaymentPackageId): void {
     if (this.paymentBusy()) return;
     this.selectedPackage.set(id);
+    this.resetPayment();
+  }
+  protected selectCoverage(id: PremiumContentCoverageId): void {
+    if (this.paymentBusy()) return;
+    this.premiumCoverage.set(id);
     this.resetPayment();
   }
   protected onCouponCodeInput(event: Event): void {
@@ -352,6 +375,8 @@ export class LiveChatAccess {
       }
       this.resetPayment();
       this.selectedPackage.set('basic');
+      // Every fresh checkout starts with no coverage: 'None' is selected by default.
+      this.premiumCoverage.set('none');
       // A fresh album photograph becomes the checkout's background on every visit.
       this.paymentPhotoSelection.update((selection) => selection + 1);
       this.stage.set('payment');

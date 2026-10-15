@@ -28,7 +28,8 @@ import { splitLocation } from './chat-knowledge';
 import { buildChatFeedbackFacts } from './chat-summary';
 import { ChatIdentity } from './chat-identity';
 import { ChatIdentityPrompt } from './chat-identity-prompt';
-import { requiresRegisteredChat } from './live-chat-policy';
+import { modelChatTier, requiresRegisteredChat } from './live-chat-policy';
+import { ChatPremiumContent } from './chat-premium-content';
 import { ChatFeedbackCard } from './chat-feedback';
 import { ChatHistory } from './chat-history';
 import {
@@ -86,7 +87,14 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
  */
 @Component({
   selector: 'app-ai-model-chat',
-  imports: [ChatAutoScroll, ChatIdentityPrompt, ChatFeedbackCard, ChatHistory, ModelVerifiedTick],
+  imports: [
+    ChatAutoScroll,
+    ChatIdentityPrompt,
+    ChatPremiumContent,
+    ChatFeedbackCard,
+    ChatHistory,
+    ModelVerifiedTick,
+  ],
   templateUrl: './ai-model-chat.html',
   styleUrl: './ai-model-chat.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -124,6 +132,8 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
 
   private readonly infoToggle = viewChild<ElementRef<HTMLButtonElement>>('infoToggle');
   private readonly infoBack = viewChild<ElementRef<HTMLButtonElement>>('infoBack');
+  /** The "Show Premium Content" button of her information sheet — focus returns here on close. */
+  private readonly premiumButton = viewChild<ElementRef<HTMLButtonElement>>('premiumButton');
   private readonly composer = viewChild<ElementRef<HTMLTextAreaElement>>('composer');
   private readonly photoInput = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private readonly cameraInput = viewChild<ElementRef<HTMLInputElement>>('cameraInput');
@@ -137,6 +147,12 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly historyOpen = signal(false);
   /** Her information sheet: over the chat on a phone, over the conversation on a wide window. */
   protected readonly infoOpen = signal(false);
+  /**
+   * Her Premium Content page: every photograph of her `PremiumContent/` folder, opened from the
+   * "Show Premium Content" button of her information sheet. A layer of its own over the window —
+   * over the whole window on a phone, over the wide conversation column on a laptop.
+   */
+  protected readonly premiumOpen = signal(false);
   protected readonly pickerFor = signal<string | null>(null);
   /** The message the visitor has chosen to reply over — the quote the composer will send. */
   protected readonly replyingTo = signal<AiChatReplyQuote | null>(null);
@@ -414,11 +430,36 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   }
 
   /**
-   * "Show Premium Content" on her information sheet. For now it only names the door: the premium
-   * gallery is still being built, so pressing it does nothing.
+   * True for a Premium model with at least one photograph in her `PremiumContent/` folder — the
+   * only models whose "Show Premium Content" button can be pressed. Every other model keeps the
+   * button disabled: there is nothing behind it for her.
+   */
+  protected readonly canShowPremiumContent = computed(
+    () =>
+      modelChatTier(this.model()) === 'premium' && (this.model().premiumPhotos?.length ?? 0) > 0,
+  );
+
+  /** The label that explains a disabled button: why this chat has no Premium Content to show. */
+  protected readonly premiumDisabledLabel = computed(() =>
+    modelChatTier(this.model()) === 'premium'
+      ? 'Premium Content is being prepared for this chat'
+      : 'Only Premium models have Premium Content',
+  );
+
+  /**
+   * "Show Premium Content" on her information sheet: the Premium Content page opens over the chat
+   * window — a new page of the same Live Chat interface, on the wide panel on a laptop and over the
+   * same screen on a phone. Her information sheet waits underneath, so going back lands on it.
    */
   protected showPremiumContent(): void {
-    // Nothing yet.
+    if (!this.canShowPremiumContent()) return;
+    this.premiumOpen.set(true);
+  }
+
+  /** Back from the Premium Content page to her information sheet, with focus restored. */
+  protected closePremiumContent(): void {
+    this.premiumOpen.set(false);
+    setTimeout(() => this.premiumButton()?.nativeElement.focus({ preventScroll: true }), 0);
   }
 
   /** The same 900px switch the stylesheet uses to turn the chat landscape. */
@@ -466,6 +507,13 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     // The history sheet is the top layer: Escape takes the visitor back to whatever is under it.
     if (this.historyOpen()) {
       this.closeHistory();
+      return;
+    }
+    // The Premium Content page sits above her information sheet. When its full-screen photograph
+    // viewer is open, that viewer takes the Escape itself — only then does the page close.
+    if (this.premiumOpen()) {
+      if (this.root.querySelector('.lightbox')) return;
+      this.closePremiumContent();
       return;
     }
     // The information sheet is a layer of its own: Escape takes the visitor back to the chat.

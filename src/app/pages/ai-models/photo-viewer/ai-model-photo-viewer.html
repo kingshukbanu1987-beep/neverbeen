@@ -23,6 +23,28 @@
             <span aria-hidden="true">↗</span>
           </a>
         }
+        @if (allowDownload()) {
+          <button
+            type="button"
+            class="viewer-download"
+            (click)="downloadPhoto()"
+            [attr.aria-label]="'Download ' + (modelName() || 'this photograph') + ' — save the photograph to your device'"
+            title="Download the photograph"
+          >
+            <svg
+              class="viewer-icon"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <path d="M12 4v11" />
+              <path d="m7.5 11.5 4.5 4.5 4.5-4.5" />
+              <path d="M5 19.5h14" />
+            </svg>
+            <span class="viewer-download-word">Download</span>
+          </button>
+        }
         <button
           #viewerClose
           type="button"

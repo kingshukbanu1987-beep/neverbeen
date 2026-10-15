@@ -1768,10 +1768,18 @@
     background 160ms ease;
 }
 
-/* The premium door: the studio's magenta, white words. For now it opens nothing. */
+/* The premium door: the studio's magenta, white words. Disabled for every model that is not a
+   Premium model, or whose PremiumContent/ folder is still empty. */
 .chat-info-premium {
   background: #c920a6;
   color: #ffffff;
+}
+
+.chat-info-premium:disabled {
+  background: #e9e4ec;
+  color: #9b93a3;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .chat-info-history {
@@ -1784,8 +1792,8 @@
   color: var(--chat-ink);
 }
 
-.chat-info-premium:hover,
-.chat-info-premium:focus-visible {
+.chat-info-premium:hover:not(:disabled),
+.chat-info-premium:focus-visible:not(:disabled) {
   background: #b01b92;
   transform: translateY(-1px);
 }

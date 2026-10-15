@@ -23,6 +23,10 @@
           <p class="album-intro">
             Every frame from {{ firstName(profile.name) }}’s album, set in one mosaic. Open any
             photograph full screen, then zoom in with a scroll, a pinch or a double-tap.
+            @if (hasPremiumTeasers()) {
+              The blurred Premium Content {{ premiumTeasers().length === 1 ? 'frame is' : 'frames are' }}
+              locked — they open only in a paid Premium Live Chat.
+            }
           </p>
         </div>
 
@@ -88,39 +92,53 @@
           <div class="mosaic">
             @for (tile of tiles(); track tile.photo.src; let index = $index) {
               <div class="mosaic-cell" [style]="tile.style">
-                <button
-                  type="button"
-                  class="mosaic-tile"
-                  [class.is-settled]="isSettled(tile.photo.src)"
-                  (click)="openViewer(index)"
-                  (pointermove)="onTilePointerMove($event)"
-                  [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
-                >
-                  <img
-                    [src]="tile.photo.src"
-                    [alt]="photoAlt(profile.name, index)"
-                    [attr.loading]="loading(index)"
-                    [attr.fetchpriority]="index === 0 ? 'high' : null"
-                    decoding="async"
-                    draggable="false"
-                    (load)="markSettled(tile.photo.src)"
-                    (error)="markSettled(tile.photo.src)"
+                @if (tile.premium) {
+                  <!-- A locked Premium Content frame: 75% blur under the diagonal watermark, its
+                       complete photograph only in a paid Premium Live Chat. -->
+                  <div class="mosaic-tile mosaic-premium-tile">
+                    <app-premium-photo-teaser
+                      [photo]="tile.photo"
+                      variant="album"
+                      [loading]="loading(index)"
+                    />
+                  </div>
+                } @else {
+                  <button
+                    type="button"
+                    class="mosaic-tile"
+                    [class.is-settled]="isSettled(tile.photo.src)"
+                    (click)="openViewer(tile.photoIndex)"
+                    (dblclick)="openViewer(tile.photoIndex)"
+                    (pointermove)="onTilePointerMove($event)"
+                    [attr.aria-label]="'Open ' + photoAlt(profile.name, tile.photoIndex ?? index)"
+                  >
+                    <img
+                      [src]="tile.photo.src"
+                      [alt]="photoAlt(profile.name, tile.photoIndex ?? index)"
+                      [attr.loading]="loading(index)"
+                      [attr.fetchpriority]="index === 0 ? 'high' : null"
+                      decoding="async"
+                      draggable="false"
+                      (load)="markSettled(tile.photo.src)"
+                      (error)="markSettled(tile.photo.src)"
+                    />
+                    <span class="mosaic-spot" aria-hidden="true"></span>
+                    <span class="mosaic-meta" aria-hidden="true">
+                      <span class="mosaic-frame"
+                        >FRAME /
+                        <span class="num">{{ frameLabel(tile.photoIndex ?? index) }}</span></span
+                      >
+                      <span class="mosaic-zoom">⤢</span>
+                    </span>
+                  </button>
+                  <app-model-media-engagement
+                    class="tile-engagement"
+                    [modelSlug]="profile.slug"
+                    mediaType="photo"
+                    [mediaSrc]="tile.photo.src"
+                    (comments)="openComments(tile.photo.src)"
                   />
-                  <span class="mosaic-spot" aria-hidden="true"></span>
-                  <span class="mosaic-meta" aria-hidden="true">
-                    <span class="mosaic-frame"
-                      >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
-                    >
-                    <span class="mosaic-zoom">⤢</span>
-                  </span>
-                </button>
-                <app-model-media-engagement
-                  class="tile-engagement"
-                  [modelSlug]="profile.slug"
-                  mediaType="photo"
-                  [mediaSrc]="tile.photo.src"
-                  (comments)="openComments(tile.photo.src)"
-                />
+                }
               </div>
             }
           </div>

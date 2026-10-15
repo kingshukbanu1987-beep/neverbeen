@@ -1,0 +1,30 @@
+<!-- A locked Premium Content frame: the photograph stays behind its blur and watermark — there is
+     nothing to click, the complete photograph lives only in a paid Premium Live Chat. -->
+<div
+  class="premium-teaser"
+  [attr.data-variant]="variant()"
+  role="img"
+  [attr.aria-label]="
+    'Premium Content photograph of this model — only available in Paid Premium Chat'
+  "
+>
+  <img
+    class="premium-teaser-photo"
+    [src]="photo().src"
+    alt=""
+    [attr.loading]="loading()"
+    decoding="async"
+    draggable="false"
+  />
+  <span class="premium-teaser-veil" aria-hidden="true"></span>
+  <span class="premium-teaser-mark" aria-hidden="true">
+    <b class="premium-teaser-title">Premium Content</b>
+    <i class="premium-teaser-sub">Only available in Paid Premium Chat</i>
+  </span>
+  <span class="premium-teaser-lock" aria-hidden="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5.5" y="10.5" width="13" height="9" rx="2.2" />
+      <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+    </svg>
+  </span>
+</div>

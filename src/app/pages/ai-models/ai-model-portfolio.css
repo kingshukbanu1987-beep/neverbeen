@@ -1157,6 +1157,35 @@
   pointer-events: auto;
 }
 
+/* A locked Premium Content frame: 85% gaussian blur under the diagonal watermark. The teaser
+   component paints the photograph and the mark; the shell keeps the grid's own tile shape. */
+.premium-teaser-tile > app-premium-photo-teaser {
+  position: absolute;
+  inset: 0;
+}
+
+.premium-teaser-tile:hover {
+  /* Locked frames never answer the hover their neighbours do. */
+  box-shadow: none;
+}
+
+/* The same locked frame in the feed layout: the teaser fills the feed photograph's own box. */
+.premium-teaser-photo {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.premium-teaser-photo > app-premium-photo-teaser {
+  position: absolute;
+  inset: 0;
+}
+
+.premium-teaser-item .feed-caption {
+  color: #e0567f;
+  font-weight: 650;
+}
+
 .tile-glow {
   position: absolute;
   inset: 0;

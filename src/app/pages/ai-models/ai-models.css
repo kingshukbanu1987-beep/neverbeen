@@ -467,6 +467,118 @@
   margin-top: 0.62rem;
 }
 
+/* The Live Chat button and whatever stands beside it on its own line — the NeverBeen Premium
+   Model wordmark of a Premium model. */
+.card-chat-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/*
+ * The NeverBeen Premium Model badge — an obsidian seal set with champagne gold, the quiet
+ * luxury idiom of a premium hallmark: a deep near-black pill against the dark card, edged with a
+ * hairline of gold and lit by a warm glow, the brand word in white, a gold rule, and the tier in
+ * brushed-gold capitals. A slow sheen of light crosses the seal the way the Live Chat pill's band
+ * of light crosses its green.
+ */
+.card-premium-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.7rem 0.34rem 0.58rem;
+  overflow: hidden;
+  border-radius: 999px;
+  /* Obsidian with a whisper of the studio's violet, lighter than the card so the seal separates. */
+  background:
+    radial-gradient(130% 170% at 18% 0%, rgb(94 58 138 / 48%), transparent 58%),
+    linear-gradient(135deg, #241736 0%, #150e22 55%, #0c0814 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 12%),
+    inset 0 -9px 14px -10px rgb(0 0 0 / 60%),
+    0 0 0 1px rgb(226 187 111 / 48%),
+    0 10px 26px -12px rgb(6 4 10 / 70%),
+    0 0 20px -6px rgb(226 187 111 / 32%);
+  color: #f7f3ff;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* The sheen of light that crosses the seal. */
+.card-premium-mark::after {
+  content: '';
+  position: absolute;
+  top: -70%;
+  left: -45%;
+  width: 30%;
+  height: 240%;
+  background: linear-gradient(100deg, transparent, rgb(255 245 216 / 24%), transparent);
+  transform: rotate(14deg);
+  animation: card-premium-beam 5.2s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes card-premium-beam {
+  0%,
+  55% {
+    left: -45%;
+  }
+  85%,
+  100% {
+    left: 130%;
+  }
+}
+
+/* The gold spark that leads the wordmark, breathing rather than blinking. */
+.card-premium-spark {
+  color: #ecc377;
+  font-size: 0.62rem;
+  font-style: normal;
+  text-shadow: 0 0 9px rgb(236 195 119 / 75%);
+  animation: card-premium-spark 3.2s ease-in-out infinite;
+}
+
+@keyframes card-premium-spark {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.62;
+    transform: scale(0.88);
+  }
+}
+
+/* The brand word: white, set a touch larger than its tier — the lockup's anchor. */
+.card-premium-word {
+  color: #fbf9ff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* The hairline gold rule between the word and the tier, fading out at both ends. */
+.card-premium-seal {
+  width: 1px;
+  height: 0.82em;
+  background: linear-gradient(180deg, transparent, rgb(236 195 119 / 62%), transparent);
+}
+
+/* The tier: brushed-gold capitals, the metallic finish of a hallmark. */
+.card-premium-tier {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #fdeec7 2%, #ecc679 46%, #c3923e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* On a phone the two keep the same stacked order, only closer together: the pill never shares the
    button's line and never squeezes its own text to do so. */
 @media (max-width: 640px) {

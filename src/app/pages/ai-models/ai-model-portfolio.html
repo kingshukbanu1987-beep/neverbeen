@@ -300,6 +300,12 @@
               }
               Tap any photograph to open it full screen, then zoom in with a scroll, a pinch or a
               double-tap.
+              @if (hasPremiumTeasers()) {
+                The blurred
+                <span class="num">{{ premiumTeasers().length }}</span> Premium Content
+                {{ premiumTeasers().length === 1 ? 'frame is' : 'frames are' }} locked — they open
+                only in a paid Premium Live Chat.
+              }
             </p>
           </div>
 
@@ -399,16 +405,16 @@
         @if (photos().length > 0) {
           @if (view() === 'grid') {
             <div class="portfolio-grid">
-              @for (photo of previewPhotos(); track photo.src; let index = $index) {
-                @if (index === viewAllIndex()) {
-                  <!-- The twelfth tile opens the complete album on its own page. -->
+              @for (tile of galleryTiles(); track tile.photo.src; let index = $index) {
+                @if (tile.kind === 'view-all') {
+                  <!-- The closing tile opens the complete album on its own page. -->
                   <a
                     class="grid-tile view-all-tile"
                     [routerLink]="['/ai-models', profile.slug, 'photos']"
                     [attr.aria-label]="viewAllLabel(profile.name)"
                     [style.animation-delay.ms]="tileDelay(index)"
                   >
-                    <img [src]="photo.src" alt="" loading="lazy" decoding="async" />
+                    <img [src]="tile.photo.src" alt="" loading="lazy" decoding="async" />
                     <span class="view-all-veil" aria-hidden="true"></span>
                     <span class="view-all-body" aria-hidden="true">
                       <span class="view-all-more"
@@ -425,24 +431,38 @@
                       >
                     </span>
                   </a>
+                } @else if (tile.kind === 'premium') {
+                  <!-- A locked Premium Content frame: 85% blur and the diagonal watermark — the
+                       complete photograph lives only in a paid Premium Live Chat. -->
+                  <div
+                    class="grid-tile-shell premium-teaser-tile"
+                    [style.animation-delay.ms]="tileDelay(index)"
+                  >
+                    <app-premium-photo-teaser
+                      [photo]="tile.photo"
+                      variant="portfolio"
+                      [loading]="index < 4 ? 'eager' : 'lazy'"
+                    />
+                  </div>
                 } @else {
                   <div class="grid-tile-shell" [style.animation-delay.ms]="tileDelay(index)">
                     <button
                       type="button"
                       class="grid-tile"
-                      (click)="openLightbox(index)"
-                      [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                      (click)="openLightbox(tile.lightboxIndex)"
+                      [attr.aria-label]="'Open ' + photoAlt(profile.name, tile.lightboxIndex)"
                     >
                       <img
-                        [src]="photo.src"
-                        [alt]="photoAlt(profile.name, index)"
+                        [src]="tile.photo.src"
+                        [alt]="photoAlt(profile.name, tile.lightboxIndex)"
                         loading="lazy"
                         decoding="async"
                       />
                       <span class="tile-glow" aria-hidden="true"></span>
                       <span class="tile-overlay" aria-hidden="true">
                         <span class="tile-number"
-                          >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
+                          >FRAME /
+                          <span class="num">{{ frameLabel(tile.lightboxIndex) }}</span></span
                         >
                         <span class="tile-expand">⤢</span>
                       </span>
@@ -451,8 +471,8 @@
                       class="tile-engagement"
                       [modelSlug]="profile.slug"
                       mediaType="photo"
-                      [mediaSrc]="photo.src"
-                      (comments)="openComments('photo', photo.src)"
+                      [mediaSrc]="tile.photo.src"
+                      (comments)="openComments('photo', tile.photo.src)"
                     />
                   </div>
                 }
@@ -460,8 +480,8 @@
             </div>
           } @else {
             <div class="portfolio-feed">
-              @for (photo of previewPhotos(); track photo.src; let index = $index) {
-                @if (index === viewAllIndex()) {
+              @for (tile of galleryTiles(); track tile.photo.src; let index = $index) {
+                @if (tile.kind === 'view-all') {
                   <figure
                     class="feed-item view-all-item"
                     [style.animation-delay.ms]="tileDelay(index)"
@@ -471,7 +491,7 @@
                       [routerLink]="['/ai-models', profile.slug, 'photos']"
                       [attr.aria-label]="viewAllLabel(profile.name)"
                     >
-                      <img [src]="photo.src" alt="" loading="lazy" decoding="async" />
+                      <img [src]="tile.photo.src" alt="" loading="lazy" decoding="async" />
                       <span class="view-all-veil" aria-hidden="true"></span>
                       <span class="view-all-body" aria-hidden="true">
                         <span class="view-all-more"
@@ -498,34 +518,57 @@
                       </span>
                     </figcaption>
                   </figure>
+                } @else if (tile.kind === 'premium') {
+                  <!-- The same locked Premium Content frame in the feed layout. -->
+                  <figure
+                    class="feed-item premium-teaser-item"
+                    [style.animation-delay.ms]="tileDelay(index)"
+                  >
+                    <div class="feed-photo premium-teaser-photo">
+                      <app-premium-photo-teaser
+                        [photo]="tile.photo"
+                        variant="portfolio"
+                        [loading]="index < 4 ? 'eager' : 'lazy'"
+                      />
+                    </div>
+                    <figcaption>
+                      <span class="feed-caption-line">
+                        <span class="feed-index">✦</span>
+                        <span class="feed-caption">
+                          Premium Content — only available in Paid Premium Chat.
+                        </span>
+                      </span>
+                    </figcaption>
+                  </figure>
                 } @else {
                   <figure class="feed-item" [style.animation-delay.ms]="tileDelay(index)">
                     <button
                       type="button"
                       class="feed-photo"
-                      (click)="openLightbox(index)"
-                      [attr.aria-label]="'Open ' + photoAlt(profile.name, index)"
+                      (click)="openLightbox(tile.lightboxIndex)"
+                      [attr.aria-label]="'Open ' + photoAlt(profile.name, tile.lightboxIndex)"
                     >
                       <img
-                        [src]="photo.src"
-                        [alt]="photoAlt(profile.name, index)"
+                        [src]="tile.photo.src"
+                        [alt]="photoAlt(profile.name, tile.lightboxIndex)"
                         loading="lazy"
                         decoding="async"
                       />
                       <span class="tile-overlay" aria-hidden="true">
                         <span class="tile-number"
-                          >FRAME / <span class="num">{{ frameLabel(index) }}</span></span
+                          >FRAME /
+                          <span class="num">{{ frameLabel(tile.lightboxIndex) }}</span></span
                         >
                         <span class="tile-expand">⤢</span>
                       </span>
                     </button>
                     <figcaption>
                       <span class="feed-caption-line">
-                        <span class="feed-index">{{ frameLabel(index) }}</span>
+                        <span class="feed-index">{{ frameLabel(tile.lightboxIndex) }}</span>
                         <span class="feed-caption">
-                          {{ captionParts(index).text }}
-                          @if (captionParts(index).frame) {
-                            <span class="num">{{ captionParts(index).frame }}</span>
+                          {{ captionParts(tile.lightboxIndex).text }}
+                          @if (captionParts(tile.lightboxIndex).frame) {
+                            <span class="num">{{ captionParts(tile.lightboxIndex).frame }}</span>
                           }
                         </span>
                       </span>
@@ -533,8 +576,8 @@
                         layout="row"
                         [modelSlug]="profile.slug"
                         mediaType="photo"
-                        [mediaSrc]="photo.src"
-                        (comments)="openComments('photo', photo.src)"
+                        [mediaSrc]="tile.photo.src"
+                        (comments)="openComments('photo', tile.photo.src)"
                       />
                     </figcaption>
                   </figure>

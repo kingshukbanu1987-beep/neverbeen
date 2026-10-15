@@ -16,7 +16,7 @@
     "biographyGeneratedAt": "2026-10-14T09:40:16.598Z",
     "conflictRule": "profile-wins",
     "createdAt": "2026-10-14T09:40:16.308Z",
-    "updatedAt": "2026-10-14T09:40:16.308Z"
+    "updatedAt": "2026-10-15T17:53:11.772Z"
   },
   "profile": {
     "_doc": "Her own profile, exactly as the website shows it on her portfolio page (data/ai-models/profiles.json merged with her album profile.json). These facts win over anything in the biography block.",
@@ -45,7 +45,7 @@
       "note": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
     },
     "portfolio": {
-      "photographs": 76,
+      "photographs": 72,
       "videos": 0
     },
     "profilePage": "/ai-models/fatima-sana-hussaini",

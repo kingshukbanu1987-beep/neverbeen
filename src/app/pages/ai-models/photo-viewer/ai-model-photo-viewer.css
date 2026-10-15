@@ -186,6 +186,47 @@
   outline-offset: 3px;
 }
 
+/* Download: offered only where the plan allows it (the Premium Content gallery of a paid chat). */
+.viewer-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid rgb(120 231 255 / 38%);
+  border-radius: 999px;
+  background: rgb(120 231 255 / 10%);
+  color: #d8f6ff;
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.viewer-download svg {
+  stroke: currentcolor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.viewer-download:hover,
+.viewer-download:focus-visible {
+  border-color: rgb(120 231 255 / 70%);
+  background: rgb(120 231 255 / 22%);
+}
+
+.viewer-download:focus-visible {
+  outline: 2px solid #7de7ff;
+  outline-offset: 3px;
+}
+
 .lightbox-close {
   display: grid;
   width: 42px;
@@ -619,6 +660,11 @@
 
   .lightbox-actions {
     gap: 0.45rem;
+  }
+
+  /* The word goes on narrow screens; the arrow icon keeps the button's meaning. */
+  .viewer-download-word {
+    display: none;
   }
 
   .lightbox-close {

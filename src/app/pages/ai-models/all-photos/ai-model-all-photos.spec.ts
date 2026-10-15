@@ -80,6 +80,46 @@ describe('AiModelAllPhotosPage', () => {
     return harness;
   }
 
+  it('teases her Premium Content locked in the first rows of the mosaic', async () => {
+    const profile = withPhotos(20);
+    profile.premiumPhotos = Array.from({ length: 4 }, (_, index) => ({
+      src: `/NeverBeenModels/TestAlbumModel/PremiumContent/frame-${index + 1}.jpg`,
+      caption: '',
+    }));
+    const harness = await openAlbum(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      const cells = Array.from(element.querySelectorAll<HTMLElement>('.mosaic-cell'));
+      const premiumCells = cells.filter((cell) => cell.querySelector('.mosaic-premium-tile'));
+      expect(premiumCells.length).toBe(4);
+
+      // They sit within the first rows of the mosaic, never one straight after another, and
+      // never in front of the cover that opens the album.
+      const positions = cells
+        .map((cell, index) => (cell.querySelector('.mosaic-premium-tile') ? index : -1))
+        .filter((index) => index >= 0);
+      expect(positions.length).toBe(4);
+      expect(positions[0]).toBeGreaterThan(0);
+      expect(Math.max(...positions)).toBeLessThan(8);
+      for (const position of positions) {
+        expect(positions).not.toContain(position + 1);
+      }
+
+      // Every locked frame carries the watermark and never opens the viewer.
+      for (const cell of premiumCells) {
+        expect(cell.textContent).toContain('Premium Content');
+        expect(cell.textContent).toContain('Only available in Paid Premium Chat');
+        expect(cell.querySelector('button')).toBeNull();
+      }
+
+      // The album's own photographs still open, still twenty of them.
+      expect(element.querySelectorAll('button.mosaic-tile').length).toBe(20);
+    } finally {
+      release(profile);
+    }
+  });
+
   it('lays out every photograph of the album in a mosaic of differently sized tiles', async () => {
     const profile = withPhotos(20);
     const harness = await openAlbum(profile.slug);

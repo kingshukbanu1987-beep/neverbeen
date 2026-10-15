@@ -16,7 +16,7 @@ import { ModelVerifiedTick } from '../../shared/model-verified-tick/model-verifi
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelChatDialog } from './chat/ai-model-chat';
 import { LiveChatAccess } from './chat/live-chat-access';
-import { requiresRegisteredChat } from './chat/live-chat-policy';
+import { modelChatTier, requiresRegisteredChat } from './chat/live-chat-policy';
 import { ChatIdentity } from './chat/chat-identity';
 import { LiveChatPlan } from './chat/chat-types';
 
@@ -314,6 +314,14 @@ export class AiModelsPage {
 
   protected reviewSummary(model: AiModelProfile): ModelReviewSummary {
     return this.reviewSummaries().get(model.slug) ?? INITIAL_REVIEW_SUMMARY;
+  }
+
+  /**
+   * True for a Premium model — the paid Premium Live Chat tier. Her card carries the NeverBeen
+   * Premium Model wordmark beside the Live Chat button, and her chat holds Premium Content.
+   */
+  protected isPremiumModel(model: AiModelProfile): boolean {
+    return modelChatTier(model) === 'premium';
   }
 
   protected formattedRating(model: AiModelProfile): string {
