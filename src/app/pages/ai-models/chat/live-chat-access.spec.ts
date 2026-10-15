@@ -411,8 +411,14 @@ describe('premium model access and UPI payment', () => {
     expect(element.querySelector('.coupon-applied')?.textContent).toContain('SPECIAL');
     expect(element.querySelector('.payment-pre-discount b')?.textContent).toBe('₹146.37');
     expect(element.querySelector('.payment-discount span')?.textContent).toBe(
-      'Discount · SPECIAL (15% off)',
+      'You save · SPECIAL (15% off)',
     );
+    expect(element.querySelector('.payment-discount')?.textContent).not.toContain('Discount');
+    expect(
+      element
+        .querySelector('.payment-discount')
+        ?.nextElementSibling?.classList.contains('payment-total'),
+    ).toBe(true);
     expect(element.querySelector('.payment-discount b')?.textContent).toBe('−₹17.85');
     expect(element.querySelector('.payment-breakdown > div:nth-child(4) b')?.textContent).toBe(
       '₹5.95',
@@ -428,7 +434,7 @@ describe('premium model access and UPI payment', () => {
 
     enterCoupon('NEVERBEEN');
     expect(element.querySelector('.payment-discount span')?.textContent).toBe(
-      'Discount · NEVERBEEN (25% off)',
+      'You save · NEVERBEEN (25% off)',
     );
     expect(element.querySelector('.payment-discount b')?.textContent).toBe('−₹29.75');
     expect(element.querySelector('.payment-pre-discount b')?.textContent).toBe('₹146.37');
