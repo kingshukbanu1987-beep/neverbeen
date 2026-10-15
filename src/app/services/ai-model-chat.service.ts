@@ -1753,7 +1753,10 @@ export class AiModelChatService {
     // The clock does not start here: it starts when the visitor has introduced themselves, so no
     // one loses their selected chat time to a form.
     const durationMs = plan === 'legacy' ? AI_CHAT_SESSION_MS : LIVE_CHAT_PLANS[plan].durationMs;
-    const durationLabel = plan === 'legacy' ? 'two-hour' : LIVE_CHAT_PLANS[plan].durationLabel;
+    const sessionPhrase =
+      plan === 'legacy'
+        ? 'two-hour chat'
+        : `${LIVE_CHAT_PLANS[plan].chatNoun} of ${LIVE_CHAT_PLANS[plan].durationLabel}`;
     return {
       slug,
       plan,
@@ -1765,7 +1768,7 @@ export class AiModelChatService {
       messages: [
         newMessage({
           author: 'system',
-          text: `🔒 This is a private ${durationLabel} chat with an AI model of the NeverBeen Multiverse. Nothing here is real outside NeverBeen, and the studio reads nothing of it.`,
+          text: `🔒 This is a private ${sessionPhrase} with an AI model of the NeverBeen Multiverse. Nothing here is real outside NeverBeen, and the studio reads nothing of it.`,
           kind: 'notice',
         }),
       ],
@@ -1799,7 +1802,9 @@ export class AiModelChatService {
 
   /** Backward-compatible plan lookup for conversations stored before access plans existed. */
   private sessionPlan(session: AiChatSession): LiveChatPlan | 'legacy' {
-    return session.plan === 'free' || session.plan === 'registered' ? session.plan : 'legacy';
+    return session.plan === 'free' || session.plan === 'registered' || session.plan === 'premium'
+      ? session.plan
+      : 'legacy';
   }
 
   private sessionDuration(session: AiChatSession): number {
@@ -1819,7 +1824,7 @@ export class AiModelChatService {
     const plan = this.sessionPlan(session);
     if (plan === 'legacy') return CHAT_TIMEOUT_TEXT;
     const label = LIVE_CHAT_PLANS[plan].durationLabel;
-    return `⌛ Your ${label} ${LIVE_CHAT_PLANS[plan].label.toLocaleLowerCase()} is up, so this chat closes here. Start another chat whenever you are ready.`;
+    return `⌛ Your ${label} ${LIVE_CHAT_PLANS[plan].chatNoun} is up, so this chat closes here. Start another chat whenever you are ready.`;
   }
 
   private appendMessage(session: AiChatSession, message: AiChatMessage): void {
@@ -1914,7 +1919,9 @@ export class AiModelChatService {
         if (!session || typeof session.endsAt !== 'number' || !Array.isArray(session.messages))
           continue;
         const restoredPlan: LiveChatPlan | 'legacy' =
-          session.plan === 'free' || session.plan === 'registered' ? session.plan : 'legacy';
+          session.plan === 'free' || session.plan === 'registered' || session.plan === 'premium'
+            ? session.plan
+            : 'legacy';
         this.sessions.set(slug, {
           slug,
           plan: restoredPlan,

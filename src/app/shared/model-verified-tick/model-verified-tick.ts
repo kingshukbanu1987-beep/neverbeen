@@ -11,8 +11,7 @@ function scallopedBadgePath(): string {
   const points: string[] = [];
   for (let step = 0; step <= BADGE_STEPS; step++) {
     const angle = (step / BADGE_STEPS) * Math.PI * 2;
-    const radius =
-      BADGE_BASE_RADIUS + BADGE_LOBE_DEPTH * Math.cos(BADGE_LOBES * angle);
+    const radius = BADGE_BASE_RADIUS + BADGE_LOBE_DEPTH * Math.cos(BADGE_LOBES * angle);
     const x = 12 + radius * Math.cos(angle);
     const y = 12 + radius * Math.sin(angle);
     points.push(`${step === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`);
@@ -23,10 +22,10 @@ function scallopedBadgePath(): string {
 const BADGE_PATH = scallopedBadgePath();
 
 /**
- * The blue tick that stands after the name of a model who only chats with Registered Users
- * (the Exclusive models of {@link requiresRegisteredChat}). It draws nothing for any other model,
- * so a parent can place it unconditionally beside every name. It is sized in `em`, so it grows
- * and shrinks with whatever heading or text it follows.
+ * The blue tick that stands after the name of an Exclusive or a Premium model (the models of
+ * {@link requiresRegisteredChat}) — the verified NeverBeen models. It draws nothing for any other
+ * model, so a parent can place it unconditionally beside every name. It is sized in `em`, so it
+ * grows and shrinks with whatever heading or text it follows.
  */
 @Component({
   selector: 'app-model-verified-tick',
@@ -83,6 +82,6 @@ export class ModelVerifiedTick {
   readonly slug = input.required<string>();
 
   protected readonly verified = computed(() => requiresRegisteredChat({ slug: this.slug() }));
-  protected readonly label = 'Verified model · chats with Registered Users only';
+  protected readonly label = 'Verified NeverBeen model · Exclusive or Premium';
   protected readonly badgePath = BADGE_PATH;
 }

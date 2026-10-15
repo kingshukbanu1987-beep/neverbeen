@@ -50,7 +50,14 @@ export function reactionEmoji(reaction: AiChatReaction | null): string {
 }
 
 /** The access choice made before a Live Chat starts. */
-export type LiveChatPlan = 'free' | 'registered';
+export type LiveChatPlan = 'free' | 'registered' | 'premium';
+
+/** One line of a plan's feature list: what it grants, and what it withholds. */
+export interface LiveChatPlanFeature {
+  text: string;
+  included: boolean;
+  emphasis?: boolean;
+}
 
 /**
  * One plan's fixed rules. These values live alongside the session types so the picker, the chat
@@ -61,32 +68,97 @@ export interface LiveChatPlanDefinition {
   label: string;
   durationMs: number;
   durationLabel: string;
+  /** The short unit shown on the plan card's duration block, e.g. `SECONDS`. */
+  durationUnit: string;
+  /** The noun phrase the session clock and close notice use, e.g. `free chat`. */
+  chatNoun: string;
   allowsMedia: boolean;
+  registrationRequired: boolean;
   memoryLabel: string;
   speedLabel: string;
+  humanLabel: string;
+  /** The complete feature list shown in the plan's own block of the access screen. */
+  features: readonly LiveChatPlanFeature[];
 }
 
-export const FREE_LIVE_CHAT_DURATION_MS = 2 * 60 * 1000;
-export const REGISTERED_LIVE_CHAT_DURATION_MS = 45 * 60 * 1000;
+export const FREE_LIVE_CHAT_DURATION_MS = 45 * 1000;
+export const REGISTERED_LIVE_CHAT_DURATION_MS = 2 * 60 * 1000;
+export const PREMIUM_LIVE_CHAT_DURATION_MS = 15 * 60 * 1000;
 
 export const LIVE_CHAT_PLANS: Record<LiveChatPlan, LiveChatPlanDefinition> = {
   free: {
     id: 'free',
     label: 'Free Chat',
     durationMs: FREE_LIVE_CHAT_DURATION_MS,
-    durationLabel: '2 minutes',
+    durationLabel: '45 seconds',
+    durationUnit: 'SECONDS',
+    chatNoun: 'free chat',
     allowsMedia: false,
+    registrationRequired: false,
     memoryLabel: 'Basic conversational memory',
     speedLabel: 'Standard response speed',
+    humanLabel: 'Limited Human like Response',
+    features: [
+      { text: 'No Registration is Required', included: true },
+      { text: 'Text-based Chat Conversations', included: true },
+      { text: 'No Photo or Video Sharing is Allowed', included: false },
+      { text: 'Access to Free NeverBeen Models', included: true },
+      { text: 'No Access to Exclusive NeverBeen Models', included: false },
+      { text: 'No Access to Premium NeverBeen Models', included: false },
+      { text: 'Chat Duration is Limited to 45 Seconds', included: true, emphasis: true },
+      { text: 'Basic conversational memory', included: true },
+      { text: 'Standard response speed', included: true },
+      { text: 'Limited Human like Response', included: true },
+    ],
   },
   registered: {
     id: 'registered',
     label: 'Registered User',
     durationMs: REGISTERED_LIVE_CHAT_DURATION_MS,
-    durationLabel: '45 minutes',
+    durationLabel: '2 minutes',
+    durationUnit: 'MINUTES',
+    chatNoun: 'registered user chat',
+    allowsMedia: false,
+    registrationRequired: true,
+    memoryLabel: 'Moderate conversation memory',
+    speedLabel: 'Moderate Response Speed',
+    humanLabel: 'More Human like Response',
+    features: [
+      { text: 'User Registration to Community is Required', included: true },
+      { text: 'Text-based Chat Conversations', included: true },
+      { text: 'No Photo or Video Sharing is Allowed', included: false },
+      { text: 'Chat Duration is Limited to 2 Minutes', included: true, emphasis: true },
+      { text: 'No Access to Free NeverBeen Models', included: false },
+      { text: 'Access to Exclusive NeverBeen Models', included: true, emphasis: true },
+      { text: 'No Access to Premium NeverBeen Models', included: false },
+      { text: 'Moderate Response Speed', included: true },
+      { text: 'More Human like Response', included: true },
+    ],
+  },
+  premium: {
+    id: 'premium',
+    label: 'Premium',
+    durationMs: PREMIUM_LIVE_CHAT_DURATION_MS,
+    durationLabel: '15 minutes',
+    durationUnit: 'MINUTES',
+    chatNoun: 'premium chat',
     allowsMedia: true,
-    memoryLabel: 'Advanced conversation memory',
-    speedLabel: 'Faster response speed',
+    registrationRequired: true,
+    memoryLabel: 'Ultimate conversation memory',
+    speedLabel: 'Ultra Fast response speed',
+    humanLabel: 'Realtime Human like Response',
+    features: [
+      { text: 'User Registration to Community is Required', included: true },
+      { text: 'Text-based Chat Conversations', included: true },
+      { text: 'Photo & Video sharing is Allowed', included: true, emphasis: true },
+      { text: 'No Access to Free NeverBeen Models', included: false },
+      { text: 'Access to Exclusive NeverBeen Models', included: true },
+      { text: 'Access to Premium NeverBeen Models', included: true, emphasis: true },
+      { text: 'More Chat Duration Upto 15 Minutes', included: true, emphasis: true },
+      { text: 'Ultimate conversation memory', included: true },
+      { text: 'Ultra Fast response speed', included: true },
+      { text: 'Realtime Human like Response', included: true },
+    ],
   },
 };
 

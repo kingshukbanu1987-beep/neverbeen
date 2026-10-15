@@ -418,9 +418,10 @@
     <app-live-chat-access
       [model]="chatting"
       [returnTo]="liveChatReturnPath(chatting)"
-      [resumeRegistered]="resumeRegisteredChat()"
+      [resumePlan]="resumeChatPlan()"
       (freeStarted)="startFreeChat()"
       (registeredStarted)="startRegisteredChat($event)"
+      (premiumStarted)="startPremiumChat($event)"
       (closed)="closeChat()"
     />
   }

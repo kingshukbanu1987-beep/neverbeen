@@ -25,7 +25,7 @@
 /* A clean white, editorial surface gives both access choices room to breathe. */
 .access-shell {
   position: relative;
-  width: min(1040px, 100%);
+  width: min(1180px, 100%);
   overflow: hidden;
   border: 1px solid #e0e9dd;
   border-radius: clamp(24px, 3vw, 34px);
@@ -227,6 +227,19 @@
   color: #7e39b5;
 }
 
+.selected-mode.is-premium {
+  border-color: rgb(226 168 61 / 48%);
+  background: rgb(245 176 66 / 12%);
+  color: #b07611;
+}
+
+.selected-mode.is-premium i {
+  background: #f2b23f;
+  box-shadow:
+    0 0 0 4px rgb(245 176 66 / 16%),
+    0 0 10px #f2b23f;
+}
+
 .access-close {
   position: absolute;
   top: 1rem;
@@ -327,7 +340,7 @@
 
 .plan-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(0.9rem, 2vw, 1.35rem);
 }
 
@@ -387,6 +400,25 @@
     inset 0 1px 0 #fff;
 }
 
+.plan-card-premium {
+  border-color: rgb(226 168 61 / 42%);
+  background:
+    radial-gradient(circle at 100% 0, rgb(255 190 84 / 18%), transparent 48%),
+    linear-gradient(155deg, #ffffff, #fffcf5);
+}
+
+.plan-card-premium.is-selected {
+  border-color: rgb(226 154 40 / 78%);
+  box-shadow:
+    0 20px 44px rgb(180 112 14 / 18%),
+    inset 0 1px 0 #fff;
+}
+
+.plan-glow-premium {
+  background: #ffc458;
+  opacity: 0.3;
+}
+
 .plan-glow {
   position: absolute;
   top: -65px;
@@ -434,6 +466,13 @@
     inset 0 1px 0 rgb(255 255 255 / 29%);
 }
 
+.plan-orbit-premium {
+  background: linear-gradient(145deg, #ffd27a, #e0900f 58%, #b26a05);
+  box-shadow:
+    0 8px 22px rgb(220 140 20 / 36%),
+    inset 0 1px 0 rgb(255 255 255 / 34%);
+}
+
 .plan-choice {
   display: inline-flex;
   align-items: center;
@@ -466,6 +505,15 @@
   box-shadow: 0 0 10px #d98cff;
 }
 
+.plan-choice.is-premium {
+  color: #b07611;
+}
+
+.plan-choice.is-premium i {
+  background: #f2b23f;
+  box-shadow: 0 0 10px #f2b23f;
+}
+
 .plan-title-row {
   margin-top: 1.15rem;
   align-items: end;
@@ -491,30 +539,133 @@
   color: #9351c0;
 }
 
-.plan-time {
+.plan-card-premium .plan-title-row h3 em {
+  color: #d99a20;
+}
+
+/* The chat duration block of every plan card: Calibri figures, ultra-modern glass pill. */
+.plan-duration {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: fit-content;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin-top: 0.95rem;
+  padding: 0.55rem 0.95rem 0.55rem 0.85rem;
+  border: 1px solid rgb(100 189 39 / 30%);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 92%), rgb(246 252 242 / 88%)),
+    radial-gradient(circle at 0 0, rgb(100 189 39 / 18%), transparent 70%);
+  box-shadow:
+    0 10px 26px rgb(45 105 16 / 10%),
+    inset 0 1px 0 #fff;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1;
+}
+
+.plan-duration-kicker {
+  align-self: center;
+  color: #75816e;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  writing-mode: horizontal-tb;
+}
+
+.plan-duration-figures {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.32rem;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.plan-duration-figures b {
+  color: #3f8b17;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 2.35rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.plan-duration-figures em {
+  color: #2f3d2a;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.92rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.plan-card-registered .plan-duration {
+  border-color: rgb(165 91 218 / 32%);
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 92%), rgb(252 250 255 / 88%)),
+    radial-gradient(circle at 0 0, rgb(165 91 218 / 16%), transparent 70%);
+}
+
+.plan-card-registered .plan-duration-figures b {
+  color: #9247c6;
+}
+
+.plan-card-premium .plan-duration {
+  border-color: rgb(217 151 40 / 38%);
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 94%), rgb(255 251 240 / 90%)),
+    radial-gradient(circle at 0 0, rgb(245 176 66 / 20%), transparent 70%);
+}
+
+.plan-card-premium .plan-duration-figures b {
+  color: #c47a0c;
+}
+
+/* The Premium amount in big font, exactly as the model's price lists it. */
+.plan-price {
+  position: relative;
+  z-index: 1;
   display: grid;
-  padding: 0.25rem 0 0.1rem;
-  color: #64a43a;
-  line-height: 0.8;
-  text-align: right;
+  width: fit-content;
+  margin-top: 0.85rem;
+  padding: 0.7rem 1.05rem;
+  border: 1px solid rgb(226 168 61 / 45%);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(255 196 92 / 32%), transparent 70%),
+    linear-gradient(150deg, #fffaf0, #fff6e2);
+  box-shadow:
+    0 14px 32px rgb(184 116 16 / 18%),
+    inset 0 1px 0 #fff;
+  text-align: left;
 }
 
-.plan-time b {
-  font-size: 1.9rem;
-  font-weight: 300;
-  letter-spacing: -0.08em;
+.plan-price-label {
+  color: #9a6a1c;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
-.plan-time small {
-  margin-top: 0.25rem;
-  color: #778572;
-  font-size: 0.46rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
+.plan-price-value {
+  margin-top: 0.12rem;
+  color: #a35e05;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(2.55rem, 4.4vw, 3.45rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-shadow: 0 6px 18px rgb(245 158 11 / 26%);
 }
 
-.plan-card-registered .plan-time b {
-  color: #984fc6;
+.plan-price-note {
+  margin-top: 0.22rem;
+  color: #97671a;
+  font-size: 0.6rem;
+  font-weight: 700;
 }
 
 .plan-summary {
@@ -580,6 +731,18 @@
   color: #438b18;
 }
 
+.plan-card-premium .plan-features li > span {
+  border-color: rgb(226 168 61 / 52%);
+  background: rgb(245 176 66 / 16%);
+  color: #c07c10;
+}
+
+.plan-card-premium .plan-features li.is-emphasis > span {
+  border-color: rgb(226 154 40 / 68%);
+  background: rgb(245 176 66 / 26%);
+  color: #a35e05;
+}
+
 .plan-features li.is-unavailable {
   color: #879081;
 }
@@ -639,6 +802,13 @@
 .plan-start-registered {
   background: linear-gradient(120deg, #a448ed, #7130d7 60%, #5625bd);
   box-shadow: 0 12px 28px rgb(121 45 220 / 35%);
+}
+
+.plan-start-premium {
+  background: linear-gradient(120deg, #f2b347, #de8c0e 58%, #b96f05);
+  box-shadow:
+    0 12px 28px rgb(202 130 14 / 38%),
+    inset 0 1px 0 rgb(255 255 255 / 32%);
 }
 
 .plan-footnote {
@@ -937,6 +1107,287 @@
   font-style: normal;
 }
 
+/* The Premium payment step: amount, UPI app, transaction reference, verification. */
+.access-payment {
+  max-width: 620px;
+}
+
+.payment-price-card {
+  display: grid;
+  width: fit-content;
+  justify-items: center;
+  margin: 1.4rem auto 1.15rem;
+  padding: 1.15rem 2.1rem 1.25rem;
+  border: 1px solid rgb(226 168 61 / 48%);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 85% 0, rgb(255 196 92 / 35%), transparent 68%),
+    linear-gradient(155deg, #fffaf0, #fff3dc);
+  box-shadow:
+    0 22px 48px rgb(184 116 16 / 22%),
+    inset 0 1px 0 #fff;
+}
+
+.payment-price-label {
+  color: #9a6a1c;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.payment-price-value {
+  margin-top: 0.25rem;
+  color: #a35e05;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(3.4rem, 8vw, 5.2rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-shadow: 0 10px 26px rgb(245 158 11 / 30%);
+}
+
+.payment-price-meta {
+  margin-top: 0.45rem;
+  color: #8c6122;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.payment-methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  text-align: left;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 0.85rem;
+  border: 1px solid #e4ebe1;
+  border-radius: 15px;
+  background: #fff;
+  color: #2b3627;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.payment-method:hover,
+.payment-method:focus-visible {
+  border-color: rgb(226 168 61 / 55%);
+  transform: translateY(-1px);
+}
+
+.payment-method.is-selected {
+  border-color: rgb(226 154 40 / 82%);
+  background: linear-gradient(150deg, #fffdf7, #fff7e8);
+  box-shadow:
+    0 12px 28px rgb(196 122 12 / 18%),
+    inset 0 1px 0 #fff;
+}
+
+.payment-method-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fff, #f4f7ef);
+  color: #3c4a37;
+  font-size: 1.02rem;
+  font-weight: 850;
+  box-shadow: inset 0 0 0 1px rgb(60 74 55 / 10%);
+}
+
+.payment-method-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.payment-method-copy b {
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.payment-method-copy small {
+  color: #6f7b69;
+  font-size: 0.62rem;
+}
+
+.payment-method-choice {
+  width: 15px;
+  height: 15px;
+  margin-left: auto;
+  flex: 0 0 auto;
+  border: 2px solid #d4ddd0;
+  border-radius: 50%;
+  transition: all 160ms ease;
+}
+
+.payment-method.is-selected .payment-method-choice {
+  border-color: #e09a18;
+  background: radial-gradient(circle, #e09a18 42%, transparent 46%);
+  box-shadow: 0 0 0 3px rgb(245 176 66 / 22%);
+}
+
+.payment-upi-handle {
+  margin: 0.95rem 0 0;
+  color: #66705f;
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
+.payment-upi-handle b {
+  color: #a35e05;
+  font-weight: 800;
+}
+
+.payment-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.95rem;
+  text-align: left;
+}
+
+.payment-field span {
+  color: #5d6a56;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.payment-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e0e9dd;
+  border-radius: 13px;
+  background: #fbfdf9;
+  color: #23301e;
+  font: inherit;
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.payment-field input:focus {
+  border-color: rgb(226 154 40 / 75%);
+  box-shadow: 0 0 0 4px rgb(245 176 66 / 18%);
+}
+
+.payment-field input:disabled {
+  background: #f3f5f1;
+  color: #77816f;
+}
+
+.access-payment .review-start {
+  margin-top: 1.15rem;
+  background: linear-gradient(120deg, #f2b347, #de8c0e 58%, #b96f05);
+  border-color: rgb(255 228 170 / 55%);
+  box-shadow:
+    0 14px 32px rgb(202 130 14 / 32%),
+    inset 0 1px 0 rgb(255 255 255 / 30%);
+}
+
+.access-payment .review-start .review-start-dot {
+  background: #fff2d4;
+  box-shadow:
+    0 0 0 4px rgb(255 242 212 / 18%),
+    0 0 12px #fff2d4;
+}
+
+.payment-verified {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: fit-content;
+  margin: 1.15rem auto 0;
+  padding: 0.85rem 1.25rem;
+  border: 1px solid rgb(100 189 39 / 40%);
+  border-radius: 16px;
+  background: linear-gradient(150deg, #f4ffeb, #e9f9d8);
+  box-shadow:
+    0 14px 32px rgb(74 145 24 / 18%),
+    inset 0 1px 0 #fff;
+  text-align: left;
+}
+
+.payment-verified-tick {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #8ede52, #56ab1e);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgb(86 171 30 / 38%);
+}
+
+.payment-verified b {
+  color: #2f6412;
+  font-size: 0.85rem;
+  font-weight: 850;
+}
+
+.payment-verified p {
+  margin: 0.16rem 0 0;
+  color: #5b7448;
+  font-size: 0.66rem;
+}
+
+/* The Premium amount again on the review step, before payment is due. */
+.review-price {
+  display: grid;
+  width: fit-content;
+  justify-items: center;
+  margin: 0 auto 1.15rem;
+  padding: 0.85rem 1.6rem;
+  border: 1px solid rgb(226 168 61 / 45%);
+  border-radius: 17px;
+  background: linear-gradient(150deg, #fffaf0, #fff3dc);
+  box-shadow: 0 12px 28px rgb(184 116 16 / 15%);
+}
+
+.review-price span {
+  color: #9a6a1c;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.review-price b {
+  margin-top: 0.2rem;
+  color: #a35e05;
+  font-family: Calibri, Candara, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 2.35rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.review-price small {
+  margin-top: 0.28rem;
+  color: #8c6122;
+  font-size: 0.58rem;
+}
+
 .profile-required,
 .flow-error {
   margin: 0.75rem 0 0;
@@ -1067,6 +1518,23 @@
   }
 }
 
+@media (max-width: 980px) {
+  .plan-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .payment-methods {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-duration {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 @media (max-width: 410px) {
   .session-rules b {
     font-size: 0.55rem;
@@ -1106,6 +1574,36 @@
   background:
     radial-gradient(ellipse at 0 0, rgb(198 157 255 / 24%), transparent 65%),
     linear-gradient(115deg, #f6f2ff, #fff 65%, #f4f9f1);
+}
+
+/* The Premium model's own note: the same safety of a verified community, in warm gold. */
+.exclusive-notice.is-premium {
+  border-bottom-color: #efe2c2;
+  background:
+    radial-gradient(ellipse at 0 0, rgb(255 196 92 / 26%), transparent 65%),
+    linear-gradient(115deg, #fff8e9, #fff 65%, #f4f9f1);
+}
+
+.exclusive-notice.is-premium .exclusive-notice-icon {
+  border-color: rgb(226 168 61 / 32%);
+  color: #b07611;
+}
+
+.exclusive-notice.is-premium .exclusive-notice-kicker {
+  color: #b07611;
+}
+
+.exclusive-notice.is-premium h2 {
+  color: #4a3208;
+}
+
+.exclusive-notice.is-premium strong {
+  color: #a35e05;
+}
+
+.exclusive-notice.is-premium .exclusive-notice-badge {
+  border-color: #ecd9ac;
+  color: #a35e05;
 }
 
 .exclusive-notice-icon {
@@ -1174,7 +1672,7 @@
 }
 
 /* Desaturate only the plan contents, never the red unavailability stamp. */
-.plan-card-free.is-disabled {
+.plan-card.is-disabled {
   container-type: inline-size;
   border-color: #dce0e4;
   background: linear-gradient(145deg, #f4f5f7, #e9ecf0);
@@ -1183,14 +1681,14 @@
   transform: none;
 }
 
-.plan-card-free.is-disabled > :not(.plan-unavailable-overlay) {
+.plan-card.is-disabled > :not(.plan-unavailable-overlay) {
   filter: grayscale(1);
   opacity: 0.35;
   pointer-events: none;
   user-select: none;
 }
 
-.plan-card-free.is-disabled .plan-start {
+.plan-card.is-disabled .plan-start {
   cursor: not-allowed;
 }
 

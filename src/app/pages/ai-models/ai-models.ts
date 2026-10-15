@@ -85,7 +85,7 @@ export class AiModelsPage {
   protected readonly chatModel = signal<AiModelProfile | null>(null);
   protected readonly chatPlan = signal<LiveChatPlan | null>(null);
   protected readonly registeredChatIdentity = signal<ChatIdentity | null>(null);
-  protected readonly resumeRegisteredChat = signal(false);
+  protected readonly resumeChatPlan = signal<LiveChatPlan | null>(null);
   private readonly testimonialsApi = inject(ModelTestimonialsService);
 
   /** Per-model averages and review counts from the complete public testimonial feeds. */
@@ -173,14 +173,15 @@ export class AiModelsPage {
   });
 
   constructor() {
-    // Google / registration returns here when a directory card initiated Registered User access.
+    // Google / registration returns here when a directory card initiated Registered User or
+    // Premium access.
     const returnedPlan = this.route.snapshot.queryParamMap?.get('liveChatPlan') ?? null;
     const returnedModel = this.route.snapshot.queryParamMap?.get('liveChatModel') ?? null;
-    if (returnedPlan === 'registered' && returnedModel) {
+    if ((returnedPlan === 'registered' || returnedPlan === 'premium') && returnedModel) {
       const model = this.models.find((candidate) => candidate.slug === returnedModel) ?? null;
       if (model) {
         this.chatModel.set(model);
-        this.resumeRegisteredChat.set(true);
+        this.resumeChatPlan.set(returnedPlan);
       }
     }
 
@@ -236,11 +237,11 @@ export class AiModelsPage {
     this.search.set('');
   }
 
-  /** Opens the Free / Registered User access screen from a directory card. */
+  /** Opens the Free Chat / Registered User / Premium access screen from a directory card. */
   protected openChat(model: AiModelProfile): void {
     this.chatPlan.set(null);
     this.registeredChatIdentity.set(null);
-    this.resumeRegisteredChat.set(false);
+    this.resumeChatPlan.set(null);
     this.chatModel.set(model);
   }
 
@@ -249,23 +250,31 @@ export class AiModelsPage {
     if (!model || requiresRegisteredChat(model)) return;
     this.chatPlan.set('free');
     this.registeredChatIdentity.set(null);
+    this.resumeChatPlan.set(null);
   }
 
   protected startRegisteredChat(identity: ChatIdentity): void {
     this.chatPlan.set('registered');
     this.registeredChatIdentity.set(identity);
-    this.resumeRegisteredChat.set(false);
+    this.resumeChatPlan.set(null);
   }
 
+  protected startPremiumChat(identity: ChatIdentity): void {
+    this.chatPlan.set('premium');
+    this.registeredChatIdentity.set(identity);
+    this.resumeChatPlan.set(null);
+  }
+
+  /** The plan chosen before the Google round trip is appended to this path when sign-in opens. */
   protected liveChatReturnPath(model: AiModelProfile): string {
-    return `/ai-models?liveChatPlan=registered&liveChatModel=${encodeURIComponent(model.slug)}`;
+    return `/ai-models?liveChatModel=${encodeURIComponent(model.slug)}`;
   }
 
   protected closeChat(): void {
     this.chatModel.set(null);
     this.chatPlan.set(null);
     this.registeredChatIdentity.set(null);
-    this.resumeRegisteredChat.set(false);
+    this.resumeChatPlan.set(null);
   }
 
   protected indexLabel(index: number): string {

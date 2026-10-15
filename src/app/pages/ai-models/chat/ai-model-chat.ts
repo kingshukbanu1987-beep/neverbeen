@@ -117,7 +117,7 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   readonly model = input.required<AiModelProfile>();
   /** Access is selected before this dialog mounts; legacy preserves direct integrations and old tests. */
   readonly plan = input<LiveChatPlan | 'legacy'>('legacy');
-  /** A completed Community profile skips the public name-and-photo prompt for Registered User chat. */
+  /** A completed Community profile skips the public name-and-photo prompt for member chat. */
   readonly registeredIdentity = input<ChatIdentity | null>(null);
   readonly closed = output<void>();
   /** Instagram's Forward: the visitor sent a message on to another model. The host opens her chat. */
@@ -187,16 +187,18 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     return plan === 'legacy' ? null : LIVE_CHAT_PLANS[plan];
   });
   protected readonly mediaAllowed = computed(() => this.planDefinition()?.allowsMedia !== false);
-  protected readonly sessionDuration = computed(() => this.session()?.durationMs ?? 2 * 60 * 60 * 1000);
+  protected readonly sessionDuration = computed(
+    () => this.session()?.durationMs ?? 2 * 60 * 60 * 1000,
+  );
   protected readonly thinking = computed(() => this.chat.thinking());
   protected readonly closedReason = computed(() => this.chat.session()?.closed ?? '');
   protected readonly sessionOver = computed(() => Boolean(this.chat.session()?.closed));
   protected readonly remaining = computed(() => this.chat.remainingMs());
-  protected readonly urgent = computed(() =>
-    this.remaining() <= Math.min(5 * 60 * 1000, this.sessionDuration() * 0.15),
+  protected readonly urgent = computed(
+    () => this.remaining() <= Math.min(5 * 60 * 1000, this.sessionDuration() * 0.15),
   );
-  protected readonly warning = computed(() =>
-    this.remaining() <= Math.min(15 * 60 * 1000, this.sessionDuration() * 0.34),
+  protected readonly warning = computed(
+    () => this.remaining() <= Math.min(15 * 60 * 1000, this.sessionDuration() * 0.34),
   );
 
   /** The same availability wording as her card and her profile page. */
@@ -261,7 +263,7 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
 
   protected readonly country = computed(() => splitLocation(this.model().location).country);
   protected readonly city = computed(() => splitLocation(this.model().location).city);
-  /** Registered User models carry a blue tick beside their name, in every line of this window. */
+  /** Exclusive and Premium models carry a blue tick beside their name, in every line of this window. */
   protected readonly registeredOnly = computed(() => requiresRegisteredChat(this.model()));
   protected readonly canSend = computed(
     () =>
@@ -533,7 +535,7 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     }
   }
 
-  /** Registered User sessions may share a short video. Object URLs are intentionally transient and
+  /** Only Premium sessions may share a short video. Object URLs are intentionally transient and
    * never copied into session storage or sent to an AI reader. */
   protected onVideoPicked(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -541,11 +543,13 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     input.value = '';
     if (!file) return;
     if (!this.mediaAllowed()) {
-      this.readError.set('Free Chat is text-only. Choose Registered User to share photos or videos.');
+      this.readError.set(
+        'This chat plan is text-only. Choose the Premium plan to share photos or videos.',
+      );
       return;
     }
     if (!file.type.startsWith('video/')) {
-      this.readError.set('Choose a video file to share with this registered chat.');
+      this.readError.set('Choose a video file to share with this Premium chat.');
       return;
     }
     if (file.size > AI_CHAT_VIDEO_LIMIT_BYTES) {

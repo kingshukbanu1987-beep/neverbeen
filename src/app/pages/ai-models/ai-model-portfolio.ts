@@ -104,9 +104,17 @@ export class AiModelPortfolioPage implements OnDestroy {
   // embeds and tests while real routed pages read the post-Google `liveChatPlan` query string.
   private readonly returnedLiveChatPlan = toSignal(
     (this.route.queryParamMap ?? this.route.paramMap).pipe(
-      map((params) => params.get('liveChatPlan') ?? ''),
+      map((params): LiveChatPlan | '' => {
+        const plan = params.get('liveChatPlan');
+        return plan === 'registered' || plan === 'premium' ? plan : '';
+      }),
     ),
-    { initialValue: this.route.snapshot.queryParamMap?.get('liveChatPlan') ?? '' },
+    {
+      initialValue: ((): LiveChatPlan | '' => {
+        const plan = this.route.snapshot.queryParamMap?.get('liveChatPlan') ?? '';
+        return plan === 'registered' || plan === 'premium' ? plan : '';
+      })(),
+    },
   );
 
   protected readonly model = computed(
@@ -274,13 +282,13 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected readonly bookingOpen = signal(false);
 
   /**
-   * The Live Chat access choice sits before the session. Only after its Free or Registered User
-   * rules are selected do we mount the chat itself.
+   * The Live Chat access choice sits before the session. Only after its Free Chat, Registered
+   * User or Premium rules are selected do we mount the chat itself.
    */
   protected readonly chatOpen = signal(false);
   protected readonly chatPlan = signal<LiveChatPlan | null>(null);
   protected readonly registeredChatIdentity = signal<ChatIdentity | null>(null);
-  protected readonly resumeRegisteredChat = signal(false);
+  protected readonly resumeChatPlan = signal<LiveChatPlan | null>(null);
   private liveChatReturnHandled = false;
 
   /**
@@ -370,16 +378,12 @@ export class AiModelPortfolioPage implements OnDestroy {
     // OAuth / registration comes back to this exact portfolio with the selected chat plan in its
     // query string. Re-open the access review rather than losing the model the member chose.
     effect(() => {
-      if (
-        this.liveChatReturnHandled ||
-        this.returnedLiveChatPlan() !== 'registered' ||
-        !this.model()
-      )
-        return;
+      const returnedPlan = this.returnedLiveChatPlan();
+      if (this.liveChatReturnHandled || !returnedPlan || !this.model()) return;
       this.liveChatReturnHandled = true;
       this.chatPlan.set(null);
       this.registeredChatIdentity.set(null);
-      this.resumeRegisteredChat.set(true);
+      this.resumeChatPlan.set(returnedPlan);
       this.chatOpen.set(true);
     });
 
@@ -731,12 +735,12 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.rentButton()?.nativeElement.focus({ preventScroll: true });
   }
 
-  /** Opens the modern Free / Registered User Live Chat access screen for this model. */
+  /** Opens the modern Free Chat / Registered User / Premium Live Chat access screen for this model. */
   protected openChat(): void {
     if (!this.model()) return;
     this.chatPlan.set(null);
     this.registeredChatIdentity.set(null);
-    this.resumeRegisteredChat.set(false);
+    this.resumeChatPlan.set(null);
     this.chatOpen.set(true);
   }
 
@@ -745,23 +749,31 @@ export class AiModelPortfolioPage implements OnDestroy {
     if (!model || requiresRegisteredChat(model)) return;
     this.chatPlan.set('free');
     this.registeredChatIdentity.set(null);
+    this.resumeChatPlan.set(null);
   }
 
   protected startRegisteredChat(identity: ChatIdentity): void {
     this.chatPlan.set('registered');
     this.registeredChatIdentity.set(identity);
-    this.resumeRegisteredChat.set(false);
+    this.resumeChatPlan.set(null);
   }
 
+  protected startPremiumChat(identity: ChatIdentity): void {
+    this.chatPlan.set('premium');
+    this.registeredChatIdentity.set(identity);
+    this.resumeChatPlan.set(null);
+  }
+
+  /** The plan chosen before the Google round trip is appended to this path when sign-in opens. */
   protected liveChatReturnPath(profile: AiModelProfile): string {
-    return `/ai-models/${encodeURIComponent(profile.slug)}?liveChatPlan=registered`;
+    return `/ai-models/${encodeURIComponent(profile.slug)}`;
   }
 
   protected closeChat(): void {
     this.chatOpen.set(false);
     this.chatPlan.set(null);
     this.registeredChatIdentity.set(null);
-    this.resumeRegisteredChat.set(false);
+    this.resumeChatPlan.set(null);
     this.chatButton()?.nativeElement.focus({ preventScroll: true });
   }
 
@@ -773,7 +785,7 @@ export class AiModelPortfolioPage implements OnDestroy {
     this.chatOpen.set(false);
     this.chatPlan.set(null);
     this.registeredChatIdentity.set(null);
-    this.resumeRegisteredChat.set(false);
+    this.resumeChatPlan.set(null);
     void this.router.navigate(['/ai-models'], { queryParams: { forwardChat: target.slug } });
   }
 

@@ -7,25 +7,57 @@
     aria-label="Live Chat access"
     (click)="$event.stopPropagation()"
   >
-    @if (registeredOnly()) {
-      <aside class="exclusive-notice" aria-label="Exclusive model chat policy">
+    @if (tier() !== 'free') {
+      <aside
+        class="exclusive-notice"
+        [class.is-premium]="tier() === 'premium'"
+        aria-label="Model chat policy"
+      >
         <span class="exclusive-notice-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6l-8-3Z" />
-            <path d="m8.5 12 2.5 2.5 4.5-5" />
-          </svg>
+          @if (tier() === 'premium') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6l-8-3Z" />
+              <path d="M12 8v5" />
+              <path d="M12 16h.01" />
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6l-8-3Z" />
+              <path d="m8.5 12 2.5 2.5 4.5-5" />
+            </svg>
+          }
         </span>
         <div class="exclusive-notice-copy">
-          <span class="exclusive-notice-kicker">NeverBeen · Exclusive access</span>
-          <h2>A safer space to connect.</h2>
-          <p>
-            Exclusive models like <strong>{{ model().name }}</strong
-            ><app-model-verified-tick [slug]="model().slug" /> are only available to chat
-            with a <strong>Registered User</strong>. For safety and care for our community, please
-            support this policy by signing in or registering.
-          </p>
+          @if (tier() === 'premium') {
+            <span class="exclusive-notice-kicker">NeverBeen · Premium access</span>
+            <h2>A Premium NeverBeen model.</h2>
+            <p>
+              <strong>{{ model().name }}</strong
+              ><app-model-verified-tick [slug]="model().slug" /> is a Premium model. Her Live Chat
+              runs on the paid <strong>Premium</strong> plan — Community registration and the
+              <strong>{{ premiumPriceLabel() }}</strong> amount unlock your private
+              {{ plans.premium.durationLabel }} chat with photo and video sharing.
+            </p>
+          } @else {
+            <span class="exclusive-notice-kicker">NeverBeen · Exclusive access</span>
+            <h2>A safer space to connect.</h2>
+            <p>
+              Exclusive models like <strong>{{ model().name }}</strong
+              ><app-model-verified-tick [slug]="model().slug" /> are only available to chat with a
+              <strong>Registered User</strong>, or on the paid <strong>Premium</strong> plan —
+              {{ premiumPriceLabel() }} for her {{ plans.premium.durationLabel }} Premium chat. For
+              safety and care for our community, please support this policy by signing in or
+              registering.
+            </p>
+          }
         </div>
-        <span class="exclusive-notice-badge">✦ Members only</span>
+        <span class="exclusive-notice-badge">
+          @if (tier() === 'premium') {
+            ✦ Premium · {{ premiumPriceLabel() }}
+          } @else {
+            ✦ Members only
+          }
+        </span>
       </aside>
     }
 
@@ -60,6 +92,7 @@
             class="selected-mode"
             [class.is-free]="selected() === 'free'"
             [class.is-registered]="selected() === 'registered'"
+            [class.is-premium]="selected() === 'premium'"
           >
             <i aria-hidden="true"></i> Selected mode · {{ plans[selected()].label }}
           </span>
@@ -82,14 +115,20 @@
           <span class="access-kicker"><i aria-hidden="true"></i> Live Chat access</span>
           <h2 id="live-chat-access-title">Choose how you want to connect.</h2>
           <p>
-            @if (registeredOnly()) {
+            @if (tier() === 'premium') {
               Connect with <b>{{ model().name }}</b
-              ><app-model-verified-tick [slug]="model().slug" /> as a Registered User. Your verified Community
-              profile unlocks a longer, more personal conversation.
+              ><app-model-verified-tick [slug]="model().slug" /> on the paid <b>Premium</b> plan.
+              Your verified Community profile and one UPI payment unlock the fullest conversation.
+            } @else if (tier() === 'exclusive') {
+              Connect with <b>{{ model().name }}</b
+              ><app-model-verified-tick [slug]="model().slug" /> as a Registered User or on the
+              Premium plan. Your time, sharing controls and conversation experience are set before
+              the chat begins.
             } @else {
-              Two thoughtful ways to meet <b>{{ model().name }}</b
-              ><app-model-verified-tick [slug]="model().slug" />. Your time, sharing controls and conversation experience are set before the chat
-              begins.
+              Chat with <b>{{ model().name }}</b
+              ><app-model-verified-tick [slug]="model().slug" /> on Free Chat — a quick, text-first
+              hello with no Community registration. The Registered User and Premium plans open the
+              Exclusive and Premium NeverBeen models.
             }
           </p>
         </div>
@@ -98,17 +137,17 @@
           <article
             class="plan-card plan-card-free"
             [class.is-selected]="selected() === 'free'"
-            [class.is-disabled]="registeredOnly()"
-            [attr.aria-disabled]="registeredOnly()"
-            [attr.aria-describedby]="registeredOnly() ? 'free-chat-unavailable' : null"
+            [class.is-disabled]="!planAvailable('free')"
+            [attr.aria-disabled]="!planAvailable('free')"
+            [attr.aria-describedby]="planAvailable('free') ? null : 'free-chat-unavailable'"
             role="option"
             [attr.aria-selected]="selected() === 'free'"
-            [attr.tabindex]="registeredOnly() ? -1 : 0"
+            [attr.tabindex]="planAvailable('free') ? 0 : -1"
             (click)="choose('free')"
             (keydown.enter)="choose('free')"
             (keydown.space)="choose('free'); $event.preventDefault()"
           >
-            @if (registeredOnly()) {
+            @if (!planAvailable('free')) {
               <div class="plan-unavailable-overlay">
                 <span id="free-chat-unavailable">Not Available</span>
               </div>
@@ -119,12 +158,19 @@
             </div>
             <div class="plan-title-row">
               <h3>Free <em>Chat</em></h3>
-              <span class="plan-time"><b>02</b><small>MIN</small></span>
             </div>
-            <p class="plan-summary">A quick, text-first hello. No Community registration needed.</p>
+            <!-- The chat duration reads in Calibri, in its own ultra-modern block of the card. -->
+            <div class="plan-duration" aria-label="Chat duration 45 seconds">
+              <span class="plan-duration-kicker">Chat duration</span>
+              <span class="plan-duration-figures"><b>45</b><em>SECONDS</em></span>
+            </div>
+            <p class="plan-summary">
+              A quick, text-first hello. No Community registration needed — the window closes itself
+              after 45 seconds.
+            </p>
 
             <ul class="plan-features">
-              @for (feature of freeFeatures; track feature.text) {
+              @for (feature of featuresOf('free'); track feature.text) {
                 <li
                   [class.is-unavailable]="!feature.included"
                   [class.is-emphasis]="feature.emphasis"
@@ -138,24 +184,34 @@
             <button
               type="button"
               class="plan-start plan-start-free"
-              [disabled]="registeredOnly()"
+              [disabled]="!planAvailable('free')"
               (click)="start('free')"
             >
               <span>Start Free Chat</span><i aria-hidden="true">→</i>
             </button>
-            <p class="plan-footnote">No sign-up required · closes automatically after 2 minutes</p>
+            <p class="plan-footnote">No sign-up required · closes automatically after 45 seconds</p>
           </article>
 
           <article
             class="plan-card plan-card-registered"
             [class.is-selected]="selected() === 'registered'"
+            [class.is-disabled]="!planAvailable('registered')"
+            [attr.aria-disabled]="!planAvailable('registered')"
+            [attr.aria-describedby]="
+              planAvailable('registered') ? null : 'registered-chat-unavailable'
+            "
             role="option"
             [attr.aria-selected]="selected() === 'registered'"
-            tabindex="0"
+            [attr.tabindex]="planAvailable('registered') ? 0 : -1"
             (click)="choose('registered')"
             (keydown.enter)="choose('registered')"
             (keydown.space)="choose('registered'); $event.preventDefault()"
           >
+            @if (!planAvailable('registered')) {
+              <div class="plan-unavailable-overlay">
+                <span id="registered-chat-unavailable">Not Available</span>
+              </div>
+            }
             <div class="plan-glow" aria-hidden="true"></div>
             <div class="plan-card-top">
               <span class="plan-orbit plan-orbit-registered" aria-hidden="true">✦</span>
@@ -163,16 +219,24 @@
             </div>
             <div class="plan-title-row">
               <h3>Registered <em>User</em></h3>
-              <span class="plan-time"><b>45</b><small>MIN</small></span>
+            </div>
+            <div class="plan-duration" aria-label="Chat duration 2 minutes">
+              <span class="plan-duration-kicker">Chat duration</span>
+              <span class="plan-duration-figures"><b>2</b><em>MINUTES</em></span>
             </div>
             <p class="plan-summary">
-              A fuller, faster conversation with media sharing for Community members.
+              A short, human conversation with your verified Community profile. Text only — a little
+              more time than Free Chat.
             </p>
 
             <ul class="plan-features">
-              @for (feature of registeredFeatures; track feature.text) {
-                <li [class.is-emphasis]="feature.emphasis">
-                  <span aria-hidden="true">✓</span>{{ feature.text }}
+              @for (feature of featuresOf('registered'); track feature.text) {
+                <li
+                  [class.is-unavailable]="!feature.included"
+                  [class.is-emphasis]="feature.emphasis"
+                >
+                  <span aria-hidden="true">{{ feature.included ? '✓' : '—' }}</span
+                  >{{ feature.text }}
                 </li>
               }
             </ul>
@@ -180,6 +244,7 @@
             <button
               type="button"
               class="plan-start plan-start-registered"
+              [disabled]="!planAvailable('registered')"
               (click)="start('registered')"
             >
               <span>{{
@@ -189,9 +254,95 @@
             </button>
             <p class="plan-footnote">
               @if (isRegisteredMember()) {
-                Community profile verified · 45-minute session ready
+                Community profile verified · 2-minute session ready
               } @else {
                 Community registration required · secure Google sign-in
+              }
+            </p>
+          </article>
+
+          <article
+            class="plan-card plan-card-premium"
+            [class.is-selected]="selected() === 'premium'"
+            [class.is-disabled]="!planAvailable('premium')"
+            [attr.aria-disabled]="!planAvailable('premium')"
+            [attr.aria-describedby]="planAvailable('premium') ? null : 'premium-chat-unavailable'"
+            role="option"
+            [attr.aria-selected]="selected() === 'premium'"
+            [attr.tabindex]="planAvailable('premium') ? 0 : -1"
+            (click)="choose('premium')"
+            (keydown.enter)="choose('premium')"
+            (keydown.space)="choose('premium'); $event.preventDefault()"
+          >
+            @if (!planAvailable('premium')) {
+              <div class="plan-unavailable-overlay">
+                <span id="premium-chat-unavailable">Not Available</span>
+              </div>
+            }
+            <div class="plan-glow plan-glow-premium" aria-hidden="true"></div>
+            <div class="plan-card-top">
+              <span class="plan-orbit plan-orbit-premium" aria-hidden="true">◆</span>
+              <span class="plan-choice is-premium"
+                ><i aria-hidden="true"></i> Paid premium access</span
+              >
+            </div>
+            <div class="plan-title-row">
+              <h3>Premium <em>Chat</em></h3>
+            </div>
+            <div class="plan-duration" aria-label="Chat duration 15 minutes">
+              <span class="plan-duration-kicker">Chat duration</span>
+              <span class="plan-duration-figures"><b>15</b><em>MINUTES</em></span>
+            </div>
+            <!-- The Premium amount in big font, exactly as this model's price lists it. -->
+            @if (premiumPrice() !== null) {
+              <div class="plan-price">
+                <span class="plan-price-label">Premium amount · {{ model().name }}</span>
+                <span class="plan-price-value">{{ premiumPriceLabel() }}</span>
+                <span class="plan-price-note">One UPI payment · GPay or PhonePe</span>
+              </div>
+            }
+            <p class="plan-summary">
+              The fullest conversation — photo and video sharing, ultimate memory and realtime
+              replies.
+            </p>
+
+            <ul class="plan-features">
+              @for (feature of featuresOf('premium'); track feature.text) {
+                <li
+                  [class.is-unavailable]="!feature.included"
+                  [class.is-emphasis]="feature.emphasis"
+                >
+                  <span aria-hidden="true">{{ feature.included ? '✓' : '—' }}</span
+                  >{{ feature.text }}
+                </li>
+              }
+            </ul>
+
+            <button
+              type="button"
+              class="plan-start plan-start-premium"
+              [disabled]="!planAvailable('premium')"
+              (click)="start('premium')"
+            >
+              <span>
+                @if (premiumPrice() !== null) {
+                  {{
+                    isRegisteredMember()
+                      ? 'Review & pay ' + premiumPriceLabel()
+                      : 'Sign in to pay ' + premiumPriceLabel()
+                  }}
+                } @else {
+                  {{ isRegisteredMember() ? 'Review & start chat' : 'Start with Community' }}
+                }
+              </span>
+              <i aria-hidden="true">→</i>
+            </button>
+            <p class="plan-footnote">
+              @if (premiumPrice() !== null) {
+                Community registration required · UPI payment {{ premiumPriceLabel() }} · 15-minute
+                session
+              } @else {
+                Community registration required · 15-minute session ready
               }
             </p>
           </article>
@@ -205,30 +356,136 @@
         <div class="sign-in-flow-content">
           @if (registeredOnly()) {
             <p class="sign-in-model-tag">
-              <span>Live Chat with</span>
+              <span>{{ plans[selected()].label }} Live Chat with</span>
               <b>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></b>
             </p>
           }
           <app-community-sign-in-card
-            [returnTo]="returnTo()"
+            [returnTo]="signInReturnTo()"
             eyebrow="NeverBeen Community · Live Chat"
             title="Continue as a Community member."
             [copy]="
-              'Sign in to Community to verify your profile, unlock photo and video sharing, and continue to your private chat details with ' +
+              'Sign in to Community to verify your profile and continue to your private ' +
+              plans[selected()].chatNoun +
+              ' details with ' +
               model().name +
               '.'
             "
-            note="Registered User Live Chat · profile registration required · 45 minutes"
+            [note]="planNote(selected())"
             [translucent]="true"
           />
         </div>
+      </div>
+    } @else if (stage() === 'payment') {
+      <div class="access-flow access-payment">
+        <button type="button" class="flow-back" (click)="backToReview()">
+          <span aria-hidden="true">←</span> Back to chat details
+        </button>
+        <span class="access-kicker"><i aria-hidden="true"></i> Premium · secure UPI payment</span>
+        <h2 id="live-chat-access-title">Complete your payment to begin.</h2>
+        <p class="flow-lede">
+          Your Premium Live Chat with <b>{{ model().name }}</b
+          ><app-model-verified-tick [slug]="model().slug" /> opens the moment this payment is
+          verified.
+        </p>
+
+        <!-- The amount again, big, so nothing is hidden at the moment of payment. -->
+        <div class="payment-price-card">
+          <span class="payment-price-label">Premium amount · {{ model().name }}</span>
+          <span class="payment-price-value">{{ premiumPriceLabel() }}</span>
+          <span class="payment-price-meta">
+            {{ plans.premium.durationLabel }} Premium Live Chat · photo &amp; video sharing ·
+            ultimate memory
+          </span>
+        </div>
+
+        <div class="payment-methods" role="radiogroup" aria-label="UPI payment app">
+          @for (app of upiApps; track app.id) {
+            <button
+              type="button"
+              class="payment-method"
+              [class.is-selected]="paymentMethod() === app.id"
+              [attr.aria-checked]="paymentMethod() === app.id"
+              role="radio"
+              (click)="selectUpiApp(app.id)"
+            >
+              <span class="payment-method-mark" aria-hidden="true">{{
+                app.id === 'gpay' ? 'G' : '𝙋'
+              }}</span>
+              <span class="payment-method-copy">
+                <b>{{ app.label }}</b>
+                <small>{{ app.hint }}</small>
+              </span>
+              <span class="payment-method-choice" aria-hidden="true"></span>
+            </button>
+          }
+        </div>
+
+        <p class="payment-upi-handle">
+          Pay <b>{{ premiumPriceLabel() }}</b> to <b>{{ upiId }}</b> with
+          {{ paymentMethod() === 'gpay' ? 'Google Pay' : 'PhonePe' }}, then paste the UPI
+          transaction reference below.
+        </p>
+
+        <label class="payment-field">
+          <span>UPI transaction reference (UTR)</span>
+          <input
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="e.g. 415902783146"
+            [value]="transactionId()"
+            (input)="onTransactionId($event)"
+            [disabled]="paymentState() === 'verifying' || paymentState() === 'verified'"
+          />
+        </label>
+
+        @if (paymentState() === 'error' && paymentError()) {
+          <p class="flow-error" role="alert">{{ paymentError() }}</p>
+        }
+
+        @if (paymentState() === 'verified') {
+          <div class="payment-verified" role="status">
+            <span class="payment-verified-tick" aria-hidden="true">✓</span>
+            <div>
+              <b>Payment verified</b>
+              <p>
+                {{ premiumPriceLabel() }} received via
+                {{ paymentMethod() === 'gpay' ? 'Google Pay' : 'PhonePe' }} · reference
+                {{ transactionId().trim() }}
+              </p>
+            </div>
+          </div>
+          <button type="button" class="review-start" (click)="startPremiumChat()">
+            <span class="review-start-dot" aria-hidden="true"></span>
+            Start Premium Live Chat · {{ plans.premium.durationLabel }}
+            <i aria-hidden="true">→</i>
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="review-start"
+            [disabled]="paymentState() === 'verifying'"
+            (click)="verifyPayment()"
+          >
+            <span class="review-start-dot" aria-hidden="true"></span>
+            {{
+              paymentState() === 'verifying' ? 'Verifying payment…' : 'Verify payment & continue'
+            }}
+            <i aria-hidden="true">→</i>
+          </button>
+        }
+        <p class="plan-footnote">{{ gatewayNote }}</p>
       </div>
     } @else {
       <div class="access-flow access-review">
         <button type="button" class="flow-back" (click)="backToPlans()">
           <span aria-hidden="true">←</span> All chat options
         </button>
-        <span class="access-kicker"><i aria-hidden="true"></i> Registered User · ready</span>
+        <span class="access-kicker"
+          ><i aria-hidden="true"></i> {{ plans[selected()].label }} · ready</span
+        >
         <h2 id="live-chat-access-title">A private chat, prepared for both of you.</h2>
         <p class="flow-lede">Review the two profiles and the session settings before you begin.</p>
 
@@ -270,13 +527,35 @@
           </article>
         </div>
 
-        <div class="session-rules" aria-label="Registered User chat features">
-          <span><i aria-hidden="true">45</i><b>Minutes</b><small>automatic close</small></span>
-          <span><i aria-hidden="true">◫</i><b>Media enabled</b><small>photos & videos</small></span>
-          <span
-            ><i aria-hidden="true">✦</i><b>Advanced memory</b><small>faster replies</small></span
-          >
+        <div class="session-rules" aria-label="{{ plans[selected()].label }} chat features">
+          <span>
+            <i class="rule-duration" aria-hidden="true">{{
+              plans[selected()].durationLabel.split(' ')[0]
+            }}</i>
+            <b>{{ plans[selected()].durationLabel.split(' ').slice(1).join(' ') }}</b>
+            <small>automatic close</small>
+          </span>
+          <span>
+            <i aria-hidden="true">◫</i>
+            <b>{{ plans[selected()].allowsMedia ? 'Media enabled' : 'Text only' }}</b>
+            <small>{{
+              plans[selected()].allowsMedia ? 'photos & videos' : 'no photos or videos'
+            }}</small>
+          </span>
+          <span>
+            <i aria-hidden="true">✦</i>
+            <b>{{ plans[selected()].speedLabel }}</b>
+            <small>{{ plans[selected()].humanLabel }}</small>
+          </span>
         </div>
+
+        @if (selected() === 'premium' && premiumPrice() !== null) {
+          <div class="review-price">
+            <span>Premium amount for {{ model().name }}</span>
+            <b>{{ premiumPriceLabel() }}</b>
+            <small>UPI payment · GPay or PhonePe · verified before the chat opens</small>
+          </div>
+        }
 
         @if (registrationMessage()) {
           <p class="flow-error" role="alert">{{ registrationMessage() }}</p>
@@ -287,10 +566,19 @@
           type="button"
           class="review-start"
           [disabled]="!canStartRegistered()"
-          (click)="startRegisteredChat()"
+          (click)="startMemberChat()"
         >
           <span class="review-start-dot" aria-hidden="true"></span>
-          Start 45-minute Live Chat <i aria-hidden="true">→</i>
+          @if (selected() === 'premium') {
+            @if (premiumPrice() !== null) {
+              Continue to payment · {{ premiumPriceLabel() }}
+            } @else {
+              Start Premium Live Chat · {{ plans.premium.durationLabel }}
+            }
+          } @else {
+            Start Live Chat · {{ plans.registered.durationLabel }}
+          }
+          <i aria-hidden="true">→</i>
         </button>
         @if (!canStartRegistered()) {
           <p class="profile-required">
