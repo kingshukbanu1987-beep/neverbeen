@@ -1,7 +1,8 @@
-<div class="access-backdrop" (click)="close()">
+<div class="access-backdrop" [class.is-payment]="stage() === 'payment'" (click)="close()">
   <section
     class="access-shell"
     [class.is-sign-in]="stage() === 'sign-in'"
+    [class.is-payment]="stage() === 'payment'"
     role="dialog"
     aria-modal="true"
     aria-label="Live Chat access"
@@ -457,6 +458,10 @@
           </div>
         </div>
 
+        <div class="package-heading">
+          <h3>Payment method</h3>
+          <span>Choose your UPI app</span>
+        </div>
         <div class="payment-methods" role="radiogroup" aria-label="UPI payment app">
           @for (app of upiApps; track app.id) {
             <button

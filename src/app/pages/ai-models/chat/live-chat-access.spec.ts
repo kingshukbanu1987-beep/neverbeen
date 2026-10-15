@@ -558,6 +558,26 @@ describe('premium model access and UPI payment', () => {
     fixture.destroy();
   });
 
+  it('applies the light checkout theme only during the payment step', () => {
+    const { fixture, element } = paymentPage();
+    expect(element.querySelector('.access-backdrop.is-payment')).not.toBeNull();
+    expect(element.querySelector('.access-shell.is-payment')).not.toBeNull();
+    expect(element.querySelector('.access-payment')?.textContent).toContain('Payment method');
+    expect(
+      element.querySelector('.payment-package.is-selected')?.getAttribute('aria-checked'),
+    ).toBe('true');
+    expect(element.querySelector('.payment-method.is-selected')?.getAttribute('aria-checked')).toBe(
+      'true',
+    );
+
+    element.querySelector<HTMLButtonElement>('.access-payment .flow-back')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.access-backdrop.is-payment')).toBeNull();
+    expect(element.querySelector('.access-shell.is-payment')).toBeNull();
+    expect(element.querySelector('.access-review')).not.toBeNull();
+    fixture.destroy();
+  });
+
   it('lets a paid member walk back from payment to the chat details', () => {
     signInAsMember();
     const { fixture, element } = chooser('fiadh-dara');
