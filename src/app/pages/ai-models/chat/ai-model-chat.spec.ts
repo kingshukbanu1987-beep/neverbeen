@@ -1087,7 +1087,7 @@ describe('AiModelChatDialog', () => {
     expect(sent.querySelector('.chat-forwarded')?.textContent).toContain('Forwarded');
   });
 
-  it('marks a Registered User model with the blue tick in the header, the profile and every response', async () => {
+  it('marks a Premium model with the blue tick in the header, the profile and every response', async () => {
     const harness = await openChat(alisha);
     expect(harness.element.querySelector('.chat-bar-name .model-verified-tick')).not.toBeNull();
     expect(harness.element.querySelector('#chat-model-name .model-verified-tick')).not.toBeNull();
@@ -1103,7 +1103,7 @@ describe('AiModelChatDialog', () => {
     expect(harness.element.querySelector('.chat-row.is-outgoing .chat-author-tag')).toBeNull();
   });
 
-  it('shows no blue tick for an ordinary model', async () => {
+  it('shows no blue tick for a Free model', async () => {
     const ordinary = aiModelProfiles.find((model) => !requiresRegisteredChat(model))!;
     const harness = await openChat(ordinary);
     expect(harness.element.querySelector('.model-verified-tick')).toBeNull();

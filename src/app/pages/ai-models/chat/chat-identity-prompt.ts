@@ -78,6 +78,11 @@ export class ChatIdentityPrompt {
     return plan === 'legacy' ? '2 hours' : LIVE_CHAT_PLANS[plan].durationLabel;
   });
 
+  protected readonly planLabel = computed(() => {
+    const plan = this.plan();
+    return plan === 'legacy' ? 'Live Chat' : LIVE_CHAT_PLANS[plan].label;
+  });
+
   protected readonly firstName = computed(() => {
     const name = cleanChatName(this.name());
     return name ? name.split(' ')[0] : '';

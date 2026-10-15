@@ -22,11 +22,11 @@
         }
         <i class="gate-live" aria-hidden="true"></i>
       </span>
-      <p class="gate-kicker">{{ plan() === 'free' ? 'Free Chat' : 'Live Chat' }} · {{ durationLabel() }}</p>
+      <p class="gate-kicker">{{ planLabel() }} · {{ durationLabel() }}</p>
       <h2 id="chat-gate-title">Before we start</h2>
       <p class="gate-lede">
-        <b>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></b> would like to know who she is talking to. Your name and one
-        photograph, and the window is yours.
+        <b>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></b> would like to
+        know who she is talking to. Your name and one photograph, and the window is yours.
       </p>
     </header>
 

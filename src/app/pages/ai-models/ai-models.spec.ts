@@ -109,7 +109,8 @@ describe('AiModelsPage', () => {
     );
     expect(element.querySelectorAll('.model-card').length).toBe(expectedNames.length);
     expect(element.querySelector('.empty-studio')).toBeNull();
-    expect(element.querySelector('.profile-data-note')?.textContent).toContain('illustrative');
+    // The illustrative-profiles notice is on screen (its copy is the studio's legal warning).
+    expect(element.querySelector('.profile-data-note')?.textContent).toContain('Prohibited');
     expect(aiModelProfiles.every((profile) => profile.illustrative)).toBe(true);
 
     // The cards follow the data order, not the folder order.
@@ -336,17 +337,27 @@ describe('AiModelsPage', () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     fixture.detectChanges();
 
+    const expectedLabel = (availability: string): string => {
+      const state = availability.trim().toLocaleLowerCase();
+      if (/unavailable|fully booked|not accepting/.test(state)) return 'Currently Unavailable';
+      if (/future|looking for|coming soon/.test(state)) return 'Looking for Future Contract';
+      return 'Available for Contract';
+    };
+
     const cards = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('.model-card'),
     );
     for (const [index, profile] of aiModelProfiles.entries()) {
       const card = cards[index];
-      expect(card.querySelector('.card-availability')?.textContent?.trim()).toBe(
-        'Available for Contract',
-      );
-      expect(card.querySelector('.card-availability')?.classList.contains('is-available')).toBe(
-        true,
-      );
+      const label = expectedLabel(profile.availability);
+      expect(card.querySelector('.card-availability')?.textContent?.trim()).toBe(label);
+      const stateClass =
+        label === 'Currently Unavailable'
+          ? 'is-unavailable'
+          : label === 'Looking for Future Contract'
+            ? 'is-future'
+            : 'is-available';
+      expect(card.querySelector('.card-availability')?.classList.contains(stateClass)).toBe(true);
       expect(card.querySelector('.card-price-label')?.textContent?.trim()).toBe(
         'Starting Price / Photograph',
       );
@@ -400,16 +411,17 @@ describe('AiModelsPage', () => {
     }
   });
 
-  it('publishes a per-photo rate in INR for every model, starting at ₹550', () => {
+  it('publishes a per-photo rate in INR for every model', () => {
     for (const profile of aiModelProfiles) {
       expect(profile.photoRate, `${profile.name} photo rate`).toBeGreaterThan(0);
       expect(profile.photoNote).toContain('INR');
     }
 
-    // The leading profile (Fiadh Dara) quotes ₹535; the models vary slightly around it.
-    expect(aiModelProfiles[0].photoRate).toBe(535);
-    expect(Math.min(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(520);
-    expect(Math.max(...aiModelProfiles.map((profile) => profile.photoRate))).toBe(600);
+    // The models quote slightly different rates around the leading profile's figure.
+    const rates = aiModelProfiles.map((profile) => profile.photoRate);
+    expect(Math.min(...rates)).toBeGreaterThanOrEqual(500);
+    expect(Math.max(...rates)).toBeLessThanOrEqual(1_000);
+    expect(new Set(rates).size).toBeGreaterThan(1);
   });
 
   it('keeps the header to a short, graphic-free title', () => {

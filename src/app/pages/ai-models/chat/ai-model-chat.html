@@ -53,7 +53,9 @@
           [attr.aria-label]="'Chat session time remaining: ' + chat.timeLeftLabel()"
         >
           <span class="chat-clock-dot" aria-hidden="true"></span>
-          <span class="chat-clock-label">{{ sessionOver() ? 'Session ended' : (planDefinition()?.label || 'Time left') }}</span>
+          <span class="chat-clock-label">{{
+            sessionOver() ? 'Session ended' : planDefinition()?.label || 'Time left'
+          }}</span>
           <b class="chat-clock-value">{{ chat.timeLeftLabel() }}</b>
           <span
             class="chat-clock-bar"
@@ -234,7 +236,12 @@
                       </span>
                     } @else if (attachment.kind === 'video' && attachment.preview) {
                       <span class="chat-bubble-video">
-                        <video [src]="attachment.preview" controls playsinline preload="metadata"></video>
+                        <video
+                          [src]="attachment.preview"
+                          controls
+                          playsinline
+                          preload="metadata"
+                        ></video>
                         <i>▶ {{ attachment.name }}</i>
                       </span>
                     } @else if (attachment.kind === 'video') {
@@ -503,7 +510,11 @@
               [value]="draft()"
               (input)="updateDraft($event)"
               (keydown)="onComposerKeydown($event)"
-              [attr.placeholder]="mediaAllowed() ? 'Message ' + model().name + '…' : 'Free Chat is text-only…'"
+              [attr.placeholder]="
+                mediaAllowed()
+                  ? 'Message ' + model().name + '…'
+                  : 'Text-only chat · no photos or videos…'
+              "
               [attr.aria-label]="'Message ' + model().name"
               maxlength="2000"
             ></textarea>
@@ -550,9 +561,7 @@
                 <span aria-hidden="true">✳</span>
               }
             </span>
-            <h2>
-              {{ model().name }}<app-model-verified-tick [slug]="model().slug" />
-            </h2>
+            <h2>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></h2>
             <p class="chat-info-handle">{{ model().handle }}</p>
             <p class="chat-info-place">
               <span aria-hidden="true">⌖</span>

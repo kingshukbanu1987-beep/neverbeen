@@ -14,6 +14,10 @@ import {
   AI_CHAT_TYPING_MAX_MS,
   AI_CHAT_TYPING_MIN_MS,
   AI_CHAT_TYPING_PER_CHAR_MS,
+  FREE_LIVE_CHAT_DURATION_MS,
+  LIVE_CHAT_PLANS,
+  PREMIUM_LIVE_CHAT_DURATION_MS,
+  REGISTERED_LIVE_CHAT_DURATION_MS,
   reactionEmoji,
   replyQuoteOf,
   typingTimeFor,
@@ -166,5 +170,41 @@ describe('the pauses of a real chat (requirement D of the second brief)', () => 
     expect(AI_CHAT_INTRO_MAX_MS).toBe(5_000);
     expect(AI_CHAT_GAP_MIN_MS).toBe(2_000);
     expect(AI_CHAT_GAP_MAX_MS).toBe(4_000);
+  });
+});
+
+describe('the three Live Chat plans', () => {
+  it('fixes each plan duration exactly as the plan brief states', () => {
+    expect(FREE_LIVE_CHAT_DURATION_MS).toBe(45 * 1000);
+    expect(LIVE_CHAT_PLANS.free.durationLabel).toBe('45 seconds');
+    expect(REGISTERED_LIVE_CHAT_DURATION_MS).toBe(2 * 60 * 1000);
+    expect(LIVE_CHAT_PLANS.registered.durationLabel).toBe('2 minutes');
+    expect(PREMIUM_LIVE_CHAT_DURATION_MS).toBe(15 * 60 * 1000);
+    expect(LIVE_CHAT_PLANS.premium.durationLabel).toBe('15 minutes');
+  });
+
+  it('allows photo and video sharing on the Premium plan alone', () => {
+    expect(LIVE_CHAT_PLANS.free.allowsMedia).toBe(false);
+    expect(LIVE_CHAT_PLANS.registered.allowsMedia).toBe(false);
+    expect(LIVE_CHAT_PLANS.premium.allowsMedia).toBe(true);
+  });
+
+  it('requires Community registration on the Registered User and Premium plans only', () => {
+    expect(LIVE_CHAT_PLANS.free.registrationRequired).toBe(false);
+    expect(LIVE_CHAT_PLANS.registered.registrationRequired).toBe(true);
+    expect(LIVE_CHAT_PLANS.premium.registrationRequired).toBe(true);
+  });
+
+  it('gives every plan its own feature list and conversation character', () => {
+    expect(LIVE_CHAT_PLANS.free.memoryLabel).toBe('Basic conversational memory');
+    expect(LIVE_CHAT_PLANS.free.humanLabel).toBe('Limited Human like Response');
+    expect(LIVE_CHAT_PLANS.registered.speedLabel).toBe('Moderate Response Speed');
+    expect(LIVE_CHAT_PLANS.registered.humanLabel).toBe('More Human like Response');
+    expect(LIVE_CHAT_PLANS.premium.memoryLabel).toBe('Ultimate conversation memory');
+    expect(LIVE_CHAT_PLANS.premium.speedLabel).toBe('Ultra Fast response speed');
+    expect(LIVE_CHAT_PLANS.premium.humanLabel).toBe('Realtime Human like Response');
+    expect(LIVE_CHAT_PLANS.free.features.length).toBe(10);
+    expect(LIVE_CHAT_PLANS.registered.features.length).toBe(9);
+    expect(LIVE_CHAT_PLANS.premium.features.length).toBe(10);
   });
 });
