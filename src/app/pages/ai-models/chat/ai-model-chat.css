@@ -324,10 +324,11 @@
   border-radius: 999px;
   background: #e6e6ea;
   color: #000;
+  font-family: inherit;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.03em;
-  text-decoration: none;
+  cursor: pointer;
   transition:
     background 160ms ease,
     transform 160ms ease;
@@ -1452,8 +1453,9 @@
   min-width: 0;
 }
 
-/* Instagram's chevron: a quiet, thin "›" right after her name; phones only (a wide window already
-   shows her information in the column on the left). */
+/* Instagram's chevron: a quiet, thin "›" right after her name — on a phone it opens her information
+   over the chat, on a wide window the same sheet over the conversation (her card stays in the left
+   column). */
 .chat-bar-more {
   display: inline-grid;
   width: 26px;
@@ -1492,7 +1494,7 @@
   outline-offset: 1px;
 }
 
-/* ------------------------------------------------------------------ her information (phones) */
+/* ------------------------------------------------------------------ her information */
 
 .chat-info {
   position: absolute;
@@ -1749,7 +1751,8 @@
   margin-top: 0.4rem;
 }
 
-.chat-info-profile,
+.chat-info-premium,
+.chat-info-history,
 .chat-info-return {
   display: grid;
   min-height: 48px;
@@ -1759,16 +1762,21 @@
   font-family: inherit;
   font-size: 0.92rem;
   font-weight: 700;
-  text-decoration: none;
   cursor: pointer;
   transition:
     transform 160ms ease,
     background 160ms ease;
 }
 
-.chat-info-profile {
-  background: var(--chat-user-bubble);
+/* The premium door: the studio's magenta, white words. For now it opens nothing. */
+.chat-info-premium {
+  background: #c920a6;
   color: #ffffff;
+}
+
+.chat-info-history {
+  background: #f1ecff;
+  color: var(--chat-violet-deep, #4b128f);
 }
 
 .chat-info-return {
@@ -1776,9 +1784,15 @@
   color: var(--chat-ink);
 }
 
-.chat-info-profile:hover,
-.chat-info-profile:focus-visible {
-  background: var(--chat-violet);
+.chat-info-premium:hover,
+.chat-info-premium:focus-visible {
+  background: #b01b92;
+  transform: translateY(-1px);
+}
+
+.chat-info-history:hover,
+.chat-info-history:focus-visible {
+  background: #e4dafc;
   transform: translateY(-1px);
 }
 
@@ -1787,7 +1801,8 @@
   background: #e6e6ec;
 }
 
-.chat-info-profile:focus-visible,
+.chat-info-premium:focus-visible,
+.chat-info-history:focus-visible,
 .chat-info-return:focus-visible {
   outline: 2px solid var(--chat-violet);
   outline-offset: 2px;
@@ -1799,11 +1814,24 @@
   }
 }
 
-/* A wide window already carries her information in the column on the left. */
+/*
+ * A wide window: the "›" (and View Profile) open her information over the conversation on the
+ * right — her card stays where it is, in the column on the left. The sheet is a cell of the
+ * window's own grid laid over the chat column, not a sheet over the whole window.
+ */
 @media (min-width: 900px) {
-  .chat-bar-more,
   .chat-info {
-    display: none;
+    position: relative;
+    inset: auto;
+    z-index: 4;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .chat-info-scroll {
+    width: 100%;
+    max-width: 34rem;
+    margin-inline: auto;
   }
 }
 

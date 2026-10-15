@@ -12,7 +12,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AiModelChatService } from '../../../services/ai-model-chat.service';
 import {
   readImageAsDataUrl,
@@ -86,14 +86,7 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
  */
 @Component({
   selector: 'app-ai-model-chat',
-  imports: [
-    RouterLink,
-    ChatAutoScroll,
-    ChatIdentityPrompt,
-    ChatFeedbackCard,
-    ChatHistory,
-    ModelVerifiedTick,
-  ],
+  imports: [ChatAutoScroll, ChatIdentityPrompt, ChatFeedbackCard, ChatHistory, ModelVerifiedTick],
   templateUrl: './ai-model-chat.html',
   styleUrl: './ai-model-chat.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,6 +98,8 @@ const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: 
 })
 export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly chat = inject(AiModelChatService);
+  /** Her full profile page: where View Profile goes on a phone. */
+  private readonly router = inject(Router);
   /** The window itself, so a click on a reply quote can jump back to the quoted bubble. */
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
@@ -140,7 +135,7 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected readonly draft = signal('');
   /** The whole chat history sheet, open over the window. */
   protected readonly historyOpen = signal(false);
-  /** Phones: her information sheet, opened by the "›" beside her name in the header. */
+  /** Her information sheet: over the chat on a phone, over the conversation on a wide window. */
   protected readonly infoOpen = signal(false);
   protected readonly pickerFor = signal<string | null>(null);
   /** The message the visitor has chosen to reply over — the quote the composer will send. */
@@ -389,7 +384,10 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
     this.feedbackCard()?.close();
   }
 
-  /** Phones: shows her information over the chat. */
+  /**
+   * Shows her information over the chat — opened by the "›" beside her name, and by View Profile
+   * on a wide window.
+   */
   protected openInfo(): void {
     this.infoOpen.set(true);
     setTimeout(() => this.infoBack()?.nativeElement.focus(), 0);
@@ -399,6 +397,37 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
   protected closeInfo(): void {
     this.infoOpen.set(false);
     setTimeout(() => this.infoToggle()?.nativeElement.focus(), 0);
+  }
+
+  /**
+   * Her grey View Profile. On a wide window it opens her information on the chat panel — exactly
+   * what the "›" beside her name does. On a phone it still leaves the chat for her full profile
+   * page, which the information sheet no longer links to.
+   */
+  protected viewProfile(): void {
+    if (this.isWideWindow()) {
+      this.openInfo();
+      return;
+    }
+    void this.router.navigate(['/ai-models', this.model().slug]);
+    this.close();
+  }
+
+  /**
+   * "Show Premium Content" on her information sheet. For now it only names the door: the premium
+   * gallery is still being built, so pressing it does nothing.
+   */
+  protected showPremiumContent(): void {
+    // Nothing yet.
+  }
+
+  /** The same 900px switch the stylesheet uses to turn the chat landscape. */
+  private isWideWindow(): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(min-width: 900px)').matches
+    );
   }
 
   /** Opens the whole chat history over the window. */
@@ -434,14 +463,14 @@ export class AiModelChatDialog implements OnInit, AfterViewInit {
       this.closeForward();
       return;
     }
+    // The history sheet is the top layer: Escape takes the visitor back to whatever is under it.
+    if (this.historyOpen()) {
+      this.closeHistory();
+      return;
+    }
     // The information sheet is a layer of its own: Escape takes the visitor back to the chat.
     if (this.infoOpen()) {
       this.closeInfo();
-      return;
-    }
-    // The history sheet is the top layer: Escape takes the visitor back to the conversation.
-    if (this.historyOpen()) {
-      this.closeHistory();
       return;
     }
     // F — the form is never dismissed by itself, but a visitor who presses Escape has answered it

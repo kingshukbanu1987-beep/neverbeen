@@ -20,7 +20,8 @@
           <span class="chat-bar-copy">
             <span class="chat-bar-name">
               <b>{{ model().name }}<app-model-verified-tick [slug]="model().slug" /></b>
-              <!-- Instagram's "›" beside the name: on a phone it opens her information. -->
+              <!-- Instagram's "›" beside the name: it opens her information — over the chat on a
+                   phone, over the conversation on a wide window. -->
               <button
                 #infoToggle
                 type="button"
@@ -98,13 +99,14 @@
           {{ city() }}
         </p>
         <div class="chat-profile-actions">
-          <a
+          <button
+            type="button"
             class="chat-view-profile"
-            [routerLink]="['/ai-models', model().slug]"
-            (click)="close()"
-            [attr.aria-label]="'View the full profile of ' + model().name"
-            >View Profile</a
+            (click)="viewProfile()"
+            [attr.aria-label]="'View the profile of ' + model().name"
           >
+            View Profile
+          </button>
           <button
             type="button"
             class="chat-history-open"
@@ -532,7 +534,8 @@
       </div>
     </div>
 
-    <!-- Phones: her information, on a clean white sheet over the chat, with a way back. -->
+    <!-- Her information: on a phone a clean white sheet over the chat, on a wide window the same
+         sheet over the conversation column — both with a way back to the chat. -->
     @if (infoOpen()) {
       <section class="chat-info" role="region" [attr.aria-label]="'About ' + model().name">
         <header class="chat-info-bar">
@@ -619,13 +622,19 @@
           }
 
           <div class="chat-info-actions">
-            <a
-              class="chat-info-profile"
-              [routerLink]="['/ai-models', model().slug]"
-              (click)="close()"
-              [attr.aria-label]="'View the full profile of ' + model().name"
-              >View full profile</a
+            <button type="button" class="chat-info-premium" (click)="showPremiumContent()">
+              Show Premium Content
+            </button>
+            <button
+              type="button"
+              class="chat-info-history"
+              (click)="openHistory()"
+              [disabled]="!session()"
+              aria-label="View the whole chat history"
+              title="See every message, photograph and document of this chat"
             >
+              Chat History
+            </button>
             <button type="button" class="chat-info-return" (click)="closeInfo()">
               Back to chat
             </button>
