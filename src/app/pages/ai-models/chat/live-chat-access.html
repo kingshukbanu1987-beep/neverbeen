@@ -504,11 +504,7 @@
                     [value]="couponCode()"
                     [disabled]="paymentBusy()"
                     [attr.aria-invalid]="couponError() ? 'true' : null"
-                    [attr.aria-describedby]="
-                      couponError()
-                        ? 'premium-coupon-hint premium-coupon-error'
-                        : 'premium-coupon-hint'
-                    "
+                    [attr.aria-describedby]="couponError() ? 'premium-coupon-error' : null"
                     placeholder="Enter coupon code"
                     autocomplete="off"
                     autocapitalize="characters"
@@ -526,9 +522,6 @@
                   Apply code
                 </button>
               </div>
-              <p id="premium-coupon-hint" class="coupon-hint">
-                Try <b>SPECIAL</b> for 15% off or <b>NEVERBEEN</b> for 25% off.
-              </p>
               @if (couponError()) {
                 <p id="premium-coupon-error" class="coupon-error" role="alert">
                   {{ couponError() }}

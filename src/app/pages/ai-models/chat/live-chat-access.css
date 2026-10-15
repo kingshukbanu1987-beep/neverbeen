@@ -2292,19 +2292,6 @@
   cursor: wait;
 }
 
-.access-payment .coupon-hint {
-  margin: 0.62rem 0 0;
-  color: #778095;
-  font-size: 0.66rem;
-  line-height: 1.5;
-}
-
-.access-payment .coupon-hint b {
-  color: #5940b5;
-  font-weight: 800;
-  letter-spacing: 0.015em;
-}
-
 .access-payment .coupon-error {
   margin: 0.55rem 0 0;
   color: #bd2d40;
