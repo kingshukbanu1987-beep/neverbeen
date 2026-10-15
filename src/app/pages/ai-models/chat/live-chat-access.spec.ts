@@ -375,7 +375,7 @@ describe('premium model access and UPI payment', () => {
     expect(element.querySelector('#premium-coupon-code')?.getAttribute('placeholder')).toBe(
       'Enter coupon code',
     );
-    expect(element.querySelector('.coupon-panel-heading p')?.textContent?.trim()).toBe(
+    expect(element.querySelector('.coupon-panel-heading > .coupon-subtotal-note')?.textContent?.trim()).toBe(
       'Discount applies to your package subtotal.',
     );
     expect(element.querySelector('.coupon-input-wrap > span')).toBeNull();

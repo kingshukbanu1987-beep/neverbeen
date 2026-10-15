@@ -2169,7 +2169,8 @@
   letter-spacing: -0.015em;
 }
 
-.access-payment .coupon-panel-heading p {
+.access-payment .coupon-panel-heading .coupon-subtotal-note {
+  width: 100%;
   text-align: center;
   margin: 0.16rem 0 0;
   color: #737d91;
