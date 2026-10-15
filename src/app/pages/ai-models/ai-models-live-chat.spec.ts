@@ -86,14 +86,15 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     const card = cardFor(fixture.nativeElement, profile.name);
     const pill = card.querySelector<HTMLElement>('.card-live-pill')!;
     expect(pill).not.toBeNull();
-    // The button leads, the pill follows it on the next line — both in the one chat row.
+    // The button leads inside its own line, the pill follows it on the next line — both in the one
+    // chat row.
     const row = pill.closest<HTMLElement>('.card-chat-row')!;
     expect(row.parentElement?.classList.contains('card-copy')).toBe(true);
-    expect(row.children[0]?.classList.contains('card-action-chat')).toBe(true);
+    const line = row.children[0] as HTMLElement;
+    expect(line.classList.contains('card-chat-line')).toBe(true);
+    expect(line.querySelector('.card-action-chat')).not.toBeNull();
     expect(row.children[1]?.tagName).toBe('APP-MODEL-LIVE-CHAT-PILL');
-    expect(pill.parentElement?.previousElementSibling?.classList.contains('card-action-chat')).toBe(
-      true,
-    );
+    expect(pill.parentElement?.previousElementSibling === line).toBe(true);
     // Stacked, not side by side: the row runs top to bottom, so the pill starts a line of its own.
     expect(getComputedStyle(row).flexDirection).toBe('column');
     expect(pill.classList.contains('is-live')).toBe(true);
@@ -118,6 +119,32 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     expect(pill.getAttribute('aria-label')).toBe(
       `3 live now and 1,284 past chats with ${profile.name}`,
     );
+    fixture.destroy();
+  });
+
+  it('marks a Premium model beside her Live Chat button, and only a Premium model', async () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    const http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne(`${API}/api/models/live-chats`).flush([]);
+    await settle();
+    fixture.detectChanges();
+
+    // A Premium model carries the NeverBeen Premium Model wordmark in her chat line.
+    const premiumModel = aiModelProfiles.find((model) => model.slug === 'fiadh-dara')!;
+    const premiumCard = cardFor(fixture.nativeElement, premiumModel.name);
+    const mark = premiumCard.querySelector<HTMLElement>('.card-premium-mark')!;
+    expect(mark.textContent).toContain('✦');
+    expect(mark.textContent).toContain('NeverBeen');
+    expect(mark.textContent).toContain('Premium Model');
+    expect(mark.closest('.card-chat-line')).not.toBeNull();
+    expect(mark.previousElementSibling?.classList.contains('card-action-chat')).toBe(true);
+    expect(getComputedStyle(mark).color).toBe('rgb(242, 19, 232)');
+
+    // A model outside the Premium plan carries no wordmark at all.
+    const plainModel = aiModelProfiles.find((model) => model.slug === 'fatima-al-mansoor')!;
+    const plainCard = cardFor(fixture.nativeElement, plainModel.name);
+    expect(plainCard.querySelector('.card-premium-mark')).toBeNull();
     fixture.destroy();
   });
 

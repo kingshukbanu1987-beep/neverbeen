@@ -199,6 +199,26 @@ The **›** right after her name opens her details — over the conversation on 
 chat on a phone — with **Show Premium Content**, **Chat History** and **Back to chat** at the foot;
 on a wide screen **View Profile** opens the same details.
 
+**Premium Content:** every model may carry a `PremiumContent` folder inside her model folder
+(`public/NeverBeenModels/<Model>/PremiumContent`); the photographs inside are her Premium Content,
+and `npm run ai-models:sync` picks them up like album photographs. They are never shown in the
+clear anywhere outside the chat: **Show Premium Content** — enabled only for Premium-plan models,
+greyed out for everyone else — opens a dark studio gallery page over the chat window with every
+frame in a mosaic of differently sized tiles. The page carries all the photograph features — seen,
+comments, likes and share with counts, zoom in and out — and a double-tap (or double-click) opens a
+full-screen viewer with its close button top right and a download to the visitor's device; a
+floating glass dock at the bottom middle of the screen leads back. Outside the chat the frames
+appear only as locked teasers: four of them, scattered at random (never side by side, and on the
+portfolio grid never in the last, View All slot) through the portfolio's photograph section at an
+85% gaussian blur, and through the first rows of the View All mosaic at 75% — each under the same
+diagonal watermark, **Premium Content** in bold red with *Only available in Paid Premium Chat*
+underneath. In the `/ai-models` directory every Premium-plan model wears a
+**✦ NeverBeen Premium Model** wordmark in `#F213E8` beside her Live Chat button. The premium
+checkout adds a **Premium Content Coverage** block after the package choice — **None** selected by
+default — whose coverage costs the model's Base Price + ₹51, joins the package subtotal before the
+Service tax · 5%, SGST · 9% and CGST · 9% are calculated, and appears as its own line in the price
+breakdown.
+
 **Nothing is answered before it has been read.** Every message — the words, a photograph, a document —
 goes through a reading first: her own engine repairs what people actually type (stretched letters,
 missing apostrophes, thumb-shortened forms like `u`, `ur`, `pls`, `thnx`, and spelling mistakes one

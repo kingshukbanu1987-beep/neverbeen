@@ -622,7 +622,19 @@
           }
 
           <div class="chat-info-actions">
-            <button type="button" class="chat-info-premium" (click)="showPremiumContent()">
+            <button
+              #premiumButton
+              type="button"
+              class="chat-info-premium"
+              (click)="showPremiumContent()"
+              [disabled]="!canShowPremiumContent()"
+              [attr.aria-disabled]="!canShowPremiumContent()"
+              [attr.title]="
+                canShowPremiumContent()
+                  ? 'Open the Premium Content gallery of this chat'
+                  : premiumDisabledLabel()
+              "
+            >
               Show Premium Content
             </button>
             <button
@@ -648,6 +660,13 @@
       @if (session(); as current) {
         <app-chat-history [model]="model()" [session]="current" (closed)="closeHistory()" />
       }
+    }
+
+    <!-- Her Premium Content: the exclusive frames of her PremiumContent/ folder, a page of their
+         own over the chat window — the wide conversation column on a laptop, the whole window on a
+         phone — with a floating way back to her information sheet. -->
+    @if (premiumOpen()) {
+      <app-chat-premium-content [model]="model()" (closed)="closePremiumContent()" />
     }
 
     <!-- Instagram's message menu: opened by a right click, a long press, or the ⋯ beside a message. -->

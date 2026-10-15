@@ -1,0 +1,792 @@
+/*
+ * The Premium Content page of a Live Chat: an ultra-modern dark gallery that takes over the chat
+ * window — the whole window on a phone, the wide conversation column on a laptop — with an aurora
+ * wash, an editorial mosaic of her exclusive frames, and a floating glass dock at the bottom middle
+ * that leads back to her profile.
+ *
+ * The host is a layer of the chat panel exactly like her information sheet: absolutely over the
+ * window on a phone, a cell of the panel's own grid over the conversation column on a wide screen.
+ */
+:host {
+  --premium-bg: #0a0711;
+  --premium-bg-2: #120a1c;
+  --premium-ink: #f8f2fa;
+  --premium-muted: #b4a6bd;
+  --premium-faint: #857a8f;
+  --premium-line: rgb(255 255 255 / 10%);
+  --premium-accent: #ff41c8;
+  --premium-accent-2: #8a5cff;
+  --premium-gold: #ffd166;
+  --premium-red: #ff2d55;
+  --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --ease-out: cubic-bezier(0.22, 0.68, 0.32, 1);
+
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  background: var(--premium-bg);
+  color: var(--premium-ink);
+  font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  animation: chat-premium-in 320ms var(--ease-out) backwards;
+}
+
+@keyframes chat-premium-in {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+}
+
+/*
+ * A wide window: the page takes the conversation column — her card stays in the column on the
+ * left, exactly as her information sheet does, one grid cell above it.
+ */
+@media (min-width: 900px) {
+  :host {
+    position: relative;
+    inset: auto;
+    z-index: 6;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+.chat-premium {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 86% -10%, rgb(255 65 200 / 16%), transparent 46%),
+    radial-gradient(ellipse at -6% 30%, rgb(138 92 255 / 14%), transparent 40%),
+    linear-gradient(180deg, #0d0817, #0a0711 60%);
+}
+
+/* The aurora: one slow-turning conic light behind everything, quiet enough to sit under photos. */
+.chat-premium-aurora {
+  position: absolute;
+  z-index: 0;
+  top: -16rem;
+  right: -12rem;
+  width: min(46rem, 130%);
+  aspect-ratio: 1.35;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 200deg at 58% 52%,
+    #40103a,
+    rgb(255 65 200 / 34%),
+    rgb(138 92 255 / 26%),
+    #1c0d2a,
+    #40103a
+  );
+  filter: blur(110px);
+  opacity: 0.4;
+  pointer-events: none;
+  animation: chat-premium-aurora 16s ease-in-out infinite alternate;
+}
+
+@keyframes chat-premium-aurora {
+  from {
+    transform: rotate(-8deg) scale(1);
+  }
+  to {
+    transform: rotate(10deg) scale(1.12);
+  }
+}
+
+/* A whisper of grain, so the dark page reads as a printed surface rather than a flat black. */
+.chat-premium-grain {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-image: radial-gradient(rgb(255 255 255 / 22%) 0.5px, transparent 0.6px);
+  background-size: 4px 4px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------------------ the bar */
+
+.chat-premium-bar {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--premium-line);
+  background: rgb(12 8 20 / 78%);
+  backdrop-filter: blur(16px);
+}
+
+.chat-premium-back {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.1rem;
+  min-height: 38px;
+  padding: 0 0.75rem 0 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--premium-ink);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.chat-premium-back svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.chat-premium-back:hover,
+.chat-premium-back:focus-visible {
+  border-color: var(--premium-line);
+  background: rgb(255 255 255 / 8%);
+}
+
+.chat-premium-back:focus-visible {
+  outline: 2px solid var(--premium-accent);
+  outline-offset: 1px;
+}
+
+.chat-premium-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.chat-premium-title > span {
+  color: var(--premium-gold);
+  text-shadow: 0 0 14px rgb(255 209 102 / 55%);
+}
+
+.chat-premium-plan {
+  justify-self: end;
+  padding: 0.34rem 0.7rem;
+  border: 1px solid rgb(255 65 200 / 32%);
+  border-radius: 999px;
+  background: rgb(255 65 200 / 12%);
+  color: #ffb3e6;
+  font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------ the hero */
+
+.chat-premium-scroll {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.2rem 1.15rem calc(7rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 16%) transparent;
+}
+
+.chat-premium-hero {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.35rem 0.15rem 0.2rem;
+}
+
+.chat-premium-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--premium-accent);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.chat-premium-eyebrow span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentcolor;
+  box-shadow: 0 0 0 4px rgb(255 65 200 / 16%);
+  animation: chat-premium-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes chat-premium-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgb(255 65 200 / 10%);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgb(255 65 200 / 20%);
+  }
+}
+
+.chat-premium-name {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+.chat-premium-name em {
+  background: linear-gradient(110deg, #ff9de2, #ffb3e6 40%, #c9a3ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-style: normal;
+}
+
+.chat-premium-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--premium-muted);
+  font-size: 0.8rem;
+}
+
+.chat-premium-meta i {
+  color: var(--premium-faint);
+  font-style: normal;
+}
+
+.chat-premium-handle {
+  color: #ffc4ec;
+  font-weight: 650;
+}
+
+.chat-premium-num {
+  font-family: var(--numeric-font);
+}
+
+.chat-premium-intro {
+  max-width: 58ch;
+  margin: 0;
+  color: var(--premium-muted);
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+/* Seen · Likes · Comments · Shares for the whole Premium Content gallery. */
+.chat-premium-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0.45rem 0 0;
+}
+
+.chat-premium-stat {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.75rem 0.55rem;
+  border: 1px solid var(--premium-line);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 2%));
+  text-align: center;
+}
+
+.chat-premium-stat dt {
+  color: var(--premium-faint);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.chat-premium-stat dd {
+  margin: 0;
+  color: var(--premium-ink);
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.chat-premium-stat.is-seen dd {
+  color: #9adcff;
+}
+
+.chat-premium-stat.is-likes dd {
+  color: #ff8fbf;
+}
+
+.chat-premium-stat.is-comments dd {
+  color: #cdb4ff;
+}
+
+.chat-premium-stat.is-shares dd {
+  color: #ffd166;
+}
+
+/* ------------------------------------------------------------------------------ the mosaic */
+
+/*
+ * The same editorial mosaic as the "View All" page: the section measures itself and the grid
+ * switches between 2, 3 and 4 columns with container queries, every cell staying 4:3.
+ */
+.chat-premium-mosaic {
+  container-type: inline-size;
+}
+
+.premium-mosaic {
+  --cols: 2;
+  --gap: 7px;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-auto-rows: calc((100cqi - (var(--cols) - 1) * var(--gap)) / var(--cols) * 0.75);
+  gap: var(--gap);
+}
+
+.premium-mosaic-cell {
+  position: relative;
+  grid-column: var(--c2);
+  grid-row: var(--r2);
+}
+
+.premium-mosaic-tile {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #251325, #100a16);
+  box-shadow: 0 18px 46px rgb(0 0 0 / 36%);
+  color: #fff;
+  cursor: zoom-in;
+  isolation: isolate;
+  transition: box-shadow 400ms var(--ease-out);
+}
+
+.premium-mosaic-tile::after {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 9%);
+  content: '';
+  pointer-events: none;
+  transition: box-shadow 350ms ease;
+}
+
+.premium-mosaic-tile img {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 24%;
+  animation: chat-premium-photo-in 700ms ease both;
+  -webkit-user-drag: none;
+}
+
+@keyframes chat-premium-photo-in {
+  from {
+    opacity: 0;
+    filter: blur(12px) saturate(1.2);
+    transform: scale(1.07);
+  }
+}
+
+.premium-mosaic-tile:hover img,
+.premium-mosaic-tile:focus-visible img {
+  filter: saturate(1.08);
+}
+
+/* The soft light that follows the mouse across a tile. */
+.premium-mosaic-spot {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: radial-gradient(
+    14rem circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgb(255 255 255 / 12%),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 350ms ease;
+  pointer-events: none;
+}
+
+.premium-mosaic-tile:hover .premium-mosaic-spot,
+.premium-mosaic-tile:focus-visible .premium-mosaic-spot {
+  opacity: 1;
+}
+
+.premium-mosaic-tile:hover,
+.premium-mosaic-tile:focus-visible {
+  box-shadow:
+    0 26px 60px rgb(0 0 0 / 48%),
+    0 0 0 1px rgb(255 65 200 / 30%);
+}
+
+.premium-mosaic-tile:focus-visible {
+  outline: 2px solid var(--premium-accent);
+  outline-offset: 3px;
+}
+
+/* The frame number and the full-screen affordance, revealed on hover. */
+.premium-mosaic-meta {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.65rem 0.75rem;
+  background: linear-gradient(180deg, rgb(8 4 12 / 55%), transparent 32%, transparent 62%, rgb(8 4 12 / 62%));
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+
+.premium-mosaic-tile:hover .premium-mosaic-meta,
+.premium-mosaic-tile:focus-visible .premium-mosaic-meta {
+  opacity: 1;
+}
+
+.premium-mosaic-frame {
+  color: #ffd9f1;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.premium-mosaic-zoom {
+  align-self: flex-end;
+  color: #fff;
+  font-size: 1rem;
+  text-shadow: 0 2px 12px rgb(0 0 0 / 60%);
+}
+
+/* The seen · likes · comments · share strip on every mosaic tile. */
+.premium-tile-engagement {
+  position: absolute;
+  z-index: 5;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.premium-tile-engagement > * {
+  pointer-events: auto;
+}
+
+@container (min-width: 560px) {
+  .premium-mosaic {
+    --cols: 3;
+    --gap: 10px;
+  }
+
+  .premium-mosaic-cell {
+    grid-column: var(--c3);
+    grid-row: var(--r3);
+  }
+
+  .premium-mosaic-tile {
+    border-radius: 18px;
+  }
+}
+
+@container (min-width: 900px) {
+  .premium-mosaic {
+    --cols: 4;
+    --gap: 14px;
+  }
+
+  .premium-mosaic-cell {
+    grid-column: var(--c4);
+    grid-row: var(--r4);
+  }
+
+  .premium-mosaic-tile {
+    border-radius: 22px;
+  }
+}
+
+/* ------------------------------------------------------------------------------ the end + empty */
+
+.chat-premium-end {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0.4rem 0 0;
+  color: var(--premium-faint);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.chat-premium-end span:first-child,
+.chat-premium-end span:last-child {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--premium-line));
+}
+
+.chat-premium-end span:last-child {
+  background: linear-gradient(90deg, var(--premium-line), transparent);
+}
+
+.chat-premium-empty {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.6rem 1.2rem;
+  border: 1px dashed var(--premium-line);
+  border-radius: 20px;
+  background: rgb(255 255 255 / 3%);
+  color: var(--premium-muted);
+}
+
+.chat-premium-empty p {
+  margin: 0 0 0.25rem;
+  color: var(--premium-ink);
+  font-weight: 700;
+}
+
+.chat-premium-empty span {
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.chat-premium-empty-mark {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 65 200 / 14%);
+  color: var(--premium-accent);
+  font-size: 1.3rem;
+}
+
+/* ------------------------------------------------- the floating dock at the bottom middle */
+
+/*
+ * The way back: one glass pill pinned to the bottom middle of the page, whatever the scroll —
+ * an orbiting ring, the arrow, the words, and her photograph on the right.
+ */
+.chat-premium-dock {
+  position: absolute;
+  z-index: 8;
+  right: 0;
+  bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.chat-premium-dock-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgb(30 18 40 / 88%), rgb(16 9 24 / 88%));
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow:
+    0 24px 60px -18px rgb(0 0 0 / 70%),
+    0 0 0 1px rgb(255 65 200 / 10%),
+    inset 0 1px 0 rgb(255 255 255 / 14%);
+  color: var(--premium-ink);
+  font-family: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform 220ms var(--ease-out),
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+  animation: chat-premium-dock-in 480ms 120ms var(--ease-out) backwards;
+}
+
+@keyframes chat-premium-dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+.chat-premium-dock-button:hover,
+.chat-premium-dock-button:focus-visible {
+  border-color: rgb(255 65 200 / 55%);
+  box-shadow:
+    0 30px 70px -18px rgb(0 0 0 / 76%),
+    0 0 26px -4px rgb(255 65 200 / 42%),
+    inset 0 1px 0 rgb(255 255 255 / 18%);
+  transform: translateY(-2px);
+}
+
+.chat-premium-dock-button:focus-visible {
+  outline: 2px solid var(--premium-accent);
+  outline-offset: 3px;
+}
+
+.chat-premium-dock-orbit {
+  position: absolute;
+  inset: -5px;
+  border-radius: 999px;
+  background: conic-gradient(from 0deg, transparent 12%, rgb(255 65 200 / 55%), transparent 58%);
+  -webkit-mask:
+    radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  animation: chat-premium-orbit 5.5s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes chat-premium-orbit {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.chat-premium-dock-arrow {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgb(255 65 200 / 26%), rgb(138 92 255 / 22%));
+  color: #ffd9f1;
+  transition: transform 220ms var(--ease-out);
+}
+
+.chat-premium-dock-button:hover .chat-premium-dock-arrow,
+.chat-premium-dock-button:focus-visible .chat-premium-dock-arrow {
+  transform: translateX(-3px);
+}
+
+.chat-premium-dock-copy {
+  display: grid;
+  gap: 0.06rem;
+  text-align: left;
+}
+
+.chat-premium-dock-kicker {
+  color: var(--premium-faint);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.chat-premium-dock-name {
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.chat-premium-dock-avatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 22%);
+  background: linear-gradient(150deg, #3d2148, #211331);
+  color: var(--premium-gold);
+  font-size: 0.95rem;
+}
+
+.chat-premium-dock-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+/* A soft shadow pill under the dock, so it floats above the photographs. */
+.chat-premium-dock-shadow {
+  position: absolute;
+  right: 50%;
+  bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  width: min(280px, 62vw);
+  height: 34px;
+  transform: translateX(50%);
+  background: radial-gradient(50% 100% at 50% 100%, rgb(0 0 0 / 55%), transparent 70%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------------------ responsive */
+
+@media (max-width: 560px) {
+  .chat-premium-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chat-premium-bar {
+    padding: 0.55rem 0.6rem;
+  }
+
+  .chat-premium-plan {
+    display: none;
+  }
+
+  .chat-premium-dock-copy {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .chat-premium-scroll {
+    width: 100%;
+    max-width: 60rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.2rem, 3vw, 2.4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .chat-premium-aurora,
+  .chat-premium-eyebrow span,
+  .chat-premium-dock-button,
+  .chat-premium-dock-orbit,
+  .premium-mosaic-tile img {
+    animation: none !important;
+    transition: none !important;
+  }
+}

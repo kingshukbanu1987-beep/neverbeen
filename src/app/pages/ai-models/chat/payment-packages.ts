@@ -46,13 +46,56 @@ export const SGST_PERCENT = 9;
 export const CGST_PERCENT = 9;
 
 /**
- * Round the additional charge to whole rupees, then calculate every tax on the full package
- * subtotal. A coupon is deducted from that same package subtotal after the pre-discount tax has
- * been calculated; it never reduces the taxable amount.
+ * The flat addition the Premium Content Coverage option charges on top of the model's own base
+ * price: the coverage costs the Base Price + ₹51, and it is taxed exactly like the rest of the
+ * package subtotal.
  */
-export function paymentBreakdown(base: number, id: PaymentPackageId, discountPercent = 0) {
+export const PREMIUM_CONTENT_COVERAGE_FLAT_PRICE = 51;
+
+/** The Premium Content Coverage choices of the checkout, in their laid-out order. */
+export const PREMIUM_CONTENT_COVERAGES = [
+  {
+    id: 'none',
+    label: 'None',
+    hint: 'A Premium Live Chat without the exclusive frames',
+  },
+  {
+    id: 'coverage',
+    label: 'Premium Content Coverage',
+    hint: 'Unlock her exclusive Premium Content frames in this chat',
+  },
+] as const;
+export type PremiumContentCoverageId = (typeof PREMIUM_CONTENT_COVERAGES)[number]['id'];
+
+/**
+ * The rupee amount of the Premium Content Coverage for one model: her own Base Price plus ₹51 —
+ * ₹0 when no coverage was selected.
+ */
+export function premiumContentCoveragePrice(
+  base: number,
+  coverage: PremiumContentCoverageId,
+): number {
+  return coverage === 'coverage'
+    ? Math.round(base) + PREMIUM_CONTENT_COVERAGE_FLAT_PRICE
+    : 0;
+}
+
+/**
+ * Round the additional charge to whole rupees, then calculate every tax on the full package
+ * subtotal. The optional Premium Content Coverage joins the same package subtotal before any tax
+ * is calculated, so it is taxable under the same Service tax · 5%, SGST · 9% and CGST · 9%. A
+ * coupon is deducted from that same package subtotal after the pre-discount tax has been
+ * calculated; it never reduces the taxable amount.
+ */
+export function paymentBreakdown(
+  base: number,
+  id: PaymentPackageId,
+  discountPercent = 0,
+  premiumContentCoverage = 0,
+) {
   const upgrade = Math.round(base * paymentPackage(id).multiplier);
-  const subtotal = base + upgrade;
+  const coverage = Math.max(0, Math.round(premiumContentCoverage));
+  const subtotal = base + upgrade + coverage;
   const serviceTax = Math.round(subtotal * SERVICE_TAX_PERCENT) / 100;
   const sgst = Math.round(subtotal * SGST_PERCENT) / 100;
   const cgst = Math.round(subtotal * CGST_PERCENT) / 100;
@@ -62,6 +105,7 @@ export function paymentBreakdown(base: number, id: PaymentPackageId, discountPer
   return {
     base,
     upgrade,
+    coverage,
     subtotal,
     serviceTax,
     sgst,

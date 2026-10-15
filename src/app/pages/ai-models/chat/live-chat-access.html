@@ -467,6 +467,55 @@
             }
           </div>
 
+          <!-- Premium Content Coverage: 'None' is selected by default. Choosing the coverage adds
+               the Base Price + ₹51 to the package subtotal, taxed under the same Service tax · 5%,
+               SGST · 9% and CGST · 9% as the rest of the package. -->
+          <div class="package-heading">
+            <h3>Premium Content Coverage</h3>
+            <span>Unlock her exclusive frames</span>
+          </div>
+          <div
+            class="payment-coverages"
+            role="radiogroup"
+            aria-label="Premium Content Coverage"
+          >
+            @for (coverage of premiumCoverages; track coverage.id) {
+              <button
+                type="button"
+                class="payment-coverage"
+                [class.coverage-none]="coverage.id === 'none'"
+                [class.coverage-full]="coverage.id === 'coverage'"
+                role="radio"
+                [class.is-selected]="premiumCoverage() === coverage.id"
+                [attr.aria-checked]="premiumCoverage() === coverage.id"
+                [disabled]="paymentBusy()"
+                (click)="selectCoverage(coverage.id)"
+              >
+                <span class="package-top"
+                  ><b>{{ coverage.label }}</b
+                  ><i aria-hidden="true">{{
+                    premiumCoverage() === coverage.id ? '●' : '○'
+                  }}</i></span
+                >
+                <span class="coverage-hint">{{ coverage.hint }}</span>
+                <span class="package-price">
+                  <b>{{
+                    coverage.id === 'coverage'
+                      ? '+' + money(coveragePrice())
+                      : money(0)
+                  }}</b>
+                  <small>{{
+                    coverage.id === 'coverage' ? 'base price + ₹51' : 'no extra cost'
+                  }}</small>
+                </span>
+              </button>
+            }
+          </div>
+          <p class="coverage-note">
+            Premium Content Coverage is added to your package subtotal and is taxable under the
+            same Service tax · 5%, SGST · 9% and CGST · 9%.
+          </p>
+
           <section class="coupon-panel" aria-labelledby="premium-coupon-title">
             <div class="coupon-panel-heading">
               <h3 id="premium-coupon-title">Have a coupon?</h3>
@@ -534,6 +583,12 @@
               <span>Duration upgrade · +{{ durationMinutes() - 15 }} minutes</span
               ><b>{{ money(breakdown().upgrade) }}</b>
             </div>
+            @if (breakdown().coverage > 0) {
+              <div class="payment-coverage-line">
+                <span>Premium Content Coverage · Base Price + ₹51</span
+                ><b>{{ money(breakdown().coverage) }}</b>
+              </div>
+            }
             <div>
               <span>Package subtotal</span><b>{{ money(breakdown().subtotal) }}</b>
             </div>

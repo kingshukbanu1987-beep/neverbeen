@@ -1800,6 +1800,133 @@
   opacity: 0.65;
   cursor: wait;
 }
+
+/* ── Premium Content Coverage: the same white-card language as the duration packages, directly
+   under them. The two options sit side by side; 'None' is selected by default. The checkout card
+   grows to hold the block, so the whole ledger stays on one clean sheet. */
+.payment-coverages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.payment-coverage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 118px;
+  padding: 18px 20px;
+  border: 1px solid #e3e6ee;
+  border-radius: 20px;
+  color: #202536;
+  background: #fff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+.payment-coverage:hover:not(:disabled),
+.payment-coverage:focus-visible {
+  border-color: #7052c8;
+  outline: 2px solid #7052c8;
+  outline-offset: 3px;
+}
+
+.payment-coverage.is-selected {
+  border-color: #7052c8;
+  background: #f6f3ff;
+  box-shadow:
+    inset 0 0 0 1px #7052c8,
+    0 6px 20px rgb(80 57 145 / 8%);
+}
+
+.payment-coverage .package-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.payment-coverage .package-top > b {
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.payment-coverage.coverage-none .package-top > b {
+  color: #000;
+}
+
+.payment-coverage.coverage-full .package-top > b {
+  color: #cc17b1;
+}
+
+.payment-coverage .package-top i {
+  font-style: normal;
+  color: #7052c8;
+}
+
+.coverage-hint {
+  flex: 1;
+  color: #626b7e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.payment-coverage .package-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  line-height: 1.2;
+}
+
+.payment-coverage .package-price b {
+  color: #0e1525;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.payment-coverage .package-price small {
+  color: #758095;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+}
+
+.payment-coverage:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.coverage-note {
+  margin: 10px 0 0;
+  color: #737d91;
+  font-size: 0.66rem;
+  line-height: 1.55;
+}
+
+/* The coverage's own line in the price ledger, between the duration upgrade and the subtotal. */
+.payment-coverage-line {
+  color: #8a1f9e;
+}
+
+.payment-coverage-line b {
+  color: #8a1f9e;
+}
+
+@media (max-width: 560px) {
+  .payment-coverages {
+    grid-template-columns: 1fr;
+  }
+}
+
 .payment-breakdown {
   display: grid;
   gap: 13px;

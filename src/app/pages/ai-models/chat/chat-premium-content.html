@@ -1,0 +1,204 @@
+<!-- The Premium Content page of the Live Chat: a dark, ultra-modern gallery laid over the chat
+     window — the whole window on a phone, the wide conversation column on a laptop. -->
+<section
+  class="chat-premium"
+  role="region"
+  [attr.aria-label]="'Premium Content of ' + model().name"
+>
+  <div class="chat-premium-aurora" aria-hidden="true"></div>
+  <div class="chat-premium-grain" aria-hidden="true"></div>
+
+  <header class="chat-premium-bar">
+    <button
+      type="button"
+      class="chat-premium-back"
+      (click)="goBack()"
+      aria-label="Back to her profile"
+    >
+      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+        <path d="M15 5.5 8.5 12 15 18.5" />
+      </svg>
+      <span>Profile</span>
+    </button>
+    <b class="chat-premium-title">
+      <span aria-hidden="true">✦</span> Premium Content
+    </b>
+    <span class="chat-premium-plan" aria-hidden="true">Paid Premium Chat</span>
+  </header>
+
+  <div class="chat-premium-scroll">
+    <header class="chat-premium-hero">
+      <p class="chat-premium-eyebrow"><span aria-hidden="true"></span>NeverBeen · exclusive frames</p>
+      <h2 class="chat-premium-name">
+        The Premium Content of <em>{{ model().name }}</em>
+      </h2>
+      <p class="chat-premium-meta">
+        <span class="chat-premium-handle">{{ model().handle }}</span>
+        <i aria-hidden="true">·</i>
+        <span
+          ><span class="chat-premium-num">{{ photoTotal() }}</span>
+          {{ photos().length === 1 ? 'frame' : 'frames' }} · only in this paid chat</span
+        >
+      </p>
+      <p class="chat-premium-intro">
+        Every frame below belongs to {{ firstName(model().name) }}’s Premium Content folder. Open
+        any photograph full screen — a click or a double-tap — then zoom with a scroll, a pinch or a
+        double-tap, and download it to your device.
+      </p>
+
+      <dl class="chat-premium-stats" aria-label="Premium Content totals">
+        <div class="chat-premium-stat is-seen">
+          <dt>Seen</dt>
+          <dd [attr.title]="formatTotal(engagementTotals().seen) + ' total views'">
+            <app-compact-count
+              [value]="engagementTotals().seen"
+              label="Seen"
+              [subject]="model().name + ' premium content'"
+            />
+          </dd>
+        </div>
+        <div class="chat-premium-stat is-likes">
+          <dt>Likes</dt>
+          <dd [attr.title]="formatTotal(engagementTotals().likes) + ' total likes'">
+            <app-compact-count
+              [value]="engagementTotals().likes"
+              label="Likes"
+              [subject]="model().name + ' premium content'"
+            />
+          </dd>
+        </div>
+        <div class="chat-premium-stat is-comments">
+          <dt>Comments</dt>
+          <dd [attr.title]="formatTotal(engagementTotals().comments) + ' total comments'">
+            <app-compact-count
+              [value]="engagementTotals().comments"
+              label="Comments"
+              [subject]="model().name + ' premium content'"
+            />
+          </dd>
+        </div>
+        <div class="chat-premium-stat is-shares">
+          <dt>Shares</dt>
+          <dd [attr.title]="formatTotal(engagementTotals().shares) + ' total shares'">
+            <app-compact-count
+              [value]="engagementTotals().shares"
+              label="Shares"
+              [subject]="model().name + ' premium content'"
+            />
+          </dd>
+        </div>
+      </dl>
+    </header>
+
+    @if (tiles().length > 0) {
+      <section class="chat-premium-mosaic" [attr.aria-label]="'Premium Content of ' + model().name">
+        <div class="premium-mosaic">
+          @for (tile of tiles(); track tile.photo.src; let index = $index) {
+            <div class="premium-mosaic-cell" [style]="tile.style">
+              <button
+                type="button"
+                class="premium-mosaic-tile"
+                (click)="openViewer(index)"
+                (dblclick)="openViewer(index)"
+                (pointermove)="onTilePointerMove($event)"
+                [attr.aria-label]="'Open full screen — ' + photoAlt(model().name, index)"
+              >
+                <img
+                  [src]="tile.photo.src"
+                  [alt]="photoAlt(model().name, index)"
+                  [attr.loading]="loading(index)"
+                  [attr.fetchpriority]="index === 0 ? 'high' : null"
+                  decoding="async"
+                  draggable="false"
+                />
+                <span class="premium-mosaic-spot" aria-hidden="true"></span>
+                <span class="premium-mosaic-meta" aria-hidden="true">
+                  <span class="premium-mosaic-frame"
+                    >FRAME / <span class="chat-premium-num">{{ frameLabel(index) }}</span></span
+                  >
+                  <span class="premium-mosaic-zoom">⤢</span>
+                </span>
+              </button>
+              <app-model-media-engagement
+                class="premium-tile-engagement"
+                [modelSlug]="model().slug"
+                mediaType="photo"
+                [mediaSrc]="tile.photo.src"
+                (comments)="openComments(tile.photo.src)"
+              />
+            </div>
+          }
+        </div>
+      </section>
+
+      <p class="chat-premium-end">
+        <span aria-hidden="true"></span>
+        End of Premium Content <i aria-hidden="true">·</i>
+        <span class="chat-premium-num">{{ photoTotal() }}</span>
+        {{ photos().length === 1 ? 'frame' : 'frames' }}
+        <span aria-hidden="true"></span>
+      </p>
+    } @else {
+      <div class="chat-premium-empty">
+        <span class="chat-premium-empty-mark" aria-hidden="true">✦</span>
+        <div>
+          <p>No Premium Content yet</p>
+          <span
+            >The studio is preparing {{ firstName(model().name) }}’s exclusive frames. Check back
+            soon.</span
+          >
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- The floating way back: pinned to the bottom middle of the page, however far the gallery has
+       scrolled — one glass pill that returns to her information sheet. -->
+  <nav class="chat-premium-dock" aria-label="Back to her profile">
+    <button #dockBack type="button" class="chat-premium-dock-button" (click)="goBack()">
+      <span class="chat-premium-dock-orbit" aria-hidden="true"></span>
+      <span class="chat-premium-dock-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M11 18l-6-6 6-6" />
+        </svg>
+      </span>
+      <span class="chat-premium-dock-copy">
+        <span class="chat-premium-dock-kicker">Go back to</span>
+        <span class="chat-premium-dock-name">Her profile</span>
+      </span>
+      <span class="chat-premium-dock-avatar" aria-hidden="true">
+        @if (model().cover) {
+          <img [src]="model().cover" alt="" />
+        } @else {
+          ✦
+        }
+      </span>
+    </button>
+    <span class="chat-premium-dock-shadow" aria-hidden="true"></span>
+  </nav>
+</section>
+
+@if (activeIndex() !== null) {
+  <app-ai-model-photo-viewer
+    [photos]="photos()"
+    [startIndex]="activeIndex() ?? 0"
+    [modelName]="model().name"
+    [modelHandle]="model().handle"
+    [modelSlug]="model().slug"
+    [allowDownload]="true"
+    (closed)="closeViewer()"
+  />
+}
+
+@if (commentsTarget(); as target) {
+  <app-model-media-comments-dialog
+    [modelSlug]="model().slug"
+    mediaType="photo"
+    [mediaSrc]="target"
+    (closed)="closeComments()"
+  />
+}
+
+<!-- The exact-count pop-up: a big counter opens it to reveal its exact figure. -->
+<app-exact-count-popover />

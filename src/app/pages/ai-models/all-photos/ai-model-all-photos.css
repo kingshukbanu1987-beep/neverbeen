@@ -310,6 +310,22 @@ a.crumb:focus-visible {
   pointer-events: auto;
 }
 
+/* A locked Premium Content frame: 75% gaussian blur under the diagonal watermark — the same tile
+   shape as its neighbours, but nothing behind it opens. */
+.mosaic-premium-tile {
+  cursor: not-allowed;
+}
+
+.mosaic-premium-tile::before {
+  animation: none;
+  opacity: 0;
+}
+
+.mosaic-premium-tile > app-premium-photo-teaser {
+  position: absolute;
+  inset: 0;
+}
+
 /* Shimmer while the photograph loads. */
 .mosaic-tile::before {
   position: absolute;

@@ -88,7 +88,9 @@ function listImages(directory) {
  * Biography and Portfolio images belong to their own pages and must never leak into the
  * portfolio grid: `Biography/` holds the fictional memory images, `Portfolio/` holds the
  * generated portfolio document and its assets, and `personality/` holds the model's static
- * character database (`characterdatabase.json`) for Live Chat.
+ * character database (`characterdatabase.json`) for Live Chat. `PremiumContent/` holds the
+ * photographs only the paid Premium Live Chat may show — they travel in their own
+ * `premiumPhotos` list, never inside the public grid.
  */
 function listAlbumImages(albumDir) {
   return naturalSort(
@@ -97,10 +99,35 @@ function listAlbumImages(albumDir) {
       return (
         firstDirectory !== 'biography' &&
         firstDirectory !== 'portfolio' &&
-        firstDirectory !== 'personality'
+        firstDirectory !== 'personality' &&
+        firstDirectory !== 'premiumcontent'
       );
     }),
   );
+}
+
+/** Where a model's Premium Content photographs live, inside her own album folder. */
+const premiumContentFolderNames = ['PremiumContent'];
+
+/** Every folder of the album that may hold Premium Content photographs. */
+function premiumContentDirs(albumDir) {
+  return premiumContentFolderNames
+    .map((folder) => join(albumDir, folder))
+    .filter((directory) => existsSync(directory));
+}
+
+/**
+ * The photographs of the model's `PremiumContent/` folder, in natural file order, each with its
+ * caption. They are never part of the public `photos` grid: they appear blurred and watermarked
+ * as teasers on the portfolio and the "View All" page, and in full only inside the paid Premium
+ * Live Chat window.
+ */
+function albumPremiumPhotos({ albumDir, captions }) {
+  const files = naturalSort(premiumContentDirs(albumDir).flatMap((directory) => listImages(directory)));
+  return files.map((absolutePath) => ({
+    src: publicUrl(absolutePath),
+    caption: captions.get(absolutePath) ?? '',
+  }));
 }
 
 function listVideos(directory) {
@@ -703,6 +730,8 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     modelName: name,
   });
 
+  const premiumPhotos = albumPremiumPhotos({ albumDir, captions });
+
   const videos = albumVideos({ albumDir, modelName: name, merged });
 
   const photos = albumEntries.map((entry) => ({
@@ -737,6 +766,8 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     portfolio: albumPortfolio(albumDir),
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
+    /** Photographs from `<album>/PremiumContent/`, shown in full only in the Premium Live Chat. */
+    premiumPhotos,
     /** Clips from `public/NeverBeenModels/<album>/video/`, played in the portfolio's reel. */
     videos,
   };
@@ -800,6 +831,8 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     portfolio: null,
     gallery: photos.slice(1).map((photo) => photo.src),
     photos,
+    // Flat (legacy) profiles have no album folder, so they carry no Premium Content folder either.
+    premiumPhotos: [],
     // Flat (legacy) profiles have no album folder, so they carry no video folder either.
     videos: [],
   };
@@ -1113,6 +1146,12 @@ export interface AiModelProfile {
   /** Every photograph in the album, cover first — the Instagram-style grid. */
   photos: AiModelPhoto[];
   /**
+   * Every photograph in the album's "PremiumContent/" sub-folder. Never part of the public grid:
+   * the portfolio and the "View All" page show them blurred and watermarked as teasers, and the
+   * complete frames appear only on the Premium Content page of a paid Premium Live Chat.
+   */
+  premiumPhotos?: AiModelPhoto[];
+  /**
    * Every clip in the album's video/ sub-folder, in album order — the video reel shown just
    * below the model's personal details.
    */
@@ -1161,8 +1200,14 @@ if (runDirectly) {
       profile.videos.length > 0
         ? `, ${profile.videos.length} video${profile.videos.length === 1 ? '' : 's'} in video/`
         : '';
+    const premiumNote =
+      profile.premiumPhotos.length > 0
+        ? `, ${profile.premiumPhotos.length} premium photograph${
+            profile.premiumPhotos.length === 1 ? '' : 's'
+          } in PremiumContent/`
+        : '';
     console.log(
-      `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${videoNote}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
+      `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${videoNote}${premiumNote}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
     );
   }
 }

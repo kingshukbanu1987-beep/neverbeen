@@ -161,14 +161,54 @@ describe('AiModelChatDialog', () => {
     fixture.detectChanges();
     const sheet = element.querySelector<HTMLElement>('.chat-info')!;
 
-    // First: the premium door. For now pressing it does nothing at all.
+    // First: the premium door. Alisha is a Premium model with Premium Content, so the button
+    // opens her Premium Content page over the chat window, with a floating way back.
     const premium = sheet.querySelector<HTMLButtonElement>('.chat-info-premium')!;
     expect(premium.textContent).toContain('Show Premium Content');
+    expect(premium.disabled).toBe(false);
     premium.click();
     fixture.detectChanges();
+    const premiumPage = element.querySelector<HTMLElement>('app-chat-premium-content')!;
+    expect(premiumPage).not.toBeNull();
+    expect(premiumPage.textContent).toContain('Premium Content');
+    expect(premiumPage.querySelectorAll('.premium-mosaic-tile').length).toBe(
+      alisha.premiumPhotos?.length ?? 0,
+    );
+    // The floating dock at the bottom middle leads back to her information sheet.
+    const dock = premiumPage.querySelector<HTMLButtonElement>('.chat-premium-dock-button')!;
+    expect(dock.textContent).toContain('Her profile');
+    dock.click();
+    fixture.detectChanges();
+    expect(element.querySelector('app-chat-premium-content')).toBeNull();
     expect(element.querySelector('.chat-info')).not.toBeNull();
-    expect(element.querySelector('app-chat-history')).toBeNull();
-    expect(harness.chat.openSlug()).toBe('alisha-bhattacharya');
+
+    // Escape closes the Premium Content page too, leaving her information open under it.
+    element.querySelector<HTMLButtonElement>('.chat-info-premium')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('app-chat-premium-content')).not.toBeNull();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(element.querySelector('app-chat-premium-content')).toBeNull();
+    expect(element.querySelector('.chat-info')).not.toBeNull();
+
+    // A Premium Content photograph opens full screen with a download button, and its Escape
+    // closes only the viewer — the page waits underneath.
+    element.querySelector<HTMLButtonElement>('.chat-info-premium')!.click();
+    fixture.detectChanges();
+    (element.querySelector('.premium-mosaic-tile') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const lightbox = element.querySelector<HTMLElement>('.lightbox')!;
+    expect(lightbox).not.toBeNull();
+    expect(lightbox.querySelector('.viewer-download')).not.toBeNull();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(element.querySelector('.lightbox')).toBeNull();
+    expect(element.querySelector('app-chat-premium-content')).not.toBeNull();
+
+    // Back out of the Premium Content page before the rest of the sheet is exercised.
+    element.querySelector<HTMLButtonElement>('.chat-premium-dock-button')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('app-chat-premium-content')).toBeNull();
 
     // Second: the whole chat history, the same sheet the wide screen opens from its side panel.
     const history = sheet.querySelector<HTMLButtonElement>('.chat-info-history')!;
@@ -188,6 +228,24 @@ describe('AiModelChatDialog', () => {
     fixture.detectChanges();
     expect(element.querySelector('.chat-info')).toBeNull();
     expect(element.querySelector('.chat-panel')).not.toBeNull();
+  });
+
+  it('keeps Show Premium Content disabled for a model who is not a Premium model', async () => {
+    // A Free model: her chat exists, but the premium door stays shut.
+    const freeModel =
+      aiModelProfiles.find((model) => model.slug === 'fatima-al-mansoor') ?? aiModelProfiles[0];
+    const harness = await openChat(freeModel);
+    const { element, fixture } = harness;
+
+    element.querySelector<HTMLButtonElement>('.chat-bar-more')!.click();
+    fixture.detectChanges();
+    const premium = element.querySelector<HTMLButtonElement>('.chat-info-premium')!;
+    expect(premium.textContent).toContain('Show Premium Content');
+    expect(premium.disabled).toBe(true);
+    premium.click();
+    fixture.detectChanges();
+    expect(element.querySelector('app-chat-premium-content')).toBeNull();
+    expect(element.querySelector('.chat-info')).not.toBeNull();
   });
 
   it('opens her information from View Profile on a wide window, the same as the "›"', async () => {

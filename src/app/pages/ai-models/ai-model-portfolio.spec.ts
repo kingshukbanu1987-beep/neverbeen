@@ -662,6 +662,50 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
+  it('teases her Premium Content blurred and watermarked, scattered through the grid', async () => {
+    const profile = withPhotos(20);
+    profile.premiumPhotos = Array.from({ length: 6 }, (_, index) => ({
+      src: `/NeverBeenModels/TestStudioModel/PremiumContent/frame-${index + 1}.jpg`,
+      caption: '',
+    }));
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      // At least four of her six Premium Content frames appear — never one after another.
+      const tiles = Array.from(element.querySelectorAll<HTMLElement>('.portfolio-grid > *'));
+      const teaserPositions = tiles
+        .map((tile, index) => (tile.classList.contains('premium-teaser-tile') ? index : -1))
+        .filter((index) => index >= 0);
+      expect(teaserPositions.length).toBe(4);
+      for (const position of teaserPositions) {
+        expect(tiles[position + 1]?.classList.contains('premium-teaser-tile')).toBe(false);
+      }
+
+      // Every teaser carries the diagonal watermark and never opens the lightbox.
+      for (const tile of tiles.filter((tile) => tile.classList.contains('premium-teaser-tile'))) {
+        expect(tile.textContent).toContain('Premium Content');
+        expect(tile.textContent).toContain('Only available in Paid Premium Chat');
+        expect(tile.querySelector('button')).toBeNull();
+        expect(tile.querySelector('img')?.getAttribute('src')).toContain('PremiumContent');
+      }
+
+      // The View All door still closes the grid, and the album photographs still open.
+      expect(tiles.at(-1)?.classList).toContain('view-all-tile');
+      expect(element.querySelectorAll('.portfolio-grid button.grid-tile').length).toBe(11);
+
+      // The feed layout teases the same locked frames.
+      Array.from(element.querySelectorAll<HTMLButtonElement>('.view-switch button'))
+        .find((button) => button.textContent?.includes('Feed'))
+        ?.click();
+      harness.detectChanges();
+      expect(element.querySelectorAll('.premium-teaser-item').length).toBe(4);
+      expect(element.querySelectorAll('button.feed-photo').length).toBe(11);
+    } finally {
+      release(profile);
+    }
+  });
+
   it('shows an album of twelve or fewer photographs whole, without a View All tile', async () => {
     const profile = withPhotos(12);
     const harness = await openPortfolio(profile.slug);

@@ -3,8 +3,10 @@ import { findPaymentCoupon } from './payment-coupons';
 import {
   CGST_PERCENT,
   SGST_PERCENT,
+  PREMIUM_CONTENT_COVERAGE_FLAT_PRICE,
   paymentBreakdown,
   paymentDurationMs,
+  premiumContentCoveragePrice,
   PaymentPackageId,
 } from './payment-packages';
 
@@ -57,5 +59,36 @@ describe('checkout packages', () => {
 
   it('rejects unknown coupons', () => {
     expect(findPaymentCoupon('not-a-coupon')).toBeNull();
+  });
+
+  it('prices the Premium Content Coverage at the Base Price + ₹51', () => {
+    expect(PREMIUM_CONTENT_COVERAGE_FLAT_PRICE).toBe(51);
+    expect(premiumContentCoveragePrice(119, 'coverage')).toBe(170);
+    expect(premiumContentCoveragePrice(99, 'coverage')).toBe(150);
+    expect(premiumContentCoveragePrice(119, 'none')).toBe(0);
+  });
+
+  it('adds the Premium Content Coverage into the taxable package subtotal', () => {
+    // Base ₹119 + Basic package (no upgrade) + coverage ₹170 (119 + 51) = ₹289 subtotal.
+    const withCoverage = paymentBreakdown(119, 'basic', 0, 170);
+    expect(withCoverage.coverage).toBe(170);
+    expect(withCoverage.subtotal).toBe(289);
+    expect(withCoverage.serviceTax).toBe(Math.round(289 * 5) / 100);
+    expect(withCoverage.sgst).toBe(Math.round(289 * SGST_PERCENT) / 100);
+    expect(withCoverage.cgst).toBe(Math.round(289 * CGST_PERCENT) / 100);
+    expect(withCoverage.total).toBe(355.47);
+
+    // Without the coverage the ledger is unchanged.
+    const withoutCoverage = paymentBreakdown(119, 'basic', 0, 0);
+    expect(withoutCoverage.coverage).toBe(0);
+    expect(withoutCoverage.subtotal).toBe(119);
+    expect(withoutCoverage.total).toBe(146.37);
+
+    // A coupon still discounts the whole package subtotal, coverage included, and never a tax.
+    const discounted = paymentBreakdown(119, 'basic', 15, 170);
+    expect(discounted.subtotal).toBe(289);
+    expect(discounted.totalBeforeDiscount).toBe(355.47);
+    expect(discounted.discount).toBe(43.35);
+    expect(discounted.total).toBe(312.12);
   });
 });

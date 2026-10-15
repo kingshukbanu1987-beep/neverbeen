@@ -362,6 +362,49 @@ describe('premium model access and UPI payment', () => {
     fixture.destroy();
   });
 
+  it('offers Premium Content Coverage at Base Price + ₹51, taxed with the package subtotal', async () => {
+    const handoff = appHandoff();
+    const { fixture, element, premium } = paymentPage(); // Nourhan Durrani: ₹119
+
+    // The coverage block sits after the package selection, with None selected by default.
+    const coverages = element.querySelectorAll<HTMLButtonElement>('.payment-coverage');
+    expect(coverages.length).toBe(2);
+    expect(coverages[0].textContent).toContain('None');
+    expect(coverages[1].textContent).toContain('Premium Content Coverage');
+    expect(coverages[0].getAttribute('aria-checked')).toBe('true');
+    expect(coverages[1].getAttribute('aria-checked')).toBe('false');
+    // Her coverage price card: the Base Price + ₹51.
+    expect(coverages[1].textContent).toContain('₹170.00');
+    expect(element.querySelector('.payment-coverage-line')).toBeNull();
+    expect(element.querySelector('.payment-summary')?.textContent).toContain('₹146.37');
+
+    // Selecting the coverage adds it to the package subtotal, under the same taxes.
+    coverages[1].click();
+    fixture.detectChanges();
+    expect(coverages[1].getAttribute('aria-checked')).toBe('true');
+    expect(element.querySelector('.payment-coverage-line')?.textContent).toContain(
+      'Premium Content Coverage',
+    );
+    expect(element.querySelector('.payment-breakdown')?.textContent).toContain('₹289.00');
+    expect(element.querySelector('.payment-summary')?.textContent).toContain('₹355.47');
+
+    // The payable amount the UPI handoff receives carries the coverage.
+    element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
+    fixture.detectChanges();
+    expect(upiLauncher.open).toHaveBeenCalledWith(
+      { modelSlug: 'nourhan-durrani', amount: 355.47, method: 'gpay' },
+      expect.any(AbortSignal),
+    );
+    handoff.returned();
+    await flushHandoff();
+    expect(premium).toHaveBeenCalledExactlyOnceWith({
+      name: 'Test Member',
+      avatar: '/member.jpg',
+      paymentPackageId: 'basic',
+    });
+    fixture.destroy();
+  });
+
   it('presents the modern coupon entry and the requested color-coded package names', () => {
     const { fixture, element } = paymentPage();
     expect(element.querySelector('.access-payment h2')?.textContent?.trim()).toBe(

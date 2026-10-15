@@ -40,12 +40,23 @@ import { LiveChatAccess } from './chat/live-chat-access';
 import { requiresRegisteredChat } from './chat/live-chat-policy';
 import { ChatIdentity } from './chat/chat-identity';
 import { LiveChatPlan } from './chat/chat-types';
+import { PremiumPhotoTeaser } from './premium-content/premium-photo-teaser';
 import { AiModelPhotoViewer } from './photo-viewer/ai-model-photo-viewer';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
 
 type PortfolioView = 'grid' | 'feed';
 type AvailabilityState = 'available' | 'unavailable' | 'future';
 type ShareState = 'idle' | 'shared' | 'copied' | 'unsupported';
+
+/**
+ * One tile of the photo section: an album photograph (which opens the lightbox at its own place in
+ * the preview), a locked Premium Content teaser (which opens nothing), or the View All door that
+ * closes the grid.
+ */
+export type PortfolioGalleryTile =
+  | { kind: 'photo'; photo: AiModelPhoto; lightboxIndex: number }
+  | { kind: 'premium'; photo: AiModelPhoto }
+  | { kind: 'view-all'; photo: AiModelPhoto };
 
 /** Fisher-Yates draw: which photograph lands in position 1, 2, 3 … of the album. */
 function drawOrder(length: number): number[] {
@@ -73,6 +84,68 @@ export function shufflePhotos(photos: readonly AiModelPhoto[]): AiModelPhoto[] {
  */
 export const PREVIEW_LIMIT = 12;
 
+/**
+ * How many locked Premium Content frames the photo section teases at most — "at least 4" whenever
+ * the model holds four or more photographs in her `PremiumContent/` folder, and every one she has
+ * when she holds fewer.
+ */
+export const PREMIUM_TEASER_LIMIT = 4;
+
+/**
+ * Draws up to `count` random slots among `total`, pairwise non-adjacent (never one straight after
+ * another) and never the very last slot, which belongs to the View All door. When the room cannot
+ * hold the whole count, as many as fit are drawn instead.
+ */
+export function drawPremiumTeaserSlots(count: number, total: number): number[] {
+  if (count <= 0 || total <= 1) return [];
+  // The last slot of the finished grid is reserved, so the candidates run 0 … total - 2.
+  const candidates = Array.from({ length: total - 1 }, (_, index) => index);
+  // `count` non-adjacent slots need 2·count − 1 candidates to exist at all.
+  const roomForAll = candidates.length >= 2 * count - 1;
+
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    for (let index = candidates.length - 1; index > 0; index -= 1) {
+      const swap = Math.floor(Math.random() * (index + 1));
+      [candidates[index], candidates[swap]] = [candidates[swap], candidates[index]];
+    }
+
+    const slots: number[] = [];
+    for (const slot of candidates) {
+      if (slots.length >= count) break;
+      if (slots.every((taken) => Math.abs(taken - slot) >= 2)) slots.push(slot);
+    }
+    // A full set is what was asked for; when the room cannot hold one, the best partial set is.
+    if (slots.length >= count || !roomForAll) return slots.sort((a, b) => a - b);
+  }
+  return [];
+}
+
+/**
+ * Lays the album's photographs and the locked Premium Content teasers into one list: the teasers
+ * land at random, never one straight after another, and never on the final slot. Each photograph
+ * keeps the index it carries in the preview, so the lightbox still opens at the right frame.
+ */
+export function interleavePremiumTeasers(
+  photos: readonly AiModelPhoto[],
+  teasers: readonly AiModelPhoto[],
+): PortfolioGalleryTile[] {
+  const tiles: PortfolioGalleryTile[] = photos.map((photo, index) => ({
+    kind: 'photo',
+    photo,
+    lightboxIndex: index,
+  }));
+  if (teasers.length === 0) return tiles;
+
+  let nextTeaser = 0;
+  for (const slot of drawPremiumTeaserSlots(teasers.length, photos.length + teasers.length)) {
+    const teaser = teasers[nextTeaser];
+    if (!teaser) break;
+    tiles.splice(slot, 0, { kind: 'premium', photo: teaser });
+    nextTeaser += 1;
+  }
+  return tiles;
+}
+
 @Component({
   selector: 'app-ai-model-portfolio-page',
   imports: [
@@ -89,6 +162,7 @@ export const PREVIEW_LIMIT = 12;
     ModelMediaCommentsDialog,
     ModelMediaEngagementBar,
     ModelVerifiedTick,
+    PremiumPhotoTeaser,
   ],
   templateUrl: './ai-model-portfolio.html',
   styleUrl: './ai-model-portfolio.css',
@@ -207,6 +281,40 @@ export class AiModelPortfolioPage implements OnDestroy {
    */
   protected readonly previewPhotos = computed(() => this.photos().slice(0, PREVIEW_LIMIT));
 
+  /**
+   * The locked Premium Content frames this visit teases — at least four whenever the model holds
+   * four or more in her `PremiumContent/` folder, every one she has when she holds fewer, and none
+   * at all for a model without the folder. Drawn afresh with every shuffle, so they never sit in
+   * the same place twice.
+   */
+  protected readonly premiumTeasers = computed(() => {
+    this.shuffleTick();
+    return shufflePhotos(this.model()?.premiumPhotos ?? []).slice(0, PREMIUM_TEASER_LIMIT);
+  });
+
+  /** True when the photo section carries at least one locked Premium Content teaser. */
+  protected readonly hasPremiumTeasers = computed(() => this.premiumTeasers().length > 0);
+
+  /**
+   * The tiles of the photo section, in the order the grid lays them out: the preview's photographs
+   * with the locked Premium Content teasers scattered among them at random — never one straight
+   * after another — and the View All door closing the row whenever the album holds more than the
+   * preview shows.
+   */
+  protected readonly galleryTiles = computed<PortfolioGalleryTile[]>(() => {
+    const preview = this.previewPhotos();
+    const hasMore = this.hasMorePhotos();
+    // When the View All door closes the grid, the twelfth photograph travels inside it rather
+    // than on its own tile.
+    const photosForGrid = hasMore ? preview.slice(0, PREVIEW_LIMIT - 1) : preview;
+    const tiles = interleavePremiumTeasers(photosForGrid, this.premiumTeasers());
+    if (hasMore) {
+      const closingPhoto = preview[PREVIEW_LIMIT - 1] ?? preview.at(-1);
+      if (closingPhoto) tiles.push({ kind: 'view-all', photo: closingPhoto });
+    }
+    return tiles;
+  });
+
   /** True when the album holds more photographs than the gallery shows. */
   protected readonly hasMorePhotos = computed(() => this.photos().length > PREVIEW_LIMIT);
 
@@ -214,9 +322,6 @@ export class AiModelPortfolioPage implements OnDestroy {
   protected readonly hiddenPhotoCount = computed(() =>
     Math.max(this.photos().length - PREVIEW_LIMIT, 0),
   );
-
-  /** Position of the View All tile — the twelfth — or -1 when the whole album is on show. */
-  protected readonly viewAllIndex = computed(() => (this.hasMorePhotos() ? PREVIEW_LIMIT - 1 : -1));
 
   /**
    * Seen · Likes · Comments · Shares across every photograph and clip of the model — the row shown

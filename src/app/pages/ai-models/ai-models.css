@@ -467,6 +467,103 @@
   margin-top: 0.62rem;
 }
 
+/* The Live Chat button and whatever stands beside it on its own line — the NeverBeen Premium
+   Model wordmark of a Premium model. */
+.card-chat-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+/*
+ * The NeverBeen Premium Model wordmark — the studio's electric magenta (#F213E8), drawn like a
+ * logo: a pulsing spark, the wordmark in its own face, and the tier under the same shine. A slow
+ * sheen crosses the letters the way the Live Chat pill's band of light crosses its green.
+ */
+.card-premium-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  padding: 0.3rem 0.62rem 0.3rem 0.5rem;
+  overflow: hidden;
+  border: 1px solid rgb(242 19 232 / 42%);
+  border-radius: 999px;
+  background:
+    linear-gradient(120deg, rgb(242 19 232 / 13%), rgb(242 19 232 / 4%)),
+    rgb(255 255 255 / 55%);
+  box-shadow:
+    0 0 18px -6px rgb(242 19 232 / 55%),
+    inset 0 1px 0 rgb(255 255 255 / 65%);
+  color: #f213e8;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* The sheen that crosses the wordmark. */
+.card-premium-mark::after {
+  content: '';
+  position: absolute;
+  top: -70%;
+  left: -45%;
+  width: 28%;
+  height: 240%;
+  background: linear-gradient(90deg, transparent, rgb(242 19 232 / 30%), transparent);
+  transform: rotate(14deg);
+  animation: card-premium-beam 4.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes card-premium-beam {
+  0%,
+  55% {
+    left: -45%;
+  }
+  85%,
+  100% {
+    left: 130%;
+  }
+}
+
+.card-premium-spark {
+  align-self: center;
+  color: #f213e8;
+  font-size: 0.68rem;
+  font-style: normal;
+  text-shadow: 0 0 10px rgb(242 19 232 / 85%);
+  animation: card-premium-spark 2.6s ease-in-out infinite;
+}
+
+@keyframes card-premium-spark {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.86);
+  }
+}
+
+.card-premium-word {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.card-premium-tier {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(110deg, #f213e8, #ff7ae8 55%, #f213e8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* On a phone the two keep the same stacked order, only closer together: the pill never shares the
    button's line and never squeezes its own text to do so. */
 @media (max-width: 640px) {

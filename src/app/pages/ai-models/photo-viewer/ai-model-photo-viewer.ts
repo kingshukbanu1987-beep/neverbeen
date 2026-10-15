@@ -111,6 +111,12 @@ export class AiModelPhotoViewer {
   readonly albumLink = input<readonly string[] | null>(null);
   /** How many photographs the complete album holds, shown on the album link. */
   readonly albumSize = input(0);
+  /**
+   * Offers a Download button that saves the photograph to the visitor's device. Off by default —
+   * the studio's photographs are protected works — and switched on only for the Premium Content
+   * gallery of a paid Premium Live Chat, where downloading is part of the plan.
+   */
+  readonly allowDownload = input(false);
 
   readonly closed = output<void>();
 
@@ -295,6 +301,41 @@ export class AiModelPhotoViewer {
 
   protected close(): void {
     this.closed.emit();
+  }
+
+  /**
+   * Saves the photograph open in the viewer to the visitor's device. The bytes are fetched as a
+   * blob so the file lands with its own name rather than opening in a new tab.
+   */
+  protected async downloadPhoto(): Promise<void> {
+    const photo = this.photo();
+    if (!photo || typeof document === 'undefined') return;
+    const fileName = decodeURIComponent(photo.src.split('/').pop() ?? '') || 'photograph.jpg';
+    try {
+      if (typeof fetch === 'function') {
+        const response = await fetch(photo.src, { mode: 'same-origin' });
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          this.saveLink(url, fileName);
+          setTimeout(() => URL.revokeObjectURL(url), 30_000);
+          return;
+        }
+      }
+    } catch {
+      // Falls back to the plain link below — some browsers still save it.
+    }
+    this.saveLink(photo.src, fileName);
+  }
+
+  private saveLink(href: string, fileName: string): void {
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 
   protected showNext(): void {
