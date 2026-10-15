@@ -73,6 +73,25 @@ describe('AiModelChatService', () => {
     sessionStorage.clear();
   });
 
+  it.each([
+    ['basic', 15],
+    ['extended', 45],
+    ['deep', 90],
+    ['ultimate', 135],
+  ] as const)('sets and retains the %s checkout duration', (paymentPackageId, minutes) => {
+    const chat = service();
+    chat.openChat(alisha, 'premium');
+    chat.setIdentity(alisha, { ...VISITOR, paymentPackageId });
+    const session = chat.session()!;
+    expect(session.durationMs).toBe(minutes * 60_000);
+    expect(session.endsAt - session.startedAt).toBe(minutes * 60_000);
+    expect(chat.remainingMs()).toBe(minutes * 60_000);
+    expect(session.messages[0].text).toContain(`${minutes} minutes`);
+    chat.closeChat();
+    chat.openChat(alisha, 'premium');
+    expect(chat.session()?.durationMs).toBe(minutes * 60_000);
+  });
+
   it('starts fresh after a visitor ends the chat, requiring a new name and photo', async () => {
     const chat = service();
     open(chat);

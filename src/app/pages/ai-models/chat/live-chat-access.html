@@ -389,14 +389,72 @@
           ><app-model-verified-tick [slug]="model().slug" />.
         </p>
 
-        <!-- The amount again, big, so nothing is hidden at the moment of payment. -->
         <div class="payment-price-card">
-          <span class="payment-price-label">Premium amount · {{ model().name }}</span>
-          <span class="payment-price-value">{{ premiumPriceLabel() }}</span>
-          <span class="payment-price-meta">
-            {{ plans.premium.durationLabel }} Premium Live Chat · photo &amp; video sharing ·
-            ultimate memory
-          </span>
+          <span class="payment-price-label">Your private session · {{ model().name }}</span>
+          <span class="payment-price-value">{{ durationMinutes() }} <small>minutes</small></span>
+          <span class="payment-price-meta"
+            >Premium Live Chat · photo &amp; video sharing · ultimate memory</span
+          >
+        </div>
+
+        <div class="package-heading">
+          <h3>Make time for connection</h3>
+          <span>Choose your duration</span>
+        </div>
+        <div class="payment-packages" role="radiogroup" aria-label="Chat duration package">
+          @for (package of paymentPackages; track package.id) {
+            <button
+              type="button"
+              class="payment-package"
+              role="radio"
+              [class.is-selected]="selectedPackage() === package.id"
+              [attr.aria-checked]="selectedPackage() === package.id"
+              [disabled]="paymentBusy()"
+              (click)="selectPackage(package.id)"
+            >
+              <span class="package-top"
+                ><b>{{ package.label }}</b
+                ><i aria-hidden="true">{{ selectedPackage() === package.id ? '●' : '○' }}</i></span
+              >
+              <span class="package-duration"
+                >{{ packageDuration(package.id) }} <small>min</small></span
+              >
+              <span class="package-tagline">{{ package.tagline }}</span>
+              <span class="package-price"
+                >{{
+                  package.extraMinutes
+                    ? '+' + money(packageExtra(package.id))
+                    : money(premiumPrice() ?? 0)
+                }}
+                <small>{{ package.extraMinutes ? 'upgrade' : 'base price' }}</small></span
+              >
+              <span class="package-extra">{{
+                package.extraMinutes
+                  ? '+' + package.extraMinutes + ' extra minutes'
+                  : 'Selected by default · 15 minutes'
+              }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="payment-breakdown" aria-live="polite" aria-label="Payment breakdown">
+          <div>
+            <span>Basic package · 15 minutes</span><b>{{ money(breakdown().base) }}</b>
+          </div>
+          <div>
+            <span>Duration upgrade · +{{ durationMinutes() - 15 }} minutes</span
+            ><b>{{ money(breakdown().upgrade) }}</b>
+          </div>
+          <div>
+            <span>Subtotal</span><b>{{ money(breakdown().subtotal) }}</b>
+          </div>
+          <div>
+            <span>Service tax · 5%</span><b>{{ money(breakdown().tax) }}</b>
+          </div>
+          <div class="payment-total">
+            <span>Total payable <small>INR · all taxes included</small></span
+            ><b>{{ money(breakdown().total) }}</b>
+          </div>
         </div>
 
         <div class="payment-methods" role="radiogroup" aria-label="UPI payment app">
@@ -410,9 +468,15 @@
               [disabled]="paymentBusy()"
               (click)="selectUpiApp(app.id)"
             >
-              <span class="payment-method-mark" aria-hidden="true">{{
-                app.id === 'gpay' ? 'G' : '𝙋'
-              }}</span>
+              <span class="payment-method-mark" aria-hidden="true"
+                ><img
+                  [src]="
+                    app.id === 'gpay'
+                      ? '/payment-icons/google-pay.svg'
+                      : '/payment-icons/phonepe.svg'
+                  "
+                  alt=""
+              /></span>
               <span class="payment-method-copy">
                 <b>{{ app.label }}</b>
                 <small>{{ app.hint }}</small>
@@ -423,7 +487,7 @@
         </div>
 
         <p class="payment-summary">
-          Pay <b>{{ premiumPriceLabel() }}</b> to <b>NeverBeen</b> with Google Pay or PhonePe.
+          Pay <b>{{ money(breakdown().total) }}</b> to <b>NeverBeen</b> with Google Pay or PhonePe.
         </p>
 
         @if (paymentState() === 'error') {
@@ -454,7 +518,7 @@
           } @else if (paymentState() === 'error') {
             Try again
           } @else {
-            Pay &amp; Chat
+            Pay {{ money(breakdown().total) }} &amp; Chat
           }
           <i aria-hidden="true">→</i>
         </button>

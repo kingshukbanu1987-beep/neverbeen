@@ -1701,3 +1701,217 @@
     display: none;
   }
 }
+
+/* Checkout: luminous duration cards and an explicit, live price ledger. */
+.payment-price-value small {
+  font-size: 0.35em;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.package-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 28px 0 14px;
+}
+.package-heading h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #edf1ff;
+}
+.package-heading > span {
+  font-size: 12px;
+  color: #a3abc3;
+}
+.payment-packages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.payment-package {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid #ffffff20;
+  border-radius: 20px;
+  color: #edf1ff;
+  background: linear-gradient(145deg, #ffffff08, #ffffff02);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.payment-package:hover:not(:disabled),
+.payment-package:focus-visible {
+  border-color: #a7a4ff;
+  outline: 2px solid #a7a4ff;
+  outline-offset: 3px;
+}
+.payment-package.is-selected {
+  border-color: #a7a4ff;
+  background: linear-gradient(145deg, #7972e52e, #40d9c90c);
+  box-shadow:
+    inset 0 0 24px #9a84ff0e,
+    0 8px 28px #0002;
+}
+.package-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+.package-top i {
+  font-style: normal;
+  color: #b8aeff;
+}
+.package-duration {
+  font-size: 34px;
+  font-weight: 650;
+  letter-spacing: -1.5px;
+}
+.package-duration small {
+  font-size: 13px;
+  color: #a9afc9;
+  letter-spacing: 0;
+}
+.package-tagline {
+  color: #a9afc9;
+  font-size: 12px;
+  min-height: 2em;
+}
+.package-price {
+  font-size: 18px;
+  font-weight: 600;
+}
+.package-price small {
+  font-size: 11px;
+  font-weight: 400;
+  color: #a9afc9;
+}
+.package-extra {
+  font-size: 11px;
+  color: #c1baff;
+}
+.payment-package:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.payment-breakdown {
+  display: grid;
+  gap: 13px;
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid #ffffff15;
+  border-radius: 20px;
+  background: #080d1b50;
+}
+.payment-breakdown > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: #a9afc9;
+}
+.payment-breakdown b {
+  color: #edf1ff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.payment-breakdown .payment-total {
+  border-top: 1px solid #ffffff20;
+  padding-top: 18px;
+  margin-top: 4px;
+  color: #edf1ff;
+  font-size: 16px;
+}
+.payment-total small {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  color: #a9afc9;
+}
+.payment-total b {
+  font-size: 26px;
+  letter-spacing: -1px;
+}
+.payment-method-mark {
+  background: #fff;
+  border-radius: 12px;
+}
+.payment-method-mark img {
+  display: block;
+  width: 38px;
+  height: 32px;
+  object-fit: contain;
+}
+@media (max-width: 420px) {
+  .payment-package {
+    padding: 14px;
+  }
+  .package-heading {
+    flex-direction: column;
+    gap: 5px;
+  }
+  .payment-breakdown {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .payment-package {
+    transition: none;
+  }
+}
+.access-payment {
+  max-width: 720px;
+  border-radius: 24px;
+  color: #edf1ff;
+  background:
+    radial-gradient(ellipse at 90% 0, #7160bf33, transparent 55%),
+    linear-gradient(155deg, #171d32, #0b1020);
+}
+.access-payment h2 {
+  color: #f3f4ff;
+}
+.access-payment .access-kicker,
+.access-payment .flow-back {
+  color: #c1baff;
+}
+.access-payment .flow-lede,
+.access-payment .plan-footnote,
+.access-payment .payment-summary,
+.access-payment .payment-status {
+  color: #adb6ce;
+}
+.access-payment .flow-lede b,
+.access-payment .payment-summary b {
+  color: #f3f4ff;
+}
+.access-payment .payment-price-card {
+  width: auto;
+  border-color: #a7a4ff40;
+  background: linear-gradient(135deg, #7972e51f, #40d9c90c);
+  box-shadow: none;
+}
+.access-payment .payment-price-label,
+.access-payment .payment-price-meta {
+  color: #c1baff;
+}
+.access-payment .payment-price-value {
+  color: #f3f4ff;
+  text-shadow: 0 8px 30px #b8aeff25;
+}
+.access-payment .review-start {
+  color: #111526;
+  background: linear-gradient(110deg, #c1baff, #8ee6dd);
+  box-shadow: 0 8px 28px #8d7aef25;
+}
+.access-payment .payment-cancel {
+  color: #c1baff;
+}
