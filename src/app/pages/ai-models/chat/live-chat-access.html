@@ -1,4 +1,4 @@
-<div class="access-backdrop" (click)="closed.emit()">
+<div class="access-backdrop" (click)="close()">
   <section
     class="access-shell"
     [class.is-sign-in]="stage() === 'sign-in'"
@@ -103,7 +103,7 @@
         type="button"
         class="access-close"
         aria-label="Close Live Chat options"
-        (click)="closed.emit()"
+        (click)="close()"
       >
         <span aria-hidden="true">✕</span>
       </button>
@@ -381,12 +381,12 @@
         <button type="button" class="flow-back" (click)="backToReview()">
           <span aria-hidden="true">←</span> Back to chat details
         </button>
-        <span class="access-kicker"><i aria-hidden="true"></i> Premium · secure UPI payment</span>
+        <span class="access-kicker"><i aria-hidden="true"></i> Premium · UPI payment</span>
         <h2 id="live-chat-access-title">Complete your payment to begin.</h2>
         <p class="flow-lede">
-          Your Premium Live Chat with <b>{{ model().name }}</b
-          ><app-model-verified-tick [slug]="model().slug" /> opens the moment this payment is
-          verified.
+          Complete your payment in your chosen app, then return here to open your Premium Live Chat
+          with <b>{{ model().name }}</b
+          ><app-model-verified-tick [slug]="model().slug" />.
         </p>
 
         <!-- The amount again, big, so nothing is hidden at the moment of payment. -->
@@ -407,6 +407,7 @@
               [class.is-selected]="paymentMethod() === app.id"
               [attr.aria-checked]="paymentMethod() === app.id"
               role="radio"
+              [disabled]="paymentBusy()"
               (click)="selectUpiApp(app.id)"
             >
               <span class="payment-method-mark" aria-hidden="true">{{
@@ -421,62 +422,48 @@
           }
         </div>
 
-        <p class="payment-upi-handle">
-          Pay <b>{{ premiumPriceLabel() }}</b> to <b>{{ upiId }}</b> with
-          {{ paymentMethod() === 'gpay' ? 'Google Pay' : 'PhonePe' }}, then paste the UPI
-          transaction reference below.
+        <p class="payment-summary">
+          Pay <b>{{ premiumPriceLabel() }}</b> to <b>NeverBeen</b> with Google Pay or PhonePe.
         </p>
 
-        <label class="payment-field">
-          <span>UPI transaction reference (UTR)</span>
-          <input
-            type="text"
-            inputmode="text"
-            autocomplete="off"
-            spellcheck="false"
-            placeholder="e.g. 415902783146"
-            [value]="transactionId()"
-            (input)="onTransactionId($event)"
-            [disabled]="paymentState() === 'verifying' || paymentState() === 'verified'"
-          />
-        </label>
-
-        @if (paymentState() === 'error' && paymentError()) {
-          <p class="flow-error" role="alert">{{ paymentError() }}</p>
-        }
-
-        @if (paymentState() === 'verified') {
-          <div class="payment-verified" role="status">
-            <span class="payment-verified-tick" aria-hidden="true">✓</span>
-            <div>
-              <b>Payment verified</b>
-              <p>
-                {{ premiumPriceLabel() }} received via
-                {{ paymentMethod() === 'gpay' ? 'Google Pay' : 'PhonePe' }} · reference
-                {{ transactionId().trim() }}
-              </p>
-            </div>
+        @if (paymentState() === 'error') {
+          <div class="flow-error payment-error" role="alert">
+            <b>Payment Failed</b>
+            <span>{{ paymentError() }}</span>
           </div>
-          <button type="button" class="review-start" (click)="startPremiumChat()">
-            <span class="review-start-dot" aria-hidden="true"></span>
-            Start Premium Live Chat · {{ plans.premium.durationLabel }}
-            <i aria-hidden="true">→</i>
-          </button>
-        } @else {
-          <button
-            type="button"
-            class="review-start"
-            [disabled]="paymentState() === 'verifying'"
-            (click)="verifyPayment()"
-          >
-            <span class="review-start-dot" aria-hidden="true"></span>
-            {{
-              paymentState() === 'verifying' ? 'Verifying payment…' : 'Verify payment & continue'
-            }}
-            <i aria-hidden="true">→</i>
+        }
+
+        @if (paymentState() === 'opening') {
+          <p class="payment-status" role="status">
+            Complete your payment in {{ paymentAppName() }}, then return to this page. Your Live
+            Chat will open automatically.
+          </p>
+        }
+
+        <button
+          type="button"
+          class="review-start"
+          [disabled]="paymentBusy()"
+          (click)="payAndChat()"
+        >
+          <span class="review-start-dot" aria-hidden="true"></span>
+          @if (paymentState() === 'opening') {
+            Opening {{ paymentAppName() }}…
+          } @else if (paymentState() === 'continuing') {
+            Opening Live Chat…
+          } @else if (paymentState() === 'error') {
+            Try again
+          } @else {
+            Pay &amp; Chat
+          }
+          <i aria-hidden="true">→</i>
+        </button>
+        @if (paymentState() === 'opening') {
+          <button type="button" class="payment-cancel" (click)="cancelPayment()">
+            Cancel payment
           </button>
         }
-        <p class="plan-footnote">{{ gatewayNote }}</p>
+        <p class="plan-footnote">{{ paymentNote }}</p>
       </div>
     } @else {
       <div class="access-flow access-review">
@@ -553,7 +540,7 @@
           <div class="review-price">
             <span>Premium amount for {{ model().name }}</span>
             <b>{{ premiumPriceLabel() }}</b>
-            <small>UPI payment · GPay or PhonePe · verified before the chat opens</small>
+            <small>UPI payment · Google Pay or PhonePe · opens your selected app</small>
           </div>
         }
 

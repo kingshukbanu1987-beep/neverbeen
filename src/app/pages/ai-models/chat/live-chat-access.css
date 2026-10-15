@@ -1107,7 +1107,7 @@
   font-style: normal;
 }
 
-/* The Premium payment step: amount, UPI app, transaction reference, verification. */
+/* The Premium payment step: amount, chosen app, and the temporary unverified handoff. */
 .access-payment {
   max-width: 620px;
 }
@@ -1179,7 +1179,7 @@
     transform 160ms ease;
 }
 
-.payment-method:hover,
+.payment-method:hover:not(:disabled),
 .payment-method:focus-visible {
   border-color: rgb(226 168 61 / 55%);
   transform: translateY(-1px);
@@ -1239,58 +1239,51 @@
   box-shadow: 0 0 0 3px rgb(245 176 66 / 22%);
 }
 
-.payment-upi-handle {
+.payment-summary {
   margin: 0.95rem 0 0;
   color: #66705f;
   font-size: 0.72rem;
   line-height: 1.6;
 }
 
-.payment-upi-handle b {
+.payment-summary b {
   color: #a35e05;
   font-weight: 800;
 }
 
-.payment-field {
+.payment-method:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.payment-error {
   display: grid;
-  gap: 0.35rem;
-  margin-top: 0.95rem;
-  text-align: left;
+  gap: 0.3rem;
 }
 
-.payment-field span {
-  color: #5d6a56;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.payment-status {
+  margin: 0.9rem 0 0;
+  color: #66705f;
+  font-size: 0.72rem;
+  line-height: 1.6;
 }
 
-.payment-field input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.85rem 1rem;
-  border: 1px solid #e0e9dd;
-  border-radius: 13px;
-  background: #fbfdf9;
-  color: #23301e;
+.payment-cancel {
+  margin-top: 0.8rem;
+  padding: 0.5rem 0.8rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #7c591d;
   font: inherit;
-  font-size: 0.95rem;
-  letter-spacing: 0.14em;
-  outline: none;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
+  font-size: 0.72rem;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-.payment-field input:focus {
-  border-color: rgb(226 154 40 / 75%);
-  box-shadow: 0 0 0 4px rgb(245 176 66 / 18%);
-}
-
-.payment-field input:disabled {
-  background: #f3f5f1;
-  color: #77816f;
+.payment-cancel:hover,
+.payment-cancel:focus-visible {
+  background: #fff7e8;
 }
 
 .access-payment .review-start {
@@ -1307,48 +1300,6 @@
   box-shadow:
     0 0 0 4px rgb(255 242 212 / 18%),
     0 0 12px #fff2d4;
-}
-
-.payment-verified {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  width: fit-content;
-  margin: 1.15rem auto 0;
-  padding: 0.85rem 1.25rem;
-  border: 1px solid rgb(100 189 39 / 40%);
-  border-radius: 16px;
-  background: linear-gradient(150deg, #f4ffeb, #e9f9d8);
-  box-shadow:
-    0 14px 32px rgb(74 145 24 / 18%),
-    inset 0 1px 0 #fff;
-  text-align: left;
-}
-
-.payment-verified-tick {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #8ede52, #56ab1e);
-  color: #fff;
-  font-size: 1.05rem;
-  font-weight: 900;
-  box-shadow: 0 8px 18px rgb(86 171 30 / 38%);
-}
-
-.payment-verified b {
-  color: #2f6412;
-  font-size: 0.85rem;
-  font-weight: 850;
-}
-
-.payment-verified p {
-  margin: 0.16rem 0 0;
-  color: #5b7448;
-  font-size: 0.66rem;
 }
 
 /* The Premium amount again on the review step, before payment is due. */
