@@ -399,7 +399,7 @@
             <span aria-hidden="true">←</span> Back to chat details
           </button>
           <span class="access-kicker"><i aria-hidden="true"></i> Premium · UPI payment</span>
-          <h2 id="live-chat-access-title">Complete your payment to begin.</h2>
+          <h2 id="live-chat-access-title">You're One Step Away From Something Incredible</h2>
           <p class="flow-lede">
             @if (desktopPayment) {
               Choose Google Pay or PhonePe, enter your UPI ID and scan the payment QR code with your
@@ -430,6 +430,10 @@
               <button
                 type="button"
                 class="payment-package"
+                [class.package-basic]="package.id === 'basic'"
+                [class.package-extended]="package.id === 'extended'"
+                [class.package-deep]="package.id === 'deep'"
+                [class.package-ultimate]="package.id === 'ultimate'"
                 role="radio"
                 [class.is-selected]="selectedPackage() === package.id"
                 [attr.aria-checked]="selectedPackage() === package.id"
@@ -446,14 +450,14 @@
                   >{{ packageDuration(package.id) }} <small>min</small></span
                 >
                 <span class="package-tagline">{{ package.tagline }}</span>
-                <span class="package-price"
-                  >{{
+                <span class="package-price">
+                  <b>{{
                     package.extraMinutes
                       ? '+' + money(packageExtra(package.id))
                       : money(premiumPrice() ?? 0)
-                  }}
-                  <small>{{ package.extraMinutes ? 'upgrade' : 'base price' }}</small></span
-                >
+                  }}</b>
+                  <small>{{ package.extraMinutes ? 'upgrade' : 'base price' }}</small>
+                </span>
                 <span class="package-extra">{{
                   package.extraMinutes
                     ? '+' + package.extraMinutes + ' extra minutes'
@@ -462,6 +466,76 @@
               </button>
             }
           </div>
+
+          <section class="coupon-panel" aria-labelledby="premium-coupon-title">
+            <div class="coupon-panel-heading">
+              <span class="coupon-panel-icon" aria-hidden="true">%</span>
+              <div>
+                <h3 id="premium-coupon-title">Have a coupon?</h3>
+                <p>Discount applies to your package subtotal; taxes stay unchanged.</p>
+              </div>
+            </div>
+            @if (appliedCoupon(); as coupon) {
+              <div class="coupon-applied" role="status">
+                <span class="coupon-applied-check" aria-hidden="true">✓</span>
+                <span class="coupon-applied-copy">
+                  <b>{{ coupon.code }}</b>
+                  <small>{{ coupon.percentOff }}% discount applied</small>
+                </span>
+                <button
+                  type="button"
+                  class="coupon-remove"
+                  [disabled]="paymentBusy()"
+                  [attr.aria-label]="'Remove ' + coupon.code + ' discount coupon'"
+                  (click)="removeCoupon()"
+                >
+                  Remove
+                </button>
+              </div>
+            } @else {
+              <div class="coupon-entry">
+                <label class="sr-only" for="premium-coupon-code">Coupon code</label>
+                <div class="coupon-input-wrap">
+                  <span aria-hidden="true">#</span>
+                  <input
+                    id="premium-coupon-code"
+                    class="coupon-input"
+                    type="text"
+                    [value]="couponCode()"
+                    [disabled]="paymentBusy()"
+                    [attr.aria-invalid]="couponError() ? 'true' : null"
+                    [attr.aria-describedby]="
+                      couponError()
+                        ? 'premium-coupon-hint premium-coupon-error'
+                        : 'premium-coupon-hint'
+                    "
+                    placeholder="Enter coupon code"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    spellcheck="false"
+                    (input)="onCouponCodeInput($event)"
+                    (keydown.enter)="applyCoupon()"
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="coupon-apply"
+                  [disabled]="paymentBusy()"
+                  (click)="applyCoupon()"
+                >
+                  Apply code
+                </button>
+              </div>
+              <p id="premium-coupon-hint" class="coupon-hint">
+                Try <b>SPECIAL</b> for 15% off or <b>NEVERBEEN</b> for 25% off.
+              </p>
+              @if (couponError()) {
+                <p id="premium-coupon-error" class="coupon-error" role="alert">
+                  {{ couponError() }}
+                </p>
+              }
+            }
+          </section>
 
           <div class="payment-breakdown" aria-live="polite" aria-label="Payment breakdown">
             <div>
@@ -472,7 +546,7 @@
               ><b>{{ money(breakdown().upgrade) }}</b>
             </div>
             <div>
-              <span>Subtotal</span><b>{{ money(breakdown().subtotal) }}</b>
+              <span>Package subtotal</span><b>{{ money(breakdown().subtotal) }}</b>
             </div>
             <div>
               <span>Service tax · 5%</span><b>{{ money(breakdown().serviceTax) }}</b>
@@ -483,6 +557,16 @@
             <div>
               <span>CGST · 9%</span><b>{{ money(breakdown().cgst) }}</b>
             </div>
+            @if (appliedCoupon(); as coupon) {
+              <div class="payment-pre-discount">
+                <span>Total before discount</span>
+                <b>{{ money(breakdown().totalBeforeDiscount) }}</b>
+              </div>
+              <div class="payment-discount">
+                <span>Discount · {{ coupon.code }} ({{ coupon.percentOff }}% off)</span>
+                <b>−{{ money(breakdown().discount) }}</b>
+              </div>
+            }
             <div class="payment-total">
               <span>Total payable <small>INR · all taxes included</small></span
               ><b>{{ money(breakdown().total) }}</b>

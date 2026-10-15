@@ -2098,6 +2098,296 @@
   color: #5b3fd1;
 }
 
+.access-payment .package-top > b {
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.access-payment .payment-package.package-basic .package-top > b,
+.access-payment .payment-package.package-deep .package-top > b {
+  color: #cc0b2e;
+}
+
+.access-payment .payment-package.package-extended .package-top > b {
+  color: #7742cc;
+}
+
+.access-payment .payment-package.package-ultimate .package-top > b {
+  color: #cc2baa;
+}
+
+.access-payment .package-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.12rem;
+  line-height: 1.2;
+}
+
+.access-payment .package-price b {
+  color: #0e1525;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.access-payment .package-price small {
+  color: #758095;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  text-transform: none;
+}
+
+.access-payment .coupon-panel {
+  margin-top: 1rem;
+  padding: 1.15rem;
+  border: 1px solid #e9e8f3;
+  border-radius: 22px;
+  background:
+    radial-gradient(120% 150% at 100% 0%, rgb(124 92 255 / 8%), transparent 58%),
+    linear-gradient(180deg, #fff, #fcfbff);
+  box-shadow:
+    0 1px 2px rgb(14 21 37 / 4%),
+    0 14px 28px -22px rgb(14 21 37 / 26%);
+}
+
+.access-payment .coupon-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.access-payment .coupon-panel-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #e5ddff;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #f6f2ff, #fff);
+  color: #6445d2;
+  font-size: 1.15rem;
+  font-weight: 850;
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+.access-payment .coupon-panel-heading h3 {
+  margin: 0;
+  color: #192033;
+  font-size: 0.93rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+.access-payment .coupon-panel-heading p {
+  margin: 0.16rem 0 0;
+  color: #737d91;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.access-payment .coupon-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+}
+
+.access-payment .coupon-input-wrap {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.85rem;
+  border: 1px solid #e4e6ee;
+  border-radius: 14px;
+  background: #fff;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.access-payment .coupon-input-wrap:focus-within {
+  border-color: #8067df;
+  box-shadow: 0 0 0 3px rgb(109 74 224 / 12%);
+}
+
+.access-payment .coupon-input-wrap > span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: #f5f2ff;
+  color: #7155d0;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.access-payment .coupon-input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #202536;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.access-payment .coupon-input::placeholder {
+  color: #9ba2b1;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.access-payment .coupon-input:disabled {
+  cursor: wait;
+}
+
+.access-payment .coupon-apply {
+  min-width: 106px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #7254dc, #5738c5);
+  color: #fff;
+  font: inherit;
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 8px 16px -10px rgb(78 51 184 / 70%);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.access-payment .coupon-apply:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 19px -10px rgb(78 51 184 / 78%);
+}
+
+.access-payment .coupon-apply:focus-visible,
+.access-payment .coupon-remove:focus-visible {
+  outline: 2px solid #6445d2;
+  outline-offset: 3px;
+}
+
+.access-payment .coupon-apply:disabled,
+.access-payment .coupon-remove:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.access-payment .coupon-hint {
+  margin: 0.62rem 0 0;
+  color: #778095;
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.access-payment .coupon-hint b {
+  color: #5940b5;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+}
+
+.access-payment .coupon-error {
+  margin: 0.55rem 0 0;
+  color: #bd2d40;
+  font-size: 0.71rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.access-payment .coupon-applied {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #d7eddf;
+  border-radius: 15px;
+  background: linear-gradient(120deg, #f0fbf4, #fff);
+}
+
+.access-payment .coupon-applied-check {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #dff5e6;
+  color: #178247;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.access-payment .coupon-applied-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.access-payment .coupon-applied-copy b {
+  color: #196f3c;
+  font-size: 0.77rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.access-payment .coupon-applied-copy small {
+  color: #58816a;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.access-payment .coupon-remove {
+  min-height: 34px;
+  margin-left: auto;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #f0d2d6;
+  border-radius: 10px;
+  background: #fff;
+  color: #b52d3e;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.access-payment .coupon-remove:hover:not(:disabled) {
+  border-color: #e4adb4;
+  background: #fff5f6;
+}
+
+@media (max-width: 420px) {
+  .access-payment .coupon-entry {
+    grid-template-columns: 1fr;
+  }
+
+  .access-payment .coupon-apply {
+    min-height: 44px;
+  }
+}
+
 .access-payment .payment-breakdown {
   border-color: #eceff5;
   border-radius: 22px;
@@ -2111,6 +2401,36 @@
 
 .access-payment .payment-breakdown b {
   color: #0e1525;
+}
+
+.access-payment .payment-breakdown .payment-pre-discount {
+  margin-top: 0.25rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #eceff5;
+  color: #313a4e;
+  font-weight: 750;
+}
+
+.access-payment .payment-breakdown .payment-pre-discount b {
+  color: #313a4e;
+}
+
+.access-payment .payment-breakdown .payment-discount {
+  padding: 0.68rem 0.78rem;
+  border: 1px solid #f6dfe2;
+  border-radius: 13px;
+  background: linear-gradient(100deg, #fff4f5, #fffafa);
+  color: #c12f43;
+  font-weight: 750;
+}
+
+.access-payment .payment-breakdown .payment-discount span,
+.access-payment .payment-breakdown .payment-discount b {
+  color: #c12f43;
+}
+
+.access-payment .payment-breakdown .payment-discount b {
+  font-weight: 850;
 }
 
 .access-payment .payment-method {
