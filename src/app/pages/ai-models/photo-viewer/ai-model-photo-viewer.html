@@ -14,7 +14,7 @@
         {{ modelName() }}<i aria-hidden="true">·</i>{{ modelHandle() }}
       </span>
       <span class="lightbox-actions">
-        @if (albumLink(); as link) {
+        @if (!albumExpanded() && albumLink(); as link) {
           <a class="viewer-album-link" [routerLink]="link">
             View all <span class="num">{{ albumSize() }}</span>
             <span aria-hidden="true">↗</span>
@@ -205,7 +205,7 @@
       </div>
       @if (total() > 1) {
         <div #thumbs class="lightbox-thumbs" role="group" aria-label="Choose a photograph">
-          @for (thumb of photos(); track thumb.src; let thumbIndex = $index) {
+          @for (thumb of visiblePhotos(); track thumb.src; let thumbIndex = $index) {
             <button
               type="button"
               class="lightbox-thumb"
@@ -228,10 +228,12 @@
   @if (photo(); as current) {
     <app-ai-model-photo-full-size
       [photo]="current"
+      [albumPhotos]="allowAlbumNavigation() ? fullSizePhotos() : null"
       [modelName]="modelName()"
       [modelHandle]="modelHandle()"
       [frameLabel]="frameNumber()"
       [frameTotal]="totalNumber()"
+      (photoChanged)="onFullSizePhotoChanged($event)"
       (closed)="closeFullSize()"
     />
   }

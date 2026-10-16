@@ -214,6 +214,8 @@
 @if (activeIndex() !== null && model(); as profile) {
   <app-ai-model-photo-viewer
     [photos]="photos()"
+    [albumPhotos]="photos()"
+    [allowAlbumNavigation]="true"
     [startIndex]="activeIndex() ?? 0"
     [modelName]="profile.name"
     [modelHandle]="profile.handle"

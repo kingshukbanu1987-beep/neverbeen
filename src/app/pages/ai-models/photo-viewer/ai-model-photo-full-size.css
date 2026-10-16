@@ -5,6 +5,7 @@
   --fs-cyan: #7de7ff;
   --fs-glass-border: rgb(255 255 255 / 14%);
   --fs-glass-bg: rgb(14 11 17 / 58%);
+  --fs-bottom-safe: max(1.15rem, env(safe-area-inset-bottom));
   --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   position: fixed;
   z-index: 300;
@@ -21,7 +22,9 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  overscroll-behavior: contain;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  overscroll-behavior: none;
   animation: full-size-in 260ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
 }
 
@@ -41,22 +44,27 @@
   cursor: grabbing;
 }
 
-/* The photograph is painted to cover the screen exactly at 1× and transformed from there;
-   `inset: 0; margin: auto` centres the (over-sized) box, `overflow: hidden` clips its edges.
-   Until the exact cover size lands, filling the screen beats flashing the natural pixels. */
+/* The photograph is centred on the stage at 1×, then panned from that true centre. Explicitly
+   anchoring the box at 50%/50% matters on phones: auto margins do not centre an over-sized absolute
+   element when its available space is negative, which used to expose a black strip on one edge and
+   make the opposite edge impossible to reach. */
 .full-size-image {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
   width: 100%;
   height: 100%;
-  margin: auto;
+  margin: 0;
   max-width: none;
   max-height: none;
   object-fit: cover;
   transform-origin: 50% 50%;
-  transform: translate(0, 0) scale(1);
-  transition: filter 420ms cubic-bezier(0.3, 0.7, 0.3, 1);
+  transform: translate(-50%, -50%) translate(0, 0) scale(1);
+  transition:
+    filter 420ms cubic-bezier(0.3, 0.7, 0.3, 1),
+    opacity 160ms ease;
   will-change: transform;
+  backface-visibility: hidden;
   -webkit-user-drag: none;
   user-select: none;
 }
@@ -80,6 +88,7 @@
    stand between the visitor's finger and the photograph. */
 .fs-close,
 .fs-actions,
+.fs-album-nav,
 .fs-zoom-dock {
   pointer-events: auto;
 }
@@ -93,6 +102,7 @@
 
 .full-size-chrome.is-idle .fs-close,
 .full-size-chrome.is-idle .fs-actions,
+.full-size-chrome.is-idle .fs-album-nav,
 .full-size-chrome.is-idle .fs-zoom-dock {
   pointer-events: none;
 }
@@ -149,6 +159,7 @@
 .fs-close,
 .fs-download,
 .fs-mode-option,
+.fs-album-button,
 .fs-zoom-button,
 .fs-zoom-readout {
   font-family: inherit;
@@ -165,6 +176,7 @@
 .fs-close:focus-visible,
 .fs-download:focus-visible,
 .fs-mode-option:focus-visible,
+.fs-album-button:focus-visible,
 .fs-zoom-button:focus-visible,
 .fs-zoom-readout:focus-visible {
   outline: 2px solid var(--fs-pink);
@@ -284,11 +296,101 @@
   transform: scale(0.96);
 }
 
+/* ------------------------------------------------------------- floating album navigation */
+
+.fs-album-nav {
+  position: absolute;
+  bottom: calc(var(--fs-bottom-safe) + 3.75rem);
+  left: 50%;
+  display: inline-grid;
+  grid-template-columns: 44px minmax(86px, auto) 44px;
+  align-items: center;
+  gap: 0.18rem;
+  padding: 0.28rem;
+  border: 1px solid rgb(255 255 255 / 17%);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgb(25 20 30 / 78%), rgb(10 10 16 / 66%));
+  box-shadow:
+    0 18px 46px rgb(0 0 0 / 52%),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+  transform: translateX(-50%);
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  pointer-events: auto;
+}
+
+.fs-album-button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fs-text);
+}
+
+.fs-album-button:hover,
+.fs-album-button:focus-visible {
+  border-color: rgb(240 112 168 / 42%);
+  background: linear-gradient(145deg, rgb(240 112 168 / 28%), rgb(120 231 255 / 12%));
+  color: #fff;
+  transform: scale(1.04);
+}
+
+.fs-album-button:active {
+  transform: scale(0.94);
+}
+
+.fs-album-meter {
+  display: grid;
+  min-width: 84px;
+  justify-items: center;
+  gap: 0.08rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.fs-album-kicker {
+  color: rgb(247 240 244 / 54%);
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.fs-album-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  color: var(--fs-text);
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.fs-album-count .num:first-child {
+  color: #ffc0dc;
+  font-size: 0.88rem;
+}
+
+.fs-album-divider {
+  color: rgb(247 240 244 / 36%);
+  font-weight: 400;
+}
+
+.full-size.has-album .fs-hint,
+.full-size.has-album .fs-toast {
+  bottom: calc(var(--fs-bottom-safe) + 8.15rem);
+}
+
 /* ------------------------------------------------------------------------------ zoom dock */
 
 .fs-zoom-dock {
   position: absolute;
-  bottom: max(1.15rem, env(safe-area-inset-bottom));
+  bottom: var(--fs-bottom-safe);
   left: 50%;
   display: inline-flex;
   align-items: center;

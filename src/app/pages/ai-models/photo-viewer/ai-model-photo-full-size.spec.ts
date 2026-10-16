@@ -7,23 +7,31 @@ const photo: AiModelPhoto = {
   src: '/NeverBeenModels/TestStudioModel/frame-03.jpg',
   caption: 'Frame 3 caption',
 };
+const albumPhotos: AiModelPhoto[] = Array.from({ length: 12 }, (_, index) => ({
+  src: `/NeverBeenModels/TestStudioModel/frame-${String(index + 1).padStart(2, '0')}.jpg`,
+  caption: `Frame ${index + 1} caption`,
+}));
 
 @Component({
   imports: [AiModelPhotoFullScreen],
   template: `
     <app-ai-model-photo-full-size
       [photo]="current"
+      [albumPhotos]="albumPhotos"
       modelName="Test Studio Model"
       modelHandle="@test.studio.model"
       frameLabel="03"
       frameTotal="12"
+      (photoChanged)="selected = $event.src"
       (closed)="closed = closed + 1"
     />
   `,
 })
 class FullSizeHost {
   readonly current = photo;
+  readonly albumPhotos = albumPhotos;
   closed = 0;
+  selected = '';
 }
 
 /** jsdom has no layout: a phone in portrait, as the full-size view is designed for. */
@@ -92,9 +100,10 @@ describe('AiModelPhotoFullScreen', () => {
 
   /** The transform currently written to the photograph. */
   function transform(): { x: number; y: number; scale: number } {
-    const match = /translate\((-?[\d.]+)px, (-?[\d.]+)px\) scale\(([\d.]+)\)/.exec(
-      image().style.transform,
-    );
+    const match =
+      /translate\(-50%,\s*-50%\)\s+translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)\s+scale\(([\d.]+)\)/.exec(
+        image().style.transform,
+      );
     return match
       ? { x: Number(match[1]), y: Number(match[2]), scale: Number(match[3]) }
       : { x: 0, y: 0, scale: 1 };
@@ -136,6 +145,15 @@ describe('AiModelPhotoFullScreen', () => {
     );
   }
 
+  function safariGesture(type: 'gesturestart' | 'gesturechange', scale: number, x = CX + 40): void {
+    const event = Object.assign(new Event(type, { bubbles: true, cancelable: true }), {
+      scale,
+      clientX: x,
+      clientY: CY,
+    });
+    element.querySelector('.full-size-stage')!.dispatchEvent(event);
+  }
+
   async function key(name: string): Promise<void> {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true }));
     await settle();
@@ -162,6 +180,33 @@ describe('AiModelPhotoFullScreen', () => {
     expect(title).toContain('@test.studio.model');
     expect(title).toContain('03');
     expect(title).toContain('12');
+  });
+
+  it('traverses the unlocked model album in full size and resets zoom for every new frame', async () => {
+    image().dispatchEvent(new Event('load'));
+    await settle();
+
+    element.querySelector<HTMLButtonElement>('.fs-zoom-button:last-child')!.click();
+    await settle();
+    expect(readout()).toBe('150%');
+
+    const next = element.querySelectorAll<HTMLButtonElement>('.fs-album-button')[1];
+    next.click();
+    await settle();
+    expect(image().getAttribute('src')).toBe(albumPhotos[3].src);
+    expect(element.querySelector('.fs-album-count')?.textContent?.replace(/\s+/g, '').trim()).toBe(
+      '04/12',
+    );
+    expect(readout()).toBe('100%');
+    expect(fixture.componentInstance.selected).toBe(albumPhotos[3].src);
+    expect(transform()).toEqual({ x: 0, y: 0, scale: 1 });
+
+    element.querySelectorAll<HTMLButtonElement>('.fs-album-button')[0].click();
+    await settle();
+    expect(image().getAttribute('src')).toBe(photo.src);
+    expect(element.querySelector('.fs-album-count')?.textContent?.replace(/\s+/g, '').trim()).toBe(
+      '03/12',
+    );
   });
 
   it('drags with one finger to the left and the right of the photograph, stopping at its edges', async () => {
@@ -240,6 +285,34 @@ describe('AiModelPhotoFullScreen', () => {
     expect(Math.abs(zoomed.x)).toBeLessThanOrEqual(
       (PAINTED.width * zoomed.scale - SCREEN.width) / 2 + 1,
     );
+
+    // The on-screen reset stays usable after a mobile pinch, even at a shifted zoom level.
+    element.querySelector<HTMLButtonElement>('.fs-zoom-readout')!.click();
+    await settle();
+    expect(readout()).toBe('100%');
+    expect(transform()).toEqual({ x: 0, y: 0, scale: 1 });
+  });
+
+  it('keeps Safari gesture zoom anchored and avoids double-applying a pointer pinch', async () => {
+    image().dispatchEvent(new Event('load'));
+    await settle();
+
+    safariGesture('gesturestart', 1);
+    safariGesture('gesturechange', 2);
+    safariGesture('gesturechange', 1.5);
+    await settle();
+    expect(readout()).toBe('150%');
+    expect(transform().x).toBeCloseTo(-20, 0);
+
+    await key('0');
+    pointer('pointerdown', image(), 1, CX - 100, CY);
+    pointer('pointerdown', image(), 2, CX + 100, CY);
+    pointer('pointermove', image(), 2, CX + 300, CY);
+    const pointerPinch = transform();
+
+    safariGesture('gesturestart', 1);
+    safariGesture('gesturechange', 4);
+    expect(transform()).toEqual(pointerPinch);
   });
 
   it('zooms to 250% where a finger double-taps and back out on the next double-tap', async () => {

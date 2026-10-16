@@ -772,6 +772,56 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
+  it('lets full size traverse the complete unlocked album and keeps that selection on return', async () => {
+    const profile = withPhotos(20);
+    const premiumPhoto = {
+      src: `/NeverBeenModels/TestStudioModel/PremiumContent/locked-frame.jpg`,
+      caption: 'Locked premium frame',
+    };
+    profile.premiumPhotos = [premiumPhoto];
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      const firstFrame = Array.from(
+        element.querySelectorAll<HTMLButtonElement>('.portfolio-grid button.grid-tile'),
+      ).find((button) => button.getAttribute('aria-label')?.endsWith('photograph 1'))!;
+      firstFrame.click();
+      harness.detectChanges();
+      element.querySelector<HTMLButtonElement>('.viewer-full-size')!.click();
+      harness.detectChanges();
+
+      const fullSize = element.querySelector('app-ai-model-photo-full-size')!;
+      expect(
+        fullSize.querySelector('.fs-album-count')?.textContent?.replace(/\s+/g, '').trim(),
+      ).toBe('01/20');
+
+      const next = () => fullSize.querySelectorAll<HTMLButtonElement>('.fs-album-button')[1];
+      for (let step = 0; step < PREVIEW_LIMIT; step += 1) {
+        next().click();
+        harness.detectChanges();
+        expect(fullSize.querySelector('.full-size-image')?.getAttribute('src')).not.toContain(
+          'PremiumContent',
+        );
+      }
+      expect(
+        fullSize.querySelector('.fs-album-count')?.textContent?.replace(/\s+/g, '').trim(),
+      ).toBe('13/20');
+
+      fullSize.querySelector<HTMLButtonElement>('.fs-close')!.click();
+      harness.detectChanges();
+
+      expect(element.querySelector('.lightbox-counter')?.textContent?.trim()).toBe('13 / 20');
+      expect(element.querySelectorAll('.lightbox-thumb').length).toBe(20);
+      expect(element.querySelector('.lightbox-image')?.getAttribute('src')).not.toContain(
+        'PremiumContent',
+      );
+      expect(element.querySelector('.viewer-album-link')).toBeNull();
+    } finally {
+      release(profile);
+    }
+  });
+
   it('opens the complete album page from the View All tile', async () => {
     const profile = withPhotos(20);
     const harness = await openPortfolio(profile.slug);
