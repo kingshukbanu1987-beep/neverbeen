@@ -24,7 +24,8 @@
             Every frame from {{ firstName(profile.name) }}’s album, set in one mosaic. Open any
             photograph full screen, then zoom in with a scroll, a pinch or a double-tap.
             @if (hasPremiumTeasers()) {
-              The blurred Premium Content {{ premiumTeasers().length === 1 ? 'frame is' : 'frames are' }}
+              The blurred Premium Content
+              {{ premiumTeasers().length === 1 ? 'frame is' : 'frames are' }}
               locked — they open only in a paid Premium Live Chat.
             }
           </p>
@@ -217,6 +218,7 @@
     [modelName]="profile.name"
     [modelHandle]="profile.handle"
     [modelSlug]="profile.slug"
+    [allowDownload]="true"
     (closed)="closeViewer()"
   />
 }

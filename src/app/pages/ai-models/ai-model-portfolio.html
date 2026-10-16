@@ -942,6 +942,7 @@
     [modelSlug]="model()?.slug ?? ''"
     [albumLink]="hasMorePhotos() ? allPhotosLink() : null"
     [albumSize]="photos().length"
+    [allowDownload]="true"
     (closed)="closeLightbox()"
   />
 }

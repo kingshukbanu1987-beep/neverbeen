@@ -5,10 +5,7 @@
   [attr.aria-label]="caption()"
   (click)="onBackdropClick($event)"
 >
-  <div
-    class="lightbox-panel"
-    [class.has-comments]="commentsOpen() && !!modelSlug()"
-  >
+  <div class="lightbox-panel" [class.has-comments]="commentsOpen() && !!modelSlug()">
     <header class="lightbox-bar">
       <span class="lightbox-counter">
         <b>{{ frameNumber() }}</b> / {{ totalNumber() }}
@@ -23,21 +20,38 @@
             <span aria-hidden="true">↗</span>
           </a>
         }
+        <button
+          type="button"
+          class="viewer-full-size"
+          (click)="openFullSize()"
+          [attr.aria-label]="
+            'View ' +
+            (modelName() || 'this photograph') +
+            ' full size — open the photograph in full screen'
+          "
+          title="Open the photograph full screen"
+        >
+          <svg class="viewer-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M9 4H4v5" />
+            <path d="M15 4h5v5" />
+            <path d="M15 20h5v-5" />
+            <path d="M9 20H4v-5" />
+          </svg>
+          <span class="viewer-full-size-word">View Full Size</span>
+        </button>
         @if (allowDownload()) {
           <button
             type="button"
             class="viewer-download"
             (click)="downloadPhoto()"
-            [attr.aria-label]="'Download ' + (modelName() || 'this photograph') + ' — save the photograph to your device'"
+            [attr.aria-label]="
+              'Download ' +
+              (modelName() || 'this photograph') +
+              ' — save the photograph to your device'
+            "
             title="Download the photograph"
           >
-            <svg
-              class="viewer-icon"
-              viewBox="0 0 24 24"
-              width="16"
-              height="16"
-              aria-hidden="true"
-            >
+            <svg class="viewer-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
               <path d="M12 4v11" />
               <path d="m7.5 11.5 4.5 4.5 4.5-4.5" />
               <path d="M5 19.5h14" />
@@ -208,3 +222,17 @@
     </footer>
   </div>
 </div>
+
+<!-- "View Full Size": the photograph takes over the whole screen; closing it returns here. -->
+@if (fullSizeOpen()) {
+  @if (photo(); as current) {
+    <app-ai-model-photo-full-size
+      [photo]="current"
+      [modelName]="modelName()"
+      [modelHandle]="modelHandle()"
+      [frameLabel]="frameNumber()"
+      [frameTotal]="totalNumber()"
+      (closed)="closeFullSize()"
+    />
+  }
+}

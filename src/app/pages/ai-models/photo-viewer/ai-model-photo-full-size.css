@@ -1,0 +1,494 @@
+:host {
+  --fs-text: #f7f0f4;
+  --fs-muted: #a39aa3;
+  --fs-pink: #f070a8;
+  --fs-cyan: #7de7ff;
+  --fs-glass-border: rgb(255 255 255 / 14%);
+  --fs-glass-bg: rgb(14 11 17 / 58%);
+  --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  position: fixed;
+  z-index: 300;
+  inset: 0;
+}
+
+/* The view owns the whole screen on every device: phones in portrait, tablets, laptops. */
+.full-size {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgb(18 12 22 / 100%), rgb(2 2 4 / 100%) 70%), #000;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: contain;
+  animation: full-size-in 260ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+}
+
+.full-size-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+.full-size-stage.is-zoomed {
+  cursor: grab;
+}
+
+.full-size-stage.is-gesturing {
+  cursor: grabbing;
+}
+
+/* The photograph is painted to cover the screen exactly at 1× and transformed from there;
+   `inset: 0; margin: auto` centres the (over-sized) box, `overflow: hidden` clips its edges.
+   Until the exact cover size lands, filling the screen beats flashing the natural pixels. */
+.full-size-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: auto;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  transform-origin: 50% 50%;
+  transform: translate(0, 0) scale(1);
+  transition: filter 420ms cubic-bezier(0.3, 0.7, 0.3, 1);
+  will-change: transform;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* B/W mode: a silver-gelatin look, eased in and out when the visitor flips the switch. */
+.full-size-image.is-bw {
+  filter: grayscale(1) contrast(1.06) brightness(1.02);
+}
+
+/* ----------------------------------------------------------------------------- the chrome */
+
+.full-size-chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 380ms ease;
+}
+
+/* Only the controls themselves take touches — the bar's gradient and the empty chrome never
+   stand between the visitor's finger and the photograph. */
+.fs-close,
+.fs-actions,
+.fs-zoom-dock {
+  pointer-events: auto;
+}
+
+/* Left alone, the controls fade away so only the photograph remains — the lightest touch,
+   key press or mouse move brings them straight back. */
+.full-size-chrome.is-idle {
+  opacity: 0;
+  transition: opacity 520ms ease;
+}
+
+.full-size-chrome.is-idle .fs-close,
+.full-size-chrome.is-idle .fs-actions,
+.full-size-chrome.is-idle .fs-zoom-dock {
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------------------- top bar */
+
+.fs-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: max(0.9rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 2.2rem
+    max(1rem, env(safe-area-inset-left));
+  background: linear-gradient(to bottom, rgb(0 0 0 / 72%), rgb(0 0 0 / 28%) 58%, transparent);
+}
+
+.fs-title {
+  overflow: hidden;
+  margin: 0;
+  color: rgb(247 240 244 / 78%);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fs-title i {
+  margin-inline: 0.55rem;
+  color: var(--fs-pink);
+  font-style: normal;
+}
+
+.fs-frame .num {
+  color: var(--fs-pink);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.fs-frame-total {
+  color: rgb(247 240 244 / 55%);
+  font-family: var(--numeric-font);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.fs-close,
+.fs-download,
+.fs-mode-option,
+.fs-zoom-button,
+.fs-zoom-readout {
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    transform 200ms cubic-bezier(0.22, 0.68, 0.32, 1),
+    opacity 200ms ease;
+}
+
+.fs-close:focus-visible,
+.fs-download:focus-visible,
+.fs-mode-option:focus-visible,
+.fs-zoom-button:focus-visible,
+.fs-zoom-readout:focus-visible {
+  outline: 2px solid var(--fs-pink);
+  outline-offset: 3px;
+}
+
+/* Close: the way back to the previous page, always top-left within thumb reach. */
+.fs-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.05rem 0.6rem 0.85rem;
+  border: 1px solid var(--fs-glass-border);
+  border-radius: 999px;
+  background: var(--fs-glass-bg);
+  color: var(--fs-text);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+}
+
+.fs-close:hover,
+.fs-close:focus-visible {
+  border-color: rgb(240 112 168 / 62%);
+  background: rgb(240 112 168 / 20%);
+  transform: translateY(-1px);
+}
+
+.fs-close:active {
+  transform: scale(0.96);
+}
+
+.fs-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.1;
+}
+
+/* Right-hand actions: the B/W ⇄ Original switch and Download. */
+.fs-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* A true segmented switch — two glass halves, the live one lit with the brand gradient. */
+.fs-mode {
+  display: inline-flex;
+  gap: 0.18rem;
+  padding: 0.22rem;
+  border: 1px solid var(--fs-glass-border);
+  border-radius: 999px;
+  background: var(--fs-glass-bg);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+}
+
+.fs-mode-option {
+  padding: 0.46rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(247 240 244 / 66%);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fs-mode-option:hover,
+.fs-mode-option:focus-visible {
+  color: var(--fs-text);
+  background: rgb(255 255 255 / 8%);
+}
+
+.fs-mode-option.is-active {
+  background: linear-gradient(125deg, rgb(184 23 31 / 92%), rgb(239 106 165 / 88%));
+  color: #fff;
+  box-shadow: 0 8px 22px rgb(240 112 168 / 35%);
+}
+
+.fs-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.62rem 1.05rem;
+  border: 1px solid rgb(120 231 255 / 40%);
+  border-radius: 999px;
+  background: rgb(120 231 255 / 12%);
+  color: #d8f6ff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 14px 34px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+}
+
+.fs-download:hover,
+.fs-download:focus-visible {
+  border-color: rgb(120 231 255 / 72%);
+  background: rgb(120 231 255 / 24%);
+  transform: translateY(-1px);
+}
+
+.fs-download:active {
+  transform: scale(0.96);
+}
+
+/* ------------------------------------------------------------------------------ zoom dock */
+
+.fs-zoom-dock {
+  position: absolute;
+  bottom: max(1.15rem, env(safe-area-inset-bottom));
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.28rem;
+  border: 1px solid var(--fs-glass-border);
+  border-radius: 999px;
+  background: var(--fs-glass-bg);
+  box-shadow: 0 18px 46px rgb(0 0 0 / 55%);
+  transform: translateX(-50%);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+
+.fs-zoom-button,
+.fs-zoom-readout {
+  display: grid;
+  min-width: 40px;
+  height: 40px;
+  place-items: center;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fs-text);
+}
+
+.fs-zoom-button:hover:not(:disabled),
+.fs-zoom-button:focus-visible,
+.fs-zoom-readout:hover:not(:disabled),
+.fs-zoom-readout:focus-visible {
+  background: rgb(240 112 168 / 22%);
+}
+
+.fs-zoom-button:disabled {
+  cursor: default;
+  opacity: 0.32;
+}
+
+.fs-zoom-readout {
+  min-width: 74px;
+  color: #ffd6e8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.fs-zoom-readout .num {
+  font-family: var(--numeric-font);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-zoom-readout:disabled {
+  cursor: default;
+  color: rgb(255 214 232 / 72%);
+}
+
+.full-size-stage.is-zoomed + .full-size-chrome .fs-zoom-readout {
+  background: linear-gradient(120deg, rgb(184 23 31 / 62%), rgb(239 106 165 / 52%));
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------------------- hint, toast */
+
+.fs-hint {
+  position: absolute;
+  bottom: calc(max(1.15rem, env(safe-area-inset-bottom)) + 4.1rem);
+  left: 50%;
+  padding: 0.55rem 1.05rem;
+  border: 1px solid var(--fs-glass-border);
+  border-radius: 999px;
+  background: var(--fs-glass-bg);
+  color: rgb(247 240 244 / 90%);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  pointer-events: none;
+  animation: fs-hint-in 460ms 240ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+}
+
+.fs-toast {
+  position: absolute;
+  bottom: calc(max(1.15rem, env(safe-area-inset-bottom)) + 4.1rem);
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.15rem;
+  border: 1px solid rgb(120 231 255 / 45%);
+  border-radius: 999px;
+  background: rgb(10 22 28 / 78%);
+  color: #d8f6ff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: 0 18px 46px rgb(0 0 0 / 55%);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  pointer-events: none;
+  animation: fs-toast-in 320ms cubic-bezier(0.22, 0.68, 0.32, 1) backwards;
+}
+
+/* ------------------------------------------------------------------------------ animations */
+
+@keyframes full-size-in {
+  from {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fs-hint-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+@keyframes fs-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.94);
+  }
+}
+
+/* ------------------------------------------------------------------------------ responsive */
+
+@media (max-width: 720px) {
+  .fs-bar {
+    gap: 0.5rem;
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .fs-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.11em;
+  }
+
+  .fs-frame-total {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Narrow screens: the labels fold away but every control stays reachable and obvious. */
+  .fs-close {
+    padding: 0.55rem 0.85rem 0.55rem 0.75rem;
+  }
+
+  .fs-close-word {
+    display: none;
+  }
+
+  .fs-download-word {
+    display: none;
+  }
+
+  .fs-download {
+    padding: 0.55rem 0.85rem;
+  }
+
+  .fs-mode-option {
+    padding: 0.42rem 0.72rem;
+    font-size: 0.6rem;
+  }
+
+  .fs-hint,
+  .fs-toast {
+    max-width: calc(100vw - 2rem);
+    overflow: hidden;
+    font-size: 0.64rem;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 380px) {
+  .fs-title {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}

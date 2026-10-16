@@ -34,6 +34,20 @@ export const ZOOM_STEP = 1.5;
 /** Where a double-click or a double-tap takes the photograph. */
 export const DOUBLE_TAP_ZOOM = 2.5;
 
+/**
+ * The size the photograph must be painted at to cover the whole stage edge to edge — the "fill the
+ * screen" fit the full-size view opens at. At least one axis matches the stage exactly; the other
+ * overflows, so the visitor pans to reach the photograph's far sides and `clampPan` keeps the stage
+ * covered. A degenerate size falls back to the stage itself, never to NaN.
+ */
+export function coverSize(photo: Size, stage: Size): Size {
+  if (!(photo.width > 0) || !(photo.height > 0) || !(stage.width > 0) || !(stage.height > 0)) {
+    return { width: Math.max(stage.width, 0), height: Math.max(stage.height, 0) };
+  }
+  const scale = Math.max(stage.width / photo.width, stage.height / photo.height);
+  return { width: photo.width * scale, height: photo.height * scale };
+}
+
 /** Anything this close to 1× counts as "not zoomed" — keeps floating-point noise out of the UI. */
 export function isZoomed(transform: ZoomTransform): boolean {
   return transform.scale > MIN_ZOOM + 0.001;
