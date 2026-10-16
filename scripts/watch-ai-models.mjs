@@ -103,6 +103,7 @@ try {
       !imageExtensions.has(extension) &&
       !videoExtensions.has(extension) &&
       !documentExtensions.has(extension) &&
+      extension !== '.mp3' &&
       extension !== '.json'
     ) {
       return;

@@ -1,5 +1,6 @@
 <div
   class="lightbox"
+  [attr.inert]="preview()?.running() ? '' : null"
   role="dialog"
   aria-modal="true"
   [attr.aria-label]="caption()"
@@ -14,6 +15,17 @@
         {{ modelName() }}<i aria-hidden="true">·</i>{{ modelHandle() }}
       </span>
       <span class="lightbox-actions">
+        @if (allowAlbumNavigation()) {
+          <button
+            type="button"
+            class="viewer-preview"
+            (click)="preview()?.start()"
+            aria-label="Preview all public photographs"
+            title="Play a cinematic photo preview"
+          >
+            <span aria-hidden="true">▷</span> Preview
+          </button>
+        }
         @if (!albumExpanded() && albumLink(); as link) {
           <a class="viewer-album-link" [routerLink]="link">
             View all <span class="num">{{ albumSize() }}</span>
@@ -237,4 +249,12 @@
       (closed)="closeFullSize()"
     />
   }
+}
+
+@if (allowAlbumNavigation()) {
+  <app-ai-model-photo-preview
+    [photos]="fullSizePhotos()"
+    [modelName]="modelName()"
+    [musicSrc]="previewMusic()"
+  />
 }

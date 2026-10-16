@@ -751,3 +751,43 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The Preview label stays visible at every viewport size. */
+.viewer-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  flex-shrink: 0;
+  padding: 0 12px;
+  border: 1px solid #ffffff30;
+  border-radius: 999px;
+  background: #ffffff12;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 180ms;
+}
+.viewer-preview:hover {
+  background: #ffffff25;
+}
+.viewer-preview:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .lightbox-bar {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .lightbox-title {
+    text-align: right;
+  }
+  .lightbox-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}

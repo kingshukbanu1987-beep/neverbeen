@@ -18,6 +18,7 @@ import { AiModelPhoto } from '../ai-model-data';
 import { ModelMediaComments } from '../../../shared/model-media-comments/model-media-comments';
 import { ModelMediaEngagementBar } from '../../../shared/model-media-engagement/model-media-engagement';
 import { AiModelPhotoFullScreen } from './ai-model-photo-full-size';
+import { AiModelPhotoPreview } from '../photo-preview/ai-model-photo-preview';
 import { downloadPhotograph } from './photo-download';
 import {
   DOUBLE_TAP_ZOOM,
@@ -91,7 +92,13 @@ interface SafariGestureEvent extends UIEvent {
  */
 @Component({
   selector: 'app-ai-model-photo-viewer',
-  imports: [RouterLink, ModelMediaComments, ModelMediaEngagementBar, AiModelPhotoFullScreen],
+  imports: [
+    RouterLink,
+    ModelMediaComments,
+    ModelMediaEngagementBar,
+    AiModelPhotoFullScreen,
+    AiModelPhotoPreview,
+  ],
   templateUrl: './ai-model-photo-viewer.html',
   styleUrl: './ai-model-photo-viewer.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -110,6 +117,8 @@ export class AiModelPhotoViewer {
   /** The photograph the visitor opened. */
   readonly startIndex = input(0);
   readonly modelName = input('');
+  readonly previewMusic = input('');
+  protected readonly preview = viewChild(AiModelPhotoPreview);
   readonly modelHandle = input('');
   /** The portfolio slug — enables the engagement strip and the "seen" count of each frame. */
   readonly modelSlug = input('');
@@ -398,8 +407,8 @@ export class AiModelPhotoViewer {
   }
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
-    // The full-size view owns the keyboard while it is up: Escape goes back there, not here.
-    if (this.fullSizeOpen()) return;
+    // Full-size and Preview own the keyboard while open; Escape must leave this viewer intact.
+    if (this.fullSizeOpen() || this.preview()?.running()) return;
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
 
     switch (event.key) {
