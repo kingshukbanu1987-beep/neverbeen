@@ -33,7 +33,7 @@ const PREMIUM_MODEL_PRICES = new Map<string, number>([
   ['priyanka-chatterjee', 129],
   ['tasneem-al-rifai', 99],
   ['fatima-sana-hussaini', 109],
-  ['ziba-nazrin', 99],
+  ['ziba-nazrin', 179],
 ]);
 
 /** Every Exclusive model unlocks on the Premium plan at this one amount. */

@@ -18,7 +18,7 @@ const premiumPrices: Readonly<Record<string, number>> = {
   'priyanka-chatterjee': 129,
   'tasneem-al-rifai': 99,
   'fatima-sana-hussaini': 109,
-  'ziba-nazrin': 99,
+  'ziba-nazrin': 179,
 };
 
 const exclusiveSlugs = [
