@@ -8,7 +8,7 @@ import { ModelLiveChatService } from '../../services/model-live-chat.service';
  * the chats live with her right now (a green pulse while there are any, a quiet grey dot while
  * there are none). Right half: her whole past-chat total, behind a small translucent white chat
  * bubble. Both numbers come from {@link ModelLiveChatService}, so the two places always agree; the
- * page that shows the pill loads and polls the counts.
+ * page that shows the pill reads the counts when it opens, and again when the visitor returns.
  *
  * Both totals are written compactly — `1.4K`, `1.7M`, `1.4B`, `1.9T` — exactly as the engagement
  * counters of the card are, so a long total never widens the pill. The exact figure stays where an

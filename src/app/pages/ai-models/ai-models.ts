@@ -77,7 +77,7 @@ export class AiModelsPage {
   protected readonly models = aiModelProfiles;
   private readonly route = inject(ActivatedRoute);
   private readonly engagement = inject(ModelMediaEngagementService);
-  /** Loads and polls each model's Live Now and past-chat counts for the split pills on the cards. */
+  /** Reads each model's Live Now and past-chat counts for the split pills on the cards. */
   private readonly liveChats = inject(ModelLiveChatService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -204,10 +204,11 @@ export class AiModelsPage {
     // Ratings are public, live testimonial data rather than part of the generated model catalog.
     // Keep these requests bounded rather than fetching every model's reviews at once.
     void this.loadReviewSummaries();
-    // The Live Now pill is live data: load the counts now, then keep polling while the directory
-    // is on screen, so a chat started or ended on any other device moves the counters by itself.
+    // The Live Now pill is read when the directory opens, and again the moment the visitor comes
+    // back to the tab — the one API call this page makes for it. Nothing is polled: a directory
+    // left open keeps the numbers it loaded.
     void this.liveChats.load();
-    this.destroyRef.onDestroy(this.liveChats.startPolling());
+    this.destroyRef.onDestroy(this.liveChats.watch());
   }
 
   protected setAvailabilityFilter(value: AvailabilityFilter): void {

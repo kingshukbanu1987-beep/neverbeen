@@ -14,10 +14,14 @@
   card, so the frame is that much taller to hold the copy over it: the cover is 0.7 of its width
   (0.8 on the narrowest phones), and the card reads its rating figure 1.3× bigger than it was
   (1.08rem → 1.4rem), the stars unchanged.
-- **The counters are live.** They are read from `GET /api/models/live-chats` when the directory
-  opens, and the directory keeps polling the same endpoint every two seconds while it is on
-  screen (a hidden tab pauses, and catches up the moment it returns). A chat started or ended on
-  any other device — or in another tab — moves the counters by themselves, with no refresh.
+- **The counters are read on every visit — and never polled.** They are read from
+  `GET /api/models/live-chats` when the directory (or a model's own page) opens: a visit, a
+  refresh, or a return to the page. The only other read is the visitor coming back to the tab,
+  which is the same return. Nothing is requested on a timer, so a page left open on screen asks
+  the API for nothing and shows the numbers it loaded. The counters that do move while a page is
+  open are the visitor's own: a Live Chat started or ended here is answered with the fresh counts
+  by its own `POST /api/models/{slug}/live-chats` (or `…/end`) request. (The first release of this
+  feature re-read the endpoint every two seconds; that polling is gone.)
 - **One count per chat, up and down.** The chat window records a start when the visitor's
   two-hour session begins (after the name and photograph form), via
   `POST /api/models/{slug}/live-chats`, under a session key of its own, and records the end of
@@ -53,4 +57,5 @@ python3 docs/patches/neverbeen-api-model-live-chat-count-verification.py /path/t
 Until the API is deployed with the live/past split, the website still behaves sensibly: a legacy
 `liveChatCount` answer is read as the past-chat total (every chat it counted has long run out its
 two hours), the Live Now half shows the quiet default `0` with the grey dot, and starts or ends
-the API cannot take yet adjust this device's own counters until the next successful poll.
+the API cannot take yet adjust this device's own counters until the next successful read — the
+next visit, or the moment the visitor comes back to the tab.

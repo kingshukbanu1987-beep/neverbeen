@@ -1,8 +1,11 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { CommunityService } from '../../services/community.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
@@ -13,6 +16,8 @@ import { AiModelAllPhotosPage } from './all-photos/ai-model-all-photos';
 import { AiModelPortfolioPage, PREVIEW_LIMIT, shufflePhotos } from './ai-model-portfolio';
 import { AiModelPortfolioDocumentPage } from './portfolio-document/ai-model-portfolio-document';
 import { AiModelVideoPlayer, formatTime } from './video/ai-model-video-player';
+
+const API = environment.apiBaseUrl.replace(/\/+$/, '');
 
 const testRoutes = [
   {
@@ -1472,6 +1477,102 @@ describe('AiModelPortfolioPage video reel', () => {
         expect(clip.fileName.length).toBeGreaterThan(0);
         expect(clip.type.startsWith('video/')).toBe(true);
       }
+    }
+  });
+});
+
+/**
+ * The API-call policy the owner asked for, held by a test: a profile page reads the API when it
+ * opens — a visit, a refresh, a return — and for what the visitor does with the page (opening a
+ * photograph, liking, commenting, sharing, starting a chat). It never asks on a timer, so a
+ * profile left open on screen makes no further request by itself.
+ */
+describe('AiModelPortfolioPage API call policy', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [AiModelPortfolioPage],
+      providers: [
+        provideRouter(testRoutes),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: CommunityService,
+          useValue: {
+            isAuthenticated: () => false,
+            guestBrowsing: () => false,
+            currentUser: () => null,
+            token: () => null,
+            apiLive: false,
+            apiUrl: 'https://neverbeen-api.test',
+          },
+        },
+        {
+          provide: ModelTestimonialsService,
+          useValue: {
+            list: vi.fn().mockResolvedValue({
+              items: [],
+              totalCount: 0,
+              page: 1,
+              pageSize: 50,
+              totalPages: 0,
+            }),
+            create: vi.fn(),
+          },
+        },
+        // The engagement counters are read once per model for the session; their own tests cover
+        // the writes a visitor's like, comment, view or share sends.
+        {
+          provide: ModelMediaEngagementService,
+          useValue: {
+            registerModel: vi.fn(),
+            statsFor: vi.fn(() => ({
+              seen: 0,
+              likes: 0,
+              comments: 0,
+              shares: 0,
+              likedByMe: false,
+            })),
+          },
+        },
+      ],
+    }).compileComponents();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('reads the Live Chat counts when the profile opens, and asks for nothing while it stays open', async () => {
+    const profile = withPhotos(1);
+    // Every timer is faked from before the page exists, so a poll timer created with the page
+    // would be advanced here like any other.
+    vi.useFakeTimers();
+
+    try {
+      const harness = await RouterTestingHarness.create(`/ai-models/${profile.slug}`);
+      await vi.advanceTimersByTimeAsync(0);
+      harness.detectChanges();
+      const http = TestBed.inject(HttpTestingController);
+      const element = harness.routeNativeElement as HTMLElement;
+      expect(element.querySelector('app-model-live-chat-pill')).not.toBeNull();
+
+      // The one read of a visit: the Live Now / past-chat counters the pill shows.
+      const request = http.expectOne(`${API}/api/models/live-chats`);
+      expect(request.request.method).toBe('GET');
+      request.flush([{ modelSlug: profile.slug, liveNowCount: 2, pastChatCount: 7 }]);
+      await vi.advanceTimersByTimeAsync(0);
+      harness.detectChanges();
+      expect(
+        element
+          .querySelector('.card-live-pill .is-past .card-live-pill-value')
+          ?.textContent?.trim(),
+      ).toBe('7');
+
+      // Ten minutes on screen, with every timer the page holds advanced: nothing else is asked.
+      await vi.advanceTimersByTimeAsync(10 * 60_000);
+      http.expectNone(`${API}/api/models/live-chats`);
+    } finally {
+      release(profile);
     }
   });
 });
