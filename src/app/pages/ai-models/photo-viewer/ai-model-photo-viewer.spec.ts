@@ -15,6 +15,8 @@ const photos: AiModelPhoto[] = Array.from({ length: 5 }, (_, index) => ({
   template: `
     <app-ai-model-photo-viewer
       [photos]="photos"
+      [albumPhotos]="albumPhotos"
+      [allowAlbumNavigation]="allowAlbumNavigation()"
       [startIndex]="0"
       modelName="Test Studio Model"
       modelHandle="@test.studio.model"
@@ -27,6 +29,8 @@ const photos: AiModelPhoto[] = Array.from({ length: 5 }, (_, index) => ({
 })
 class ViewerHost {
   readonly photos = photos;
+  readonly albumPhotos = photos;
+  readonly allowAlbumNavigation = signal(true);
   readonly albumLink = signal<string[] | null>(null);
   closed = 0;
 }
@@ -434,6 +438,35 @@ describe('AiModelPhotoViewer', () => {
     expect(element.querySelector('app-ai-model-photo-full-size')).toBeNull();
     expect(host.closed).toBe(0);
     expect(element.querySelector('.lightbox')).not.toBeNull();
+  });
+
+  it('keeps the full-size album navigator opt-in for galleries such as Premium Content', async () => {
+    fixture.componentInstance.allowAlbumNavigation.set(false);
+    await settle();
+
+    element.querySelector<HTMLButtonElement>('.viewer-full-size')!.click();
+    await settle();
+
+    const fullSize = element.querySelector('app-ai-model-photo-full-size')!;
+    expect(fullSize.querySelector('.fs-album-nav')).toBeNull();
+  });
+
+  it('returns to the photograph selected in the full-size album navigator', async () => {
+    element.querySelector<HTMLButtonElement>('.viewer-full-size')!.click();
+    await settle();
+
+    const fullSize = element.querySelector('app-ai-model-photo-full-size')!;
+    fullSize.querySelectorAll<HTMLButtonElement>('.fs-album-button')[1].click();
+    await settle();
+    expect(fullSize.querySelector('.full-size-image')?.getAttribute('src')).toBe(photos[1].src);
+
+    fullSize.querySelector<HTMLButtonElement>('.fs-close')!.click();
+    await settle();
+
+    expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(photos[1].src);
+    expect(
+      element.querySelector('.lightbox-counter')?.textContent?.replace(/\s+/g, ' ').trim(),
+    ).toBe('02 / 05');
   });
 
   it('lets the full-size view own Escape while it is up — the viewer stays open underneath', async () => {

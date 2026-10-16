@@ -936,6 +936,8 @@
 @if (lightboxOpen()) {
   <app-ai-model-photo-viewer
     [photos]="previewPhotos()"
+    [albumPhotos]="photos()"
+    [allowAlbumNavigation]="true"
     [startIndex]="activeIndex() ?? 0"
     [modelName]="model()?.name ?? ''"
     [modelHandle]="model()?.handle ?? ''"

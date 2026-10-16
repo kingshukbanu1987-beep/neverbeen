@@ -8,6 +8,7 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
   viewChild,
@@ -104,17 +105,21 @@ type FullScreenElement = HTMLElement & {
   },
 })
 export class AiModelPhotoFullScreen {
-  /** The photograph to show full size. */
+  /** The photograph the viewer was on when full screen opened. */
   readonly photo = input.required<AiModelPhoto>();
+  /** All unlocked photographs in the model's album; Premium Content is never passed here. */
+  readonly albumPhotos = input<readonly AiModelPhoto[] | null>(null);
   readonly modelName = input('');
   readonly modelHandle = input('');
-  /** The photograph's frame label in the album, e.g. "03". */
+  /** The photograph's frame label in the current viewer, e.g. "03". */
   readonly frameLabel = input('');
   /** The album's size as shown beside the frame label, e.g. "12". */
   readonly frameTotal = input('');
 
   /** Emitted when the visitor closes the view and wants to go back to where they came from. */
   readonly closed = output<void>();
+  /** The currently selected unlocked album photograph, emitted after in-full-screen navigation. */
+  readonly photoChanged = output<AiModelPhoto>();
 
   protected readonly maxZoom = MAX_ZOOM;
 
@@ -147,10 +152,36 @@ export class AiModelPhotoFullScreen {
     return this.modelHandle() ? `${name} · ${this.modelHandle()}` : name;
   });
 
+  /** The album is intentionally built only from the model's regular, unlocked photographs. */
+  protected readonly frames = computed(() => {
+    const album = this.albumPhotos();
+    return album?.length ? album : [this.photo()];
+  });
+
+  /** Starts on the photograph opened in the lightbox, then stays local while this view is open. */
+  protected readonly frameIndex = linkedSignal(() => {
+    const source = this.photo().src;
+    const index = this.frames().findIndex((frame) => frame.src === source);
+    return index >= 0 ? index : 0;
+  });
+
+  protected readonly currentPhoto = computed(
+    () => this.frames()[this.frameIndex()] ?? this.photo(),
+  );
+  protected readonly hasAlbumNavigation = computed(() => this.frames().length > 1);
+  protected readonly displayFrameLabel = computed(() =>
+    this.albumPhotos()?.length ? String(this.frameIndex() + 1).padStart(2, '0') : this.frameLabel(),
+  );
+  protected readonly displayFrameTotal = computed(() =>
+    this.albumPhotos()?.length
+      ? String(this.albumPhotos()!.length).padStart(2, '0')
+      : this.frameTotal(),
+  );
+
   protected readonly altText = computed(() => {
     const name = this.modelName() || 'Portfolio';
-    return this.frameLabel()
-      ? `${name} — portfolio photograph ${this.frameLabel()}`
+    return this.displayFrameLabel()
+      ? `${name} — portfolio photograph ${this.displayFrameLabel()}`
       : `${name} — portfolio photograph`;
   });
 
@@ -170,8 +201,11 @@ export class AiModelPhotoFullScreen {
   private lastPointerType = 'mouse';
   private lastTap: { time: number; x: number; y: number } | null = null;
   private glideFrame = 0;
+  private appliedMotion: Motion | null = null;
   private safariGestureBase = 1;
+  private safariGestureView: ZoomTransform = IDENTITY;
   private safariGestureFocus: Point = { x: 0, y: 0 };
+  private lastChromeWake = 0;
   private hintTimer: ReturnType<typeof setTimeout> | null = null;
   private idleTimer: ReturnType<typeof setTimeout> | null = null;
   private savedTimer: ReturnType<typeof setTimeout> | null = null;
@@ -184,6 +218,10 @@ export class AiModelPhotoFullScreen {
   private nativeFullscreen = false;
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
+    let visualViewport: VisualViewport | null = null;
+    const syncVisualViewport = () => this.onWindowResize();
+
     // Claim one history entry, so the phone's back gesture (and the browser's Back button) closes
     // this view instead of leaving the page the visitor was on.
     this.pushHistory();
@@ -215,6 +253,20 @@ export class AiModelPhotoFullScreen {
       });
     });
 
+    // Decode both neighbours before they're needed so album navigation feels immediate on phones.
+    effect(() => {
+      const frames = this.frames();
+      const index = this.frameIndex();
+      if (frames.length < 2 || typeof Image === 'undefined') return;
+      for (const offset of [1, -1]) {
+        const neighbour = frames[(index + offset + frames.length) % frames.length];
+        if (!neighbour) continue;
+        const image = new Image();
+        image.decoding = 'async';
+        image.src = neighbour.src;
+      }
+    });
+
     // Every device opens full screen: the browser's own full screen where it exists (laptops,
     // tablets, most Android phones) and a screen-filling overlay everywhere else (iPhone Safari
     // keeps the browser chrome, so the overlay is the full screen).
@@ -222,12 +274,18 @@ export class AiModelPhotoFullScreen {
       this.syncBounds();
       this.applyTransform('instant');
       this.requestNativeFullscreen();
+
+      visualViewport = typeof window !== 'undefined' ? window.visualViewport : null;
+      visualViewport?.addEventListener('resize', syncVisualViewport, { passive: true });
+      visualViewport?.addEventListener('scroll', syncVisualViewport, { passive: true });
     });
 
     this.scheduleIdleHide();
 
-    inject(DestroyRef).onDestroy(() => {
+    destroyRef.onDestroy(() => {
       this.stopGlide();
+      visualViewport?.removeEventListener('resize', syncVisualViewport);
+      visualViewport?.removeEventListener('scroll', syncVisualViewport);
       if (this.hintTimer) clearTimeout(this.hintTimer);
       if (this.idleTimer) clearTimeout(this.idleTimer);
       if (this.savedTimer) clearTimeout(this.savedTimer);
@@ -344,11 +402,48 @@ export class AiModelPhotoFullScreen {
     this.closed.emit();
   }
 
+  /** Moves around the regular album, wrapping at either end just like the lightbox. */
+  protected showNextPhoto(): void {
+    if (!this.hasAlbumNavigation()) return;
+    this.selectFrame((this.frameIndex() + 1) % this.frames().length);
+  }
+
+  protected showPreviousPhoto(): void {
+    if (!this.hasAlbumNavigation()) return;
+    this.selectFrame((this.frameIndex() - 1 + this.frames().length) % this.frames().length);
+  }
+
+  private selectFrame(index: number): void {
+    const selected = this.frames()[index];
+    if (!selected || index === this.frameIndex()) return;
+
+    this.stopGlide();
+    for (const pointerId of this.pointers.keys()) this.releaseCapture(pointerId);
+    this.pointers.clear();
+    this.gesture = null;
+    this.gesturing.set(false);
+    this.lastTap = null;
+    this.view = IDENTITY;
+    this.photoSize = { width: 0, height: 0 };
+    this.frameIndex.set(index);
+
+    const image = this.imageRef()?.nativeElement;
+    if (image) {
+      image.style.width = '100%';
+      image.style.height = '100%';
+      image.style.opacity = '0.68';
+    }
+    this.applyTransform('instant');
+    this.dismissHint();
+    this.wakeChrome();
+    this.photoChanged.emit(selected);
+  }
+
   // ------------------------------------------------------------------------------- download
 
   /** Saves the photograph to the visitor's device and confirms with a brief pill. */
   protected async download(): Promise<void> {
-    const photo = this.photo();
+    const photo = this.currentPhoto();
     if (!photo?.src) return;
     await downloadPhotograph(photo.src);
     this.saved.set(true);
@@ -408,7 +503,11 @@ export class AiModelPhotoFullScreen {
 
   protected onPointerMove(event: PointerEvent): void {
     // A moving mouse wakes the controls even before it presses anything.
-    if (!this.gesture && (event.pointerType || this.lastPointerType) === 'mouse') {
+    if (
+      !this.gesture &&
+      (event.pointerType || this.lastPointerType) === 'mouse' &&
+      Date.now() - this.lastChromeWake >= 800
+    ) {
       this.wakeChrome();
     }
     const gesture = this.gesture;
@@ -482,6 +581,7 @@ export class AiModelPhotoFullScreen {
 
     this.gesture = null;
     this.gesturing.set(false);
+    this.wakeChrome();
     if (cancelled) return;
 
     this.glide(gesture.samples, event.timeStamp);
@@ -593,17 +693,22 @@ export class AiModelPhotoFullScreen {
 
   private onSafariGestureStart(event: SafariGestureEvent): void {
     event.preventDefault();
+    // iOS may send both legacy gesture events and pointer events for the same pinch. The pointer
+    // stream already handles that gesture, so applying both would double the zoom and feel stuck.
+    if (this.pointers.size > 0) return;
     this.stopGlide();
     this.syncBounds();
+    this.safariGestureView = { ...this.view };
     this.safariGestureBase = this.view.scale;
     this.safariGestureFocus = this.toStage({ x: event.clientX, y: event.clientY });
   }
 
   private onSafariGestureChange(event: SafariGestureEvent): void {
     event.preventDefault();
+    if (this.pointers.size > 0 || !Number.isFinite(event.scale)) return;
     this.dismissHint();
     this.view = zoomAround(
-      { ...this.view, scale: this.safariGestureBase },
+      this.safariGestureView,
       clampScale(this.safariGestureBase * event.scale),
       this.safariGestureFocus,
       this.stageSize,
@@ -622,10 +727,12 @@ export class AiModelPhotoFullScreen {
         this.close();
         break;
       case 'ArrowRight':
-        this.panBy(-PAN_STEP, 0);
+        if (this.hasAlbumNavigation() && !isZoomed(this.view)) this.showNextPhoto();
+        else this.panBy(-PAN_STEP, 0);
         break;
       case 'ArrowLeft':
-        this.panBy(PAN_STEP, 0);
+        if (this.hasAlbumNavigation() && !isZoomed(this.view)) this.showPreviousPhoto();
+        else this.panBy(PAN_STEP, 0);
         break;
       case 'ArrowUp':
         this.panBy(0, PAN_STEP);
@@ -673,7 +780,9 @@ export class AiModelPhotoFullScreen {
 
   protected onPhotoLoad(): void {
     // The photograph's own size is only known once it has loaded; it is then painted to cover
-    // the whole screen exactly.
+    // the whole screen exactly. A new album frame fades in as soon as it is decoded.
+    const image = this.imageRef()?.nativeElement;
+    if (image) image.style.opacity = '1';
     this.syncBounds();
     this.view = clampPan(this.view, this.stageSize, this.photoSize);
     this.applyTransform('instant');
@@ -709,8 +818,19 @@ export class AiModelPhotoFullScreen {
   // ---------------------------------------------------------------------------------- chrome
 
   protected wakeChrome(): void {
+    this.lastChromeWake = Date.now();
     this.chromeVisible.set(true);
     this.scheduleIdleHide();
+  }
+
+  /** Pointer movement reveals controls on desktop without restarting a timer on every touch sample. */
+  protected onRootPointerMove(event: PointerEvent): void {
+    if (
+      (event.pointerType || this.lastPointerType) === 'mouse' &&
+      Date.now() - this.lastChromeWake >= 800
+    ) {
+      this.wakeChrome();
+    }
   }
 
   private scheduleIdleHide(): void {
@@ -755,14 +875,21 @@ export class AiModelPhotoFullScreen {
     this.scale.set(this.view.scale);
     const image = this.imageRef()?.nativeElement;
     if (!image) return;
-    image.style.transition =
-      motion === 'smooth'
-        ? 'transform 280ms cubic-bezier(0.22, 0.68, 0.32, 1)'
-        : motion === 'wheel'
-          ? 'transform 130ms ease-out'
-          : 'none';
+
+    if (this.appliedMotion !== motion) {
+      const transformTransition =
+        motion === 'smooth'
+          ? 'transform 280ms cubic-bezier(0.22, 0.68, 0.32, 1)'
+          : motion === 'wheel'
+            ? 'transform 130ms ease-out'
+            : 'transform 0s linear';
+      image.style.transition = `filter 420ms cubic-bezier(0.3, 0.7, 0.3, 1), opacity 160ms ease, ${transformTransition}`;
+      this.appliedMotion = motion;
+    }
     const { scale, x, y } = this.view;
-    image.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    // The percentage translate centres the over-sized cover image on the stage; x/y then pan it
+    // independently of scale, which keeps the mathematically clamped edges aligned with the screen.
+    image.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
   }
 
   private capturePointer(pointerId: number): void {

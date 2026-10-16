@@ -101,8 +101,12 @@ interface SafariGestureEvent extends UIEvent {
   },
 })
 export class AiModelPhotoViewer {
-  /** The photographs to browse, in the order the page shows them. */
+  /** The photographs to browse in the lightbox, in the order the page shows them. */
   readonly photos = input.required<readonly AiModelPhoto[]>();
+  /** The complete unlocked album; used by the full-size navigator when the profile shows a preview. */
+  readonly albumPhotos = input<readonly AiModelPhoto[] | null>(null);
+  /** Only regular model portfolios opt in; premium galleries must never expose album navigation. */
+  readonly allowAlbumNavigation = input(false);
   /** The photograph the visitor opened. */
   readonly startIndex = input(0);
   readonly modelName = input('');
@@ -125,13 +129,20 @@ export class AiModelPhotoViewer {
 
   protected readonly maxZoom = MAX_ZOOM;
 
+  /** When full-size navigation leaves the profile preview, continue in the complete album on return. */
+  protected readonly albumExpanded = signal(false);
+  protected readonly visiblePhotos = computed(() => {
+    const album = this.albumPhotos();
+    return this.albumExpanded() && album?.length ? album : this.photos();
+  });
+
   /** Follows `startIndex`, but the viewer's own controls move it on. */
   protected readonly index = linkedSignal(() => {
     const last = Math.max(this.photos().length - 1, 0);
     return Math.min(Math.max(Math.trunc(this.startIndex()), 0), last);
   });
 
-  protected readonly photo = computed(() => this.photos()[this.index()] ?? null);
+  protected readonly photo = computed(() => this.visiblePhotos()[this.index()] ?? null);
 
   /**
    * The current photograph as a one-item list keyed by its address, so every photograph gets a
@@ -142,7 +153,7 @@ export class AiModelPhotoViewer {
     return photo ? [photo] : [];
   });
 
-  protected readonly total = computed(() => this.photos().length);
+  protected readonly total = computed(() => this.visiblePhotos().length);
   protected readonly frameNumber = computed(() => this.frameLabel(this.index()));
   protected readonly totalNumber = computed(() =>
     String(Math.max(this.total(), 1)).padStart(2, '0'),
@@ -205,12 +216,45 @@ export class AiModelPhotoViewer {
    * 500% zoom, B/W ⇄ Original and Download. Closing it hands the visitor straight back here.
    */
   protected readonly fullSizeOpen = signal(false);
+  private readonly fullSizeSelection = signal<AiModelPhoto | null>(null);
+
+  protected readonly fullSizePhotos = computed(() => {
+    const album = this.albumPhotos();
+    return album?.length ? album : this.photos();
+  });
 
   protected openFullSize(): void {
+    this.fullSizeSelection.set(null);
     this.fullSizeOpen.set(true);
   }
 
+  protected onFullSizePhotoChanged(photo: AiModelPhoto): void {
+    this.fullSizeSelection.set(photo);
+    const slug = this.modelSlug();
+    if (slug && photo.src !== this.photo()?.src) {
+      void this.engagement.recordView(slug, 'photo', photo.src);
+    }
+  }
+
   protected closeFullSize(): void {
+    const selected = this.fullSizeSelection();
+    if (selected) {
+      const visibleIndex = this.visiblePhotos().findIndex((photo) => photo.src === selected.src);
+      if (visibleIndex >= 0) {
+        if (visibleIndex !== this.index()) {
+          this.index.set(visibleIndex);
+          this.resetView();
+        }
+      } else {
+        const albumIndex = this.fullSizePhotos().findIndex((photo) => photo.src === selected.src);
+        if (albumIndex >= 0) {
+          this.albumExpanded.set(true);
+          this.index.set(albumIndex);
+          this.resetView();
+        }
+      }
+    }
+    this.fullSizeSelection.set(null);
     this.fullSizeOpen.set(false);
   }
 
@@ -279,7 +323,7 @@ export class AiModelPhotoViewer {
 
     // Warm the browser cache with the neighbours, so the next swipe shows its photograph at once.
     effect(() => {
-      const photos = this.photos();
+      const photos = this.visiblePhotos();
       const index = this.index();
       if (photos.length < 2 || typeof Image === 'undefined') return;
       for (const offset of [1, -1]) {

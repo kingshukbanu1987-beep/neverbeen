@@ -1,11 +1,12 @@
 <div
   #root
   class="full-size"
+  [class.has-album]="hasAlbumNavigation()"
   role="dialog"
   aria-modal="true"
   [attr.aria-label]="'Full size view — ' + altText()"
   (pointerdown)="wakeChrome()"
-  (pointermove)="wakeChrome()"
+  (pointermove)="onRootPointerMove($event)"
 >
   <div
     #stage
@@ -23,7 +24,7 @@
       #photoImage
       class="full-size-image"
       [class.is-bw]="bw()"
-      [src]="photo().src"
+      [src]="currentPhoto().src"
       [alt]="altText()"
       draggable="false"
       decoding="async"
@@ -49,12 +50,12 @@
 
       <p class="fs-title">
         {{ title() }}
-        @if (frameLabel()) {
+        @if (displayFrameLabel()) {
           <i aria-hidden="true">·</i>
           <span class="fs-frame">
-            <span class="num">{{ frameLabel() }}</span>
-            @if (frameTotal()) {
-              <span class="fs-frame-total"> / {{ frameTotal() }}</span>
+            <span class="num">{{ displayFrameLabel() }}</span>
+            @if (displayFrameTotal()) {
+              <span class="fs-frame-total"> / {{ displayFrameTotal() }}</span>
             }
           </span>
         }
@@ -105,6 +106,41 @@
 
     @if (hintVisible() && !zoomed()) {
       <span class="fs-hint" aria-hidden="true">{{ hintText() }}</span>
+    }
+
+    @if (hasAlbumNavigation()) {
+      <nav class="fs-album-nav" aria-label="Browse the model's photographs">
+        <button
+          type="button"
+          class="fs-album-button"
+          (click)="showPreviousPhoto()"
+          aria-label="Previous photograph"
+          title="Previous photograph"
+        >
+          <svg class="fs-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <span class="fs-album-meter" aria-live="polite" aria-atomic="true">
+          <span class="fs-album-kicker">Album</span>
+          <span class="fs-album-count">
+            <span class="num">{{ displayFrameLabel() }}</span>
+            <span class="fs-album-divider">/</span>
+            <span class="num">{{ displayFrameTotal() }}</span>
+          </span>
+        </span>
+        <button
+          type="button"
+          class="fs-album-button"
+          (click)="showNextPhoto()"
+          aria-label="Next photograph"
+          title="Next photograph"
+        >
+          <svg class="fs-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      </nav>
     }
 
     <div class="fs-zoom-dock" role="group" aria-label="Zoom">
