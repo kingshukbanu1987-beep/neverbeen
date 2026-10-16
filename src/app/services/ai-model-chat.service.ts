@@ -411,12 +411,27 @@ export class AiModelChatService {
    */
   setIdentity(model: AiModelProfile, identity: ChatIdentity): void {
     const session = this.sessionFor(model);
+    const premium = this.sessionPlan(session) === 'premium';
+    // Premium Content Coverage bought at a later checkout still reaches a Premium session that is
+    // running and was reopened instead of restarted: coverage can be added, never taken away.
+    if (
+      premium &&
+      session.identity &&
+      !session.closed &&
+      identity.premiumContentCoverage === true &&
+      !session.premiumContentCoverage
+    ) {
+      session.premiumContentCoverage = true;
+      this.touch(session);
+    }
     if (session.identity || session.closed || !isValidChatName(identity.name) || !identity.avatar)
       return;
 
-    if (this.sessionPlan(session) === 'premium') {
+    if (premium) {
       session.durationMs = paymentDurationMs(identity.paymentPackageId ?? 'basic');
       session.messages[0].text = `🔒 This is a private Premium Live Chat of ${session.durationMs / 60_000} minutes with an AI model of the NeverBeen Multiverse. Nothing here is real outside NeverBeen, and the studio reads nothing of it.`;
+      // Show Premium Content opens only when this checkout included Premium Content Coverage.
+      session.premiumContentCoverage = identity.premiumContentCoverage === true;
     }
     const now = Date.now();
     session.identity = { name: identity.name, avatar: identity.avatar };
@@ -1939,6 +1954,9 @@ export class AiModelChatService {
               : restoredPlan === 'legacy'
                 ? AI_CHAT_SESSION_MS
                 : LIVE_CHAT_PLANS[restoredPlan].durationMs,
+          // A reload keeps the Premium Content Coverage the checkout paid for — and only that.
+          premiumContentCoverage:
+            restoredPlan === 'premium' && session.premiumContentCoverage === true,
           identity: session.identity ?? null,
           personalMemory: restorePersonalMemory(session.personalMemory),
           startedAt: session.startedAt ?? Date.now(),

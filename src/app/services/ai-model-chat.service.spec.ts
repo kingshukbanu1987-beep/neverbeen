@@ -92,6 +92,79 @@ describe('AiModelChatService', () => {
     expect(chat.session()?.durationMs).toBe(minutes * 60_000);
   });
 
+  it('keeps the Premium Content Coverage of the checkout, also across a reload', () => {
+    const chat = service();
+    chat.openChat(alisha, 'premium');
+    chat.setIdentity(alisha, {
+      ...VISITOR,
+      paymentPackageId: 'basic',
+      premiumContentCoverage: true,
+    });
+    expect(chat.session()?.premiumContentCoverage).toBe(true);
+
+    // A second service instance stands in for a reloaded page.
+    const restored = TestBed.runInInjectionContext(() => new AiModelChatService());
+    silenceChatPacing(restored);
+    restored.openChat(alisha, 'premium');
+    expect(restored.session()?.premiumContentCoverage).toBe(true);
+    restored.closeChat();
+  });
+
+  it('leaves a Premium session without coverage when its checkout had none', () => {
+    const chat = service();
+    chat.openChat(alisha, 'premium');
+    chat.setIdentity(alisha, {
+      ...VISITOR,
+      paymentPackageId: 'basic',
+      premiumContentCoverage: false,
+    });
+    expect(chat.session()?.premiumContentCoverage).toBe(false);
+    const restored = TestBed.runInInjectionContext(() => new AiModelChatService());
+    silenceChatPacing(restored);
+    restored.openChat(alisha, 'premium');
+    expect(restored.session()?.premiumContentCoverage).toBe(false);
+    restored.closeChat();
+  });
+
+  it('adds coverage bought at a later checkout to the Premium session still running', () => {
+    const chat = service();
+    chat.openChat(alisha, 'premium');
+    chat.setIdentity(alisha, {
+      ...VISITOR,
+      paymentPackageId: 'basic',
+      premiumContentCoverage: false,
+    });
+    const { startedAt, endsAt } = chat.session()!;
+
+    // The window is reopened after a second checkout, this time with the coverage: the running
+    // session is kept — the same clock — and gains the coverage.
+    chat.closeChat();
+    chat.openChat(alisha, 'premium');
+    chat.setIdentity(alisha, {
+      ...VISITOR,
+      paymentPackageId: 'basic',
+      premiumContentCoverage: true,
+    });
+    expect(chat.session()?.premiumContentCoverage).toBe(true);
+    expect(chat.session()?.startedAt).toBe(startedAt);
+    expect(chat.session()?.endsAt).toBe(endsAt);
+
+    // A later checkout without the coverage never takes it away again.
+    chat.setIdentity(alisha, {
+      ...VISITOR,
+      paymentPackageId: 'basic',
+      premiumContentCoverage: false,
+    });
+    expect(chat.session()?.premiumContentCoverage).toBe(true);
+  });
+
+  it('grants Premium Content Coverage to Premium sessions only', () => {
+    const chat = service();
+    chat.openChat(alisha, 'registered');
+    chat.setIdentity(alisha, { ...VISITOR, premiumContentCoverage: true });
+    expect(chat.session()?.premiumContentCoverage).toBeFalsy();
+  });
+
   it('starts fresh after a visitor ends the chat, requiring a new name and photo', async () => {
     const chat = service();
     open(chat);

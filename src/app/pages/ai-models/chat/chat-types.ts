@@ -367,6 +367,12 @@ export interface AiChatSession {
   plan?: LiveChatPlan | 'legacy';
   /** Fixed at session creation, so reopening a chat can never restart or extend its time. */
   durationMs?: number;
+  /**
+   * True once Premium Content Coverage was paid for at this Premium session's checkout. It is the
+   * only key to "Show Premium Content" on her information sheet, whether she is a Premium model,
+   * an Exclusive model or any other; without it the button stays disabled.
+   */
+  premiumContentCoverage?: boolean;
   messages: AiChatMessage[];
   /**
    * The three-strike escalation: a warning is served at 1 and 2, and she says goodbye at 3.

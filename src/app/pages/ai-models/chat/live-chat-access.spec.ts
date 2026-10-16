@@ -362,37 +362,63 @@ describe('premium model access and UPI payment', () => {
     fixture.destroy();
   });
 
-  it('offers Premium Content Coverage at Base Price + ₹51, taxed with the package subtotal', async () => {
+  it('offers Premium Content Coverage at a flat ₹100, taxed with the package subtotal', async () => {
     const handoff = appHandoff();
     const { fixture, element, premium } = paymentPage(); // Nourhan Durrani: ₹119
 
-    // The coverage block sits after the package selection, with None selected by default.
+    // The coverage section sits after the package selection: its title on one line and its line
+    // of help on the next, each in an element of its own — and None selected by default.
+    const coverageSection = element.querySelectorAll<HTMLElement>('.checkout-section')[1];
+    expect(coverageSection.querySelector('.checkout-section-title')?.textContent?.trim()).toBe(
+      'Premium Content Coverage',
+    );
+    expect(coverageSection.querySelector('.checkout-section-subtitle')?.textContent?.trim()).toBe(
+      'Unlock her exclusive frames',
+    );
     const coverages = element.querySelectorAll<HTMLButtonElement>('.payment-coverage');
     expect(coverages.length).toBe(2);
-    expect(coverages[0].textContent).toContain('None');
-    expect(coverages[1].textContent).toContain('Premium Content Coverage');
+    expect(
+      Array.from(coverages).map((coverage) =>
+        coverage.querySelector('.package-top b')?.textContent?.trim(),
+      ),
+    ).toEqual(['None', 'Access Premium Content']);
+    // Each option shows only its price — no 'base price + ₹51' or 'no extra cost' caption — and
+    // no taxation note follows the block.
+    expect(coverages[0].querySelector('.package-price small')).toBeNull();
+    expect(coverages[1].querySelector('.package-price small')).toBeNull();
+    expect(coverages[0].textContent).not.toContain('no extra cost');
+    expect(coverages[1].textContent).not.toContain('base price');
+    expect(element.querySelector('.coverage-note')).toBeNull();
+    expect(element.querySelector('.access-payment')?.textContent).not.toContain(
+      'is taxable under the same',
+    );
     expect(coverages[0].getAttribute('aria-checked')).toBe('true');
     expect(coverages[1].getAttribute('aria-checked')).toBe('false');
-    // Her coverage price card: the Base Price + ₹51.
-    expect(coverages[1].textContent).toContain('₹170.00');
+    // The coverage price card: a flat ₹100, whatever her own base price.
+    expect(coverages[1].querySelector('.package-price b')?.textContent?.trim()).toBe('+₹100.00');
     expect(element.querySelector('.payment-coverage-line')).toBeNull();
     expect(element.querySelector('.payment-summary')?.textContent).toContain('₹146.37');
 
-    // Selecting the coverage adds it to the package subtotal, under the same taxes.
+    // Selecting the coverage adds it to the package subtotal, under the same taxes, with a ledger
+    // line that reads just "Premium Content Coverage".
     coverages[1].click();
     fixture.detectChanges();
     expect(coverages[1].getAttribute('aria-checked')).toBe('true');
-    expect(element.querySelector('.payment-coverage-line')?.textContent).toContain(
+    const coverageLine = element.querySelector('.payment-coverage-line')!;
+    expect(coverageLine.querySelector('span')?.textContent?.trim()).toBe(
       'Premium Content Coverage',
     );
-    expect(element.querySelector('.payment-breakdown')?.textContent).toContain('₹289.00');
-    expect(element.querySelector('.payment-summary')?.textContent).toContain('₹355.47');
+    expect(coverageLine.querySelector('b')?.textContent).toBe('₹100.00');
+    expect(element.querySelector('.payment-breakdown')?.textContent).not.toContain('₹51');
+    expect(element.querySelector('.payment-breakdown')?.textContent).toContain('₹219.00');
+    expect(element.querySelector('.payment-summary')?.textContent).toContain('₹269.37');
 
-    // The payable amount the UPI handoff receives carries the coverage.
+    // The payable amount the UPI handoff receives carries the coverage, and so does the chat
+    // that opens after it: the coverage is what unlocks Show Premium Content there.
     element.querySelector<HTMLButtonElement>('.access-payment .review-start')!.click();
     fixture.detectChanges();
     expect(upiLauncher.open).toHaveBeenCalledWith(
-      { modelSlug: 'nourhan-durrani', amount: 355.47, method: 'gpay' },
+      { modelSlug: 'nourhan-durrani', amount: 269.37, method: 'gpay' },
       expect.any(AbortSignal),
     );
     handoff.returned();
@@ -401,7 +427,105 @@ describe('premium model access and UPI payment', () => {
       name: 'Test Member',
       avatar: '/member.jpg',
       paymentPackageId: 'basic',
+      premiumContentCoverage: true,
     });
+    fixture.destroy();
+  });
+
+  it('prices the coverage at the same flat ₹100 for a dearer model', () => {
+    const { fixture, element } = paymentPage('alisha-bhattacharya'); // Base price ₹199
+    const coverages = element.querySelectorAll<HTMLButtonElement>('.payment-coverage');
+    expect(coverages[1].querySelector('.package-price b')?.textContent?.trim()).toBe('+₹100.00');
+    coverages[1].click();
+    fixture.detectChanges();
+    expect(element.querySelector('.payment-coverage-line b')?.textContent).toBe('₹100.00');
+    expect(element.querySelector('.payment-breakdown')?.textContent).toContain('₹299.00');
+    fixture.destroy();
+  });
+
+  it('collapses and expands the duration and coverage sections, showing the selected option', () => {
+    const { fixture, element } = paymentPage();
+    const sections = element.querySelectorAll<HTMLElement>('.checkout-section');
+    expect(sections.length).toBe(2);
+    const [duration, coverage] = Array.from(sections);
+    const toggle = (section: HTMLElement) =>
+      section.querySelector<HTMLButtonElement>('.checkout-section-toggle')!;
+    const panel = (section: HTMLElement) =>
+      section.querySelector<HTMLElement>('.checkout-section-panel')!;
+    const choice = (section: HTMLElement) =>
+      section.querySelector<HTMLElement>('.checkout-section-choice');
+
+    // Both sections open expanded, with their options showing and no summary chip.
+    expect(duration.querySelector('.checkout-section-title')?.textContent?.trim()).toBe(
+      'Make time for connection',
+    );
+    expect(duration.querySelector('.checkout-section-subtitle')?.textContent?.trim()).toBe(
+      'Choose your duration',
+    );
+    for (const section of [duration, coverage]) {
+      expect(section.classList.contains('is-collapsed')).toBe(false);
+      expect(toggle(section).getAttribute('aria-expanded')).toBe('true');
+      expect(toggle(section).getAttribute('aria-controls')).toBe(panel(section).id);
+      expect(panel(section).hasAttribute('inert')).toBe(false);
+      expect(choice(section)).toBeNull();
+    }
+    expect(panel(duration).querySelectorAll('.payment-package').length).toBe(4);
+    expect(panel(coverage).querySelectorAll('.payment-coverage').length).toBe(2);
+
+    // Pick Stay Longer and the coverage, then collapse both sections.
+    element.querySelector<HTMLButtonElement>('.payment-package.package-extended')!.click();
+    element.querySelector<HTMLButtonElement>('.payment-coverage.coverage-full')!.click();
+    fixture.detectChanges();
+    toggle(duration).click();
+    toggle(coverage).click();
+    fixture.detectChanges();
+
+    // A collapsed section keeps its heading and shows only the selected option's name, small.
+    for (const section of [duration, coverage]) {
+      expect(section.classList.contains('is-collapsed')).toBe(true);
+      expect(toggle(section).getAttribute('aria-expanded')).toBe('false');
+      expect(panel(section).hasAttribute('inert')).toBe(true);
+      expect(section.querySelector('.checkout-section-title')).not.toBeNull();
+      expect(section.querySelector('.checkout-section-subtitle')).not.toBeNull();
+    }
+    expect(choice(duration)?.textContent?.replace('Selected:', '').trim()).toBe('Stay Longer');
+    expect(choice(duration)?.getAttribute('data-choice')).toBe('extended');
+    expect(choice(coverage)?.textContent?.replace('Selected:', '').trim()).toBe(
+      'Access Premium Content',
+    );
+    // The choices themselves still count while their sections are folded away.
+    expect(element.querySelector('.payment-price-value')?.textContent).toContain('45');
+    expect(element.querySelector('.payment-coverage-line b')?.textContent).toBe('₹100.00');
+
+    // Each section expands again on its own.
+    toggle(coverage).click();
+    fixture.detectChanges();
+    expect(coverage.classList.contains('is-collapsed')).toBe(false);
+    expect(toggle(coverage).getAttribute('aria-expanded')).toBe('true');
+    expect(choice(coverage)).toBeNull();
+    expect(duration.classList.contains('is-collapsed')).toBe(true);
+    toggle(duration).click();
+    fixture.detectChanges();
+    expect(duration.classList.contains('is-collapsed')).toBe(false);
+    expect(choice(duration)).toBeNull();
+    fixture.destroy();
+  });
+
+  it('opens every fresh checkout with both sections expanded', () => {
+    const { fixture, element } = paymentPage();
+    element
+      .querySelectorAll<HTMLButtonElement>('.checkout-section-toggle')
+      .forEach((toggle) => toggle.click());
+    fixture.detectChanges();
+    expect(element.querySelectorAll('.checkout-section.is-collapsed').length).toBe(2);
+
+    // Back to the chat details and on to the payment step again: a fresh checkout.
+    element.querySelector<HTMLButtonElement>('.access-payment .flow-back')!.click();
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('.review-start')!.click();
+    fixture.detectChanges();
+    expect(element.querySelectorAll('.checkout-section').length).toBe(2);
+    expect(element.querySelectorAll('.checkout-section.is-collapsed').length).toBe(0);
     fixture.destroy();
   });
 
@@ -499,6 +623,7 @@ describe('premium model access and UPI payment', () => {
       name: 'Test Member',
       avatar: '/member.jpg',
       paymentPackageId: 'basic',
+      premiumContentCoverage: false,
     });
     fixture.destroy();
   });
@@ -538,6 +663,7 @@ describe('premium model access and UPI payment', () => {
         name: 'Test Member',
         avatar: '/member.jpg',
         paymentPackageId: 'basic',
+        premiumContentCoverage: false,
       });
       expect(element.querySelector('.payment-verified')).toBeNull();
       expect(element.textContent).not.toContain('Payment verified');
@@ -572,6 +698,7 @@ describe('premium model access and UPI payment', () => {
       name: 'Test Member',
       avatar: '/member.jpg',
       paymentPackageId: 'extended',
+      premiumContentCoverage: false,
     });
     fixture.destroy();
   });
@@ -1009,6 +1136,7 @@ describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () 
         name: 'Test Member',
         avatar: '/member.jpg',
         paymentPackageId: 'basic',
+        premiumContentCoverage: false,
       });
       expect(element.querySelector('.payment-status')?.textContent).toContain(
         'Opening your Live Chat',
@@ -1117,6 +1245,7 @@ describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () 
       name: 'Test Member',
       avatar: '/member.jpg',
       paymentPackageId: 'extended',
+      premiumContentCoverage: false,
     });
     fixture.destroy();
   });
@@ -1157,6 +1286,29 @@ describe('laptop and desktop: mandatory UPI ID, then a scan-to-pay QR code', () 
       name: 'Test Member',
       avatar: '/member.jpg',
       paymentPackageId: 'extended',
+      premiumContentCoverage: false,
+    });
+    fixture.destroy();
+  });
+
+  it('carries the Premium Content Coverage of a desktop QR payment into the chat', () => {
+    vi.useFakeTimers();
+    const page = paymentPage();
+    const { fixture, element, premium } = page;
+    element.querySelector<HTMLButtonElement>('.payment-coverage.coverage-full')!.click();
+    fixture.detectChanges();
+    chooseApp(page, 'gpay');
+    typeUpiId(page, '9876543210@ybl');
+    payButton(element).click();
+    fixture.detectChanges();
+    // Base ₹119 + the flat ₹100 coverage = ₹219, plus 5% + 9% + 9% = ₹269.37.
+    expect(element.querySelector('.payment-qr')?.textContent).toContain('₹269.37');
+    vi.advanceTimersByTime(10_000);
+    expect(premium).toHaveBeenCalledExactlyOnceWith({
+      name: 'Test Member',
+      avatar: '/member.jpg',
+      paymentPackageId: 'basic',
+      premiumContentCoverage: true,
     });
     fixture.destroy();
   });
