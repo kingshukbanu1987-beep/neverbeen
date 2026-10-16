@@ -847,9 +847,10 @@
 }
 
 /* Preview — the cinematic play of the model's complete public album, straight from her card: the
-   very button the photo viewer offers (a transparent capsule, ▷ then the word), only stretched
-   across the whole row it stands in, right under the counts. Minimum padding keeps the card
-   compact; the hover is the studio's pink edge with a breath of light inside the capsule. */
+   very button the photo viewer offers (a capsule, ▷ then the word), only stretched across the
+   whole row it stands in, right under the counts. Its background is #F21DA8 at 92% opacity, so
+   the portrait still breathes faintly through the magenta. Minimum padding keeps the card
+   compact; the hover lifts the capsule to full opacity. */
 .card-preview {
   display: flex;
   width: 100%;
@@ -860,14 +861,14 @@
   padding: 0.28rem 0.7rem;
   border: 1px solid rgb(255 255 255 / 30%);
   border-radius: 999px;
-  background: transparent;
+  background: rgb(242 29 168 / 92%);
   color: #fff;
   font-family: inherit;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  /* The capsule stays transparent over the portrait, so the words carry their own shade. */
+  /* The capsule stands over the portrait, so the words carry their own shade. */
   text-shadow: 0 2px 12px rgb(0 0 0 / 65%);
   cursor: pointer;
   transition:
@@ -882,13 +883,13 @@
 }
 
 .card-preview:hover {
-  border-color: rgb(240 112 168 / 62%);
-  background: rgb(255 255 255 / 12%);
-  box-shadow: 0 0 18px rgb(169 17 85 / 18%);
+  border-color: rgb(255 255 255 / 62%);
+  background: rgb(242 29 168 / 100%);
+  box-shadow: 0 0 18px rgb(242 29 168 / 35%);
 }
 
 .card-preview:active {
-  background: rgb(173 20 26 / 42%);
+  background: rgb(242 29 168 / 82%);
 }
 
 .card-preview:focus-visible {
