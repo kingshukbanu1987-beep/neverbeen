@@ -18,6 +18,7 @@ const premiumPrices: Readonly<Record<string, number>> = {
   'priyanka-chatterjee': 129,
   'tasneem-al-rifai': 99,
   'fatima-sana-hussaini': 109,
+  'ziba-nazrin': 179,
 };
 
 const exclusiveSlugs = [
@@ -53,7 +54,6 @@ const freeSlugs = [
   'zaynab-jones',
   'maeve-anahita',
   'lucia-gomensoro-rossi',
-  'ziba-nazrin',
   'nazanin-maeve-al-farsi',
   'soraya-smith',
   'zeina-al-atassi',
