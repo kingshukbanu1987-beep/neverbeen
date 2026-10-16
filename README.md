@@ -85,7 +85,10 @@ ng test
 The `/ai-models` page is a dark, magenta-accented studio directory that opens on a short, plain title
 bar — no artwork or decorative panels. Portfolios appear in the published order (`order` in
 `data/ai-models/profiles.json`) and every cover states, in large bold type, how many photographs that
-model has in her portfolio. Each cover opens its own
+model has in her portfolio. Every card keeps its blocks tight on minimum padding — the **Starting
+Price / Photograph** row, the photograph and video counts, the **Preview** capsule and the Seen /
+Likes / Comments / Shares row read as one compact column rather than a stack of separated panels.
+Each cover opens its own
 portfolio at `/ai-models/:slug`: an Instagram-style profile header (avatar, handle, photographs
 count, location, age, height, weight, body shape, tags and short introduction) above a photo grid of
 **12 photographs drawn at random** from the album on every visit — with a **Shuffle** control in the
@@ -105,7 +108,10 @@ only a single-finger swipe at normal size moves to the next or previous frame, s
 the finger left over after a pinch always stay on the current photograph. The viewer opened from the
 portfolio browses the 12 photographs on show and links to the complete album.
 
-**Cinematic Preview:** the viewer on both the portfolio and View All page offers **Preview**.
+**Cinematic Preview:** the viewer on both the portfolio and View All page offers **Preview**, and so
+does every card in the `/ai-models` directory — the same transparent capsule, only stretched across
+the whole row and set directly under the photograph and video counts, so a visitor can play a
+model's album without opening her portfolio first.
 It plays the model's **complete public photo album**, not just the 12 visible profile tiles.
 Every shuffled loop contains each photograph once, with no repeat at the loop boundary when
 there is more than one photo. `PremiumContent/` photos are excluded and the premium viewer does
@@ -128,6 +134,11 @@ sound button can mute or retry playback if the browser blocks it. Music loops in
 the photo order. **End Preview** or Escape returns to the same photo viewer, stops and releases
 the audio, restores focus and scrolling, and cancels outstanding preview work. Switching tabs
 pauses the animation, slide clock and music until the page is visible again.
+
+In the directory, one deck serves every card: it lives at the page level (a card clips and lifts
+what it holds, which would trap a full-screen play), the click that arms it also starts it — so the
+music and full-screen requests stay inside the gesture — and the directory steps aside (`inert`)
+while it plays. A card whose album holds no photograph offers no Preview.
 
 Right below the personal details, a **Videos** reel plays the clips from the model's own
 `<album>/video/` folder: tap a clip to open it in the portfolio's player — play, pause, stop, scrub,

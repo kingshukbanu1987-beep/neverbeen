@@ -1,4 +1,4 @@
-<main class="ai-models-page">
+<main class="ai-models-page" [attr.inert]="preview()?.running() ? '' : null">
   <section class="studio-hero" aria-labelledby="ai-models-title">
     <div class="container hero-shell">
       <div class="studio-bar">
@@ -322,6 +322,23 @@
                         <i aria-hidden="true">{{ videoLabel(model) }}</i>
                       </span>
                     </div>
+
+                    <!-- The cinematic Preview, straight from the card: the same button the photo
+                         viewer offers, with the same job — her complete public album, shuffled —
+                         only stretched across the whole row under the counts. -->
+                    @if (previewAvailable(model)) {
+                      <button
+                        type="button"
+                        class="card-preview"
+                        (click)="startPreview(model)"
+                        [attr.aria-label]="
+                          'Play a cinematic preview of the photographs of ' + model.name
+                        "
+                        title="Play a cinematic photo preview"
+                      >
+                        <span aria-hidden="true">▷</span> Preview
+                      </button>
+                    }
                   </div>
                 </div>
               </div>
@@ -445,3 +462,11 @@
 
 <!-- The exact-count pop-up: a big counter opens it to reveal its exact figure. -->
 <app-exact-count-popover />
+
+<!-- One cinematic Preview for the whole directory, held at the page level (never inside a card,
+     which clips and lifts what it holds): it plays the album of whichever model armed it. -->
+<app-ai-model-photo-preview
+  [photos]="previewPhotos()"
+  [modelName]="previewName()"
+  [musicSrc]="previewMusic()"
+/>

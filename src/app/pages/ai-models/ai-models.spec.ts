@@ -8,6 +8,7 @@ import { ModelTestimonialsService } from '../../services/model-testimonials.serv
 import { compactCount, exactCount } from '../../shared/exact-count-popover';
 import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelsPage, drawCover } from './ai-models';
+import { AiModelPhotoPreview } from './photo-preview/ai-model-photo-preview';
 
 /** The cover each card is showing, in the order the cards sit on the page. */
 function cardCovers(element: HTMLElement): string[] {
@@ -556,6 +557,89 @@ describe('AiModelsPage', () => {
       expect(name?.nextElementSibling).toBe(row);
       expect(card.querySelector('.card-actions .card-action-chat')).toBeNull();
     }
+  });
+
+  it('offers the cinematic Preview on every card, stretched across the row under the counts', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const cards = Array.from(element.querySelectorAll<HTMLElement>('.model-card'));
+    expect(cards.length).toBe(aiModelProfiles.length);
+
+    for (const [index, card] of cards.entries()) {
+      const profile = aiModelProfiles[index];
+      const preview = card.querySelector<HTMLButtonElement>('.card-preview');
+      const counts = card.querySelector('.card-media-counts');
+
+      if (profile.photos.length === 0) {
+        // Nothing to play, nothing offered.
+        expect(preview, `${profile.name} has no photographs`).toBeNull();
+        continue;
+      }
+
+      expect(preview, `${profile.name} preview button`).toBeTruthy();
+      expect(preview?.textContent?.replace(/\s+/g, ' ').trim()).toBe('▷ Preview');
+      expect(preview?.getAttribute('aria-label')).toContain(profile.name);
+      // It closes the block the counts open: one group, the button right under the two counts.
+      expect(preview?.previousElementSibling).toBe(counts);
+      expect(preview?.parentElement).toBe(counts?.parentElement);
+      expect(preview?.parentElement?.classList.contains('card-meta')).toBe(true);
+    }
+
+    // One shared deck for the whole directory, held at the page level — never inside a card, which
+    // clips and lifts what it holds and would trap the full-screen preview.
+    const decks = element.querySelectorAll('app-ai-model-photo-preview');
+    expect(decks.length).toBe(1);
+    expect(decks[0].closest('.model-card')).toBeNull();
+
+    fixture.destroy();
+  });
+
+  it('plays the album of the model whose card Preview was pressed, straight from the click', () => {
+    // jsdom leaves HTMLMediaElement.play() unimplemented, so the deck is armed on a silent model.
+    const profile = aiModelProfiles.find(
+      (model) => model.photos.length > 1 && !model.previewMusic,
+    )!;
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const element: HTMLElement = fixture.nativeElement;
+    const card = Array.from(element.querySelectorAll<HTMLElement>('.model-card'))[
+      aiModelProfiles.indexOf(profile)
+    ];
+    const deck = fixture.debugElement.query(
+      (node) => node.componentInstance instanceof AiModelPhotoPreview,
+    )!.componentInstance as AiModelPhotoPreview;
+
+    expect(deck.running()).toBe(false);
+    expect(element.querySelector('.photo-preview')).toBeNull();
+
+    card.querySelector<HTMLButtonElement>('.card-preview')!.click();
+
+    // Nothing runs between the click and the start: the deck already holds her album, her name and
+    // her music, so the browser keeps the gesture the full screen and the sound ask for.
+    expect(deck.running()).toBe(true);
+    expect(deck.photos()).toBe(profile.photos);
+    expect(deck.modelName()).toBe(profile.name);
+    expect(deck.musicSrc()).toBe(profile.previewMusic ?? '');
+
+    fixture.detectChanges();
+    expect(element.querySelector('.photo-preview')?.getAttribute('aria-label')).toBe(
+      `${profile.name} photo preview`,
+    );
+    // The directory steps aside while her deck plays, exactly as the photo viewer does.
+    expect(element.querySelector('main')?.hasAttribute('inert')).toBe(true);
+
+    // Ending it puts the directory back exactly as it was.
+    deck.stop(false);
+    fixture.detectChanges();
+    expect(deck.running()).toBe(false);
+    expect(element.querySelector('.photo-preview')).toBeNull();
+    expect(element.querySelector('main')?.hasAttribute('inert')).toBe(false);
+    expect(document.body.style.overflow).toBe('');
+
+    fixture.destroy();
   });
 
   it('falls back to the stored cover for a model whose album is still empty', () => {

@@ -1,10 +1,12 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ModelLiveChatService } from '../../services/model-live-chat.service';
@@ -13,12 +15,13 @@ import { ModelTestimonialsService } from '../../services/model-testimonials.serv
 import { CompactCount, ExactCountPopover } from '../../shared/exact-count-popover';
 import { ModelLiveChatPill } from '../../shared/model-live-chat-pill/model-live-chat-pill';
 import { ModelVerifiedTick } from '../../shared/model-verified-tick/model-verified-tick';
-import { AiModelProfile, aiModelProfiles } from './ai-model-data';
+import { AiModelPhoto, AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelChatDialog } from './chat/ai-model-chat';
 import { LiveChatAccess } from './chat/live-chat-access';
 import { modelChatTier, requiresRegisteredChat } from './chat/live-chat-policy';
 import { ChatIdentity } from './chat/chat-identity';
 import { LiveChatPlan } from './chat/chat-types';
+import { AiModelPhotoPreview } from './photo-preview/ai-model-photo-preview';
 
 type AvailabilityState = 'available' | 'unavailable' | 'future';
 type SortMode = 'default' | 'price-asc' | 'price-desc';
@@ -31,6 +34,8 @@ const EMPTY_ENGAGEMENT_TOTALS: ModelEngagementTotals = {
   comments: 0,
   shares: 0,
 };
+/** What the shared cinematic Preview holds while no card has armed it. */
+const EMPTY_PREVIEW_PHOTOS: readonly AiModelPhoto[] = [];
 const TESTIMONIALS_PAGE_SIZE = 100;
 const REVIEW_SUMMARY_CONCURRENCY = 4;
 
@@ -68,6 +73,7 @@ export function drawCover(model: AiModelProfile): string {
     LiveChatAccess,
     ModelLiveChatPill,
     ModelVerifiedTick,
+    AiModelPhotoPreview,
   ],
   templateUrl: './ai-models.html',
   styleUrl: './ai-models.css',
@@ -130,6 +136,20 @@ export class AiModelsPage {
   private readonly covers = new Map(
     aiModelProfiles.map((model) => [model.slug, drawCover(model)] as const),
   );
+
+  /**
+   * The cinematic Preview the cards open. One deck serves the whole directory — it lives at the
+   * page level, never inside a card, because a card clips and transforms what it holds.
+   */
+  protected readonly preview = viewChild(AiModelPhotoPreview);
+  private readonly changeDetector = inject(ChangeDetectorRef);
+  /** The model whose card armed the shared Preview; her album is what the deck plays. */
+  protected readonly previewModel = signal<AiModelProfile | null>(null);
+  protected readonly previewPhotos = computed<readonly AiModelPhoto[]>(
+    () => this.previewModel()?.photos ?? EMPTY_PREVIEW_PHOTOS,
+  );
+  protected readonly previewName = computed(() => this.previewModel()?.name ?? '');
+  protected readonly previewMusic = computed(() => this.previewModel()?.previewMusic ?? '');
 
   protected readonly search = signal('');
   protected readonly sort = signal<SortMode>('default');
@@ -285,6 +305,24 @@ export class AiModelsPage {
   /** The frame this card displays: a random pick from the model's album, fixed for this visit. */
   protected coverFor(model: AiModelProfile): string {
     return this.covers.get(model.slug) ?? model.cover;
+  }
+
+  /** A card offers Preview only when her album holds at least one photograph to play. */
+  protected previewAvailable(model: AiModelProfile): boolean {
+    return model.photos.length > 0;
+  }
+
+  /**
+   * Plays the very same cinematic Preview the photo viewer offers — the model's complete public
+   * album, shuffled — straight from her card. The deck is bound to the armed model, so her
+   * photographs are pushed into the shared Preview before it starts: the start stays inside the
+   * click, which is what the browser's music and full-screen requests need.
+   */
+  protected startPreview(model: AiModelProfile): void {
+    if (!this.previewAvailable(model)) return;
+    this.previewModel.set(model);
+    this.changeDetector.detectChanges();
+    this.preview()?.start();
   }
 
   /** How many photographs the model's album holds — shown large on the cover. */
