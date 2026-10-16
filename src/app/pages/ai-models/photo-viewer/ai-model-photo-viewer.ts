@@ -17,6 +17,8 @@ import { ModelMediaEngagementService } from '../../../services/model-media-engag
 import { AiModelPhoto } from '../ai-model-data';
 import { ModelMediaComments } from '../../../shared/model-media-comments/model-media-comments';
 import { ModelMediaEngagementBar } from '../../../shared/model-media-engagement/model-media-engagement';
+import { AiModelPhotoFullScreen } from './ai-model-photo-full-size';
+import { downloadPhotograph } from './photo-download';
 import {
   DOUBLE_TAP_ZOOM,
   IDENTITY,
@@ -89,7 +91,7 @@ interface SafariGestureEvent extends UIEvent {
  */
 @Component({
   selector: 'app-ai-model-photo-viewer',
-  imports: [RouterLink, ModelMediaComments, ModelMediaEngagementBar],
+  imports: [RouterLink, ModelMediaComments, ModelMediaEngagementBar, AiModelPhotoFullScreen],
   templateUrl: './ai-model-photo-viewer.html',
   styleUrl: './ai-model-photo-viewer.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -113,8 +115,9 @@ export class AiModelPhotoViewer {
   readonly albumSize = input(0);
   /**
    * Offers a Download button that saves the photograph to the visitor's device. Off by default —
-   * the studio's photographs are protected works — and switched on only for the Premium Content
-   * gallery of a paid Premium Live Chat, where downloading is part of the plan.
+   * the studio's photographs are protected works — and switched on for the Photo Gallery (the
+   * portfolio and the complete album) and for the Premium Content gallery of a paid Premium Live
+   * Chat, where downloading is part of the plan. The full-size view always offers it.
    */
   readonly allowDownload = input(false);
 
@@ -195,6 +198,20 @@ export class AiModelPhotoViewer {
 
   protected toggleComments(): void {
     this.commentsOpen.update((open) => !open);
+  }
+
+  /**
+   * "View Full Size": the photograph leaves the page and takes over the whole screen — pan,
+   * 500% zoom, B/W ⇄ Original and Download. Closing it hands the visitor straight back here.
+   */
+  protected readonly fullSizeOpen = signal(false);
+
+  protected openFullSize(): void {
+    this.fullSizeOpen.set(true);
+  }
+
+  protected closeFullSize(): void {
+    this.fullSizeOpen.set(false);
   }
 
   private readonly stageRef = viewChild<ElementRef<HTMLElement>>('stage');
@@ -309,33 +326,8 @@ export class AiModelPhotoViewer {
    */
   protected async downloadPhoto(): Promise<void> {
     const photo = this.photo();
-    if (!photo || typeof document === 'undefined') return;
-    const fileName = decodeURIComponent(photo.src.split('/').pop() ?? '') || 'photograph.jpg';
-    try {
-      if (typeof fetch === 'function') {
-        const response = await fetch(photo.src, { mode: 'same-origin' });
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          this.saveLink(url, fileName);
-          setTimeout(() => URL.revokeObjectURL(url), 30_000);
-          return;
-        }
-      }
-    } catch {
-      // Falls back to the plain link below — some browsers still save it.
-    }
-    this.saveLink(photo.src, fileName);
-  }
-
-  private saveLink(href: string, fileName: string): void {
-    const link = document.createElement('a');
-    link.href = href;
-    link.download = fileName;
-    link.rel = 'noopener';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    if (!photo) return;
+    await downloadPhotograph(photo.src);
   }
 
   protected showNext(): void {
@@ -362,6 +354,8 @@ export class AiModelPhotoViewer {
   }
 
   protected onDocumentKeydown(event: KeyboardEvent): void {
+    // The full-size view owns the keyboard while it is up: Escape goes back there, not here.
+    if (this.fullSizeOpen()) return;
     if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
 
     switch (event.key) {

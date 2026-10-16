@@ -412,4 +412,42 @@ describe('AiModelPhotoViewer', () => {
     expect(link.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^View all 20\s?↗$/);
     expect(link.getAttribute('href')).toBe('/ai-models/test-studio-model/photos');
   });
+
+  it('opens the photograph full screen with "View Full Size" and comes back when it closes', async () => {
+    const host = fixture.componentInstance;
+
+    const button = element.querySelector<HTMLButtonElement>('.viewer-full-size')!;
+    expect(button.textContent).toContain('View Full Size');
+
+    button.click();
+    await settle();
+
+    const fullSize = element.querySelector('app-ai-model-photo-full-size');
+    expect(fullSize).not.toBeNull();
+    expect(fullSize!.querySelector('.full-size-image')?.getAttribute('src')).toBe(photos[0].src);
+    // The full-size view is its own dialog, with its own close control back to here.
+    expect(fullSize!.querySelector('.fs-close')).not.toBeNull();
+
+    fullSize!.querySelector<HTMLButtonElement>('.fs-close')!.click();
+    await settle();
+
+    expect(element.querySelector('app-ai-model-photo-full-size')).toBeNull();
+    expect(host.closed).toBe(0);
+    expect(element.querySelector('.lightbox')).not.toBeNull();
+  });
+
+  it('lets the full-size view own Escape while it is up — the viewer stays open underneath', async () => {
+    const host = fixture.componentInstance;
+
+    element.querySelector<HTMLButtonElement>('.viewer-full-size')!.click();
+    await settle();
+
+    await key('Escape');
+    expect(element.querySelector('app-ai-model-photo-full-size')).toBeNull();
+    expect(host.closed).toBe(0);
+
+    // Now that the full-size view is gone, Escape closes the viewer as always.
+    await key('Escape');
+    expect(host.closed).toBe(1);
+  });
 });

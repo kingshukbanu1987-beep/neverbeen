@@ -4,6 +4,7 @@ import {
   MIN_ZOOM,
   clampPan,
   clampScale,
+  coverSize,
   isZoomed,
   pinchTransform,
   wheelZoomFactor,
@@ -106,5 +107,39 @@ describe('zoom-pan', () => {
     const pinchStep = wheelZoomFactor({ deltaY: -8, deltaMode: 0, ctrlKey: true });
     expect(pinchStep).toBeGreaterThan(1.05);
     expect(pinchStep).toBeLessThan(1.2);
+  });
+
+  it('paints the photograph to cover the whole screen — the full-size fit', () => {
+    // A landscape photograph on a phone in portrait: it fills the screen top to bottom and its
+    // sides overflow, waiting just off the edges for the visitor to pan to.
+    const phone = { width: 390, height: 844 };
+    const landscape = { width: 1200, height: 800 };
+    const painted = coverSize(landscape, phone);
+    expect(painted.height).toBeCloseTo(844);
+    expect(painted.width).toBeCloseTo(1266);
+    // It covers the screen exactly on the tight axis and overflows the other…
+    expect(painted.width).toBeGreaterThan(phone.width);
+    // …and `clampPan` lets the visitor reach each edge of the photograph but no further.
+    expect(clampPan({ scale: 1, x: -10_000, y: 0 }, phone, painted).x).toBeCloseTo(-438);
+    expect(clampPan({ scale: 1, x: 10_000, y: 0 }, phone, painted).x).toBeCloseTo(438);
+    expect(clampPan({ scale: 1, x: 0, y: 10_000 }, phone, painted).y).toBe(0);
+
+    // A portrait photograph on a laptop screen behaves the same way the other way round.
+    const laptop = { width: 1440, height: 900 };
+    const portrait = { width: 600, height: 900 };
+    const wide = coverSize(portrait, laptop);
+    expect(wide.width).toBeCloseTo(1440);
+    expect(wide.height).toBeCloseTo(2160);
+  });
+
+  it('never returns a broken size, whatever it is given', () => {
+    expect(coverSize({ width: 0, height: 0 }, { width: 390, height: 844 })).toEqual({
+      width: 390,
+      height: 844,
+    });
+    expect(coverSize({ width: 100, height: 100 }, { width: 0, height: 0 })).toEqual({
+      width: 0,
+      height: 0,
+    });
   });
 });

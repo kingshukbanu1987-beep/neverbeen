@@ -1,0 +1,157 @@
+<div
+  #root
+  class="full-size"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'Full size view — ' + altText()"
+  (pointerdown)="wakeChrome()"
+  (pointermove)="wakeChrome()"
+>
+  <div
+    #stage
+    class="full-size-stage"
+    [class.is-zoomed]="zoomed()"
+    [class.is-gesturing]="gesturing()"
+    [class.is-bw]="bw()"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerCancel($event)"
+    (dblclick)="onDoubleClick($event)"
+  >
+    <img
+      #photoImage
+      class="full-size-image"
+      [class.is-bw]="bw()"
+      [src]="photo().src"
+      [alt]="altText()"
+      draggable="false"
+      decoding="async"
+      (load)="onPhotoLoad()"
+    />
+  </div>
+
+  <div class="full-size-chrome" [class.is-idle]="!chromeVisible()">
+    <header class="fs-bar">
+      <button
+        #closeButton
+        type="button"
+        class="fs-close"
+        (click)="close()"
+        aria-label="Close the full size view and go back"
+        title="Close (Esc)"
+      >
+        <svg class="fs-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+        <span class="fs-close-word">Close</span>
+      </button>
+
+      <p class="fs-title">
+        {{ title() }}
+        @if (frameLabel()) {
+          <i aria-hidden="true">·</i>
+          <span class="fs-frame">
+            <span class="num">{{ frameLabel() }}</span>
+            @if (frameTotal()) {
+              <span class="fs-frame-total"> / {{ frameTotal() }}</span>
+            }
+          </span>
+        }
+      </p>
+
+      <div class="fs-actions">
+        <div class="fs-mode" role="group" aria-label="Colour mode">
+          <button
+            type="button"
+            class="fs-mode-option"
+            [class.is-active]="!bw()"
+            [attr.aria-pressed]="!bw()"
+            (click)="setOriginal()"
+          >
+            Original
+          </button>
+          <button
+            type="button"
+            class="fs-mode-option"
+            [class.is-active]="bw()"
+            [attr.aria-pressed]="bw()"
+            (click)="setBlackAndWhite()"
+          >
+            B/W
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="fs-download"
+          (click)="download()"
+          [attr.aria-label]="
+            'Download ' +
+            (modelName() || 'the photograph') +
+            ' — save the full size photograph to your device'
+          "
+          title="Download the photograph"
+        >
+          <svg class="fs-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+            <path d="M12 4v11" />
+            <path d="m7.5 11.5 4.5 4.5 4.5-4.5" />
+            <path d="M5 19.5h14" />
+          </svg>
+          <span class="fs-download-word">Download</span>
+        </button>
+      </div>
+    </header>
+
+    @if (hintVisible() && !zoomed()) {
+      <span class="fs-hint" aria-hidden="true">{{ hintText() }}</span>
+    }
+
+    <div class="fs-zoom-dock" role="group" aria-label="Zoom">
+      <button
+        type="button"
+        class="fs-zoom-button"
+        (click)="zoomOut()"
+        [disabled]="!zoomed()"
+        aria-label="Zoom out"
+      >
+        <svg class="fs-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M5 12h14" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="fs-zoom-readout"
+        (click)="resetZoom()"
+        [disabled]="!zoomed()"
+        [attr.aria-label]="'Zoom ' + zoomPercent() + '% of full screen fit — reset'"
+        title="Reset to fill the screen"
+      >
+        <span class="readout-value"
+          ><span class="num">{{ zoomPercent() }}</span
+          >%</span
+        >
+      </button>
+      <button
+        type="button"
+        class="fs-zoom-button"
+        (click)="zoomIn()"
+        [disabled]="atMaxZoom()"
+        aria-label="Zoom in up to 500%"
+      >
+        <svg class="fs-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+    </div>
+
+    @if (saved()) {
+      <div class="fs-toast" role="status">
+        <svg class="fs-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path d="m5 12.5 4.5 4.5L19 7.5" />
+        </svg>
+        Saved to your device
+      </div>
+    }
+  </div>
+</div>
