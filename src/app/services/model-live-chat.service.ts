@@ -34,19 +34,14 @@ export interface ModelLiveChatCounts {
 export type LiveChatCountStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 /**
- * How often the directory asks the API for fresh counts while it is on screen. A chat started or
- * ended on any other device shows up on every open directory within this window — no refresh.
- */
-export const LIVE_CHAT_POLL_MS = 2_000;
-
-/**
  * The Live Now and past-chat counters of every AI model, shown in the split pill beside each
  * card's Live Chat button.
  *
- * - **Reads.** One request loads every model's counts for the directory
- *   (`GET /api/models/live-chats`, see docs/patches/neverbeen-api-model-live-chat-count.patch),
- *   and `startPolling()` keeps re-reading it every {@link LIVE_CHAT_POLL_MS} (two seconds) while the directory
- *   is open, so a session started or ended anywhere else moves the counters without a refresh.
+ * - **Reads.** One request loads every model's counts
+ *   (`GET /api/models/live-chats`, see docs/patches/neverbeen-api-model-live-chat-count.patch).
+ *   It is made when a page showing the pill opens — a visit, a refresh, a return to the page — and
+ *   again when the visitor comes back to the tab (`watch()`). **Nothing is polled:** a page left
+ *   open on screen asks the API for nothing, and keeps the numbers it loaded.
  * - **Writes.** The chat window records one start when a visitor's two-hour session begins
  *   (`POST /api/models/{slug}/live-chats`) and one end when that session is over
  *   (`POST /api/models/{slug}/live-chats/end`), both under the session's own key. Sessions that
@@ -68,9 +63,9 @@ export class ModelLiveChatService {
   readonly status = this.statusState.asReadonly();
 
   private inFlight: Promise<void> | null = null;
-  private pollTimer: ReturnType<typeof setInterval> | null = null;
-  private pollSubscribers = 0;
-  /** A tab coming back into view reads the counts straight away instead of waiting out the poll. */
+  /** Pages showing the counts; the visibility listener only runs while at least one watches. */
+  private watchers = 0;
+  /** A tab coming back into view re-reads the counts — the visitor's own return, not a poll. */
   private readonly onVisibilityChange = (): void => {
     if (typeof document === 'undefined' || document.visibilityState === 'visible') {
       void this.load();
@@ -117,34 +112,24 @@ export class ModelLiveChatService {
   }
 
   /**
-   * Keeps the counts live while a page shows them: the API is re-read every
-   * {@link LIVE_CHAT_POLL_MS} (and the moment a hidden tab comes back), so a chat started or ended
-   * on another device adjusts every visible counter by itself. Returns the stop function — each
-   * caller stops its own subscription, and the timer only runs while someone is watching.
+   * Keeps the counts current while a page shows them — **without any timer.** The counts are read
+   * when the page opens ({@link load}), and this listener re-reads them the moment the visitor
+   * comes back to the tab (the browser fires `visibilitychange` as the tab returns). A page left
+   * open on screen asks for nothing further. Returns the stop function — each caller stops its own
+   * subscription, and the listener only exists while someone is watching.
    */
-  startPolling(): () => void {
-    this.pollSubscribers += 1;
-    if (this.pollSubscribers === 1 && this.http) {
-      this.pollTimer = setInterval(() => {
-        // A hidden tab does not poll; `visibilitychange` catches it up the moment it returns.
-        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-        void this.load();
-      }, LIVE_CHAT_POLL_MS);
-      if (typeof document !== 'undefined') {
-        document.addEventListener('visibilitychange', this.onVisibilityChange);
-      }
+  watch(): () => void {
+    this.watchers += 1;
+    if (this.watchers === 1 && this.http && typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.onVisibilityChange);
     }
 
     let stopped = false;
     return () => {
       if (stopped) return;
       stopped = true;
-      this.pollSubscribers -= 1;
-      if (this.pollSubscribers > 0) return;
-      if (this.pollTimer !== null) {
-        clearInterval(this.pollTimer);
-        this.pollTimer = null;
-      }
+      this.watchers = Math.max(0, this.watchers - 1);
+      if (this.watchers > 0) return;
       if (typeof document !== 'undefined') {
         document.removeEventListener('visibilitychange', this.onVisibilityChange);
       }

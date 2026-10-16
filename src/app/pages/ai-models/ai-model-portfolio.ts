@@ -445,10 +445,12 @@ export class AiModelPortfolioPage implements OnDestroy {
   private shareTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    // The pill is live data, exactly as on the directory's cards: load the counts now and keep
-    // polling while this page is on screen, so a chat started or ended anywhere moves them.
+    // The pill reads the counts whenever this page opens, exactly as the directory's cards do,
+    // and again when the visitor comes back to the tab. No polling: the numbers the page loaded
+    // stay until then, and a chat started or ended from here moves them through the counts its
+    // own start / end request answers with.
     void this.liveChats.load();
-    this.destroyRef.onDestroy(this.liveChats.startPolling());
+    this.destroyRef.onDestroy(this.liveChats.watch());
 
     // Load a fresh model-specific public testimonial feed whenever the route changes.
     effect(() => {

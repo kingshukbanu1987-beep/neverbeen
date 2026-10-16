@@ -133,6 +133,13 @@ panel, information sheet and history, beside every reply the model sends, and on
 feedback form. The tick is drawn by `app-model-verified-tick` (`src/app/shared/model-verified-tick`)
 and appears for no other model.
 
+Both AI-model pages — the `/ai-models` directory and a model's own profile — speak to the Web API
+only when the page opens (a visit, a refresh, a return to the page), when the visitor comes back to
+the tab, and for what the visitor does with the page: opening a photograph, liking, commenting,
+sharing, starting or ending a Live Chat. **Nothing is polled on a timer.** Every request either
+page makes, and the tests that hold the rule, are written down in
+[`docs/ai-models-api-call-policy.md`](docs/ai-models-api-call-policy.md).
+
 Unspecified fields remain blank; randomized or unverified profile details are marked as illustrative
 until verified.
 

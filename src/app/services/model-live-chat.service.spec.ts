@@ -3,9 +3,15 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { environment } from '../../environments/environment';
-import { LIVE_CHAT_POLL_MS, ModelLiveChatService } from './model-live-chat.service';
+import { ModelLiveChatService } from './model-live-chat.service';
 
 const API = environment.apiBaseUrl.replace(/\/+$/, '');
+
+/** Reports the tab as hidden or visible, exactly the way the browser tells the page. */
+function setTabVisibility(state: 'visible' | 'hidden'): void {
+  Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
+}
 
 describe('ModelLiveChatService', () => {
   beforeEach(() => {
@@ -16,6 +22,7 @@ describe('ModelLiveChatService', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    Reflect.deleteProperty(document, 'visibilityState');
     TestBed.inject(HttpTestingController).verify();
   });
 
@@ -101,23 +108,34 @@ describe('ModelLiveChatService', () => {
     expect(service.countsFor('alisha-bhattacharya')).toEqual({ liveNow: 2, pastChats: 9 });
   });
 
-  it('polls the counts while someone is watching, and stops when they are gone', async () => {
+  it('re-reads the counts when the visitor comes back to the tab, and never polls on a timer', async () => {
     vi.useFakeTimers();
     const service = TestBed.inject(ModelLiveChatService);
     const http = TestBed.inject(HttpTestingController);
 
-    const stop = service.startPolling();
+    const stop = service.watch();
+    // Watching is not reading: the page's own `load()` does that when it opens.
     http.expectNone(`${API}/api/models/live-chats`);
 
-    await vi.advanceTimersByTimeAsync(LIVE_CHAT_POLL_MS);
+    // A page left open on screen asks for nothing. No timer, of any length, re-reads the counts.
+    await vi.advanceTimersByTimeAsync(10 * 60_000);
+    http.expectNone(`${API}/api/models/live-chats`);
+
+    // Coming back to the tab is the visitor's own return, and a return re-reads them.
+    setTabVisibility('visible');
     http
       .expectOne(`${API}/api/models/live-chats`)
       .flush([{ modelSlug: 'alisha-bhattacharya', liveNowCount: 5, pastChatCount: 40 }]);
     await vi.advanceTimersByTimeAsync(0);
     expect(service.countsFor('alisha-bhattacharya')).toEqual({ liveNow: 5, pastChats: 40 });
 
+    // A tab away from the screen is not read either.
+    setTabVisibility('hidden');
+    http.expectNone(`${API}/api/models/live-chats`);
+
+    // Once the last page stops watching, even a return reads nothing.
     stop();
-    await vi.advanceTimersByTimeAsync(LIVE_CHAT_POLL_MS * 3);
+    setTabVisibility('visible');
     http.expectNone(`${API}/api/models/live-chats`);
   });
 

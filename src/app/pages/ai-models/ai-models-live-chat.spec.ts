@@ -251,7 +251,36 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     fixture.destroy();
   });
 
-  it('moves the Live Now count when a fresh poll answers with different numbers', async () => {
+  it('reads the counts when the directory opens, and asks for nothing while it stays open', async () => {
+    vi.useFakeTimers();
+    const fixture = TestBed.createComponent(AiModelsPage);
+    const http = TestBed.inject(HttpTestingController);
+
+    try {
+      fixture.detectChanges();
+
+      // The one read of a visit.
+      http
+        .expectOne(`${API}/api/models/live-chats`)
+        .flush([{ modelSlug: profile.slug, liveNowCount: 1, pastChatCount: 10 }]);
+      await vi.advanceTimersByTimeAsync(0);
+      fixture.detectChanges();
+
+      const pill = cardFor(fixture.nativeElement, profile.name).querySelector<HTMLElement>(
+        '.card-live-pill',
+      )!;
+      expect(pillTextOf(pill, 'is-now').value).toBe('1');
+
+      // Ten minutes on screen, with every timer the page holds advanced: nothing else is asked.
+      await vi.advanceTimersByTimeAsync(10 * 60_000);
+      http.expectNone(`${API}/api/models/live-chats`);
+    } finally {
+      vi.useRealTimers();
+      fixture.destroy();
+    }
+  });
+
+  it('moves the Live Now count when a fresh read answers with different numbers', async () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
@@ -268,8 +297,8 @@ describe('AiModelsPage — Live Now / past-chat pill and review wording', () => 
     let now = pillTextOf(pill, 'is-now');
     expect(now.value).toBe('1');
 
-    // A chat ends somewhere else in the world: the next poll brings the smaller number, and the
-    // pill shows it without any reload of the page.
+    // A chat ends somewhere else in the world: the next read — the visitor's return to the tab —
+    // brings the smaller number, and the pill shows it without any reload of the page.
     const service = TestBed.inject(ModelLiveChatService);
     const refreshing = service.load();
     http
