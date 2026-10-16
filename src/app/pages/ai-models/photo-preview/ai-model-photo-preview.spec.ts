@@ -38,6 +38,52 @@ class MockAudio {
   }
 }
 
+class MockResizeObserver {
+  static instances: MockResizeObserver[] = [];
+  observe = vi.fn();
+  disconnect = vi.fn();
+  unobserve = vi.fn();
+  constructor(readonly callback: () => void) {
+    MockResizeObserver.instances.push(this);
+  }
+}
+
+/**
+ * jsdom lays nothing out, so the location plate has no width of its own to measure. This gives the
+ * plate the width its one line would have at full size (`line`) and the caption the width a phone
+ * would leave it (`room`), and keeps both honest as the plate's `--place-fit` scales it down.
+ */
+function stubWidths(widths: { line: number; room: number }): () => void {
+  const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
+  const scroll = Object.getOwnPropertyDescriptor(proto, 'scrollWidth');
+  const client = Object.getOwnPropertyDescriptor(proto, 'clientWidth');
+  const fitOf = (node: HTMLElement) => Number(node.style.getPropertyValue('--place-fit')) || 1;
+
+  Object.defineProperty(proto, 'scrollWidth', {
+    configurable: true,
+    get(this: HTMLElement) {
+      return this.classList.contains('preview-place') ? Math.round(widths.line * fitOf(this)) : 0;
+    },
+  });
+  Object.defineProperty(proto, 'clientWidth', {
+    configurable: true,
+    get(this: HTMLElement) {
+      if (this.classList.contains('preview-caption')) return widths.room;
+      if (this.classList.contains('preview-place')) {
+        return Math.min(widths.room, Math.round(widths.line * fitOf(this)));
+      }
+      return 0;
+    },
+  });
+
+  return () => {
+    if (scroll) Object.defineProperty(proto, 'scrollWidth', scroll);
+    else delete proto['scrollWidth'];
+    if (client) Object.defineProperty(proto, 'clientWidth', client);
+    else delete proto['clientWidth'];
+  };
+}
+
 describe('AiModelPhotoPreview', () => {
   let fixture: ComponentFixture<AiModelPhotoPreview>;
   let component: AiModelPhotoPreview;
@@ -48,15 +94,18 @@ describe('AiModelPhotoPreview', () => {
     vi.useFakeTimers();
     vi.stubGlobal('Image', MockImage);
     vi.stubGlobal('Audio', MockAudio);
+    vi.stubGlobal('ResizeObserver', MockResizeObserver);
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
     MockImage.failures.clear();
     MockImage.pending = false;
     MockAudio.instances = [];
+    MockResizeObserver.instances = [];
     fixture = TestBed.createComponent(AiModelPhotoPreview);
     component = fixture.componentInstance;
     element = fixture.nativeElement;
     fixture.componentRef.setInput('photos', photos);
     fixture.componentRef.setInput('modelName', 'Test Model');
+    fixture.componentRef.setInput('modelLocation', 'Shiraz, Iran');
     fixture.detectChanges();
   });
 
@@ -79,6 +128,12 @@ describe('AiModelPhotoPreview', () => {
 
   async function advance(ms: number): Promise<void> {
     await vi.advanceTimersByTimeAsync(ms);
+    await render();
+  }
+
+  /** The caption grew or narrowed — the sound button arrived, the phone turned over. */
+  async function resizeCaption(): Promise<void> {
+    MockResizeObserver.instances.forEach((observer) => observer.callback());
     await render();
   }
 
@@ -204,7 +259,6 @@ describe('AiModelPhotoPreview', () => {
     expect(latest()?.getAttribute('src')).toBe(photos[0].src);
     await advance(9000);
     expect(latest()?.getAttribute('src')).toBe(photos[0].src);
-    expect(element.querySelector('.preview-caption')?.textContent).toContain('1 photographs');
   });
 
   it('skips failed images and exits loading with an error if all images fail', async () => {
@@ -265,5 +319,127 @@ describe('AiModelPhotoPreview', () => {
     component.start();
     expect(component.running()).toBe(false);
     expect(MockAudio.instances).toHaveLength(0);
+  });
+
+  describe('location plate', () => {
+    function plate(): HTMLElement | null {
+      return element.querySelector<HTMLElement>('.preview-place');
+    }
+
+    it('shows her city, her country and its two-letter code instead of a photograph count', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Shiraz, Iran');
+      component.start();
+      await render();
+      expect(plate()?.querySelector('.place-city')?.textContent?.trim()).toBe('Shiraz');
+      expect(plate()?.querySelector('.place-name')?.textContent?.trim()).toBe('Iran');
+      expect(plate()?.querySelector('.place-code')?.textContent?.trim()).toBe('IR');
+      expect(plate()?.getAttribute('title')).toBe('Shiraz, Iran');
+      // The photograph count and the "shuffled, endlessly" line are gone for good.
+      expect(element.querySelector('.preview-caption')?.textContent).not.toContain('photograph');
+      expect(element.querySelector('.preview-caption')?.textContent).not.toContain('endlessly');
+    });
+
+    it('reads the whole place out to assistive tech as one line', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Kuwait City, Kuwait');
+      component.start();
+      await render();
+      // Every visible part of the plate is decorative; the one line a reader hears is the place.
+      const heard = Array.from(plate()!.children).filter(
+        (child) => child.getAttribute('aria-hidden') !== 'true',
+      );
+      expect(heard).toHaveLength(1);
+      expect(heard[0].textContent?.trim()).toBe('Based in Kuwait City, Kuwait');
+    });
+
+    it('shows the city alone when the location names no country', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Shiraz');
+      component.start();
+      await render();
+      expect(plate()?.querySelector('.place-city')?.textContent?.trim()).toBe('Shiraz');
+      expect(plate()?.querySelector('.place-name')).toBeNull();
+      expect(plate()?.querySelector('.place-code')).toBeNull();
+      expect(plate()?.querySelector('.place-rule')).toBeNull();
+    });
+
+    it('drops the code chip for a country the directory does not know', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Shiraz, Persia');
+      component.start();
+      await render();
+      expect(plate()?.querySelector('.place-city')?.textContent?.trim()).toBe('Shiraz');
+      expect(plate()?.querySelector('.place-name')?.textContent?.trim()).toBe('Persia');
+      expect(plate()?.querySelector('.place-code')).toBeNull();
+    });
+
+    it('holds no plate at all for a model with no location on file', async () => {
+      fixture.componentRef.setInput('modelLocation', '');
+      component.start();
+      await render();
+      expect(plate()).toBeNull();
+      expect(element.querySelector('.preview-caption h2')?.textContent?.trim()).toBe('Test Model');
+    });
+
+    it('keeps the whole place on one line, however long it is', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Sarajevo, Bosnia and Herzegovina');
+      component.start();
+      await render();
+      // The line never breaks, and neither does the row of parts it is built from.
+      expect(getComputedStyle(plate()!).whiteSpace).toBe('nowrap');
+      expect(getComputedStyle(plate()!.querySelector('.place-row')!).flexWrap).toBe('nowrap');
+      expect(getComputedStyle(plate()!.querySelector('.place-country')!).flexWrap).toBe('nowrap');
+    });
+
+    it('shrinks the plate instead of breaking it when the place is longer than the room', async () => {
+      // A phone: 356px of line (city, rule, country and code at full size) in 224px of caption.
+      const restore = stubWidths({ line: 356, room: 224 });
+      try {
+        fixture.componentRef.setInput('modelLocation', 'Sarajevo, Bosnia and Herzegovina');
+        component.start();
+        await render();
+        expect(plate()!.style.getPropertyValue('--place-fit')).toBe('0.617');
+      } finally {
+        restore();
+      }
+    });
+
+    it('leaves the plate at its natural size when the place has room to spare', async () => {
+      const restore = stubWidths({ line: 197, room: 264 });
+      try {
+        fixture.componentRef.setInput('modelLocation', 'Doha, Qatar');
+        component.start();
+        await render();
+        expect(Number(plate()!.style.getPropertyValue('--place-fit'))).toBe(1);
+      } finally {
+        restore();
+      }
+    });
+
+    it('refits the plate when the room it has changes', async () => {
+      const width = { line: 356, room: 264 };
+      const restore = stubWidths(width);
+      try {
+        fixture.componentRef.setInput('modelLocation', 'Sarajevo, Bosnia and Herzegovina');
+        component.start();
+        await render();
+        expect(plate()!.style.getPropertyValue('--place-fit')).toBe('0.727');
+        // The sound button takes its place, or the phone turns over: the room narrows.
+        width.room = 224;
+        await resizeCaption();
+        expect(plate()!.style.getPropertyValue('--place-fit')).toBe('0.617');
+      } finally {
+        restore();
+      }
+    });
+
+    it('never shrinks the plate past the size at which it stays readable', async () => {
+      const restore = stubWidths({ line: 1200, room: 300 });
+      try {
+        fixture.componentRef.setInput('modelLocation', 'Sarajevo, Bosnia and Herzegovina');
+        component.start();
+        await render();
+        expect(plate()!.style.getPropertyValue('--place-fit')).toBe('0.550');
+      } finally {
+        restore();
+      }
+    });
   });
 });

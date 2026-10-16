@@ -5,6 +5,7 @@ import {
   ElementRef,
   Injector,
   afterNextRender,
+  computed,
   effect,
   inject,
   input,
@@ -13,6 +14,7 @@ import {
 } from '@angular/core';
 import { AiModelPhoto } from '../ai-model-data';
 import { previewRound, publicPreviewPhotos } from './preview-deck';
+import { parsePreviewPlace } from './preview-place';
 
 interface PreviewFrame {
   id: number;
@@ -20,6 +22,11 @@ interface PreviewFrame {
   zoomOut: boolean;
   duration: number;
 }
+
+/** The smallest the location plate's type may shrink — below this the line would be unreadable. */
+const PLACE_FIT_FLOOR = 0.55;
+/** A hair of breathing room, so a long line scales down a touch further than strictly needed. */
+const PLACE_FIT_SAFETY = 0.98;
 
 @Component({
   selector: 'app-ai-model-photo-preview',
@@ -35,6 +42,8 @@ interface PreviewFrame {
 export class AiModelPhotoPreview {
   readonly photos = input.required<readonly AiModelPhoto[]>();
   readonly modelName = input('');
+  /** The model's "City, Country" line — the location plate under her name while the deck plays. */
+  readonly modelLocation = input('');
   readonly musicSrc = input('');
   readonly running = signal(false);
   protected readonly frames = signal<PreviewFrame[]>([]);
@@ -43,11 +52,16 @@ export class AiModelPhotoPreview {
   protected readonly musicAvailable = signal(false);
   protected readonly muted = signal(false);
   protected readonly suspended = signal(false);
-  protected readonly count = signal(0);
+  /**
+   * The city and country the plate under her name shows, split out of `modelLocation`. Null when
+   * the model has no location on file, which leaves the caption to her name alone.
+   */
+  protected readonly place = computed(() => parsePreviewPlace(this.modelLocation()));
 
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly endButton = viewChild<ElementRef<HTMLButtonElement>>('endButton');
+  private readonly plate = viewChild<ElementRef<HTMLElement>>('plate');
   private pool: AiModelPhoto[] = [];
   private deck: AiModelPhoto[] = [];
   private failed = new Set<string>();
@@ -64,12 +78,45 @@ export class AiModelPhotoPreview {
   private clock = 0;
   private deadline = 0;
   private remaining = 0;
+  private observer?: ResizeObserver;
 
   constructor() {
     effect(() => {
       if (this.running()) this.endButton()?.nativeElement.focus({ preventScroll: true });
     });
+    // The plate is on screen once the deck runs: fit its one line to the room the caption has.
+    effect(() => {
+      if (this.running()) this.fitPlace();
+    });
     inject(DestroyRef).onDestroy(() => this.stop(false));
+  }
+
+  /**
+   * Scales the location plate down until its single line fits the caption.
+   *
+   * The line never wraps: a long country shrinks the plate rather than breaking it in two. Every
+   * part of the plate — type, tracking, gaps, padding, marker — is sized from `--place-fit`, so
+   * measuring the line once at full size gives the exact scale the caption's width allows. The
+   * line's own padding rides on the row inside the plate, so what is measured is the whole of it.
+   */
+  private fitPlace(): void {
+    const plate = this.plate()?.nativeElement;
+    const caption = plate?.parentElement;
+    if (!plate || !caption) return;
+
+    plate.style.setProperty('--place-fit', '1');
+    const line = plate.scrollWidth;
+    const room = caption.clientWidth;
+    if (!line || !room) return;
+    const fit = Math.min(1, Math.max(PLACE_FIT_FLOOR, (room / line) * PLACE_FIT_SAFETY));
+    plate.style.setProperty('--place-fit', fit.toFixed(3));
+
+    // The caption's width moves with the sound button, full screen and the device's orientation;
+    // it does not depend on the plate's own size, so refitting can never feed back into it.
+    if (!this.observer && typeof ResizeObserver !== 'undefined') {
+      this.observer = new ResizeObserver(() => this.fitPlace());
+      this.observer.observe(caption);
+    }
   }
 
   /** Called directly from the Preview click, preserving the browser's audio activation. */
@@ -82,7 +129,6 @@ export class AiModelPhotoPreview {
     this.deck = [];
     this.frameId = 0;
     this.frames.set([]);
-    this.count.set(this.pool.length);
     this.unavailable.set(false);
     this.loading.set(true);
     this.suspended.set(false);
@@ -125,6 +171,8 @@ export class AiModelPhotoPreview {
     this.cancelLoad = undefined;
     this.nextFrame = undefined;
     this.frames.set([]);
+    this.observer?.disconnect();
+    this.observer = undefined;
     this.disposeAudio();
     document.body.style.overflow = this.previousOverflow;
     if (this.ownsFullscreen && document.fullscreenElement) {
