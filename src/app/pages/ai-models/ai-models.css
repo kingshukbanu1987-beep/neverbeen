@@ -325,9 +325,10 @@
   flex: 0 0 auto;
   overflow: hidden;
   /* The card's copy lies over the bottom of the frame, so the frame has to be tall enough to hold
-     all of it: 0.75 → 0.7 of its width, the room the split pill's own line under the Live Chat
-     button needs, plus a breath for the larger rating figure. */
-  aspect-ratio: 0.7 / 1;
+     all of it: 0.75 → 0.7 → 0.68 of its width — the room the split pill's own line under the Live
+     Chat button needs, a breath for the larger rating figure, and the Preview capsule that now
+     closes the copy under the counts (its own row, tight against the blocks above it). */
+  aspect-ratio: 0.68 / 1;
 }
 
 .card-image {
@@ -442,7 +443,9 @@
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 2.5rem clamp(1rem, 2.2vw, 1.4rem) clamp(1rem, 2vw, 1.3rem);
+  /* Minimum padding under the last block, so the counts and the Preview button sit tight above
+     the engagement row rather than floating a finger's width clear of it. */
+  padding: 2.5rem clamp(1rem, 2.2vw, 1.4rem) clamp(0.5rem, 1vw, 0.62rem);
   pointer-events: none;
 }
 
@@ -756,7 +759,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.65rem;
-  margin-top: 0.78rem;
+  /* Minimum padding: the price, the counts and the Preview button read as one tight group. */
+  margin-top: 0.5rem;
   padding: 0.55rem 0.72rem;
   border: 1px solid rgb(255 255 255 / 17%);
   border-radius: 6px;
@@ -785,9 +789,9 @@
 
 .card-meta {
   display: grid;
-  gap: 0.65rem;
-  margin-top: 0.72rem;
-  padding-top: 0.72rem;
+  gap: 0.34rem;
+  margin-top: 0.34rem;
+  padding-top: 0.34rem;
   border-top: 1px solid rgb(255 255 255 / 19%);
 }
 
@@ -842,11 +846,62 @@
   background: rgb(173 20 26 / 42%);
 }
 
+/* Preview — the cinematic play of the model's complete public album, straight from her card: the
+   very button the photo viewer offers (a transparent capsule, ▷ then the word), only stretched
+   across the whole row it stands in, right under the counts. Minimum padding keeps the card
+   compact; the hover is the studio's pink edge with a breath of light inside the capsule. */
+.card-preview {
+  display: flex;
+  width: 100%;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* The capsule stays transparent over the portrait, so the words carry their own shade. */
+  text-shadow: 0 2px 12px rgb(0 0 0 / 65%);
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.card-preview span {
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.card-preview:hover {
+  border-color: rgb(240 112 168 / 62%);
+  background: rgb(255 255 255 / 12%);
+  box-shadow: 0 0 18px rgb(169 17 85 / 18%);
+}
+
+.card-preview:active {
+  background: rgb(173 20 26 / 42%);
+}
+
+.card-preview:focus-visible {
+  outline: 2px solid #f070a8;
+  outline-offset: 2px;
+}
+
 .card-engagement-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 0.95rem clamp(0.75rem, 2vw, 1.25rem) 0;
-  padding: 0.7rem 0.45rem;
+  /* Minimum padding: the engagement row sits tight under the counts and the Preview button. */
+  margin: 0.4rem clamp(0.75rem, 2vw, 1.25rem) 0;
+  padding: 0.5rem 0.45rem;
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 13%);
   border-radius: 11px;
@@ -1335,7 +1390,7 @@
   }
 
   .card-copy {
-    padding: 2rem 1rem 1rem;
+    padding: 2rem 1rem 0.5rem;
   }
 
   .card-copy h3 {
@@ -1365,8 +1420,8 @@
   }
 
   .card-engagement-row {
-    margin: 0.75rem 0.75rem 0;
-    padding: 0.58rem 0.25rem;
+    margin: 0.4rem 0.75rem 0;
+    padding: 0.45rem 0.25rem;
   }
 
   .card-engagement-stat {
@@ -1402,6 +1457,14 @@
   .card-photo-count i,
   .card-video-count i {
     font-size: 0.5rem;
+  }
+
+  .card-preview {
+    min-height: 30px;
+    gap: 0.35rem;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
   }
 
   .card-index {
@@ -1452,8 +1515,9 @@
 
 @media (max-width: 420px) {
   .card-cover {
-    /* The same extra line under the Live Chat button, in the tighter phone frame. */
-    aspect-ratio: 0.8 / 1;
+    /* The same extra lines — the pill's under the Live Chat button and the Preview capsule under
+       the counts — in the tighter phone frame. */
+    aspect-ratio: 0.76 / 1;
   }
 
   .card-copy h3 {
