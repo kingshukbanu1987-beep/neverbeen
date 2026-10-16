@@ -122,8 +122,10 @@ until the next is ready. Unavailable images are skipped. Reduced-motion preferen
 
 Her **city and country** ride a lit glass plate under her name for the whole play: the city in
 tracked capitals beside a pulsing marker, then a hairline drawn across to the country and its
-two-letter code wherever the directory knows one. The plate wraps instead of overflowing a narrow
-phone, and a model with no location on file plays under her name alone.
+two-letter code wherever the directory knows one. The line never breaks, on a phone either — the
+longer the place, the smaller the plate's type, tracking, gaps and padding all scale together,
+measured against the room the caption has and re-measured whenever that room changes. A model with
+no location on file plays under her name alone.
 
 For optional looping background music, place an MP3 **directly in the model's folder** with the
 exact display name, including spaces and case, e.g.:
