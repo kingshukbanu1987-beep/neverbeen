@@ -104,6 +104,31 @@ with the arrow keys), and the zoom readout resets it to fit. Zooming never chang
 only a single-finger swipe at normal size moves to the next or previous frame, so pinches, pans and
 the finger left over after a pinch always stay on the current photograph. The viewer opened from the
 portfolio browses the 12 photographs on show and links to the complete album.
+
+**Cinematic Preview:** the viewer on both the portfolio and View All page offers **Preview**.
+It plays the model's **complete public photo album**, not just the 12 visible profile tiles.
+Every shuffled loop contains each photograph once, with no repeat at the loop boundary when
+there is more than one photo. `PremiumContent/` photos are excluded and the premium viewer does
+not offer Preview. Centered, edge-to-edge cover crops fill portrait and landscape viewports
+(no letterboxing), alternating a 4-second slow zoom-in with a 5-second zoom-out and soft crossfades.
+Photos are decoded ahead of transitions; on a slow connection the current image stays visible
+until the next is ready. Unavailable images are skipped. Reduced-motion preferences disable zoom.
+
+For optional looping background music, place an MP3 **directly in the model's folder** with the
+exact display name, including spaces and case, e.g.:
+
+```text
+public/NeverBeenModels/AlishaBhattacharya/Alisha Bhattacharya.mp3
+```
+
+`npm run generate:ai-models` / `npm run build` discovers it automatically; the development watcher
+also picks up MP3 changes. Missing or unplayable tracks leave Preview silent. Playback requests
+100% player volume (the device's hardware volume and browser audio policy still apply); the glass
+sound button can mute or retry playback if the browser blocks it. Music loops independently of
+the photo order. **End Preview** or Escape returns to the same photo viewer, stops and releases
+the audio, restores focus and scrolling, and cancels outstanding preview work. Switching tabs
+pauses the animation, slide clock and music until the page is visible again.
+
 Right below the personal details, a **Videos** reel plays the clips from the model's own
 `<album>/video/` folder: tap a clip to open it in the portfolio's player — play, pause, stop, scrub,
 volume, playback speed, previous/next clip, picture-in-picture, true full screen (F or a double

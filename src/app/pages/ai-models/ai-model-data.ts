@@ -145,6 +145,8 @@ export interface AiModelProfile {
   cover: string;
   /** Album folder inside public/NeverBeenModels. */
   album: string;
+  /** Optional exact-name <model name>.mp3 in the album root, for the cinematic preview. */
+  previewMusic?: string;
   location: string;
   age: string;
   height: string;
@@ -1750,6 +1752,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     name: 'Alisha Bhattacharya',
     cover: '/NeverBeenModels/AlishaBhattacharya/Alisha%20Bhattacharya.jpg',
     album: 'AlishaBhattacharya',
+    previewMusic: '/NeverBeenModels/AlishaBhattacharya/Alisha%20Bhattacharya.mp3',
     location: 'Darjeeling, India',
     age: '25',
     height: '165 cm',

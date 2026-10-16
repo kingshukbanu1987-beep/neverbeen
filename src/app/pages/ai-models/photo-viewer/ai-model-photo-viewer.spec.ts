@@ -14,7 +14,7 @@ const photos: AiModelPhoto[] = Array.from({ length: 5 }, (_, index) => ({
   imports: [AiModelPhotoViewer],
   template: `
     <app-ai-model-photo-viewer
-      [photos]="photos"
+      [photos]="photos()"
       [albumPhotos]="albumPhotos"
       [allowAlbumNavigation]="allowAlbumNavigation()"
       [startIndex]="0"
@@ -28,7 +28,7 @@ const photos: AiModelPhoto[] = Array.from({ length: 5 }, (_, index) => ({
   `,
 })
 class ViewerHost {
-  readonly photos = photos;
+  readonly photos = signal(photos);
   readonly albumPhotos = photos;
   readonly allowAlbumNavigation = signal(true);
   readonly albumLink = signal<string[] | null>(null);
@@ -482,5 +482,30 @@ describe('AiModelPhotoViewer', () => {
     // Now that the full-size view is gone, Escape closes the viewer as always.
     await key('Escape');
     expect(host.closed).toBe(1);
+  });
+
+  it('offers Preview only to regular model galleries, never the premium viewer', async () => {
+    expect(element.querySelector('.viewer-preview')?.textContent).toContain('Preview');
+    fixture.componentInstance.allowAlbumNavigation.set(false);
+    await settle();
+    expect(element.querySelector('.viewer-preview')).toBeNull();
+    expect(element.querySelector('app-ai-model-photo-preview')).toBeNull();
+  });
+
+  it('previews the complete public album from a subset and leaves the viewer in place on exit', async () => {
+    fixture.componentInstance.photos.set(photos.slice(0, 2));
+    await settle();
+    element.querySelector<HTMLButtonElement>('.viewer-preview')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('.photo-preview')).not.toBeNull();
+    expect(element.querySelector('.preview-caption')?.textContent).toContain('5 photographs');
+    expect(element.querySelector('.lightbox')?.hasAttribute('inert')).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true }));
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+    await settle();
+    expect(element.querySelector('.photo-preview')).toBeNull();
+    expect(element.querySelector('.lightbox')?.hasAttribute('inert')).toBe(false);
+    expect(element.querySelector('.lightbox-image')?.getAttribute('src')).toBe(photos[0].src);
+    expect(fixture.componentInstance.closed).toBe(0);
   });
 });

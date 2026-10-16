@@ -1,0 +1,62 @@
+@if (running()) {
+  <section
+    class="photo-preview"
+    [class.is-suspended]="suspended()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="modelName() + ' photo preview'"
+  >
+    <div class="preview-canvas" aria-hidden="true">
+      @for (frame of frames(); track frame.id) {
+        <div class="preview-frame" [style.--motion-time]="frame.duration + 800 + 'ms'">
+          <img
+            [src]="frame.photo.src"
+            alt=""
+            draggable="false"
+            decoding="async"
+            [class.zoom-out]="frame.zoomOut"
+          />
+        </div>
+      }
+    </div>
+    <div class="preview-shade" aria-hidden="true"></div>
+    <header class="preview-header">
+      <span class="preview-badge"><span class="live-dot"></span> PREVIEW</span>
+      <button #endButton type="button" class="end-preview glass-button" (click)="stop()">
+        <span aria-hidden="true">✕</span> End Preview
+      </button>
+    </header>
+    @if (loading() || unavailable()) {
+      <div class="preview-status" role="status">
+        @if (loading()) {
+          <span class="loading-orbit" aria-hidden="true"></span>
+          <p>Setting the scene…</p>
+        } @else {
+          <p>These photographs couldn’t be loaded.</p>
+          <span>Please end Preview and try again.</span>
+        }
+      </div>
+    }
+    <footer class="preview-footer">
+      <div class="preview-caption">
+        <span class="preview-eyebrow">THE MOVING COLLECTION</span>
+        <h2>{{ modelName() }}</h2>
+        <p>{{ count() }} photographs <span aria-hidden="true">·</span> Shuffled, endlessly</p>
+      </div>
+      @if (musicAvailable()) {
+        <button
+          type="button"
+          class="music-button glass-button"
+          (click)="toggleMusic()"
+          [attr.aria-label]="muted() ? 'Play background music' : 'Mute background music'"
+          [attr.aria-pressed]="!muted()"
+        >
+          <span class="equalizer" [class.is-muted]="muted()" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
+          <span>{{ muted() ? 'Sound off' : 'Sound on' }}</span>
+        </button>
+      }
+    </footer>
+  </section>
+}

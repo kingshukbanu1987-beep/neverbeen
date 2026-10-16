@@ -745,6 +745,9 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     name,
     cover,
     album: folderName,
+    ...(existsSync(join(albumDir, `${name}.mp3`)) && statSync(join(albumDir, `${name}.mp3`)).isFile()
+      ? { previewMusic: publicUrl(join(albumDir, `${name}.mp3`)) }
+      : {}),
     location: text(merged.location),
     age: text(merged.age),
     height: text(merged.height),
@@ -1109,6 +1112,8 @@ export interface AiModelProfile {
   cover: string;
   /** Album folder inside public/NeverBeenModels. */
   album: string;
+  /** Optional exact-name <model name>.mp3 in the album root, for the cinematic preview. */
+  previewMusic?: string;
   location: string;
   age: string;
   height: string;
