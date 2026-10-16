@@ -122,6 +122,8 @@ export class AiModelPhotoViewer {
   readonly modelHandle = input('');
   /** The portfolio slug — enables the engagement strip and the "seen" count of each frame. */
   readonly modelSlug = input('');
+  /** The model's "City, Country" line, shown on the location plate of the cinematic Preview. */
+  readonly modelLocation = input('');
   /** Router link to the complete album, offered when the viewer only holds part of it. */
   readonly albumLink = input<readonly string[] | null>(null);
   /** How many photographs the complete album holds, shown on the album link. */

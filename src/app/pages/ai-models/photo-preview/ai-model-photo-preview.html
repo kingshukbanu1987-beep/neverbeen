@@ -41,7 +41,25 @@
       <div class="preview-caption">
         <span class="preview-eyebrow">THE MOVING COLLECTION</span>
         <h2>{{ modelName() }}</h2>
-        <p>{{ count() }} photographs <span aria-hidden="true">·</span> Shuffled, endlessly</p>
+
+        <!-- The location plate: her city and country, as a lit glass pill — a pulsing marker, the
+             city in tracked capitals, a hairline drawn across to the country and its code. -->
+        @if (place(); as place) {
+          <p class="preview-place" [attr.title]="place.label">
+            <span class="visually-hidden">Based in {{ place.label }}</span>
+            <span class="place-marker" aria-hidden="true"><i></i></span>
+            <span class="place-city" aria-hidden="true">{{ place.city }}</span>
+            @if (place.country) {
+              <span class="place-rule" aria-hidden="true"></span>
+              <span class="place-country" aria-hidden="true">
+                <span class="place-name">{{ place.country }}</span>
+                @if (place.code) {
+                  <span class="place-code">{{ place.code }}</span>
+                }
+              </span>
+            }
+          </p>
+        }
       </div>
       @if (musicAvailable()) {
         <button

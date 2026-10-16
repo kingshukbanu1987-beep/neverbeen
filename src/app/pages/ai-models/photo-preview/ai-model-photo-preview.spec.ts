@@ -57,6 +57,7 @@ describe('AiModelPhotoPreview', () => {
     element = fixture.nativeElement;
     fixture.componentRef.setInput('photos', photos);
     fixture.componentRef.setInput('modelName', 'Test Model');
+    fixture.componentRef.setInput('modelLocation', 'Shiraz, Iran');
     fixture.detectChanges();
   });
 
@@ -204,7 +205,6 @@ describe('AiModelPhotoPreview', () => {
     expect(latest()?.getAttribute('src')).toBe(photos[0].src);
     await advance(9000);
     expect(latest()?.getAttribute('src')).toBe(photos[0].src);
-    expect(element.querySelector('.preview-caption')?.textContent).toContain('1 photographs');
   });
 
   it('skips failed images and exits loading with an error if all images fail', async () => {
@@ -265,5 +265,63 @@ describe('AiModelPhotoPreview', () => {
     component.start();
     expect(component.running()).toBe(false);
     expect(MockAudio.instances).toHaveLength(0);
+  });
+
+  describe('location plate', () => {
+    function plate(): HTMLElement | null {
+      return element.querySelector<HTMLElement>('.preview-place');
+    }
+
+    it('shows her city, her country and its two-letter code instead of a photograph count', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Shiraz, Iran');
+      component.start();
+      await render();
+      expect(plate()?.querySelector('.place-city')?.textContent?.trim()).toBe('Shiraz');
+      expect(plate()?.querySelector('.place-name')?.textContent?.trim()).toBe('Iran');
+      expect(plate()?.querySelector('.place-code')?.textContent?.trim()).toBe('IR');
+      expect(plate()?.getAttribute('title')).toBe('Shiraz, Iran');
+      // The photograph count and the "shuffled, endlessly" line are gone for good.
+      expect(element.querySelector('.preview-caption')?.textContent).not.toContain('photograph');
+      expect(element.querySelector('.preview-caption')?.textContent).not.toContain('endlessly');
+    });
+
+    it('reads the whole place out to assistive tech as one line', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Kuwait City, Kuwait');
+      component.start();
+      await render();
+      // Every visible part of the plate is decorative; the one line a reader hears is the place.
+      const heard = Array.from(plate()!.children).filter(
+        (child) => child.getAttribute('aria-hidden') !== 'true',
+      );
+      expect(heard).toHaveLength(1);
+      expect(heard[0].textContent?.trim()).toBe('Based in Kuwait City, Kuwait');
+    });
+
+    it('shows the city alone when the location names no country', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Shiraz');
+      component.start();
+      await render();
+      expect(plate()?.querySelector('.place-city')?.textContent?.trim()).toBe('Shiraz');
+      expect(plate()?.querySelector('.place-name')).toBeNull();
+      expect(plate()?.querySelector('.place-code')).toBeNull();
+      expect(plate()?.querySelector('.place-rule')).toBeNull();
+    });
+
+    it('drops the code chip for a country the directory does not know', async () => {
+      fixture.componentRef.setInput('modelLocation', 'Shiraz, Persia');
+      component.start();
+      await render();
+      expect(plate()?.querySelector('.place-city')?.textContent?.trim()).toBe('Shiraz');
+      expect(plate()?.querySelector('.place-name')?.textContent?.trim()).toBe('Persia');
+      expect(plate()?.querySelector('.place-code')).toBeNull();
+    });
+
+    it('holds no plate at all for a model with no location on file', async () => {
+      fixture.componentRef.setInput('modelLocation', '');
+      component.start();
+      await render();
+      expect(plate()).toBeNull();
+      expect(element.querySelector('.preview-caption h2')?.textContent?.trim()).toBe('Test Model');
+    });
   });
 });

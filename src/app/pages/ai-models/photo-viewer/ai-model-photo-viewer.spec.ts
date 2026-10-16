@@ -21,6 +21,7 @@ const photos: AiModelPhoto[] = Array.from({ length: 5 }, (_, index) => ({
       modelName="Test Studio Model"
       modelHandle="@test.studio.model"
       modelSlug="test-studio-model"
+      modelLocation="Shiraz, Iran"
       [albumLink]="albumLink()"
       [albumSize]="20"
       (closed)="closed = closed + 1"
@@ -498,7 +499,10 @@ describe('AiModelPhotoViewer', () => {
     element.querySelector<HTMLButtonElement>('.viewer-preview')!.click();
     fixture.detectChanges();
     expect(element.querySelector('.photo-preview')).not.toBeNull();
-    expect(element.querySelector('.preview-caption')?.textContent).toContain('5 photographs');
+    // The deck carries her place through: the city and country the plate shows, not a count.
+    expect(element.querySelector('.preview-place .place-city')?.textContent?.trim()).toBe('Shiraz');
+    expect(element.querySelector('.preview-place .place-name')?.textContent?.trim()).toBe('Iran');
+    expect(element.querySelector('.preview-place .place-code')?.textContent?.trim()).toBe('IR');
     expect(element.querySelector('.lightbox')?.hasAttribute('inert')).toBe(true);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', cancelable: true }));
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));

@@ -149,6 +149,8 @@ export class AiModelsPage {
     () => this.previewModel()?.photos ?? EMPTY_PREVIEW_PHOTOS,
   );
   protected readonly previewName = computed(() => this.previewModel()?.name ?? '');
+  /** Her "City, Country" line, which the Preview shows on the plate under her name. */
+  protected readonly previewLocation = computed(() => this.previewModel()?.location ?? '');
   protected readonly previewMusic = computed(() => this.previewModel()?.previewMusic ?? '');
 
   protected readonly search = signal('');

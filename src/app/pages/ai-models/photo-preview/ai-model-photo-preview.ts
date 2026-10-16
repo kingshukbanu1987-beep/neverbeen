@@ -5,6 +5,7 @@ import {
   ElementRef,
   Injector,
   afterNextRender,
+  computed,
   effect,
   inject,
   input,
@@ -13,6 +14,7 @@ import {
 } from '@angular/core';
 import { AiModelPhoto } from '../ai-model-data';
 import { previewRound, publicPreviewPhotos } from './preview-deck';
+import { parsePreviewPlace } from './preview-place';
 
 interface PreviewFrame {
   id: number;
@@ -35,6 +37,8 @@ interface PreviewFrame {
 export class AiModelPhotoPreview {
   readonly photos = input.required<readonly AiModelPhoto[]>();
   readonly modelName = input('');
+  /** The model's "City, Country" line — the location plate under her name while the deck plays. */
+  readonly modelLocation = input('');
   readonly musicSrc = input('');
   readonly running = signal(false);
   protected readonly frames = signal<PreviewFrame[]>([]);
@@ -43,7 +47,11 @@ export class AiModelPhotoPreview {
   protected readonly musicAvailable = signal(false);
   protected readonly muted = signal(false);
   protected readonly suspended = signal(false);
-  protected readonly count = signal(0);
+  /**
+   * The city and country the plate under her name shows, split out of `modelLocation`. Null when
+   * the model has no location on file, which leaves the caption to her name alone.
+   */
+  protected readonly place = computed(() => parsePreviewPlace(this.modelLocation()));
 
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -82,7 +90,6 @@ export class AiModelPhotoPreview {
     this.deck = [];
     this.frameId = 0;
     this.frames.set([]);
-    this.count.set(this.pool.length);
     this.unavailable.set(false);
     this.loading.set(true);
     this.suspended.set(false);

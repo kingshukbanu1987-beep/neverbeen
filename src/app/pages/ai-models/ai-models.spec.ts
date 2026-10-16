@@ -622,6 +622,7 @@ describe('AiModelsPage', () => {
     expect(deck.running()).toBe(true);
     expect(deck.photos()).toBe(profile.photos);
     expect(deck.modelName()).toBe(profile.name);
+    expect(deck.modelLocation()).toBe(profile.location);
     expect(deck.musicSrc()).toBe(profile.previewMusic ?? '');
 
     fixture.detectChanges();

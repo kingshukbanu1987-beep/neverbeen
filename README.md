@@ -120,6 +120,11 @@ not offer Preview. Centered, edge-to-edge cover crops fill portrait and landscap
 Photos are decoded ahead of transitions; on a slow connection the current image stays visible
 until the next is ready. Unavailable images are skipped. Reduced-motion preferences disable zoom.
 
+Her **city and country** ride a lit glass plate under her name for the whole play: the city in
+tracked capitals beside a pulsing marker, then a hairline drawn across to the country and its
+two-letter code wherever the directory knows one. The plate wraps instead of overflowing a narrow
+phone, and a model with no location on file plays under her name alone.
+
 For optional looping background music, place an MP3 **directly in the model's folder** with the
 exact display name, including spaces and case, e.g.:
 
