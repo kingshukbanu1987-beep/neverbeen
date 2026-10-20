@@ -1,0 +1,230 @@
+{
+  "campaign": "NeverBeen X \u2014 Paris Photo-Call Launch Shoot",
+  "slug": "neverbeen-x-launch",
+  "generated": "2026-10-20",
+  "format": {
+    "aspectRatio": "9:16",
+    "note": "Mobile screen aspect ratio (portrait)",
+    "master": "4320x7680 (8K vertical)",
+    "web": "1620x2880",
+    "camera": "Extreme close-up group portrait, camera rolled 65 degrees"
+  },
+  "backdrop": {
+    "wall": "White step-and-repeat with the NEVERBEEN logo",
+    "left": "Green palm fronds",
+    "right": "Dark navy curtain",
+    "note": "Every person was removed from the source photograph and the 'v\u00eatir' wordmark was replaced with the NeverBeen logo."
+  },
+  "models": [
+    {
+      "name": "Ziba Nazrin",
+      "album": "ZibaNazrin",
+      "heightFt": 6.2,
+      "heightLabel": "6.2 ft",
+      "albumUrl": "/NeverBeenModels/ZibaNazrin/"
+    },
+    {
+      "name": "Fiadh Dara",
+      "album": "FiadhDara",
+      "heightFt": 5.8,
+      "heightLabel": "5.8 ft",
+      "albumUrl": "/NeverBeenModels/FiadhDara/"
+    },
+    {
+      "name": "Alisha Bhattacharya",
+      "album": "AlishaBhattacharya",
+      "heightFt": 5.11,
+      "heightLabel": "5.11 ft",
+      "albumUrl": "/NeverBeenModels/AlishaBhattacharya/"
+    },
+    {
+      "name": "Rozalin El Masry",
+      "album": "RozalinElMasry",
+      "heightFt": 5.1,
+      "heightLabel": "5.1 ft",
+      "albumUrl": "/NeverBeenModels/RozalinElMasry/"
+    },
+    {
+      "name": "Nour El-Sherif",
+      "album": "NourElSherif",
+      "heightFt": 6.1,
+      "heightLabel": "6.1 ft",
+      "albumUrl": "/NeverBeenModels/NourElSherif/"
+    },
+    {
+      "name": "Aoife Pahlavi",
+      "album": "AoifePahlavi",
+      "heightFt": 5.7,
+      "heightLabel": "5.7 ft",
+      "albumUrl": "/NeverBeenModels/AoifePahlavi/"
+    }
+  ],
+  "branding": {
+    "cornerMark": "Transparent NEVERBEEN logo (paper plane + wordmark) locked to the top-right corner",
+    "source": "/neverbeen-logo.png"
+  },
+  "shots": [
+    {
+      "id": 1,
+      "file": "shot-01.jpg",
+      "webFile": "web/shot-01.jpg",
+      "lead": "Ziba Nazrin",
+      "tilt": "65 degrees clockwise",
+      "mood": "laughing candid",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/--zgZHR20S3VfxQSqO6LMSXpnUvU1M72otPrvWpQj2c.jpg",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/4Ze4Q2aQym5pgfObpUFtrZEp3dd17qNvJ8bIHQ0aN8U.jpg",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/23Y4phat6j6IoyG_cRSosOpZTXpAr2yJfGwvpnY46zg.jpg",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/3EldHs60f1TbNrqIHIIVtwtxuBAm74sDsj10QtW5Ox0.png",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/8QJ1IRYHN02LVa4ePRC2rduzQj5YmrfkoI3AgF3tHkk.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/3QJeFPQ_OTvAg0PK3pYEmgY_dknAozpDfXLutraVJxs.jpg"
+      }
+    },
+    {
+      "id": 2,
+      "file": "shot-02.jpg",
+      "webFile": "web/shot-02.jpg",
+      "lead": "Nour El-Sherif",
+      "tilt": "65 degrees counter-clockwise",
+      "mood": "chatting candid",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/8LSBdER9Yy3QbiOzlTKcvCLhABupR6Sz32x8QaJLR9s.jpg",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/258gl57L8CWU1h96a_jvB-SQ3HauZxKQ69FQdNz8Wok.png",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/-z8HJ_S07N25tKuTWPp_FpR5DbrF2AKzA2C6BtW5lmg.jpg",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/9Eo5AkLQd3jp5CJTIkzqFkTfe-boMTvOypzwn_DFtn4.jpg",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/4WY_iQzToHtaOYFVxh6ALsVqOrQButg7WQmnO9u8xFQ.png",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/7gnRVGNNscrIAXnvBcPugg20BbjeEnYVEDJW6g2RyHI.jpg"
+      }
+    },
+    {
+      "id": 3,
+      "file": "shot-03.jpg",
+      "webFile": "web/shot-03.jpg",
+      "lead": "Fiadh Dara",
+      "tilt": "65 degrees clockwise",
+      "mood": "confident posing",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/BCFbkRtcmSFEAF59ZsxT_ibK5tNbNmiRFKiIIQ49Icc.jpg",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/9fl2qDkZNlqpau_nAJS_cMw0QdpwoSwfyhZzeszgq1E.jpg",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/5TDGjGHastPklalg_-RBxdpITZm60ko7AZf3CC_jgP0.png",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/6Re7HEPHyPsfSrxSU9qUZPu8dUz9R6RM-sfmGaOanpE.png",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/9Bt-hZsofVZ2lem00M6iUT7-Tyb4PBK1DqLVp-aGwxU.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/NuLD2gDxgAP_OgHGl9jJrDC18sByahbTTgb1MkyN0j4.jpg"
+      }
+    },
+    {
+      "id": 4,
+      "file": "shot-04.jpg",
+      "webFile": "web/shot-04.jpg",
+      "lead": "Aoife Pahlavi",
+      "tilt": "65 degrees counter-clockwise",
+      "mood": "playful whispering",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/A1WgJLiJuqM3M8jBMP9Ylke_ss9tTbzqT3nYH7dylHU.jpg",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/6-a2uYlHMe22S7dog5b9it-Jo0pkqB-rl3Umf6AlQY8.png",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/4I-y3osIV8FLlG2NuGhwDGZsroicX0cwvsdvC2eDYU4.png",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/B-df97bgtW0MR7FJbLG0XVmu1vJsBFyP_ihlGibZFMA.png",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/CEpoP2XZzDLWpkI7xcsMKEsliPFsKewT2wo-Q_yRJMQ.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/R7Wc8OYt1sqLAl3IWVsEo0Q_NZ03RpDzPwRNrwB-CmE.jpg"
+      }
+    },
+    {
+      "id": 5,
+      "file": "shot-05.jpg",
+      "webFile": "web/shot-05.jpg",
+      "lead": "Ziba Nazrin",
+      "tilt": "65 degrees counter-clockwise",
+      "mood": "giggling candid",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/B_0xe8rczZpNCAgzC-6-hZQw-F-lGt6he5wRoRZUCl8.png",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/1b5zXqHHPrnYC7vc4nyyqF_zrbIpV9mIo7c0cgjZG24.png",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/0bZQEjId7VWQGmkXkimUNuZqXF7gqyBLoMRIMFvk6wc.jpg",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/19bF73ELFqF4Jhotr9tGTrYZwrrU8wd8NBjpiOIkfsU.png",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/G6qAlGkH9WgNceQlv3niInkouuCbEZAdxr0KcTj1sRE.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/_LeHDYGuiuDZ-JUZQAIiu1d32Iy_16U1I2SgaHze3e4.jpg"
+      }
+    },
+    {
+      "id": 6,
+      "file": "shot-06.jpg",
+      "webFile": "web/shot-06.jpg",
+      "lead": "Rozalin El Masry",
+      "tilt": "65 degrees clockwise",
+      "mood": "smiling at camera",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/5LD1HOrD5gqGNnKnLv1AfWErj07B5minkkWJRCcjGZw.png",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/0VR1d-kJiSHZGRcf2_5GW_FoRkeONuF9jcNeG-94bq0.png",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/3Ufo6Dq4XBwvCxIP-4rbUs1yx4JJ5EiIF637uiqqwzo.png",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/3EnXTZjTMD7GAbLzOV2e57e8fZi9MYyOP6vFDmTRndU.jpg",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/-xDswydu0SHD36WEhfDa3DLgi2zUtIDGoovb3v4A_ZU.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/XYwbSSBOTv4BP1Eoj4MWoFv4JiEvUvBpvL_0TY4qEpM.png"
+      }
+    },
+    {
+      "id": 7,
+      "file": "shot-07.jpg",
+      "webFile": "web/shot-07.jpg",
+      "lead": "Alisha Bhattacharya",
+      "tilt": "65 degrees counter-clockwise",
+      "mood": "warm candid smile",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/9KgZAmtO7FcUXOuoIvyQAIVtCmlsRDh0GdUjKbOXZ3c.jpg",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/AGPJxuqFAPwfH1f-0nHquVp7Xj-fIPYpIkHJKRkxm1w.png",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/9ap9IUhNUYYgSZQu12mrULZRcASAquKLT0IwdO4-fRU.jpg",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/8eSFyKmk7qZDL-LAqQLu0M-KH8fVlC7mZ4CoDIqQP0k.png",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/68VQp1Pr6gDBFL2xf4E_RejtszoJEzHBVLd2t0jo4LE.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/b04_606gU1M37QsgfLlGHaM8Ysz4_sRTRJpnlH6I6No.png"
+      }
+    },
+    {
+      "id": 8,
+      "file": "shot-08.jpg",
+      "webFile": "web/shot-08.jpg",
+      "lead": "Nour El-Sherif",
+      "tilt": "65 degrees clockwise",
+      "mood": "fashion-editorial poise",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/74LPo-nHam6SpV6mDIdaGK_BgMRgxDhYUyUVvAmX3mw.jpg",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/69AgGuAzTVpTwR5uUfmyaAapdLN5ndV-u5XkXL5h07Q.jpg",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/9bGaYGQ3UCIDro4b0oGvGd6lCY4rv35Vz-gTzliBxP4.jpg",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/AsqIus-aCfvK3V0aGYRI0Vf1biEnMy58bmeJfYisB_4.png",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/F2YPLZNpy_T2Pxvop2kXanieSM3F7-eJZGPd3Hf7Qlk.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/areQotfT2J3t9YA9ZrUop8SrNpooXkpMtAgimGJZnPc.jpg"
+      }
+    },
+    {
+      "id": 9,
+      "file": "shot-09.jpg",
+      "webFile": "web/shot-09.jpg",
+      "lead": "Fiadh Dara",
+      "tilt": "65 degrees counter-clockwise",
+      "mood": "laughing candid",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/3sg2_JUXy0Tk0s8SYTOR9vyAgmeATdnOnWSKOEY15r0.png",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/3WzeqKDK2aKrz3VE0jv698z0MmkLxh8IDzcC4fBYDSs.jpg",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/8V6Ea3TiX2hHehDgEmS1GvCtYkt7n5Xu-ssE-FFF_2A.png",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/5OyN3zJJy-Cgvv8TPlpl-dAo2b9fT2Qs6khR9eHg2Cw.png",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/9Bt-hZsofVZ2lem00M6iUT7-Tyb4PBK1DqLVp-aGwxU.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/aEEQcTbrsNfQNZqtyNXwhSERUBqbNWtJnOXca1GiOAU.jpg"
+      }
+    },
+    {
+      "id": 10,
+      "file": "shot-10.jpg",
+      "webFile": "web/shot-10.jpg",
+      "lead": "Aoife Pahlavi",
+      "tilt": "65 degrees clockwise",
+      "mood": "celebratory candid",
+      "outfitReference": {
+        "Ziba Nazrin": "/NeverBeenModels/ZibaNazrin/5LD1HOrD5gqGNnKnLv1AfWErj07B5minkkWJRCcjGZw.png",
+        "Fiadh Dara": "/NeverBeenModels/FiadhDara/0VR1d-kJiSHZGRcf2_5GW_FoRkeONuF9jcNeG-94bq0.png",
+        "Alisha Bhattacharya": "/NeverBeenModels/AlishaBhattacharya/3Ufo6Dq4XBwvCxIP-4rbUs1yx4JJ5EiIF637uiqqwzo.png",
+        "Rozalin El Masry": "/NeverBeenModels/RozalinElMasry/3EnXTZjTMD7GAbLzOV2e57e8fZi9MYyOP6vFDmTRndU.jpg",
+        "Nour El-Sherif": "/NeverBeenModels/NourElSherif/-xDswydu0SHD36WEhfDa3DLgi2zUtIDGoovb3v4A_ZU.jpg",
+        "Aoife Pahlavi": "/NeverBeenModels/AoifePahlavi/XYwbSSBOTv4BP1Eoj4MWoFv4JiEvUvBpvL_0TY4qEpM.png"
+      },
+      "note": "Editorial push-in of the frame-6 take \u2014 tighter extreme close-up on the same six faces and outfits.",
+      "crop": "630x1120 from the frame-6 take, re-rendered at 4320x7680"
+    }
+  ]
+}
