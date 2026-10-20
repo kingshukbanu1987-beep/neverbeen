@@ -86,6 +86,11 @@
                 </ul>
               }
 
+              <!-- Highlights sit exactly where the brief asks: just before Read full Biography. -->
+              @if (profile.highlights && profile.highlights.length > 0) {
+                <app-model-highlights [model]="profile" />
+              }
+
               <div class="profile-actions">
                 <div class="rent-action-stack">
                   <a [routerLink]="['/ai-models', profile.slug, 'biography']" class="biography-link"

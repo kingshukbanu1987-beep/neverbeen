@@ -40,6 +40,7 @@ import { LiveChatAccess } from './chat/live-chat-access';
 import { requiresRegisteredChat } from './chat/live-chat-policy';
 import { ChatIdentity } from './chat/chat-identity';
 import { LiveChatPlan } from './chat/chat-types';
+import { ModelHighlights } from './highlights/model-highlights';
 import { PremiumPhotoTeaser } from './premium-content/premium-photo-teaser';
 import { AiModelPhotoViewer } from './photo-viewer/ai-model-photo-viewer';
 import { AiModelVideoPlayer } from './video/ai-model-video-player';
@@ -162,6 +163,7 @@ export function interleavePremiumTeasers(
     ModelMediaCommentsDialog,
     ModelMediaEngagementBar,
     ModelVerifiedTick,
+    ModelHighlights,
     PremiumPhotoTeaser,
   ],
   templateUrl: './ai-model-portfolio.html',

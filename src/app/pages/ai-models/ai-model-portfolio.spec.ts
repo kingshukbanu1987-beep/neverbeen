@@ -231,6 +231,57 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
+  it('shows the model Highlights immediately before Read full Biography (never expires)', async () => {
+    const profile = withPhotos(2);
+    profile.highlights = [
+      {
+        id: 'studio-diaries',
+        name: 'Studio Diaries',
+        cover: '/NeverBeenModels/TestStudioModel/Highlights/studio/01.jpg',
+        music: '/NeverBeenModels/TestStudioModel/theme.mp3',
+        items: [
+          {
+            kind: 'photo',
+            src: '/NeverBeenModels/TestStudioModel/Highlights/studio/01.jpg',
+            type: '',
+            poster: '',
+            caption: '',
+          },
+          {
+            kind: 'photo',
+            src: '/NeverBeenModels/TestStudioModel/Highlights/studio/02.jpg',
+            type: '',
+            poster: '',
+            caption: '',
+          },
+        ],
+        photoCount: 2,
+        videoCount: 0,
+      },
+    ];
+    const harness = await openPortfolio(profile.slug);
+    const element = harness.routeNativeElement as HTMLElement;
+
+    try {
+      const section = element.querySelector('.highlights-section');
+      const actions = element.querySelector('.profile-actions');
+      const biography = element.querySelector('.biography-link');
+
+      expect(section).not.toBeNull();
+      expect(section?.textContent).toContain('Highlights');
+      expect(section?.textContent).toContain('never expires');
+      expect(element.querySelectorAll('.highlight-bubble').length).toBe(1);
+      // The rail sits above the action row, and the biography link stays directly above Rent Me.
+      expect(
+        section!.compareDocumentPosition(actions!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(biography?.parentElement?.classList.contains('rent-action-stack')).toBe(true);
+      expect(biography?.textContent).toContain('Read full Biography');
+    } finally {
+      release(profile);
+    }
+  });
+
   it('shows the model city and country instead of the generic model label', async () => {
     const profile = withPhotos(1);
     const harness = await openPortfolio(profile.slug);

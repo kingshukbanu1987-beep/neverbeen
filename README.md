@@ -161,6 +161,19 @@ handwritten-style signature is shown on photographed-looking white paper. If tha
 the page shows **Biography not Available**. Every published biography and memory image is explicitly
 fictional and belongs only to the NeverBeen Multiverse.
 
+**Highlights.** Just above **Read full Biography**, every model may carry an Instagram-style row of
+circular covers — her **Highlights**. Each circle is one sub-folder of
+`public/NeverBeenModels/<Album>/Highlights/`, and the sub-folder's name is the highlight's name. The
+row scrolls horizontally with its own scrollbar and a pair of arrow controls. Tapping a circle opens
+the portrait story player: a photograph holds the screen for four seconds and a clip plays for its
+own duration before the highlight moves on; tapping the content jumps to the next story, a
+press-and-hold pauses, a sideways swipe changes highlight, a downward swipe or Escape closes. The
+highlight's own audio plays as background music (the first audio file in its folder), falling back to
+the model's album preview music. Highlights never expire, and their frames carry no likes, comments,
+seen counts, shares or downloads. The folder format and the optional `highlight.json` are documented
+in [`public/NeverBeenModels/README.md`](public/NeverBeenModels/README.md) and
+[`docs/ai-model-highlights.md`](docs/ai-model-highlights.md).
+
 Below the portfolio grid, Community members can publish a testimonial with a 10–100 character
 headline, 20–2,500 character quote and a full- or half-star rating. Testimonials include linked
 Community author cards, presence status, city/country and a localized timestamp; the scrollable feed
@@ -190,7 +203,8 @@ Each model owns one album folder inside `public/NeverBeenModels`, named after th
 spaces (for example `public/NeverBeenModels/NourhanDurrani`). Drop the model's photographs into that
 folder and they appear in the portfolio grid; the first image (or the one named `cover.*`) is used as
 the cover and avatar. Each model's album also holds a `video/` sub-folder — drop the clips in there
-and they appear in her portfolio's video reel, in file-name order. Nothing needs to be run or edited:
+and they appear in her portfolio's video reel, in file-name order — and a `Highlights/` sub-folder,
+where each sub-folder is one highlight (see **Highlights** above). Nothing needs to be run or edited:
 while `npm start` is running an album
 watcher regenerates the manifest as the files land and the dev server reloads the page, `npm run
 build` refreshes it in its prebuild step, and a brand-new folder becomes a new portfolio page on its

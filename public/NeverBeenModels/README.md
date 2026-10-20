@@ -15,6 +15,14 @@ public/NeverBeenModels/
     video/                  ← video clips, shown in the reel under the personal details
       reel-01.mp4
       poster-01.jpg         ← optional poster frame for a clip (see below)
+    Highlights/             ← the profile's circular Highlights row (never expires)
+      Editorial/            ← one sub-folder = one highlight, named after the folder
+        01-frame.jpg
+        02-frame.jpg
+        highlight.json      ← optional name, cover, music, order, captions and item order
+      Motion/
+        01-cover.jpg
+        02-clip.mp4
     Biography/              ← this model's separate fictional biography assets
       .gitkeep
       biography.json        ← created by BiographyScript.mjs
@@ -59,6 +67,61 @@ Name a model's frames with the frame number first so the folder, the grid and th
 in the same order — for example `01-magenta-ruffles-portrait.png`, `12-red-off-shoulder-gaze.png`.
 The cover keeps the model's own name (`Nourhan Durrani.png`). Any name works, but numbers keep the
 portfolio in sequence and make the folder easy to scan.
+
+## Highlights
+
+Every album folder carries a `Highlights/` sub-folder. Each **sub-folder** inside it is one
+highlight, and the sub-folder's name is the highlight's name — `Highlights/Shiraz Diaries/` becomes
+the circle labelled **Shiraz Diaries** in the row shown just above **Read full Biography** on the
+model's portfolio.
+
+- Drop photographs (`jpg`, `jpeg`, `png`, `webp`, `avif`, `gif`) and clips (`mp4`, `m4v`, `webm`,
+  `ogv`/`ogg`, `mov`) into a highlight's sub-folder. They are played in natural file-name order, so
+  `01-…`, `02-…` fixes the running order.
+- The circle's thumbnail is the first photograph of the highlight. Add a file named `cover.*` to
+  choose another picture; `cover.*` is a thumbnail only and never appears in the story.
+- Background music: put an audio file (`mp3`, `m4a`, `aac`, `wav`, `ogg`, `opus`, `flac`) in the
+  highlight's folder — the first one is used. A highlight without audio borrows the model's
+  `<Album>/<Model Name>.mp3` preview music. The clips themselves play muted, under the music.
+- Highlights **never expire**. They are shown for as long as their sub-folder exists, and no date or
+  view counter is recorded anywhere.
+- Their frames are excluded from the portfolio grid, the photo count, the video reel and the
+  Seen · Likes · Comments · Shares totals — a highlight is a story, not a post, and its player has no
+  like, comment, seen, share or download controls.
+- The player is always portrait: four seconds per photograph, the clip's own duration per video, tap
+  to jump to the next story, press-and-hold to pause, sideways swipe to change highlight, downward
+  swipe, Escape or ✕ to close.
+- An empty highlight folder is skipped with a warning, and a model with no highlight sub-folders
+  simply shows no Highlights row.
+
+An optional `highlight.json` (any casing) inside a highlight folder customises it; every field is
+optional:
+
+```json
+{
+  "name": "Shiraz Diaries",
+  "cover": "01-evening-light.jpg",
+  "music": "theme.mp3",
+  "order": 1,
+  "captions": {
+    "01-evening-light.jpg": "The last light on the Eram rooftops.",
+    "02-film.mp4": "Six seconds of movement from the studio floor."
+  },
+  "items": ["02-film.mp4", "01-evening-light.jpg"]
+}
+```
+
+`order` pins a highlight to the front of the row (lower first); the rest keep folder order. `items`
+pins an exact running order. `captions` is keyed by the file name inside the highlight folder. A
+`cover` that points at a real frame keeps that frame in the story; only a file literally named
+`cover.*` is held out of it.
+
+```bash
+npm run generate:ai-models   # or let the watcher / npm run build refresh it
+```
+
+Adding a sub-folder is all it takes: the watcher regenerates the manifest and the dev server reloads
+the page.
 
 ## Adding videos
 

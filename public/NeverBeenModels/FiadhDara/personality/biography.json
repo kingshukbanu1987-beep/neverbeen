@@ -16,7 +16,7 @@
     "biographyGeneratedAt": "2026-10-11T14:46:33.107Z",
     "conflictRule": "profile-wins",
     "createdAt": "2026-10-14T09:40:16.308Z",
-    "updatedAt": "2026-10-14T09:40:16.308Z"
+    "updatedAt": "2026-10-20T05:29:00.248Z"
   },
   "profile": {
     "_doc": "Her own profile, exactly as the website shows it on her portfolio page (data/ai-models/profiles.json merged with her album profile.json). These facts win over anything in the biography block.",
@@ -45,7 +45,7 @@
       "note": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
     },
     "portfolio": {
-      "photographs": 102,
+      "photographs": 105,
       "videos": 0,
       "portfolioDocument": {
         "fileName": "FiadhDara_Portfolio.pdf",
