@@ -110,36 +110,46 @@
 
 .highlight-arrow {
   display: grid;
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   padding: 0;
-  border: 1px solid rgb(255 255 255 / 13%);
+  border: 1px solid rgb(255 255 255 / 18%);
   border-radius: 50%;
-  background: rgb(255 255 255 / 5%);
+  background: rgb(255 255 255 / 8%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #f4e6ee;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   cursor: pointer;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 22%);
   transition:
     border-color 180ms ease,
     background 180ms ease,
     color 180ms ease,
     opacity 180ms ease,
-    transform 180ms ease;
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .highlight-arrow:hover:not(:disabled),
 .highlight-arrow:focus-visible {
-  border-color: rgb(240 112 168 / 60%);
-  background: rgb(239 106 165 / 16%);
+  border-color: rgb(240 112 168 / 65%);
+  background: rgb(239 106 165 / 20%);
   color: #fff;
+  box-shadow: 0 6px 20px rgb(239 106 165 / 22%);
   transform: translateY(-1px);
 }
 
+.highlight-arrow:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
 .highlight-arrow:disabled {
-  opacity: 0.28;
+  opacity: 0.32;
   cursor: default;
+  box-shadow: none;
 }
 
 .highlight-arrow:focus-visible {
@@ -393,6 +403,12 @@
 
   .highlights-head {
     align-items: center;
+  }
+
+  .highlight-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 0.84rem;
   }
 
   .highlights-count {
