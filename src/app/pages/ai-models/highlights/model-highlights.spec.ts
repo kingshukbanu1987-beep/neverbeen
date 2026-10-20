@@ -122,7 +122,7 @@ describe('ModelHighlights', () => {
   const circles = () =>
     Array.from(element.querySelectorAll<HTMLButtonElement>('.highlight-bubble'));
 
-  it('shows one Instagram-style circle per Highlights sub-folder, with its name and count', () => {
+  it('shows one Instagram-style circle per Highlights sub-folder with its name and cover, without story-count text', () => {
     expect(element.querySelector('.highlights-section')).not.toBeNull();
     expect(element.querySelector('#model-highlights-title')?.textContent?.trim()).toBe(
       'Highlights',
@@ -140,7 +140,7 @@ describe('ModelHighlights', () => {
     );
     expect(names).toEqual(['Shiraz Diaries', 'Motion']);
     expect(circles()[0].querySelector('img')?.getAttribute('src')).toContain('01-cover.jpg');
-    expect(circles()[0].querySelector('.highlight-meta')?.textContent?.trim()).toBe('3 stories');
+    expect(circles()[0].querySelector('.highlight-meta')).toBeNull();
     expect(circles()[1].querySelector('.highlight-badge')?.textContent?.trim()).toBe('▶');
     expect(circles()[0].getAttribute('aria-label')).toContain('Play the Shiraz Diaries highlight');
     expect(circles()[0].getAttribute('aria-label')).toContain('with music');

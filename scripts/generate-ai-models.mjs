@@ -559,6 +559,11 @@ function albumHighlights({ albumDir, modelName, fallbackMusic }) {
     // A file literally named `cover.*` is the circle's thumbnail, never a story frame.
     // A configured `cover` may point at any frame, and that frame stays in the highlight.
     const coverFile = resolveInside(directory, text(config.cover), isImage) ?? null;
+    const nameCover = media.find(
+      (absolutePath) =>
+        isImage(absolutePath) &&
+        imageStem(absolutePath.split(sep).pop()).toLocaleLowerCase() === name.toLocaleLowerCase(),
+    );
     const namedCover = media.find(
       (absolutePath) => imageStem(absolutePath.split(sep).pop()).toLocaleLowerCase() === 'cover',
     );
@@ -620,9 +625,11 @@ function albumHighlights({ albumDir, modelName, fallbackMusic }) {
     const firstPhoto = ordered.find((item) => item.kind === 'photo');
     const cover = coverFile
       ? publicUrl(coverFile)
-      : namedCover
-        ? publicUrl(namedCover)
-        : (firstPhoto?.src ?? ordered.find((item) => item.poster)?.poster ?? '');
+      : nameCover
+        ? publicUrl(nameCover)
+        : namedCover
+          ? publicUrl(namedCover)
+          : (firstPhoto?.src ?? ordered.find((item) => item.poster)?.poster ?? '');
 
     const audio =
       resolveInside(directory, text(config.music), isAudio) ??
