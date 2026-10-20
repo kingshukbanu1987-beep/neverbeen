@@ -133,7 +133,8 @@ describe('HighlightViewer', () => {
     expect(element.querySelector('.story-identity-copy strong')?.textContent?.trim()).toBe(
       'Shiraz Diaries',
     );
-    expect(element.querySelector('.story-sub')?.textContent).toContain('Never expires');
+    expect(element.querySelector('.story-sub')?.textContent).not.toContain('Never expires');
+    expect(element.querySelector('.story-identity-copy strong')?.textContent).toContain('Shiraz Diaries');
     expect(element.querySelector('.story-sub')?.textContent).toContain('Test Studio Model');
     expect(element.querySelector('.story-caption')?.textContent).toContain(
       'The last light on the Eram rooftops.',

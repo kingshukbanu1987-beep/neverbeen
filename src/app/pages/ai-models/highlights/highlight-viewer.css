@@ -121,7 +121,7 @@
 .story-chrome {
   position: absolute;
   inset: 0;
-  z-index: 4;
+  z-index: 6;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
@@ -193,6 +193,7 @@
 
 .story-identity {
   display: flex;
+  flex: 1 1 auto;
   min-width: 0;
   align-items: center;
   gap: 0.6rem;
@@ -227,6 +228,7 @@
 
 .story-identity-copy {
   display: flex;
+  flex: 1 1 auto;
   min-width: 0;
   flex-direction: column;
   gap: 0.16rem;
