@@ -1,0 +1,438 @@
+@property --ring-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 140deg;
+}
+
+:host {
+  display: block;
+  margin-top: 1.65rem;
+  --highlight-ring: 88px;
+  --highlight-glow: rgb(239 106 165 / 45%);
+}
+
+.highlights-section {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: 1.1rem 1.2rem 0.85rem;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 26px;
+  background:
+    radial-gradient(120% 170% at 0% -30%, rgb(239 106 165 / 15%), transparent 58%),
+    radial-gradient(90% 140% at 100% 130%, rgb(173 20 26 / 18%), transparent 60%),
+    linear-gradient(150deg, rgb(255 255 255 / 5.5%), rgb(255 255 255 / 1.4%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 7%),
+    0 24px 60px rgb(0 0 0 / 24%);
+  overflow: hidden;
+}
+
+/* A hairline gradient border, brighter on the two corners the light falls on. */
+.highlights-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    138deg,
+    rgb(255 173 208 / 60%),
+    rgb(255 255 255 / 4%) 32%,
+    rgb(255 255 255 / 0%) 62%,
+    rgb(239 106 165 / 42%)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* A soft sphere of light behind the first circles. */
+.highlights-section::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -9rem;
+  left: -6rem;
+  width: 18rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(239 106 165 / 22%), transparent 70%);
+  filter: blur(24px);
+  pointer-events: none;
+}
+
+.highlights-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.highlights-heading h2 {
+  margin: 0;
+  font-family: var(--serif, 'Cormorant Garamond', Georgia, serif);
+  font-size: clamp(1.45rem, 2.3vw, 1.9rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.highlights-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.highlights-count {
+  color: var(--studio-faint, #746a75);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.highlights-count b {
+  color: #f7e7ef;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.highlights-arrows {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.highlight-arrow {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 5%);
+  color: #f4e6ee;
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.highlight-arrow:hover:not(:disabled),
+.highlight-arrow:focus-visible {
+  border-color: rgb(240 112 168 / 60%);
+  background: rgb(239 106 165 / 16%);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.highlight-arrow:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.highlight-arrow:focus-visible {
+  outline: 2px solid #f47ab0;
+  outline-offset: 2px;
+}
+
+.highlights-track {
+  position: relative;
+  min-width: 0;
+  margin-top: 0.55rem;
+}
+
+/* The two soft fades sit over the rail only while there is more to scroll. */
+.highlights-track::before,
+.highlights-track::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 12px;
+  width: 2.5rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.highlights-track.has-back::before {
+  left: 0;
+  background: linear-gradient(90deg, #150e18 5%, transparent);
+  opacity: 1;
+}
+
+.highlights-track.has-forward::after {
+  right: 0;
+  background: linear-gradient(270deg, #150e18 5%, transparent);
+  opacity: 1;
+}
+
+.highlights-rail {
+  display: flex;
+  gap: 1.05rem;
+  margin: 0;
+  padding: 0.35rem 0.15rem 0.85rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(239 106 165 / 80%) rgb(255 255 255 / 6%);
+}
+
+.highlights-rail::-webkit-scrollbar {
+  height: 5px;
+}
+
+.highlights-rail::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgb(255 255 255 / 6%);
+}
+
+.highlights-rail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ad141a, #ef6aa5 55%, #ffc4dd);
+  box-shadow: 0 0 10px rgb(239 106 165 / 45%);
+}
+
+.highlights-rail::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #c11a22, #f680b3 55%, #ffe0ee);
+}
+
+.highlight-item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.highlight-bubble {
+  position: relative;
+  display: flex;
+  width: calc(var(--highlight-ring) + 18px);
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.highlight-ring {
+  position: relative;
+  display: grid;
+  width: var(--highlight-ring);
+  height: var(--highlight-ring);
+  place-items: center;
+  padding: 3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from var(--ring-angle),
+    #ffd0e4,
+    #ef6aa5 18%,
+    #ad141a 40%,
+    #f7cdb6 55%,
+    #ef6aa5 74%,
+    #ffd0e4
+  );
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 11%),
+    0 10px 28px rgb(173 20 26 / 28%);
+  animation: highlight-ring-spin 16s linear infinite;
+  transition:
+    transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 260ms ease;
+}
+
+.highlight-thumb {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid #0d0911;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, #2a1a26, #120c16 70%);
+}
+
+.highlight-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  transition: transform 380ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.highlight-fallback {
+  color: #f0a8c8;
+  font-size: 1.25rem;
+}
+
+.highlight-bubble:hover .highlight-ring,
+.highlight-bubble:focus-visible .highlight-ring {
+  transform: translateY(-2px) scale(1.045);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 20%),
+    0 16px 34px rgb(173 20 26 / 42%),
+    0 0 26px var(--highlight-glow);
+}
+
+.highlight-bubble:hover .highlight-thumb img {
+  transform: scale(1.08);
+}
+
+.highlight-bubble:focus-visible {
+  outline: none;
+}
+
+.highlight-bubble:focus-visible .highlight-ring {
+  outline: 2px solid #f9c0dc;
+  outline-offset: 4px;
+}
+
+.highlight-bubble:active .highlight-ring {
+  transform: scale(0.97);
+}
+
+.highlight-badge {
+  position: absolute;
+  top: calc(var(--highlight-ring) - 24px);
+  right: 6px;
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  padding: 0 5px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background: linear-gradient(145deg, #221321, #0b070f);
+  color: #ffe4f0;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 45%);
+  pointer-events: none;
+}
+
+.highlight-badge-play {
+  padding-left: 1px;
+  color: #ffb3d2;
+  font-size: 0.52rem;
+}
+
+.highlight-name {
+  max-width: 100%;
+  margin-top: 0.55rem;
+  overflow: hidden;
+  color: #f6e9f1;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.005em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 180ms ease;
+}
+
+.highlight-bubble:hover .highlight-name {
+  color: #fff;
+}
+
+.highlight-meta {
+  margin-top: 0.18rem;
+  color: var(--studio-faint, #746a75);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.highlights-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.15rem 0 0;
+  color: rgb(247 240 244 / 46%);
+  font-size: 0.64rem;
+  letter-spacing: 0.015em;
+}
+
+.highlights-hint span {
+  color: var(--studio-pink, #ef6aa5);
+  font-size: 0.7rem;
+}
+
+@keyframes highlight-ring-spin {
+  to {
+    --ring-angle: 500deg;
+  }
+}
+
+@media (max-width: 720px) {
+  :host {
+    margin-top: 1.35rem;
+    --highlight-ring: 74px;
+  }
+
+  .highlights-section {
+    padding: 0.9rem 0.85rem 0.7rem;
+    border-radius: 20px;
+  }
+
+  .highlights-head {
+    align-items: center;
+  }
+
+  .highlights-count {
+    display: none;
+  }
+
+  .highlights-rail {
+    gap: 0.85rem;
+  }
+
+  .highlight-badge {
+    top: calc(var(--highlight-ring) - 22px);
+    right: 4px;
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.54rem;
+  }
+
+  .highlight-name {
+    font-size: 0.66rem;
+  }
+
+  .highlight-meta {
+    font-size: 0.5rem;
+  }
+
+  .highlights-hint {
+    font-size: 0.58rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight-ring {
+    animation: none;
+  }
+
+  .highlight-bubble,
+  .highlight-ring,
+  .highlight-thumb img,
+  .highlight-arrow {
+    transition: none;
+  }
+}

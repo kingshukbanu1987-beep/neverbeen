@@ -44,7 +44,10 @@ the legacy list of gallery paths); without it, the cover comes first and the rem
 follow in natural filename order. `videos` does the same for the clips in the album's `video/`
 sub-folder — each entry is a file name or `{ file, caption, poster }` — and `videoCaptions` /
 `videoPosters` map a file name to its caption or poster frame. See
-`public/NeverBeenModels/README.md` for the video folder layout. `illustrative` marks randomized or unverified details, and the
+`public/NeverBeenModels/README.md` for the video folder layout. Highlights are folder-driven: every
+sub-folder of the album's `Highlights/` directory is one highlight, named after the folder, and its
+own optional `highlight.json` carries the name, cover, music, order, captions and item order. No
+profile field is needed for them. `illustrative` marks randomized or unverified details, and the
 directory and portfolio show a visible notice until it is removed or set to `false`.
 
 3. Shared metadata for every model can also live in `data/ai-models/profiles.json`, keyed by cover

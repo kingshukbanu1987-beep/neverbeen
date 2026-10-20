@@ -1,0 +1,99 @@
+@if (highlights().length > 0) {
+  <section class="highlights-section" aria-labelledby="model-highlights-title">
+    <header class="highlights-head">
+      <div class="highlights-heading">
+        <h2 id="model-highlights-title">Highlights</h2>
+      </div>
+
+      <div class="highlights-tools">
+        <span class="highlights-count">
+          <b class="num">{{ highlights().length }}</b>
+          {{ highlights().length === 1 ? 'collection' : 'collections' }}
+        </span>
+        <div class="highlights-arrows" role="group" aria-label="Scroll the highlights">
+          <button
+            type="button"
+            class="highlight-arrow"
+            [disabled]="!canScrollBack()"
+            (click)="scrollRail(-1)"
+            aria-label="Scroll highlights left"
+          >
+            <span aria-hidden="true">←</span>
+          </button>
+          <button
+            type="button"
+            class="highlight-arrow"
+            [disabled]="!canScrollForward()"
+            (click)="scrollRail(1)"
+            aria-label="Scroll highlights right"
+          >
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div
+      class="highlights-track"
+      [class.has-back]="canScrollBack()"
+      [class.has-forward]="canScrollForward()"
+    >
+      <ul class="highlights-rail" #rail (scroll)="syncScroll()">
+        @for (highlight of highlights(); track highlight.id) {
+          <li class="highlight-item">
+            <button
+              type="button"
+              class="highlight-bubble"
+              (click)="open($index, $event)"
+              [attr.aria-label]="openLabel(highlight)"
+            >
+              <span class="highlight-ring" aria-hidden="true">
+                <span class="highlight-thumb">
+                  @if (highlight.cover) {
+                    <img
+                      [src]="highlight.cover"
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      draggable="false"
+                    />
+                  } @else {
+                    <span class="highlight-fallback">✳</span>
+                  }
+                </span>
+              </span>
+
+              <span class="highlight-badge" aria-hidden="true">
+                @if (highlight.videoCount > 0) {
+                  <span class="highlight-badge-play">▶</span>
+                } @else {
+                  <span class="num">{{ highlight.items.length }}</span>
+                }
+              </span>
+
+              <span class="highlight-name">{{ highlight.name }}</span>
+              <span class="highlight-meta">{{ storyLabel(highlight) }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <p class="highlights-hint">
+      <span aria-hidden="true">✦</span>
+      Tap a circle to play its portrait stories with music. A highlight never expires.
+    </p>
+  </section>
+}
+
+@if (viewerOpen() && highlights().length > 0) {
+  <app-highlight-viewer
+    [highlights]="highlights()"
+    [startIndex]="activeIndex()"
+    [modelName]="model().name"
+    [modelHandle]="model().handle"
+    [modelCover]="model().cover"
+    [fallbackMusic]="model().previewMusic ?? ''"
+    (closed)="closeViewer()"
+  />
+}

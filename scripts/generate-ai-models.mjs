@@ -52,12 +52,38 @@ const videoExtensions = new Map([
 /** Where a model's clips are looked for, inside her own album folder. `video/` is canonical. */
 const videoFolderNames = ['video', 'videos'];
 
+/**
+ * The audio the Highlights player can use as background music. Every highlight takes the first
+ * audio file inside its own folder; a highlight without one borrows the model's album preview music.
+ */
+const audioExtensions = new Map([
+  ['.mp3', 'audio/mpeg'],
+  ['.m4a', 'audio/mp4'],
+  ['.aac', 'audio/aac'],
+  ['.wav', 'audio/wav'],
+  ['.ogg', 'audio/ogg'],
+  ['.oga', 'audio/ogg'],
+  ['.opus', 'audio/ogg'],
+  ['.flac', 'audio/flac'],
+]);
+
+/**
+ * The album sub-folder that holds the model's Highlights. Each sub-folder inside it is one
+ * highlight, and the sub-folder's name is the highlight's name. The folder is matched without
+ * regard to case, so `Highlights/` and `highlights/` both work.
+ */
+const highlightsFolderName = 'highlights';
+
 function isImage(fileName) {
   return imageExtensions.has(extname(fileName).toLowerCase());
 }
 
 function isVideo(fileName) {
   return videoExtensions.has(extname(fileName).toLowerCase());
+}
+
+function isAudio(fileName) {
+  return audioExtensions.has(extname(fileName).toLowerCase());
 }
 
 function videoType(fileName) {
@@ -85,12 +111,13 @@ function listImages(directory) {
 }
 
 /**
- * Biography and Portfolio images belong to their own pages and must never leak into the
- * portfolio grid: `Biography/` holds the fictional memory images, `Portfolio/` holds the
- * generated portfolio document and its assets, and `personality/` holds the model's static
- * character database (`characterdatabase.json`) for Live Chat. `PremiumContent/` holds the
- * photographs only the paid Premium Live Chat may show — they travel in their own
- * `premiumPhotos` list, never inside the public grid.
+ * Biography, Portfolio, Highlights and PremiumContent images belong to their own views and must
+ * never leak into the portfolio grid: `Biography/` holds the fictional memory images,
+ * `Portfolio/` holds the generated portfolio document and its assets, `Highlights/` holds the
+ * story frames of the highlights rail, `personality/` holds the model's static character database
+ * (`characterdatabase.json`) for Live Chat, and `PremiumContent/` holds the photographs only the
+ * paid Premium Live Chat may show — they travel in their own `premiumPhotos` list, never inside
+ * the public grid.
  */
 function listAlbumImages(albumDir) {
   return naturalSort(
@@ -100,7 +127,8 @@ function listAlbumImages(albumDir) {
         firstDirectory !== 'biography' &&
         firstDirectory !== 'portfolio' &&
         firstDirectory !== 'personality' &&
-        firstDirectory !== 'premiumcontent'
+        firstDirectory !== 'premiumcontent' &&
+        firstDirectory !== highlightsFolderName
       );
     }),
   );
@@ -123,7 +151,9 @@ function premiumContentDirs(albumDir) {
  * Live Chat window.
  */
 function albumPremiumPhotos({ albumDir, captions }) {
-  const files = naturalSort(premiumContentDirs(albumDir).flatMap((directory) => listImages(directory)));
+  const files = naturalSort(
+    premiumContentDirs(albumDir).flatMap((directory) => listImages(directory)),
+  );
   return files.map((absolutePath) => ({
     src: publicUrl(absolutePath),
     caption: captions.get(absolutePath) ?? '',
@@ -458,6 +488,175 @@ function albumVideos({ albumDir, modelName, merged }) {
   }));
 }
 
+/** The first child directory of `directory` named `name`, ignoring case (`Highlights` / `highlights`). */
+function childDirectory(directory, name) {
+  if (!existsSync(directory)) return null;
+  const wanted = name.toLocaleLowerCase();
+  const entry = readdirSync(directory, { withFileTypes: true }).find(
+    (candidate) => candidate.isDirectory() && candidate.name.toLocaleLowerCase() === wanted,
+  );
+  return entry ? join(directory, entry.name) : null;
+}
+
+/**
+ * A highlight sub-folder may carry an optional `highlight.json` (any casing) that renames it,
+ * pins its cover, points at its music, orders the highlights and captions individual frames:
+ *
+ *   {
+ *     "name": "Shiraz Diaries",
+ *     "cover": "cover.jpg",
+ *     "music": "theme.mp3",
+ *     "order": 1,
+ *     "captions": { "01.jpg": "Rooftop, golden hour" },
+ *     "items": ["01.jpg", "clip-01.mp4"]
+ *   }
+ *
+ * Every field is optional: without the file the folder's name is the highlight's name, its cover
+ * is the first photograph and its music is the first audio file — or the model's album preview
+ * music when the folder holds none.
+ */
+function readHighlightConfig(directory) {
+  if (!existsSync(directory)) return {};
+  const entry = readdirSync(directory, { withFileTypes: true }).find(
+    (candidate) => candidate.isFile() && candidate.name.toLocaleLowerCase() === 'highlight.json',
+  );
+  return entry ? readJson(join(directory, entry.name)) : {};
+}
+
+/** Every highlight sub-folder of `<album>/Highlights/`, in natural name order. */
+function highlightsDirectories(albumDir) {
+  const root = childDirectory(albumDir, highlightsFolderName);
+  if (!root) return [];
+
+  return naturalSort(
+    readdirSync(root, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+      .map((entry) => join(root, entry.name)),
+  );
+}
+
+/**
+ * The model's Highlights — the row of Instagram-style circles shown just above **Read full
+ * Biography**. Every sub-folder of `<album>/Highlights/` is one highlight, named after the folder,
+ * and the photographs and clips inside it are its stories. A highlight never expires: it is shown
+ * for as long as its folder exists.
+ *
+ * A story frame gives no like, comment, seen or share affordance, and none of the frames are
+ * counted in the portfolio grid or its engagement totals.
+ */
+function albumHighlights({ albumDir, modelName, fallbackMusic }) {
+  const highlights = [];
+  const usedIds = new Set();
+
+  for (const directory of highlightsDirectories(albumDir)) {
+    const folderName = directory.split(sep).pop() ?? '';
+    const config = readHighlightConfig(directory);
+    const name = text(config.name) || folderName;
+    const media = naturalSort(
+      listFiles(directory, (fileName) => isImage(fileName) || isVideo(fileName)),
+    );
+
+    // A file literally named `cover.*` is the circle's thumbnail, never a story frame.
+    // A configured `cover` may point at any frame, and that frame stays in the highlight.
+    const coverFile = resolveInside(directory, text(config.cover), isImage) ?? null;
+    const namedCover = media.find(
+      (absolutePath) => imageStem(absolutePath.split(sep).pop()).toLocaleLowerCase() === 'cover',
+    );
+
+    const captions =
+      config.captions && typeof config.captions === 'object' && !Array.isArray(config.captions)
+        ? config.captions
+        : {};
+    /** The poster of a clip: the still beside it (`reel-01.jpg` next to `reel-01.mp4`). */
+    const posterFor = (absolutePath) => {
+      const stem = imageStem(absolutePath.split(sep).pop());
+      const sibling = media.find(
+        (candidate) =>
+          isImage(candidate) &&
+          imageStem(candidate.split(sep).pop()).toLocaleLowerCase() === stem.toLocaleLowerCase(),
+      );
+      return sibling ? publicUrl(sibling) : '';
+    };
+
+    const ordered = [];
+    const seen = new Set();
+    const push = (absolutePath) => {
+      if (!absolutePath || seen.has(absolutePath)) return;
+      if (absolutePath === namedCover) return;
+      seen.add(absolutePath);
+      const fileName = absolutePath.split(sep).pop() ?? '';
+      const caption = text(captions[fileName] ?? captions[relative(directory, absolutePath)]);
+      ordered.push(
+        isVideo(absolutePath)
+          ? {
+              kind: 'video',
+              src: publicUrl(absolutePath),
+              type: videoType(absolutePath),
+              poster: posterFor(absolutePath),
+              caption,
+            }
+          : { kind: 'photo', src: publicUrl(absolutePath), type: '', poster: '', caption },
+      );
+    };
+
+    for (const reference of Array.isArray(config.items) ? config.items : []) {
+      push(
+        resolveInside(
+          directory,
+          text(reference),
+          (fileName) => isImage(fileName) || isVideo(fileName),
+        ),
+      );
+    }
+    for (const absolutePath of media) push(absolutePath);
+
+    if (ordered.length === 0) {
+      console.warn(
+        `[ai-models] Skipping the empty highlight "${name}" of ${modelName} — add photographs or clips to ${relative(projectRoot, directory)}.`,
+      );
+      continue;
+    }
+
+    const firstPhoto = ordered.find((item) => item.kind === 'photo');
+    const cover = coverFile
+      ? publicUrl(coverFile)
+      : namedCover
+        ? publicUrl(namedCover)
+        : (firstPhoto?.src ?? ordered.find((item) => item.poster)?.poster ?? '');
+
+    const audio =
+      resolveInside(directory, text(config.music), isAudio) ??
+      naturalSort(listFiles(directory, isAudio))[0] ??
+      null;
+
+    const baseId = slugify(name);
+    let id = baseId;
+    let suffix = 2;
+    while (usedIds.has(id)) id = `${baseId}-${suffix++}`;
+    usedIds.add(id);
+
+    highlights.push({
+      id,
+      name,
+      cover,
+      music: audio ? publicUrl(audio) : fallbackMusic,
+      items: ordered,
+      photoCount: ordered.filter((item) => item.kind === 'photo').length,
+      videoCount: ordered.filter((item) => item.kind === 'video').length,
+      order: numberValue(config.order),
+    });
+  }
+
+  // `order` in highlight.json pins a highlight to the front; the rest keep their folder order.
+  return highlights
+    .sort((a, b) => {
+      const left = a.order > 0 ? a.order : Number.MAX_SAFE_INTEGER;
+      const right = b.order > 0 ? b.order : Number.MAX_SAFE_INTEGER;
+      return left - right;
+    })
+    .map(({ order: _order, ...highlight }) => highlight);
+}
+
 function biographyEntries(value, fields) {
   if (!Array.isArray(value)) return [];
   return value
@@ -734,6 +933,16 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
 
   const videos = albumVideos({ albumDir, modelName: name, merged });
 
+  // The album's own `<model name>.mp3` is the cinematic preview music; the highlights fall back to
+  // it when a highlight folder carries no audio of its own.
+  const previewMusicFile = join(albumDir, `${name}.mp3`);
+  const previewMusic =
+    existsSync(previewMusicFile) && statSync(previewMusicFile).isFile()
+      ? publicUrl(previewMusicFile)
+      : '';
+
+  const highlights = albumHighlights({ albumDir, modelName: name, fallbackMusic: previewMusic });
+
   const photos = albumEntries.map((entry) => ({
     src: publicUrl(entry.absolutePath),
     caption: entry.caption,
@@ -745,9 +954,7 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     name,
     cover,
     album: folderName,
-    ...(existsSync(join(albumDir, `${name}.mp3`)) && statSync(join(albumDir, `${name}.mp3`)).isFile()
-      ? { previewMusic: publicUrl(join(albumDir, `${name}.mp3`)) }
-      : {}),
+    ...(previewMusic ? { previewMusic } : {}),
     location: text(merged.location),
     age: text(merged.age),
     height: text(merged.height),
@@ -773,6 +980,11 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     premiumPhotos,
     /** Clips from `public/NeverBeenModels/<album>/video/`, played in the portfolio's reel. */
     videos,
+    /**
+     * Highlights from `<album>/Highlights/` — one per sub-folder, named after it, shown in the
+     * profile's circular rail and played as never-expiring portrait stories.
+     */
+    highlights,
   };
 }
 
@@ -838,6 +1050,8 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     premiumPhotos: [],
     // Flat (legacy) profiles have no album folder, so they carry no video folder either.
     videos: [],
+    // Flat (legacy) profiles have no album folder, so they carry no Highlights either.
+    highlights: [],
   };
 }
 
@@ -988,6 +1202,41 @@ export interface AiModelVideo {
   poster: string;
   /** MIME type of the clip, e.g. "video/mp4". */
   type: string;
+}
+
+/** One story frame of a model highlight: a photograph or a clip. */
+export interface AiModelHighlightItem {
+  /** Whether the frame is a still photograph or a video. */
+  kind: 'photo' | 'video';
+  /** Public URL of the frame. */
+  src: string;
+  /** MIME type of a clip, e.g. "video/mp4"; empty for a photograph. */
+  type: string;
+  /** Optional poster frame of a clip; empty when there is none. */
+  poster: string;
+  /** Optional caption written in the highlight's \`highlight.json\`. */
+  caption: string;
+}
+
+/**
+ * One highlight of the model's profile — a sub-folder of \`<album>/Highlights/\`, named after it.
+ * Highlights never expire. Their frames are shown as portrait stories for four seconds each (a
+ * clip plays for its own duration) and carry no likes, comments, seen or share affordances.
+ */
+export interface AiModelHighlight {
+  /** URL-safe id derived from the highlight's name. */
+  id: string;
+  /** The highlight's name: its sub-folder name unless \`highlight.json\` renames it. */
+  name: string;
+  /** Circle thumbnail — the folder's cover image, or its first photograph. */
+  cover: string;
+  /** Background music: the highlight's own audio, or the model's preview music when it has none. */
+  music: string;
+  /** Every photograph and clip of the highlight, in the folder's order. */
+  items: AiModelHighlightItem[];
+  /** Number of photographs and clips, shown on the highlight's circle. */
+  photoCount: number;
+  videoCount: number;
 }
 
 export interface AiModelBiographyEntry {
@@ -1161,6 +1410,11 @@ export interface AiModelProfile {
    * below the model's personal details.
    */
   videos: AiModelVideo[];
+  /**
+   * Every sub-folder of the album's \`Highlights/\` folder, in folder order — the circular rail
+   * shown just above \`Read full Biography\`. Optional so hand-built profiles stay valid.
+   */
+  highlights?: AiModelHighlight[];
 }
 
 export const aiModelProfiles: AiModelProfile[] = [
@@ -1211,8 +1465,12 @@ if (runDirectly) {
             profile.premiumPhotos.length === 1 ? '' : 's'
           } in PremiumContent/`
         : '';
+    const highlightNote =
+      profile.highlights.length > 0
+        ? `, ${profile.highlights.length} highlight${profile.highlights.length === 1 ? '' : 's'} in Highlights/`
+        : '';
     console.log(
-      `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${videoNote}${premiumNote}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
+      `[ai-models]   ${profile.name}: ${profile.photos.length} photograph${profile.photos.length === 1 ? '' : 's'}${videoNote}${premiumNote}${highlightNote}${profile.album ? ` (public/NeverBeenModels/${profile.album})` : ''}`,
     );
   }
 }

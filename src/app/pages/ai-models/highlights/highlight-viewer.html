@@ -1,0 +1,214 @@
+<div class="highlight-viewer" role="dialog" aria-modal="true" [attr.aria-label]="viewerLabel()">
+  @if (highlight(); as active) {
+    <div class="viewer-atmosphere" aria-hidden="true">
+      @if (active.cover || modelCover()) {
+        <img [src]="active.cover || modelCover()" alt="" />
+      }
+    </div>
+    <span class="viewer-vignette" aria-hidden="true"></span>
+
+    <section class="story-stage" [class.is-paused]="paused()">
+      <!-- Everything below the chrome is the tap surface: a tap is the next story. -->
+      <div
+        class="story-surface"
+        (pointerdown)="onPointerDown($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerCancel()"
+        (pointerleave)="onPointerCancel()"
+        (contextmenu)="$event.preventDefault()"
+      >
+        @for (frame of frames(); track frame.src) {
+          @if (frame.kind === 'video') {
+            <video
+              #storyVideo
+              class="story-media"
+              [src]="frame.src"
+              [poster]="frame.poster"
+              muted
+              playsinline
+              autoplay
+              preload="auto"
+              (loadedmetadata)="onVideoMetadata($event)"
+              (timeupdate)="onVideoTime($event)"
+              (ended)="next()"
+              (error)="next()"
+            ></video>
+          } @else {
+            <img
+              class="story-media"
+              [src]="frame.src"
+              [alt]="frame.caption || active.name"
+              draggable="false"
+            />
+          }
+          <span class="story-grain" aria-hidden="true"></span>
+        }
+        <span class="story-shade" aria-hidden="true"></span>
+      </div>
+
+      <div class="story-chrome">
+        <div class="story-progress" role="group" aria-label="Story progress">
+          @for (frame of items(); track $index; let index = $index) {
+            <button
+              type="button"
+              class="story-segment"
+              [class.is-done]="index < activeItem()"
+              [class.is-current]="index === activeItem()"
+              (click)="goTo(index)"
+              [attr.aria-label]="'Story ' + (index + 1) + ' of ' + items().length"
+              [attr.aria-current]="index === activeItem() ? 'true' : null"
+            >
+              <span
+                class="story-segment-fill"
+                [style.transform]="'scaleX(' + segmentFill(index) + ')'"
+              ></span>
+            </button>
+          }
+        </div>
+
+        <header class="story-topbar">
+          <div class="story-identity">
+            <span class="story-avatar" aria-hidden="true">
+              @if (active.cover || modelCover()) {
+                <img [src]="active.cover || modelCover()" alt="" />
+              } @else {
+                <span>✳</span>
+              }
+            </span>
+            <span class="story-identity-copy">
+              <strong>{{ active.name }}</strong>
+              <span class="story-sub">
+                <i class="story-never">Never expires</i>
+                <span aria-hidden="true">·</span>
+                {{ modelName() }}
+                <span class="story-handle">{{ modelHandle() }}</span>
+              </span>
+            </span>
+          </div>
+
+          <div class="story-actions">
+            <span class="story-counter num">{{ counterLabel() }}</span>
+            <button
+              type="button"
+              class="story-icon"
+              (click)="togglePaused()"
+              [attr.aria-label]="paused() ? 'Play the highlight' : 'Pause the highlight'"
+              [attr.aria-pressed]="paused()"
+            >
+              @if (paused()) {
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 5.5v13l11-6.5-11-6.5Z" fill="currentColor" stroke="none" />
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M9 5v14M15 5v14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              }
+            </button>
+
+            @if (hasMusic()) {
+              <button
+                type="button"
+                class="story-icon"
+                (click)="toggleMuted()"
+                [attr.aria-label]="muted() ? 'Turn the music on' : 'Mute the music'"
+                [attr.aria-pressed]="muted()"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M4 9.5h3.2L12 6v12l-4.8-3.5H4v-5Z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linejoin="round"
+                  />
+                  @if (muted()) {
+                    <path
+                      d="m16 9 4 6m0-6-4 6"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    />
+                  } @else {
+                    <path
+                      d="M15.5 9.2a3.8 3.8 0 0 1 0 5.6M18 7a7 7 0 0 1 0 10"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                    />
+                  }
+                </svg>
+              </button>
+            }
+
+            <button
+              #closeButton
+              type="button"
+              class="story-icon story-close"
+              (click)="close()"
+              aria-label="Close the highlight"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="m6 6 12 12M18 6 6 18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <button
+          type="button"
+          class="story-nav is-previous"
+          (click)="previous()"
+          aria-label="Previous story"
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
+        <button type="button" class="story-nav is-next" (click)="next()" aria-label="Next story">
+          <span aria-hidden="true">›</span>
+        </button>
+
+        <footer class="story-footer">
+          <div class="story-footer-line">
+            <span class="story-chip">
+              <span class="story-chip-dot" aria-hidden="true"></span>{{ typeLabel() }}
+            </span>
+            @if (hasMusic()) {
+              <span class="story-sound" [class.is-muted]="muted()">
+                <span class="story-eq" [class.is-on]="soundOn() && !paused()" aria-hidden="true">
+                  <i></i><i></i><i></i>
+                </span>
+                {{ muted() ? 'Sound off' : 'Soundtrack' }}
+              </span>
+            } @else {
+              <span class="story-sound is-muted">No soundtrack</span>
+            }
+          </div>
+
+          @if (item()?.caption; as caption) {
+            <p class="story-caption">{{ caption }}</p>
+          }
+
+          <p class="story-hint">Tap for the next story <span aria-hidden="true">→</span></p>
+        </footer>
+      </div>
+    </section>
+
+    @if (hasMusic()) {
+      <audio #musicEl loop preload="auto" aria-hidden="true"></audio>
+    }
+  }
+</div>
