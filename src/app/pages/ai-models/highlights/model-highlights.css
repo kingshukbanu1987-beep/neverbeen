@@ -73,29 +73,8 @@
   gap: 1rem;
 }
 
-.highlights-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: #f0b8d2;
-}
-
-.highlights-eyebrow i {
-  color: var(--studio-pink, #ef6aa5);
-  font-style: normal;
-}
-
-.highlights-live {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--studio-pink, #ef6aa5);
-  box-shadow: 0 0 0 0 rgb(239 106 165 / 70%);
-  animation: highlight-pulse 2.6s ease-out infinite;
-}
-
 .highlights-heading h2 {
-  margin: 0.3rem 0 0;
+  margin: 0;
   font-family: var(--serif, 'Cormorant Garamond', Georgia, serif);
   font-size: clamp(1.45rem, 2.3vw, 1.9rem);
   font-weight: 500;
@@ -401,16 +380,6 @@
   }
 }
 
-@keyframes highlight-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgb(239 106 165 / 55%);
-  }
-  60%,
-  100% {
-    box-shadow: 0 0 0 7px rgb(239 106 165 / 0%);
-  }
-}
-
 @media (max-width: 720px) {
   :host {
     margin-top: 1.35rem;
@@ -456,8 +425,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .highlight-ring,
-  .highlights-live {
+  .highlight-ring {
     animation: none;
   }
 

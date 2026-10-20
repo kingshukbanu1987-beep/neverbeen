@@ -127,7 +127,11 @@ describe('ModelHighlights', () => {
     expect(element.querySelector('#model-highlights-title')?.textContent?.trim()).toBe(
       'Highlights',
     );
-    expect(element.querySelector('.highlights-eyebrow')?.textContent).toContain('never expires');
+    // The brief removed the old "STORY ARCHIVE · NEVER EXPIRES" header above the title.
+    expect(element.querySelector('.highlights-eyebrow')).toBeNull();
+    expect(element.querySelector('.highlights-heading')?.textContent).not.toContain(
+      'Story archive',
+    );
     expect(element.querySelector('.highlights-count')?.textContent).toContain('2');
     expect(circles().length).toBe(2);
 
