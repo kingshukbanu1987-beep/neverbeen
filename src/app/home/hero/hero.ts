@@ -14,6 +14,7 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
   // openable in a new tab or downloadable as a PDF.
   documentation: { path: '/documentation', cls: 'btn-brochure' },
   'ai-models': { path: '/ai-models', cls: 'btn-ai-models' },
+  merchandise: { path: '/merchandise', cls: 'btn-founder' },
   storyline: { path: '/storyline-of-parallel-universe', cls: 'btn-brochure' },
 };
 
@@ -51,18 +52,28 @@ export class Hero {
       if (anchor >= 0) buttons.splice(anchor + 1, 0, aiModels);
       else buttons.push(aiModels);
     }
+    const merchandiseIndex = buttons.findIndex((b) => b.id === 'merchandise');
+    if (merchandiseIndex >= 0) {
+      const [merchandise] = buttons.splice(merchandiseIndex, 1);
+      const aiModelsAnchor = buttons.findIndex((b) => b.id === 'ai-models');
+      if (aiModelsAnchor >= 0) buttons.splice(aiModelsAnchor + 1, 0, merchandise);
+      else buttons.push(merchandise);
+    }
     const storylineIndex = buttons.findIndex((b) => b.id === 'storyline');
     if (storylineIndex >= 0) {
       const [storyline] = buttons.splice(storylineIndex, 1);
+      const merchandiseAnchor = buttons.findIndex((b) => b.id === 'merchandise');
       const aiModelsAnchor = buttons.findIndex((b) => b.id === 'ai-models');
       const brochureAnchor = buttons.findIndex((b) => b.id === 'documentation');
       const communityAnchor = buttons.findIndex((b) => b.id === 'community');
       const anchor =
-        aiModelsAnchor >= 0
-          ? aiModelsAnchor
-          : brochureAnchor >= 0
-            ? brochureAnchor
-            : communityAnchor;
+        merchandiseAnchor >= 0
+          ? merchandiseAnchor
+          : aiModelsAnchor >= 0
+            ? aiModelsAnchor
+            : brochureAnchor >= 0
+              ? brochureAnchor
+              : communityAnchor;
       if (anchor >= 0) buttons.splice(anchor + 1, 0, storyline);
       else buttons.push(storyline);
     }

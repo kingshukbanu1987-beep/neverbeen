@@ -1,0 +1,92 @@
+{
+  "category": "Notebooks-and-Notepads",
+  "slug": "notebooks-and-notepads",
+  "title": "Notebooks & Notepads",
+  "subtitle": "For the itinerary you will actually keep.",
+  "description": "Lay-flat notebooks, page-a-week notepads and a refillable leather journal — 100 GSM paper that resists ink bleed.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-NB-001": {
+      "id": "NB-NB-001",
+      "name": "A5 Dotted Notebook",
+      "audience": "Unisex",
+      "price": 399,
+      "compareAtPrice": 549,
+      "colors": [
+        "Navy",
+        "Sand"
+      ],
+      "sizes": [
+        "A5 · 160 pages"
+      ],
+      "material": "100 GSM ivory paper, lay-flat binding",
+      "badge": "Bestseller",
+      "rating": 4.8,
+      "reviews": 356,
+      "description": "A dotted A5 notebook with 160 numbered pages, a ribbon marker and an elastic closure. The binding lies completely flat.",
+      "image": "NB-NB-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "100 GSM ivory paper, lay-flat binding",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-NB-002": {
+      "id": "NB-NB-002",
+      "name": "Weekly Notepad",
+      "audience": "Unisex",
+      "price": 299,
+      "compareAtPrice": 399,
+      "colors": [
+        "Natural"
+      ],
+      "sizes": [
+        "52 sheets"
+      ],
+      "material": "Recycled 90 GSM paper, glued spine",
+      "rating": 4.6,
+      "reviews": 168,
+      "description": "Fifty-two undated weekly sheets on a glued pad, with a tear line that actually tears straight.",
+      "image": "NB-NB-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Recycled 90 GSM paper, glued spine",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-NB-003": {
+      "id": "NB-NB-003",
+      "name": "Leather Journal",
+      "audience": "Unisex",
+      "price": 899,
+      "compareAtPrice": 1199,
+      "colors": [
+        "Copper tan"
+      ],
+      "sizes": [
+        "A5 · 192 pages"
+      ],
+      "material": "Full-grain leather, refillable insert",
+      "badge": "New",
+      "rating": 4.9,
+      "reviews": 91,
+      "description": "A full-grain leather journal with a wrap-around strap and a refillable insert, so it lasts longer than the trip.",
+      "image": "NB-NB-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Full-grain leather, refillable insert",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

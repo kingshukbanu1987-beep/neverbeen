@@ -102,6 +102,13 @@ export class Navbar {
     { id: 'how', label: 'How', path: '/', fragment: 'how-it-works', icon: 'cog' },
     { id: 'audience', label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
     { id: 'collection', label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
+    {
+      id: 'merchandise',
+      label: 'Merchandise',
+      path: '/merchandise',
+      fragment: undefined,
+      icon: 'shopping-bag',
+    },
     { id: 'destinations', label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
     { id: 'live', label: 'Live', path: '/travel-feeds', fragment: undefined, icon: 'live' },
     { id: 'pricing', label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },

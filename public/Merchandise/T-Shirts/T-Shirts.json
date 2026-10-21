@@ -1,0 +1,170 @@
+{
+  "category": "T-Shirts",
+  "slug": "t-shirts",
+  "title": "T-Shirts",
+  "subtitle": "Everyday cotton, cut for everyone.",
+  "description": "Soft, breathable and pre-shrunk NeverBeen tees in fits for women, men, boys, girls and kids. The wordmark is screen-printed in the studio navy, so it stays sharp wash after wash.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-TS-001": {
+      "id": "NB-TS-001",
+      "name": "Women's Skyline Tee",
+      "audience": "Women",
+      "price": 899,
+      "compareAtPrice": 1299,
+      "colors": [
+        "Ivory",
+        "Powder blue",
+        "Blush"
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "material": "180 GSM combed cotton, relaxed fit",
+      "badge": "Bestseller",
+      "rating": 4.8,
+      "reviews": 412,
+      "description": "A softly draped ivory tee with a curved hem and a NeverBeen wordmark printed small at the chest. Made from 180 GSM combed cotton that keeps its shape.",
+      "image": "NB-TS-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "180 GSM combed cotton, relaxed fit",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TS-002": {
+      "id": "NB-TS-002",
+      "name": "Men's Passport Tee",
+      "audience": "Men",
+      "price": 949,
+      "compareAtPrice": 1349,
+      "colors": [
+        "Studio navy",
+        "Graphite",
+        "Forest"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "material": "200 GSM ring-spun cotton, classic fit",
+      "badge": "New",
+      "rating": 4.7,
+      "reviews": 286,
+      "description": "The studio navy tee with the NeverBeen wordmark in white across the chest. Straight cut, ribbed crew neck and a heavier 200 GSM ring-spun cotton.",
+      "image": "NB-TS-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "200 GSM ring-spun cotton, classic fit",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TS-003": {
+      "id": "NB-TS-003",
+      "name": "Boys' Paper Plane Tee",
+      "audience": "Boys",
+      "price": 649,
+      "compareAtPrice": 899,
+      "colors": [
+        "Sky blue",
+        "Off white"
+      ],
+      "sizes": [
+        "6Y",
+        "8Y",
+        "10Y",
+        "12Y",
+        "14Y"
+      ],
+      "material": "160 GSM cotton jersey, easy fit",
+      "rating": 4.6,
+      "reviews": 158,
+      "description": "A light sky-blue tee built for playgrounds. Side seams are taped flat and the print sits in a soft, flexible ink.",
+      "image": "NB-TS-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "160 GSM cotton jersey, easy fit",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TS-004": {
+      "id": "NB-TS-004",
+      "name": "Girls' Cloud Nine Tee",
+      "audience": "Girls",
+      "price": 649,
+      "compareAtPrice": 899,
+      "colors": [
+        "Rose blush",
+        "Ivory"
+      ],
+      "sizes": [
+        "6Y",
+        "8Y",
+        "10Y",
+        "12Y",
+        "14Y"
+      ],
+      "material": "160 GSM cotton jersey, A-line fit",
+      "badge": "Loved",
+      "rating": 4.9,
+      "reviews": 203,
+      "description": "A cloud-soft rose tee with a slightly flared hem. Printed with a water-based ink that feels like nothing on the skin.",
+      "image": "NB-TS-004.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "160 GSM cotton jersey, A-line fit",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TS-005": {
+      "id": "NB-TS-005",
+      "name": "Kids' Tiny Traveller Tee",
+      "audience": "Kids",
+      "price": 499,
+      "compareAtPrice": 699,
+      "colors": [
+        "Mint",
+        "Sand"
+      ],
+      "sizes": [
+        "2Y",
+        "4Y",
+        "6Y",
+        "8Y"
+      ],
+      "material": "150 GSM organic cotton, tag-free neck",
+      "rating": 4.8,
+      "reviews": 96,
+      "description": "A tag-free organic cotton tee for the smallest explorers, with an envelope neckline that is kind on the way on and off.",
+      "image": "NB-TS-005.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "150 GSM organic cotton, tag-free neck",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

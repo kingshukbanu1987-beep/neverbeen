@@ -70,6 +70,15 @@ describe('Navbar', () => {
     expect(how!.querySelector('svg.icon use')?.getAttribute('href')).toBe('#nb-icon-cog');
   });
 
+  it('points the Merchandise link at the store and gives it a shopping bag icon', () => {
+    const merchandise = navLinks().find((link) => link.textContent?.trim() === 'Merchandise');
+
+    expect(merchandise?.getAttribute('href')).toBe('/merchandise');
+    expect(merchandise?.querySelector('svg.icon use')?.getAttribute('href')).toBe(
+      '#nb-icon-shopping-bag',
+    );
+  });
+
   it('points the Audience link at the audience route', () => {
     const audience = navLinks().find((link) => link.textContent?.trim() === 'Audience');
 

@@ -1,0 +1,94 @@
+{
+  "category": "Tiffin-Boxes",
+  "slug": "tiffin-boxes",
+  "title": "Tiffin Boxes",
+  "subtitle": "Home food, wherever the day takes you.",
+  "description": "Stainless steel tiffins and leak-proof lunch boxes that stack, clip and carry a proper home-cooked meal.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-TF-001": {
+      "id": "NB-TF-001",
+      "name": "Three-Tier Steel Tiffin",
+      "audience": "Unisex",
+      "price": 1499,
+      "compareAtPrice": 1999,
+      "colors": [
+        "Steel",
+        "Navy clip"
+      ],
+      "sizes": [
+        "3 × 500 ml"
+      ],
+      "material": "Food-grade stainless steel with powder-coated clip",
+      "badge": "Bestseller",
+      "rating": 4.8,
+      "reviews": 267,
+      "description": "Three stackable steel containers with a locking clip frame. Dal stays in one tier, rice in the next and chapatis stay warm in the third.",
+      "image": "NB-TF-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Food-grade stainless steel with powder-coated clip",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TF-002": {
+      "id": "NB-TF-002",
+      "name": "Leak-Proof Bento Box",
+      "audience": "Unisex",
+      "price": 999,
+      "compareAtPrice": 1299,
+      "colors": [
+        "Sand",
+        "Navy"
+      ],
+      "sizes": [
+        "900 ml"
+      ],
+      "material": "BPA-free polypropylene, microwave-safe",
+      "rating": 4.6,
+      "reviews": 188,
+      "description": "A compartmented bento with a snap-lock lid and a silicone seal. Two removable dividers keep the sabzi off the rice.",
+      "image": "NB-TF-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "BPA-free polypropylene, microwave-safe",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TF-003": {
+      "id": "NB-TF-003",
+      "name": "Insulated Lunch Jar",
+      "audience": "Unisex",
+      "price": 1199,
+      "compareAtPrice": 1599,
+      "colors": [
+        "Navy",
+        "Ivory"
+      ],
+      "sizes": [
+        "600 ml"
+      ],
+      "material": "Vacuum-insulated steel with foldable spoon",
+      "badge": "New",
+      "rating": 4.7,
+      "reviews": 121,
+      "description": "A tall insulated jar that keeps khichdi hot until 2 pm, with a folding spoon clipped under the lid.",
+      "image": "NB-TF-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Vacuum-insulated steel with foldable spoon",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

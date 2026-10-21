@@ -1,0 +1,94 @@
+{
+  "category": "Water-Bottles-and-Tumblers",
+  "slug": "water-bottles-and-tumblers",
+  "title": "Water Bottles & Tumblers",
+  "subtitle": "Cold water, warm coffee, zero plastic.",
+  "description": "Double-wall stainless steel that holds temperature for hours, with a powder-coated NeverBeen finish that survives a backpack.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-BT-001": {
+      "id": "NB-BT-001",
+      "name": "Insulated Steel Bottle · 750 ml",
+      "audience": "Unisex",
+      "price": 1299,
+      "compareAtPrice": 1799,
+      "colors": [
+        "Studio navy",
+        "Ivory"
+      ],
+      "sizes": [
+        "750 ml"
+      ],
+      "material": "Double-wall 18/8 stainless steel, copper-lined",
+      "badge": "Bestseller",
+      "rating": 4.9,
+      "reviews": 534,
+      "description": "Twenty-four hours cold, twelve hours hot. The 750 ml bottle has a leak-proof twist cap, a wide mouth for ice and a powder-coated navy body.",
+      "image": "NB-BT-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Double-wall 18/8 stainless steel, copper-lined",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-BT-002": {
+      "id": "NB-BT-002",
+      "name": "Vacuum Tumbler · 500 ml",
+      "audience": "Unisex",
+      "price": 999,
+      "compareAtPrice": 1399,
+      "colors": [
+        "Steel",
+        "Navy"
+      ],
+      "sizes": [
+        "500 ml"
+      ],
+      "material": "Vacuum-insulated stainless steel with sliding lid",
+      "rating": 4.7,
+      "reviews": 318,
+      "description": "A tapered tumbler that fits a car cup holder and keeps filter coffee hot for six hours. Slide the lid shut and it travels without a drip.",
+      "image": "NB-BT-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Vacuum-insulated stainless steel with sliding lid",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-BT-003": {
+      "id": "NB-BT-003",
+      "name": "Tritan Sports Bottle · 1 L",
+      "audience": "Unisex",
+      "price": 749,
+      "compareAtPrice": 999,
+      "colors": [
+        "Mint",
+        "Navy"
+      ],
+      "sizes": [
+        "1 L"
+      ],
+      "material": "BPA-free Tritan with silicone straw",
+      "badge": "New",
+      "rating": 4.5,
+      "reviews": 142,
+      "description": "A one-litre bottle light enough for a gym bag, with a flip straw, a carry loop and measurements printed down the side.",
+      "image": "NB-BT-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "BPA-free Tritan with silicone straw",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}
