@@ -12,9 +12,11 @@
       @if (buttons().length) {
         <div class="actions">
           @for (b of buttons(); track b.id) {
-            @if (b.id === 'documentation' || b.id === 'storyline') {
+            @if (b.id === 'documentation' || b.id === 'storyline' || b.id === 'ai-models') {
               <!-- Native same-tab navigation stays reliable after history restores
-                   or a deployment replaces the lazy route's JavaScript chunk. -->
+                   or a deployment replaces the lazy route's JavaScript chunk: the browser
+                   loads a fresh document (and fresh chunks) instead of asking the
+                   long-running single-page app to fetch a file that may no longer exist. -->
               <a [href]="b.path" [class]="'btn ' + b.cls">{{ b.label }}</a>
             } @else {
               <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{

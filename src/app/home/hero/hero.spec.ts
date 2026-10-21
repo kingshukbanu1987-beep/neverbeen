@@ -26,7 +26,7 @@ describe('Hero', () => {
     return buttonsOf(element).map((link) => link.textContent?.trim() ?? '');
   }
 
-  it('places Connect to NeverBeen Community very first, before Know the Founder, styled like Dream Destinations used to be', () => {
+  it('places Connect to NeverBeen Community very first, before Know the Founder, in the founder navy', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
@@ -45,9 +45,13 @@ describe('Hero', () => {
 
     const community = buttons[0];
     expect(community.getAttribute('href')).toBe('/community');
-    // Same style Dream Destinations had: solid green pill with white text
+    // The same navy "Know the Founder" wears, with white text.
+    const founder = buttons[labels.indexOf('Know the Founder')];
     expect(community.classList.contains('btn-dream')).toBe(true);
-    expect(getComputedStyle(community).backgroundColor).toBe('rgb(91, 181, 35)');
+    expect(getComputedStyle(community).backgroundColor).toBe('rgb(18, 59, 104)');
+    expect(getComputedStyle(community).backgroundColor).toBe(
+      getComputedStyle(founder).backgroundColor,
+    );
     expect(getComputedStyle(community).color).toBe('rgb(255, 255, 255)');
   });
 
@@ -109,7 +113,7 @@ describe('Hero', () => {
     expect(getComputedStyle(brochure).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('puts NeverBeen AI Models directly after Brochure with the requested founder-button styling and color', () => {
+  it('puts NeverBeen AI Models directly after Brochure in the studio pink', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
@@ -119,7 +123,7 @@ describe('Hero', () => {
     expect(aiModels.textContent?.trim()).toBe('NeverBeen AI Models');
     expect(aiModels.getAttribute('href')).toBe('/ai-models');
     expect(aiModels.classList.contains('btn-ai-models')).toBe(true);
-    expect(getComputedStyle(aiModels).backgroundColor).toBe('rgb(173, 20, 26)');
+    expect(getComputedStyle(aiModels).backgroundColor).toBe('rgb(255, 70, 162)');
     expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
   });
 
@@ -163,6 +167,22 @@ describe('Hero', () => {
       routerLinks.some(
         (link) => link.nativeElement.getAttribute('href') === '/storyline-of-parallel-universe',
       ),
+    ).toBe(false);
+  });
+
+  it('uses a native same-tab direct link for AI Models instead of lazy-route navigation', () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const aiModels = element.querySelector<HTMLAnchorElement>('a[href="/ai-models"]')!;
+    const routerLinks = fixture.debugElement.queryAll(By.directive(RouterLink));
+
+    expect(aiModels).toBeTruthy();
+    expect(aiModels.textContent?.trim()).toBe('NeverBeen AI Models');
+    expect(aiModels.getAttribute('target')).toBeNull();
+    // A real document navigation always opens the directory, even when the tab has been open
+    // long enough for a deployment to replace the route's JavaScript chunk.
+    expect(
+      routerLinks.some((link) => link.nativeElement.getAttribute('href') === '/ai-models'),
     ).toBe(false);
   });
 
