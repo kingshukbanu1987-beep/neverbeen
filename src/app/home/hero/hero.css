@@ -47,40 +47,36 @@ h1 {
   outline-offset: 3px;
 }
 
-.btn-founder {
+/* "Know the Founder" and "Connect to NeverBeen Community" share the same navy. */
+.btn-founder,
+.btn-dream {
   background: #123b68;
   color: #fff;
 }
 
 .btn-founder:hover,
-.btn-founder:focus-visible {
+.btn-founder:focus-visible,
+.btn-dream:hover,
+.btn-dream:focus-visible {
   background: #0c2b4d;
+  color: #fff;
 }
 
+/* "NeverBeen AI Models" wears the studio pink. */
 .btn-ai-models {
-  background: #ad141a;
+  background: #ff46a2;
   color: #fff;
 }
 
 .btn-ai-models:hover,
 .btn-ai-models:focus-visible {
-  background: #891017;
+  background: #e52d8b;
   color: #fff;
 }
 
 .btn-ai-models:focus-visible {
-  outline: 2px solid #ad141a;
+  outline: 2px solid #ff46a2;
   outline-offset: 3px;
-}
-
-.btn-dream {
-  background: #5bb523;
-  color: #fff;
-}
-
-.btn-dream:hover,
-.btn-dream:focus-visible {
-  background: #4a9a1c;
 }
 
 .btn-collection {

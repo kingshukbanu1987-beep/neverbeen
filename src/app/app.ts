@@ -11,6 +11,7 @@ import { SiteConfigService } from './services/site-config.service';
 import { SiteAnalyticsService } from './services/site-analytics.service';
 import { SiteTabService } from './services/site-tab.service';
 import { CommunityBadgeService } from './services/community-badge.service';
+import { SiteRecoveryService } from './services/site-recovery.service';
 
 @Component({
   selector: 'app-root',
@@ -27,6 +28,8 @@ export class App {
   /** Keeps the browser tab as "NeverBeen" (+ unread chats and notifications, red badge on the icon). */
   private readonly tab = inject(SiteTabService);
   private readonly badges = inject(CommunityBadgeService);
+  /** Repairs a tab that comes back after a while in a broken state (see the service). */
+  private readonly recovery = inject(SiteRecoveryService);
 
   private readonly url = signal(typeof location !== 'undefined' ? location.pathname : '/');
 
@@ -65,6 +68,9 @@ export class App {
     afterNextRender(() => {
       this.translation.init();
       this.tab.sync();
+      // Coming back to the tab after a while must never leave the visitor with only the
+      // header and the footer: if the routed page never made it into <main>, rebuild it.
+      this.recovery.startContentWatch();
     });
   }
 }

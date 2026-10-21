@@ -1,8 +1,14 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch } from '@angular/common/http';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import {
+  NavigationError,
+  provideRouter,
+  withInMemoryScrolling,
+  withNavigationErrorHandler,
+} from '@angular/router';
 
 import { routes } from './app.routes';
+import { SiteRecoveryService } from './services/site-recovery.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,6 +24,14 @@ export const appConfig: ApplicationConfig = {
         anchorScrolling: 'enabled',
         scrollPositionRestoration: 'top',
       }),
+      // A tab that has been open for a while still runs the JavaScript it downloaded then. If
+      // the site was redeployed in the meantime, the chunk a lazy route needs (AI Models,
+      // Collection, Community …) no longer exists and the navigation is rejected — which used
+      // to leave the click doing nothing at all. Repair the tab with a fresh document for the
+      // requested URL instead (once per URL per tab session — see SiteRecoveryService).
+      withNavigationErrorHandler((error: NavigationError) =>
+        inject(SiteRecoveryService).recoverFailedNavigation(error.url),
+      ),
     ),
   ],
 };

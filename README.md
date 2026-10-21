@@ -856,6 +856,27 @@ The gate lives in `src/app/services/community.service.ts`:
 
 The website, brochure, AI model studio, live travel feeds and the Admin Console are unaffected.
 
+## Coming back to an open tab
+
+NeverBeen is a single-page application, so a tab keeps running the JavaScript it downloaded when it
+was opened. Browsers keep such a tab for hours (and may restore it from the back-forward cache), and
+in that time a deployment can replace the hashed route chunks. Two things used to go wrong, both of
+which looked like “the website is broken until I refresh”:
+
+- **A lazy route would not open.** Clicking **NeverBeen AI Models** (or Collection, Community …)
+  asked the old document for a chunk that no longer exists; the router rejected the navigation and
+  the click did nothing. The **NeverBeen AI Models**, **Brochure** and **Storyline** buttons are now
+  plain same-tab links (`<a href>`), so the browser loads a fresh document and fresh chunks. For
+  every other lazy route, `SiteRecoveryService` handles a failed navigation the same way: it fetches
+  a fresh document for the URL the visitor asked for (once per URL per tab — a guard in
+  `sessionStorage`, cleared on every successful navigation, keeps this out of a reload loop).
+- **Only the header and the footer were on screen.** When the initial navigation failed (or the tab
+  was restored in a dead state), the router outlet stayed empty. `SiteRecoveryService` now watches
+  `<main>`: if the routed page never appeared — right after loading, when the visitor returns to the
+  tab after a minute or more, or when the browser restores the page from its back-forward cache — it
+  rebuilds the tab with one fresh document instead of leaving the visitor with an empty page. Pages
+  without `<main>` (the maintenance screen, the stand-alone admin pages) are never touched.
+
 ## Deploying to Cloudflare Pages
 
 Create a Pages project connected to this repository with these settings:
