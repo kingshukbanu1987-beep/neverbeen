@@ -7,8 +7,8 @@
   --shop-blue-deep: #0c2c4e;
   --shop-rose: #f4e7eb;
   --shop-paper: #f7f8fa;
-  --shop-serif: var(--serif, Georgia, serif);
-  --shop-sans: var(--sans, system-ui, sans-serif);
+  --shop-serif: 'Calibri', Arial, sans-serif;
+  --shop-sans: 'Calibri', Arial, sans-serif;
   color: var(--shop-ink);
   font-family: var(--shop-sans);
 }
