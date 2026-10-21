@@ -1,0 +1,120 @@
+{
+  "category": "Phone-Cases",
+  "slug": "phone-cases",
+  "title": "Phone Cases",
+  "subtitle": "Protection, with the mark on it.",
+  "description": "Cases built for the iPhone 18 Pro Max with raised camera lips, MagSafe alignment and a soft-touch finish.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-PH-001": {
+      "id": "NB-PH-001",
+      "name": "iPhone 18 Pro Max Silicone Case",
+      "audience": "Unisex",
+      "price": 899,
+      "compareAtPrice": 1199,
+      "colors": [
+        "Studio navy",
+        "Ivory",
+        "Blush"
+      ],
+      "sizes": [
+        "iPhone 18 Pro Max"
+      ],
+      "material": "Liquid silicone, microfibre lining",
+      "badge": "Bestseller",
+      "rating": 4.7,
+      "reviews": 476,
+      "description": "A soft-touch silicone case with a microfibre lining, a raised camera lip and MagSafe magnets built in.",
+      "image": "NB-PH-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Liquid silicone, microfibre lining",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-PH-002": {
+      "id": "NB-PH-002",
+      "name": "iPhone 18 Pro Max Clear Case",
+      "audience": "Unisex",
+      "price": 799,
+      "compareAtPrice": 999,
+      "colors": [
+        "Clear"
+      ],
+      "sizes": [
+        "iPhone 18 Pro Max"
+      ],
+      "material": "Anti-yellowing polycarbonate, TPU frame",
+      "rating": 4.5,
+      "reviews": 289,
+      "description": "A crystal-clear case that resists yellowing, with shock-absorbing corners and a printed wordmark.",
+      "image": "NB-PH-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Anti-yellowing polycarbonate, TPU frame",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-PH-003": {
+      "id": "NB-PH-003",
+      "name": "iPhone 18 Pro Max Wallet Case",
+      "audience": "Unisex",
+      "price": 1199,
+      "compareAtPrice": 1599,
+      "colors": [
+        "Tan",
+        "Graphite"
+      ],
+      "sizes": [
+        "iPhone 18 Pro Max"
+      ],
+      "material": "Full-grain leather, MagSafe wallet",
+      "badge": "New",
+      "rating": 4.6,
+      "reviews": 134,
+      "description": "A leather case with a detachable MagSafe card wallet that holds two cards and a note.",
+      "image": "NB-PH-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Full-grain leather, MagSafe wallet",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-PH-004": {
+      "id": "NB-PH-004",
+      "name": "iPhone 18 Pro Max Tough Armor",
+      "audience": "Unisex",
+      "price": 1299,
+      "compareAtPrice": 1799,
+      "colors": [
+        "Graphite"
+      ],
+      "sizes": [
+        "iPhone 18 Pro Max"
+      ],
+      "material": "Polycarbonate shell, air-cushion corners",
+      "rating": 4.8,
+      "reviews": 197,
+      "description": "A two-layer armour case rated for a two-metre drop, with air-cushion corners and a grippy edge.",
+      "image": "NB-PH-004.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Polycarbonate shell, air-cushion corners",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

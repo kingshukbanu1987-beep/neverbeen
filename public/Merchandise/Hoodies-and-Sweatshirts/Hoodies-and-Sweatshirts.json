@@ -1,0 +1,139 @@
+{
+  "category": "Hoodies-and-Sweatshirts",
+  "slug": "hoodies-and-sweatshirts",
+  "title": "Hoodies & Sweatshirts",
+  "subtitle": "Weight for the winter window seat.",
+  "description": "Brushed-back fleece hoodies and sweatshirts for women and men, cut oversized where it matters and finished with ribbed cuffs.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-HS-001": {
+      "id": "NB-HS-001",
+      "name": "Men's Oversized Hoodie",
+      "audience": "Men",
+      "price": 1999,
+      "compareAtPrice": 2599,
+      "colors": [
+        "Studio navy",
+        "Graphite"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "material": "380 GSM brushed-back cotton fleece",
+      "badge": "Bestseller",
+      "rating": 4.8,
+      "reviews": 389,
+      "description": "A heavyweight 380 GSM hoodie with a double-layer hood, a deep kangaroo pocket and a boxy oversized cut.",
+      "image": "NB-HS-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "380 GSM brushed-back cotton fleece",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-HS-002": {
+      "id": "NB-HS-002",
+      "name": "Women's Cropped Hoodie",
+      "audience": "Women",
+      "price": 1799,
+      "compareAtPrice": 2299,
+      "colors": [
+        "Blush",
+        "Ivory"
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "material": "340 GSM brushed fleece, cropped cut",
+      "rating": 4.7,
+      "reviews": 214,
+      "description": "A cropped hoodie that ends at the waist, with a soft brushed inside and a small wordmark at the chest.",
+      "image": "NB-HS-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "340 GSM brushed fleece, cropped cut",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-HS-003": {
+      "id": "NB-HS-003",
+      "name": "Unisex Crew Sweatshirt",
+      "audience": "Unisex",
+      "price": 1599,
+      "compareAtPrice": 2099,
+      "colors": [
+        "Sage",
+        "Navy",
+        "Ivory"
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "material": "360 GSM loopback cotton, ribbed trims",
+      "rating": 4.6,
+      "reviews": 176,
+      "description": "The plain-but-not-plain sweatshirt: loopback cotton, ribbed cuffs and hem, and a wordmark printed at the chest.",
+      "image": "NB-HS-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "360 GSM loopback cotton, ribbed trims",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-HS-004": {
+      "id": "NB-HS-004",
+      "name": "Zip-Through Hoodie",
+      "audience": "Unisex",
+      "price": 2199,
+      "compareAtPrice": 2799,
+      "colors": [
+        "Graphite",
+        "Navy"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "material": "400 GSM fleece, YKK zip",
+      "badge": "New",
+      "rating": 4.8,
+      "reviews": 132,
+      "description": "A full-zip hoodie in 400 GSM fleece, with a YKK zip, side pockets and a wordmark on the chest.",
+      "image": "NB-HS-004.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "400 GSM fleece, YKK zip",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

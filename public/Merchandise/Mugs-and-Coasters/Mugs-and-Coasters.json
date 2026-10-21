@@ -1,0 +1,118 @@
+{
+  "category": "Mugs-and-Coasters",
+  "slug": "mugs-and-coasters",
+  "title": "Mugs & Coasters",
+  "subtitle": "Slow mornings, marked.",
+  "description": "Stoneware mugs and cork-backed coasters with a NeverBeen glaze or print. Microwave and dishwasher safe.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-MC-001": {
+      "id": "NB-MC-001",
+      "name": "Ceramic Mug · 350 ml",
+      "audience": "Unisex",
+      "price": 499,
+      "compareAtPrice": 699,
+      "colors": [
+        "Ivory",
+        "Navy"
+      ],
+      "sizes": [
+        "350 ml"
+      ],
+      "material": "Stoneware, matte glaze",
+      "badge": "Bestseller",
+      "rating": 4.8,
+      "reviews": 621,
+      "description": "A generous 350 ml stoneware mug with a matte exterior, a glossy rim and the wordmark fired into the glaze.",
+      "image": "NB-MC-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Stoneware, matte glaze",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-MC-002": {
+      "id": "NB-MC-002",
+      "name": "Studio Navy Mug · 350 ml",
+      "audience": "Unisex",
+      "price": 549,
+      "compareAtPrice": 749,
+      "colors": [
+        "Studio navy"
+      ],
+      "sizes": [
+        "350 ml"
+      ],
+      "material": "Stoneware, satin glaze",
+      "rating": 4.7,
+      "reviews": 289,
+      "description": "The navy mug with a white wordmark, glazed inside and out and finished with a comfortable handle.",
+      "image": "NB-MC-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Stoneware, satin glaze",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-MC-003": {
+      "id": "NB-MC-003",
+      "name": "Travel Mug · 400 ml",
+      "audience": "Unisex",
+      "price": 899,
+      "compareAtPrice": 1199,
+      "colors": [
+        "Steel / navy"
+      ],
+      "sizes": [
+        "400 ml"
+      ],
+      "material": "Vacuum-insulated steel, splash-proof lid",
+      "badge": "New",
+      "rating": 4.6,
+      "reviews": 147,
+      "description": "A steel travel mug with a splash-proof lid that keeps chai hot for four hours on the commute.",
+      "image": "NB-MC-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Vacuum-insulated steel, splash-proof lid",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-MC-004": {
+      "id": "NB-MC-004",
+      "name": "Coaster Set of 4",
+      "audience": "Unisex",
+      "price": 449,
+      "compareAtPrice": 649,
+      "colors": [
+        "Cream / navy"
+      ],
+      "sizes": [
+        "4 coasters"
+      ],
+      "material": "Cork-backed ceramic, 10 cm",
+      "rating": 4.5,
+      "reviews": 203,
+      "description": "Four 10 cm ceramic coasters with cork backs — two wordmark, two plain — stacked and boxed as a gift.",
+      "image": "NB-MC-004.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Cork-backed ceramic, 10 cm",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

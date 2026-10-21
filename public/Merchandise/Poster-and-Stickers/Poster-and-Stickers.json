@@ -1,0 +1,93 @@
+{
+  "category": "Poster-and-Stickers",
+  "slug": "poster-and-stickers",
+  "title": "Posters & Stickers",
+  "subtitle": "The places you have never been, on your wall.",
+  "description": "Museum-grade prints and die-cut stickers of the NeverBeen studio artwork, printed on archival paper with pigment inks.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-PS-001": {
+      "id": "NB-PS-001",
+      "name": "NeverBeen Skies · A2 Poster",
+      "audience": "Unisex",
+      "price": 599,
+      "compareAtPrice": 799,
+      "colors": [
+        "Natural white"
+      ],
+      "sizes": [
+        "A2",
+        "A3"
+      ],
+      "material": "250 GSM archival matte paper",
+      "badge": "Bestseller",
+      "rating": 4.9,
+      "reviews": 344,
+      "description": "A pigment-printed A2 poster of the studio’s dusk artwork, finished with the NeverBeen wordmark. Ships rolled in a rigid tube.",
+      "image": "NB-PS-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "250 GSM archival matte paper",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-PS-002": {
+      "id": "NB-PS-002",
+      "name": "Traveller Sticker Pack · 12",
+      "audience": "Unisex",
+      "price": 249,
+      "compareAtPrice": 349,
+      "colors": [
+        "Multi"
+      ],
+      "sizes": [
+        "12 stickers"
+      ],
+      "material": "Vinyl, UV-laminated, weatherproof",
+      "rating": 4.8,
+      "reviews": 512,
+      "description": "Twelve die-cut vinyl stickers — wordmarks, paper planes and studio artwork. Waterproof enough for a laptop, a bottle or a bike.",
+      "image": "NB-PS-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Vinyl, UV-laminated, weatherproof",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-PS-003": {
+      "id": "NB-PS-003",
+      "name": "NeverBeen Framed Print · A3",
+      "audience": "Unisex",
+      "price": 1299,
+      "compareAtPrice": 1699,
+      "colors": [
+        "Oak frame",
+        "Black frame"
+      ],
+      "sizes": [
+        "A3"
+      ],
+      "material": "Solid oak frame, art-glass glazing",
+      "badge": "New",
+      "rating": 4.7,
+      "reviews": 87,
+      "description": "The NeverBeen print arrives framed in solid oak with art-glass glazing and a ready-to-hang backing.",
+      "image": "NB-PS-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Solid oak frame, art-glass glazing",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

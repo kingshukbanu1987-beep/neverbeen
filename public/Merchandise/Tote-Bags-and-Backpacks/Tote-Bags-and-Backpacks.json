@@ -1,0 +1,119 @@
+{
+  "category": "Tote-Bags-and-Backpacks",
+  "slug": "tote-bags-and-backpacks",
+  "title": "Tote Bags & Backpacks",
+  "subtitle": "Carry the studio with you.",
+  "description": "Heavy canvas totes and water-resistant backpacks with padded laptop sleeves, built for carry-on and commute.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-TB-001": {
+      "id": "NB-TB-001",
+      "name": "Heavy Canvas Tote",
+      "audience": "Unisex",
+      "price": 699,
+      "compareAtPrice": 899,
+      "colors": [
+        "Natural",
+        "Navy"
+      ],
+      "sizes": [
+        "16 L"
+      ],
+      "material": "12 oz cotton canvas, reinforced base",
+      "badge": "Bestseller",
+      "rating": 4.8,
+      "reviews": 407,
+      "description": "A 12 oz canvas tote with a boxed, reinforced base that holds a 15-inch laptop and the week’s groceries without complaining.",
+      "image": "NB-TB-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "12 oz cotton canvas, reinforced base",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TB-002": {
+      "id": "NB-TB-002",
+      "name": "Navy Canvas Tote",
+      "audience": "Unisex",
+      "price": 749,
+      "compareAtPrice": 999,
+      "colors": [
+        "Studio navy"
+      ],
+      "sizes": [
+        "16 L"
+      ],
+      "material": "12 oz cotton canvas, internal pocket",
+      "rating": 4.7,
+      "reviews": 189,
+      "description": "The same heavy tote in studio navy, with a white wordmark and an inside zip pocket for keys.",
+      "image": "NB-TB-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "12 oz cotton canvas, internal pocket",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TB-003": {
+      "id": "NB-TB-003",
+      "name": "Laptop Backpack · 24 L",
+      "audience": "Unisex",
+      "price": 2499,
+      "compareAtPrice": 3299,
+      "colors": [
+        "Graphite",
+        "Navy"
+      ],
+      "sizes": [
+        "24 L"
+      ],
+      "material": "Water-resistant recycled polyester, padded 16-inch sleeve",
+      "badge": "New",
+      "rating": 4.8,
+      "reviews": 264,
+      "description": "A 24 L commuter backpack with a padded 16-inch laptop sleeve, a fleece pocket for glasses and a luggage pass-through.",
+      "image": "NB-TB-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Water-resistant recycled polyester, padded 16-inch sleeve",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-TB-004": {
+      "id": "NB-TB-004",
+      "name": "Everyday Sling Bag",
+      "audience": "Unisex",
+      "price": 1299,
+      "compareAtPrice": 1699,
+      "colors": [
+        "Graphite"
+      ],
+      "sizes": [
+        "6 L"
+      ],
+      "material": "Water-resistant polyester, quick-release buckle",
+      "rating": 4.5,
+      "reviews": 112,
+      "description": "A 6 L crossbody sling for a phone, a passport and a paperback, with a quick-release buckle that works with one hand.",
+      "image": "NB-TB-004.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Water-resistant polyester, quick-release buckle",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

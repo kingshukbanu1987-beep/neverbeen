@@ -1,0 +1,93 @@
+{
+  "category": "Caps",
+  "slug": "caps",
+  "title": "Caps",
+  "subtitle": "Shade for the long way round.",
+  "description": "Six-panel cotton caps and trucker caps with an embroidered NeverBeen mark and an adjustable back.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-CP-001": {
+      "id": "NB-CP-001",
+      "name": "Classic Baseball Cap",
+      "audience": "Unisex",
+      "price": 699,
+      "compareAtPrice": 899,
+      "colors": [
+        "Studio navy",
+        "Ivory"
+      ],
+      "sizes": [
+        "One size · adjustable"
+      ],
+      "material": "Cotton twill, brass buckle",
+      "badge": "Bestseller",
+      "rating": 4.7,
+      "reviews": 231,
+      "description": "A six-panel cotton cap with the wordmark embroidered across the front and an antique-brass buckle at the back.",
+      "image": "NB-CP-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Cotton twill, brass buckle",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-CP-002": {
+      "id": "NB-CP-002",
+      "name": "Trucker Cap",
+      "audience": "Unisex",
+      "price": 749,
+      "compareAtPrice": 999,
+      "colors": [
+        "Ivory / navy"
+      ],
+      "sizes": [
+        "One size · adjustable"
+      ],
+      "material": "Cotton front panel, breathable mesh back",
+      "rating": 4.5,
+      "reviews": 118,
+      "description": "A structured front panel in ivory with a navy embroidered logo and a mesh back that lets the heat out.",
+      "image": "NB-CP-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Cotton front panel, breathable mesh back",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-CP-003": {
+      "id": "NB-CP-003",
+      "name": "Everyday Dad Cap",
+      "audience": "Unisex",
+      "price": 649,
+      "compareAtPrice": 849,
+      "colors": [
+        "Sand",
+        "Graphite"
+      ],
+      "sizes": [
+        "One size · adjustable"
+      ],
+      "material": "Washed cotton, soft crown",
+      "badge": "New",
+      "rating": 4.6,
+      "reviews": 74,
+      "description": "An unstructured washed-cotton cap that folds into a bag and fits like it has been yours for years.",
+      "image": "NB-CP-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Washed cotton, soft crown",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

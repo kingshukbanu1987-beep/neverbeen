@@ -1,0 +1,93 @@
+{
+  "category": "Keychains",
+  "slug": "keychains",
+  "title": "Keychains",
+  "subtitle": "A small mark in the pocket.",
+  "description": "Solid metal and leather keychains with the NeverBeen mark, boxed for gifting and ready for the keys that always go missing.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-KC-001": {
+      "id": "NB-KC-001",
+      "name": "Metal Wordmark Keychain",
+      "audience": "Unisex",
+      "price": 249,
+      "compareAtPrice": 399,
+      "colors": [
+        "Steel"
+      ],
+      "sizes": [
+        "One size"
+      ],
+      "material": "Zinc alloy with brushed steel finish",
+      "badge": "Bestseller",
+      "rating": 4.7,
+      "reviews": 341,
+      "description": "A brushed steel fob with the wordmark, a laser-etched back and a split ring that will not loosen.",
+      "image": "NB-KC-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Zinc alloy with brushed steel finish",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-KC-002": {
+      "id": "NB-KC-002",
+      "name": "Leather Keyring",
+      "audience": "Unisex",
+      "price": 349,
+      "compareAtPrice": 449,
+      "colors": [
+        "Tan",
+        "Navy"
+      ],
+      "sizes": [
+        "One size"
+      ],
+      "material": "Full-grain leather, brass ring",
+      "rating": 4.6,
+      "reviews": 158,
+      "description": "A stitched full-grain leather fob that darkens with use, on a solid brass ring.",
+      "image": "NB-KC-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Full-grain leather, brass ring",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-KC-003": {
+      "id": "NB-KC-003",
+      "name": "Acrylic Charm",
+      "audience": "Unisex",
+      "price": 199,
+      "compareAtPrice": 279,
+      "colors": [
+        "Navy",
+        "Pink"
+      ],
+      "sizes": [
+        "One size"
+      ],
+      "material": "Printed acrylic, 4 mm",
+      "badge": "New",
+      "rating": 4.4,
+      "reviews": 87,
+      "description": "A lightweight acrylic charm printed double-sided, for a bag zip or a set of keys.",
+      "image": "NB-KC-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Printed acrylic, 4 mm",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

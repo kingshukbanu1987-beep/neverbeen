@@ -1,0 +1,91 @@
+{
+  "category": "Pens",
+  "slug": "pens",
+  "title": "Pens",
+  "subtitle": "Sign the boarding pass with something good.",
+  "description": "Machined brass and aluminium pens with a NeverBeen monogram, smooth 0.5 mm refills and a satisfying weight.",
+  "deliveryWorkingDays": 15,
+  "currency": "INR",
+  "items": {
+    "NB-PN-001": {
+      "id": "NB-PN-001",
+      "name": "Brass Ballpoint Pen",
+      "audience": "Unisex",
+      "price": 349,
+      "compareAtPrice": 499,
+      "colors": [
+        "Brass"
+      ],
+      "sizes": [
+        "One size"
+      ],
+      "material": "Machined brass, 0.7 mm refill",
+      "badge": "Bestseller",
+      "rating": 4.7,
+      "reviews": 274,
+      "description": "A machined brass ballpoint with a knurled grip and a click that feels expensive. It develops a patina as you use it.",
+      "image": "NB-PN-001.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Machined brass, 0.7 mm refill",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-PN-002": {
+      "id": "NB-PN-002",
+      "name": "Gel Pen Trio",
+      "audience": "Unisex",
+      "price": 399,
+      "compareAtPrice": 549,
+      "colors": [
+        "Navy / grey / sand"
+      ],
+      "sizes": [
+        "3 pens"
+      ],
+      "material": "Recycled aluminium, 0.5 mm gel",
+      "rating": 4.5,
+      "reviews": 153,
+      "description": "Three quick-drying 0.5 mm gel pens in a slim sleeve, each with a matte wordmark near the clip.",
+      "image": "NB-PN-002.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Recycled aluminium, 0.5 mm gel",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    },
+    "NB-PN-003": {
+      "id": "NB-PN-003",
+      "name": "Fountain Pen",
+      "audience": "Unisex",
+      "price": 999,
+      "compareAtPrice": 1399,
+      "colors": [
+        "Graphite"
+      ],
+      "sizes": [
+        "Medium nib"
+      ],
+      "material": "Aluminium body, iridium medium nib",
+      "badge": "New",
+      "rating": 4.8,
+      "reviews": 68,
+      "description": "A balanced aluminium fountain pen with an iridium medium nib, a converter and two ink cartridges in the box.",
+      "image": "NB-PN-003.jpg",
+      "currency": "INR",
+      "inStock": true,
+      "deliveryWorkingDays": 15,
+      "highlights": [
+        "Aluminium body, iridium medium nib",
+        "Printed with the NeverBeen wordmark",
+        "Dispatched from India in 2 working days"
+      ]
+    }
+  }
+}

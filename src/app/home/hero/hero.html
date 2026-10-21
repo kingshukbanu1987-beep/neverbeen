@@ -12,7 +12,12 @@
       @if (buttons().length) {
         <div class="actions">
           @for (b of buttons(); track b.id) {
-            @if (b.id === 'documentation' || b.id === 'storyline' || b.id === 'ai-models') {
+            @if (
+              b.id === 'documentation' ||
+              b.id === 'storyline' ||
+              b.id === 'ai-models' ||
+              b.id === 'merchandise'
+            ) {
               <!-- Native same-tab navigation stays reliable after history restores
                    or a deployment replaces the lazy route's JavaScript chunk: the browser
                    loads a fresh document (and fresh chunks) instead of asking the
