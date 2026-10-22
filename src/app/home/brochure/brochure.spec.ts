@@ -25,7 +25,7 @@ describe('Brochure', () => {
     ]);
   });
 
-  it('places the Brochure button right below the section description', () => {
+  it('places the Explore the NeverBeen Brochure button right below the section description', () => {
     const fixture = TestBed.createComponent(Brochure);
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
@@ -37,7 +37,7 @@ describe('Brochure', () => {
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);
     expect(brochureBtn).toBeTruthy();
-    expect(brochureBtn.textContent?.trim()).toBe('Brochure');
+    expect(brochureBtn.textContent?.trim()).toBe('Explore the NeverBeen Brochure');
     expect(brochureBtn.getAttribute('href')).toBe('/documentation');
   });
 

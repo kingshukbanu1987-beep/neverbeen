@@ -99,7 +99,7 @@ describe('Gallery', () => {
     expect(firstLoad).not.toEqual(secondLoad);
   });
 
-  it('places the NeverBeen Collection button right below the gallery description', () => {
+  it('places the Explore the NeverBeen Collection button right below the gallery description', () => {
     const element: HTMLElement = create().nativeElement;
     const heading = element.querySelector<HTMLElement>('app-section-heading')!;
     const actions = element.querySelector<HTMLElement>('.actions')!;
@@ -108,7 +108,7 @@ describe('Gallery', () => {
     expect(heading).toBeTruthy();
     expect(heading.nextElementSibling).toBe(actions);
     expect(collectionBtn).toBeTruthy();
-    expect(collectionBtn.textContent?.trim()).toBe('NeverBeen Collection');
+    expect(collectionBtn.textContent?.trim()).toBe('Explore the NeverBeen Collection');
     expect(collectionBtn.getAttribute('href')).toBe('/collection');
   });
 

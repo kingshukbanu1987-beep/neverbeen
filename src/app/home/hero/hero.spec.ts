@@ -66,13 +66,17 @@ describe('Hero', () => {
     const labels = labelsOf(element);
 
     expect(labels).not.toContain('NeverBeen AI Models');
+    expect(labels).not.toContain('Meet the NeverBeen AI Models');
     expect(labels).not.toContain('Know the Founder');
     expect(labels).not.toContain('Dream Destinations');
     expect(labels).not.toContain('Neverbeen Collection');
     expect(labels).not.toContain('NeverBeen Collection');
+    expect(labels).not.toContain('Explore the NeverBeen Collection');
     expect(labels).not.toContain('Explore Gallery');
     expect(labels).not.toContain('Brochure');
+    expect(labels).not.toContain('Explore the NeverBeen Brochure');
     expect(labels).not.toContain('The Storyline of Parallel Universe');
+    expect(labels).not.toContain('Read the Stories of Parallel Universe');
     expect(element.querySelector('a[href="/ai-models"]')).toBeNull();
     expect(element.querySelector('a[href="/founder"]')).toBeNull();
     expect(element.querySelector('a[href="/collection"]')).toBeNull();
@@ -99,7 +103,7 @@ describe('Hero', () => {
     expect(getComputedStyle(founderBtn).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('places Brochure in the Brochure section just below the description', () => {
+  it('places Explore the NeverBeen Brochure in the Brochure section just below the description', () => {
     const fixture = TestBed.createComponent(Brochure);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -112,13 +116,13 @@ describe('Hero', () => {
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);
     expect(brochureBtn).toBeTruthy();
-    expect(brochureBtn.textContent?.trim()).toBe('Brochure');
+    expect(brochureBtn.textContent?.trim()).toBe('Explore the NeverBeen Brochure');
     expect(brochureBtn.getAttribute('href')).toBe('/documentation');
     expect(getComputedStyle(brochureBtn).backgroundColor).toBe('rgb(247, 195, 14)');
     expect(getComputedStyle(brochureBtn).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('places The Storyline of Parallel Universe in the Storyline section just below the description', () => {
+  it('places Read the Stories of Parallel Universe in the Storyline section just below the description', () => {
     const fixture = TestBed.createComponent(StorylineSection);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -132,7 +136,7 @@ describe('Hero', () => {
     expect(lede.nextElementSibling).toBe(actions);
     expect(storylineBtn).toBeTruthy();
     expect(storylineBtn.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      'The Storyline of Parallel Universe',
+      'Read the Stories of Parallel Universe',
     );
     expect(storylineBtn.getAttribute('href')).toBe('/storyline-of-parallel-universe');
     expect(getComputedStyle(storylineBtn).backgroundColor).toBe('rgb(247, 195, 14)');

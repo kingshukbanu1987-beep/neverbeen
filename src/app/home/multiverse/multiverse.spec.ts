@@ -146,7 +146,7 @@ describe('The NeverBeen Multiverse Studio slideshow', () => {
     fixture.destroy();
   });
 
-  it('places the NeverBeen AI Models button in the Multiverse Studio intro just below the description in studio pink', () => {
+  it('places the Meet the NeverBeen AI Models button in the Multiverse Studio intro just below the description in studio pink', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: SiteConfigService, useValue: config() }],
     });
@@ -163,7 +163,7 @@ describe('The NeverBeen Multiverse Studio slideshow', () => {
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);
     expect(aiModels).toBeTruthy();
-    expect(aiModels.textContent?.trim()).toBe('NeverBeen AI Models');
+    expect(aiModels.textContent?.trim()).toBe('Meet the NeverBeen AI Models');
     expect(aiModels.getAttribute('href')).toBe('/ai-models');
     expect(aiModels.getAttribute('target')).toBeNull();
     expect(aiModels.classList.contains('btn-ai-models')).toBe(true);

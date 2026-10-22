@@ -33,7 +33,7 @@ describe('StorylineSection', () => {
     ]);
   });
 
-  it('places The Storyline of Parallel Universe button right below the section description', () => {
+  it('places Read the Stories of Parallel Universe button right below the section description', () => {
     const fixture = TestBed.createComponent(StorylineSection);
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
@@ -46,8 +46,9 @@ describe('StorylineSection', () => {
     expect(lede.nextElementSibling).toBe(actions);
     expect(storylineBtn).toBeTruthy();
     expect(storylineBtn.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      'The Storyline of Parallel Universe',
+      'Read the Stories of Parallel Universe',
     );
+    expect(storylineBtn.querySelector('em')?.textContent).toBe('Parallel Universe');
     expect(storylineBtn.getAttribute('href')).toBe('/storyline-of-parallel-universe');
   });
 
