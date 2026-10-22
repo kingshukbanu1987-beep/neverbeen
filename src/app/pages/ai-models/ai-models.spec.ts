@@ -10,6 +10,9 @@ import { AiModelProfile, aiModelProfiles } from './ai-model-data';
 import { AiModelsPage, drawCover } from './ai-models';
 import { AiModelPhotoPreview } from './photo-preview/ai-model-photo-preview';
 
+/** The manifest retains every portfolio; the directory shows only profiles not marked hidden. */
+const directoryProfiles = aiModelProfiles.filter((profile) => !profile.hiddenFromDirectory);
+
 /** The cover each card is showing, in the order the cards sit on the page. */
 function cardCovers(element: HTMLElement): string[] {
   return Array.from(element.querySelectorAll('.model-card img')).map(
@@ -69,11 +72,17 @@ describe('AiModelsPage', () => {
       'Priyanka Chatterjee',
       'Sereenah Noorzai',
       'Tasneem Al-Rifai',
-      'Amira Bint Tariq Al-Sayed',
       'Fatima Sana Hussaini',
       'Fatima Al-Mansoor',
       "Shirina O'Brien",
       'Aoife Pahlavi',
+      'Farah Al-Shaar',
+      'Florencia Fontana Gatti',
+      'Maeve Anahita',
+      'Valentina Rodríguez Silva',
+    ];
+    const expectedHiddenNames = [
+      'Amira Bint Tariq Al-Sayed',
       'Salma Ahmadzai',
       'Nermin Akhundzada',
       'Rasha Fakhoury',
@@ -90,25 +99,36 @@ describe('AiModelsPage', () => {
       'Soha Haddad',
       'Ameera Lone',
       'Saoirse Rezaei',
-      'Farah Al-Shaar',
-      'Florencia Fontana Gatti',
       'Zaynab Jones',
-      'Maeve Anahita',
       'Lucía Gomensoro Rossi',
       'Zeina Al-Sabbagh',
       'Nazanin Maeve Al-Farsi',
       'Soraya Smith',
       'Zeina Al-Atassi',
       'Amina El-Maghraby',
-      'Valentina Rodríguez Silva',
     ];
 
     expect(element.querySelector('h1')?.textContent).toContain('NeverBeen AI Models');
-    expect(aiModelProfiles.map((profile) => profile.name)).toEqual(expectedNames);
+    expect(aiModelProfiles).toHaveLength(42);
+    expect(
+      aiModelProfiles
+        .filter((profile) => profile.hiddenFromDirectory)
+        .map((profile) => profile.name),
+    ).toEqual(expectedHiddenNames);
+    expect(directoryProfiles.map((profile) => profile.name)).toEqual(expectedNames);
     expect(aiModelProfiles.map((profile) => profile.order)).toEqual(
-      Array.from({ length: expectedNames.length }, (_, index) => index + 1),
+      Array.from({ length: 42 }, (_, index) => index + 1),
     );
     expect(element.querySelectorAll('.model-card').length).toBe(expectedNames.length);
+    expect(
+      Array.from(element.querySelectorAll('.card-index .num')).map((index) =>
+        index.textContent?.trim(),
+      ),
+    ).toEqual(
+      Array.from({ length: expectedNames.length }, (_, index) =>
+        String(index + 1).padStart(2, '0'),
+      ),
+    );
     expect(element.querySelector('.empty-studio')).toBeNull();
     // The illustrative-profiles notice is on screen (its copy is the studio's legal warning).
     expect(element.querySelector('.profile-data-note')?.textContent).toContain('Prohibited');
@@ -215,7 +235,7 @@ describe('AiModelsPage', () => {
     const element: HTMLElement = fixture.nativeElement;
     const cards = Array.from(element.querySelectorAll('.model-card'));
 
-    for (const [index, profile] of aiModelProfiles.entries()) {
+    for (const [index, profile] of directoryProfiles.entries()) {
       const badge = cards[index].querySelector('.card-photo-count');
       expect(badge, `${profile.name} photo count`).toBeTruthy();
       expect(badge?.querySelector('b')?.textContent?.trim()).toBe(String(profile.photos.length));
@@ -246,7 +266,7 @@ describe('AiModelsPage', () => {
       likedByMe: false,
     }));
     const registerModel = vi.spyOn(engagement, 'registerModel');
-    const profile = aiModelProfiles.find((model) => model.videos.length > 0)!;
+    const profile = directoryProfiles.find((model) => model.videos.length > 0)!;
     const fixture = TestBed.createComponent(AiModelsPage);
     fixture.detectChanges();
 
@@ -301,7 +321,7 @@ describe('AiModelsPage', () => {
       shares: 0,
       likedByMe: false,
     }));
-    const profile = aiModelProfiles.find((model) => model.videos.length > 0)!;
+    const profile = directoryProfiles.find((model) => model.videos.length > 0)!;
     const seenTotal = profile.photos.length * 1004 + profile.videos.length * 1400;
     const fixture = TestBed.createComponent(AiModelsPage);
     fixture.detectChanges();
@@ -348,7 +368,7 @@ describe('AiModelsPage', () => {
     const cards = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('.model-card'),
     );
-    for (const [index, profile] of aiModelProfiles.entries()) {
+    for (const [index, profile] of directoryProfiles.entries()) {
       const card = cards[index];
       const label = expectedLabel(profile.availability);
       expect(card.querySelector('.card-availability')?.textContent?.trim()).toBe(label);
@@ -458,7 +478,7 @@ describe('AiModelsPage', () => {
     fixture.detectChanges();
 
     const element: HTMLElement = fixture.nativeElement;
-    const missingCoverIndex = aiModelProfiles.findIndex((profile) => !profile.cover);
+    const missingCoverIndex = directoryProfiles.findIndex((profile) => !profile.cover);
 
     if (missingCoverIndex === -1) return;
 
@@ -472,9 +492,9 @@ describe('AiModelsPage', () => {
     fixture.detectChanges();
 
     const covers = cardCovers(fixture.nativeElement as HTMLElement);
-    expect(covers.length).toBe(aiModelProfiles.length);
+    expect(covers.length).toBe(directoryProfiles.length);
 
-    for (const [index, profile] of aiModelProfiles.entries()) {
+    for (const [index, profile] of directoryProfiles.entries()) {
       expect(
         profile.photos.map((photo) => photo.src),
         `${profile.name} album`,
@@ -497,7 +517,7 @@ describe('AiModelsPage', () => {
       const firstCovers = cardCovers(first.nativeElement as HTMLElement);
       const secondCovers = cardCovers(second.nativeElement as HTMLElement);
 
-      for (const [index, profile] of aiModelProfiles.entries()) {
+      for (const [index, profile] of directoryProfiles.entries()) {
         expect(firstCovers[index], `${profile.name} opening frame`).toBe(profile.photos[0].src);
         expect(secondCovers[index], `${profile.name} closing frame`).toBe(
           profile.photos[profile.photos.length - 1].src,
@@ -565,10 +585,10 @@ describe('AiModelsPage', () => {
 
     const element: HTMLElement = fixture.nativeElement;
     const cards = Array.from(element.querySelectorAll<HTMLElement>('.model-card'));
-    expect(cards.length).toBe(aiModelProfiles.length);
+    expect(cards.length).toBe(directoryProfiles.length);
 
     for (const [index, card] of cards.entries()) {
-      const profile = aiModelProfiles[index];
+      const profile = directoryProfiles[index];
       const preview = card.querySelector<HTMLButtonElement>('.card-preview');
       const counts = card.querySelector('.card-media-counts');
 
@@ -598,7 +618,7 @@ describe('AiModelsPage', () => {
 
   it('plays the album of the model whose card Preview was pressed, straight from the click', () => {
     // jsdom leaves HTMLMediaElement.play() unimplemented, so the deck is armed on a silent model.
-    const profile = aiModelProfiles.find(
+    const profile = directoryProfiles.find(
       (model) => model.photos.length > 1 && !model.previewMusic,
     )!;
     const fixture = TestBed.createComponent(AiModelsPage);
@@ -606,7 +626,7 @@ describe('AiModelsPage', () => {
 
     const element: HTMLElement = fixture.nativeElement;
     const card = Array.from(element.querySelectorAll<HTMLElement>('.model-card'))[
-      aiModelProfiles.indexOf(profile)
+      directoryProfiles.indexOf(profile)
     ];
     const deck = fixture.debugElement.query(
       (node) => node.componentInstance instanceof AiModelPhotoPreview,

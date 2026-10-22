@@ -71,7 +71,10 @@ directory and portfolio show a visible notice until it is removed or set to `fal
 ```
 
 `order` is the position on the `/ai-models` directory (1-based; entries without one keep their
-discovery order after the numbered ones), so the running order is data, not code.
+discovery order after the numbered ones), so the running order is data, not code. Set
+`hiddenFromDirectory: true` in the shared entry to keep a model's generated profile and album files
+for future use while omitting her from the directory. Her direct portfolio remains available, and
+the visible card sequence closes any gaps automatically; remove the flag to list her again.
 
 4. Give each model her own price for a single photograph in the same shared entry. `photoRate` is in
    INR and powers the Rent form — the packages in the pop-up, the running total, and the
