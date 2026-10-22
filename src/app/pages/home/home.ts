@@ -61,6 +61,15 @@ export class Home {
       if (anchor >= 0) sections.splice(anchor + 1, 0, storyline);
       else sections.push(storyline);
     }
+    // How It Works belongs immediately before Pricing, even when a published
+    // section order predates that move.
+    const howIdx = sections.findIndex((s) => s.id === 'how');
+    if (howIdx >= 0) {
+      const [how] = sections.splice(howIdx, 1);
+      const pricingIdx = sections.findIndex((s) => s.id === 'pricing');
+      if (pricingIdx >= 0) sections.splice(pricingIdx, 0, how);
+      else sections.push(how);
+    }
     return sections;
   });
 }

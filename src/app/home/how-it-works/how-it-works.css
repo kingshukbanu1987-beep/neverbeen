@@ -16,7 +16,7 @@ article {
 }
 
 span {
-  font-family: var(--sans);
+  font-family: var(--home-font, var(--sans));
   font-size: 1.4rem;
   font-weight: 600;
   letter-spacing: 0.02em;

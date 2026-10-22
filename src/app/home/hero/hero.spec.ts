@@ -97,7 +97,7 @@ describe('Hero', () => {
     expect(heading).toBeTruthy();
     expect(heading.nextElementSibling).toBe(actions);
     expect(founderBtn).toBeTruthy();
-    expect(founderBtn.textContent?.trim()).toBe('Know the Founder');
+    expect(founderBtn.textContent?.trim()).toBe('Meet the Founder of NeverBeen Multiverse');
     expect(founderBtn.getAttribute('href')).toBe('/founder');
     expect(getComputedStyle(founderBtn).backgroundColor).toBe('rgb(18, 59, 104)');
     expect(getComputedStyle(founderBtn).color).toBe('rgb(255, 255, 255)');
@@ -205,5 +205,89 @@ describe('Hero', () => {
       .map((b) => ({ ...b, visible: b.id !== 'merchandise' }));
     cms.state.update((s) => ({ ...s, published: { 'home.hero': { buttons } } }));
     expect(create().nativeElement.querySelector('a[href="/merchandise"]')).toBeNull();
+  });
+
+  it('drops the destination photo slideshow from the top of the page', () => {
+    const element: HTMLElement = create().nativeElement;
+    expect(element.querySelector('figure.frame img')?.getAttribute('src')).not.toContain(
+      'destinations',
+    );
+    expect(element.querySelector('.slide-controls')).toBeNull();
+    expect(element.querySelector('figcaption')).toBeNull();
+  });
+
+  it('sets the headline over the closing pages of the brochure', () => {
+    const element: HTMLElement = create().nativeElement;
+    const travel = element.querySelector<HTMLElement>('.panel-travel')!;
+    expect(travel).toBeTruthy();
+    expect(travel.querySelector('h1')?.textContent?.trim()).toBe(
+      "Go Anywhere. Even Where You've Never Been.",
+    );
+    expect(travel.querySelector('.lede')?.textContent).toContain(
+      'Create stunning AI vacation photos of yourself',
+    );
+
+    const sources = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo')).map((img) =>
+      img.getAttribute('src'),
+    );
+    expect(sources).toEqual([
+      '/assets/brochure-preview/neverbeen-brochure-page-52.jpg',
+      '/assets/brochure-preview/neverbeen-brochure-page-53.jpg',
+    ]);
+  });
+
+  it('writes the people headline and paragraph on the banner portraits', () => {
+    const element: HTMLElement = create().nativeElement;
+    const people = element.querySelector<HTMLElement>('.panel-people')!;
+    expect(people).toBeTruthy();
+    expect(people.querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      "Meet the People. Even When They Don't Exists outside NeverBeen Multiverse",
+    );
+    expect(people.querySelector('.lede')?.textContent).toContain(
+      'What if their stories matter, even if their worlds are imaginary?',
+    );
+
+    const sources = Array.from(people.querySelectorAll<HTMLImageElement>('img.photo')).map((img) =>
+      img.getAttribute('src'),
+    );
+    expect(sources.length).toBeGreaterThan(0);
+    expect(sources.every((src) => src?.startsWith('/banner/'))).toBe(true);
+  });
+
+  it('places the three calls to action between the two previews', () => {
+    const element: HTMLElement = create().nativeElement;
+    const travel = element.querySelector('.panel-travel')!;
+    const dock = element.querySelector('.dock')!;
+    const people = element.querySelector('.panel-people')!;
+
+    expect(travel.compareDocumentPosition(dock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(dock.compareDocumentPosition(people) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(labelsOf(element)).toEqual([
+      'Connect to NeverBeen Community',
+      'Shop NeverBeen Merchandise',
+      'Create My Vacation',
+    ]);
+  });
+
+  it('moves both previews every five seconds by default', () => {
+    const fixture = create();
+    const hero = fixture.componentInstance as unknown as {
+      intervalSeconds: () => number;
+      brochureIndex: () => number;
+      peopleIndex: () => number;
+      advance: () => void;
+      brochureSlides: unknown[];
+      peopleSlides: unknown[];
+    };
+
+    expect(hero.intervalSeconds()).toBe(5);
+    expect(hero.brochureIndex()).toBe(0);
+    expect(hero.peopleIndex()).toBe(0);
+
+    hero.advance();
+    fixture.detectChanges();
+
+    expect(hero.brochureIndex()).toBe(1 % hero.brochureSlides.length);
+    expect(hero.peopleIndex()).toBe(1 % hero.peopleSlides.length);
   });
 });

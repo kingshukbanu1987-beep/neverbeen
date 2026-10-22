@@ -1,50 +1,109 @@
 <section class="hero" id="home">
-  <div class="container layout">
-    <div class="copy">
+  <!-- Pastel studio light: the same white, gallery-clean finish as
+       The NeverBeen Multiverse Studio, so the page opens in one voice. -->
+  <div class="ambience" aria-hidden="true">
+    <span class="glow glow-a"></span>
+    <span class="glow glow-b"></span>
+    <span class="grid"></span>
+  </div>
+
+  <!-- ==================================================================
+       Sub-section 1 — "Go Anywhere. Even Where You've Never Been."
+       The closing spread of the NeverBeen Brochure plays behind the
+       headline as an automatic preview (one page every five seconds).
+       ================================================================== -->
+  <article class="panel panel-travel" aria-labelledby="hero-title">
+    <div class="stage" aria-hidden="true">
+      @for (slide of brochureSlides; track slide.src; let i = $index) {
+        @if (isBrochureMounted(i)) {
+          <figure class="frame" [class.on]="brochureIndex() === i">
+            <img class="wash" [src]="slide.src" alt="" decoding="async" />
+            <img
+              class="photo"
+              [src]="slide.src"
+              [alt]="slide.alt"
+              [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+              decoding="async"
+            />
+          </figure>
+        }
+      }
+    </div>
+    <span class="veil" aria-hidden="true"></span>
+
+    <div class="panel-copy">
       @if (eyebrow()) {
         <p class="eyebrow">{{ eyebrow() }}</p>
       }
-      <h1>{{ title() }}</h1>
+      <h1 id="hero-title">{{ title() }}</h1>
       @if (lede()) {
         <p class="lede">{{ lede() }}</p>
       }
-      <!-- Labels and visibility are managed in Website Management. -->
-      @if (buttons().length) {
-        <div class="actions">
-          @for (b of buttons(); track b.id) {
-            @if (b.id === 'merchandise') {
-              <!-- Native same-tab navigation stays reliable after history restores
-                   or a deployment replaces the lazy route's JavaScript chunk: the browser
-                   loads a fresh document (and fresh chunks) instead of asking the
-                   long-running single-page app to fetch a file that may no longer exist. -->
-              <a [href]="b.path" [class]="'btn ' + b.cls">{{ b.label }}</a>
-            } @else {
-              <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{
-                b.label
-              }}</a>
-            }
+      <div class="dots" aria-hidden="true">
+        @for (slide of brochureSlides; track slide.src; let i = $index) {
+          <span [class.on]="brochureIndex() === i"></span>
+        }
+      </div>
+    </div>
+  </article>
+
+  <!-- ==================================================================
+       The three calls to action, set in the seam between the previews.
+       ================================================================== -->
+  @if (buttons().length) {
+    <div class="dock">
+      <div class="actions">
+        @for (b of buttons(); track b.id) {
+          @if (b.id === 'merchandise') {
+            <!-- Native same-tab navigation stays reliable after history restores
+                 or a deployment replaces the lazy route's JavaScript chunk: the browser
+                 loads a fresh document (and fresh chunks) instead of asking the
+                 long-running single-page app to fetch a file that may no longer exist. -->
+            <a [href]="b.path" [class]="'btn ' + b.cls">{{ b.label }}</a>
+          } @else {
+            <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{
+              b.label
+            }}</a>
           }
-        </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ==================================================================
+       Sub-section 2 — "Meet the People. Even When They Don't Exists
+       outside NeverBeen Multiverse", written directly on the portraits
+       from public/banner, one every five seconds.
+       ================================================================== -->
+  <article class="panel panel-people" aria-labelledby="hero-people-title">
+    <div class="stage" aria-hidden="true">
+      @for (slide of peopleSlides; track slide.src; let i = $index) {
+        @if (isPeopleMounted(i)) {
+          <figure class="frame" [class.on]="peopleIndex() === i">
+            <img class="wash" [src]="slide.src" alt="" decoding="async" />
+            <img
+              class="photo"
+              [src]="slide.src"
+              [alt]="slide.alt"
+              [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+              decoding="async"
+            />
+          </figure>
+        }
       }
     </div>
-    <figure class="frame">
-      <img [src]="destination().image" [alt]="destination().caption" />
-      <nav class="slide-controls" aria-label="Hero destinations">
-        <button
-          type="button"
-          (click)="showPreviousDestination()"
-          aria-label="Show previous destination"
-        >
-          Previous
-        </button>
-        <button type="button" (click)="showNextDestination()" aria-label="Show next destination">
-          Next
-        </button>
-      </nav>
-      <figcaption aria-live="polite">
-        <span>{{ destination().place }}</span>
-        <span>{{ destination().caption }}</span>
-      </figcaption>
-    </figure>
-  </div>
+    <span class="veil" aria-hidden="true"></span>
+
+    <div class="panel-copy">
+      <h2 id="hero-people-title">{{ peopleTitle() }}</h2>
+      @if (peopleCopy()) {
+        <p class="lede">{{ peopleCopy() }}</p>
+      }
+      <div class="dots" aria-hidden="true">
+        @for (slide of peopleSlides; track slide.src; let i = $index) {
+          <span [class.on]="peopleIndex() === i"></span>
+        }
+      </div>
+    </div>
+  </article>
 </section>
