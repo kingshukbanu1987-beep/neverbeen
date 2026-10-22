@@ -50,6 +50,12 @@
   min-height: clamp(340px, 48vh, 480px);
 }
 
+/* The portraits are 4:3; a wide, short panel must crop, so keep the crop on
+   the faces rather than the sky above them. */
+.panel-people .frame .photo {
+  object-position: center 32%;
+}
+
 /* ------------------------------------------------------------------- stage */
 .stage {
   position: absolute;
