@@ -37,17 +37,34 @@ describe('Gallery', () => {
     );
   }
 
-  it('shows exactly 20 distinct photographs from the Neverbeen Collection', () => {
+  it('shows 23 distinct photographs (20-25 range) from the Neverbeen Collection in a variable-size mosaic', () => {
     const element: HTMLElement = create().nativeElement;
     const collectionSources = new Set(collectionPhotos.map((photo) => photo.src));
     const sources = sourcesOf(element);
 
+    expect(GALLERY_PHOTO_COUNT).toBeGreaterThanOrEqual(20);
+    expect(GALLERY_PHOTO_COUNT).toBeLessThanOrEqual(25);
     expect(sources.length).toBe(GALLERY_PHOTO_COUNT);
     expect(new Set(sources).size).toBe(GALLERY_PHOTO_COUNT);
     for (const src of sources) {
       expect(collectionSources.has(src)).toBe(true);
     }
-    expect(element.querySelectorAll('.mosaic figure').length).toBe(GALLERY_PHOTO_COUNT);
+
+    const figures = Array.from(element.querySelectorAll<HTMLElement>('.mosaic figure'));
+    expect(figures.length).toBe(GALLERY_PHOTO_COUNT);
+
+    // Places the mosaic shell outside .container for maximum screen width.
+    const mosaicShell = element.querySelector<HTMLElement>('.mosaic-shell')!;
+    expect(mosaicShell).toBeTruthy();
+    expect(mosaicShell.closest('.container')).toBeNull();
+
+    // Assigns variable-size grid spans (--c4 / --r4) like the AI model View All page.
+    const desktopSpans = new Set(
+      figures.map(
+        (fig) => `${fig.style.getPropertyValue('--c4')}|${fig.style.getPropertyValue('--r4')}`,
+      ),
+    );
+    expect(desktopSpans.size).toBeGreaterThanOrEqual(3);
   });
 
   it('captions every sampled photograph with its title and place', () => {

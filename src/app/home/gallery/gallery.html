@@ -5,15 +5,23 @@
       tone="ink"
       eyebrow="The proof"
       title="Gallery"
-      copy="Twenty stills drawn at random from the Neverbeen Collection—a new set every time you open this page."
+      copy="Twenty-three stills drawn at random from the Neverbeen Collection—a new set every time you open this page."
     />
     <div class="actions">
       <a routerLink="/collection" class="btn btn-ghost">NeverBeen Collection</a>
     </div>
+  </div>
+
+  <div class="mosaic-shell">
     <div class="mosaic">
-      @for (photo of photographs; track photo.src) {
-        <figure>
-          <img [src]="photo.src" [alt]="photo.alt" loading="lazy" decoding="async" />
+      @for (photo of photographs; track photo.src; let i = $index) {
+        <figure class="tile" [style]="tileStyles[i]">
+          <img
+            [src]="photo.src"
+            [alt]="photo.alt"
+            [attr.loading]="i < 6 ? 'eager' : 'lazy'"
+            decoding="async"
+          />
           <figcaption>
             <strong>{{ photo.title }}</strong>
             <span>{{ locationOf(photo) }}</span>
@@ -21,6 +29,9 @@
         </figure>
       }
     </div>
+  </div>
+
+  <div class="container">
     <p class="mosaic-note">
       <span>
         Showing {{ photographs.length }} of {{ collectionSize }} photographs, reshuffled on every

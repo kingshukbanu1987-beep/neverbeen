@@ -1,0 +1,103 @@
+<section class="storyline-section" id="storyline-section" aria-labelledby="storyline-section-title">
+  <div class="container">
+    <header class="intro">
+      <h2 id="storyline-section-title">
+        @if (isDefaultTitle()) {
+          The Storyline of <em>Parallel Universe</em>
+        } @else {
+          {{ title() }}
+        }
+      </h2>
+      <p class="lede">{{ copy() }}</p>
+      <div class="actions">
+        <a href="/storyline-of-parallel-universe" class="btn btn-brochure">
+          The Storyline of <em>Parallel Universe</em>
+        </a>
+      </div>
+    </header>
+  </div>
+
+  <div class="stage-shell">
+    <div
+      class="stage"
+      tabindex="0"
+      role="region"
+      aria-roledescription="carousel"
+      [attr.aria-label]="title() + ' — ' + total + ' stories'"
+      (keydown)="onKeydown($event)"
+      (touchstart)="onTouchStart($event)"
+      (touchend)="onTouchEnd($event)"
+    >
+      <div class="deck">
+        @for (slide of slides; track slide.id; let i = $index) {
+          @if (isMounted(i)) {
+            <article
+              class="slide"
+              [class.is-active]="i === activeIndex()"
+              [attr.aria-hidden]="i === activeIndex() ? 'false' : 'true'"
+              [attr.data-story]="slide.id"
+            >
+              <img
+                class="photo"
+                [src]="slide.src"
+                [alt]="slide.alt"
+                [attr.loading]="i === activeIndex() ? 'eager' : 'lazy'"
+                decoding="async"
+              />
+              <div class="scrim" aria-hidden="true"></div>
+              <div class="copy">
+                <span class="tag">{{ slide.tag }}</span>
+                <h3>{{ slide.title }}</h3>
+                <p>{{ slide.deck }}</p>
+              </div>
+            </article>
+          }
+        }
+      </div>
+
+      <button
+        type="button"
+        class="nav prev"
+        aria-label="Previous story"
+        (click)="previous()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="M15 5l-7 7 7 7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        class="nav next"
+        aria-label="Next story"
+        (click)="next()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="M9 5l7 7-7 7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="meter" aria-live="polite">
+      <span class="counter">{{ counterLabel() }}</span>
+      <div class="track" aria-hidden="true">
+        <div class="bar" [style.width.%]="progressPercent()"></div>
+      </div>
+      <span class="caption">Story {{ current().number }} · {{ current().place }}</span>
+    </div>
+  </div>
+</section>
