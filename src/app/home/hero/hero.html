@@ -8,16 +8,11 @@
       @if (lede()) {
         <p class="lede">{{ lede() }}</p>
       }
-      <!-- Labels and visibility are managed in Website Management; AI Models follows Brochure. -->
+      <!-- Labels and visibility are managed in Website Management. -->
       @if (buttons().length) {
         <div class="actions">
           @for (b of buttons(); track b.id) {
-            @if (
-              b.id === 'documentation' ||
-              b.id === 'storyline' ||
-              b.id === 'ai-models' ||
-              b.id === 'merchandise'
-            ) {
+            @if (b.id === 'merchandise') {
               <!-- Native same-tab navigation stays reliable after history restores
                    or a deployment replaces the lazy route's JavaScript chunk: the browser
                    loads a fresh document (and fresh chunks) instead of asking the

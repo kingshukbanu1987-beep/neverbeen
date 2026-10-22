@@ -77,6 +77,8 @@ const items = (rows: [string, string][]): CmsItem[] => rows.map(([id, label]) =>
 export const HOME_SECTIONS: [string, string][] = [
   ['hero', 'Hero banner'],
   ['multiverse', 'The NeverBeen Multiverse Studio'],
+  ['brochure', 'The NeverBeen Brochure'],
+  ['storyline', 'The Storyline of Parallel Universe'],
   ['how', 'How It Works'],
   ['destinations', 'Popular Destinations'],
   ['gallery', 'Gallery'],
@@ -104,15 +106,8 @@ export const NAV_LINKS: [string, string][] = [
 
 export const HERO_BUTTONS: [string, string][] = [
   ['community', 'Connect to NeverBeen Community'],
-  ['documentation', 'Brochure'],
-  ['ai-models', 'NeverBeen AI Models'],
   ['merchandise', 'Shop NeverBeen Merchandise'],
-  ['storyline', 'The Storyline of Parallel Universe'],
-  ['founder', 'Know the Founder'],
   ['create', 'Create My Vacation'],
-  ['destinations', 'Dream Destinations'],
-  ['collection', 'Neverbeen Collection'],
-  ['gallery', 'Explore Gallery'],
 ];
 
 export const PROFILE_SECTIONS: [string, string][] = [
@@ -271,6 +266,68 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     ],
   },
   {
+    key: 'home.brochure',
+    page: 'home',
+    label: 'The NeverBeen Brochure',
+    icon: '📖',
+    description:
+      'Full-width brochure slideshow highlighting the 22 traveller story pages from the NeverBeen Brochure.',
+    previewPath: '/',
+    previewFragment: 'brochure',
+    fields: [
+      { key: 'title', label: 'Section title', type: 'text', default: 'The NeverBeen Brochure', maxLength: 120 },
+      {
+        key: 'copy',
+        label: 'Intro copy',
+        type: 'textarea',
+        default:
+          'Fifty-three colourful pages with the destinations we compose, the photographs clients keep, the packages and prices, and a step-by-step guide to placing your Neverbeen Request — plus traveller stories from across the world.',
+        maxLength: 1200,
+      },
+      { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
+      {
+        key: 'seconds',
+        label: 'Seconds per memo',
+        type: 'number',
+        default: 5,
+        min: 2,
+        max: 20,
+        hint: 'The shipped pace is 5 seconds. Visitors can always move on themselves.',
+      },
+    ],
+  },
+  {
+    key: 'home.storyline',
+    page: 'home',
+    label: 'The Storyline of Parallel Universe',
+    icon: '🌌',
+    description:
+      'Full-width slideshow featuring the nine stories from The Storyline of Parallel Universe.',
+    previewPath: '/',
+    previewFragment: 'storyline-section',
+    fields: [
+      { key: 'title', label: 'Section title', type: 'text', default: 'The Storyline of Parallel Universe', maxLength: 120 },
+      {
+        key: 'copy',
+        label: 'Intro copy',
+        type: 'textarea',
+        default:
+          'Nine real-feelings scenarios about the journeys people carry in their hearts — postponed by work, distance, illness or loss — and how a Parallel Universe frame lets an unlived moment be seen with honesty and care.',
+        maxLength: 1200,
+      },
+      { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
+      {
+        key: 'seconds',
+        label: 'Seconds per memo',
+        type: 'number',
+        default: 5,
+        min: 2,
+        max: 20,
+        hint: 'The shipped pace is 5 seconds. Visitors can always move on themselves.',
+      },
+    ],
+  },
+  {
     key: 'home.how',
     page: 'home',
     label: 'How It Works',
@@ -318,11 +375,11 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     label: 'Gallery',
     icon: '🖼️',
     description:
-      'The proof mosaic: 20 photographs drawn at random from the Neverbeen Collection (/collection) on every page load, so the set is not managed here.',
+      'The proof mosaic: 23 photographs drawn at random from the Neverbeen Collection (/collection) on every page load, so the set is not managed here.',
     previewPath: '/',
     previewFragment: 'gallery',
     fields: [
-      ...heading('The proof', 'Gallery', 'Twenty stills drawn at random from the Neverbeen Collection—a new set every time you open this page.'),
+      ...heading('The proof', 'Gallery', 'Twenty-three stills drawn at random from the Neverbeen Collection—a new set every time you open this page.'),
     ],
   },
   {

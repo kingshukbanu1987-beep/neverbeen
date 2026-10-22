@@ -1,0 +1,95 @@
+<section class="brochure" id="brochure" aria-labelledby="brochure-title">
+  <div class="container">
+    <header class="intro">
+      <h2 id="brochure-title">{{ title() }}</h2>
+      <p class="lede">{{ copy() }}</p>
+      <div class="actions">
+        <a href="/documentation" class="btn btn-brochure">Brochure</a>
+      </div>
+    </header>
+  </div>
+
+  <div class="stage-shell">
+    <div
+      class="stage"
+      tabindex="0"
+      role="region"
+      aria-roledescription="carousel"
+      [attr.aria-label]="title() + ' — ' + total + ' brochure pages'"
+      (keydown)="onKeydown($event)"
+      (touchstart)="onTouchStart($event)"
+      (touchend)="onTouchEnd($event)"
+    >
+      <div class="deck">
+        @for (slide of slides; track slide.page; let i = $index) {
+          @if (isMounted(i)) {
+            <article
+              class="slide"
+              [class.is-active]="i === activeIndex()"
+              [attr.aria-hidden]="i === activeIndex() ? 'false' : 'true'"
+              [attr.data-page]="slide.page"
+            >
+              <img
+                class="photo"
+                [src]="slide.src"
+                [alt]="slide.alt"
+                [attr.loading]="i === activeIndex() ? 'eager' : 'lazy'"
+                decoding="async"
+              />
+              <div class="scrim" aria-hidden="true"></div>
+              <div class="copy">
+                <span class="tag">{{ slide.tag }}</span>
+                <h3>{{ slide.header }}</h3>
+                <p>{{ slide.copy }}</p>
+              </div>
+            </article>
+          }
+        }
+      </div>
+
+      <button
+        type="button"
+        class="nav prev"
+        aria-label="Previous brochure page"
+        (click)="previous()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="M15 5l-7 7 7 7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        class="nav next"
+        aria-label="Next brochure page"
+        (click)="next()"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path
+            d="M9 5l7 7-7 7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="meter" aria-live="polite">
+      <span class="counter">{{ counterLabel() }}</span>
+      <div class="track" aria-hidden="true">
+        <div class="bar" [style.width.%]="progressPercent()"></div>
+      </div>
+      <span class="caption">Brochure Page {{ current().page }} · {{ current().scene }}</span>
+    </div>
+  </div>
+</section>

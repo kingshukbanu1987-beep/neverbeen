@@ -21,4 +21,18 @@ describe('Home history restoration', () => {
     home['onPageShow'](new PageTransitionEvent('pageshow', { persisted: false }));
     expect(reloads).toBe(1);
   });
+
+  it('orders Brochure under Multiverse and Storyline below Brochure', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: DOCUMENT, useValue: { defaultView: { location: { reload: () => {} } } } },
+      ],
+    });
+    const home = TestBed.runInInjectionContext(() => new Home());
+    const ids = home['sections']().map((s) => s.id);
+    const multiverseIdx = ids.indexOf('multiverse');
+    expect(multiverseIdx).toBeGreaterThanOrEqual(0);
+    expect(ids[multiverseIdx + 1]).toBe('brochure');
+    expect(ids[multiverseIdx + 2]).toBe('storyline');
+  });
 });

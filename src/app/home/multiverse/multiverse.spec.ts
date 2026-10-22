@@ -146,6 +146,33 @@ describe('The NeverBeen Multiverse Studio slideshow', () => {
     fixture.destroy();
   });
 
+  it('places the NeverBeen AI Models button in the Multiverse Studio intro just below the description in studio pink', () => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: SiteConfigService, useValue: config() }],
+    });
+    const fixture = TestBed.createComponent(Multiverse);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    const intro = element.querySelector<HTMLElement>('header.intro')!;
+    const lede = intro.querySelector<HTMLElement>('.lede')!;
+    const actions = intro.querySelector<HTMLElement>('.actions')!;
+    const aiModels = actions.querySelector<HTMLAnchorElement>('a.btn.btn-ai-models')!;
+
+    expect(intro).toBeTruthy();
+    expect(lede).toBeTruthy();
+    expect(lede.nextElementSibling).toBe(actions);
+    expect(aiModels).toBeTruthy();
+    expect(aiModels.textContent?.trim()).toBe('NeverBeen AI Models');
+    expect(aiModels.getAttribute('href')).toBe('/ai-models');
+    expect(aiModels.getAttribute('target')).toBeNull();
+    expect(aiModels.classList.contains('btn-ai-models')).toBe(true);
+    expect(getComputedStyle(aiModels).backgroundColor).toBe('rgb(255, 70, 162)');
+    expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
+
+    fixture.destroy();
+  });
+
   it('orders the memos at random without repeating one inside a visit', () => {
     const studio = setup(fakeDocument());
     const sources = studio['slides'].map((slide) => slide.src);
