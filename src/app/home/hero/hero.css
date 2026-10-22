@@ -62,23 +62,6 @@ h1 {
   color: #fff;
 }
 
-/* "NeverBeen AI Models" wears the studio pink. */
-.btn-ai-models {
-  background: #ff46a2;
-  color: #fff;
-}
-
-.btn-ai-models:hover,
-.btn-ai-models:focus-visible {
-  background: #e52d8b;
-  color: #fff;
-}
-
-.btn-ai-models:focus-visible {
-  outline: 2px solid #ff46a2;
-  outline-offset: 3px;
-}
-
 .btn-collection {
   background: transparent;
   color: var(--ink);

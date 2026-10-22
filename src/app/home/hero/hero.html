@@ -8,14 +8,13 @@
       @if (lede()) {
         <p class="lede">{{ lede() }}</p>
       }
-      <!-- Labels and visibility are managed in Website Management; AI Models follows Brochure. -->
+      <!-- Labels and visibility are managed in Website Management. -->
       @if (buttons().length) {
         <div class="actions">
           @for (b of buttons(); track b.id) {
             @if (
               b.id === 'documentation' ||
               b.id === 'storyline' ||
-              b.id === 'ai-models' ||
               b.id === 'merchandise'
             ) {
               <!-- Native same-tab navigation stays reliable after history restores

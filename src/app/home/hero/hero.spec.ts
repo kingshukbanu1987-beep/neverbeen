@@ -34,7 +34,6 @@ describe('Hero', () => {
     expect(labels).toEqual([
       'Connect to NeverBeen Community',
       'Brochure',
-      'NeverBeen AI Models',
       'Shop NeverBeen Merchandise',
       'The Storyline of Parallel Universe',
       'Know the Founder',
@@ -114,27 +113,19 @@ describe('Hero', () => {
     expect(getComputedStyle(brochure).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('puts NeverBeen AI Models directly after Brochure in the studio pink', () => {
+  it('does not include NeverBeen AI Models in the hero actions (moved to Multiverse Studio)', () => {
+    const element: HTMLElement = create().nativeElement;
+    expect(labelsOf(element)).not.toContain('NeverBeen AI Models');
+    expect(element.querySelector('a[href="/ai-models"]')).toBeNull();
+  });
+
+  it('places merchandise after Brochure in the Founder navy, then keeps Storyline gold', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
     const brochureIndex = labels.indexOf('Brochure');
-    const aiModels = buttons[brochureIndex + 1];
-
-    expect(aiModels.textContent?.trim()).toBe('NeverBeen AI Models');
-    expect(aiModels.getAttribute('href')).toBe('/ai-models');
-    expect(aiModels.classList.contains('btn-ai-models')).toBe(true);
-    expect(getComputedStyle(aiModels).backgroundColor).toBe('rgb(255, 70, 162)');
-    expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
-  });
-
-  it('places merchandise after AI Models in the Founder navy, then keeps Storyline gold', () => {
-    const element: HTMLElement = create().nativeElement;
-    const buttons = buttonsOf(element);
-    const labels = labelsOf(element);
-    const aiModelsIndex = labels.indexOf('NeverBeen AI Models');
-    const merchandise = buttons[aiModelsIndex + 1];
-    const storyline = buttons[aiModelsIndex + 2];
+    const merchandise = buttons[brochureIndex + 1];
+    const storyline = buttons[brochureIndex + 2];
     const founder = buttons[labels.indexOf('Know the Founder')];
 
     expect(merchandise.textContent?.trim()).toBe('Shop NeverBeen Merchandise');
@@ -180,22 +171,6 @@ describe('Hero', () => {
     ).toBe(false);
   });
 
-  it('uses a native same-tab direct link for AI Models instead of lazy-route navigation', () => {
-    const fixture = create();
-    const element: HTMLElement = fixture.nativeElement;
-    const aiModels = element.querySelector<HTMLAnchorElement>('a[href="/ai-models"]')!;
-    const routerLinks = fixture.debugElement.queryAll(By.directive(RouterLink));
-
-    expect(aiModels).toBeTruthy();
-    expect(aiModels.textContent?.trim()).toBe('NeverBeen AI Models');
-    expect(aiModels.getAttribute('target')).toBeNull();
-    // A real document navigation always opens the directory, even when the tab has been open
-    // long enough for a deployment to replace the route's JavaScript chunk.
-    expect(
-      routerLinks.some((link) => link.nativeElement.getAttribute('href') === '/ai-models'),
-    ).toBe(false);
-  });
-
   it('uses a native same-tab link for merchandise instead of lazy-route navigation', () => {
     const fixture = create();
     const element = fixture.nativeElement as HTMLElement;
@@ -228,9 +203,8 @@ describe('Hero', () => {
     const labels = labelsOf(create().nativeElement);
     const communityIndex = labels.indexOf('Connect to NeverBeen Community');
     expect(labels[communityIndex + 1]).toBe('Our brochure');
-    expect(labels[communityIndex + 2]).toBe('NeverBeen AI Models');
-    expect(labels[communityIndex + 3]).toBe('Shop NeverBeen Merchandise');
-    expect(labels[communityIndex + 4]).toBe('The Storyline of Parallel Universe');
+    expect(labels[communityIndex + 2]).toBe('Shop NeverBeen Merchandise');
+    expect(labels[communityIndex + 3]).toBe('The Storyline of Parallel Universe');
     expect(labels.at(-1)).toBe('Explore Gallery');
   });
 

@@ -13,7 +13,6 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
   // The brochure page publishes the single wide landscape visitor brochure,
   // openable in a new tab or downloadable as a PDF.
   documentation: { path: '/documentation', cls: 'btn-brochure' },
-  'ai-models': { path: '/ai-models', cls: 'btn-ai-models' },
   merchandise: { path: '/merchandise', cls: 'btn-founder' },
   storyline: { path: '/storyline-of-parallel-universe', cls: 'btn-brochure' },
 };
@@ -35,7 +34,7 @@ export class Hero {
   protected readonly lede = computed(() => this.cms.text('home.hero', 'lede'));
   protected readonly buttons = computed(() => {
     const buttons = this.cms.visibleItems('home.hero', 'buttons').filter((b) => BUTTONS[b.id]);
-    // Keep Brochure directly after Community, then put AI Models and Storyline
+    // Keep Brochure directly after Community, then put Merchandise and Storyline
     // behind it even when a published CMS order predates those links. Preserve
     // each item's visibility, label and the relative order of other actions.
     const brochureIndex = buttons.findIndex((b) => b.id === 'documentation');
@@ -43,37 +42,27 @@ export class Hero {
       const [brochure] = buttons.splice(brochureIndex, 1);
       buttons.splice(buttons.findIndex((b) => b.id === 'community') + 1, 0, brochure);
     }
-    const aiModelsIndex = buttons.findIndex((b) => b.id === 'ai-models');
-    if (aiModelsIndex >= 0) {
-      const [aiModels] = buttons.splice(aiModelsIndex, 1);
-      const brochureAnchor = buttons.findIndex((b) => b.id === 'documentation');
-      const communityAnchor = buttons.findIndex((b) => b.id === 'community');
-      const anchor = brochureAnchor >= 0 ? brochureAnchor : communityAnchor;
-      if (anchor >= 0) buttons.splice(anchor + 1, 0, aiModels);
-      else buttons.push(aiModels);
-    }
     const merchandiseIndex = buttons.findIndex((b) => b.id === 'merchandise');
     if (merchandiseIndex >= 0) {
       const [merchandise] = buttons.splice(merchandiseIndex, 1);
-      const aiModelsAnchor = buttons.findIndex((b) => b.id === 'ai-models');
-      if (aiModelsAnchor >= 0) buttons.splice(aiModelsAnchor + 1, 0, merchandise);
+      const brochureAnchor = buttons.findIndex((b) => b.id === 'documentation');
+      const communityAnchor = buttons.findIndex((b) => b.id === 'community');
+      const anchor = brochureAnchor >= 0 ? brochureAnchor : communityAnchor;
+      if (anchor >= 0) buttons.splice(anchor + 1, 0, merchandise);
       else buttons.push(merchandise);
     }
     const storylineIndex = buttons.findIndex((b) => b.id === 'storyline');
     if (storylineIndex >= 0) {
       const [storyline] = buttons.splice(storylineIndex, 1);
       const merchandiseAnchor = buttons.findIndex((b) => b.id === 'merchandise');
-      const aiModelsAnchor = buttons.findIndex((b) => b.id === 'ai-models');
       const brochureAnchor = buttons.findIndex((b) => b.id === 'documentation');
       const communityAnchor = buttons.findIndex((b) => b.id === 'community');
       const anchor =
         merchandiseAnchor >= 0
           ? merchandiseAnchor
-          : aiModelsAnchor >= 0
-            ? aiModelsAnchor
-            : brochureAnchor >= 0
-              ? brochureAnchor
-              : communityAnchor;
+          : brochureAnchor >= 0
+            ? brochureAnchor
+            : communityAnchor;
       if (anchor >= 0) buttons.splice(anchor + 1, 0, storyline);
       else buttons.push(storyline);
     }
