@@ -27,7 +27,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "86 cm",
     "waist": "64 cm",
-    "hip": "92 cm"
+    "hip": "92 cm",
+    "hiddenFromDirectory": true
   },
   "Sereenah Noorzai.png": {
     "location": "Muscat, Oman",
@@ -88,7 +89,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "83 cm",
     "waist": "63 cm",
-    "hip": "89 cm"
+    "hip": "89 cm",
+    "hiddenFromDirectory": true
   },
   "Toulene Arslan.png": {
     "location": "Istanbul, Türkiye",
@@ -103,7 +105,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "85 cm",
     "waist": "64 cm",
-    "hip": "91 cm"
+    "hip": "91 cm",
+    "hiddenFromDirectory": true
   },
   "Zeina Al-Sabbagh.png": {
     "location": "Beirut, Lebanon",
@@ -118,7 +121,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "84 cm",
     "waist": "66 cm",
-    "hip": "90 cm"
+    "hip": "90 cm",
+    "hiddenFromDirectory": true
   },
   "Nermin Akhundzada.png": {
     "location": "Baku, Azerbaijan",
@@ -134,7 +138,8 @@
     "bust": "85 cm",
     "waist": "65 cm",
     "hip": "91 cm",
-    "availability": "Looking for Future Contract"
+    "availability": "Looking for Future Contract",
+    "hiddenFromDirectory": true
   },
   "Rasha Fakhoury.png": {
     "location": "Amman, Jordan",
@@ -149,7 +154,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "87 cm",
     "waist": "66 cm",
-    "hip": "94 cm"
+    "hip": "94 cm",
+    "hiddenFromDirectory": true
   },
   "Ava Amira Gallagher.png": {
     "name": "Ava Amira Gallagher",
@@ -165,7 +171,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "84 cm",
     "waist": "62 cm",
-    "hip": "89 cm"
+    "hip": "89 cm",
+    "hiddenFromDirectory": true
   },
   "Banafsheh Saoirse Yazdani.png": {
     "name": "Banafsheh Saoirse Yazdani",
@@ -181,7 +188,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "86 cm",
     "waist": "66 cm",
-    "hip": "93 cm"
+    "hip": "93 cm",
+    "hiddenFromDirectory": true
   },
   "Caoimhe Niloufar Rahimi.png": {
     "name": "Caoimhe Niloufar Rahimi",
@@ -197,7 +205,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "84 cm",
     "waist": "65 cm",
-    "hip": "90 cm"
+    "hip": "90 cm",
+    "hiddenFromDirectory": true
   },
   "Fiadh Dara.png": {
     "name": "Fiadh Dara",
@@ -229,7 +238,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "86 cm",
     "waist": "64 cm",
-    "hip": "93 cm"
+    "hip": "93 cm",
+    "hiddenFromDirectory": true
   },
   "Maeve Anahita.png": {
     "name": "Maeve Anahita",
@@ -262,7 +272,8 @@
     "bust": "85 cm",
     "waist": "67 cm",
     "hip": "91 cm",
-    "availability": "Looking for Future Contract"
+    "availability": "Looking for Future Contract",
+    "hiddenFromDirectory": true
   },
   "Sorcha Golsa MacCarthy.png": {
     "name": "Sorcha Golsa MacCarthy",
@@ -278,7 +289,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "85 cm",
     "waist": "65 cm",
-    "hip": "90 cm"
+    "hip": "90 cm",
+    "hiddenFromDirectory": true
   },
   "Donya Caoimhe Yazdani.png": {
     "name": "Donya Caoimhe Yazdani",
@@ -294,7 +306,8 @@
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
     "bust": "83 cm",
     "waist": "62 cm",
-    "hip": "89 cm"
+    "hip": "89 cm",
+    "hiddenFromDirectory": true
   },
   "Priyanka Chatterjee.png": {
     "name": "Priyanka Chatterjee",
@@ -374,7 +387,8 @@
     "illustrative": true,
     "order": 11,
     "photoRate": 585,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Aisha Bint Mohammed Al-Husseini": {
     "name": "Aisha Bint Mohammed Al-Husseini",
@@ -390,7 +404,8 @@
     "illustrative": true,
     "order": 25,
     "photoRate": 595,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Shirina O'Brien": {
     "name": "Shirina O'Brien",
@@ -439,7 +454,8 @@
     "illustrative": true,
     "order": 28,
     "photoRate": 545,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Soha Haddad": {
     "name": "Soha Haddad",
@@ -456,7 +472,8 @@
     "order": 29,
     "photoRate": 535,
     "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
-    "availability": "Currently Unavailable"
+    "availability": "Currently Unavailable",
+    "hiddenFromDirectory": true
   },
   "Ameera Lone": {
     "name": "Ameera Lone",
@@ -472,7 +489,8 @@
     "illustrative": true,
     "order": 30,
     "photoRate": 530,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Saoirse Rezaei": {
     "name": "Saoirse Rezaei",
@@ -488,7 +506,8 @@
     "illustrative": true,
     "order": 31,
     "photoRate": 560,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Farah Al-Shaar": {
     "name": "Farah Al-Shaar",
@@ -536,7 +555,8 @@
     "illustrative": true,
     "order": 34,
     "photoRate": 570,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Reema Ganguly": {
     "name": "Reema Ganguly",
@@ -568,7 +588,8 @@
     "illustrative": true,
     "order": 36,
     "photoRate": 575,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Ziba Nazrin": {
     "name": "Ziba Nazrin",
@@ -616,7 +637,8 @@
     "illustrative": true,
     "order": 39,
     "photoRate": 560,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Zeina Al-Atassi": {
     "name": "Zeina Al-Atassi",
@@ -632,7 +654,8 @@
     "illustrative": true,
     "order": 40,
     "photoRate": 540,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Amina El-Maghraby": {
     "name": "Amina El-Maghraby",
@@ -648,7 +671,8 @@
     "illustrative": true,
     "order": 41,
     "photoRate": 595,
-    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
+    "photoNote": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.",
+    "hiddenFromDirectory": true
   },
   "Valentina Rodríguez Silva": {
     "name": "Valentina Rodríguez Silva",

@@ -80,7 +80,8 @@ export function drawCover(model: AiModelProfile): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AiModelsPage {
-  protected readonly models = aiModelProfiles;
+  /** The public directory omits profiles explicitly kept off-page for future use. */
+  protected readonly models = aiModelProfiles.filter((profile) => !profile.hiddenFromDirectory);
   private readonly route = inject(ActivatedRoute);
   private readonly engagement = inject(ModelMediaEngagementService);
   /** Reads each model's Live Now and past-chat counts for the split pills on the cards. */
@@ -134,7 +135,7 @@ export class AiModelsPage {
    * cover from her album, while the cards keep their published running order.
    */
   private readonly covers = new Map(
-    aiModelProfiles.map((model) => [model.slug, drawCover(model)] as const),
+    this.models.map((model) => [model.slug, drawCover(model)] as const),
   );
 
   /**
@@ -200,7 +201,8 @@ export class AiModelsPage {
     const returnedPlan = this.route.snapshot.queryParamMap?.get('liveChatPlan') ?? null;
     const returnedModel = this.route.snapshot.queryParamMap?.get('liveChatModel') ?? null;
     if ((returnedPlan === 'registered' || returnedPlan === 'premium') && returnedModel) {
-      const model = this.models.find((candidate) => candidate.slug === returnedModel) ?? null;
+      // Retained profiles remain routable even when they are no longer listed in the directory.
+      const model = aiModelProfiles.find((candidate) => candidate.slug === returnedModel) ?? null;
       if (model) {
         this.chatModel.set(model);
         this.resumeChatPlan.set(returnedPlan);
@@ -211,7 +213,7 @@ export class AiModelsPage {
     // model's own page: that model's access screen opens, and the message waits in her composer.
     const forwardedTo = this.route.snapshot.queryParamMap?.get('forwardChat') ?? null;
     if (forwardedTo) {
-      const model = this.models.find((candidate) => candidate.slug === forwardedTo) ?? null;
+      const model = aiModelProfiles.find((candidate) => candidate.slug === forwardedTo) ?? null;
       if (model) this.openChat(model);
     }
 

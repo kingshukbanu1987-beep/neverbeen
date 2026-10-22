@@ -974,6 +974,7 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     tags: textList(merged.tags),
     availability: text(merged.availability),
     order: numberValue(merged.order),
+    ...(merged.hiddenFromDirectory === true ? { hiddenFromDirectory: true } : {}),
     photoRate: photoRateValue(merged),
     photoNote: text(merged.photoNote ?? merged.rateNote),
     bio: text(merged.bio ?? merged.shortInfo ?? merged.description),
@@ -1045,6 +1046,7 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     tags: textList(profile.tags),
     availability: text(profile.availability),
     order: numberValue(profile.order),
+    ...(profile.hiddenFromDirectory === true ? { hiddenFromDirectory: true } : {}),
     photoRate: photoRateValue(profile),
     photoNote: text(profile.photoNote ?? profile.rateNote),
     bio: text(profile.bio ?? profile.shortInfo ?? profile.description),
@@ -1390,6 +1392,8 @@ export interface AiModelProfile {
   availability: string;
   /** Directory display position (1-based); 0 when unspecified. */
   order: number;
+  /** Whether this portfolio is retained for future use but hidden from the model directory. */
+  hiddenFromDirectory?: boolean;
   /** Rate for a single photograph in INR — every model quotes her own. 0 when unpublished. */
   photoRate: number;
   /** Note shown with the rate in the booking pop-up. */

@@ -202,6 +202,8 @@ export interface AiModelProfile {
   availability: string;
   /** Directory display position (1-based); 0 when unspecified. */
   order: number;
+  /** Whether this portfolio is retained for future use but hidden from the model directory. */
+  hiddenFromDirectory?: boolean;
   /** Rate for a single photograph in INR — every model quotes her own. 0 when unpublished. */
   photoRate: number;
   /** Note shown with the rate in the booking pop-up. */
@@ -9158,6 +9160,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 11,
+    hiddenFromDirectory: true,
     photoRate: 585,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -10646,6 +10649,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 16,
+    hiddenFromDirectory: true,
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -10676,6 +10680,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: 'Looking for Future Contract',
     order: 17,
+    hiddenFromDirectory: true,
     photoRate: 520,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -10706,6 +10711,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 18,
+    hiddenFromDirectory: true,
     photoRate: 600,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -10736,6 +10742,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 19,
+    hiddenFromDirectory: true,
     photoRate: 585,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -10768,6 +10775,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 20,
+    hiddenFromDirectory: true,
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -10800,6 +10808,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 21,
+    hiddenFromDirectory: true,
     photoRate: 565,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -10968,6 +10977,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 22,
+    hiddenFromDirectory: true,
     photoRate: 575,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11003,6 +11013,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 23,
+    hiddenFromDirectory: true,
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11038,6 +11049,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 24,
+    hiddenFromDirectory: true,
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11070,6 +11082,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 25,
+    hiddenFromDirectory: true,
     photoRate: 595,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11105,6 +11118,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 26,
+    hiddenFromDirectory: true,
     photoRate: 590,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11135,6 +11149,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 27,
+    hiddenFromDirectory: true,
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11165,6 +11180,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 28,
+    hiddenFromDirectory: true,
     photoRate: 545,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11197,6 +11213,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: 'Currently Unavailable',
     order: 29,
+    hiddenFromDirectory: true,
     photoRate: 535,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11227,6 +11244,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 30,
+    hiddenFromDirectory: true,
     photoRate: 530,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11257,6 +11275,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 31,
+    hiddenFromDirectory: true,
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11352,6 +11371,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 34,
+    hiddenFromDirectory: true,
     photoRate: 570,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11412,6 +11432,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 36,
+    hiddenFromDirectory: true,
     photoRate: 575,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11447,6 +11468,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 37,
+    hiddenFromDirectory: true,
     photoRate: 555,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11477,6 +11499,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: 'Looking for Future Contract',
     order: 38,
+    hiddenFromDirectory: true,
     photoRate: 595,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11509,6 +11532,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 39,
+    hiddenFromDirectory: true,
     photoRate: 560,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11539,6 +11563,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 40,
+    hiddenFromDirectory: true,
     photoRate: 540,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',
@@ -11569,6 +11594,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     tags: [],
     availability: '',
     order: 41,
+    hiddenFromDirectory: true,
     photoRate: 595,
     photoNote:
       'Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately.',

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-test('model manifest discovers only exact-name album-root MP3s and keeps premium photos separate', () => {
+test('model manifest keeps hidden directory profiles, exact-name preview MP3s and premium photos separate', () => {
   const root = mkdtempSync(join(tmpdir(), 'neverbeen-preview-'));
   try {
     mkdirSync(join(root, 'scripts'), { recursive: true });
@@ -15,7 +15,12 @@ test('model manifest discovers only exact-name album-root MP3s and keeps premium
     );
     const album = join(root, 'public/NeverBeenModels/TestModel');
     mkdirSync(join(album, 'PremiumContent'), { recursive: true });
+    mkdirSync(join(root, 'data/ai-models'), { recursive: true });
     writeFileSync(join(album, 'profile.json'), JSON.stringify({ name: 'Test Model' }));
+    writeFileSync(
+      join(root, 'data/ai-models/profiles.json'),
+      JSON.stringify({ 'Test Model.jpg': { hiddenFromDirectory: true } }),
+    );
     writeFileSync(join(album, 'Test Model.jpg'), 'fixture');
     writeFileSync(join(album, 'PremiumContent/secret.jpg'), 'fixture');
     writeFileSync(join(album, 'PremiumContent/Test Model.mp3'), 'fixture');
@@ -35,6 +40,7 @@ test('model manifest discovers only exact-name album-root MP3s and keeps premium
           .replace(/,\s*\]$/, ']'),
       )[0];
     assert.equal(profile().previewMusic, undefined);
+    assert.equal(profile().hiddenFromDirectory, true);
     writeFileSync(join(album, 'Test Model.mp3'), 'fixture');
     const model = profile();
     assert.equal(model.previewMusic, '/NeverBeenModels/TestModel/Test%20Model.mp3');
