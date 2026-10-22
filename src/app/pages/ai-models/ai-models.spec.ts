@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
+import { AiModelsDirectoryMemoryService } from '../../services/ai-models-directory-memory.service';
 import {
   MediaEngagementStats,
   ModelMediaEngagementService,
@@ -56,6 +57,12 @@ describe('AiModelsPage', () => {
     }).compileComponents();
   });
 
+  afterEach(() => {
+    // The directory remembers its position per tab; one test must never hand it to the next.
+    window.sessionStorage.clear();
+    vi.restoreAllMocks();
+  });
+
   it('renders the portfolios in the published order and labels randomized details as illustrative', () => {
     const fixture = TestBed.createComponent(AiModelsPage);
     fixture.detectChanges();
@@ -70,15 +77,15 @@ describe('AiModelsPage', () => {
       'Reema Ganguly',
       'Nour El-Sherif',
       'Priyanka Chatterjee',
-      'Sereenah Noorzai',
+      'Aoife Pahlavi',
       'Tasneem Al-Rifai',
       'Fatima Sana Hussaini',
-      'Fatima Al-Mansoor',
-      "Shirina O'Brien",
-      'Aoife Pahlavi',
-      'Farah Al-Shaar',
-      'Florencia Fontana Gatti',
       'Maeve Anahita',
+      'Farah Al-Shaar',
+      'Sereenah Noorzai',
+      "Shirina O'Brien",
+      'Florencia Fontana Gatti',
+      'Fatima Al-Mansoor',
       'Valentina Rodríguez Silva',
     ];
     const expectedHiddenNames = [
@@ -660,6 +667,68 @@ describe('AiModelsPage', () => {
     expect(element.querySelector('main')?.hasAttribute('inert')).toBe(false);
     expect(document.body.style.overflow).toBe('');
 
+    fixture.destroy();
+  });
+
+  it('remembers the directory as it stands when a card opens a model profile', () => {
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const scrollY = vi.spyOn(window, 'scrollY', 'get').mockReturnValue(1480);
+    const element: HTMLElement = fixture.nativeElement;
+
+    element.querySelector<HTMLAnchorElement>('.model-card .card-image')!.click();
+
+    expect(navigate).toHaveBeenCalled();
+    expect(TestBed.inject(AiModelsDirectoryMemoryService).recall()).toEqual({
+      scrollY: 1480,
+      search: '',
+      sort: 'default',
+      availability: 'all',
+    });
+
+    scrollY.mockRestore();
+    navigate.mockRestore();
+    fixture.destroy();
+  });
+
+  it('reopens the directory exactly where the visitor left it when she comes back from a profile', async () => {
+    const memory = TestBed.inject(AiModelsDirectoryMemoryService);
+    memory.remember({
+      scrollY: 1480,
+      search: 'iran',
+      sort: 'price-desc',
+      availability: 'available',
+    });
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const element: HTMLElement = fixture.nativeElement;
+
+    // The saved scroll position is applied when the grid has been laid out.
+    expect(scrollTo).toHaveBeenCalledWith({ top: 1480, left: 0, behavior: 'instant' });
+    // Her search, running order and availability chip come back with her.
+    expect(element.querySelector<HTMLInputElement>('.search-field input')?.value).toBe('iran');
+    expect(element.querySelector<HTMLSelectElement>('.sort-field select')?.value).toBe(
+      'price-desc',
+    );
+    expect(element.querySelector('.availability-chip.is-active')?.textContent).toContain(
+      'Available for Contract',
+    );
+
+    // The cards on screen are the same filtered set she was looking at.
+    const locations = Array.from(element.querySelectorAll('.model-card .card-location')).map(
+      (location) => location.textContent?.trim() ?? '',
+    );
+    expect(locations.length).toBeGreaterThan(0);
+    expect(locations.every((location) => location.toLocaleLowerCase().includes('iran'))).toBe(true);
+
+    scrollTo.mockRestore();
     fixture.destroy();
   });
 
