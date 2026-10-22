@@ -10,7 +10,7 @@
 }
 
 .multiverse {
-  --memo-font: 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+  --memo-font: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
   --studio-accent: #5b5bf0;
   --studio-warm: #ff8a5c;
   --studio-mint: #14b8a6;

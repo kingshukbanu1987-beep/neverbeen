@@ -22,6 +22,19 @@ describe('Home history restoration', () => {
     expect(reloads).toBe(1);
   });
 
+  it('moves How It Works immediately before Pricing', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: DOCUMENT, useValue: { defaultView: { location: { reload: () => {} } } } },
+      ],
+    });
+    const home = TestBed.runInInjectionContext(() => new Home());
+    const ids = home['sections']().map((s) => s.id);
+    const pricingIdx = ids.indexOf('pricing');
+    expect(pricingIdx).toBeGreaterThan(0);
+    expect(ids[pricingIdx - 1]).toBe('how');
+  });
+
   it('orders Brochure under Multiverse and Storyline below Brochure', () => {
     TestBed.configureTestingModule({
       providers: [

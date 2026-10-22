@@ -13,6 +13,9 @@
   --radius: 18px;
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Outfit', system-ui, sans-serif;
+  /* The calm Calibri stack used by "The NeverBeen Multiverse Studio" — the
+     single voice for every word and button on the Home page. */
+  --home-font: 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
   /* Height of the sticky website header; kept in sync at runtime by the navbar. */
   --site-nav-h: calc(clamp(54px, 4.2vw, 64px) + 1px);
 }
@@ -36,6 +39,13 @@ body {
   font-weight: 400;
   line-height: 1.6;
   letter-spacing: 0.01em;
+}
+
+/* Home page: sections, copy and buttons all speak in the Multiverse Studio's
+   Calibri voice. Components that set their own display face (the serif
+   headlines and the brand wordmark) keep it. */
+app-home {
+  font-family: var(--home-font);
 }
 
 img {
