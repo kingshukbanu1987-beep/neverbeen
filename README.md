@@ -85,7 +85,10 @@ ng test
 The `/ai-models` page is a dark, magenta-accented studio directory that opens on a short, plain title
 bar — no artwork or decorative panels. Portfolios appear in the published order (`order` in
 `data/ai-models/profiles.json`) and every cover states, in large bold type, how many photographs that
-model has in her portfolio. Every card keeps its blocks tight on minimum padding — the **Starting
+model has in her portfolio. Opening a model's profile and coming back — with the browser's Back
+button or with the profile's own **All AI models** link — returns the directory to the same card at
+the same scroll position, with the search, sort and availability filter the visitor had chosen
+still applied. Every card keeps its blocks tight on minimum padding — the **Starting
 Price / Photograph** row, the photograph and video counts, the **Preview** capsule and the Seen /
 Likes / Comments / Shares row read as one compact column rather than a stack of separated panels.
 Each cover opens its own

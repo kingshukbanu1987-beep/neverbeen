@@ -3,12 +3,18 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
+  afterNextRender,
   computed,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, Scroll } from '@angular/router';
+import { filter, take } from 'rxjs';
+import {
+  AiModelsDirectoryMemory,
+  AiModelsDirectoryMemoryService,
+} from '../../services/ai-models-directory-memory.service';
 import { ModelLiveChatService } from '../../services/model-live-chat.service';
 import { ModelMediaEngagementService } from '../../services/model-media-engagement.service';
 import { ModelTestimonialsService } from '../../services/model-testimonials.service';
@@ -83,7 +89,10 @@ export class AiModelsPage {
   /** The public directory omits profiles explicitly kept off-page for future use. */
   protected readonly models = aiModelProfiles.filter((profile) => !profile.hiddenFromDirectory);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly engagement = inject(ModelMediaEngagementService);
+  /** Remembers where the visitor was in this directory when she opened a model profile. */
+  private readonly directoryMemory = inject(AiModelsDirectoryMemoryService);
   /** Reads each model's Live Now and past-chat counts for the split pills on the cards. */
   private readonly liveChats = inject(ModelLiveChatService);
   private readonly destroyRef = inject(DestroyRef);
@@ -196,6 +205,12 @@ export class AiModelsPage {
   });
 
   constructor() {
+    // A visit that comes straight back from a model profile reopens the directory exactly as it
+    // was left — same search, sort and availability filter, same scroll position — instead of
+    // jumping to the top of the page.
+    const remembered = this.directoryMemory.recall();
+    if (remembered) this.restoreDirectory(remembered);
+
     // Google / registration returns here when a directory card initiated Registered User or
     // Premium access.
     const returnedPlan = this.route.snapshot.queryParamMap?.get('liveChatPlan') ?? null;
@@ -248,6 +263,63 @@ export class AiModelsPage {
   protected resetFilters(): void {
     this.search.set('');
     this.availabilityFilter.set('all');
+  }
+
+  /**
+   * Saves the directory as it stands the moment one of the cards opens a model profile, so the
+   * visitor can be handed back to that exact card when she returns.
+   *
+   * The handler sits on the whole grid rather than on each link: one click listener covers the
+   * cover, the reviews link and every "View Profile / View Portfolio / Read Bio" link.
+   */
+  protected rememberDirectoryPosition(event: Event): void {
+    const target = event.target as Element | null;
+    const link = typeof target?.closest === 'function' ? target.closest('a[href]') : null;
+    const href = link?.getAttribute('href') ?? '';
+    // Only one of the directory's own model links is a round trip worth remembering.
+    if (!href.startsWith('/ai-models/')) return;
+
+    this.directoryMemory.remember({
+      scrollY: typeof window === 'undefined' ? 0 : window.scrollY,
+      search: this.search(),
+      sort: this.sort(),
+      availability: this.availabilityFilter(),
+    });
+  }
+
+  /**
+   * Reopens the directory on the card the visitor left. The scroll is applied twice on purpose:
+   * once after the first render, so the freshly mounted grid already has its full height, and
+   * once when the router reports its own scroll handling for this navigation — the router would
+   * otherwise put the page back at the top. That second pass is also what makes the profile
+   * page's own "All AI models" link (a forward navigation, not Back) return to the same card.
+   */
+  private restoreDirectory(memory: AiModelsDirectoryMemory): void {
+    this.search.set(memory.search);
+    if (memory.sort === 'price-asc' || memory.sort === 'price-desc') this.sort.set(memory.sort);
+    if (
+      memory.availability === 'available' ||
+      memory.availability === 'unavailable' ||
+      memory.availability === 'future'
+    ) {
+      this.availabilityFilter.set(memory.availability);
+    }
+
+    if (typeof window === 'undefined') return;
+    const top = memory.scrollY;
+    afterNextRender(() => this.scrollDirectoryTo(top));
+    this.router.events
+      .pipe(
+        filter((event): event is Scroll => event instanceof Scroll),
+        take(1),
+      )
+      .subscribe(() => this.scrollDirectoryTo(top));
+  }
+
+  /** Scrolls instantly: the visitor must never watch the directory glide back into place. */
+  private scrollDirectoryTo(top: number): void {
+    if (typeof window === 'undefined' || typeof window.scrollTo !== 'function') return;
+    window.scrollTo({ top, left: 0, behavior: 'instant' });
   }
 
   protected updateSort(event: Event): void {

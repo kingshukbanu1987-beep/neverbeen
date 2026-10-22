@@ -22,7 +22,11 @@ export const appConfig: ApplicationConfig = {
       routes,
       withInMemoryScrolling({
         anchorScrolling: 'enabled',
-        scrollPositionRestoration: 'top',
+        // A page the visitor navigates back to (the browser's Back button, a "Back to …" link
+        // that returns through the history) reopens where she left it, while a new destination
+        // still starts at the top. `top` forced every return — including a return from a model
+        // profile to the AI Models directory — to the top of the page.
+        scrollPositionRestoration: 'enabled',
       }),
       // A tab that has been open for a while still runs the JavaScript it downloaded then. If
       // the site was redeployed in the meantime, the chunk a lazy route needs (AI Models,

@@ -173,7 +173,7 @@
           </button>
         </div>
       } @else {
-        <div class="model-grid">
+        <div class="model-grid" (click)="rememberDirectoryPosition($event)">
           @for (model of filteredModels(); track model.slug; let index = $index) {
             <article class="model-card">
               <div class="card-cover">
