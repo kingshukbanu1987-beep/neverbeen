@@ -8,6 +8,13 @@
   color: var(--ink);
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1.15rem;
+}
+
 .mosaic {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -88,6 +95,10 @@ figcaption span {
 @media (max-width: 520px) {
   .gallery {
     padding: 4rem 0;
+  }
+
+  .actions .btn {
+    width: 100%;
   }
 
   .mosaic {

@@ -107,11 +107,7 @@ export const HERO_BUTTONS: [string, string][] = [
   ['documentation', 'Brochure'],
   ['merchandise', 'Shop NeverBeen Merchandise'],
   ['storyline', 'The Storyline of Parallel Universe'],
-  ['founder', 'Know the Founder'],
   ['create', 'Create My Vacation'],
-  ['destinations', 'Dream Destinations'],
-  ['collection', 'Neverbeen Collection'],
-  ['gallery', 'Explore Gallery'],
 ];
 
 export const PROFILE_SECTIONS: [string, string][] = [

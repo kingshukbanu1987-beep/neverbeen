@@ -3,11 +3,12 @@ import { SiteConfigService } from '../../services/site-config.service';
 import { TestBed } from '@angular/core/testing';
 import { RouterLink, provideRouter } from '@angular/router';
 import { Hero } from './hero';
+import { Owner } from '../owner/owner';
 
 describe('Hero', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Hero],
+      imports: [Hero, Owner],
       providers: [provideRouter([])],
     }).compileComponents();
   });
@@ -26,7 +27,7 @@ describe('Hero', () => {
     return buttonsOf(element).map((link) => link.textContent?.trim() ?? '');
   }
 
-  it('places Connect to NeverBeen Community very first, before Know the Founder, in the founder navy', () => {
+  it('places Connect to NeverBeen Community very first in the founder navy', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
@@ -36,69 +37,62 @@ describe('Hero', () => {
       'Brochure',
       'Shop NeverBeen Merchandise',
       'The Storyline of Parallel Universe',
-      'Know the Founder',
       'Create My Vacation',
-      'Dream Destinations',
-      'Neverbeen Collection',
-      'Explore Gallery',
     ]);
 
     const community = buttons[0];
     expect(community.getAttribute('href')).toBe('/community');
-    // The same navy "Know the Founder" wears, with white text.
-    const founder = buttons[labels.indexOf('Know the Founder')];
     expect(community.classList.contains('btn-dream')).toBe(true);
     expect(getComputedStyle(community).backgroundColor).toBe('rgb(18, 59, 104)');
-    expect(getComputedStyle(community).backgroundColor).toBe(
-      getComputedStyle(founder).backgroundColor,
-    );
     expect(getComputedStyle(community).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('places Create My Vacation right after Know the Founder', () => {
+  it('places Create My Vacation right after The Storyline of Parallel Universe', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
 
-    const founderIndex = labels.indexOf('Know the Founder');
-    expect(founderIndex).toBeGreaterThan(-1);
-    expect(labels[founderIndex + 1]).toBe('Create My Vacation');
+    const storylineIndex = labels.indexOf('The Storyline of Parallel Universe');
+    expect(storylineIndex).toBeGreaterThan(-1);
+    expect(labels[storylineIndex + 1]).toBe('Create My Vacation');
 
-    const createBtn = buttons[founderIndex + 1];
+    const createBtn = buttons[storylineIndex + 1];
     expect(createBtn.getAttribute('href')).toBe('/#contact');
     expect(createBtn.classList.contains('btn-primary')).toBe(true);
   });
 
-  it('styles Dream Destinations exactly like Explore Gallery (ghost style)', () => {
+  it('does not include moved or removed buttons in the hero actions', () => {
     const element: HTMLElement = create().nativeElement;
-    const buttons = buttonsOf(element);
     const labels = labelsOf(element);
 
-    const createIndex = labels.indexOf('Create My Vacation');
-    expect(createIndex).toBeGreaterThan(-1);
-    expect(labels[createIndex + 1]).toBe('Dream Destinations');
-
-    const dream = buttons[createIndex + 1];
-    const gallery = buttons.find((b) => b.textContent?.trim() === 'Explore Gallery')!;
-
-    expect(dream.getAttribute('href')).toBe('/#destinations');
-    expect(dream.classList.contains('btn-ghost')).toBe(true);
-
-    const dreamStyle = getComputedStyle(dream);
-    const galleryStyle = getComputedStyle(gallery);
-    expect(dreamStyle.backgroundColor).toBe(galleryStyle.backgroundColor);
-    expect(dreamStyle.color).toBe(galleryStyle.color);
-    expect(dreamStyle.borderColor).toBe(galleryStyle.borderColor);
+    expect(labels).not.toContain('NeverBeen AI Models');
+    expect(labels).not.toContain('Know the Founder');
+    expect(labels).not.toContain('Dream Destinations');
+    expect(labels).not.toContain('Neverbeen Collection');
+    expect(labels).not.toContain('NeverBeen Collection');
+    expect(labels).not.toContain('Explore Gallery');
+    expect(element.querySelector('a[href="/ai-models"]')).toBeNull();
+    expect(element.querySelector('a[href="/founder"]')).toBeNull();
+    expect(element.querySelector('a[href="/collection"]')).toBeNull();
   });
 
-  it('keeps Neverbeen Collection between Dream Destinations and Explore Gallery', () => {
-    const element: HTMLElement = create().nativeElement;
-    const labels = labelsOf(element);
+  it('places Know the Founder in the Founder section just below the founder description', () => {
+    const fixture = TestBed.createComponent(Owner);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
 
-    const dreamIndex = labels.indexOf('Dream Destinations');
-    expect(dreamIndex).toBeGreaterThan(-1);
-    expect(labels[dreamIndex + 1]).toBe('Neverbeen Collection');
-    expect(labels[dreamIndex + 2]).toBe('Explore Gallery');
+    const intro = element.querySelector<HTMLElement>('.intro')!;
+    const heading = intro.querySelector<HTMLElement>('app-section-heading')!;
+    const actions = intro.querySelector<HTMLElement>('.actions')!;
+    const founderBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-founder')!;
+
+    expect(heading).toBeTruthy();
+    expect(heading.nextElementSibling).toBe(actions);
+    expect(founderBtn).toBeTruthy();
+    expect(founderBtn.textContent?.trim()).toBe('Know the Founder');
+    expect(founderBtn.getAttribute('href')).toBe('/founder');
+    expect(getComputedStyle(founderBtn).backgroundColor).toBe('rgb(18, 59, 104)');
+    expect(getComputedStyle(founderBtn).color).toBe('rgb(255, 255, 255)');
   });
 
   it('places Brochure after Community with a gold background and white text', () => {
@@ -113,12 +107,6 @@ describe('Hero', () => {
     expect(getComputedStyle(brochure).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('does not include NeverBeen AI Models in the hero actions (moved to Multiverse Studio)', () => {
-    const element: HTMLElement = create().nativeElement;
-    expect(labelsOf(element)).not.toContain('NeverBeen AI Models');
-    expect(element.querySelector('a[href="/ai-models"]')).toBeNull();
-  });
-
   it('places merchandise after Brochure in the Founder navy, then keeps Storyline gold', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
@@ -126,15 +114,15 @@ describe('Hero', () => {
     const brochureIndex = labels.indexOf('Brochure');
     const merchandise = buttons[brochureIndex + 1];
     const storyline = buttons[brochureIndex + 2];
-    const founder = buttons[labels.indexOf('Know the Founder')];
+    const community = buttons[labels.indexOf('Connect to NeverBeen Community')];
 
     expect(merchandise.textContent?.trim()).toBe('Shop NeverBeen Merchandise');
     expect(merchandise.getAttribute('href')).toBe('/merchandise');
     expect(merchandise.classList.contains('btn-founder')).toBe(true);
     expect(getComputedStyle(merchandise).backgroundColor).toBe(
-      getComputedStyle(founder).backgroundColor,
+      getComputedStyle(community).backgroundColor,
     );
-    expect(getComputedStyle(merchandise).color).toBe(getComputedStyle(founder).color);
+    expect(getComputedStyle(merchandise).color).toBe(getComputedStyle(community).color);
     expect(storyline.textContent?.trim()).toBe('The Storyline of Parallel Universe');
     expect(storyline.getAttribute('href')).toBe('/storyline-of-parallel-universe');
     expect(storyline.classList.contains('btn-brochure')).toBe(true);
@@ -151,7 +139,7 @@ describe('Hero', () => {
     const brochure = fixture.nativeElement.querySelector('a[href="/documentation"]');
     expect(brochure).toBeTruthy();
     expect(brochure.getAttribute('target')).toBeNull();
-    expect(links.some((el) => el.nativeElement.getAttribute('href') === '/founder')).toBe(true);
+    expect(links.some((el) => el.nativeElement.getAttribute('href') === '/community')).toBe(true);
   });
 
   it('uses a native same-tab direct link for Storyline instead of lazy-route navigation', () => {
@@ -205,7 +193,7 @@ describe('Hero', () => {
     expect(labels[communityIndex + 1]).toBe('Our brochure');
     expect(labels[communityIndex + 2]).toBe('Shop NeverBeen Merchandise');
     expect(labels[communityIndex + 3]).toBe('The Storyline of Parallel Universe');
-    expect(labels.at(-1)).toBe('Explore Gallery');
+    expect(labels.at(-1)).toBe('Create My Vacation');
   });
 
   it('keeps CMS visibility settings for the brochure', () => {

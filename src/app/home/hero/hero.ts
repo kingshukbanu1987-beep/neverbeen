@@ -5,11 +5,7 @@ import { SiteConfigService } from '../../services/site-config.service';
 
 const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> = {
   community: { path: '/community', cls: 'btn-dream' },
-  founder: { path: '/founder', cls: 'btn-founder' },
   create: { path: '/', fragment: 'contact', cls: 'btn-primary' },
-  destinations: { path: '/', fragment: 'destinations', cls: 'btn-ghost' },
-  collection: { path: '/collection', cls: 'btn-ghost' },
-  gallery: { path: '/', fragment: 'gallery', cls: 'btn-ghost' },
   // The brochure page publishes the single wide landscape visitor brochure,
   // openable in a new tab or downloadable as a PDF.
   documentation: { path: '/documentation', cls: 'btn-brochure' },

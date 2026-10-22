@@ -82,6 +82,19 @@ describe('Gallery', () => {
     expect(firstLoad).not.toEqual(secondLoad);
   });
 
+  it('places the NeverBeen Collection button right below the gallery description', () => {
+    const element: HTMLElement = create().nativeElement;
+    const heading = element.querySelector<HTMLElement>('app-section-heading')!;
+    const actions = element.querySelector<HTMLElement>('.actions')!;
+    const collectionBtn = actions?.querySelector<HTMLAnchorElement>('a.btn')!;
+
+    expect(heading).toBeTruthy();
+    expect(heading.nextElementSibling).toBe(actions);
+    expect(collectionBtn).toBeTruthy();
+    expect(collectionBtn.textContent?.trim()).toBe('NeverBeen Collection');
+    expect(collectionBtn.getAttribute('href')).toBe('/collection');
+  });
+
   it('tells the visitor the sample size and links to the whole collection', () => {
     const element: HTMLElement = create().nativeElement;
 
