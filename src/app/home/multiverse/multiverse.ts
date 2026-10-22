@@ -12,8 +12,8 @@ import { sampleWithoutReplacement } from '../../shared/random-sample';
 import { SiteConfigService } from '../../services/site-config.service';
 import { PromotionSlide, promotionSlides } from './promotion-slides';
 
-/** The shipped pace of the slideshow: one memo every three seconds. */
-export const MEMO_INTERVAL_SECONDS = 3;
+/** The shipped pace of the slideshow: one memo every five seconds. */
+export const MEMO_INTERVAL_SECONDS = 5;
 
 /**
  * The NeverBeen Multiverse Studio.
@@ -22,7 +22,7 @@ export const MEMO_INTERVAL_SECONDS = 3;
  * `public/promotion` (manifest: `promotion-slides.ts`). The memos are shuffled
  * into a random order on every page load and then played one after another;
  * the visitor can always step back to the previous memo or forward to the next
- * one, which restarts the three-second timer.
+ * one, which restarts the five-second timer.
  *
  * Renders exactly one memo in every viewport — the widescreen panel and the
  * mobile panel share the same markup and only the scale of the type changes.
@@ -62,7 +62,6 @@ export class Multiverse implements OnDestroy {
 
   protected readonly current = computed<PromotionSlide | null>(() => this.slides[this.index()] ?? null);
 
-  protected readonly eyebrow = computed(() => this.cms.text('home.multiverse', 'eyebrow'));
   protected readonly title = computed(() => this.cms.text('home.multiverse', 'title'));
   protected readonly copy = computed(() => this.cms.text('home.multiverse', 'copy'));
 

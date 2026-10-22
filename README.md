@@ -552,11 +552,13 @@ Admin Console → Website Management.
 ## The NeverBeen Multiverse Studio (home page slideshow)
 
 Between the hero and **How It Works**, the home page plays the promotion memos: one photograph at a
-time, in a random order drawn on every page load, advancing every three seconds. Each memo carries a
+time, in a random order drawn on every page load, advancing every five seconds. Each memo carries a
 big Calibri headline (derived from the same pool as the photograph) over a smaller supporting line,
 and the visitor can step back or forward with the on-panel buttons, the arrow keys, or a swipe.
 
-Photographs come from `public/promotion`. Drop images in and run
+The section is a white, full-bleed studio panel: the photograph container stretches to the screen
+edges and the intro copy sits above it. Photographs come from `public/promotion`. Drop images in and
+run:
 
 ```bash
 npm run generate:promotion

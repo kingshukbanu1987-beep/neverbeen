@@ -70,17 +70,17 @@ describe('The NeverBeen Multiverse Studio slideshow', () => {
     expect(studio['index']()).toBe(0);
   });
 
-  it('advances every three seconds by default and honours the published pace', () => {
+  it('advances every five seconds by default and honours the published pace', () => {
     vi.useFakeTimers();
     const studio = setup(fakeDocument());
-    expect(MEMO_INTERVAL_SECONDS).toBe(3);
-    expect(studio['intervalSeconds']()).toBe(3);
+    expect(MEMO_INTERVAL_SECONDS).toBe(5);
+    expect(studio['intervalSeconds']()).toBe(5);
 
-    vi.advanceTimersByTime(2900);
+    vi.advanceTimersByTime(4900);
     expect(studio['index']()).toBe(0);
     vi.advanceTimersByTime(100);
     expect(studio['index']()).toBe(1);
-    vi.advanceTimersByTime(3000);
+    vi.advanceTimersByTime(5000);
     expect(studio['index']()).toBe(2);
 
     studio['ngOnDestroy']();
@@ -100,7 +100,7 @@ describe('The NeverBeen Multiverse Studio slideshow', () => {
   it('stays on one memo when autoplay is switched off', () => {
     vi.useFakeTimers();
     const studio = setup(fakeDocument(), { 'home.multiverse.autoplay': false });
-    vi.advanceTimersByTime(9000);
+    vi.advanceTimersByTime(15000);
     expect(studio['index']()).toBe(0);
     // Visitors can still step through the memos themselves.
     studio['next']();

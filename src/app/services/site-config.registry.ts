@@ -249,20 +249,24 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'multiverse-studio',
     fields: [
-      ...heading(
-        'Now showing',
-        'The NeverBeen Multiverse Studio',
-        'Every photograph in the promotion gallery is a parallel holiday — one memo at a time, shuffled at random, with a story set over the frame. Step back or forward whenever you like.',
-      ),
+      { key: 'title', label: 'Section title', type: 'text', default: 'The NeverBeen Multiverse Studio', maxLength: 120 },
+      {
+        key: 'copy',
+        label: 'Intro copy',
+        type: 'textarea',
+        default:
+          'There are worlds that have never been imagined, realities that have never been reached, and stories that have never been told. Some exist beyond the boundaries of time. Others live between the fragments of dreams, hidden in the spaces between what is and what could be. At The NeverBeen Multiverse Studio, we explore these possibilities. We build the unreal, question the familiar, and give form to ideas that have yet to find a place in existence.',
+        maxLength: 1200,
+      },
       { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
       {
         key: 'seconds',
         label: 'Seconds per memo',
         type: 'number',
-        default: 3,
+        default: 5,
         min: 2,
         max: 20,
-        hint: 'The shipped pace is 3 seconds. Visitors can always move on themselves.',
+        hint: 'The shipped pace is 5 seconds. Visitors can always move on themselves.',
       },
     ],
   },

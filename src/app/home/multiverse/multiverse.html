@@ -5,20 +5,17 @@
     <span class="grid"></span>
   </div>
 
-  <div class="container">
-    <header class="intro">
-      @if (eyebrow()) {
-        <p class="eyebrow">{{ eyebrow() }}</p>
-      }
-      <h2 id="multiverse-title">{{ title() }}</h2>
-      @if (copy()) {
-        <p class="lede">{{ copy() }}</p>
-      }
-    </header>
+  <header class="intro container">
+    <h2 id="multiverse-title">{{ title() }}</h2>
+    @if (copy()) {
+      <p class="lede">{{ copy() }}</p>
+    }
+  </header>
 
-    @if (total === 0) {
-      <p class="empty">The studio is setting up its first memo. Please check back shortly.</p>
-    } @else {
+  @if (total === 0) {
+    <p class="empty container">The studio is setting up its first memo. Please check back shortly.</p>
+  } @else {
+    <div class="stage-shell">
       <div
         class="stage"
         tabindex="0"
@@ -64,25 +61,25 @@
           </button>
         </div>
 
-        <div class="meter">
-          <p class="counter">
-            <span class="sr-only">Memo </span>{{ pad(index() + 1) }}<span class="slash">/</span>{{ pad(total) }}
-          </p>
-          <div class="rail" [class.paused]="!autoplay()" aria-hidden="true">
-            @if (progressOdd()) {
-              <span class="rail-fill" [style.animation-duration.ms]="intervalSeconds() * 1000"></span>
-            } @else {
-              <span class="rail-fill" [style.animation-duration.ms]="intervalSeconds() * 1000"></span>
-            }
-          </div>
-        </div>
-
         <p class="sr-only" aria-live="polite">
           @if (current(); as slide) {
             {{ slide.tag }}: {{ slide.header }} {{ slide.copy }}
           }
         </p>
       </div>
-    }
-  </div>
+
+      <div class="meter">
+        <p class="counter">
+          <span class="sr-only">Memo </span>{{ pad(index() + 1) }}<span class="slash">/</span>{{ pad(total) }}
+        </p>
+        <div class="rail" [class.paused]="!autoplay()" aria-hidden="true">
+          @if (progressOdd()) {
+            <span class="rail-fill" [style.animation-duration.ms]="intervalSeconds() * 1000"></span>
+          } @else {
+            <span class="rail-fill" [style.animation-duration.ms]="intervalSeconds() * 1000"></span>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </section>
