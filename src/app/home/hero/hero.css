@@ -1,16 +1,18 @@
 /* ============================================================================
    The top of the Home page
-   Two cinematic previews, one seam of calls to action.
+   A white, gallery-clean studio finish — the same pastel light, hairline
+   borders and glass controls as The NeverBeen Multiverse Studio.
 
    1. "Go Anywhere. Even Where You've Never Been." — the closing spread of the
-      NeverBeen Brochure playing behind the headline.
+      NeverBeen Brochure playing behind the headline, under a bright white veil
+      so every word stays ink-dark on white.
    2. The three buttons, floating in the seam between the two previews.
    3. "Meet the People. Even When They Don't Exists outside NeverBeen
       Multiverse" — written straight onto the portraits from public/banner.
 
    Both previews cross-fade on their own every five seconds. On phones the
    photographs switch to `object-fit: contain`, so a landscape still is shown
-   in full — never cropped — while a blurred copy of itself fills the frame.
+   in full — never cropped — while a soft copy of itself fills the frame.
    ========================================================================== */
 
 :host {
@@ -18,32 +20,92 @@
 }
 
 .hero {
-  --hero-font: 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+  --hero-font: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+  --studio-ink: #0b0d12;
+  --studio-muted: #5c6270;
 
   position: relative;
+  isolation: isolate;
   display: grid;
   gap: clamp(0.5rem, 1vw, 0.9rem);
-  padding: clamp(0.65rem, 1.3vw, 1.1rem) 0 clamp(2.2rem, 3.6vw, 3rem);
+  padding: clamp(0.9rem, 1.8vw, 1.5rem) 0 clamp(2.2rem, 3.6vw, 3rem);
   overflow: hidden;
-  background:
-    radial-gradient(1200px 560px at 50% -12%, #17334f 0%, rgba(23, 51, 79, 0) 62%),
-    linear-gradient(180deg, #071526 0%, #04090f 58%, #03070c 100%);
-  color: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #fdfdff 55%, #fbfbfe 100%);
+  border-bottom: 1px solid rgba(11, 13, 18, 0.06);
+  color: var(--studio-ink);
+}
+
+/* ---------------------------------------------------------------- ambience */
+.ambience {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.7;
+  animation: drift 26s ease-in-out infinite alternate;
+}
+
+.glow-a {
+  top: -34%;
+  left: -8%;
+  width: 44rem;
+  height: 44rem;
+  background: radial-gradient(circle at 35% 35%, #e6e2ff 0%, rgba(230, 226, 255, 0) 66%);
+}
+
+.glow-b {
+  right: -12%;
+  bottom: -42%;
+  width: 42rem;
+  height: 42rem;
+  background: radial-gradient(circle at 60% 40%, #ffe6d8 0%, rgba(255, 230, 216, 0) 64%);
+  animation-delay: -11s;
+  opacity: 0.55;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(11, 13, 18, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 13, 18, 0.04) 1px, transparent 1px);
+  background-size: 68px 68px;
+  mask-image: radial-gradient(72% 60% at 50% 26%, #000 0%, transparent 78%);
+  opacity: 0.7;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(5%, -4%, 0) scale(1.12);
+  }
 }
 
 /* ------------------------------------------------------------------ panels */
 .panel {
   position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-end;
   isolation: isolate;
   overflow: hidden;
   min-height: clamp(390px, 58vh, 560px);
   margin-inline: clamp(0.4rem, 1.5vw, 1.15rem);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(11, 13, 18, 0.08);
   border-radius: clamp(20px, 2.2vw, 32px);
-  background: #061220;
-  box-shadow: 0 34px 90px -42px rgba(0, 0, 0, 0.95);
+  background: #f5f7fb;
+  box-shadow:
+    0 24px 56px rgba(11, 13, 18, 0.13),
+    0 2px 6px rgba(11, 13, 18, 0.05);
 }
 
 .panel-people {
@@ -82,7 +144,7 @@
 
 .frame .photo {
   position: relative;
-  z-index: 1; /* above the blurred twin, which only appears on phones */
+  z-index: 1; /* above the soft twin, which only appears on phones */
   display: block;
   width: 100%;
   height: 100%;
@@ -91,12 +153,14 @@
   user-select: none;
 }
 
-/* The blurred twin only appears on phones, where the crisp still is contained. */
+/* The soft twin only appears on phones, where the still is contained. */
 .frame .wash {
   display: none;
 }
 
-/* Reads the photograph, never the type: darkest at the foot and to the left. */
+/* Bright studio light: the photograph is washed towards white where the words
+   sit, so the section stays white and the type stays ink-dark — while the
+   picture itself is still clearly a picture on the open side of the panel. */
 .veil {
   position: absolute;
   inset: 0;
@@ -105,12 +169,48 @@
   background:
     linear-gradient(
       180deg,
-      rgba(4, 9, 17, 0.45) 0%,
-      rgba(4, 9, 17, 0.06) 30%,
-      rgba(4, 9, 17, 0.42) 62%,
-      rgba(4, 9, 17, 0.94) 100%
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.32) 34%,
+      rgba(255, 255, 255, 0.86) 70%,
+      rgba(255, 255, 255, 0.97) 100%
     ),
-    linear-gradient(90deg, rgba(4, 9, 17, 0.74) 0%, rgba(4, 9, 17, 0.16) 58%, rgba(4, 9, 17, 0) 82%);
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.94) 0%,
+      rgba(255, 255, 255, 0.6) 48%,
+      rgba(255, 255, 255, 0.06) 84%
+    );
+}
+
+/* The portrait preview keeps more of the face clear, so its white rises from
+   the foot of the panel instead of the side. */
+.panel-people .veil {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.12) 26%,
+      rgba(255, 255, 255, 0.84) 66%,
+      rgba(255, 255, 255, 0.98) 92%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.58) 0%,
+      rgba(255, 255, 255, 0.14) 56%,
+      rgba(255, 255, 255, 0) 86%
+    );
+}
+
+/* A hairline inner frame, exactly as on the studio panels. */
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* -------------------------------------------------------------- panel copy */
@@ -129,7 +229,7 @@
   font-weight: 700;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
+  color: #5b5bf0;
 }
 
 h1 {
@@ -139,9 +239,8 @@ h1 {
   font-weight: 500;
   line-height: 0.97;
   letter-spacing: -0.032em;
-  color: #fff;
+  color: #0b0d12;
   text-wrap: balance;
-  text-shadow: 0 3px 34px rgba(0, 0, 0, 0.45);
 }
 
 h2 {
@@ -152,19 +251,17 @@ h2 {
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: -0.028em;
-  color: #fff;
+  color: #0b0d12;
   text-wrap: balance;
-  text-shadow: 0 3px 30px rgba(0, 0, 0, 0.5);
 }
 
 .lede {
-  max-width: 44rem;
+  max-width: 42rem;
   margin: 1.1rem 0 0;
   font-family: var(--hero-font);
   font-size: clamp(0.95rem, 1.1vw, 1.08rem);
   line-height: 1.66;
-  color: rgba(255, 255, 255, 0.86);
-  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.5);
+  color: #414855;
 }
 
 /* One hairline per photograph: which page / portrait is on stage right now. */
@@ -180,19 +277,21 @@ h2 {
   width: clamp(1.15rem, 2vw, 1.9rem);
   height: 3px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(11, 13, 18, 0.2);
   transition:
     background 500ms ease,
     transform 500ms ease;
 }
 
 .dots span.on {
-  background: #fff;
+  background: #0b0d12;
   transform: scaleY(1.5);
 }
 
 /* ---------------------------------------------------------- buttons (dock) */
 .dock {
+  position: relative;
+  z-index: 2;
   display: flex;
   justify-content: center;
   padding-inline: clamp(0.5rem, 2vw, 1.5rem);
@@ -207,10 +306,12 @@ h2 {
   gap: 0.4rem;
   max-width: 100%;
   padding: 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(11, 13, 18, 0.08);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 26px 60px -28px rgba(0, 0, 0, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 18px 40px -26px rgba(11, 13, 18, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(22px) saturate(150%);
 }
 
@@ -282,7 +383,7 @@ h2 {
 @media (max-width: 900px) {
   .hero {
     gap: 0.55rem;
-    padding-top: 0.55rem;
+    padding-top: 0.65rem;
   }
 
   .panel,
@@ -290,6 +391,7 @@ h2 {
     display: block;
     min-height: 0;
     border-radius: clamp(16px, 4.6vw, 24px);
+    background: #f7f9fc;
   }
 
   .stage {
@@ -313,7 +415,8 @@ h2 {
     object-position: center;
   }
 
-  /* A blurred, slightly over-scaled copy fills the frame instead of bars. */
+  /* A soft, bright copy of the same photograph fills the frame instead of
+     grey bars — a white studio mat around a print. */
   .frame .wash {
     display: block;
     position: absolute;
@@ -322,27 +425,20 @@ h2 {
     height: 100%;
     object-fit: cover;
     transform: scale(1.12);
-    filter: blur(26px) saturate(1.15) brightness(0.72);
-    opacity: 0.85;
+    filter: blur(28px) saturate(1.05) brightness(1.06);
+    opacity: 0.75;
   }
 
+  /* On phones the words move below the picture, onto the white panel. */
   .veil {
     display: none;
   }
 
-  /* The copy rides up onto the foot of the photograph and fades the still
-     into the page, exactly as a caption printed on the picture would. */
   .panel-copy {
     max-width: none;
-    margin-top: calc(-1 * clamp(2.4rem, 10vw, 3.8rem));
-    padding: clamp(2.6rem, 11vw, 3.8rem) clamp(1rem, 4.6vw, 1.6rem) clamp(1.15rem, 4vw, 1.6rem);
-    background: linear-gradient(
-      180deg,
-      rgba(4, 9, 15, 0) 0%,
-      rgba(4, 9, 15, 0.72) 26%,
-      rgba(4, 9, 15, 0.94) 58%,
-      #04090f 100%
-    );
+    padding: clamp(1.1rem, 4.4vw, 1.6rem) clamp(1rem, 4.6vw, 1.6rem) clamp(1.15rem, 4vw, 1.6rem);
+    background: #ffffff;
+    border-top: 1px solid rgba(11, 13, 18, 0.06);
   }
 
   .eyebrow {
@@ -400,5 +496,9 @@ h2 {
   .frame.on {
     transition: opacity 320ms linear;
     transform: none;
+  }
+
+  .glow {
+    animation: none;
   }
 }
