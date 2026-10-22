@@ -61,6 +61,13 @@ export class Home {
       if (anchor >= 0) sections.splice(anchor + 1, 0, storyline);
       else sections.push(storyline);
     }
+    // Move 'how' section before 'pricing'
+    const howIdx = sections.findIndex((s) => s.id === 'how');
+    const pricingIdx = sections.findIndex((s) => s.id === 'pricing');
+    if (howIdx >= 0 && pricingIdx > howIdx) {
+      const [how] = sections.splice(howIdx, 1);
+      sections.splice(pricingIdx, 0, how);
+    }
     return sections;
   });
 }

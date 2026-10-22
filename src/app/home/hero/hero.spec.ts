@@ -67,7 +67,7 @@ describe('Hero', () => {
 
     expect(labels).not.toContain('NeverBeen AI Models');
     expect(labels).not.toContain('Meet the NeverBeen AI Models');
-    expect(labels).not.toContain('Know the Founder');
+    expect(labels).not.toContain('Meet the Founder of NeverBeen Multiverse');
     expect(labels).not.toContain('Dream Destinations');
     expect(labels).not.toContain('Neverbeen Collection');
     expect(labels).not.toContain('NeverBeen Collection');
@@ -84,7 +84,7 @@ describe('Hero', () => {
     expect(element.querySelector('a[href="/storyline-of-parallel-universe"]')).toBeNull();
   });
 
-  it('places Know the Founder in the Founder section just below the founder description', () => {
+  it('places Meet the Founder of NeverBeen Multiverse in the Founder section just below the founder description', () => {
     const fixture = TestBed.createComponent(Owner);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -97,7 +97,7 @@ describe('Hero', () => {
     expect(heading).toBeTruthy();
     expect(heading.nextElementSibling).toBe(actions);
     expect(founderBtn).toBeTruthy();
-    expect(founderBtn.textContent?.trim()).toBe('Know the Founder');
+    expect(founderBtn.textContent?.trim()).toBe('Meet the Founder of NeverBeen Multiverse');
     expect(founderBtn.getAttribute('href')).toBe('/founder');
     expect(getComputedStyle(founderBtn).backgroundColor).toBe('rgb(18, 59, 104)');
     expect(getComputedStyle(founderBtn).color).toBe('rgb(255, 255, 255)');

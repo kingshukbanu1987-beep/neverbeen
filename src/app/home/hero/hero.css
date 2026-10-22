@@ -13,135 +13,160 @@
   align-items: center;
 }
 
-h1 {
-  margin: 0;
+.hero h1 {
   font-family: var(--serif);
+  margin: 0;
   font-size: clamp(3rem, 6vw, 5.1rem);
   font-weight: 500;
   line-height: 0.96;
   letter-spacing: -0.035em;
 }
 
-.lede {
+.hero .lede {
   max-width: 32rem;
   margin: 1.4rem 0 2rem;
   font-size: 1.12rem;
   color: var(--ink-soft);
+  font-family: var(--memo-font);
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
+/* First subsection: "Go Anywhere. Even Where You've Never Been" */
+.subsection-first {
+  order: 1;
 }
 
-.btn-brochure,
-.btn-brochure:hover,
-.btn-brochure:focus-visible {
-  background: #F7C30E;
-  color: #fff;
+.subsection-title {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  margin-bottom: 1rem;
+  background: linear-gradient(100deg, #0b0d12 6%, #3c4155 52%, #6f5bd6 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.btn-brochure:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
+.subsection-text {
+  font-family: var(--memo-font);
+  font-size: clamp(0.9rem, 1.2vw, 1rem);
+  color: var(--studio-muted);
+  margin-bottom: 2rem;
+  max-width: 48rem;
 }
 
-/* "Know the Founder" and "Connect to NeverBeen Community" share the same navy. */
-.btn-founder,
-.btn-dream {
-  background: #123b68;
-  color: #fff;
-}
-
-.btn-founder:hover,
-.btn-founder:focus-visible,
-.btn-dream:hover,
-.btn-dream:focus-visible {
-  background: #0c2b4d;
-  color: #fff;
-}
-
-.btn-collection {
-  background: transparent;
-  color: var(--ink);
-  border: 1px solid rgba(29, 25, 20, 0.22);
-}
-
-.btn-collection:hover,
-.btn-collection:focus-visible {
-  background: transparent;
-  color: var(--ink);
-  border-color: var(--ink);
-}
-
-.frame {
-  margin: 0;
+/* Brochure slideshow background */
+.brochure-slideshow {
   position: relative;
-}
-
-.frame img {
+  height: clamp(250px, 40vw, 400px);
   width: 100%;
-  height: min(72vh, 640px);
-  object-fit: cover;
-  border-radius: 28px;
-  box-shadow: var(--shadow);
+  border-radius: clamp(16px, 2vw, 28px);
+  overflow: hidden;
+  margin-top: 2rem;
 }
 
-figcaption {
+.brochure-slideshow .slide-bg {
   position: absolute;
-  left: 1.2rem;
-  right: 1.2rem;
-  bottom: 1.2rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--paper);
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  animation: slideFade 25s ease-in-out infinite;
 }
 
-.slide-controls {
+.brochure-slideshow .slide-bg.active {
+  opacity: 1;
+}
+
+@keyframes slideFade {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  33% { opacity: 1; }
+  41% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Second subsection: "Meet the People. Even When They Don't Exist outside NeverBeen Multiverse" */
+.subsection-second {
+  order: 2;
+  padding-top: 3rem;
+}
+
+.subsection-title-second {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  margin-bottom: 1rem;
+  background: linear-gradient(100deg, #0b0d12 6%, #3c4155 52%, #6f5bd6 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subsection-text-second {
+  font-family: var(--memo-font);
+  font-size: clamp(0.9rem, 1.2vw, 1rem);
+  color: var(--studio-muted);
+  margin-bottom: 2rem;
+  max-width: 48rem;
+  line-height: 1.6;
+}
+
+/* Banner slideshow background */
+.banner-slideshow {
+  position: relative;
+  height: clamp(250px, 40vw, 400px);
+  width: 100%;
+  border-radius: clamp(16px, 2vw, 28px);
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+.banner-slideshow .slide-bg {
   position: absolute;
-  top: 1.2rem;
-  right: 1.2rem;
-  display: flex;
-  gap: 0.5rem;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  animation: slideFade 20s ease-in-out infinite;
 }
 
-.slide-controls button {
-  border: 1px solid rgb(255 255 255 / 70%);
-  border-radius: 999px;
-  padding: 0.55rem 0.8rem;
-  color: var(--paper);
-  background: rgb(20 25 23 / 45%);
-  font: inherit;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
+.banner-slideshow .slide-bg.active {
+  opacity: 1;
 }
 
-.slide-controls button:hover,
-.slide-controls button:focus-visible {
-  background: rgb(20 25 23 / 75%);
+@keyframes slideFade {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  25% { opacity: 1; }
+  30% { opacity: 0; }
+  100% { opacity: 0; }
 }
 
-.slide-controls button:focus-visible {
-  outline: 2px solid var(--paper);
-  outline-offset: 3px;
-}
-
+/* Mobile responsive */
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
 
-  .frame img {
-    height: min(64vw, 420px);
+  .subsection-first,
+  .subsection-second {
+    width: 100%;
+  }
+
+  .brochure-slideshow,
+  .banner-slideshow {
+    height: 40vw;
+    max-height: 400px;
+  }
+
+  .subsection-title,
+  .subsection-title-second {
+    font-size: clamp(1.8rem, 5vw, 2.2rem);
   }
 }
 
@@ -150,30 +175,20 @@ figcaption {
     padding: 2.5rem 0 3.5rem;
   }
 
-  h1 {
-    font-size: clamp(2.6rem, 13vw, 4rem);
+  .subsection-title,
+  .subsection-title-second {
+    font-size: clamp(1.6rem, 6vw, 2rem);
   }
 
-  .lede {
-    font-size: 1rem;
+  .subsection-text,
+  .subsection-text-second {
+    font-size: 0.95rem;
   }
 
-  .actions .btn {
-    width: 100%;
-  }
-
-  .frame img {
-    height: 360px;
+  .brochure-slideshow,
+  .banner-slideshow {
+    height: 45vw;
+    max-height: 400px;
     border-radius: 20px;
-  }
-
-  figcaption {
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .slide-controls {
-    top: 0.8rem;
-    right: 0.8rem;
   }
 }

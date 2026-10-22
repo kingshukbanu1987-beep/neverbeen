@@ -1011,3 +1011,10 @@ export const privacyPromises: PrivacyPromise[] = [
       'Every engagement is covered by a signed model release and usage agreement, so permission is written down, dated, and clear on both sides.',
   },
 ];
+export const bannerImages: string[] = [
+  "/banner/-4m0Xo-3Bi2T_Jx02NGRzs7UHpON4yT8TsZr1ss7OvQ.jpg",
+  "/banner/BsoM1hCYXWDoTMGTOoemuYBBJ5yNeSZuJVgiUkpaHjo.jpg",
+  "/banner/IbIW2HUq08hGaT2wHtGHEPHWO2lkp6CzU40pXMGWs1c.jpg",
+  "/banner/VZ5gGZHAVgJ3yT6KSTKcCvvKKRb8d_te14WfrhIrwug.jpg",
+  "/banner/z8lZkQ7GMVkWeKr5j7zIBkT6waiGB1TcJhTKk17JauU.jpg"
+];

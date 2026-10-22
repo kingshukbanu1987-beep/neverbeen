@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { heroDestinations } from '../../models/site-content';
-import { SiteConfigService } from '../../services/site-config.service';
+import { brochureSlides } from '../../home/brochure/brochure-slides';
+import { bannerImages } from '../../models/site-content';
+import { SiteConfigService } from '../../services/site-config-service';
 
 const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> = {
   community: { path: '/community', cls: 'btn-dream' },
@@ -40,11 +41,23 @@ export class Hero {
     }));
   });
 
-  protected showPreviousDestination(): void {
+  protected readonly lastTwoBrochureSlides = computed(() => {
+    const total = brochureSlides.length;
+    if (total >= 2) {
+      return [brochureSlides[total - 2], brochureSlides[total - 1]];
+    }
+    return brochureSlides.slice(0);
+  });
+
+  protected readonly bannerSlides = computed(() => {
+    return bannerImages;
+  });
+
+  protected readonly showPreviousDestination(): void {
     this.index.update((value) => (value - 1 + heroDestinations.length) % heroDestinations.length);
   }
 
-  protected showNextDestination(): void {
+  protected readonly showNextDestination(): void {
     this.index.update((value) => (value + 1) % heroDestinations.length);
   }
 

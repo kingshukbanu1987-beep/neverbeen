@@ -1,50 +1,29 @@
 <section class="hero" id="home">
   <div class="container layout">
-    <div class="copy">
-      @if (eyebrow()) {
-        <p class="eyebrow">{{ eyebrow() }}</p>
-      }
-      <h1>{{ title() }}</h1>
-      @if (lede()) {
-        <p class="lede">{{ lede() }}</p>
-      }
-      <!-- Labels and visibility are managed in Website Management. -->
-      @if (buttons().length) {
-        <div class="actions">
-          @for (b of buttons(); track b.id) {
-            @if (b.id === 'merchandise') {
-              <!-- Native same-tab navigation stays reliable after history restores
-                   or a deployment replaces the lazy route's JavaScript chunk: the browser
-                   loads a fresh document (and fresh chunks) instead of asking the
-                   long-running single-page app to fetch a file that may no longer exist. -->
-              <a [href]="b.path" [class]="'btn ' + b.cls">{{ b.label }}</a>
-            } @else {
-              <a [routerLink]="b.path" [fragment]="b.fragment" [class]="'btn ' + b.cls">{{
-                b.label
-              }}</a>
-            }
-          }
-        </div>
-      }
+    <!-- First subsection: "Go Anywhere. Even Where You've Never Been" -->
+    <div class="subsection-first">
+      <h2 class="subsection-title">Go Anywhere. Even Where You've Never Been</h2>
+      <p class="subsection-text">
+        Create stunning AI vacation photos of yourself in the world's most beautiful destinations. Nobody will know or detect that the places you have never been
+      </p>
+      <div class="brochure-slideshow">
+        @for (slide of lastTwoBrochureSlides; track slide.page) {
+          <div class="slide-bg" [style.background-image]="'url(' + slide.src + ')'"></div>
+        }
+      </div>
     </div>
-    <figure class="frame">
-      <img [src]="destination().image" [alt]="destination().caption" />
-      <nav class="slide-controls" aria-label="Hero destinations">
-        <button
-          type="button"
-          (click)="showPreviousDestination()"
-          aria-label="Show previous destination"
-        >
-          Previous
-        </button>
-        <button type="button" (click)="showNextDestination()" aria-label="Show next destination">
-          Next
-        </button>
-      </nav>
-      <figcaption aria-live="polite">
-        <span>{{ destination().place }}</span>
-        <span>{{ destination().caption }}</span>
-      </figcaption>
-    </figure>
+
+    <!-- Second subsection: "Meet the People. Even When They Don't Exist outside NeverBeen Multiverse" -->
+    <div class="subsection-second">
+      <h2 class="subsection-title">Meet the People. Even When They Don't Exist outside NeverBeen Multiverse</h2>
+      <p class="subsection-text-second">
+        What if their stories matter, even if their worlds are imaginary? Because a character doesn't need to exist in our reality to leave a lasting impression on it.
+      </p>
+      <div class="banner-slideshow">
+        @for (slide of bannerSlides; track slide.src) {
+          <div class="slide-bg" [style.background-image]="'url(' + slide + ')'"></div>
+        }
+      </div>
+    </div>
   </div>
 </section>
