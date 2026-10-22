@@ -76,6 +76,7 @@ const items = (rows: [string, string][]): CmsItem[] => rows.map(([id, label]) =>
 /** Home page sections, in their shipped order. */
 export const HOME_SECTIONS: [string, string][] = [
   ['hero', 'Hero banner'],
+  ['multiverse', 'The NeverBeen Multiverse Studio'],
   ['how', 'How It Works'],
   ['destinations', 'Popular Destinations'],
   ['gallery', 'Gallery'],
@@ -236,6 +237,37 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
       { key: 'buttons', label: 'Call-to-action buttons', type: 'items', default: items(HERO_BUTTONS), labelEditable: true },
       { key: 'autoplay', label: 'Rotate the destination photo automatically', type: 'toggle', default: true },
       { key: 'interval', label: 'Seconds per photo', type: 'number', default: 3, min: 2, max: 20 },
+    ],
+  },
+  {
+    key: 'home.multiverse',
+    page: 'home',
+    label: 'The NeverBeen Multiverse Studio',
+    icon: '🌠',
+    description:
+      'The promotion slideshow: one memo at a time from public/promotion, with a big headline and a short story over each photograph. Photographs come from the folder; the words and pace are managed here.',
+    previewPath: '/',
+    previewFragment: 'multiverse-studio',
+    fields: [
+      { key: 'title', label: 'Section title', type: 'text', default: 'The NeverBeen Multiverse Studio', maxLength: 120 },
+      {
+        key: 'copy',
+        label: 'Intro copy',
+        type: 'textarea',
+        default:
+          'There are worlds that have never been imagined, realities that have never been reached, and stories that have never been told. Some exist beyond the boundaries of time. Others live between the fragments of dreams, hidden in the spaces between what is and what could be. At The NeverBeen Multiverse Studio, we explore these possibilities. We build the unreal, question the familiar, and give form to ideas that have yet to find a place in existence.',
+        maxLength: 1200,
+      },
+      { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
+      {
+        key: 'seconds',
+        label: 'Seconds per memo',
+        type: 'number',
+        default: 5,
+        min: 2,
+        max: 20,
+        hint: 'The shipped pace is 5 seconds. Visitors can always move on themselves.',
+      },
     ],
   },
   {

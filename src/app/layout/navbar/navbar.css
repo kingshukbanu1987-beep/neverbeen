@@ -1,5 +1,7 @@
 .nav {
   --nav-icon: #000;
+  /* One source of truth for the website header height: a slim, modern bar. */
+  --nav-bar-h: clamp(54px, 4.2vw, 64px);
 
   position: sticky;
   top: 0;
@@ -42,14 +44,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: clamp(110px, 13vw, 170px);
+  min-height: var(--nav-bar-h);
   gap: 1rem;
 }
 
 .logo {
   display: block;
-  width: clamp(220px, 26vw, 340px);
-  height: clamp(110px, 13vw, 170px);
+  width: clamp(96px, 10vw, 128px);
+  height: clamp(44px, 5vw, 56px);
   flex-shrink: 0;
   font-family: var(--serif);
   font-size: 1.7rem;
@@ -66,8 +68,8 @@
 
 /* Requirement I: Scale neverbeen-logo.png to 50% on Community page or user profiles */
 .logo.compact-logo {
-  width: clamp(110px, 13vw, 170px);
-  height: clamp(55px, 6.5vw, 85px);
+  width: clamp(84px, 9vw, 116px);
+  height: clamp(42px, 4.6vw, 58px);
   transition:
     width 0.2s ease,
     height 0.2s ease;
@@ -77,8 +79,8 @@
 img.compact-logo {
   width: 100% !important;
   height: 100% !important;
-  max-width: clamp(110px, 13vw, 170px) !important;
-  max-height: clamp(55px, 6.5vw, 85px) !important;
+  max-width: clamp(84px, 9vw, 116px) !important;
+  max-height: clamp(42px, 4.6vw, 58px) !important;
   object-fit: contain;
 }
 
@@ -91,13 +93,13 @@ img.compact-logo {
 }
 
 .nav.compact-nav .logo.compact-logo {
-  width: clamp(110px, 13vw, 140px);
-  height: clamp(48px, 5.5vw, 60px);
+  width: clamp(80px, 8.5vw, 108px);
+  height: clamp(38px, 4.2vw, 54px);
 }
 
 .nav.compact-nav .logo.compact-logo img {
-  max-width: clamp(110px, 13vw, 140px) !important;
-  max-height: clamp(48px, 5.5vw, 60px) !important;
+  max-width: clamp(80px, 8.5vw, 108px) !important;
+  max-height: clamp(38px, 4.2vw, 54px) !important;
 }
 
 nav#site-nav {
@@ -367,7 +369,7 @@ a:has(use[href='#nb-icon-live']) .icon {
     position: absolute;
     left: 0;
     right: 0;
-    top: clamp(110px, 13vw, 170px);
+    top: var(--nav-bar-h);
     flex-direction: column;
     align-items: flex-start;
     padding: 1rem 1.25rem 1.4rem;
@@ -401,17 +403,17 @@ a:has(use[href='#nb-icon-live']) .icon {
   }
 
   .logo {
-    width: 220px;
-    height: 110px;
+    width: 96px;
+    height: 44px;
   }
 
   .logo.compact-logo {
-    width: 110px !important;
-    height: 55px !important;
+    width: 84px !important;
+    height: 42px !important;
   }
 
   nav#site-nav {
-    top: 110px;
+    top: 54px;
   }
 
   .ch-brand {

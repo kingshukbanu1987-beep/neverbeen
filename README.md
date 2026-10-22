@@ -549,6 +549,39 @@ photographs to `public/collection` and they join the rotation automatically. The
 in `GALLERY_PHOTO_COUNT` (`src/app/home/gallery/gallery.ts`). Only the section copy stays editable in
 Admin Console → Website Management.
 
+## The NeverBeen Multiverse Studio (home page slideshow)
+
+Between the hero and **How It Works**, the home page plays the promotion memos: one photograph at a
+time, in a random order drawn on every page load, advancing every five seconds. Each memo carries a
+big Calibri headline (derived from the same pool as the photograph) over a smaller supporting line,
+and the visitor can step back or forward with the on-panel buttons, the arrow keys, or a swipe.
+
+The section is a white, full-bleed studio panel: the photograph container stretches to the screen
+edges and the intro copy sits above it. Photographs come from `public/promotion`. Drop images in and
+run:
+
+```bash
+npm run generate:promotion
+```
+
+(or let `npm start` / `npm run build` do it) to rewrite `src/app/home/multiverse/promotion-slides.ts`.
+Optional wording per photograph lives in `public/promotion/captions.json`:
+
+```json
+{
+  "Ads1.jpg": {
+    "tag": "The Studio",
+    "header": "Every frame is a parallel life you almost lived.",
+    "copy": "Somewhere between a photograph and a memory sits NeverBeen."
+  }
+}
+```
+
+Undescribed photographs take the next memo from the curated pool inside the generator, walking it with
+a fixed stride so neighbouring slides never repeat the same words. The section itself — heading,
+autoplay and seconds per memo — is managed in **Admin Console → Website Management → The NeverBeen
+Multiverse Studio**, and can be hidden or moved like any other home section under *Sections & order*.
+
 ## The brochure (`/documentation`)
 
 The Documentation page publishes a single client-facing PDF — the **NeverBeen visitor brochure**
