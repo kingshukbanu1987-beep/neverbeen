@@ -76,6 +76,7 @@ const items = (rows: [string, string][]): CmsItem[] => rows.map(([id, label]) =>
 /** Home page sections, in their shipped order. */
 export const HOME_SECTIONS: [string, string][] = [
   ['hero', 'Hero banner'],
+  ['multiverse', 'The NeverBeen Multiverse Studio'],
   ['how', 'How It Works'],
   ['destinations', 'Popular Destinations'],
   ['gallery', 'Gallery'],
@@ -236,6 +237,33 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
       { key: 'buttons', label: 'Call-to-action buttons', type: 'items', default: items(HERO_BUTTONS), labelEditable: true },
       { key: 'autoplay', label: 'Rotate the destination photo automatically', type: 'toggle', default: true },
       { key: 'interval', label: 'Seconds per photo', type: 'number', default: 3, min: 2, max: 20 },
+    ],
+  },
+  {
+    key: 'home.multiverse',
+    page: 'home',
+    label: 'The NeverBeen Multiverse Studio',
+    icon: '🌠',
+    description:
+      'The promotion slideshow: one memo at a time from public/promotion, with a big headline and a short story over each photograph. Photographs come from the folder; the words and pace are managed here.',
+    previewPath: '/',
+    previewFragment: 'multiverse-studio',
+    fields: [
+      ...heading(
+        'Now showing',
+        'The NeverBeen Multiverse Studio',
+        'Every photograph in the promotion gallery is a parallel holiday — one memo at a time, shuffled at random, with a story set over the frame. Step back or forward whenever you like.',
+      ),
+      { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
+      {
+        key: 'seconds',
+        label: 'Seconds per memo',
+        type: 'number',
+        default: 3,
+        min: 2,
+        max: 20,
+        hint: 'The shipped pace is 3 seconds. Visitors can always move on themselves.',
+      },
     ],
   },
   {

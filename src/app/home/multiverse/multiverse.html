@@ -1,0 +1,88 @@
+<section class="multiverse" id="multiverse-studio" aria-labelledby="multiverse-title">
+  <div class="ambience" aria-hidden="true">
+    <span class="glow glow-a"></span>
+    <span class="glow glow-b"></span>
+    <span class="grid"></span>
+  </div>
+
+  <div class="container">
+    <header class="intro">
+      @if (eyebrow()) {
+        <p class="eyebrow">{{ eyebrow() }}</p>
+      }
+      <h2 id="multiverse-title">{{ title() }}</h2>
+      @if (copy()) {
+        <p class="lede">{{ copy() }}</p>
+      }
+    </header>
+
+    @if (total === 0) {
+      <p class="empty">The studio is setting up its first memo. Please check back shortly.</p>
+    } @else {
+      <div
+        class="stage"
+        tabindex="0"
+        role="group"
+        aria-roledescription="carousel"
+        aria-label="NeverBeen Multiverse Studio memos. Use the previous and next buttons, or the arrow keys, to move between memos."
+        (keydown)="onKeydown($event)"
+        (touchstart)="onTouchStart($event)"
+        (touchend)="onTouchEnd($event)"
+      >
+        <div class="deck">
+          @for (layer of layersView(); track $index) {
+            <figure class="layer" [class.on]="isActive($index)" [attr.aria-hidden]="isActive($index) ? null : 'true'">
+              @if (layer) {
+                <img [src]="layer.src" [alt]="layer.alt" decoding="async" draggable="false" />
+              }
+            </figure>
+          }
+          <span class="scrim" aria-hidden="true"></span>
+          <span class="frame" aria-hidden="true"></span>
+        </div>
+
+        <div class="memo-scene">
+          @for (slide of currentSlides(); track slide.src) {
+            <div class="memo-text">
+              <span class="tag">{{ slide.tag }}</span>
+              <h3>{{ slide.header }}</h3>
+              <p>{{ slide.copy }}</p>
+            </div>
+          }
+        </div>
+
+        <div class="controls">
+          <button type="button" class="nav" (click)="previous()" aria-label="Previous memo">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button type="button" class="nav" (click)="next()" aria-label="Next memo">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="meter">
+          <p class="counter">
+            <span class="sr-only">Memo </span>{{ pad(index() + 1) }}<span class="slash">/</span>{{ pad(total) }}
+          </p>
+          <div class="rail" [class.paused]="!autoplay()" aria-hidden="true">
+            @if (progressOdd()) {
+              <span class="rail-fill" [style.animation-duration.ms]="intervalSeconds() * 1000"></span>
+            } @else {
+              <span class="rail-fill" [style.animation-duration.ms]="intervalSeconds() * 1000"></span>
+            }
+          </div>
+        </div>
+
+        <p class="sr-only" aria-live="polite">
+          @if (current(); as slide) {
+            {{ slide.tag }}: {{ slide.header }} {{ slide.copy }}
+          }
+        </p>
+      </div>
+    }
+  </div>
+</section>

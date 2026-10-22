@@ -1,0 +1,522 @@
+/* ============================================================================
+   The NeverBeen Multiverse Studio
+   A one-memo-at-a-time promotion slideshow. Deep studio black, soft aurora
+   light, glass controls, and Calibri for every word that sits on the memo.
+   ========================================================================== */
+
+:host {
+  display: block;
+}
+
+.multiverse {
+  --studio-ink: #06070a;
+  --studio-glow: #7c5cff;
+  --studio-warm: #ff8a5c;
+  --studio-mint: #56e0c0;
+  --memo-font: 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(3.5rem, 7vw, 6.5rem) 0 clamp(4rem, 8vw, 7rem);
+  background:
+    radial-gradient(120% 90% at 50% -10%, #15161f 0%, transparent 60%),
+    linear-gradient(180deg, #05060a 0%, #070810 55%, #04050a 100%);
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------- ambience */
+.ambience {
+  position: absolute;
+  inset: -20% -10%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  animation: drift 24s ease-in-out infinite alternate;
+}
+
+.glow-a {
+  top: 4%;
+  left: -6%;
+  width: 46rem;
+  height: 46rem;
+  background: radial-gradient(circle at 30% 30%, var(--studio-glow), transparent 62%);
+}
+
+.glow-b {
+  right: -10%;
+  bottom: -8%;
+  width: 42rem;
+  height: 42rem;
+  background: radial-gradient(circle at 60% 40%, var(--studio-warm), transparent 60%);
+  animation-delay: -9s;
+  opacity: 0.32;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 74px 74px;
+  mask-image: radial-gradient(70% 60% at 50% 40%, #000 0%, transparent 78%);
+  opacity: 0.5;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(5%, -4%, 0) scale(1.12);
+  }
+}
+
+/* ------------------------------------------------------------------ header */
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+.intro {
+  max-width: 54rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.intro .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1rem;
+  padding: 0.42rem 0.9rem 0.42rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--memo-font);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.intro .eyebrow::before {
+  content: '';
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--studio-mint);
+  box-shadow: 0 0 0 4px rgba(86, 224, 192, 0.18), 0 0 14px rgba(86, 224, 192, 0.9);
+}
+
+.intro h2 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2.1rem, 4.6vw, 3.9rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  background: linear-gradient(100deg, #ffffff 8%, #cfd3ff 42%, #ffd9c4 88%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.intro .lede {
+  max-width: 42rem;
+  margin: 1.1rem 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-family: var(--memo-font);
+  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  line-height: 1.65;
+}
+
+/* ------------------------------------------------------------------- stage */
+.stage {
+  position: relative;
+  border-radius: clamp(20px, 2.4vw, 32px);
+  outline: none;
+  transform: translateZ(0);
+  touch-action: pan-y;
+}
+
+.stage:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75), 0 0 0 8px rgba(124, 92, 255, 0.28);
+}
+
+.deck {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: min(60vh, 340px);
+  overflow: hidden;
+  border-radius: clamp(20px, 2.4vw, 32px);
+  background: #0a0b12;
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.09),
+    0 0 90px rgba(124, 92, 255, 0.18);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 900ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 1400ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.layer.on {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+  user-select: none;
+  filter: saturate(1.04) contrast(1.03);
+}
+
+/* Bottom-weighted wash keeps the memo legible over any photograph. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(4, 5, 10, 0.62) 0%, rgba(4, 5, 10, 0.06) 30%, rgba(4, 5, 10, 0.22) 52%, rgba(4, 5, 10, 0.9) 100%),
+    linear-gradient(90deg, rgba(4, 5, 10, 0.55) 0%, rgba(4, 5, 10, 0.05) 55%, rgba(4, 5, 10, 0.15) 100%);
+}
+
+/* A hairline inner frame — the "glass panel" edge. */
+.frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* --------------------------------------------------------------- memo copy */
+.memo-scene {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: flex-end;
+  padding: clamp(1.4rem, 3.4vw, 3.4rem);
+  pointer-events: none;
+}
+
+.memo-text {
+  max-width: 46rem;
+  animation: memo-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.memo-text > * {
+  animation: memo-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.tag {
+  display: inline-block;
+  margin-bottom: 0.85rem;
+  padding: 0.34rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  font-family: var(--memo-font);
+  font-size: clamp(0.62rem, 0.9vw, 0.74rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  animation-delay: 60ms;
+}
+
+.memo-text h3 {
+  margin: 0;
+  font-family: var(--memo-font);
+  font-size: clamp(1.55rem, 4.2vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.018em;
+  color: #fff;
+  text-wrap: balance;
+  text-shadow: 0 2px 26px rgba(0, 0, 0, 0.55);
+  animation-delay: 140ms;
+}
+
+.memo-text p {
+  max-width: 38rem;
+  margin: 0.85rem 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--memo-font);
+  font-size: clamp(0.86rem, 1.15vw, 1.06rem);
+  font-weight: 400;
+  line-height: 1.6;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.6);
+  animation-delay: 220ms;
+}
+
+@keyframes memo-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes memo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* ---------------------------------------------------------------- controls */
+.controls {
+  position: absolute;
+  top: clamp(0.9rem, 2vw, 1.5rem);
+  right: clamp(0.9rem, 2vw, 1.5rem);
+  z-index: 2;
+  display: flex;
+  gap: 0.55rem;
+}
+
+.nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(2.6rem, 3.6vw, 3.1rem);
+  height: clamp(2.6rem, 3.6vw, 3.1rem);
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  background: rgba(10, 11, 18, 0.42);
+  backdrop-filter: blur(16px) saturate(140%);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.nav svg {
+  width: 46%;
+  height: 46%;
+}
+
+.nav:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.nav:active {
+  transform: scale(0.94);
+}
+
+.nav:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------- meter */
+.meter {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.4rem);
+  margin-top: 1rem;
+  padding-inline: 0.25rem;
+}
+
+.counter {
+  margin: 0;
+  flex: none;
+  font-family: var(--memo-font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
+.counter .slash {
+  margin: 0 0.35rem;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 400;
+}
+
+.rail {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.rail-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--studio-mint), var(--studio-glow) 55%, var(--studio-warm));
+  animation: rail-progress linear both;
+}
+
+.rail.paused .rail-fill {
+  animation: none;
+  opacity: 0.25;
+  transform: scaleX(1);
+}
+
+@keyframes rail-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ------------------------------------------------------------------- extras */
+.empty {
+  margin: 0;
+  padding: 3rem 1.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: clamp(20px, 2.4vw, 32px);
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--memo-font);
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------- widescreen */
+@media (min-width: 900px) {
+  .deck {
+    min-height: clamp(380px, 54vw, 620px);
+  }
+
+  .memo-scene {
+    inset: auto 0 0 0;
+    padding: clamp(2.4rem, 4vw, 3.8rem);
+  }
+
+  .controls {
+    top: 50%;
+    right: clamp(1.1rem, 2.2vw, 1.9rem);
+    transform: translateY(-50%);
+    flex-direction: column;
+  }
+}
+
+/* ------------------------------------------------------------------ mobile */
+@media (max-width: 720px) {
+  /* The promotion photographs are 4:3, so a 5:4 frame only trims a sliver at
+     the sides — every face stays in the shot while the copy gets its band. */
+  .deck {
+    aspect-ratio: 5 / 4;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .layer img {
+    object-position: center 30%;
+  }
+
+  .scrim {
+    background:
+      linear-gradient(180deg, rgba(4, 5, 10, 0.66) 0%, rgba(4, 5, 10, 0.04) 34%, rgba(4, 5, 10, 0.42) 58%, rgba(4, 5, 10, 0.94) 100%);
+  }
+
+  .memo-scene {
+    inset: auto 0 0 0;
+    padding: 1.15rem 1.1rem 1.25rem;
+  }
+
+  .memo-text h3 {
+    font-size: clamp(1.35rem, 7.2vw, 1.9rem);
+    line-height: 1.1;
+  }
+
+  .memo-text p {
+    margin-top: 0.55rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .tag {
+    margin-bottom: 0.55rem;
+    letter-spacing: 0.18em;
+  }
+
+  /* Controls sit at the top corners on a phone: thumb-reachable, never on the copy. */
+  .controls {
+    top: 0.75rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    justify-content: space-between;
+    transform: none;
+  }
+
+  .meter {
+    margin-top: 0.8rem;
+  }
+
+  .intro .lede {
+    font-size: 0.92rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layer,
+  .layer.on {
+    transition: opacity 300ms linear;
+    transform: none;
+  }
+
+  .glow {
+    animation: none;
+  }
+
+  .memo-text,
+  .memo-text > * {
+    animation-duration: 200ms;
+  }
+}

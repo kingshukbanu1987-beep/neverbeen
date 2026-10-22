@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { SiteConfigService } from '../../services/site-config.service';
 import { Hero } from '../../home/hero/hero';
+import { Multiverse } from '../../home/multiverse/multiverse';
 import { HowItWorks } from '../../home/how-it-works/how-it-works';
 import { Destinations } from '../../home/destinations/destinations';
 import { Gallery } from '../../home/gallery/gallery';
@@ -12,7 +13,7 @@ import { Contact } from '../../home/contact/contact';
 
 @Component({
   selector: 'app-home',
-  imports: [Hero, HowItWorks, Destinations, Gallery, Pricing, Faq, Owner, Contact],
+  imports: [Hero, Multiverse, HowItWorks, Destinations, Gallery, Pricing, Faq, Owner, Contact],
   templateUrl: './home.html',
   styleUrl: './home.css',
   host: { '(window:pageshow)': 'onPageShow($event)' },
