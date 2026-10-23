@@ -1,17 +1,32 @@
 :host {
   display: block;
-  --studio-bg: #09070b;
-  --studio-text: #f7f0f4;
-  --studio-muted: #a39aa3;
-  --studio-faint: #746a75;
-  --studio-line: rgb(255 255 255 / 11%);
-  --studio-pink: #ef6aa5;
-  --accent-gradient: linear-gradient(120deg, #b8171f, #ef6aa5);
-  /* Every numeric readout is set in Calibri, as on the portfolio. */
+  --page-font: 'Calibri', 'Carlito', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
   --numeric-font: 'Calibri', 'Carlito', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  /* The white finish: paper-white surfaces, plum ink, lavender light. */
+  --studio-bg: #ffffff;
+  --studio-wash: #f7f4fb;
+  --studio-surface: #ffffff;
+  --studio-surface-raised: #faf8fd;
+  --studio-text: #251d34;
+  --studio-plum: #2a1f3d;
+  --studio-muted: #6b6380;
+  --studio-faint: #9a93aa;
+  --studio-line: rgb(92 63 132 / 12%);
+  --studio-line-strong: rgb(92 63 132 / 20%);
+  --studio-accent: rgb(150 120 182);
+  --studio-accent-deep: #6f539a;
+  --studio-accent-soft: rgb(150 120 182 / 12%);
+  --studio-accent-mid: rgb(150 120 182 / 32%);
+  /* Every numeric readout is set in Calibri, as on the portfolio. */
   --ease-out: cubic-bezier(0.22, 0.68, 0.32, 1);
   background: var(--studio-bg);
   color: var(--studio-text);
+  font-family: var(--page-font);
+}
+
+.album-page,
+.album-page * {
+  font-family: var(--page-font);
 }
 
 .album-page {
@@ -22,9 +37,8 @@
   /* Room for the floating dock under the last row of the mosaic. */
   padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
   background:
-    radial-gradient(ellipse at 88% 0%, rgb(104 13 56 / 26%), transparent 42rem),
-    radial-gradient(ellipse at 0% 38%, rgb(173 20 26 / 9%), transparent 34rem),
-    linear-gradient(180deg, #0c080f, #09070b 56rem);
+    radial-gradient(ellipse 40% 34% at 0% 12%, rgb(199 181 226 / 14%), transparent 70%),
+    linear-gradient(180deg, #ffffff, #fcfbfe 58%, #ffffff);
 }
 
 .album-aurora {
@@ -37,14 +51,14 @@
   border-radius: 50%;
   background: conic-gradient(
     from 210deg at 55% 50%,
-    #58102f,
-    rgb(184 23 31 / 55%),
-    rgb(239 106 165 / 30%),
-    #2a0a1c,
-    #58102f
+    rgb(111 83 154 / 35%),
+    rgb(150 120 182 / 45%),
+    rgb(199 181 226 / 30%),
+    rgb(247 244 252 / 40%),
+    rgb(111 83 154 / 35%)
   );
   filter: blur(120px);
-  opacity: 0.34;
+  opacity: 0.3;
   pointer-events: none;
   animation: aurora-drift 18s ease-in-out infinite alternate;
 }
@@ -75,27 +89,27 @@
 }
 
 .album-nav i {
-  color: var(--studio-pink);
+  color: var(--studio-accent);
   font-style: normal;
 }
 
 .crumb {
-  color: var(--studio-faint);
+  color: var(--studio-muted);
   transition: color 180ms ease;
 }
 
 a.crumb:hover,
 a.crumb:focus-visible {
-  color: #fff;
+  color: var(--studio-plum);
 }
 
 a.crumb:focus-visible {
-  outline: 2px solid #f47ab0;
+  outline: 2px solid var(--studio-accent);
   outline-offset: 4px;
 }
 
 .crumb.is-current {
-  color: rgb(247 240 244 / 82%);
+  color: rgb(37 29 52 / 82%);
 }
 
 /* ---------------------------------------------------------------------------------- hero */
@@ -117,9 +131,9 @@ a.crumb:focus-visible {
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgb(239 106 165 / 70%),
-    rgb(255 255 255 / 12%) 38%,
-    rgb(255 255 255 / 4%)
+    rgb(150 120 182 / 60%),
+    rgb(255 255 255 / 30%) 38%,
+    rgb(255 255 255 / 6%)
   );
   content: '';
 }
@@ -129,7 +143,7 @@ a.crumb:focus-visible {
   align-items: center;
   gap: 0.65rem;
   margin: 0;
-  color: var(--studio-pink);
+  color: var(--studio-accent-deep);
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.22em;
@@ -140,25 +154,23 @@ a.crumb:focus-visible {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--studio-pink);
+  background: var(--studio-accent);
   animation: beacon 2.6s ease-out infinite;
 }
 
 .album-title {
-  /* The gradient only paints inside the box, and the tight line-height leaves Cormorant's
-     descenders (g, y, p) below it — so the box is padded out and the padding given back. */
   margin: calc(0.95rem - 0.06em) 0 -0.14em;
   padding: 0.06em 0 0.22em;
-  background: linear-gradient(104deg, #fff 0%, #fde6f0 42%, #f49cc4 76%, #ef6aa5 100%);
+  background: linear-gradient(104deg, #2a1f3d 0%, #6f539a 42%, #9678b6 76%, #b79fd4 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  font-family: var(--serif);
-  font-size: clamp(2.9rem, 8.2vw, 7.2rem);
-  font-weight: 500;
+  -webkit-text-fill-color: transparent;
+  font-family: var(--page-font);
+  font-size: clamp(2.9rem, 8.2vw, 6.4rem);
+  font-weight: 600;
   letter-spacing: -0.055em;
   line-height: 0.92;
-  -webkit-text-fill-color: transparent;
 }
 
 .album-meta {
@@ -167,7 +179,7 @@ a.crumb:focus-visible {
   align-items: center;
   gap: 0.3rem 0.65rem;
   margin: 1rem 0 0;
-  color: rgb(247 240 244 / 70%);
+  color: var(--studio-muted);
   font-size: 0.74rem;
   font-weight: 650;
   letter-spacing: 0.14em;
@@ -175,12 +187,12 @@ a.crumb:focus-visible {
 }
 
 .album-meta i {
-  color: var(--studio-pink);
+  color: var(--studio-accent);
   font-style: normal;
 }
 
 .album-handle {
-  color: #ffd0e4;
+  color: var(--studio-accent-deep);
   letter-spacing: 0.06em;
   text-transform: none;
 }
@@ -201,8 +213,10 @@ a.crumb:focus-visible {
   padding: 0.8rem 0.55rem;
   border: 1px solid var(--studio-line);
   border-radius: 18px;
-  background: linear-gradient(145deg, rgb(255 255 255 / 4%), rgb(255 255 255 / 1.5%));
-  box-shadow: inset 0 1px rgb(255 255 255 / 3%);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(150 120 182 / 10%), transparent 72%),
+    linear-gradient(145deg, #ffffff, #faf8fd);
+  box-shadow: inset 0 1px #ffffff;
 }
 
 .album-stat {
@@ -224,9 +238,9 @@ a.crumb:focus-visible {
   grid-area: value;
   max-width: 100%;
   margin: 0;
-  color: #ffe1ee;
-  font-size: clamp(1rem, 2.6vw, 2.3rem);
-  font-weight: 700;
+  color: var(--studio-accent-deep);
+  font-size: clamp(1rem, 2.6vw, 2.1rem);
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.055em;
   line-height: 1;
@@ -284,14 +298,18 @@ a.crumb:focus-visible {
   height: 100%;
   overflow: hidden;
   padding: 0;
-  border: 0;
+  border: 1px solid var(--studio-line);
   border-radius: 14px;
-  background: linear-gradient(145deg, #21131d, #0f0b12);
-  box-shadow: 0 18px 46px rgb(0 0 0 / 32%);
-  color: #fff;
+  background: var(--studio-surface);
+  box-shadow: 0 18px 46px rgb(52 34 80 / 10%);
+  color: #ffffff;
   cursor: zoom-in;
   isolation: isolate;
   transition: box-shadow 500ms var(--ease-out);
+}
+
+.mosaic-tile.is-settled {
+  background: #ffffff;
 }
 
 /* The seen · likes · comments · share strip on every mosaic tile. */
@@ -310,8 +328,7 @@ a.crumb:focus-visible {
   pointer-events: auto;
 }
 
-/* A locked Premium Content frame: 75% gaussian blur under the diagonal watermark — the same tile
-   shape as its neighbours, but nothing behind it opens. */
+/* A locked Premium Content frame: soft white veil under the diagonal watermark. */
 .mosaic-premium-tile {
   cursor: not-allowed;
 }
@@ -334,8 +351,8 @@ a.crumb:focus-visible {
   background: linear-gradient(
     110deg,
     transparent 30%,
-    rgb(255 255 255 / 6%) 48%,
-    rgb(239 106 165 / 7%) 52%,
+    rgb(255 255 255 / 50%) 48%,
+    rgb(150 120 182 / 14%) 52%,
     transparent 70%
   );
   background-size: 220% 100%;
@@ -344,21 +361,21 @@ a.crumb:focus-visible {
   transition: opacity 500ms ease;
 }
 
+.mosaic-tile.is-settled::before {
+  opacity: 0;
+  animation: none;
+}
+
 /* Hairline that catches the light around every tile. */
 .mosaic-tile::after {
   position: absolute;
   z-index: 3;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 8%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 70%);
   content: '';
   pointer-events: none;
   transition: box-shadow 400ms ease;
-}
-
-.mosaic-tile.is-settled::before {
-  opacity: 0;
-  animation: none;
 }
 
 .mosaic-tile img {
@@ -395,17 +412,17 @@ a.crumb:focus-visible {
 .mosaic-tile:hover,
 .mosaic-tile:focus-visible {
   box-shadow:
-    0 26px 60px rgb(0 0 0 / 46%),
-    0 0 0 1px rgb(239 106 165 / 22%);
+    0 26px 60px rgb(52 34 80 / 14%),
+    0 0 0 1px rgb(150 120 182 / 22%);
 }
 
 .mosaic-tile:hover::after,
 .mosaic-tile:focus-visible::after {
-  box-shadow: inset 0 0 0 1px rgb(239 106 165 / 45%);
+  box-shadow: inset 0 0 0 1px rgb(150 120 182 / 45%);
 }
 
 .mosaic-tile:focus-visible {
-  outline: 2px solid #f47ab0;
+  outline: 2px solid var(--studio-accent);
   outline-offset: 3px;
 }
 
@@ -416,7 +433,7 @@ a.crumb:focus-visible {
   inset: 0;
   background: radial-gradient(
     420px circle at var(--spot-x, 50%) var(--spot-y, 35%),
-    rgb(255 225 238 / 22%),
+    rgb(255 255 255 / 30%),
     transparent 55%
   );
   mix-blend-mode: soft-light;
@@ -438,7 +455,7 @@ a.crumb:focus-visible {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.7rem 0.75rem 2.7rem;
-  background: linear-gradient(180deg, transparent 52%, rgb(6 4 8 / 72%));
+  background: linear-gradient(180deg, transparent 52%, rgb(37 29 52 / 62%));
   opacity: 0;
   transition: opacity 320ms ease;
   pointer-events: none;
@@ -453,6 +470,7 @@ a.crumb:focus-visible {
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.16em;
+  color: #ffffff;
   text-shadow: 0 2px 12px rgb(0 0 0 / 50%);
 }
 
@@ -467,7 +485,8 @@ a.crumb:focus-visible {
   place-items: center;
   border: 1px solid rgb(255 255 255 / 38%);
   border-radius: 50%;
-  background: rgb(9 7 11 / 40%);
+  background: rgb(37 29 52 / 40%);
+  color: #ffffff;
   font-size: 0.8rem;
   transform: translateY(4px);
   transition: transform 320ms var(--ease-out);
@@ -518,11 +537,6 @@ a.crumb:focus-visible {
 /* Tiles drift up into place as they scroll into view, where the browser supports it. */
 @supports (animation-timeline: view()) {
   .mosaic-cell {
-    /*
-     * Keep a declaration ahead of `animation`: Angular only renames a component's keyframes in an
-     * `animation` declaration that follows a `;` or whitespace, and the production build minifies
-     * the stylesheet first — a leading declaration nested in an at-rule would keep the old name.
-     */
     transform-origin: 50% 100%;
     animation: tile-rise linear both;
     animation-timeline: view();
@@ -538,7 +552,7 @@ a.crumb:focus-visible {
   justify-content: center;
   gap: 0.6rem;
   margin: clamp(2.4rem, 5vw, 3.6rem) 0 0;
-  color: var(--studio-faint);
+  color: var(--studio-muted);
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.22em;
@@ -548,20 +562,20 @@ a.crumb:focus-visible {
 .album-end > span[aria-hidden] {
   width: min(120px, 14vw);
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(239 106 165 / 60%));
+  background: linear-gradient(90deg, transparent, rgb(150 120 182 / 60%));
 }
 
 .album-end > span[aria-hidden]:last-child {
-  background: linear-gradient(270deg, transparent, rgb(239 106 165 / 60%));
+  background: linear-gradient(270deg, transparent, rgb(150 120 182 / 60%));
 }
 
 .album-end i {
-  color: var(--studio-pink);
+  color: var(--studio-accent);
   font-style: normal;
 }
 
 .album-end .num {
-  color: rgb(247 240 244 / 80%);
+  color: rgb(37 29 52 / 80%);
   font-size: 0.78rem;
 }
 
@@ -574,9 +588,9 @@ a.crumb:focus-visible {
   gap: 1rem;
   margin-top: 2rem;
   padding: 1.4rem 1.6rem;
-  border: 1px dashed rgb(240 112 168 / 27%);
+  border: 1px dashed rgb(150 120 182 / 27%);
   border-radius: 18px;
-  background: rgb(255 255 255 / 1.5%);
+  background: rgb(150 120 182 / 4%);
 }
 
 .album-pending-mark {
@@ -585,17 +599,19 @@ a.crumb:focus-visible {
   height: 42px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgb(240 112 168 / 37%);
+  border: 1px solid rgb(150 120 182 / 37%);
   border-radius: 50%;
-  color: var(--studio-pink);
+  background: #ffffff;
+  color: var(--studio-accent);
   font-size: 1.1rem;
 }
 
 .album-pending p {
   margin: 0;
-  color: #f6edf3;
-  font-family: var(--serif);
+  color: var(--studio-text);
+  font-family: var(--page-font);
   font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .album-pending div > span {
@@ -606,7 +622,7 @@ a.crumb:focus-visible {
 }
 
 .album-pending b {
-  color: #f0a8c9;
+  color: var(--studio-accent-deep);
   font-weight: 600;
 }
 
@@ -621,15 +637,16 @@ a.crumb:focus-visible {
 
 .album-not-found h1 {
   margin: 1.2rem 0 0;
-  font-family: var(--serif);
+  font-family: var(--page-font);
   font-size: clamp(3rem, 7vw, 5.5rem);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.05em;
   line-height: 0.93;
+  color: var(--studio-plum);
 }
 
 .album-not-found h1 em {
-  color: #f070a8;
+  color: var(--studio-accent);
   font-style: normal;
 }
 
@@ -644,18 +661,19 @@ a.crumb:focus-visible {
   align-items: center;
   gap: 0.65rem;
   margin-top: 1.7rem;
-  color: #f090bb;
+  color: var(--studio-plum);
   font-size: 0.84rem;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .album-directory-link:hover,
 .album-directory-link:focus-visible {
-  color: #fff;
+  color: var(--studio-accent-deep);
 }
 
 .album-directory-link:focus-visible {
-  outline: 2px solid #f47ab0;
+  outline: 2px solid var(--studio-accent);
   outline-offset: 4px;
 }
 
@@ -669,13 +687,13 @@ a.crumb:focus-visible {
   max-width: calc(100% - 1.5rem);
   overflow: hidden;
   border-radius: 999px;
-  background: rgb(16 11 19 / 72%);
+  background: rgb(255 255 255 / 82%);
   box-shadow:
-    0 24px 60px rgb(0 0 0 / 55%),
-    0 2px 10px rgb(0 0 0 / 30%);
+    0 24px 60px rgb(52 34 80 / 12%),
+    0 2px 10px rgb(52 34 80 / 6%);
   transform: translateX(-50%);
-  backdrop-filter: blur(22px) saturate(1.5);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
   animation: dock-in 640ms 240ms var(--ease-out) backwards;
 }
 
@@ -688,10 +706,10 @@ a.crumb:focus-visible {
   border-radius: inherit;
   background: linear-gradient(
     120deg,
-    rgb(255 255 255 / 30%),
-    rgb(239 106 165 / 62%) 42%,
-    rgb(184 23 31 / 46%) 68%,
-    rgb(255 255 255 / 12%)
+    rgb(255 255 255 / 60%),
+    rgb(150 120 182 / 55%) 42%,
+    rgb(111 83 154 / 46%) 68%,
+    rgb(255 255 255 / 25%)
   );
   content: '';
   mask:
@@ -708,17 +726,17 @@ a.crumb:focus-visible {
   gap: 0.85rem;
   padding: 0.45rem 0.5rem 0.45rem 0.45rem;
   border-radius: inherit;
-  color: #fff;
+  color: var(--studio-text);
   transition: background 220ms ease;
 }
 
 .dock-link:hover,
 .dock-link:focus-visible {
-  background: rgb(255 255 255 / 5%);
+  background: var(--studio-accent-soft);
 }
 
 .dock-link:focus-visible {
-  outline: 2px solid #f47ab0;
+  outline: 2px solid var(--studio-accent);
   outline-offset: -3px;
 }
 
@@ -729,8 +747,8 @@ a.crumb:focus-visible {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
-  background: var(--accent-gradient);
-  box-shadow: 0 10px 26px rgb(184 23 31 / 40%);
+  background: linear-gradient(120deg, #6f539a, #9678b6);
+  box-shadow: 0 10px 26px rgb(111 83 154 / 30%);
   color: #fff;
   transition: transform 320ms var(--ease-out);
 }
@@ -747,7 +765,7 @@ a.crumb:focus-visible {
 }
 
 .dock-kicker {
-  color: var(--studio-pink);
+  color: var(--studio-accent-deep);
   font-size: 0.56rem;
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -757,9 +775,10 @@ a.crumb:focus-visible {
 
 .dock-name {
   overflow: hidden;
-  font-family: var(--serif);
+  font-family: var(--page-font);
   font-size: 1.08rem;
   line-height: 1.1;
+  color: var(--studio-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -772,10 +791,10 @@ a.crumb:focus-visible {
   overflow: hidden;
   place-items: center;
   margin-left: 0.4rem;
-  border: 1px solid rgb(239 106 165 / 55%);
+  border: 1px solid var(--studio-accent-soft);
   border-radius: 50%;
-  background: #1a1220;
-  color: var(--studio-pink);
+  background: #ffffff;
+  color: var(--studio-plum);
 }
 
 .dock-avatar img {
@@ -800,7 +819,7 @@ a.crumb:focus-visible {
     display: block;
     height: 2px;
     border-radius: 2px;
-    background: var(--accent-gradient);
+    background: linear-gradient(120deg, #6f539a, #9678b6);
     transform-origin: left center;
     animation: dock-progress linear both;
     animation-timeline: scroll(root block);
@@ -814,6 +833,7 @@ a.crumb:focus-visible {
   from {
     background-position: 120% 0;
   }
+
   to {
     background-position: -120% 0;
   }
@@ -824,6 +844,7 @@ a.crumb:focus-visible {
     opacity: 0.2;
     transform: translateY(36px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -835,6 +856,7 @@ a.crumb:focus-visible {
     opacity: 0;
     transform: translate(-50%, 24px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -845,6 +867,7 @@ a.crumb:focus-visible {
   from {
     transform: scaleX(0);
   }
+
   to {
     transform: scaleX(1);
   }
@@ -852,11 +875,12 @@ a.crumb:focus-visible {
 
 @keyframes beacon {
   0% {
-    box-shadow: 0 0 0 0 rgb(239 106 165 / 60%);
+    box-shadow: 0 0 0 0 rgb(150 120 182 / 60%);
   }
+
   70%,
   100% {
-    box-shadow: 0 0 0 10px rgb(239 106 165 / 0%);
+    box-shadow: 0 0 0 10px rgb(150 120 182 / 0%);
   }
 }
 
@@ -864,6 +888,7 @@ a.crumb:focus-visible {
   from {
     transform: translate3d(0, 0, 0) rotate(0deg);
   }
+
   to {
     transform: translate3d(-6%, 4%, 0) rotate(14deg);
   }
@@ -952,4 +977,68 @@ a.crumb:focus-visible {
   .dock-progress {
     display: none;
   }
+}
+
+/* ------------------------------------------------------------------ shared chrome */
+
+/* Light glass for the seen · likes · comments · shares strips on mosaic tiles. */
+app-model-media-engagement .eng-bar {
+  border-color: var(--studio-line-strong);
+  background: #ffffff;
+  box-shadow: 0 6px 22px rgb(52 34 80 / 6%);
+}
+
+app-model-media-engagement .eng-item {
+  color: var(--studio-text);
+}
+
+app-model-media-engagement .eng-seen {
+  color: var(--studio-muted);
+}
+
+app-model-media-engagement .eng-item:hover:not(:disabled):not(.eng-seen),
+app-model-media-engagement .eng-item:focus-visible:not(.eng-seen) {
+  background: var(--studio-accent-soft);
+  color: var(--studio-accent-deep);
+}
+
+app-model-media-engagement .eng-like.is-on {
+  color: var(--studio-accent-deep);
+}
+
+app-model-media-engagement .eng-like.is-on .eng-icon {
+  fill: rgb(150 120 182 / 88%);
+  stroke: var(--studio-accent-deep);
+}
+
+app-model-media-engagement .eng-item:focus-visible {
+  outline-color: var(--studio-accent);
+}
+
+/* Light veil and watermark for locked Premium Content frames. */
+app-premium-photo-teaser .premium-teaser {
+  background: var(--studio-surface-raised);
+}
+
+app-premium-photo-teaser .premium-teaser-veil {
+  background:
+    radial-gradient(120% 120% at 50% 46%, rgb(255 255 255 / 70%), transparent 55%),
+    linear-gradient(160deg, rgb(150 120 182 / 10%), rgb(150 120 182 / 22%));
+}
+
+app-premium-photo-teaser .premium-teaser-title {
+  color: var(--studio-accent-deep);
+  text-shadow:
+    0 0 1px #ffffff,
+    0 2px 14px rgb(255 255 255 / 70%);
+}
+
+app-premium-photo-teaser .premium-teaser-sub {
+  color: var(--studio-plum);
+  text-shadow: 0 0 6px #ffffff;
+}
+
+app-premium-photo-teaser .premium-teaser-lock {
+  background: rgb(255 255 255 / 82%);
+  color: var(--studio-plum);
 }
