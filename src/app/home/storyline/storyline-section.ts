@@ -22,7 +22,7 @@ export const DEFAULT_STORYLINE_TITLE = 'The Storyline of Parallel Universe';
   selector: 'app-storyline-section',
   imports: [],
   templateUrl: './storyline-section.html',
-  styleUrl: './storyline-section.css',
+  styleUrls: ['./storyline-section.css', '../collection-button.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StorylineSection {
@@ -43,9 +43,7 @@ export class StorylineSection {
   protected readonly intervalMs = computed(() => {
     const raw = Number(this.cms.get<number>('home.storyline', 'seconds'));
     const seconds =
-      Number.isFinite(raw) && raw >= 1
-        ? Math.min(30, raw)
-        : STORYLINE_MEMO_INTERVAL_SECONDS;
+      Number.isFinite(raw) && raw >= 1 ? Math.min(30, raw) : STORYLINE_MEMO_INTERVAL_SECONDS;
     return seconds * 1000;
   });
 

@@ -293,6 +293,9 @@ export class AiModelsPage {
    * once when the router reports its own scroll handling for this navigation — the router would
    * otherwise put the page back at the top. That second pass is also what makes the profile
    * page's own "All AI models" link (a forward navigation, not Back) return to the same card.
+   * Router forwards Scroll to public observers before RouterScroller consumes it, so the second
+   * pass waits for the current event dispatch to finish; otherwise RouterScroller gets the last
+   * write and undoes the restoration.
    */
   private restoreDirectory(memory: AiModelsDirectoryMemory): void {
     this.search.set(memory.search);
@@ -313,7 +316,7 @@ export class AiModelsPage {
         filter((event): event is Scroll => event instanceof Scroll),
         take(1),
       )
-      .subscribe(() => this.scrollDirectoryTo(top));
+      .subscribe(() => queueMicrotask(() => this.scrollDirectoryTo(top)));
   }
 
   /** Scrolls instantly: the visitor must never watch the directory glide back into place. */

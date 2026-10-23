@@ -4,11 +4,11 @@ import { RouterLink } from '@angular/router';
 import type { PricingPlan } from '../../models/site-content';
 import { PackageSelectionService } from '../../services/package-selection.service';
 import { PricingCard } from '../../shared/pricing-card/pricing-card';
-import { SectionHeading } from '../../shared/section-heading/section-heading';
+import { HomeDisclosure } from '../../shared/home-disclosure/home-disclosure';
 
 @Component({
   selector: 'app-pricing',
-  imports: [PricingCard, SectionHeading, RouterLink],
+  imports: [PricingCard, HomeDisclosure, RouterLink],
   templateUrl: './pricing.html',
   styleUrl: './pricing.css',
 })
@@ -16,7 +16,9 @@ export class Pricing {
   private readonly packageSelection = inject(PackageSelectionService);
   private readonly cms = inject(SiteConfigService);
   protected readonly plans = computed(() =>
-    this.cms.records<PricingPlan>('home.pricing', 'plans').map((p) => ({ ...p, features: Array.isArray(p.features) ? p.features : [] })),
+    this.cms
+      .records<PricingPlan>('home.pricing', 'plans')
+      .map((p) => ({ ...p, features: Array.isArray(p.features) ? p.features : [] })),
   );
   protected readonly selectedPlan = this.packageSelection.selectedPackage;
 

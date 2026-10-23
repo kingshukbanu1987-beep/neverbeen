@@ -40,7 +40,7 @@ describe('StorylineSection', () => {
 
     const lede = element.querySelector<HTMLElement>('.intro .lede')!;
     const actions = element.querySelector<HTMLElement>('.intro .actions')!;
-    const storylineBtn = actions?.querySelector<HTMLAnchorElement>('a.btn-brochure')!;
+    const storylineBtn = actions?.querySelector<HTMLAnchorElement>('a.btn-ghost')!;
 
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);

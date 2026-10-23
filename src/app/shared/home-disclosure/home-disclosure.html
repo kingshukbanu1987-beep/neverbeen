@@ -1,0 +1,56 @@
+<div class="disclosure" [class.is-expanded]="expanded()">
+  <div class="disclosure-header">
+    <div class="heading">
+      <div class="eyebrow-row">
+        @if (shownEyebrow()) {
+          <p class="eyebrow">{{ shownEyebrow() }}</p>
+        }
+        @if (meta()) {
+          <span class="meta">{{ meta() }}</span>
+        }
+      </div>
+      <h2 [id]="contentId() + '-title'">{{ shownTitle() }}</h2>
+    </div>
+
+    <button
+      type="button"
+      class="disclosure-toggle"
+      (click)="toggle()"
+      [attr.aria-expanded]="expanded()"
+      [attr.aria-controls]="contentId()"
+      [attr.aria-label]="(expanded() ? 'Collapse ' : 'Expand ') + shownTitle() + ' section'"
+    >
+      <span>{{ expanded() ? 'Collapse' : 'Expand' }}</span>
+      <span class="toggle-icon" aria-hidden="true">
+        <svg viewBox="0 0 20 20" focusable="false">
+          <path
+            d="m5 7.5 5 5 5-5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
+    </button>
+  </div>
+
+  <div
+    class="disclosure-content"
+    [id]="contentId()"
+    role="region"
+    [attr.aria-labelledby]="contentId() + '-title'"
+    [attr.aria-hidden]="!expanded()"
+    [attr.inert]="!expanded() ? '' : null"
+  >
+    <div class="content-clip">
+      <div class="content-body">
+        @if (shownCopy()) {
+          <p class="section-copy">{{ shownCopy() }}</p>
+        }
+        <ng-content />
+      </div>
+    </div>
+  </div>
+</div>

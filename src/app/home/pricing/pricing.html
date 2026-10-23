@@ -1,22 +1,31 @@
 <section class="pricing" id="pricing">
   <div class="container">
-    <app-section-heading
+    <app-home-disclosure
       cmsKey="home.pricing"
-      align="center"
+      contentId="pricing-content"
       eyebrow="Collections"
       title="Pricing"
       copy="Simple plans for a first postcard, a full trip, or a season of elsewhere."
-    />
-    <div class="grid">
-      @for (plan of plans(); track $index) {
-        <app-pricing-card [plan]="plan" [isSelected]="selectedPlan() === plan.name" (selected)="choosePlan($event)" />
+      [meta]="plans().length + ' curated plans'"
+    >
+      <div class="grid">
+        @for (plan of plans(); track $index) {
+          <app-pricing-card
+            [plan]="plan"
+            [isSelected]="selectedPlan() === plan.name"
+            (selected)="choosePlan($event)"
+          />
+        }
+      </div>
+      @if (selectedPlan()) {
+        <p class="note">
+          <span class="note-dot" aria-hidden="true"></span>
+          <span
+            ><strong>{{ selectedPlan() }}</strong> is a beautiful place to start.</span
+          >
+          <a routerLink="/" fragment="contact">Tell us where you have never been.</a>
+        </p>
       }
-    </div>
-    @if (selectedPlan()) {
-      <p class="note">
-        {{ selectedPlan() }} is a beautiful place to start.
-        <a routerLink="/" fragment="contact">Tell us where you have never been.</a>
-      </p>
-    }
+    </app-home-disclosure>
   </div>
 </section>

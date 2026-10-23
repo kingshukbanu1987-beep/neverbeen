@@ -1,11 +1,11 @@
 import { Component, computed, inject } from '@angular/core';
 import { SiteConfigService } from '../../services/site-config.service';
 import type { HowItWorksStep } from '../../models/site-content';
-import { SectionHeading } from '../../shared/section-heading/section-heading';
+import { HomeDisclosure } from '../../shared/home-disclosure/home-disclosure';
 
 @Component({
   selector: 'app-how-it-works',
-  imports: [SectionHeading],
+  imports: [HomeDisclosure],
   templateUrl: './how-it-works.html',
   styleUrl: './how-it-works.css',
 })
