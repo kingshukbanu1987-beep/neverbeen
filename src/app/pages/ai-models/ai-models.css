@@ -1202,9 +1202,7 @@
   margin-top: 0.5rem;
   margin-inline: calc(-1 * var(--card-copy-pad, 1.2rem));
   padding: 0.55rem calc(var(--card-copy-pad, 1.2rem) + 0.2rem);
-  /* Only the top rule: the counts row below carries the line that closes the band. */
-  border-block: 1px solid rgb(255 255 255 / 17%) 0;
-  border-inline: 0;
+  border: 0;
   border-radius: 0;
   background: rgb(9 7 11 / 48%);
   backdrop-filter: blur(12px);
@@ -1255,21 +1253,16 @@
   justify-content: center;
   gap: 0.4rem;
   padding: 0.5rem 0.65rem;
-  border: 1px solid rgb(255 255 255 / 20%);
+  border: 0;
   background: rgb(9 7 11 / 48%);
   backdrop-filter: blur(12px);
-  transition:
-    border-color 220ms ease,
-    background 220ms ease;
+  transition: background 220ms ease;
 }
 
-/* One continuous band: the two tiles meet on a single hairline, sharing their outer rules. */
-.card-photo-count {
-  border-radius: 0;
-  border-right: 0;
-}
-
+/* One continuous band: the two halves meet edge to edge, with no rule between them. */
+.card-photo-count,
 .card-video-count {
+  border: 0;
   border-radius: 0;
 }
 
@@ -1298,7 +1291,6 @@
 
 .model-card:hover .card-photo-count,
 .model-card:hover .card-video-count {
-  border-color: rgb(240 112 168 / 62%);
   background: rgb(173 20 26 / 42%);
 }
 
