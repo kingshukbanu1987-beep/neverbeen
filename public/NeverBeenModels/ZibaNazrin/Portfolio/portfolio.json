@@ -1,0 +1,34 @@
+{
+  "model": "Ziba Nazrin",
+  "album": "ZibaNazrin",
+  "slug": "ziba-nazrin",
+  "document": "ZibaNazrin_Portfolio.pdf",
+  "url": "/NeverBeenModels/ZibaNazrin/Portfolio/ZibaNazrin_Portfolio.pdf",
+  "pages": 24,
+  "orientation": "portrait",
+  "page": {
+    "width": 595.28,
+    "height": 841.89,
+    "units": "pt",
+    "note": "A4 portrait vector master — photographs prepared at print resolution; the page art renders crisp at 8K and beyond."
+  },
+  "style": {
+    "id": "neon-mango",
+    "name": "Neon Mango",
+    "mood": "tropical voltage, street-gloss shine",
+    "seed": 732700823
+  },
+  "sizeBytes": 5951620,
+  "generatedAt": "2026-10-23T00:24:03.983Z",
+  "generator": {
+    "script": "CreatePortfolio.mjs",
+    "version": "1.0.0"
+  },
+  "imageEngine": "imagemagick",
+  "photography": {
+    "pool": 232,
+    "used": 232,
+    "folder": "public/NeverBeenModels/ZibaNazrin"
+  },
+  "storySource": "Biography"
+}

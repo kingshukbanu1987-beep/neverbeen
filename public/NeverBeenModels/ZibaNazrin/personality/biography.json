@@ -12,11 +12,11 @@
     "language": "en",
     "fictional": true,
     "universe": "NeverBeen Multiverse",
-    "biographySource": "generated-for-live-chat",
-    "biographyGeneratedAt": "2026-10-14T09:40:17.646Z",
+    "biographySource": "Biography/biography.json",
+    "biographyGeneratedAt": "2026-10-23T00:18:54.883Z",
     "conflictRule": "profile-wins",
     "createdAt": "2026-10-14T09:40:16.308Z",
-    "updatedAt": "2026-10-20T05:29:00.248Z"
+    "updatedAt": "2026-10-23T00:24:47.503Z"
   },
   "profile": {
     "_doc": "Her own profile, exactly as the website shows it on her portfolio page (data/ai-models/profiles.json merged with her album profile.json). These facts win over anything in the biography block.",
@@ -45,14 +45,18 @@
       "note": "Rates are in INR per photograph. Ten photographs is the minimum order; travel, styling and usage buyout are quoted separately."
     },
     "portfolio": {
-      "photographs": 205,
-      "videos": 0
+      "photographs": 232,
+      "videos": 0,
+      "portfolioDocument": {
+        "fileName": "ZibaNazrin_Portfolio.pdf",
+        "pages": 24
+      }
     },
     "profilePage": "/ai-models/ziba-nazrin",
     "illustrative": true
   },
   "biography": {
-    "_doc": "The details of her fictional NeverBeen life, written for Live Chat by the BiographyScript engine because she has no written biography yet. It is not shown on the website.",
+    "_doc": "The details of her fictional NeverBeen life, from her written biography (Biography/biography.json, also shown on her public biography page).",
     "title": "In the Multiverse of NeverBeen",
     "birthDetails": {
       "date": "16 May 2002",
@@ -247,7 +251,7 @@
       {
         "id": "friends",
         "period": "Off duty · 2026 · age 24",
-        "timestamp": "10 October 2026 · 18:35 Asia/Baghdad",
+        "timestamp": "18 October 2026 · 18:35 Asia/Baghdad",
         "caption": "The people who know every version of her"
       },
       {
