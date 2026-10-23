@@ -2486,11 +2486,11 @@
 /* ------------------------------------------------------------ page-wide chrome */
 
 /* Black split pill so the Live Now / Past Chats counts stay readable on any album background,
-   and exactly as tall as the Live Chat button beside it. The black is kept mostly opaque so the
+   and exactly as tall as the Live Chat button beside it. The black is kept near-opaque so the
    pill reads as a distinct dark capsule against the light page. */
 app-model-live-chat-pill .card-live-pill {
   --pill-border: rgb(255 255 255 / 30%);
-  --pill-surface: rgb(0 0 0 / 82%);
+  --pill-surface: rgb(0 0 0 / 95%);
   --pill-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 8px 22px rgb(0 0 0 / 45%);
   --pill-text: #ffffff;
   --pill-divider: rgb(255 255 255 / 30%);
@@ -2502,6 +2502,23 @@ app-model-live-chat-pill .card-live-pill {
   --pill-live-word: #aee3b0;
   --pill-live-border: rgb(116 196 118 / 70%);
   height: var(--card-chat-height, calc(0.45rem * 2 + 1.02rem * 1.15));
+}
+
+/* Larger text inside the split pill so the counts and labels are easy to read. */
+app-model-live-chat-pill .card-live-pill .card-live-pill-value {
+  font-size: 1.5rem;
+}
+
+app-model-live-chat-pill .card-live-pill .card-live-pill-word {
+  font-size: 1rem;
+}
+
+app-model-live-chat-pill .card-live-pill.is-live .card-live-pill-seg.is-now .card-live-pill-value {
+  font-size: 1.5rem;
+}
+
+app-model-live-chat-pill .card-live-pill.is-live .card-live-pill-seg.is-now .card-live-pill-word {
+  font-size: 1rem;
 }
 
 app-model-live-chat-pill .card-live-pill.is-live .card-live-pill-seg.is-now {
