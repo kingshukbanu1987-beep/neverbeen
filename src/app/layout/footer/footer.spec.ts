@@ -20,7 +20,7 @@ describe('Footer', () => {
     return fixture;
   }
 
-  it('uses rgb(59, 36, 79) for the footer background on /ai-models, model profile, and view all photos pages', async () => {
+  it('uses rgb(55, 38, 66) for the footer background on /ai-models, model profile, and view all photos pages', async () => {
     const fixture = create();
     const component = fixture.componentInstance;
     const footer = fixture.nativeElement.querySelector('footer#site-footer') as HTMLElement;
@@ -40,7 +40,7 @@ describe('Footer', () => {
 
       expect(component['isAiModels']()).toBe(true);
       expect(footer.classList.contains('ai-models-footer')).toBe(true);
-      expect(getComputedStyle(footer).backgroundColor).toBe('rgb(59, 36, 79)');
+      expect(getComputedStyle(footer).backgroundColor).toBe('rgb(55, 38, 66)');
       expect(getComputedStyle(footer).backgroundImage).toBe('none');
     }
 
@@ -48,6 +48,6 @@ describe('Footer', () => {
     fixture.detectChanges();
     expect(component['isAiModels']()).toBe(false);
     expect(footer.classList.contains('ai-models-footer')).toBe(false);
-    expect(getComputedStyle(footer).backgroundColor).not.toBe('rgb(59, 36, 79)');
+    expect(getComputedStyle(footer).backgroundColor).not.toBe('rgb(55, 38, 66)');
   });
 });

@@ -5,9 +5,9 @@
 }
 
 .footer.ai-models-footer {
-  --forest-deep: rgb(59, 36, 79);
+  --forest-deep: rgb(55, 38, 66);
   --gold: #d8c6f0;
-  background: rgb(59, 36, 79);
+  background: rgb(55, 38, 66);
   border-top: 1px solid rgb(255 255 255 / 14%);
 }
 
