@@ -13,9 +13,9 @@ import { SiteConfigService } from '../../services/site-config.service';
 import { HERO_BROCHURE_PREVIEW_SLIDES, HERO_PEOPLE_SLIDES, HeroSlide } from './hero-slides';
 
 const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> = {
-  community: { path: '/community', cls: 'btn-dream' },
-  create: { path: '/', fragment: 'contact', cls: 'btn-primary' },
-  merchandise: { path: '/merchandise', cls: 'btn-founder' },
+  community: { path: '/community', cls: 'btn-ghost' },
+  create: { path: '/', fragment: 'contact', cls: 'btn-ghost' },
+  merchandise: { path: '/merchandise', cls: 'btn-ghost' },
 };
 
 /** The shipped pace of both hero previews: one photograph every five seconds. */
@@ -38,7 +38,7 @@ export const HERO_SLIDE_INTERVAL_SECONDS = 5;
   selector: 'app-hero',
   imports: [RouterLink],
   templateUrl: './hero.html',
-  styleUrl: './hero.css',
+  styleUrls: ['./hero.css', '../collection-button.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Hero {

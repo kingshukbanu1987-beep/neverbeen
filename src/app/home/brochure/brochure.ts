@@ -20,7 +20,7 @@ export const BROCHURE_MEMO_INTERVAL_MS = BROCHURE_MEMO_INTERVAL_SECONDS * 1000;
   selector: 'app-brochure',
   imports: [],
   templateUrl: './brochure.html',
-  styleUrl: './brochure.css',
+  styleUrls: ['./brochure.css', '../collection-button.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Brochure {
@@ -40,9 +40,7 @@ export class Brochure {
   protected readonly intervalMs = computed(() => {
     const raw = Number(this.cms.get<number>('home.brochure', 'seconds'));
     const seconds =
-      Number.isFinite(raw) && raw >= 1
-        ? Math.min(30, raw)
-        : BROCHURE_MEMO_INTERVAL_SECONDS;
+      Number.isFinite(raw) && raw >= 1 ? Math.min(30, raw) : BROCHURE_MEMO_INTERVAL_SECONDS;
     return seconds * 1000;
   });
 

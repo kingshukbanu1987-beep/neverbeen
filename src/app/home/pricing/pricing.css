@@ -1,41 +1,103 @@
+:host {
+  display: block;
+  font-family: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+}
+
 .pricing {
-  padding: 5.5rem 0;
-  background: #FAFAFA;
+  --disclosure-accent: #8061a8;
+  --disclosure-accent-soft: #e6e6fa;
+  padding: clamp(3rem, 6vw, 5.5rem) 0;
+  background:
+    radial-gradient(58rem 30rem at 104% 0%, rgba(230, 230, 250, 0.8), transparent 70%),
+    radial-gradient(48rem 24rem at -10% 100%, rgba(211, 232, 240, 0.34), transparent 72%),
+    linear-gradient(180deg, #fbfaff 0%, #f8f7fb 100%);
+  border-block: 1px solid rgba(87, 65, 119, 0.055);
+}
+
+.container {
+  width: min(1280px, calc(100% - 2.5rem));
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
   align-items: stretch;
-  margin-top: 3rem;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+app-pricing-card {
+  display: block;
+  min-width: 0;
 }
 
 .note {
-  margin: 1.8rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem 0.65rem;
+  margin: 1.5rem 0 0;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid rgba(128, 97, 168, 0.12);
+  border-radius: 16px;
+  background: rgba(230, 230, 250, 0.42);
+  color: #655d70;
+  font-size: 0.92rem;
   text-align: center;
-  color: var(--ink-soft);
+}
+
+.note strong {
+  color: #514060;
+  font-weight: 700;
+}
+
+.note-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #9b82bd;
+  box-shadow: 0 0 0 4px rgba(155, 130, 189, 0.13);
 }
 
 .note a {
+  color: #70558e;
+  font-weight: 600;
   text-decoration: underline;
+  text-decoration-color: rgba(112, 85, 142, 0.35);
   text-underline-offset: 3px;
 }
 
-@media (max-width: 900px) {
+.note a:hover {
+  text-decoration-color: currentColor;
+}
+
+@media (max-width: 1080px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 600px) {
   .pricing {
-    padding: 4rem 0;
+    padding: 3rem 0;
+  }
+
+  .container {
+    width: min(1280px, calc(100% - 1.25rem));
   }
 
   .grid {
     grid-template-columns: 1fr;
-    max-width: 420px;
-    margin-inline: auto;
+    gap: 0.85rem;
+  }
+
+  .note {
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .note-dot {
+    display: none;
   }
 }

@@ -1,23 +1,61 @@
 <section class="faq" id="faq">
-  <div class="container layout">
-    <app-section-heading
+  <div class="container">
+    <app-home-disclosure
       cmsKey="home.faq"
+      contentId="faq-content"
       eyebrow="Before you go"
       title="FAQ"
       copy="The practical questions, answered the way a studio would."
-    />
-    <div class="list">
-      @for (item of items(); track $index; let i = $index) {
-        <article>
-          <button type="button" (click)="toggle(i)" [attr.aria-expanded]="openIndex() === i">
-            {{ item.question }}
-            <span>{{ openIndex() === i ? '–' : '+' }}</span>
-          </button>
-          @if (openIndex() === i) {
-            <p>{{ item.answer }}</p>
-          }
-        </article>
-      }
-    </div>
+      [meta]="items().length + ' helpful answers'"
+    >
+      <div class="list">
+        @for (item of items(); track $index; let i = $index) {
+          <article [class.is-open]="openIndex() === i">
+            <h3>
+              <button
+                type="button"
+                [id]="'faq-question-' + i"
+                (click)="toggle(i)"
+                [attr.aria-expanded]="openIndex() === i"
+                [attr.aria-controls]="'faq-answer-' + i"
+              >
+                <span class="question">{{ item.question }}</span>
+                <span class="answer-icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" focusable="false">
+                    @if (openIndex() === i) {
+                      <path
+                        d="M5 10h10"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                      />
+                    } @else {
+                      <path
+                        d="M5 10h10M10 5v10"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                      />
+                    }
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            @if (openIndex() === i) {
+              <div
+                class="answer"
+                [id]="'faq-answer-' + i"
+                role="region"
+                [attr.aria-labelledby]="'faq-question-' + i"
+              >
+                <p>{{ item.answer }}</p>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    </app-home-disclosure>
   </div>
 </section>

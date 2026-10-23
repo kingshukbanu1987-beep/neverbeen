@@ -1,10 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, vi } from 'vitest';
-import {
-  BROCHURE_MEMO_INTERVAL_MS,
-  BROCHURE_MEMO_INTERVAL_SECONDS,
-  Brochure,
-} from './brochure';
+import { BROCHURE_MEMO_INTERVAL_MS, BROCHURE_MEMO_INTERVAL_SECONDS, Brochure } from './brochure';
 import { BROCHURE_SLIDE_PAGE_NUMBERS, brochureSlides } from './brochure-slides';
 
 describe('Brochure', () => {
@@ -32,7 +28,7 @@ describe('Brochure', () => {
 
     const lede = element.querySelector<HTMLElement>('.intro .lede')!;
     const actions = element.querySelector<HTMLElement>('.intro .actions')!;
-    const brochureBtn = actions?.querySelector<HTMLAnchorElement>('a.btn-brochure')!;
+    const brochureBtn = actions?.querySelector<HTMLAnchorElement>('a.btn-ghost')!;
 
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);

@@ -1,19 +1,27 @@
 <section class="how" id="how-it-works">
   <div class="container">
-    <app-section-heading
+    <app-home-disclosure
       cmsKey="home.how"
+      contentId="how-it-works-content"
       eyebrow="The studio process"
       title="How It Works"
       copy="Four quiet steps from a portrait on your phone to a photograph that looks like you left. Our team use latest high definition, efficient, limited and expensive AI Models and Algorithms to create your Photographs that nowhere people can detect it's AI generated. It will look real, that's a Promise from nowhere Team. Furthermore, we will test those photographs in different AI Detection Systems to ensure that it pass the test and Detection System unable to detect its AI generated."
-    />
-    <div class="steps">
-      @for (step of steps(); track $index) {
-        <article>
-          <span>{{ step.number }}</span>
-          <h3>{{ step.title }}</h3>
-          <p>{{ step.description }}</p>
-        </article>
-      }
-    </div>
+      [meta]="steps().length + ' simple steps'"
+    >
+      <div class="steps">
+        @for (step of steps(); track $index; let i = $index) {
+          <article class="step">
+            <div class="step-marker">
+              <span class="step-number">{{ step.number }}</span>
+              @if (i < steps().length - 1) {
+                <span class="step-connector" aria-hidden="true"></span>
+              }
+            </div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.description }}</p>
+          </article>
+        }
+      </div>
+    </app-home-disclosure>
   </div>
 </section>

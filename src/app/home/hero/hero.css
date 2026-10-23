@@ -315,53 +315,13 @@ h2 {
   backdrop-filter: blur(22px) saturate(150%);
 }
 
+/* Match Explore the NeverBeen Collection: the same transparent, ink-on-white
+   ghost button, including the home page's Calibri size and weight. */
 .actions .btn {
-  min-height: 50px;
-  padding-inline: clamp(1.05rem, 1.7vw, 1.55rem);
-  font-family: var(--hero-font);
-  font-size: clamp(0.86rem, 1vw, 0.95rem);
-  font-weight: 600;
-  letter-spacing: 0.005em;
-}
-
-.btn-brochure,
-.btn-brochure:hover,
-.btn-brochure:focus-visible {
-  background: #f7c30e;
-  color: #fff;
-}
-
-.btn-brochure:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 3px;
-}
-
-/* "Meet the Founder" and "Connect to NeverBeen Community" share the same navy. */
-.btn-founder,
-.btn-dream {
-  background: #123b68;
-  color: #fff;
-}
-
-.btn-founder:hover,
-.btn-founder:focus-visible,
-.btn-dream:hover,
-.btn-dream:focus-visible {
-  background: #0c2b4d;
-  color: #fff;
-}
-
-.btn-collection {
-  background: transparent;
-  color: var(--ink);
-  border: 1px solid rgba(29, 25, 20, 0.22);
-}
-
-.btn-collection:hover,
-.btn-collection:focus-visible {
-  background: transparent;
-  color: var(--ink);
-  border-color: var(--ink);
+  font-family: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 /* ------------------------------------------------------------------ tablet */
@@ -487,7 +447,6 @@ h2 {
   .actions .btn {
     width: 100%;
     flex: 0 0 auto;
-    min-height: 48px;
   }
 }
 

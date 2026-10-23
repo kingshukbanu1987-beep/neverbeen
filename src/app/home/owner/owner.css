@@ -1,6 +1,11 @@
+:host {
+  display: block;
+  font-family: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+}
+
 .owner {
   padding: 5.5rem 0;
-  background: #FAFAFA;
+  background: #fafafa;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
@@ -22,17 +27,6 @@
   flex-wrap: wrap;
   gap: 0.8rem;
   margin-top: -0.85rem;
-}
-
-.btn-founder {
-  background: #123b68;
-  color: #fff;
-}
-
-.btn-founder:hover,
-.btn-founder:focus-visible {
-  background: #0c2b4d;
-  color: #fff;
 }
 
 .portrait {

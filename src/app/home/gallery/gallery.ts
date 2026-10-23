@@ -29,7 +29,7 @@ export function locationOf(photo: CollectionPhoto): string {
   selector: 'app-gallery',
   imports: [RouterLink, SectionHeading],
   templateUrl: './gallery.html',
-  styleUrl: './gallery.css',
+  styleUrls: ['./gallery.css', '../collection-button.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Gallery {

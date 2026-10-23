@@ -29,7 +29,7 @@ describe('Hero', () => {
     return buttonsOf(element).map((link) => link.textContent?.trim() ?? '');
   }
 
-  it('places Connect to NeverBeen Community very first in the founder navy', () => {
+  it('places Connect to NeverBeen Community first in the Collection ghost style', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
@@ -42,9 +42,11 @@ describe('Hero', () => {
 
     const community = buttons[0];
     expect(community.getAttribute('href')).toBe('/community');
-    expect(community.classList.contains('btn-dream')).toBe(true);
-    expect(getComputedStyle(community).backgroundColor).toBe('rgb(18, 59, 104)');
-    expect(getComputedStyle(community).color).toBe('rgb(255, 255, 255)');
+    expect(community.classList.contains('btn-ghost')).toBe(true);
+    expect(getComputedStyle(community).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(community).color).toBe('var(--ink)');
+    expect(getComputedStyle(community).fontFamily).toContain('Calibri');
+    expect(getComputedStyle(community).fontSize).toBe('1rem');
   });
 
   it('places Create My Vacation right after Shop NeverBeen Merchandise', () => {
@@ -58,7 +60,7 @@ describe('Hero', () => {
 
     const createBtn = buttons[merchandiseIndex + 1];
     expect(createBtn.getAttribute('href')).toBe('/#contact');
-    expect(createBtn.classList.contains('btn-primary')).toBe(true);
+    expect(createBtn.classList.contains('btn-ghost')).toBe(true);
   });
 
   it('does not include moved or removed buttons in the hero actions', () => {
@@ -92,15 +94,15 @@ describe('Hero', () => {
     const intro = element.querySelector<HTMLElement>('.intro')!;
     const heading = intro.querySelector<HTMLElement>('app-section-heading')!;
     const actions = intro.querySelector<HTMLElement>('.actions')!;
-    const founderBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-founder')!;
+    const founderBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-ghost')!;
 
     expect(heading).toBeTruthy();
     expect(heading.nextElementSibling).toBe(actions);
     expect(founderBtn).toBeTruthy();
     expect(founderBtn.textContent?.trim()).toBe('Meet the Founder of NeverBeen Multiverse');
     expect(founderBtn.getAttribute('href')).toBe('/founder');
-    expect(getComputedStyle(founderBtn).backgroundColor).toBe('rgb(18, 59, 104)');
-    expect(getComputedStyle(founderBtn).color).toBe('rgb(255, 255, 255)');
+    expect(getComputedStyle(founderBtn).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(founderBtn).color).toBe('var(--ink)');
   });
 
   it('places Explore the NeverBeen Brochure in the Brochure section just below the description', () => {
@@ -111,15 +113,15 @@ describe('Hero', () => {
     const intro = element.querySelector<HTMLElement>('.intro')!;
     const lede = intro.querySelector<HTMLElement>('.lede')!;
     const actions = intro.querySelector<HTMLElement>('.actions')!;
-    const brochureBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-brochure')!;
+    const brochureBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-ghost')!;
 
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);
     expect(brochureBtn).toBeTruthy();
     expect(brochureBtn.textContent?.trim()).toBe('Explore the NeverBeen Brochure');
     expect(brochureBtn.getAttribute('href')).toBe('/documentation');
-    expect(getComputedStyle(brochureBtn).backgroundColor).toBe('rgb(247, 195, 14)');
-    expect(getComputedStyle(brochureBtn).color).toBe('rgb(255, 255, 255)');
+    expect(getComputedStyle(brochureBtn).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(brochureBtn).color).toBe('var(--ink)');
   });
 
   it('places Read the Stories of Parallel Universe in the Storyline section just below the description', () => {
@@ -130,7 +132,7 @@ describe('Hero', () => {
     const intro = element.querySelector<HTMLElement>('.intro')!;
     const lede = intro.querySelector<HTMLElement>('.lede')!;
     const actions = intro.querySelector<HTMLElement>('.actions')!;
-    const storylineBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-brochure')!;
+    const storylineBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-ghost')!;
 
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);
@@ -139,11 +141,11 @@ describe('Hero', () => {
       'Read the Stories of Parallel Universe',
     );
     expect(storylineBtn.getAttribute('href')).toBe('/storyline-of-parallel-universe');
-    expect(getComputedStyle(storylineBtn).backgroundColor).toBe('rgb(247, 195, 14)');
-    expect(getComputedStyle(storylineBtn).color).toBe('rgb(255, 255, 255)');
+    expect(getComputedStyle(storylineBtn).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(storylineBtn).color).toBe('var(--ink)');
   });
 
-  it('places merchandise after Community in the Founder navy', () => {
+  it('places merchandise after Community in the same Collection ghost style', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
@@ -153,11 +155,12 @@ describe('Hero', () => {
 
     expect(merchandise.textContent?.trim()).toBe('Shop NeverBeen Merchandise');
     expect(merchandise.getAttribute('href')).toBe('/merchandise');
-    expect(merchandise.classList.contains('btn-founder')).toBe(true);
+    expect(merchandise.classList.contains('btn-ghost')).toBe(true);
     expect(getComputedStyle(merchandise).backgroundColor).toBe(
       getComputedStyle(community).backgroundColor,
     );
     expect(getComputedStyle(merchandise).color).toBe(getComputedStyle(community).color);
+    expect(getComputedStyle(merchandise).fontSize).toBe(getComputedStyle(community).fontSize);
   });
 
   it('uses a native same-tab link for merchandise instead of lazy-route navigation', () => {
