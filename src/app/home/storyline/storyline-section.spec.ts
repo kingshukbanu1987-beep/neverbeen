@@ -48,8 +48,14 @@ describe('StorylineSection', () => {
     expect(storylineBtn.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       'Read the Stories of Parallel Universe',
     );
-    expect(storylineBtn.querySelector('em')?.textContent).toBe('Parallel Universe');
+    expect(storylineBtn.querySelector('em')).toBeNull();
     expect(storylineBtn.getAttribute('href')).toBe('/storyline-of-parallel-universe');
+
+    const heading = element.querySelector<HTMLElement>('#storyline-section-title')!;
+    expect(heading.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'The Storyline of Parallel Universe',
+    );
+    expect(heading.querySelector('em')).toBeNull();
   });
 
   it('places the slideshow stage-shell outside .container so it spans maximum screen width', () => {

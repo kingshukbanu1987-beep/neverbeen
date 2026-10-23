@@ -1,4 +1,4 @@
-import { destinations, faqItems, howItWorksSteps, pricingPlans } from '../models/site-content';
+import { HowItWorksStep, destinations, faqItems, howItWorksSteps, howItWorksTracks, pricingPlans } from '../models/site-content';
 
 /**
  * Registry of every website component that can be managed from
@@ -73,12 +73,40 @@ const heading = (eyebrow: string, title: string, copy: string): CmsField[] => [
 
 const items = (rows: [string, string][]): CmsItem[] => rows.map(([id, label]) => ({ id, label, visible: true }));
 
+/** Copy + steps for one How It Works capability (travel keeps the shared `steps` field). */
+const capabilityFields = (
+  trackId: 'rent' | 'chat' | 'shop',
+  label: string,
+  title: string,
+  copy: string,
+  steps: HowItWorksStep[],
+): CmsField[] => [
+  { key: `${trackId}Title`, label: `${label} — title`, type: 'text', default: title, maxLength: 120 },
+  { key: `${trackId}Copy`, label: `${label} — intro copy`, type: 'textarea', default: copy, maxLength: 600 },
+  {
+    key: `${trackId}Steps`,
+    label: `${label} — steps`,
+    type: 'records',
+    default: steps.map((s) => ({ number: s.number, title: s.title, description: s.description })),
+    recordFields: [
+      { key: 'number', label: 'Number', type: 'text' },
+      { key: 'title', label: 'Title', type: 'text' },
+      { key: 'description', label: 'Description', type: 'textarea' },
+    ],
+    recordTitleKey: 'title',
+    maxRecords: 6,
+  },
+];
+
+/** The shipped copy for one of the three capabilities beyond travel photography. */
+const track = (id: 'travel' | 'rent' | 'chat' | 'shop') => howItWorksTracks.find((t) => t.id === id)!;
+
 /** Home page sections, in their shipped order. */
 export const HOME_SECTIONS: [string, string][] = [
   ['hero', 'Hero banner'],
   ['multiverse', 'The NeverBeen Multiverse Studio'],
-  ['brochure', 'The NeverBeen Brochure'],
   ['storyline', 'The Storyline of Parallel Universe'],
+  ['brochure', 'The NeverBeen Brochure'],
   ['destinations', 'Popular Destinations'],
   ['gallery', 'Gallery'],
   ['how', 'How It Works'],
@@ -356,18 +384,19 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     page: 'home',
     label: 'How It Works',
     icon: '⚙️',
-    description: 'The studio process section with its numbered steps.',
+    description:
+      'The four NeverBeen capabilities — travel photography, AI model rental, live chat and merchandise — each explained step by step.',
     previewPath: '/',
     previewFragment: 'how-it-works',
     fields: [
       ...heading(
-        'The studio process',
+        'Four ways into the studio',
         'How It Works',
-        "Four quiet steps from a portrait on your phone to a photograph that looks like you left. Our team use latest high definition, efficient, limited and expensive AI Models and Algorithms to create your Photographs that nowhere people can detect it's AI generated. It will look real, that's a Promise from nowhere Team. Furthermore, we will test those photographs in different AI Detection Systems to ensure that it pass the test and Detection System unable to detect its AI generated.",
+        'NeverBeen is four businesses under one roof: travel photographs of yourself, AI models for rent, live chat with the models, and merchandise. Each one runs on the same quiet discipline — a clear request, a human check, and a finished piece that never looks machine-made. Below, every capability is explained step by step.',
       ),
       {
         key: 'steps',
-        label: 'Steps',
+        label: 'Travel photography — steps',
         type: 'records',
         default: howItWorksSteps.map((s) => ({ number: s.number, title: s.title, description: s.description })),
         recordFields: [
@@ -378,6 +407,9 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         recordTitleKey: 'title',
         maxRecords: 8,
       },
+      ...capabilityFields('rent', 'AI model rental', track('rent').title, track('rent').description, track('rent').steps),
+      ...capabilityFields('chat', 'Live chat', track('chat').title, track('chat').description, track('chat').steps),
+      ...capabilityFields('shop', 'Merchandise', track('shop').title, track('shop').description, track('shop').steps),
     ],
   },
   {

@@ -47,11 +47,33 @@ describe('Expandable home sections', () => {
     const fixture = create(HowItWorks);
     const element = fixture.nativeElement as HTMLElement;
 
-    expect(element.querySelectorAll('.step').length).toBeGreaterThan(0);
-    expect(getComputedStyle(element.querySelector<HTMLElement>('.step')!).fontFamily).toContain(
+    expect(element.querySelectorAll('.track-step').length).toBeGreaterThan(0);
+    expect(getComputedStyle(element.querySelector<HTMLElement>('.track-step')!).fontFamily).toContain(
       'Calibri',
     );
     expectCollapsedThenExpanded(fixture);
+  });
+
+  it('explains all four NeverBeen capabilities step by step inside How It Works', () => {
+    const fixture = create(HowItWorks);
+    const element = fixture.nativeElement as HTMLElement;
+    const capabilities = Array.from(element.querySelectorAll<HTMLElement>('.capability'));
+
+    expect(capabilities.map((c) => c.dataset['track'])).toEqual([
+      'travel',
+      'rent',
+      'chat',
+      'shop',
+    ]);
+    for (const capability of capabilities) {
+      expect(capability.querySelectorAll('.track-step').length).toBe(4);
+      expect(capability.querySelector('h3')?.textContent?.trim().length).toBeGreaterThan(0);
+    }
+
+    const ctaHrefs = Array.from(
+      element.querySelectorAll<HTMLAnchorElement>('.capability-cta'),
+    ).map((a) => a.getAttribute('href'));
+    expect(ctaHrefs).toEqual(['/#contact', '/ai-models', '/ai-models', '/merchandise']);
   });
 
   it('collapses Pricing by default and uses lavender for the selected plan', () => {

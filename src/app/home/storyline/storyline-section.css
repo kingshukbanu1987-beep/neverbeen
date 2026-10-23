@@ -28,10 +28,6 @@ h2 {
   color: #0b1220;
 }
 
-h2 em {
-  font-style: italic;
-}
-
 .lede {
   font-family: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
   font-size: clamp(1rem, 1.35vw, 1.15rem);

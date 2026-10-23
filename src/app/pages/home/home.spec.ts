@@ -35,7 +35,7 @@ describe('Home history restoration', () => {
     expect(ids[pricingIdx - 1]).toBe('how');
   });
 
-  it('orders Brochure under Multiverse and Storyline below Brochure', () => {
+  it('orders Storyline directly under Multiverse and Brochure below Storyline', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: DOCUMENT, useValue: { defaultView: { location: { reload: () => {} } } } },
@@ -45,7 +45,7 @@ describe('Home history restoration', () => {
     const ids = home['sections']().map((s) => s.id);
     const multiverseIdx = ids.indexOf('multiverse');
     expect(multiverseIdx).toBeGreaterThanOrEqual(0);
-    expect(ids[multiverseIdx + 1]).toBe('brochure');
-    expect(ids[multiverseIdx + 2]).toBe('storyline');
+    expect(ids[multiverseIdx + 1]).toBe('storyline');
+    expect(ids[multiverseIdx + 2]).toBe('brochure');
   });
 });

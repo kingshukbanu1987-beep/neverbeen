@@ -717,6 +717,146 @@ export const howItWorksSteps: HowItWorksStep[] = [
   },
 ];
 
+/** One of the four NeverBeen capabilities explained inside How It Works. */
+export interface HowItWorksTrack {
+  /** Stable id, also used as the CMS field prefix for editable copy. */
+  id: 'travel' | 'rent' | 'chat' | 'shop';
+  /** The big ordinal shown on the capability card. */
+  code: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  ctaLabel: string;
+  ctaHref: string;
+  steps: HowItWorksStep[];
+}
+
+/**
+ * The four business models the studio runs, in the order they appear inside
+ * How It Works: travel photography, AI-model rental, live chat and merchandise.
+ */
+export const howItWorksTracks: HowItWorksTrack[] = [
+  {
+    id: 'travel',
+    code: '01',
+    eyebrow: 'Travel photography',
+    title: 'Create travel photographs of yourself',
+    description:
+      'Our signature studio service. Send one honest portrait and the places you have never been; we return photographs of you standing in them, in light that looks borrowed from the trip itself.',
+    ctaLabel: 'Start a NeverBeen request',
+    ctaHref: '/#contact',
+    steps: howItWorksSteps,
+  },
+  {
+    id: 'rent',
+    code: '02',
+    eyebrow: 'AI model rental',
+    title: 'Rent NeverBeen AI Models for fashion & editorial photography',
+    description:
+      'Put a NeverBeen AI model in your next campaign. Use the roster for lookbooks, editorial spreads, e-commerce and brand promotion — with commercial licensing, art direction and retouching handled by the studio.',
+    ctaLabel: 'Meet the AI Models',
+    ctaHref: '/ai-models',
+    steps: [
+      {
+        number: '01',
+        title: 'Shortlist a model',
+        description:
+          'Browse the roster by look, build, mood and market, then save the NeverBeen AI models that fit your campaign.',
+      },
+      {
+        number: '02',
+        title: 'Brief the shoot',
+        description:
+          'Share moodboards, wardrobe, product shots, set references and the usage rights your brand needs.',
+      },
+      {
+        number: '03',
+        title: 'Direct the frames',
+        description:
+          'Approve poses, expressions, styling and lighting through revision rounds until every frame is on-brand.',
+      },
+      {
+        number: '04',
+        title: 'License and launch',
+        description:
+          'Receive print-ready, commercially licensed photographs for campaign, packaging, e-commerce and paid media.',
+      },
+    ],
+  },
+  {
+    id: 'chat',
+    code: '03',
+    eyebrow: 'Live chat',
+    title: 'Live chat with the NeverBeen AI Models',
+    description:
+      'Open a private, one-to-one conversation with a NeverBeen AI model and let it grow the way a human relationship does — through memory, mood, time and return visits.',
+    ctaLabel: 'Start a live chat',
+    ctaHref: '/ai-models',
+    steps: [
+      {
+        number: '01',
+        title: 'Choose a companion',
+        description:
+          'Read the biographies and portfolios, then pick the personality whose world you would like to step into.',
+      },
+      {
+        number: '02',
+        title: 'Open a private chat',
+        description:
+          'Start a one-to-one live chat from the model’s portfolio. Your companion remembers your name, tone and history.',
+      },
+      {
+        number: '03',
+        title: 'Build the relationship',
+        description:
+          'Talk daily, swap voice notes and photographs, and let the character respond to your mood and your story over time.',
+      },
+      {
+        number: '04',
+        title: 'Keep it yours',
+        description:
+          'Conversations stay in your account: pause, resume, export the history or clear it whenever you choose.',
+      },
+    ],
+  },
+  {
+    id: 'shop',
+    code: '04',
+    eyebrow: 'Merchandise',
+    title: 'Shop NeverBeen merchandise',
+    description:
+      'Carry the multiverse with you. Apparel, drinkware, stationery and collectibles are printed on demand from NeverBeen artwork and shipped to your door.',
+    ctaLabel: 'Shop NeverBeen merchandise',
+    ctaHref: '/merchandise',
+    steps: [
+      {
+        number: '01',
+        title: 'Choose your piece',
+        description:
+          'Explore tees, hoodies, caps, bottles, tiffin boxes, posters, notebooks, phone cases and more.',
+      },
+      {
+        number: '02',
+        title: 'Add it to the bag',
+        description:
+          'Pick the size, colour and quantity — the bag recalculates stock, pricing and totals as you go.',
+      },
+      {
+        number: '03',
+        title: 'Check out securely',
+        description:
+          'Confirm delivery details and pay through the guarded checkout, with tracking issued on dispatch.',
+      },
+      {
+        number: '04',
+        title: 'Unbox the multiverse',
+        description:
+          'Your made-to-order piece arrives within the stated working days, ready to wear, frame or collect.',
+      },
+    ],
+  },
+];
+
 export interface HeroDestination {
   place: string;
   caption: string;
