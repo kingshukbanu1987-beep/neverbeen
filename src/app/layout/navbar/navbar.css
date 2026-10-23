@@ -11,11 +11,16 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* Dark, compact site chrome for the AI model studio and its individual portfolios. */
+/* Plum, compact site chrome for the AI model studio and its individual profiles. */
 .nav.ai-models-nav {
   --nav-icon: #f7f0f4;
-  background: #09070b;
-  border-bottom-color: rgb(255 255 255 / 10%);
+  background: rgb(59, 36, 79);
+  border-bottom-color: rgb(255 255 255 / 14%);
+}
+
+.nav.ai-models-nav .menu,
+.nav.ai-models-nav nav#site-nav {
+  background: rgb(59, 36, 79);
 }
 
 .nav.ai-models-nav .logo img {
@@ -23,7 +28,7 @@
 }
 
 .nav.ai-models-nav nav#site-nav a {
-  color: rgb(247 240 244 / 75%);
+  color: rgb(247 240 244 / 80%);
 }
 
 .nav.ai-models-nav nav#site-nav a:hover,
@@ -37,7 +42,7 @@
 }
 
 .nav.ai-models-nav .menu:focus-visible {
-  outline-color: #ef6aa5;
+  outline-color: rgb(150 120 182);
 }
 
 .bar {
@@ -383,8 +388,8 @@ a:has(use[href='#nb-icon-live']) .icon {
 
   .nav.ai-models-nav nav#site-nav {
     top: clamp(52px, 6.5vw, 68px);
-    background: #100c12;
-    border-bottom-color: rgb(255 255 255 / 11%);
+    background: rgb(59, 36, 79);
+    border-bottom-color: rgb(255 255 255 / 14%);
   }
 
   .icon {
