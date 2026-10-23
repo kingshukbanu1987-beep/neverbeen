@@ -423,6 +423,29 @@
   outline-offset: 3px;
 }
 
+/* The live dot: a small white centre inside the green button that pulses like a heartbeat. */
+.card-chat-dot {
+  display: inline-block;
+  width: 0.5rem;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: card-chat-dot-pulse 2.2s ease-out infinite;
+}
+
+@keyframes card-chat-dot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 255 255 / 80%), 0 0 8px 1px rgb(255 255 255 / 60%);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.42rem rgb(255 255 255 / 0%), 0 0 8px 1px rgb(255 255 255 / 0%);
+  }
+}
+
 @keyframes card-chat-glow {
   0%,
   100% {
@@ -2462,21 +2485,22 @@
 
 /* ------------------------------------------------------------ page-wide chrome */
 
-/* Black split pill (60% opacity) so the Live Now / Past Chats counts stay readable on any
-   album background, and exactly as tall as the Live Chat button beside it. */
+/* Black split pill so the Live Now / Past Chats counts stay readable on any album background,
+   and exactly as tall as the Live Chat button beside it. The black is kept mostly opaque so the
+   pill reads as a distinct dark capsule against the light page. */
 app-model-live-chat-pill .card-live-pill {
-  --pill-border: rgb(255 255 255 / 20%);
-  --pill-surface: rgb(0 0 0 / 60%);
-  --pill-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 8px 22px rgb(0 0 0 / 40%);
+  --pill-border: rgb(255 255 255 / 30%);
+  --pill-surface: rgb(0 0 0 / 82%);
+  --pill-shadow: inset 0 1px 0 rgb(255 255 255 / 18%), 0 8px 22px rgb(0 0 0 / 45%);
   --pill-text: #ffffff;
-  --pill-divider: rgb(255 255 255 / 25%);
-  --pill-bubble-fill: rgb(255 255 255 / 14%);
-  --pill-bubble-stroke: rgb(255 255 255 / 70%);
+  --pill-divider: rgb(255 255 255 / 30%);
+  --pill-bubble-fill: rgb(255 255 255 / 16%);
+  --pill-bubble-stroke: rgb(255 255 255 / 80%);
   --pill-bubble-dot: #ffffff;
-  --pill-dot: rgb(255 255 255 / 45%);
-  --pill-word: rgb(255 255 255 / 75%);
+  --pill-dot: rgb(255 255 255 / 55%);
+  --pill-word: rgb(255 255 255 / 85%);
   --pill-live-word: #aee3b0;
-  --pill-live-border: rgb(116 196 118 / 60%);
+  --pill-live-border: rgb(116 196 118 / 70%);
   height: var(--card-chat-height, calc(0.45rem * 2 + 1.02rem * 1.15));
 }
 
