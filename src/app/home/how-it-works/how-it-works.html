@@ -3,22 +3,85 @@
     <app-home-disclosure
       cmsKey="home.how"
       contentId="how-it-works-content"
-      eyebrow="The studio process"
+      eyebrow="Four ways into the studio"
       title="How It Works"
-      copy="Four quiet steps from a portrait on your phone to a photograph that looks like you left. Our team use latest high definition, efficient, limited and expensive AI Models and Algorithms to create your Photographs that nowhere people can detect it's AI generated. It will look real, that's a Promise from nowhere Team. Furthermore, we will test those photographs in different AI Detection Systems to ensure that it pass the test and Detection System unable to detect its AI generated."
-      [meta]="steps().length + ' simple steps'"
+      copy="NeverBeen is four businesses under one roof: travel photographs of yourself, AI models for rent, live chat with the models, and merchandise. Each one runs on the same quiet discipline — a clear request, a human check, and a finished piece that never looks machine-made. Below, every capability is explained step by step."
+      [meta]="tracks().length + ' capabilities · step by step'"
     >
-      <div class="steps">
-        @for (step of steps(); track $index; let i = $index) {
-          <article class="step">
-            <div class="step-marker">
-              <span class="step-number">{{ step.number }}</span>
-              @if (i < steps().length - 1) {
-                <span class="step-connector" aria-hidden="true"></span>
+      <div class="capabilities">
+        @for (track of tracks(); track track.id) {
+          <article class="capability" [attr.data-track]="track.id">
+            <header class="capability-head">
+              <div class="capability-topline">
+                <span class="capability-icon" aria-hidden="true">
+                  @switch (track.id) {
+                    @case ('travel') {
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <circle cx="12" cy="12" r="8.4" />
+                        <path
+                          d="M3.8 12h16.4M12 3.6c2.4 2.3 3.6 5.1 3.6 8.4s-1.2 6.1-3.6 8.4c-2.4-2.3-3.6-5.1-3.6-8.4S9.6 5.9 12 3.6Z"
+                        />
+                      </svg>
+                    }
+                    @case ('rent') {
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path
+                          d="M12 3.2l1.9 4.6 4.9.4-3.7 3.3 1.1 4.8L12 13.8l-4.2 2.5 1.1-4.8-3.7-3.3 4.9-.4z"
+                        />
+                        <path d="M5 19.5h14" />
+                      </svg>
+                    }
+                    @case ('chat') {
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path
+                          d="M20.2 12.3c0 4.2-3.7 7.6-8.2 7.6-1.1 0-2.2-.2-3.2-.6L4 21l1.4-4.2c-1-1.3-1.6-2.8-1.6-4.5 0-4.2 3.7-7.6 8.2-7.6s8.2 3.4 8.2 7.6Z"
+                        />
+                        <path d="M9 11.6h6M9 14.8h4" />
+                      </svg>
+                    }
+                    @case ('shop') {
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path
+                          d="M5.4 8.2h13.2l-1 11.4a1.7 1.7 0 0 1-1.7 1.6H8.1a1.7 1.7 0 0 1-1.7-1.6z"
+                        />
+                        <path d="M9 9V6.9a3 3 0 0 1 6 0V9" />
+                      </svg>
+                    }
+                  }
+                </span>
+                <span class="capability-code" aria-hidden="true">{{ track.code }}</span>
+              </div>
+
+              <p class="capability-eyebrow">{{ track.eyebrow }}</p>
+              <h3>{{ track.title }}</h3>
+              <p class="capability-copy">{{ track.description }}</p>
+
+              <a class="capability-cta" [href]="track.ctaHref">
+                <span>{{ track.ctaLabel }}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    d="M5 12h13m-5-5 5 5-5 5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.9"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </a>
+            </header>
+
+            <ol class="track-steps" [attr.aria-label]="track.title + ' steps'">
+              @for (step of track.steps; track $index; let last = $last) {
+                <li class="track-step" [class.is-last]="last">
+                  <span class="track-step-number" aria-hidden="true">{{ step.number }}</span>
+                  <div class="track-step-body">
+                    <h4>{{ step.title }}</h4>
+                    <p>{{ step.description }}</p>
+                  </div>
+                </li>
               }
-            </div>
-            <h3>{{ step.title }}</h3>
-            <p>{{ step.description }}</p>
+            </ol>
           </article>
         }
       </div>

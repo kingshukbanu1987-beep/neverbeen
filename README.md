@@ -582,6 +582,27 @@ a fixed stride so neighbouring slides never repeat the same words. The section i
 autoplay and seconds per memo — is managed in **Admin Console → Website Management → The NeverBeen
 Multiverse Studio**, and can be hidden or moved like any other home section under *Sections & order*.
 
+## How It Works on the home page
+
+The home page runs **The NeverBeen Multiverse Studio → The Storyline of Parallel Universe → The
+NeverBeen Brochure** directly under the hero, then **How It Works** immediately before **Pricing**.
+`Home.sections()` pins that order even when a previously published section order in Admin Console →
+Website Management predates it, so the storyline always reads before the brochure.
+
+**How It Works** explains the four NeverBeen business models one after another, each as four numbered
+steps in its own accent-coloured capability card:
+
+| # | Capability | Where it leads |
+| - | ---------- | -------------- |
+| 01 | Travel photographs of yourself | `/#contact` |
+| 02 | Rent NeverBeen AI Models for fashion & editorial photography | `/ai-models` |
+| 03 | Live chat with the NeverBeen AI Models | `/ai-models` |
+| 04 | Shop NeverBeen merchandise | `/merchandise` |
+
+The shipped copy lives in `howItWorksTracks` (`src/app/models/site-content.ts`). The travel steps are
+edited under **How It Works → Travel photography — steps**; the other three capabilities expose their
+title, intro copy and steps as their own fields, so each one can be reworded without touching code.
+
 ## The brochure (`/documentation`)
 
 The Documentation page publishes a single client-facing PDF — the **NeverBeen visitor brochure**

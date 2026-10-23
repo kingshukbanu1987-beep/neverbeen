@@ -45,31 +45,29 @@ export class Home {
   private readonly cms = inject(SiteConfigService);
   protected readonly sections = computed(() => {
     const sections = [...this.cms.visibleItems('home.layout', 'sections')];
-    const brochureIdx = sections.findIndex((s) => s.id === 'brochure');
-    if (brochureIdx >= 0) {
-      const [brochure] = sections.splice(brochureIdx, 1);
-      const multiverseIdx = sections.findIndex((s) => s.id === 'multiverse');
-      if (multiverseIdx >= 0) sections.splice(multiverseIdx + 1, 0, brochure);
-      else sections.push(brochure);
-    }
-    const storylineIdx = sections.findIndex((s) => s.id === 'storyline');
-    if (storylineIdx >= 0) {
-      const [storyline] = sections.splice(storylineIdx, 1);
-      const brochureAnchor = sections.findIndex((s) => s.id === 'brochure');
-      const multiverseAnchor = sections.findIndex((s) => s.id === 'multiverse');
-      const anchor = brochureAnchor >= 0 ? brochureAnchor : multiverseAnchor;
-      if (anchor >= 0) sections.splice(anchor + 1, 0, storyline);
-      else sections.push(storyline);
-    }
+    // The Storyline of Parallel Universe sits directly under the Multiverse
+    // studio, with the NeverBeen Brochure right after it — even when a
+    // published section order predates that move.
+    moveAfter(sections, 'storyline', 'multiverse');
+    moveAfter(sections, 'brochure', 'storyline');
     // How It Works belongs immediately before Pricing, even when a published
     // section order predates that move.
-    const howIdx = sections.findIndex((s) => s.id === 'how');
-    if (howIdx >= 0) {
-      const [how] = sections.splice(howIdx, 1);
-      const pricingIdx = sections.findIndex((s) => s.id === 'pricing');
-      if (pricingIdx >= 0) sections.splice(pricingIdx, 0, how);
-      else sections.push(how);
-    }
+    moveAfter(sections, 'how', 'pricing', 'before');
     return sections;
   });
+}
+
+/** Re-orders a home section next to another, leaving hidden ids out of it. */
+function moveAfter(
+  sections: { id: string }[],
+  id: string,
+  anchorId: string,
+  side: 'after' | 'before' = 'after',
+): void {
+  const from = sections.findIndex((s) => s.id === id);
+  if (from < 0) return;
+  const [section] = sections.splice(from, 1);
+  const anchor = sections.findIndex((s) => s.id === anchorId);
+  if (anchor >= 0) sections.splice(side === 'after' ? anchor + 1 : anchor, 0, section);
+  else sections.push(section);
 }
