@@ -123,20 +123,22 @@
   margin-top: 1.15rem;
 }
 
-/* "NeverBeen AI Models" wears the studio pink. */
+/* "NeverBeen AI Models" wears the lavender of the AI Models directory: rgb(150, 120, 182). */
 .btn-ai-models {
-  background: #ff46a2;
+  border-color: rgb(150 120 182 / 55%);
+  background: rgb(150 120 182);
   color: #fff;
+  box-shadow: 0 14px 30px -18px rgb(88 58 128 / 70%);
 }
 
 .btn-ai-models:hover,
 .btn-ai-models:focus-visible {
-  background: #e52d8b;
+  background: #8569a8;
   color: #fff;
 }
 
 .btn-ai-models:focus-visible {
-  outline: 2px solid #ff46a2;
+  outline: 2px solid rgb(150 120 182);
   outline-offset: 3px;
 }
 
@@ -159,7 +161,9 @@
 }
 
 .stage:focus-visible {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 5px rgba(91, 91, 240, 0.55);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 5px rgba(91, 91, 240, 0.55);
 }
 
 .deck {
@@ -180,7 +184,9 @@
   margin: 0;
   opacity: 0;
   transform: scale(1.05);
-  transition: opacity 800ms cubic-bezier(0.22, 0.61, 0.36, 1), transform 1500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition:
+    opacity 800ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 1500ms cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: opacity, transform;
 }
 
@@ -329,7 +335,10 @@
   color: var(--studio-ink);
   cursor: pointer;
   box-shadow: 0 10px 26px rgba(11, 13, 18, 0.18);
-  transition: transform 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .nav svg {
@@ -392,7 +401,12 @@
   inset: 0;
   transform-origin: left center;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--studio-ink), var(--studio-accent) 58%, var(--studio-warm));
+  background: linear-gradient(
+    90deg,
+    var(--studio-ink),
+    var(--studio-accent) 58%,
+    var(--studio-warm)
+  );
   animation: rail-progress linear both;
 }
 

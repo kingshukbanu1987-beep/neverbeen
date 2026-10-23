@@ -2,6 +2,11 @@
 :host {
   display: inline-flex;
   min-width: 0;
+
+  /* A page may re-livery the counter for its own surface (see ai-models.css). */
+  --compact-count-hover-bg: rgb(255 255 255 / 8%);
+  --compact-count-hover-text: #fff;
+  --compact-count-focus: #f47ab0;
 }
 
 .compact-count {
@@ -26,17 +31,13 @@
     background 160ms ease;
 }
 
-.compact-count:hover {
-  background: rgb(255 255 255 / 8%);
-  color: #fff;
-}
-
+.compact-count:hover,
 .compact-count.is-open {
-  background: rgb(255 255 255 / 10%);
-  color: #fff;
+  background: var(--compact-count-hover-bg);
+  color: var(--compact-count-hover-text);
 }
 
 .compact-count:focus-visible {
-  outline: 2px solid #f47ab0;
+  outline: 2px solid var(--compact-count-focus);
   outline-offset: 3px;
 }

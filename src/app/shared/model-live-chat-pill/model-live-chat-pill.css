@@ -2,6 +2,20 @@
   display: inline-flex;
   min-width: 0;
   max-width: 100%;
+  /* The glass is themed by the page that holds the pill: dark glass by default, white glass on the
+     white-and-lavender directory (see app-model-live-chat-pill in ai-models.css). */
+  --pill-border: rgb(255 255 255 / 18%);
+  --pill-surface: linear-gradient(135deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 3%));
+  --pill-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 8px 22px rgb(0 0 0 / 20%);
+  --pill-text: #ffffff;
+  --pill-divider: rgb(255 255 255 / 30%);
+  --pill-bubble-fill: rgb(255 255 255 / 14%);
+  --pill-bubble-stroke: rgb(255 255 255 / 78%);
+  --pill-bubble-dot: rgb(255 255 255 / 88%);
+  --pill-dot: rgb(255 255 255 / 34%);
+  --pill-word: rgb(255 255 255 / 66%);
+  --pill-live-word: #aee3b0;
+  --pill-live-border: rgb(116 196 118 / 46%);
 }
 
 /*
@@ -20,14 +34,12 @@
   /* Exactly as tall as the Live Chat button it shares the row with (see --card-chat-height). */
   height: var(--card-chat-height, calc(0.45rem * 2 + 1.02rem * 1.15));
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 18%);
+  border: 1px solid var(--pill-border);
   border-radius: 999px;
-  background: linear-gradient(135deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 3%));
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 12%),
-    0 8px 22px rgb(0 0 0 / 20%);
+  background: var(--pill-surface);
+  box-shadow: var(--pill-shadow);
   backdrop-filter: blur(12px);
-  color: #ffffff;
+  color: var(--pill-text);
   white-space: nowrap;
   transition:
     border-color 180ms ease,
@@ -35,10 +47,7 @@
 }
 
 .card-live-pill.is-live {
-  border-color: rgb(116 196 118 / 46%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 14%),
-    0 8px 24px rgb(28 88 40 / 26%);
+  border-color: var(--pill-live-border);
 }
 
 .card-live-pill-seg {
@@ -60,7 +69,7 @@
   width: 1px;
   flex: 0 0 auto;
   align-self: stretch;
-  background: linear-gradient(180deg, transparent, rgb(255 255 255 / 30%), transparent);
+  background: linear-gradient(180deg, transparent, var(--pill-divider), transparent);
 }
 
 /* The small chat bubble in front of the past-chat total: a modern rounded bubble in
@@ -83,15 +92,15 @@
 }
 
 .card-live-pill-bubble-shape {
-  fill: rgb(255 255 255 / 14%);
-  stroke: rgb(255 255 255 / 78%);
+  fill: var(--pill-bubble-fill);
+  stroke: var(--pill-bubble-stroke);
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .card-live-pill-bubble-dot {
-  fill: rgb(255 255 255 / 88%);
+  fill: var(--pill-bubble-dot);
 }
 
 /* The dot of the live half: quiet grey while nobody is chatting, a pulsing beacon while they are. */
@@ -100,7 +109,7 @@
   aspect-ratio: 1;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: rgb(255 255 255 / 34%);
+  background: var(--pill-dot);
 }
 
 .card-live-pill.is-live .card-live-pill-dot {
@@ -123,7 +132,7 @@
 }
 
 .card-live-pill-word {
-  color: rgb(255 255 255 / 66%);
+  color: var(--pill-word);
   font-family: inherit;
   font-size: 0.88rem;
   font-style: normal;
@@ -134,7 +143,7 @@
 }
 
 .card-live-pill.is-live .card-live-pill-seg.is-now .card-live-pill-word {
-  color: #aee3b0;
+  color: var(--pill-live-word);
 }
 
 @keyframes card-live-pill-beacon {
