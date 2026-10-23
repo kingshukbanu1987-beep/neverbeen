@@ -29,4 +29,16 @@ export class Footer {
   protected readonly copyright = computed(() => this.cms.text('global.footer', 'copyright'));
   protected readonly columns = computed(() => this.cms.visibleItems('global.footer', 'columns'));
   protected readonly showAdmin = computed(() => this.cms.flag('global.footer', 'showAdminLink'));
+
+  /** Returns the visitor to the top of the page, honouring reduced-motion preferences. */
+  protected scrollToTop(): void {
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
 }
