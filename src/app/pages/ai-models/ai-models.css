@@ -1289,10 +1289,7 @@
   text-transform: uppercase;
 }
 
-.model-card:hover .card-photo-count,
-.model-card:hover .card-video-count {
-  background: rgb(173 20 26 / 42%);
-}
+/* The count band keeps its own quiet glass whether the card is at rest, hovered or selected. */
 
 /* Preview — the cinematic play of the model's complete public album: one lavender capsule
    stretched across the row under the counts, rgb(150, 120, 182), with a soft sonar halo of the
