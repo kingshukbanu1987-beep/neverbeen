@@ -89,7 +89,7 @@ export class Navbar {
     /^\/community(?:\/register)?\/?(\?|#|$)/.test(this.currentUrl()),
   );
 
-  /** Give the AI model studio and its profile pages their plum site chrome: rgb(59, 36, 79). */
+  /** Give the AI model studio and its profile pages their plum site chrome: rgb(55, 38, 66). */
   protected readonly isAiModels = computed(() =>
     /^\/?ai-models(?:\/|\?|#|$)/.test(this.currentUrl()),
   );

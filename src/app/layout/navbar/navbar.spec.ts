@@ -234,7 +234,7 @@ describe('Navbar', () => {
     expect(element.querySelector('.logo')).toBeNull();
   });
 
-  it('uses rgb(59, 36, 79) for the header and menu background on /ai-models and model profile pages', () => {
+  it('uses rgb(55, 38, 66) for the header and menu background on /ai-models and model profile pages', () => {
     const fixture = create();
     const component = fixture.componentInstance;
     const element: HTMLElement = fixture.nativeElement;
@@ -256,14 +256,14 @@ describe('Navbar', () => {
 
       expect(component['isAiModels']()).toBe(true);
       expect(header.classList.contains('ai-models-nav')).toBe(true);
-      expect(getComputedStyle(header).backgroundColor).toBe('rgb(59, 36, 79)');
-      expect(getComputedStyle(menuButton).backgroundColor).toBe('rgb(59, 36, 79)');
-      expect(getComputedStyle(siteNav).backgroundColor).toBe('rgb(59, 36, 79)');
+      expect(getComputedStyle(header).backgroundColor).toBe('rgb(55, 38, 66)');
+      expect(getComputedStyle(menuButton).backgroundColor).toBe('rgb(55, 38, 66)');
+      expect(getComputedStyle(siteNav).backgroundColor).toBe('rgb(55, 38, 66)');
 
       menuButton.click();
       fixture.detectChanges();
       expect(siteNav.classList.contains('open')).toBe(true);
-      expect(getComputedStyle(siteNav).backgroundColor).toBe('rgb(59, 36, 79)');
+      expect(getComputedStyle(siteNav).backgroundColor).toBe('rgb(55, 38, 66)');
 
       menuButton.click();
       fixture.detectChanges();
