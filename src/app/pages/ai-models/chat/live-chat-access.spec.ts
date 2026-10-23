@@ -27,6 +27,7 @@ const premiumPrices: Readonly<Record<string, number>> = {
   'tasneem-al-rifai': 99,
   'fatima-sana-hussaini': 109,
   'ziba-nazrin': 179,
+  'maeve-anahita': 189,
 };
 
 const upiLauncher = {
