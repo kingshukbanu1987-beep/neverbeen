@@ -156,7 +156,7 @@
 
 .shell {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.35fr);
   gap: clamp(2rem, 5vw, 4.5rem);
   align-items: start;
 }
@@ -211,102 +211,6 @@
   color: var(--f-muted);
   font-size: clamp(0.98rem, 1.15vw, 1.08rem);
   line-height: 1.62;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: 1.7rem;
-}
-
-.cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  min-height: 48px;
-  padding: 0.72rem 1.35rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.92rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease,
-    background 0.3s ease,
-    color 0.3s ease,
-    border-color 0.3s ease;
-}
-
-.cta-solid {
-  color: #3a2160;
-  background: linear-gradient(135deg, #ffffff 0%, #f4e9ff 100%);
-  box-shadow:
-    0 16px 34px -18px rgba(22, 7, 40, 0.95),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.75);
-}
-
-.cta-solid:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 22px 42px -18px rgba(22, 7, 40, 1),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.95);
-}
-
-.cta-arrow {
-  width: 17px;
-  height: 17px;
-  transition: transform 0.3s ease;
-}
-
-.cta-solid:hover .cta-arrow {
-  transform: translateX(4px);
-}
-
-.cta-line {
-  color: var(--f-ink);
-  border-color: rgba(255, 255, 255, 0.34);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(10px);
-}
-
-.cta-line:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.13);
-  border-color: rgba(255, 255, 255, 0.58);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin: 1.9rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.chips li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.36rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(248, 242, 255, 0.78);
-  font-size: 0.74rem;
-  letter-spacing: 0.04em;
-}
-
-.chips li::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--f-warm);
-  box-shadow: 0 0 0 3px rgba(255, 227, 189, 0.16);
 }
 
 /* ------------------------------------------------------------------ columns */
@@ -431,48 +335,6 @@
   letter-spacing: 0.01em;
 }
 
-.baseline-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(248, 242, 255, 0.76);
-  font-size: 0.72rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.pulse {
-  position: relative;
-  width: 7px;
-  height: 7px;
-  flex: none;
-  border-radius: 50%;
-  background: #a6f5cf;
-  box-shadow: 0 0 0 0 rgba(166, 245, 207, 0.6);
-  animation: pulse 2.6s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(166, 245, 207, 0.55);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(166, 245, 207, 0);
-  }
-}
-
 .to-top {
   display: inline-flex;
   align-items: center;
@@ -533,20 +395,10 @@
     radial-gradient(110% 90% at 55% 118%, rgba(74, 12, 42, 0.55), transparent 66%);
 }
 
-.footer.ai-models-footer .chips li::before {
-  background: #ef6aa5;
-  box-shadow: 0 0 0 3px rgba(239, 106, 165, 0.18);
-}
-
 .footer.ai-models-footer .to-top:hover {
   background: #ef6aa5;
   border-color: #ef6aa5;
   color: #09070b;
-}
-
-.footer.ai-models-footer .cta-solid {
-  color: #2a0718;
-  background: linear-gradient(135deg, #ffffff 0%, #ffe4ef 100%);
 }
 
 /* ------------------------------------------------------------- responsive */
@@ -589,10 +441,6 @@
     align-items: flex-start;
     flex-direction: column;
   }
-
-  .cta {
-    flex: 1 1 auto;
-  }
 }
 
 @media (max-width: 460px) {
@@ -603,14 +451,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .footer::before,
-  .aurora,
-  .pulse {
+  .aurora {
     animation: none !important;
   }
 
   .mark,
-  .cta,
-  .cta-arrow,
   .column,
   .column a,
   .column a::after,

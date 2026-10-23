@@ -31,34 +31,6 @@
       @if (tagline()) {
         <p class="tag">{{ tagline() }}</p>
       }
-
-      <div class="actions">
-        <a class="cta cta-solid" routerLink="/collection">
-          <span>Start a collection</span>
-          <svg
-            class="cta-arrow"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <path
-              d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-          </svg>
-        </a>
-        <a class="cta cta-line" routerLink="/" fragment="contact">Talk to the studio</a>
-      </div>
-
-      <ul class="chips" aria-label="Studio highlights">
-        <li>AI travel portraits</li>
-        <li>Every destination</li>
-        <li>Made in minutes</li>
-      </ul>
     </div>
 
     <!-- Columns (order, titles, visibility) are managed in Admin Console → Website Management. -->
@@ -98,21 +70,18 @@
 
   <div class="container baseline">
     <p class="copy">© {{ year }} NeverBeen. {{ copyright() }}</p>
-    <div class="baseline-actions">
-      <span class="status"><span class="pulse" aria-hidden="true"></span>Made with AI</span>
-      <button class="to-top" type="button" (click)="scrollToTop()">
-        Back to top
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          focusable="false"
-          aria-hidden="true"
-        >
-          <path d="M12 19V5M6 11l6-6 6 6" stroke-linecap="round" stroke-linejoin="round"></path>
-        </svg>
-      </button>
-    </div>
+    <button class="to-top" type="button" (click)="scrollToTop()">
+      Back to top
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        focusable="false"
+        aria-hidden="true"
+      >
+        <path d="M12 19V5M6 11l6-6 6 6" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
   </div>
 </footer>
