@@ -3,7 +3,12 @@ import { provideRouter } from '@angular/router';
 import { Navbar } from './navbar';
 import { routes } from '../../app.routes';
 import { CommunityBadgeService } from '../../services/community-badge.service';
-import { CommunityService, deleteCookie, setCookie, TOKEN_KEY } from '../../services/community.service';
+import {
+  CommunityService,
+  deleteCookie,
+  setCookie,
+  TOKEN_KEY,
+} from '../../services/community.service';
 import { SiteTabService } from '../../services/site-tab.service';
 import { ActiveChatBox, Companion, NotificationItem } from '../../models/community';
 
@@ -23,7 +28,14 @@ function makeCompanion(id: number): Companion {
 }
 
 function makeBox(companionId: number, unreadCount: number): ActiveChatBox {
-  return { companionId, companion: makeCompanion(companionId), isMinimized: false, draftText: '', unreadCount, messages: [] };
+  return {
+    companionId,
+    companion: makeCompanion(companionId),
+    isMinimized: false,
+    draftText: '',
+    unreadCount,
+    messages: [],
+  };
 }
 
 function makeNotification(id: number, isRead = false): NotificationItem {
@@ -222,6 +234,48 @@ describe('Navbar', () => {
     expect(element.querySelector('.logo')).toBeNull();
   });
 
+  it('uses rgb(55, 38, 66) for the header and menu background on /ai-models and model profile pages', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    const header = element.querySelector('header.nav') as HTMLElement;
+    const menuButton = element.querySelector('button.menu') as HTMLButtonElement;
+    const siteNav = element.querySelector('nav#site-nav') as HTMLElement;
+
+    for (const url of [
+      '/ai-models',
+      '/ai-models?search=fiadh',
+      '/ai-models/fiadh-dara',
+      '/ai-models/fiadh-dara#testimonials',
+      '/ai-models/fiadh-dara/photos',
+      '/ai-models/fiadh-dara/biography',
+      '/ai-models/fiadh-dara/portfolio',
+    ]) {
+      component['currentUrl'].set(url);
+      fixture.detectChanges();
+
+      expect(component['isAiModels']()).toBe(true);
+      expect(header.classList.contains('ai-models-nav')).toBe(true);
+      expect(getComputedStyle(header).backgroundColor).toBe('rgb(55, 38, 66)');
+      expect(getComputedStyle(menuButton).backgroundColor).toBe('rgb(55, 38, 66)');
+      expect(getComputedStyle(siteNav).backgroundColor).toBe('rgb(55, 38, 66)');
+
+      menuButton.click();
+      fixture.detectChanges();
+      expect(siteNav.classList.contains('open')).toBe(true);
+      expect(getComputedStyle(siteNav).backgroundColor).toBe('rgb(55, 38, 66)');
+
+      menuButton.click();
+      fixture.detectChanges();
+    }
+
+    component['currentUrl'].set('/');
+    fixture.detectChanges();
+    expect(component['isAiModels']()).toBe(false);
+    expect(header.classList.contains('ai-models-nav')).toBe(false);
+    expect(getComputedStyle(header).backgroundColor).toBe('rgb(255, 255, 255)');
+  });
+
   it('keeps the full website header on the Community sign-in page', () => {
     const fixture = create();
     const component = fixture.componentInstance;
@@ -271,7 +325,9 @@ describe('Navbar', () => {
     TestBed.flushEffects();
     fixture.detectChanges();
 
-    const chatBadge = element.querySelector('a[href="/profile#messenger"] .ch-badge')?.textContent?.trim();
+    const chatBadge = element
+      .querySelector('a[href="/profile#messenger"] .ch-badge')
+      ?.textContent?.trim();
     expect(community.unreadChatCount()).toBeGreaterThan(0);
     expect(chatBadge).toBe(String(community.unreadChatCount()));
   });
@@ -315,7 +371,10 @@ describe('Navbar', () => {
     TestBed.inject(SiteTabService).sync();
 
     // Over 99 unread → the 99+ cap.
-    apply(Array.from({ length: 105 }, (_, i) => makeNotification(i + 1)), [makeBox(7, 1)]);
+    apply(
+      Array.from({ length: 105 }, (_, i) => makeNotification(i + 1)),
+      [makeBox(7, 1)],
+    );
     expect(iconBadges()).toEqual([null, '99+', '1']);
 
     // Everything marked read → the badges disappear.

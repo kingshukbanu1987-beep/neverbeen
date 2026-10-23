@@ -1,4 +1,12 @@
-import { Component, DestroyRef, ElementRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgOptimizedImage } from '@angular/common';
 import { filter } from 'rxjs/operators';
@@ -14,6 +22,14 @@ interface NavLink {
   icon: string;
 }
 
+function initialNavbarUrl(routerUrl: string): string {
+  if (routerUrl && routerUrl !== '/') return routerUrl;
+  if (typeof location !== 'undefined' && location.pathname && location.pathname !== '/') {
+    return `${location.pathname}${location.search}${location.hash}`;
+  }
+  return routerUrl || '';
+}
+
 @Component({
   selector: 'app-navbar',
   imports: [NgOptimizedImage, RouterLink, RouterLinkActive, CommunitySearchBox],
@@ -25,7 +41,7 @@ export class Navbar {
   private readonly cms = inject(SiteConfigService);
   private readonly badges = inject(CommunityBadgeService);
   protected readonly open = signal(false);
-  protected readonly currentUrl = signal(this.router.url || '');
+  protected readonly currentUrl = signal(initialNavbarUrl(this.router.url));
 
   /**
    * Community header badges: unread notifications / unread chats. Read from the
@@ -69,11 +85,13 @@ export class Navbar {
    * header appears only once a visitor enters the community itself (/community/… pages,
    * member profiles and the Message Book).
    */
-  private readonly isCommunitySignIn = computed(() => /^\/community(?:\/register)?\/?(\?|#|$)/.test(this.currentUrl()));
+  private readonly isCommunitySignIn = computed(() =>
+    /^\/community(?:\/register)?\/?(\?|#|$)/.test(this.currentUrl()),
+  );
 
-  /** Give the AI model studio the same compact, ink-dark site chrome as its portfolio pages. */
+  /** Give the AI model studio and its profile pages their plum site chrome: rgb(55, 38, 66). */
   protected readonly isAiModels = computed(() =>
-    /^\/ai-models(?:\/|\?|#|$)/.test(this.currentUrl()),
+    /^\/?ai-models(?:\/|\?|#|$)/.test(this.currentUrl()),
   );
 
   /**
@@ -98,10 +116,22 @@ export class Navbar {
   );
 
   private readonly allLinks: NavLink[] = [
-    { id: 'home', label: 'Home', path: '/', fragment: undefined as string | undefined, icon: 'home' },
+    {
+      id: 'home',
+      label: 'Home',
+      path: '/',
+      fragment: undefined as string | undefined,
+      icon: 'home',
+    },
     { id: 'how', label: 'How', path: '/', fragment: 'how-it-works', icon: 'cog' },
     { id: 'audience', label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
-    { id: 'collection', label: 'Collection', path: '/collection', fragment: undefined, icon: 'image' },
+    {
+      id: 'collection',
+      label: 'Collection',
+      path: '/collection',
+      fragment: undefined,
+      icon: 'image',
+    },
     {
       id: 'merchandise',
       label: 'Merchandise',
@@ -109,14 +139,26 @@ export class Navbar {
       fragment: undefined,
       icon: 'shopping-bag',
     },
-    { id: 'destinations', label: 'Destinations', path: '/', fragment: 'destinations', icon: 'map-pin' },
+    {
+      id: 'destinations',
+      label: 'Destinations',
+      path: '/',
+      fragment: 'destinations',
+      icon: 'map-pin',
+    },
     { id: 'live', label: 'Live', path: '/travel-feeds', fragment: undefined, icon: 'live' },
     { id: 'pricing', label: 'Pricing', path: '/', fragment: 'pricing', icon: 'tag' },
     { id: 'faq', label: 'FAQ', path: '/', fragment: 'faq', icon: 'help-circle' },
     { id: 'admin', label: 'Admin', path: '/login', fragment: undefined, icon: 'log-in' },
     { id: 'founder', label: 'Founder', path: '/', fragment: 'owner', icon: 'user' },
     { id: 'contact', label: 'Contact', path: '/', fragment: 'contact', icon: 'mail' },
-    { id: 'feedback', label: 'Feedback', path: '/feedback', fragment: undefined, icon: 'message-square' },
+    {
+      id: 'feedback',
+      label: 'Feedback',
+      path: '/feedback',
+      fragment: undefined,
+      icon: 'message-square',
+    },
   ];
 
   /** Menu options in the order, wording and visibility published in Website Management. */

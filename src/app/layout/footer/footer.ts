@@ -4,6 +4,14 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { SiteConfigService } from '../../services/site-config.service';
 
+function initialFooterUrl(routerUrl: string): string {
+  if (routerUrl && routerUrl !== '/') return routerUrl;
+  if (typeof location !== 'undefined' && location.pathname && location.pathname !== '/') {
+    return `${location.pathname}${location.search}${location.hash}`;
+  }
+  return routerUrl || '';
+}
+
 @Component({
   selector: 'app-footer',
   imports: [RouterLink],
@@ -18,7 +26,7 @@ export class Footer {
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
       map((event) => event.urlAfterRedirects || event.url),
     ),
-    { initialValue: this.router.url },
+    { initialValue: initialFooterUrl(this.router.url) },
   );
   protected readonly isAiModels = computed(() => {
     const path = this.currentUrl().split(/[?#]/)[0];
