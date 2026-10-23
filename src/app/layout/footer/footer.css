@@ -5,12 +5,10 @@
 }
 
 .footer.ai-models-footer {
-  --forest-deep: #09070b;
-  --gold: #ef6aa5;
-  background:
-    radial-gradient(ellipse at 80% 0%, rgb(93 12 48 / 16%), transparent 32rem),
-    #09070b;
-  border-top: 1px solid rgb(255 255 255 / 8%);
+  --forest-deep: rgb(59, 36, 79);
+  --gold: #d8c6f0;
+  background: rgb(59, 36, 79);
+  border-top: 1px solid rgb(255 255 255 / 14%);
 }
 
 .grid {
