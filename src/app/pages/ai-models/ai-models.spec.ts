@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { NavigationEnd, Router, Scroll, provideRouter } from '@angular/router';
 import { AiModelsDirectoryMemoryService } from '../../services/ai-models-directory-memory.service';
 import {
   MediaEngagementStats,
@@ -727,6 +727,33 @@ describe('AiModelsPage', () => {
     );
     expect(locations.length).toBeGreaterThan(0);
     expect(locations.every((location) => location.toLocaleLowerCase().includes('iran'))).toBe(true);
+
+    scrollTo.mockRestore();
+    fixture.destroy();
+  });
+
+  it('restores after the router scroller has handled the same navigation', async () => {
+    TestBed.inject(AiModelsDirectoryMemoryService).remember({
+      scrollY: 1480,
+      search: '',
+      sort: 'default',
+      availability: 'all',
+    });
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+    const fixture = TestBed.createComponent(AiModelsPage);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    scrollTo.mockClear();
+
+    const router = TestBed.inject(Router);
+    const events = router.events as unknown as { next(event: Scroll): void };
+    events.next(new Scroll(new NavigationEnd(2, '/ai-models', '/ai-models'), null, null));
+    // RouterScroller subscribes to the router's transition stream after Router forwards the public
+    // Scroll event. Its own write therefore happens after the page's public-event observer.
+    window.scrollTo({ top: 0, left: 0 });
+    await Promise.resolve();
+
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 1480, left: 0, behavior: 'instant' });
 
     scrollTo.mockRestore();
     fixture.destroy();
