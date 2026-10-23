@@ -1,45 +1,118 @@
 <footer class="footer" id="site-footer" [class.ai-models-footer]="isAiModels()">
-  <div class="container grid">
-    <div>
-      <p class="logo">NeverBeen</p>
+  <!-- Ambient stage: aurora light, blueprint mesh, film grain and a ghost wordmark. -->
+  <div class="stage" aria-hidden="true">
+    <span class="aurora aurora-a"></span>
+    <span class="aurora aurora-b"></span>
+    <span class="aurora aurora-c"></span>
+    <span class="mesh"></span>
+    <span class="grain"></span>
+    <span class="ghost-word">NeverBeen</span>
+  </div>
+
+  <div class="container shell">
+    <div class="brand-panel">
+      <a class="lockup" routerLink="/" aria-label="NeverBeen — back to the home page">
+        <span class="mark" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            focusable="false"
+          >
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3.4 9h17.2M3.4 15h17.2"></path>
+            <path d="M12 3a15.5 15.5 0 0 1 0 18a15.5 15.5 0 0 1 0-18Z"></path>
+          </svg>
+        </span>
+        <span class="wordmark">NeverBeen</span>
+      </a>
+
       @if (tagline()) {
         <p class="tag">{{ tagline() }}</p>
       }
+
+      <div class="actions">
+        <a class="cta cta-solid" routerLink="/collection">
+          <span>Start a collection</span>
+          <svg
+            class="cta-arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            focusable="false"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 12h13M12.5 6.5 18 12l-5.5 5.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+        </a>
+        <a class="cta cta-line" routerLink="/" fragment="contact">Talk to the studio</a>
+      </div>
+
+      <ul class="chips" aria-label="Studio highlights">
+        <li>AI travel portraits</li>
+        <li>Every destination</li>
+        <li>Made in minutes</li>
+      </ul>
     </div>
+
     <!-- Columns (order, titles, visibility) are managed in Admin Console → Website Management. -->
-    @for (col of columns(); track col.id) {
-      @switch (col.id) {
-        @case ('studio') {
-          <div>
-            <p class="label">{{ col.label }}</p>
-            <a routerLink="/" fragment="how-it-works">How It Works</a>
-            <a routerLink="/" fragment="destinations">Destinations</a>
-            <a routerLink="/audience">Audience</a>
-            <a routerLink="/collection">Collection</a>
-            <a routerLink="/" fragment="pricing">Pricing</a>
-          </div>
-        }
-        @case ('visit') {
-          <div>
-            <p class="label">{{ col.label }}</p>
-            <a routerLink="/" fragment="gallery">Gallery</a>
-            <a routerLink="/" fragment="contact">Contact</a>
-            @if (showAdmin()) {
-              <a routerLink="/login">Admin</a>
+    <nav class="columns" aria-label="Footer navigation">
+      @for (col of columns(); track col.id; let i = $index) {
+        <div class="column">
+          <p class="label">
+            <span class="index" aria-hidden="true">0{{ i + 1 }}</span
+            >{{ col.label }}
+          </p>
+          @switch (col.id) {
+            @case ('studio') {
+              <a routerLink="/" fragment="how-it-works">How It Works</a>
+              <a routerLink="/" fragment="destinations">Destinations</a>
+              <a routerLink="/audience">Audience</a>
+              <a routerLink="/collection">Collection</a>
+              <a routerLink="/" fragment="pricing">Pricing</a>
             }
-          </div>
-        }
-        @case ('support') {
-          <div>
-            <p class="label">{{ col.label }}</p>
-            <a routerLink="/help">Help Centre</a>
-            <a routerLink="/privacy">Privacy</a>
-            <a routerLink="/terms">Terms &amp; Condition</a>
-            <a routerLink="/community">Community</a>
-          </div>
-        }
+            @case ('visit') {
+              <a routerLink="/" fragment="gallery">Gallery</a>
+              <a routerLink="/" fragment="contact">Contact</a>
+              @if (showAdmin()) {
+                <a routerLink="/login">Admin</a>
+              }
+            }
+            @case ('support') {
+              <a routerLink="/help">Help Centre</a>
+              <a routerLink="/privacy">Privacy</a>
+              <a routerLink="/terms">Terms &amp; Condition</a>
+              <a routerLink="/community">Community</a>
+            }
+          }
+        </div>
       }
-    }
+    </nav>
   </div>
-  <p class="copy">© {{ year }} NeverBeen. {{ copyright() }}</p>
+
+  <div class="container baseline">
+    <p class="copy">© {{ year }} NeverBeen. {{ copyright() }}</p>
+    <div class="baseline-actions">
+      <span class="status"><span class="pulse" aria-hidden="true"></span>Made with AI</span>
+      <button class="to-top" type="button" (click)="scrollToTop()">
+        Back to top
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          focusable="false"
+          aria-hidden="true"
+        >
+          <path d="M12 19V5M6 11l6-6 6 6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
 </footer>
