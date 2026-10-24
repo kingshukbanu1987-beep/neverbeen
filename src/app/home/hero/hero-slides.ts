@@ -1,3 +1,5 @@
+import { BANNER_IMAGE_SOURCES } from './banner-images';
+
 /**
  * The two automatic previews that sit behind the top of the Home page.
  *
@@ -33,7 +35,7 @@ export const HERO_BROCHURE_PREVIEW_SLIDES: readonly HeroSlide[] = [
   },
 ];
 
-export const HERO_PEOPLE_SLIDES: readonly HeroSlide[] = [
+const PEOPLE_DESCRIPTIONS: readonly HeroSlide[] = [
   {
     src: '/banner/-4m0Xo-3Bi2T_Jx02NGRzs7UHpON4yT8TsZr1ss7OvQ.jpg',
     alt: 'A woman resting with her eyes closed on a rooftop terrace, a city skyline blurred behind her.',
@@ -63,3 +65,10 @@ export const HERO_PEOPLE_SLIDES: readonly HeroSlide[] = [
     alt: 'A laughing woman in crimson at a golden floral celebration, marigold garlands behind her.',
   },
 ];
+
+/** Include every banner image while retaining the curated descriptions. */
+export const HERO_PEOPLE_SLIDES: readonly HeroSlide[] = BANNER_IMAGE_SOURCES.map((src) => ({
+  src,
+  alt: PEOPLE_DESCRIPTIONS.find((slide) => slide.src === src)?.alt
+    ?? 'A portrait from the NeverBeen Multiverse.',
+}));
