@@ -450,6 +450,61 @@ h2 {
   }
 }
 
+/* Desktop and tablet: keep each photograph complete and place its copy below. */
+@media (min-width: 901px) {
+  .panel,
+  .panel-people {
+    display: block;
+    min-height: 0;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .panel::after { display: none; }
+
+  .panel-travel .stage { aspect-ratio: 1853 / 1309; }
+  .panel-people .stage { aspect-ratio: 1200 / 896; }
+
+  .frame .photo {
+    object-fit: contain;
+    object-position: center;
+  }
+
+  .veil { display: none; }
+
+  .panel-copy {
+    max-width: 72rem;
+    margin-inline: auto;
+    padding: clamp(1.25rem, 2.5vw, 2rem) clamp(1rem, 3vw, 2.5rem);
+    background: #fff;
+  }
+
+  .actions {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    gap: 0.75rem;
+  }
+
+  .actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.65rem 1.1rem;
+    border: 1px solid rgba(29, 25, 20, 0.22);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink, #0b0d12);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .frame,
   .frame.on {
@@ -460,4 +515,22 @@ h2 {
   .glow {
     animation: none;
   }
+}
+
+/* CTA links sit independently on the page rather than in a shared card. */
+.dock .actions {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.dock .actions .btn {
+  padding: 0.65rem 1.1rem;
+  border: 1px solid rgba(29, 25, 20, 0.22);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink, #0b0d12);
 }
