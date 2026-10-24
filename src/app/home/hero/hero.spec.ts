@@ -243,6 +243,8 @@ describe('Hero', () => {
     const copy = travel.querySelector<HTMLElement>('.panel-copy')!;
     expect(getComputedStyle(travel).display).toBe('flex');
     expect(getComputedStyle(travel).flexDirection).toBe('column');
+    expect(getComputedStyle(travel).width).toBe('100%');
+    expect(getComputedStyle(travel).maxWidth).toBe('none');
     expect(getComputedStyle(stage).position).toBe('relative');
     expect(stage.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(travel.querySelector('.veil')).toBeNull();
@@ -273,6 +275,8 @@ describe('Hero', () => {
     const copy = people.querySelector<HTMLElement>('.panel-copy')!;
     expect(getComputedStyle(people).display).toBe('flex');
     expect(getComputedStyle(people).flexDirection).toBe('column');
+    expect(getComputedStyle(people).width).toBe('100%');
+    expect(getComputedStyle(people).maxWidth).toBe('none');
     expect(getComputedStyle(stage).position).toBe('relative');
     expect(stage.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(people.querySelector('.veil')).toBeNull();

@@ -1,18 +1,19 @@
 /* ============================================================================
-   The top of the Home page — Ultra-modern Gallery Showcase
-   A luminous studio porcelain backdrop frames two architectural gallery cards
-   and three independent floating white call-to-action pills:
+   The top of the Home page — Ultra-modern Full-Width Gallery Showcase
+   A luminous studio porcelain backdrop frames two full-screen-width gallery
+   sections and three independent floating white call-to-action pills:
 
-   1. "Go Anywhere. Even Where You've Never Been." — the closing spreads of the
-      NeverBeen Brochure presented in full size (never cropped) inside a crisp
-      bezel frame, with the editorial headline and copy deck cleanly below the
-      artwork across widescreen, laptop, tablet and mobile screens.
+   1. "Go Anywhere. Even Where You've Never Been." — wide across the screen,
+      displaying the closing spreads of the NeverBeen Brochure in full size
+      (never cropped) inside a crisp bezel frame, with the editorial headline
+      and copy deck cleanly below the artwork on every screen size.
    2. Three standalone white pill buttons ('Connect to NeverBeen Community',
       'Shop NeverBeen Merchandise' & 'Create My Vacation') floating
       independently in the studio seam without a wrapper container.
    3. "Meet the People. Even When They Don't Exists outside NeverBeen
-      Multiverse" — full-size, uncropped portraits from public/banner above
-      their dedicated editorial copy deck on every screen size.
+      Multiverse" — wide across the screen, presenting the full-size,
+      uncropped portraits from public/banner above their editorial copy deck
+      on every screen size.
    ========================================================================== */
 
 :host {
@@ -24,20 +25,23 @@
   --studio-ink: #0b0d12;
   --studio-muted: #475569;
   --studio-accent: #5b5bf0;
-  /* Viewport-aware gallery column: scales seamlessly from edge-to-edge on
-     mobile up to 1180px on widescreen while respecting laptop screen height so
-     each uncropped photograph can be viewed in full at a glance. */
-  --hero-shell-w: min(calc(100% - clamp(0.85rem, 3vw, 2.75rem)), max(320px, min(1180px, 108vh)));
+  /* Matches the maximum-width studio stage shell used across the Home page:
+     stretches wide to cover the screen with only a slim edge gutter so the
+     rounded architectural corners read cleanly. */
+  --hero-gutter: clamp(0.4rem, 1.4vw, 1.25rem);
 
   position: relative;
   isolation: isolate;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1rem, 1.8vw, 1.65rem);
-  padding: clamp(0.95rem, 2vw, 1.75rem) 0 clamp(2.4rem, 4vw, 3.5rem);
+  width: 100%;
+  padding: clamp(0.85rem, 1.6vw, 1.4rem) var(--hero-gutter) clamp(2.4rem, 4vw, 3.5rem);
   overflow: hidden;
   background: linear-gradient(180deg, #f5f7fc 0%, #f1f4fa 48%, #f7f8fc 100%);
   border-bottom: 1px solid rgba(15, 23, 42, 0.07);
   color: var(--studio-ink);
+  box-sizing: border-box;
 }
 
 /* ---------------------------------------------------------------- ambience */
@@ -96,16 +100,19 @@
 }
 
 /* ------------------------------------------------------------------ panels */
+/* Full-screen-width showcase cards: cover the full width of the viewport on
+   widescreen, laptop, tablet and mobile, with image above and copy below. */
 .panel {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  width: var(--hero-shell-w);
-  margin-inline: auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   overflow: hidden;
   border: 1px solid rgba(15, 23, 42, 0.085);
-  border-radius: clamp(20px, 2.3vw, 32px);
+  border-radius: clamp(20px, 2.2vw, 30px);
   background-color: #ffffff;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
@@ -114,26 +121,30 @@
 }
 
 /* ------------------------------------------------------------------- stage */
-/* Inset architectural gallery bezel: frames the full-bleed photograph cleanly
-   on top while keeping 100% of every image visible without cropping. */
+/* Inset architectural gallery bezel: stretches across the full card width while
+   presenting 100% of every photograph uncropped (`object-fit: contain`). */
 .stage {
+  --stage-inset: clamp(0.38rem, 0.75vw, 0.7rem);
   position: relative;
-  margin: clamp(0.38rem, 0.8vw, 0.72rem) clamp(0.38rem, 0.8vw, 0.72rem) 0;
-  border-radius: clamp(14px, 1.75vw, 24px);
+  width: calc(100% - (2 * var(--stage-inset)));
+  margin: var(--stage-inset) auto 0;
+  border-radius: clamp(14px, 1.7vw, 23px);
   overflow: hidden;
-  background-color: #f3f5fa;
+  background-color: #eef1f8;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
-/* Exact native aspect ratios: brochure spreads are 1853 × 1309 and banner
-   portraits are 1200 × 896, so every frame fills the stage in full size
-   without cropping on widescreen, laptop, tablet or phone. */
+/* Native aspect ratios with viewport-height cap so widescreen/laptop displays
+   keep the entire full-size uncropped image visible on screen at once while
+   the ambient wash fills the full screen width seamlessly. */
 .panel-travel .stage {
   aspect-ratio: 1853 / 1309;
+  max-height: clamp(360px, 82vh, 900px);
 }
 
 .panel-people .stage {
   aspect-ratio: 1200 / 896;
+  max-height: clamp(360px, 82vh, 880px);
 }
 
 .frame {
@@ -160,8 +171,8 @@
   user-select: none;
 }
 
-/* Soft ambient studio twin behind the still, serving as a luminous mat if a
-   future photograph ever differs from the stage aspect ratio. */
+/* Luminous ambient twin of the active photograph: fills the wide full-screen
+   stage smoothly behind the uncropped still on ultrawide and laptop screens. */
 .frame .wash {
   display: block;
   position: absolute;
@@ -169,9 +180,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.12);
-  filter: blur(28px) saturate(1.06) brightness(1.05);
-  opacity: 0.75;
+  transform: scale(1.16);
+  filter: blur(42px) saturate(1.12) brightness(1.04);
+  opacity: 0.82;
 }
 
 /* -------------------------------------------------------------- panel copy */
@@ -179,8 +190,8 @@
   position: relative;
   z-index: 2;
   width: 100%;
-  padding: clamp(1.3rem, 2.6vw, 2.25rem) clamp(1.15rem, 2.9vw, 2.65rem)
-    clamp(1.25rem, 2.4vw, 2.1rem);
+  padding: clamp(1.3rem, 2.5vw, 2.25rem) clamp(1.15rem, 2.8vw, 2.75rem)
+    clamp(1.25rem, 2.3vw, 2.1rem);
   background-color: #ffffff;
 }
 
@@ -213,9 +224,9 @@
 
 h1 {
   margin: 0;
-  max-width: 54rem;
+  max-width: 68rem;
   font-family: var(--serif);
-  font-size: clamp(1.95rem, 3.85vw, 3.4rem);
+  font-size: clamp(1.95rem, 3.85vw, 3.5rem);
   font-weight: 500;
   line-height: 1.03;
   letter-spacing: -0.028em;
@@ -228,9 +239,9 @@ h1 {
 
 h2 {
   margin: 0;
-  max-width: 52rem;
+  max-width: 66rem;
   font-family: var(--serif);
-  font-size: clamp(1.65rem, 3.2vw, 2.8rem);
+  font-size: clamp(1.65rem, 3.2vw, 2.9rem);
   font-weight: 500;
   line-height: 1.07;
   letter-spacing: -0.026em;
@@ -249,7 +260,7 @@ h2 {
 }
 
 .lede {
-  max-width: 54rem;
+  max-width: 64rem;
   margin: clamp(0.75rem, 1.3vw, 1.05rem) 0 0;
   font-family: var(--hero-font);
   font-size: clamp(0.95rem, 1.12vw, 1.08rem);
@@ -312,8 +323,7 @@ h2 {
 .dock {
   position: relative;
   z-index: 2;
-  width: var(--hero-shell-w);
-  margin-inline: auto;
+  width: 100%;
   margin-block: clamp(0.15rem, 0.4vw, 0.35rem);
   background: transparent;
 }
@@ -390,8 +400,9 @@ h2 {
   }
 
   .stage {
-    margin: 0.35rem 0.35rem 0;
+    --stage-inset: 0.35rem;
     border-radius: clamp(13px, 3.6vw, 18px);
+    max-height: none;
   }
 
   .eyebrow {
