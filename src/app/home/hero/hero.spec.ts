@@ -247,9 +247,14 @@ describe('Hero', () => {
     expect(getComputedStyle(stage).gridArea).toBe('stage');
     expect(getComputedStyle(travel).width).toBe('100%');
     expect(getComputedStyle(travel).maxWidth).toBe('none');
+    expect(getComputedStyle(travel).borderTopWidth).toBe('0px');
     expect(getComputedStyle(stage).position).toBe('relative');
+    expect(getComputedStyle(stage).borderTopWidth).toBe('0px');
+    expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(getComputedStyle(stage).backgroundColor);
+    expect(getComputedStyle(stage).borderRadius).not.toBe('0px');
     expect(stage.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(travel.querySelector('.veil')).toBeNull();
+    expect(travel.querySelector('.wash')).toBeNull();
 
     expect(travel.querySelector('h1')?.textContent?.trim()).toBe(
       "Go Anywhere. Even Where You've Never Been.",
@@ -281,9 +286,14 @@ describe('Hero', () => {
     expect(getComputedStyle(stage).gridArea).toBe('stage');
     expect(getComputedStyle(people).width).toBe('100%');
     expect(getComputedStyle(people).maxWidth).toBe('none');
+    expect(getComputedStyle(people).borderTopWidth).toBe('0px');
     expect(getComputedStyle(stage).position).toBe('relative');
+    expect(getComputedStyle(stage).borderTopWidth).toBe('0px');
+    expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(getComputedStyle(stage).backgroundColor);
+    expect(getComputedStyle(stage).borderRadius).not.toBe('0px');
     expect(stage.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(people.querySelector('.veil')).toBeNull();
+    expect(people.querySelector('.wash')).toBeNull();
 
     expect(people.querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       "Meet the People. Even When They Don't Exists outside NeverBeen Multiverse",

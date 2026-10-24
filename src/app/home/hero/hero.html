@@ -10,16 +10,15 @@
 
   <!-- ==================================================================
        Sub-section 1 — "Go Anywhere. Even Where You've Never Been."
-       Unified full-width panel: editorial copy on the left and the full-size,
-       uncropped brochure spread on the right on widescreen; stacked with the
-       full-size image above the copy on mobile.
+       Unified full-width panel: editorial copy on the left and the standalone,
+       full-size brochure spread with curved corners on all 4 corners on the
+       right on widescreen; stacked with image above copy on mobile.
        ================================================================== -->
   <article class="panel panel-travel" aria-labelledby="hero-title">
     <div class="stage" aria-hidden="true">
       @for (slide of brochureSlides; track slide.src; let i = $index) {
         @if (isBrochureMounted(i)) {
           <figure class="frame" [class.on]="brochureIndex() === i">
-            <img class="wash" [src]="slide.src" alt="" decoding="async" />
             <img
               class="photo"
               [src]="slide.src"
@@ -82,15 +81,14 @@
   <!-- ==================================================================
        Sub-section 2 — "Meet the People. Even When They Don't Exists
        outside NeverBeen Multiverse": unified full-width panel with copy on
-       the left and full-size, uncropped portraits from public/banner on the
-       right on widescreen; image above copy on mobile.
+       the left and standalone, curved-corner portraits from public/banner on
+       the right on widescreen; image above copy on mobile.
        ================================================================== -->
   <article class="panel panel-people" aria-labelledby="hero-people-title">
     <div class="stage" aria-hidden="true">
       @for (slide of peopleSlides; track slide.src; let i = $index) {
         @if (isPeopleMounted(i)) {
           <figure class="frame" [class.on]="peopleIndex() === i">
-            <img class="wash" [src]="slide.src" alt="" decoding="async" />
             <img
               class="photo"
               [src]="slide.src"
