@@ -29,7 +29,7 @@ describe('Hero', () => {
     return buttonsOf(element).map((link) => link.textContent?.trim() ?? '');
   }
 
-  it('places Connect to NeverBeen Community first in the Collection ghost style', () => {
+  it('places Connect to NeverBeen Community first as an independent white pill button', () => {
     const element: HTMLElement = create().nativeElement;
     const buttons = buttonsOf(element);
     const labels = labelsOf(element);
@@ -43,10 +43,25 @@ describe('Hero', () => {
     const community = buttons[0];
     expect(community.getAttribute('href')).toBe('/community');
     expect(community.classList.contains('btn-ghost')).toBe(true);
-    expect(getComputedStyle(community).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(community).backgroundColor).toBe('rgb(255, 255, 255)');
     expect(getComputedStyle(community).color).toBe('var(--ink)');
     expect(getComputedStyle(community).fontFamily).toContain('Calibri');
     expect(getComputedStyle(community).fontSize).toBe('1rem');
+  });
+
+  it('renders each hero button independently with a white background instead of inside a white container', () => {
+    const element: HTMLElement = create().nativeElement;
+    const dock = element.querySelector<HTMLElement>('.dock')!;
+    const actions = element.querySelector<HTMLElement>('.actions')!;
+    const buttons = buttonsOf(element);
+
+    expect(getComputedStyle(dock).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(actions).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(actions).borderTopWidth).toBe('0px');
+    expect(buttons.length).toBe(3);
+    for (const btn of buttons) {
+      expect(getComputedStyle(btn).backgroundColor).toBe('rgb(255, 255, 255)');
+    }
   });
 
   it('places Create My Vacation right after Shop NeverBeen Merchandise', () => {
@@ -219,10 +234,28 @@ describe('Hero', () => {
     expect(element.querySelector('figcaption')).toBeNull();
   });
 
-  it('sets the headline over the closing pages of the brochure', () => {
+  it('places the travel text on the left and the full-size brochure spread on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
     expect(travel).toBeTruthy();
+
+    const stage = travel.querySelector<HTMLElement>('.stage')!;
+    const copy = travel.querySelector<HTMLElement>('.panel-copy')!;
+    expect(getComputedStyle(travel).display).toBe('grid');
+    expect(getComputedStyle(travel).gridTemplateAreas).toContain('copy stage');
+    expect(getComputedStyle(copy).gridArea).toBe('copy');
+    expect(getComputedStyle(stage).gridArea).toBe('stage');
+    expect(getComputedStyle(travel).width).toBe('100%');
+    expect(getComputedStyle(travel).maxWidth).toBe('none');
+    expect(getComputedStyle(travel).borderTopWidth).toBe('0px');
+    expect(getComputedStyle(stage).position).toBe('relative');
+    expect(getComputedStyle(stage).borderTopWidth).toBe('0px');
+    expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(getComputedStyle(stage).backgroundColor);
+    expect(getComputedStyle(stage).borderRadius).not.toBe('0px');
+    expect(stage.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(travel.querySelector('.veil')).toBeNull();
+    expect(travel.querySelector('.wash')).toBeNull();
+
     expect(travel.querySelector('h1')?.textContent?.trim()).toBe(
       "Go Anywhere. Even Where You've Never Been.",
     );
@@ -230,19 +263,38 @@ describe('Hero', () => {
       'Create stunning AI vacation photos of yourself',
     );
 
-    const sources = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo')).map((img) =>
-      img.getAttribute('src'),
-    );
-    expect(sources).toEqual([
+    const photos = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo'));
+    expect(photos.map((img) => img.getAttribute('src'))).toEqual([
       '/assets/brochure-preview/neverbeen-brochure-page-52.jpg',
       '/assets/brochure-preview/neverbeen-brochure-page-53.jpg',
     ]);
+    for (const photo of photos) {
+      expect(getComputedStyle(photo).objectFit).toBe('contain');
+    }
   });
 
-  it('writes the people headline and paragraph on the banner portraits', () => {
+  it('places the people text on the left and the full-size banner portraits on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const people = element.querySelector<HTMLElement>('.panel-people')!;
     expect(people).toBeTruthy();
+
+    const stage = people.querySelector<HTMLElement>('.stage')!;
+    const copy = people.querySelector<HTMLElement>('.panel-copy')!;
+    expect(getComputedStyle(people).display).toBe('grid');
+    expect(getComputedStyle(people).gridTemplateAreas).toContain('copy stage');
+    expect(getComputedStyle(copy).gridArea).toBe('copy');
+    expect(getComputedStyle(stage).gridArea).toBe('stage');
+    expect(getComputedStyle(people).width).toBe('100%');
+    expect(getComputedStyle(people).maxWidth).toBe('none');
+    expect(getComputedStyle(people).borderTopWidth).toBe('0px');
+    expect(getComputedStyle(stage).position).toBe('relative');
+    expect(getComputedStyle(stage).borderTopWidth).toBe('0px');
+    expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(getComputedStyle(stage).backgroundColor);
+    expect(getComputedStyle(stage).borderRadius).not.toBe('0px');
+    expect(stage.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(people.querySelector('.veil')).toBeNull();
+    expect(people.querySelector('.wash')).toBeNull();
+
     expect(people.querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
       "Meet the People. Even When They Don't Exists outside NeverBeen Multiverse",
     );
@@ -250,11 +302,13 @@ describe('Hero', () => {
       'What if their stories matter, even if their worlds are imaginary?',
     );
 
-    const sources = Array.from(people.querySelectorAll<HTMLImageElement>('img.photo')).map((img) =>
-      img.getAttribute('src'),
-    );
+    const photos = Array.from(people.querySelectorAll<HTMLImageElement>('img.photo'));
+    const sources = photos.map((img) => img.getAttribute('src'));
     expect(sources.length).toBeGreaterThan(0);
     expect(sources.every((src) => src?.startsWith('/banner/'))).toBe(true);
+    for (const photo of photos) {
+      expect(getComputedStyle(photo).objectFit).toBe('contain');
+    }
   });
 
   it('places the three calls to action between the two previews', () => {

@@ -22,13 +22,13 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
 export const HERO_SLIDE_INTERVAL_SECONDS = 5;
 
 /**
- * The top of the Home page — two full-bleed previews under one roof.
+ * The top of the Home page — two full-width gallery panels under one roof.
  *
- * The first preview carries the headline "Go Anywhere. Even Where You've Never
- * Been." over the closing pages of the NeverBeen Brochure. The three call-to-
- * action buttons sit in the seam between the previews. The second preview
- * carries "Meet the People. Even When They Don't Exists outside NeverBeen
- * Multiverse" over the photographs in `public/banner`.
+ * On widescreen, each section forms a single unified panel with the editorial
+ * headline and copy on the left and the full-size, uncropped photograph stage
+ * on the right; on mobile, the full-size image sits cleanly above the copy.
+ * Three independent white pill call-to-action buttons float in the seam
+ * between the two sections.
  *
  * Both previews cross-fade on their own every five seconds. They are purely
  * decorative: the stage is hidden from assistive technology, so a rotating
@@ -38,7 +38,7 @@ export const HERO_SLIDE_INTERVAL_SECONDS = 5;
   selector: 'app-hero',
   imports: [RouterLink],
   templateUrl: './hero.html',
-  styleUrls: ['./hero.css', '../collection-button.css'],
+  styleUrls: ['../collection-button.css', './hero.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Hero {
@@ -117,6 +117,10 @@ export class Hero {
 
   protected isPeopleMounted(index: number): boolean {
     return this.isCurrent(this.peopleSlides.length, this.peopleIndex(), index);
+  }
+
+  protected pad(value: number): string {
+    return value.toString().padStart(2, '0');
   }
 
   private isCurrent(total: number, active: number, index: number): boolean {

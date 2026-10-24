@@ -1,6 +1,7 @@
 <section class="hero" id="home">
-  <!-- Pastel studio light: the same white, gallery-clean finish as
-       The NeverBeen Multiverse Studio, so the page opens in one voice. -->
+  <!-- Pastel studio light: a luminous gallery-clean backdrop that gives crisp
+       separation to the wide showcase panels and the independent white
+       call-to-action pills. -->
   <div class="ambience" aria-hidden="true">
     <span class="glow glow-a"></span>
     <span class="glow glow-b"></span>
@@ -9,15 +10,15 @@
 
   <!-- ==================================================================
        Sub-section 1 — "Go Anywhere. Even Where You've Never Been."
-       The closing spread of the NeverBeen Brochure plays behind the
-       headline as an automatic preview (one page every five seconds).
+       Unified full-width panel: editorial copy on the left and the standalone,
+       full-size brochure spread with curved corners on all 4 corners on the
+       right on widescreen; stacked with image above copy on mobile.
        ================================================================== -->
   <article class="panel panel-travel" aria-labelledby="hero-title">
     <div class="stage" aria-hidden="true">
       @for (slide of brochureSlides; track slide.src; let i = $index) {
         @if (isBrochureMounted(i)) {
           <figure class="frame" [class.on]="brochureIndex() === i">
-            <img class="wash" [src]="slide.src" alt="" decoding="async" />
             <img
               class="photo"
               [src]="slide.src"
@@ -29,26 +30,33 @@
         }
       }
     </div>
-    <span class="veil" aria-hidden="true"></span>
 
     <div class="panel-copy">
-      @if (eyebrow()) {
-        <p class="eyebrow">{{ eyebrow() }}</p>
-      }
-      <h1 id="hero-title">{{ title() }}</h1>
-      @if (lede()) {
-        <p class="lede">{{ lede() }}</p>
-      }
-      <div class="dots" aria-hidden="true">
-        @for (slide of brochureSlides; track slide.src; let i = $index) {
-          <span [class.on]="brochureIndex() === i"></span>
+      <div class="copy-body">
+        @if (eyebrow()) {
+          <p class="eyebrow">{{ eyebrow() }}</p>
         }
+        <h1 id="hero-title">{{ title() }}</h1>
+        @if (lede()) {
+          <p class="lede">{{ lede() }}</p>
+        }
+      </div>
+
+      <div class="panel-footer" aria-hidden="true">
+        <div class="dots">
+          @for (slide of brochureSlides; track slide.src; let i = $index) {
+            <span [class.on]="brochureIndex() === i"></span>
+          }
+        </div>
+        <span class="frame-counter">
+          {{ pad(brochureIndex() + 1) }}<span class="slash">/</span>{{ pad(brochureSlides.length) }}
+        </span>
       </div>
     </div>
   </article>
 
   <!-- ==================================================================
-       The three calls to action, set in the seam between the previews.
+       The three independent white call-to-action pills between the sections.
        ================================================================== -->
   @if (buttons().length) {
     <div class="dock">
@@ -72,15 +80,15 @@
 
   <!-- ==================================================================
        Sub-section 2 — "Meet the People. Even When They Don't Exists
-       outside NeverBeen Multiverse", written directly on the portraits
-       from public/banner, one every five seconds.
+       outside NeverBeen Multiverse": unified full-width panel with copy on
+       the left and standalone, curved-corner portraits from public/banner on
+       the right on widescreen; image above copy on mobile.
        ================================================================== -->
   <article class="panel panel-people" aria-labelledby="hero-people-title">
     <div class="stage" aria-hidden="true">
       @for (slide of peopleSlides; track slide.src; let i = $index) {
         @if (isPeopleMounted(i)) {
           <figure class="frame" [class.on]="peopleIndex() === i">
-            <img class="wash" [src]="slide.src" alt="" decoding="async" />
             <img
               class="photo"
               [src]="slide.src"
@@ -92,17 +100,24 @@
         }
       }
     </div>
-    <span class="veil" aria-hidden="true"></span>
 
     <div class="panel-copy">
-      <h2 id="hero-people-title">{{ peopleTitle() }}</h2>
-      @if (peopleCopy()) {
-        <p class="lede">{{ peopleCopy() }}</p>
-      }
-      <div class="dots" aria-hidden="true">
-        @for (slide of peopleSlides; track slide.src; let i = $index) {
-          <span [class.on]="peopleIndex() === i"></span>
+      <div class="copy-body">
+        <h2 id="hero-people-title">{{ peopleTitle() }}</h2>
+        @if (peopleCopy()) {
+          <p class="lede">{{ peopleCopy() }}</p>
         }
+      </div>
+
+      <div class="panel-footer" aria-hidden="true">
+        <div class="dots">
+          @for (slide of peopleSlides; track slide.src; let i = $index) {
+            <span [class.on]="peopleIndex() === i"></span>
+          }
+        </div>
+        <span class="frame-counter">
+          {{ pad(peopleIndex() + 1) }}<span class="slash">/</span>{{ pad(peopleSlides.length) }}
+        </span>
       </div>
     </div>
   </article>

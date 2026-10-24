@@ -246,7 +246,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     label: 'Hero banner',
     icon: '🌅',
     description:
-      'The first thing visitors see: the headline over the closing pages of the NeverBeen Brochure, the call-to-action buttons, then the portrait preview over public/banner.',
+      'The first thing visitors see: the closing pages of the NeverBeen Brochure in full size with the headline below, the independent call-to-action buttons, then the full-size portrait preview from public/banner.',
     previewPath: '/',
     fields: [
       { key: 'eyebrow', label: 'Eyebrow', type: 'text', default: 'Travel photography, imagined', maxLength: 60 },
