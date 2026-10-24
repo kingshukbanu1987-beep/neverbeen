@@ -6,6 +6,7 @@ import { Brochure } from '../brochure/brochure';
 import { Hero } from './hero';
 import { Owner } from '../owner/owner';
 import { StorylineSection } from '../storyline/storyline-section';
+import { HERO_BROCHURE_PREVIEW_SLIDES, HERO_TRAVEL_SLIDES } from './hero-slides';
 
 describe('Hero', () => {
   beforeEach(async () => {
@@ -234,7 +235,7 @@ describe('Hero', () => {
     expect(element.querySelector('figcaption')).toBeNull();
   });
 
-  it('places the travel text on the left and the full-size brochure spread on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
+  it('places the travel text on the left and the full-size travel photographs from public/travel on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
     expect(travel).toBeTruthy();
@@ -257,17 +258,22 @@ describe('Hero', () => {
     expect(travel.querySelector('.wash')).toBeNull();
 
     expect(travel.querySelector('h1')?.textContent?.trim()).toBe(
-      "Go Anywhere. Even Where You've Never Been.",
+      "Go Anywhere. Even Where You've Never Been",
     );
     expect(travel.querySelector('.lede')?.textContent).toContain(
       'Create stunning AI vacation photos of yourself',
     );
 
     const photos = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo'));
-    expect(photos.map((img) => img.getAttribute('src'))).toEqual([
-      '/assets/brochure-preview/neverbeen-brochure-page-52.jpg',
-      '/assets/brochure-preview/neverbeen-brochure-page-53.jpg',
-    ]);
+    const sources = photos.map((img) => img.getAttribute('src'));
+    // The panel plays every image in public/travel, falling back to the
+    // brochure preview until that folder holds a photograph. Only the active
+    // frame and its incoming neighbour are mounted at once.
+    const slides = HERO_TRAVEL_SLIDES.length ? HERO_TRAVEL_SLIDES : HERO_BROCHURE_PREVIEW_SLIDES;
+    expect(sources).toEqual(slides.slice(0, Math.min(slides.length, 2)).map((slide) => slide.src));
+    if (HERO_TRAVEL_SLIDES.length) {
+      expect(sources.every((src) => src?.startsWith('/travel/'))).toBe(true);
+    }
     for (const photo of photos) {
       expect(getComputedStyle(photo).objectFit).toBe('contain');
     }
@@ -330,21 +336,21 @@ describe('Hero', () => {
     const fixture = create();
     const hero = fixture.componentInstance as unknown as {
       intervalSeconds: () => number;
-      brochureIndex: () => number;
+      travelIndex: () => number;
       peopleIndex: () => number;
       advance: () => void;
-      brochureSlides: unknown[];
+      travelSlides: unknown[];
       peopleSlides: unknown[];
     };
 
     expect(hero.intervalSeconds()).toBe(5);
-    expect(hero.brochureIndex()).toBe(0);
+    expect(hero.travelIndex()).toBe(0);
     expect(hero.peopleIndex()).toBe(0);
 
     hero.advance();
     fixture.detectChanges();
 
-    expect(hero.brochureIndex()).toBe(1 % hero.brochureSlides.length);
+    expect(hero.travelIndex()).toBe(1 % hero.travelSlides.length);
     expect(hero.peopleIndex()).toBe(1 % hero.peopleSlides.length);
   });
 });

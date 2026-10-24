@@ -1,13 +1,12 @@
 import { BANNER_IMAGE_SOURCES } from './banner-images';
+import { TRAVEL_IMAGE_SOURCES } from './travel-images';
 
 /**
  * The two automatic previews that sit behind the top of the Home page.
  *
- * 1. `HERO_BROCHURE_PREVIEW_SLIDES` — the closing pages of
- *    `public/assets/documentation/NeverBeen_Brochure.pdf` (pages 52 and 53),
- *    rendered to stills so the hero can show them as a soft background
- *    slideshow without loading a 20 MB PDF. Re-render them with
- *    `npm run generate:brochure` whenever the brochure's last pages change.
+ * 1. `HERO_TRAVEL_SLIDES` — every photograph dropped into `public/travel`,
+ *    shown as the first preview: "Go Anywhere. Even Where You've Never Been."
+ *    Re-run `npm run generate:travel` whenever the travel folder changes.
  *
  * 2. `HERO_PEOPLE_SLIDES` — every photograph dropped into `public/banner`,
  *    shown as the second preview: "Meet the People. Even When They Don't
@@ -24,6 +23,12 @@ export interface HeroSlide {
   alt: string;
 }
 
+/**
+ * The closing pages of the NeverBeen brochure (pages 52 and 53), kept as a
+ * graceful stand-in for the first preview until the first travel photograph
+ * lands in `public/travel`. The hero swaps to `HERO_TRAVEL_SLIDES` the moment
+ * the generated travel list is non-empty.
+ */
 export const HERO_BROCHURE_PREVIEW_SLIDES: readonly HeroSlide[] = [
   {
     src: '/assets/brochure-preview/neverbeen-brochure-page-52.jpg',
@@ -34,6 +39,14 @@ export const HERO_BROCHURE_PREVIEW_SLIDES: readonly HeroSlide[] = [
     alt: 'Final page of the NeverBeen brochure: an expedition ship in an Antarctic bay, with the line “Not everyone can Sail. But everyone deserves to see the world through their dreams.”',
   },
 ];
+
+const TRAVEL_ALT = 'A destination photograph from the NeverBeen travel collection.';
+
+/** Include every travel image while retaining a meaningful description. */
+export const HERO_TRAVEL_SLIDES: readonly HeroSlide[] = TRAVEL_IMAGE_SOURCES.map((src) => ({
+  src,
+  alt: TRAVEL_ALT,
+}));
 
 const PEOPLE_DESCRIPTIONS: readonly HeroSlide[] = [
   {
