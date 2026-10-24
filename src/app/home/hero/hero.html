@@ -1,6 +1,7 @@
 <section class="hero" id="home">
-  <!-- Pastel studio light: the same white, gallery-clean finish as
-       The NeverBeen Multiverse Studio, so the page opens in one voice. -->
+  <!-- Pastel studio light: a luminous gallery-clean backdrop that gives crisp
+       separation to the white showcase cards and the independent white
+       call-to-action pills. -->
   <div class="ambience" aria-hidden="true">
     <span class="glow glow-a"></span>
     <span class="glow glow-b"></span>
@@ -9,8 +10,8 @@
 
   <!-- ==================================================================
        Sub-section 1 — "Go Anywhere. Even Where You've Never Been."
-       The closing spread of the NeverBeen Brochure plays behind the
-       headline as an automatic preview (one page every five seconds).
+       The closing spreads of the NeverBeen Brochure are shown in full size
+       (uncropped) above the editorial copy deck on every screen size.
        ================================================================== -->
   <article class="panel panel-travel" aria-labelledby="hero-title">
     <div class="stage" aria-hidden="true">
@@ -29,7 +30,6 @@
         }
       }
     </div>
-    <span class="veil" aria-hidden="true"></span>
 
     <div class="panel-copy">
       @if (eyebrow()) {
@@ -39,16 +39,21 @@
       @if (lede()) {
         <p class="lede">{{ lede() }}</p>
       }
-      <div class="dots" aria-hidden="true">
-        @for (slide of brochureSlides; track slide.src; let i = $index) {
-          <span [class.on]="brochureIndex() === i"></span>
-        }
+      <div class="panel-footer" aria-hidden="true">
+        <div class="dots">
+          @for (slide of brochureSlides; track slide.src; let i = $index) {
+            <span [class.on]="brochureIndex() === i"></span>
+          }
+        </div>
+        <span class="frame-counter">
+          {{ pad(brochureIndex() + 1) }}<span class="slash">/</span>{{ pad(brochureSlides.length) }}
+        </span>
       </div>
     </div>
   </article>
 
   <!-- ==================================================================
-       The three calls to action, set in the seam between the previews.
+       The three independent white call-to-action pills between the sections.
        ================================================================== -->
   @if (buttons().length) {
     <div class="dock">
@@ -72,8 +77,8 @@
 
   <!-- ==================================================================
        Sub-section 2 — "Meet the People. Even When They Don't Exists
-       outside NeverBeen Multiverse", written directly on the portraits
-       from public/banner, one every five seconds.
+       outside NeverBeen Multiverse", set cleanly below the full-size,
+       uncropped portraits from public/banner on every screen size.
        ================================================================== -->
   <article class="panel panel-people" aria-labelledby="hero-people-title">
     <div class="stage" aria-hidden="true">
@@ -92,17 +97,21 @@
         }
       }
     </div>
-    <span class="veil" aria-hidden="true"></span>
 
     <div class="panel-copy">
       <h2 id="hero-people-title">{{ peopleTitle() }}</h2>
       @if (peopleCopy()) {
         <p class="lede">{{ peopleCopy() }}</p>
       }
-      <div class="dots" aria-hidden="true">
-        @for (slide of peopleSlides; track slide.src; let i = $index) {
-          <span [class.on]="peopleIndex() === i"></span>
-        }
+      <div class="panel-footer" aria-hidden="true">
+        <div class="dots">
+          @for (slide of peopleSlides; track slide.src; let i = $index) {
+            <span [class.on]="peopleIndex() === i"></span>
+          }
+        </div>
+        <span class="frame-counter">
+          {{ pad(peopleIndex() + 1) }}<span class="slash">/</span>{{ pad(peopleSlides.length) }}
+        </span>
       </div>
     </div>
   </article>
