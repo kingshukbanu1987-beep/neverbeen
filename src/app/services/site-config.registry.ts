@@ -1,11 +1,4 @@
-import {
-  HowItWorksStep,
-  destinations,
-  faqItems,
-  howItWorksSteps,
-  howItWorksTracks,
-  pricingPlans,
-} from '../models/site-content';
+import { HowItWorksStep, destinations, faqItems, howItWorksSteps, howItWorksTracks, pricingPlans } from '../models/site-content';
 
 /**
  * Registry of every website component that can be managed from
@@ -16,8 +9,7 @@ import {
 
 export type CmsPage = 'global' | 'home' | 'community';
 
-export type CmsFieldType =
-  'text' | 'textarea' | 'toggle' | 'number' | 'select' | 'color' | 'url' | 'items' | 'records';
+export type CmsFieldType = 'text' | 'textarea' | 'toggle' | 'number' | 'select' | 'color' | 'url' | 'items' | 'records';
 
 /** One row of an `items` field: a fixed element that can be renamed, hidden and re-ordered. */
 export interface CmsItem {
@@ -68,40 +60,18 @@ export interface CmsComponentDef {
 }
 
 export const CMS_PAGES: { key: CmsPage; label: string; icon: string; hint: string }[] = [
-  {
-    key: 'global',
-    label: 'Site-wide',
-    icon: '🌐',
-    hint: 'Announcement bar, navigation, footer & brand colours',
-  },
-  {
-    key: 'home',
-    label: 'Home page',
-    icon: '🏠',
-    hint: 'Section order, visibility and every section’s content',
-  },
-  {
-    key: 'community',
-    label: 'Community',
-    icon: '💬',
-    hint: 'Connect (sign-in) page and member profile features',
-  },
+  { key: 'global', label: 'Site-wide', icon: '🌐', hint: 'Announcement bar, navigation, footer & brand colours' },
+  { key: 'home', label: 'Home page', icon: '🏠', hint: 'Section order, visibility and every section’s content' },
+  { key: 'community', label: 'Community', icon: '💬', hint: 'Connect (sign-in) page and member profile features' },
 ];
 
 const heading = (eyebrow: string, title: string, copy: string): CmsField[] => [
-  {
-    key: 'eyebrow',
-    label: 'Eyebrow (small label above the title)',
-    type: 'text',
-    default: eyebrow,
-    maxLength: 60,
-  },
+  { key: 'eyebrow', label: 'Eyebrow (small label above the title)', type: 'text', default: eyebrow, maxLength: 60 },
   { key: 'title', label: 'Section title', type: 'text', default: title, maxLength: 120 },
   { key: 'copy', label: 'Intro copy', type: 'textarea', default: copy, maxLength: 800 },
 ];
 
-const items = (rows: [string, string][]): CmsItem[] =>
-  rows.map(([id, label]) => ({ id, label, visible: true }));
+const items = (rows: [string, string][]): CmsItem[] => rows.map(([id, label]) => ({ id, label, visible: true }));
 
 /** Copy + steps for one How It Works capability (travel keeps the shared `steps` field). */
 const capabilityFields = (
@@ -111,20 +81,8 @@ const capabilityFields = (
   copy: string,
   steps: HowItWorksStep[],
 ): CmsField[] => [
-  {
-    key: `${trackId}Title`,
-    label: `${label} — title`,
-    type: 'text',
-    default: title,
-    maxLength: 120,
-  },
-  {
-    key: `${trackId}Copy`,
-    label: `${label} — intro copy`,
-    type: 'textarea',
-    default: copy,
-    maxLength: 600,
-  },
+  { key: `${trackId}Title`, label: `${label} — title`, type: 'text', default: title, maxLength: 120 },
+  { key: `${trackId}Copy`, label: `${label} — intro copy`, type: 'textarea', default: copy, maxLength: 600 },
   {
     key: `${trackId}Steps`,
     label: `${label} — steps`,
@@ -141,8 +99,7 @@ const capabilityFields = (
 ];
 
 /** The shipped copy for one of the three capabilities beyond travel photography. */
-const track = (id: 'travel' | 'rent' | 'chat' | 'shop') =>
-  howItWorksTracks.find((t) => t.id === id)!;
+const track = (id: 'travel' | 'rent' | 'chat' | 'shop') => howItWorksTracks.find((t) => t.id === id)!;
 
 /** Home page sections, in their shipped order. */
 export const HOME_SECTIONS: [string, string][] = [
@@ -216,27 +173,9 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     fields: [
       { key: 'enabled', label: 'Show announcement bar', type: 'toggle', default: false },
-      {
-        key: 'text',
-        label: 'Message',
-        type: 'text',
-        default: 'New: portrait collections for the monsoon season are open.',
-        maxLength: 160,
-      },
-      {
-        key: 'linkLabel',
-        label: 'Link label',
-        type: 'text',
-        default: 'Explore the collection',
-        maxLength: 40,
-      },
-      {
-        key: 'linkUrl',
-        label: 'Link target',
-        type: 'url',
-        default: '/collection',
-        hint: 'A site path such as /collection or a full https:// URL.',
-      },
+      { key: 'text', label: 'Message', type: 'text', default: 'New: portrait collections for the monsoon season are open.', maxLength: 160 },
+      { key: 'linkLabel', label: 'Link label', type: 'text', default: 'Explore the collection', maxLength: 40 },
+      { key: 'linkUrl', label: 'Link target', type: 'url', default: '/collection', hint: 'A site path such as /collection or a full https:// URL.' },
       {
         key: 'tone',
         label: 'Style',
@@ -259,16 +198,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     icon: '🧭',
     description: 'Rename, hide and re-order the options in the website header.',
     previewPath: '/',
-    fields: [
-      {
-        key: 'links',
-        label: 'Menu options',
-        type: 'items',
-        default: items(NAV_LINKS),
-        labelEditable: true,
-        lockedIds: ['home'],
-      },
-    ],
+    fields: [{ key: 'links', label: 'Menu options', type: 'items', default: items(NAV_LINKS), labelEditable: true, lockedIds: ['home'] }],
   },
   {
     key: 'global.footer',
@@ -279,31 +209,9 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'site-footer',
     fields: [
-      {
-        key: 'tagline',
-        label: 'Tagline',
-        type: 'text',
-        default: 'Vacation photographs of places you have never stood.',
-        maxLength: 140,
-      },
-      {
-        key: 'copyright',
-        label: 'Copyright line (after “© year NeverBeen.”)',
-        type: 'text',
-        default: 'Portraits of elsewhere.',
-        maxLength: 100,
-      },
-      {
-        key: 'columns',
-        label: 'Link columns',
-        type: 'items',
-        default: items([
-          ['studio', 'Studio'],
-          ['visit', 'Visit'],
-          ['support', 'Support'],
-        ]),
-        labelEditable: true,
-      },
+      { key: 'tagline', label: 'Tagline', type: 'text', default: 'Vacation photographs of places you have never stood.', maxLength: 140 },
+      { key: 'copyright', label: 'Copyright line (after “© year NeverBeen.”)', type: 'text', default: 'Portraits of elsewhere.', maxLength: 100 },
+      { key: 'columns', label: 'Link columns', type: 'items', default: items([['studio', 'Studio'], ['visit', 'Visit'], ['support', 'Support']]), labelEditable: true },
       { key: 'showAdminLink', label: 'Show the “Admin” link', type: 'toggle', default: true },
     ],
   },
@@ -328,18 +236,9 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     page: 'home',
     label: 'Sections & order',
     icon: '🧩',
-    description:
-      'Drag or move sections to change the order of the Home page; switch any section off.',
+    description: 'Drag or move sections to change the order of the Home page; switch any section off.',
     previewPath: '/',
-    fields: [
-      {
-        key: 'sections',
-        label: 'Home page sections',
-        type: 'items',
-        default: items(HOME_SECTIONS),
-        labelEditable: false,
-      },
-    ],
+    fields: [{ key: 'sections', label: 'Home page sections', type: 'items', default: items(HOME_SECTIONS), labelEditable: false }],
   },
   {
     key: 'home.hero',
@@ -350,35 +249,16 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
       'The first thing visitors see: the closing pages of the NeverBeen Brochure in full size with the headline below, the independent call-to-action buttons, then the full-size portrait preview from public/banner.',
     previewPath: '/',
     fields: [
-      {
-        key: 'eyebrow',
-        label: 'Eyebrow',
-        type: 'text',
-        default: 'Travel photography, imagined',
-        maxLength: 60,
-      },
-      {
-        key: 'title',
-        label: 'Headline',
-        type: 'text',
-        default: "Go Anywhere. Even Where You've Never Been.",
-        maxLength: 120,
-      },
+      { key: 'eyebrow', label: 'Eyebrow', type: 'text', default: 'Travel photography, imagined', maxLength: 60 },
+      { key: 'title', label: 'Headline', type: 'text', default: "Go Anywhere. Even Where You've Never Been.", maxLength: 120 },
       {
         key: 'lede',
         label: 'Intro paragraph',
         type: 'textarea',
-        default:
-          "Create stunning AI vacation photos of yourself in the world's most beautiful destinations. Nobody will know or detect that the places you have never been.",
+        default: "Create stunning AI vacation photos of yourself in the world's most beautiful destinations. Nobody will know or detect that the places you have never been.",
         maxLength: 400,
       },
-      {
-        key: 'buttons',
-        label: 'Call-to-action buttons',
-        type: 'items',
-        default: items(HERO_BUTTONS),
-        labelEditable: true,
-      },
+      { key: 'buttons', label: 'Call-to-action buttons', type: 'items', default: items(HERO_BUTTONS), labelEditable: true },
       {
         key: 'peopleTitle',
         label: 'Portrait preview headline',
@@ -394,12 +274,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
           'What if their stories matter, even if their worlds are imaginary? Because a character doesn’t need to exist in our reality to leave a lasting impression on it.',
         maxLength: 400,
       },
-      {
-        key: 'autoplay',
-        label: 'Change the preview photographs automatically',
-        type: 'toggle',
-        default: true,
-      },
+      { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {
         key: 'interval',
         label: 'Seconds per preview photograph',
@@ -421,13 +296,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'multiverse-studio',
     fields: [
-      {
-        key: 'title',
-        label: 'Section title',
-        type: 'text',
-        default: 'The NeverBeen Multiverse Studio',
-        maxLength: 120,
-      },
+      { key: 'title', label: 'Section title', type: 'text', default: 'The NeverBeen Multiverse Studio', maxLength: 120 },
       {
         key: 'copy',
         label: 'Intro copy',
@@ -436,12 +305,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
           'There are worlds that have never been imagined, realities that have never been reached, and stories that have never been told. Some exist beyond the boundaries of time. Others live between the fragments of dreams, hidden in the spaces between what is and what could be. At The NeverBeen Multiverse Studio, we explore these possibilities. We build the unreal, question the familiar, and give form to ideas that have yet to find a place in existence.',
         maxLength: 1200,
       },
-      {
-        key: 'autoplay',
-        label: 'Move to the next memo automatically',
-        type: 'toggle',
-        default: true,
-      },
+      { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
       {
         key: 'seconds',
         label: 'Seconds per memo',
@@ -463,13 +327,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'brochure',
     fields: [
-      {
-        key: 'title',
-        label: 'Section title',
-        type: 'text',
-        default: 'The NeverBeen Brochure',
-        maxLength: 120,
-      },
+      { key: 'title', label: 'Section title', type: 'text', default: 'The NeverBeen Brochure', maxLength: 120 },
       {
         key: 'copy',
         label: 'Intro copy',
@@ -478,12 +336,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
           'Fifty-three colourful pages with the destinations we compose, the photographs clients keep, the packages and prices, and a step-by-step guide to placing your Neverbeen Request — plus traveller stories from across the world.',
         maxLength: 1200,
       },
-      {
-        key: 'autoplay',
-        label: 'Move to the next memo automatically',
-        type: 'toggle',
-        default: true,
-      },
+      { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
       {
         key: 'seconds',
         label: 'Seconds per memo',
@@ -505,13 +358,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'storyline-section',
     fields: [
-      {
-        key: 'title',
-        label: 'Section title',
-        type: 'text',
-        default: 'The Storyline of Parallel Universe',
-        maxLength: 120,
-      },
+      { key: 'title', label: 'Section title', type: 'text', default: 'The Storyline of Parallel Universe', maxLength: 120 },
       {
         key: 'copy',
         label: 'Intro copy',
@@ -520,12 +367,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
           'Nine real-feelings scenarios about the journeys people carry in their hearts — postponed by work, distance, illness or loss — and how a Parallel Universe frame lets an unlived moment be seen with honesty and care.',
         maxLength: 1200,
       },
-      {
-        key: 'autoplay',
-        label: 'Move to the next memo automatically',
-        type: 'toggle',
-        default: true,
-      },
+      { key: 'autoplay', label: 'Move to the next memo automatically', type: 'toggle', default: true },
       {
         key: 'seconds',
         label: 'Seconds per memo',
@@ -556,11 +398,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         key: 'steps',
         label: 'Travel photography — steps',
         type: 'records',
-        default: howItWorksSteps.map((s) => ({
-          number: s.number,
-          title: s.title,
-          description: s.description,
-        })),
+        default: howItWorksSteps.map((s) => ({ number: s.number, title: s.title, description: s.description })),
         recordFields: [
           { key: 'number', label: 'Number', type: 'text' },
           { key: 'title', label: 'Title', type: 'text' },
@@ -569,27 +407,9 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         recordTitleKey: 'title',
         maxRecords: 8,
       },
-      ...capabilityFields(
-        'rent',
-        'AI model rental',
-        track('rent').title,
-        track('rent').description,
-        track('rent').steps,
-      ),
-      ...capabilityFields(
-        'chat',
-        'Live chat',
-        track('chat').title,
-        track('chat').description,
-        track('chat').steps,
-      ),
-      ...capabilityFields(
-        'shop',
-        'Merchandise',
-        track('shop').title,
-        track('shop').description,
-        track('shop').steps,
-      ),
+      ...capabilityFields('rent', 'AI model rental', track('rent').title, track('rent').description, track('rent').steps),
+      ...capabilityFields('chat', 'Live chat', track('chat').title, track('chat').description, track('chat').steps),
+      ...capabilityFields('shop', 'Merchandise', track('shop').title, track('shop').description, track('shop').steps),
     ],
   },
   {
@@ -597,23 +417,12 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     page: 'home',
     label: 'Popular Destinations',
     icon: '🗺️',
-    description:
-      'The destination atlas: heading plus which destinations are shown and in what order.',
+    description: 'The destination atlas: heading plus which destinations are shown and in what order.',
     previewPath: '/',
     previewFragment: 'destinations',
     fields: [
-      ...heading(
-        'The atlas',
-        'Popular Destinations',
-        'Places people book in their minds long before they book a flight.',
-      ),
-      {
-        key: 'items',
-        label: 'Destinations',
-        type: 'items',
-        default: destinations.map((d) => ({ id: d.slug, label: d.name, visible: true })),
-        labelEditable: false,
-      },
+      ...heading('The atlas', 'Popular Destinations', 'Places people book in their minds long before they book a flight.'),
+      { key: 'items', label: 'Destinations', type: 'items', default: destinations.map((d) => ({ id: d.slug, label: d.name, visible: true })), labelEditable: false },
     ],
   },
   {
@@ -626,11 +435,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'gallery',
     fields: [
-      ...heading(
-        'The proof',
-        'Gallery',
-        'Twenty-three stills drawn at random from the Neverbeen Collection—a new set every time you open this page.',
-      ),
+      ...heading('The proof', 'Gallery', 'Twenty-three stills drawn at random from the Neverbeen Collection—a new set every time you open this page.'),
     ],
   },
   {
@@ -642,24 +447,12 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'pricing',
     fields: [
-      ...heading(
-        'Collections',
-        'Pricing',
-        'Simple plans for a first postcard, a full trip, or a season of elsewhere.',
-      ),
+      ...heading('Collections', 'Pricing', 'Simple plans for a first postcard, a full trip, or a season of elsewhere.'),
       {
         key: 'plans',
         label: 'Plans',
         type: 'records',
-        default: pricingPlans.map((p) => ({
-          name: p.name,
-          price: p.price,
-          cadence: p.cadence,
-          description: p.description,
-          cta: p.cta,
-          featured: p.featured,
-          features: [...p.features],
-        })),
+        default: pricingPlans.map((p) => ({ name: p.name, price: p.price, cadence: p.cadence, description: p.description, cta: p.cta, featured: p.featured, features: [...p.features] })),
         recordFields: [
           { key: 'name', label: 'Plan name', type: 'text' },
           { key: 'price', label: 'Price', type: 'text' },
@@ -683,11 +476,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/',
     previewFragment: 'faq',
     fields: [
-      ...heading(
-        'Before you go',
-        'FAQ',
-        'The practical questions, answered the way a studio would.',
-      ),
+      ...heading('Before you go', 'FAQ', 'The practical questions, answered the way a studio would.'),
       {
         key: 'items',
         label: 'Questions',
@@ -724,11 +513,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     description: 'The enquiry form at the end of the Home page.',
     previewPath: '/',
     previewFragment: 'contact',
-    fields: heading(
-      'Begin',
-      "Tell us where you've never been",
-      'Share a portrait and a destination. A studio editor will reply with a collection brief.',
-    ),
+    fields: heading('Begin', "Tell us where you've never been", 'Share a portrait and a destination. A studio editor will reply with a collection brief.'),
   },
   // ------------------------------------------------------------------ Community
   {
@@ -740,29 +525,19 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     previewPath: '/community',
     fields: [
       { key: 'badge', label: 'Badge', type: 'text', default: 'NeverBeen Community', maxLength: 40 },
-      {
-        key: 'title',
-        label: 'Title',
-        type: 'text',
-        default: 'Connect to NeverBeen Community',
-        maxLength: 90,
-      },
+      { key: 'title', label: 'Title', type: 'text', default: 'Connect to NeverBeen Community', maxLength: 90 },
       {
         key: 'subtitle',
         label: 'Subtitle',
         type: 'textarea',
-        default:
-          'Sign in with your preferred account to join Neverbeen Social Network for discussions, share travel memoirs, and explore vacation galleries.',
+        default: 'Sign in with your preferred account to join Neverbeen Social Network for discussions, share travel memoirs, and explore vacation galleries.',
         maxLength: 300,
       },
       {
         key: 'providers',
         label: 'Sign-in providers',
         type: 'items',
-        default: items([
-          ['google', 'Sign in with Google'],
-          ['facebook', 'Sign in with Facebook'],
-        ]),
+        default: items([['google', 'Sign in with Google'], ['facebook', 'Sign in with Facebook']]),
         labelEditable: true,
       },
       {
@@ -782,24 +557,12 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         key: 'guestHint',
         label: 'Guest option hint',
         type: 'text',
-        default:
-          'Explore the whole community default profile without an account. Sign in any time to connect and post.',
+        default: 'Explore the whole community default profile without an account. Sign in any time to connect and post.',
         maxLength: 120,
       },
       { key: 'showLanguage', label: 'Show the language switcher', type: 'toggle', default: true },
-      {
-        key: 'secureNote',
-        label: 'Security footnote',
-        type: 'text',
-        default: 'Authentication is encrypted and secure.',
-        maxLength: 90,
-      },
-      {
-        key: 'showLegal',
-        label: 'Show Privacy · Terms · Help links',
-        type: 'toggle',
-        default: true,
-      },
+      { key: 'secureNote', label: 'Security footnote', type: 'text', default: 'Authentication is encrypted and secure.', maxLength: 90 },
+      { key: 'showLegal', label: 'Show Privacy · Terms · Help links', type: 'toggle', default: true },
     ],
   },
   {
@@ -810,46 +573,12 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     description: 'Which social features members see in their profile menu, and the side panels.',
     previewPath: '/community/profile',
     fields: [
-      {
-        key: 'sections',
-        label: 'Profile menu',
-        type: 'items',
-        default: items(PROFILE_SECTIONS),
-        labelEditable: true,
-        lockedIds: ['journey', 'settings'],
-      },
-      {
-        key: 'showCompanionsPanel',
-        label: 'Show “My Companions” side panel',
-        type: 'toggle',
-        default: true,
-      },
-      {
-        key: 'showCirclesPanel',
-        label: 'Show “My Circles” side panel',
-        type: 'toggle',
-        default: true,
-      },
-      {
-        key: 'showModelAdsPanel',
-        label: 'Show the AI Models advertisement under “Online Companions”',
-        type: 'toggle',
-        default: true,
-      },
-      {
-        key: 'showModelAdsInFeed',
-        label: 'Show AI Models advertisements between Journey posts',
-        type: 'toggle',
-        default: true,
-      },
-      {
-        key: 'modelAdCount',
-        label: 'Model advertisements in the right rail',
-        type: 'number',
-        default: 15,
-        min: 4,
-        max: 42,
-      },
+      { key: 'sections', label: 'Profile menu', type: 'items', default: items(PROFILE_SECTIONS), labelEditable: true, lockedIds: ['journey', 'settings'] },
+      { key: 'showCompanionsPanel', label: 'Show “My Companions” side panel', type: 'toggle', default: true },
+      { key: 'showCirclesPanel', label: 'Show “My Circles” side panel', type: 'toggle', default: true },
+      { key: 'showModelAdsPanel', label: 'Show the AI Models advertisement under “Online Companions”', type: 'toggle', default: true },
+      { key: 'showModelAdsInFeed', label: 'Show AI Models advertisements between Journey posts', type: 'toggle', default: true },
+      { key: 'modelAdCount', label: 'Model advertisements in the right rail', type: 'number', default: 15, min: 4, max: 42 },
     ],
   },
   {
