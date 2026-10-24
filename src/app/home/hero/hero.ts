@@ -22,15 +22,13 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
 export const HERO_SLIDE_INTERVAL_SECONDS = 5;
 
 /**
- * The top of the Home page — two full-frame gallery previews under one roof.
+ * The top of the Home page — two full-width gallery panels under one roof.
  *
- * The first showcase displays the closing spreads of the NeverBeen Brochure in
- * full size (uncropped), with the headline "Go Anywhere. Even Where You've
- * Never Been." and intro copy set cleanly below the image across every screen
- * size. Three independent white pill call-to-action buttons float in the seam
- * between the two sections. The second showcase displays the full-size,
- * uncropped portraits from `public/banner`, followed below by "Meet the People.
- * Even When They Don't Exists outside NeverBeen Multiverse".
+ * On widescreen, each section forms a single unified panel with the editorial
+ * headline and copy on the left and the full-size, uncropped photograph stage
+ * on the right; on mobile, the full-size image sits cleanly above the copy.
+ * Three independent white pill call-to-action buttons float in the seam
+ * between the two sections.
  *
  * Both previews cross-fade on their own every five seconds. They are purely
  * decorative: the stage is hidden from assistive technology, so a rotating

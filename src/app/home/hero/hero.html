@@ -1,6 +1,6 @@
 <section class="hero" id="home">
   <!-- Pastel studio light: a luminous gallery-clean backdrop that gives crisp
-       separation to the white showcase cards and the independent white
+       separation to the wide showcase panels and the independent white
        call-to-action pills. -->
   <div class="ambience" aria-hidden="true">
     <span class="glow glow-a"></span>
@@ -10,8 +10,9 @@
 
   <!-- ==================================================================
        Sub-section 1 — "Go Anywhere. Even Where You've Never Been."
-       The closing spreads of the NeverBeen Brochure are shown in full size
-       (uncropped) above the editorial copy deck on every screen size.
+       Unified full-width panel: editorial copy on the left and the full-size,
+       uncropped brochure spread on the right on widescreen; stacked with the
+       full-size image above the copy on mobile.
        ================================================================== -->
   <article class="panel panel-travel" aria-labelledby="hero-title">
     <div class="stage" aria-hidden="true">
@@ -32,13 +33,16 @@
     </div>
 
     <div class="panel-copy">
-      @if (eyebrow()) {
-        <p class="eyebrow">{{ eyebrow() }}</p>
-      }
-      <h1 id="hero-title">{{ title() }}</h1>
-      @if (lede()) {
-        <p class="lede">{{ lede() }}</p>
-      }
+      <div class="copy-body">
+        @if (eyebrow()) {
+          <p class="eyebrow">{{ eyebrow() }}</p>
+        }
+        <h1 id="hero-title">{{ title() }}</h1>
+        @if (lede()) {
+          <p class="lede">{{ lede() }}</p>
+        }
+      </div>
+
       <div class="panel-footer" aria-hidden="true">
         <div class="dots">
           @for (slide of brochureSlides; track slide.src; let i = $index) {
@@ -77,8 +81,9 @@
 
   <!-- ==================================================================
        Sub-section 2 — "Meet the People. Even When They Don't Exists
-       outside NeverBeen Multiverse", set cleanly below the full-size,
-       uncropped portraits from public/banner on every screen size.
+       outside NeverBeen Multiverse": unified full-width panel with copy on
+       the left and full-size, uncropped portraits from public/banner on the
+       right on widescreen; image above copy on mobile.
        ================================================================== -->
   <article class="panel panel-people" aria-labelledby="hero-people-title">
     <div class="stage" aria-hidden="true">
@@ -99,10 +104,13 @@
     </div>
 
     <div class="panel-copy">
-      <h2 id="hero-people-title">{{ peopleTitle() }}</h2>
-      @if (peopleCopy()) {
-        <p class="lede">{{ peopleCopy() }}</p>
-      }
+      <div class="copy-body">
+        <h2 id="hero-people-title">{{ peopleTitle() }}</h2>
+        @if (peopleCopy()) {
+          <p class="lede">{{ peopleCopy() }}</p>
+        }
+      </div>
+
       <div class="panel-footer" aria-hidden="true">
         <div class="dots">
           @for (slide of peopleSlides; track slide.src; let i = $index) {

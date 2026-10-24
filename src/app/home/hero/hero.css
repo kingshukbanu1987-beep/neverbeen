@@ -1,19 +1,19 @@
 /* ============================================================================
-   The top of the Home page — Ultra-modern Full-Width Gallery Showcase
-   A luminous studio porcelain backdrop frames two full-screen-width gallery
-   sections and three independent floating white call-to-action pills:
+   The top of the Home page — Ultra-modern Full-Width Split Gallery Showcase
+   A luminous studio porcelain backdrop frames two full-screen-width unified
+   panels and three independent floating white call-to-action pills:
 
-   1. "Go Anywhere. Even Where You've Never Been." — wide across the screen,
-      displaying the closing spreads of the NeverBeen Brochure in full size
-      (never cropped) inside a crisp bezel frame, with the editorial headline
-      and copy deck cleanly below the artwork on every screen size.
+   1. "Go Anywhere. Even Where You've Never Been." — on widescreen, a single
+      full-width gallery panel with the editorial headline & copy on the left
+      and the full-size, uncropped closing spreads of the NeverBeen Brochure on
+      the right. On mobile, the full-size image sits cleanly above the copy.
    2. Three standalone white pill buttons ('Connect to NeverBeen Community',
       'Shop NeverBeen Merchandise' & 'Create My Vacation') floating
       independently in the studio seam without a wrapper container.
    3. "Meet the People. Even When They Don't Exists outside NeverBeen
-      Multiverse" — wide across the screen, presenting the full-size,
-      uncropped portraits from public/banner above their editorial copy deck
-      on every screen size.
+      Multiverse" — on widescreen, a single full-width gallery panel with the
+      editorial copy on the left and the full-size, uncropped portraits from
+      public/banner on the right; on mobile, the image sits above the copy.
    ========================================================================== */
 
 :host {
@@ -100,20 +100,24 @@
 }
 
 /* ------------------------------------------------------------------ panels */
-/* Full-screen-width showcase cards: cover the full width of the viewport on
-   widescreen, laptop, tablet and mobile, with image above and copy below. */
+/* Widescreen unified showcase panel: editorial copy on the left, full-size
+   uncropped photograph stage on the right, spanning the full screen width. */
 .panel {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(19rem, 0.8fr) minmax(0, 1.2fr);
+  grid-template-areas: 'copy stage';
+  align-items: stretch;
   width: 100%;
   max-width: none;
   margin: 0;
   overflow: hidden;
   border: 1px solid rgba(15, 23, 42, 0.085);
-  border-radius: clamp(20px, 2.2vw, 30px);
-  background-color: #ffffff;
+  border-radius: clamp(22px, 2.2vw, 32px);
+  background:
+    radial-gradient(90% 85% at 0% 0%, rgba(91, 91, 240, 0.048) 0%, rgba(255, 255, 255, 0) 64%),
+    #ffffff;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
     0 24px 60px -20px rgba(15, 23, 42, 0.13),
@@ -121,22 +125,25 @@
 }
 
 /* ------------------------------------------------------------------- stage */
-/* Inset architectural gallery bezel: stretches across the full card width while
-   presenting 100% of every photograph uncropped (`object-fit: contain`). */
+/* Right-hand picture aperture on widescreen: inset architectural bezel with
+   subtle gallery elevation, keeping 100% of every image uncropped. */
 .stage {
-  --stage-inset: clamp(0.38rem, 0.75vw, 0.7rem);
+  --stage-inset: clamp(0.5rem, 0.85vw, 0.85rem);
+  grid-area: stage;
+  align-self: center;
   position: relative;
-  width: calc(100% - (2 * var(--stage-inset)));
-  margin: var(--stage-inset) auto 0;
-  border-radius: clamp(14px, 1.7vw, 23px);
+  width: calc(100% - var(--stage-inset));
+  margin: var(--stage-inset) var(--stage-inset) var(--stage-inset) 0;
+  border-radius: clamp(16px, 1.8vw, 24px);
   overflow: hidden;
   background-color: #eef1f8;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 14px 36px -18px rgba(15, 23, 42, 0.2),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.07);
 }
 
-/* Native aspect ratios with viewport-height cap so widescreen/laptop displays
-   keep the entire full-size uncropped image visible on screen at once while
-   the ambient wash fills the full screen width seamlessly. */
+/* Exact native aspect ratios (1853 × 1309 brochure spreads; 1200 × 896 banner
+   portraits) so every photograph fills the stage in full size without cropping. */
 .panel-travel .stage {
   aspect-ratio: 1853 / 1309;
   max-height: clamp(360px, 82vh, 900px);
@@ -171,8 +178,8 @@
   user-select: none;
 }
 
-/* Luminous ambient twin of the active photograph: fills the wide full-screen
-   stage smoothly behind the uncropped still on ultrawide and laptop screens. */
+/* Luminous ambient twin of the active photograph: seamlessly fills any
+   remaining stage space on ultra-wide monitors without cropping the photo. */
 .frame .wash {
   display: block;
   position: absolute;
@@ -186,26 +193,46 @@
 }
 
 /* -------------------------------------------------------------- panel copy */
+/* Left-hand editorial deck on widescreen: optically centered copy body with
+   the slide progress & tabular index anchored cleanly along the bottom edge. */
 .panel-copy {
+  grid-area: copy;
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  padding: clamp(1.3rem, 2.5vw, 2.25rem) clamp(1.15rem, 2.8vw, 2.75rem)
-    clamp(1.25rem, 2.3vw, 2.1rem);
-  background-color: #ffffff;
+  min-width: 0;
+  padding: clamp(1.5rem, 2.8vw, 2.8rem) clamp(1.35rem, 2.5vw, 2.5rem) clamp(1.3rem, 2.1vw, 2rem)
+    clamp(1.5rem, 3.1vw, 3.1rem);
+}
+
+.copy-body {
+  margin-block: auto;
+  padding-bottom: clamp(1rem, 1.8vw, 1.5rem);
+}
+
+.panel-people .copy-body::before {
+  content: '';
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  margin-bottom: clamp(0.8rem, 1.3vw, 1.05rem);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--studio-accent) 0%, #a855f7 100%);
 }
 
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0 0 clamp(0.65rem, 1.1vw, 0.9rem);
+  margin: 0 0 clamp(0.7rem, 1.15vw, 0.95rem);
   padding: 0.32rem 0.82rem;
   border: 1px solid rgba(91, 91, 240, 0.18);
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(91, 91, 240, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%);
   font-family: var(--hero-font);
-  font-size: clamp(0.66rem, 0.8vw, 0.74rem);
+  font-size: clamp(0.66rem, 0.78vw, 0.74rem);
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -224,11 +251,10 @@
 
 h1 {
   margin: 0;
-  max-width: 68rem;
   font-family: var(--serif);
-  font-size: clamp(1.95rem, 3.85vw, 3.5rem);
+  font-size: clamp(1.85rem, 2.95vw, 3.3rem);
   font-weight: 500;
-  line-height: 1.03;
+  line-height: 1.04;
   letter-spacing: -0.028em;
   color: var(--studio-ink);
   background: linear-gradient(102deg, #0b0d12 10%, #262c3f 56%, #5b5bf0 98%);
@@ -239,11 +265,10 @@ h1 {
 
 h2 {
   margin: 0;
-  max-width: 66rem;
   font-family: var(--serif);
-  font-size: clamp(1.65rem, 3.2vw, 2.9rem);
+  font-size: clamp(1.6rem, 2.5vw, 2.75rem);
   font-weight: 500;
-  line-height: 1.07;
+  line-height: 1.08;
   letter-spacing: -0.026em;
   color: var(--studio-ink);
   background: linear-gradient(102deg, #0b0d12 10%, #262c3f 56%, #5b5bf0 98%);
@@ -260,10 +285,10 @@ h2 {
 }
 
 .lede {
-  max-width: 64rem;
-  margin: clamp(0.75rem, 1.3vw, 1.05rem) 0 0;
+  max-width: 38rem;
+  margin: clamp(0.8rem, 1.3vw, 1.1rem) 0 0;
   font-family: var(--hero-font);
-  font-size: clamp(0.95rem, 1.12vw, 1.08rem);
+  font-size: clamp(0.94rem, 1.05vw, 1.08rem);
   line-height: 1.66;
   color: var(--studio-muted);
 }
@@ -274,9 +299,8 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: clamp(1rem, 1.8vw, 1.45rem);
-  padding-top: clamp(0.85rem, 1.4vw, 1.1rem);
-  border-top: 1px solid rgba(15, 23, 42, 0.065);
+  padding-top: clamp(0.85rem, 1.3vw, 1.1rem);
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
 }
 
 .dots {
@@ -388,6 +412,61 @@ h2 {
 }
 
 /* ------------------------------------------------------------------ mobile */
+/* Mobile screen view: stacked vertically with the full-size, uncropped image
+   on top and the text deck directly below it. */
+@media (max-width: 900px) {
+  .panel {
+    display: flex;
+    flex-direction: column;
+    border-radius: clamp(18px, 4.6vw, 24px);
+    background: #ffffff;
+  }
+
+  .stage {
+    --stage-inset: clamp(0.35rem, 1.1vw, 0.55rem);
+    align-self: stretch;
+    width: calc(100% - (2 * var(--stage-inset)));
+    margin: var(--stage-inset) auto 0;
+    border-radius: clamp(13px, 3.6vw, 18px);
+    max-height: none;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+  }
+
+  .panel-copy {
+    padding: clamp(1.2rem, 4.2vw, 1.75rem) clamp(1.1rem, 4.4vw, 1.75rem)
+      clamp(1.15rem, 3.8vw, 1.6rem);
+  }
+
+  .copy-body {
+    margin-block: 0;
+    padding-bottom: 0;
+  }
+
+  .panel-people .copy-body::before {
+    display: none;
+  }
+
+  h1 {
+    max-width: 54rem;
+    font-size: clamp(1.85rem, 6.2vw, 2.6rem);
+    line-height: 1.04;
+  }
+
+  h2 {
+    max-width: 52rem;
+    font-size: clamp(1.5rem, 5.2vw, 2.2rem);
+    line-height: 1.08;
+  }
+
+  .lede {
+    max-width: 54rem;
+  }
+
+  .panel-footer {
+    margin-top: clamp(1rem, 3.2vw, 1.35rem);
+  }
+}
+
 @media (max-width: 640px) {
   .hero {
     gap: 0.85rem;
@@ -395,14 +474,8 @@ h2 {
     padding-bottom: 1.9rem;
   }
 
-  .panel {
-    border-radius: clamp(18px, 4.6vw, 24px);
-  }
-
   .stage {
     --stage-inset: 0.35rem;
-    border-radius: clamp(13px, 3.6vw, 18px);
-    max-height: none;
   }
 
   .eyebrow {
@@ -411,12 +484,10 @@ h2 {
 
   h1 {
     font-size: clamp(1.85rem, 8.2vw, 2.5rem);
-    line-height: 1.04;
   }
 
   h2 {
     font-size: clamp(1.5rem, 6.6vw, 2.05rem);
-    line-height: 1.08;
   }
 
   .lede {

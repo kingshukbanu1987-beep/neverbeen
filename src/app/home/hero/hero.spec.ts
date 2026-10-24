@@ -234,15 +234,17 @@ describe('Hero', () => {
     expect(element.querySelector('figcaption')).toBeNull();
   });
 
-  it('places the headline below the full-size, uncropped brochure spread across all screens', () => {
+  it('places the travel text on the left and the full-size brochure spread on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
     expect(travel).toBeTruthy();
 
     const stage = travel.querySelector<HTMLElement>('.stage')!;
     const copy = travel.querySelector<HTMLElement>('.panel-copy')!;
-    expect(getComputedStyle(travel).display).toBe('flex');
-    expect(getComputedStyle(travel).flexDirection).toBe('column');
+    expect(getComputedStyle(travel).display).toBe('grid');
+    expect(getComputedStyle(travel).gridTemplateAreas).toContain('copy stage');
+    expect(getComputedStyle(copy).gridArea).toBe('copy');
+    expect(getComputedStyle(stage).gridArea).toBe('stage');
     expect(getComputedStyle(travel).width).toBe('100%');
     expect(getComputedStyle(travel).maxWidth).toBe('none');
     expect(getComputedStyle(stage).position).toBe('relative');
@@ -266,15 +268,17 @@ describe('Hero', () => {
     }
   });
 
-  it('places the people headline and paragraph below the full-size, uncropped banner portraits', () => {
+  it('places the people text on the left and the full-size banner portraits on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const people = element.querySelector<HTMLElement>('.panel-people')!;
     expect(people).toBeTruthy();
 
     const stage = people.querySelector<HTMLElement>('.stage')!;
     const copy = people.querySelector<HTMLElement>('.panel-copy')!;
-    expect(getComputedStyle(people).display).toBe('flex');
-    expect(getComputedStyle(people).flexDirection).toBe('column');
+    expect(getComputedStyle(people).display).toBe('grid');
+    expect(getComputedStyle(people).gridTemplateAreas).toContain('copy stage');
+    expect(getComputedStyle(copy).gridArea).toBe('copy');
+    expect(getComputedStyle(stage).gridArea).toBe('stage');
     expect(getComputedStyle(people).width).toBe('100%');
     expect(getComputedStyle(people).maxWidth).toBe('none');
     expect(getComputedStyle(stage).position).toBe('relative');
