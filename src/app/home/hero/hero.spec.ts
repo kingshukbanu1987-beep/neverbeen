@@ -4,6 +4,8 @@ import { TestBed } from '@angular/core/testing';
 import { RouterLink, provideRouter } from '@angular/router';
 import { Brochure } from '../brochure/brochure';
 import { Hero } from './hero';
+import { HERO_TRAVEL_SLIDES } from './hero-slides';
+import { TRAVEL_IMAGE_SOURCES } from './travel-images';
 import { Owner } from '../owner/owner';
 import { StorylineSection } from '../storyline/storyline-section';
 
@@ -234,7 +236,7 @@ describe('Hero', () => {
     expect(element.querySelector('figcaption')).toBeNull();
   });
 
-  it('places the travel text on the left and the full-size brochure spread on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
+  it('places the travel text on the left and the full-size public/travel photographs on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
     expect(travel).toBeTruthy();
@@ -257,20 +259,50 @@ describe('Hero', () => {
     expect(travel.querySelector('.wash')).toBeNull();
 
     expect(travel.querySelector('h1')?.textContent?.trim()).toBe(
-      "Go Anywhere. Even Where You've Never Been.",
+      "Go Anywhere. Even Where You've Never Been",
     );
     expect(travel.querySelector('.lede')?.textContent).toContain(
       'Create stunning AI vacation photos of yourself',
     );
 
     const photos = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo'));
-    expect(photos.map((img) => img.getAttribute('src'))).toEqual([
-      '/assets/brochure-preview/neverbeen-brochure-page-52.jpg',
-      '/assets/brochure-preview/neverbeen-brochure-page-53.jpg',
-    ]);
+    const sources = photos.map((img) => img.getAttribute('src'));
+    expect(sources.length).toBeGreaterThan(0);
+    expect(sources.every((src) => src?.startsWith('/travel/'))).toBe(true);
+    // The active photograph plus the one preloaded behind it, in folder order.
+    expect(sources).toEqual(HERO_TRAVEL_SLIDES.slice(0, sources.length).map((s) => s.src));
     for (const photo of photos) {
       expect(getComputedStyle(photo).objectFit).toBe('contain');
     }
+  });
+
+  it('renders every photograph in public/travel in the top slideshow', () => {
+    expect(HERO_TRAVEL_SLIDES.length).toBe(TRAVEL_IMAGE_SOURCES.length);
+    expect(HERO_TRAVEL_SLIDES.map((slide) => slide.src)).toEqual([...TRAVEL_IMAGE_SOURCES]);
+    for (const slide of HERO_TRAVEL_SLIDES) {
+      expect(slide.alt.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('drops the closing full stop from the old published headline but keeps custom copy', () => {
+    const cms = TestBed.inject(SiteConfigService);
+    cms.state.update((s) => ({
+      ...s,
+      published: { ...s.published, 'home.hero': { title: "Go Anywhere. Even Where You've Never Been." } },
+    }));
+    const element: HTMLElement = create().nativeElement;
+    expect(element.querySelector('.panel-travel h1')?.textContent?.trim()).toBe(
+      "Go Anywhere. Even Where You've Never Been",
+    );
+
+    cms.state.update((s) => ({
+      ...s,
+      published: { ...s.published, 'home.hero': { title: 'Go Anywhere, Whenever You Like.' } },
+    }));
+    const custom: HTMLElement = create().nativeElement;
+    expect(custom.querySelector('.panel-travel h1')?.textContent?.trim()).toBe(
+      'Go Anywhere, Whenever You Like.',
+    );
   });
 
   it('places the people text on the left and the full-size banner portraits on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
@@ -330,21 +362,21 @@ describe('Hero', () => {
     const fixture = create();
     const hero = fixture.componentInstance as unknown as {
       intervalSeconds: () => number;
-      brochureIndex: () => number;
+      travelIndex: () => number;
       peopleIndex: () => number;
       advance: () => void;
-      brochureSlides: unknown[];
+      travelSlides: unknown[];
       peopleSlides: unknown[];
     };
 
     expect(hero.intervalSeconds()).toBe(5);
-    expect(hero.brochureIndex()).toBe(0);
+    expect(hero.travelIndex()).toBe(0);
     expect(hero.peopleIndex()).toBe(0);
 
     hero.advance();
     fixture.detectChanges();
 
-    expect(hero.brochureIndex()).toBe(1 % hero.brochureSlides.length);
+    expect(hero.travelIndex()).toBe(1 % hero.travelSlides.length);
     expect(hero.peopleIndex()).toBe(1 % hero.peopleSlides.length);
   });
 });

@@ -3,11 +3,11 @@
    A luminous studio porcelain backdrop frames two full-screen-width unified
    panels and three independent floating white call-to-action pills:
 
-   1. "Go Anywhere. Even Where You've Never Been." — on widescreen, a single
+   1. "Go Anywhere. Even Where You've Never Been" — on widescreen, a single
       full-width panel with the editorial headline & copy on the left and the
-      standalone, full-size brochure spread on the right with smooth curved
-      corners on all 4 corners (no frame border). On mobile, the full-size
-      curved-corner image sits cleanly above the copy.
+      standalone, full-size travel photographs from public/travel on the right
+      with smooth curved corners on all 4 corners (no frame border). On mobile,
+      the full-size curved-corner image sits cleanly above the copy.
    2. Three standalone white pill buttons ('Connect to NeverBeen Community',
       'Shop NeverBeen Merchandise' & 'Create My Vacation') floating
       independently in the studio seam without a wrapper container.
@@ -137,11 +137,12 @@
   box-shadow: 0 22px 48px -22px rgba(15, 23, 42, 0.22);
 }
 
-/* Exact native aspect ratios (1853 × 1309 brochure spreads; 1200 × 896 banner
-   portraits) with no height clamping, so every photograph fills 100% of its
-   curved-corner bounds without any frame border or cropping. */
+/* A steady cinematic 16:9 stage for the widescreen travel photographs and the
+   native 1200 × 896 banner portraits: no height clamping, so every photograph
+   is shown in full inside its curved-corner bounds, with no frame border and
+   no cropping, whatever its own aspect ratio. */
 .panel-travel .stage {
-  aspect-ratio: 1853 / 1309;
+  aspect-ratio: 16 / 9;
 }
 
 .panel-people .stage {

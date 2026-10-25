@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SiteConfigService } from '../../services/site-config.service';
-import { HERO_BROCHURE_PREVIEW_SLIDES, HERO_PEOPLE_SLIDES, HeroSlide } from './hero-slides';
+import { HERO_PEOPLE_SLIDES, HERO_TRAVEL_SLIDES, HeroSlide } from './hero-slides';
 
 const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> = {
   community: { path: '/community', cls: 'btn-ghost' },
@@ -20,6 +20,9 @@ const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> 
 
 /** The shipped pace of both hero previews: one photograph every five seconds. */
 export const HERO_SLIDE_INTERVAL_SECONDS = 5;
+
+/** The old shipped headline: still stored by anyone who published it verbatim. */
+const LEGACY_HERO_TITLE = "Go Anywhere. Even Where You've Never Been.";
 
 /**
  * The top of the Home page — two full-width gallery panels under one roof.
@@ -46,17 +49,22 @@ export class Hero {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly brochureSlides: readonly HeroSlide[] = HERO_BROCHURE_PREVIEW_SLIDES;
+  protected readonly travelSlides: readonly HeroSlide[] = HERO_TRAVEL_SLIDES;
   protected readonly peopleSlides: readonly HeroSlide[] = HERO_PEOPLE_SLIDES;
 
-  /** Which brochure page is on stage, and which banner portrait is on stage. */
-  protected readonly brochureIndex = signal(0);
+  /** Which travel photograph is on stage, and which banner portrait is on stage. */
+  protected readonly travelIndex = signal(0);
   protected readonly peopleIndex = signal(0);
 
   private readonly visible = signal(true);
 
   protected readonly eyebrow = computed(() => this.cms.text('home.hero', 'eyebrow'));
-  protected readonly title = computed(() => this.cms.text('home.hero', 'title'));
+  protected readonly title = computed(() => {
+    const title = this.cms.text('home.hero', 'title');
+    // The headline no longer ends in a full stop, but a published copy of the
+    // old default would otherwise keep showing one.
+    return title.trim() === LEGACY_HERO_TITLE ? LEGACY_HERO_TITLE.slice(0, -1) : title;
+  });
   protected readonly lede = computed(() => this.cms.text('home.hero', 'lede'));
   protected readonly peopleTitle = computed(() => this.cms.text('home.hero', 'peopleTitle'));
   protected readonly peopleCopy = computed(() => this.cms.text('home.hero', 'peopleCopy'));
@@ -111,8 +119,8 @@ export class Hero {
   }
 
   /** Only the active and the incoming photograph are mounted, per preview. */
-  protected isBrochureMounted(index: number): boolean {
-    return this.isCurrent(this.brochureSlides.length, this.brochureIndex(), index);
+  protected isTravelMounted(index: number): boolean {
+    return this.isCurrent(this.travelSlides.length, this.travelIndex(), index);
   }
 
   protected isPeopleMounted(index: number): boolean {
@@ -129,7 +137,7 @@ export class Hero {
   }
 
   private advance(): void {
-    this.brochureIndex.update((index) => (index + 1) % this.brochureSlides.length);
+    this.travelIndex.update((index) => (index + 1) % this.travelSlides.length);
     this.peopleIndex.update((index) => (index + 1) % this.peopleSlides.length);
     this.preload();
   }
@@ -139,7 +147,7 @@ export class Hero {
     const view = this.document.defaultView;
     if (!view || typeof view.Image !== 'function') return;
     for (const [slides, active] of [
-      [this.brochureSlides, this.brochureIndex()],
+      [this.travelSlides, this.travelIndex()],
       [this.peopleSlides, this.peopleIndex()],
     ] as const) {
       const upcoming = slides[(active + 1) % slides.length];

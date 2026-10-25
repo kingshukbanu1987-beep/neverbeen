@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "prestart": "node scripts/generate-banner.mjs && node scripts/generate-collection.mjs && node scripts/generate-promotion.mjs && node scripts/generate-ai-models.mjs && node PersonalityBiographyScript.mjs",
+    "prestart": "node scripts/generate-banner.mjs && node scripts/generate-travel.mjs && node scripts/generate-collection.mjs && node scripts/generate-promotion.mjs && node scripts/generate-ai-models.mjs && node PersonalityBiographyScript.mjs",
     "start": "node scripts/dev.mjs",
     "serve": "ng serve",
-    "prebuild": "node scripts/generate-banner.mjs && node scripts/generate-collection.mjs && node scripts/generate-promotion.mjs && node scripts/generate-ai-models.mjs && node PersonalityBiographyScript.mjs",
+    "prebuild": "node scripts/generate-banner.mjs && node scripts/generate-travel.mjs && node scripts/generate-collection.mjs && node scripts/generate-promotion.mjs && node scripts/generate-ai-models.mjs && node PersonalityBiographyScript.mjs",
     "build": "ng build",
     "generate:collection": "node scripts/generate-collection.mjs",
     "generate:promotion": "node scripts/generate-promotion.mjs",
@@ -20,7 +20,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "generate:brochure": "node docs/presentation/generate-neverbeen-brochure.js",
-    "generate:banner": "node scripts/generate-banner.mjs"
+    "generate:banner": "node scripts/generate-banner.mjs",
+    "generate:travel": "node scripts/generate-travel.mjs"
   },
   "private": true,
   "packageManager": "npm@11.6.2",

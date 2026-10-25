@@ -246,11 +246,11 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
     label: 'Hero banner',
     icon: '🌅',
     description:
-      'The first thing visitors see: the closing pages of the NeverBeen Brochure in full size with the headline below, the independent call-to-action buttons, then the full-size portrait preview from public/banner.',
+      'The first thing visitors see: every travel photograph in public/travel as a full-size slideshow with the headline beside it, the independent call-to-action buttons, then the full-size portrait preview from public/banner.',
     previewPath: '/',
     fields: [
       { key: 'eyebrow', label: 'Eyebrow', type: 'text', default: 'Travel photography, imagined', maxLength: 60 },
-      { key: 'title', label: 'Headline', type: 'text', default: "Go Anywhere. Even Where You've Never Been.", maxLength: 120 },
+      { key: 'title', label: 'Headline', type: 'text', default: "Go Anywhere. Even Where You've Never Been", maxLength: 120 },
       {
         key: 'lede',
         label: 'Intro paragraph',

@@ -9,16 +9,16 @@
   </div>
 
   <!-- ==================================================================
-       Sub-section 1 — "Go Anywhere. Even Where You've Never Been."
+       Sub-section 1 — "Go Anywhere. Even Where You've Never Been"
        Unified full-width panel: editorial copy on the left and the standalone,
-       full-size brochure spread with curved corners on all 4 corners on the
-       right on widescreen; stacked with image above copy on mobile.
+       full-size travel photograph with curved corners on all 4 corners on
+       the right on widescreen; stacked with image above copy on mobile.
        ================================================================== -->
   <article class="panel panel-travel" aria-labelledby="hero-title">
     <div class="stage" aria-hidden="true">
-      @for (slide of brochureSlides; track slide.src; let i = $index) {
-        @if (isBrochureMounted(i)) {
-          <figure class="frame" [class.on]="brochureIndex() === i">
+      @for (slide of travelSlides; track slide.src; let i = $index) {
+        @if (isTravelMounted(i)) {
+          <figure class="frame" [class.on]="travelIndex() === i">
             <img
               class="photo"
               [src]="slide.src"
@@ -44,12 +44,12 @@
 
       <div class="panel-footer" aria-hidden="true">
         <div class="dots">
-          @for (slide of brochureSlides; track slide.src; let i = $index) {
-            <span [class.on]="brochureIndex() === i"></span>
+          @for (slide of travelSlides; track slide.src; let i = $index) {
+            <span [class.on]="travelIndex() === i"></span>
           }
         </div>
         <span class="frame-counter">
-          {{ pad(brochureIndex() + 1) }}<span class="slash">/</span>{{ pad(brochureSlides.length) }}
+          {{ pad(travelIndex() + 1) }}<span class="slash">/</span>{{ pad(travelSlides.length) }}
         </span>
       </div>
     </div>
