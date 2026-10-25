@@ -235,6 +235,26 @@ describe('Hero', () => {
     expect(element.querySelector('figcaption')).toBeNull();
   });
 
+  it('keeps the slideshow progress indicators shrinkable beside an unwrapped counter', () => {
+    const element: HTMLElement = create().nativeElement;
+    const footers = Array.from(element.querySelectorAll<HTMLElement>('.panel-footer'));
+
+    expect(footers).toHaveLength(2);
+    for (const footer of footers) {
+      const dots = footer.querySelector<HTMLElement>('.dots')!;
+      const counter = footer.querySelector<HTMLElement>('.frame-counter')!;
+
+      expect(getComputedStyle(footer).minWidth).toBe('0px');
+      expect(getComputedStyle(dots).flexGrow).toBe('1');
+      expect(getComputedStyle(dots).minWidth).toBe('0px');
+      expect(getComputedStyle(counter).whiteSpace).toBe('nowrap');
+      for (const segment of Array.from(dots.children) as HTMLElement[]) {
+        expect(getComputedStyle(segment).flexShrink).toBe('1');
+        expect(getComputedStyle(segment).minWidth).toBe('0px');
+      }
+    }
+  });
+
   it('places the travel text on the left and the full-bleed travel photographs from public/travel on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
