@@ -4,9 +4,7 @@
 <div class="hero-signin" [class.is-member]="signedIn()">
   @if (signedIn()) {
     <p class="hero-signin-title">{{ welcomeTitle() }}</p>
-    <a class="hero-signin-link" routerLink="/community">
-      Step into the NeverBeen Multiverse <span aria-hidden="true">↗</span>
-    </a>
+    <p class="hero-signin-subtitle">Step into the NeverBeen Multiverse</p>
   } @else {
     <app-community-sign-in-card variant="button" returnTo="/" />
   }

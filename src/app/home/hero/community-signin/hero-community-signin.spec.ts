@@ -50,7 +50,8 @@ describe('HeroCommunitySignIn', () => {
 
     // Nothing is written next to the button — no header line, no copy, no note.
     expect(element.querySelector('.hero-signin-title')).toBeNull();
-    expect(element.querySelector('.hero-signin-link')).toBeNull();
+    expect(element.querySelector('.hero-signin-subtitle')).toBeNull();
+    expect(element.querySelector('a')).toBeNull();
 
     // The Google button comes from the shared Community sign-in card, in its
     // button-only variant: no dark card, no eyebrow, no extra copy or note.
@@ -67,7 +68,7 @@ describe('HeroCommunitySignIn', () => {
     );
   });
 
-  it('replaces the sign-in with a personal welcome for a signed-in member', () => {
+  it('replaces the sign-in with a personal welcome and plain-text subtitle that does not link to the community', () => {
     signedIn.set(true);
     currentUser.set({
       id: 42,
@@ -88,10 +89,16 @@ describe('HeroCommunitySignIn', () => {
       'Welcome, Aisha.',
     );
     expect(element.querySelector('app-community-sign-in-card')).toBeNull();
-    expect(element.querySelector('.hero-signin-link')?.getAttribute('href')).toBe('/community');
-    expect(element.querySelector('.hero-signin-link')?.textContent).toContain(
-      'Step into the NeverBeen Multiverse',
-    );
+
+    const subtitle = element.querySelector('.hero-signin-subtitle');
+    expect(subtitle).toBeTruthy();
+    expect(subtitle?.tagName).toBe('P');
+    expect(subtitle?.textContent?.trim()).toBe('Step into the NeverBeen Multiverse');
+
+    // Plain text only — never an anchor or navigation trigger to /community.
+    expect(element.querySelector('a')).toBeNull();
+    expect(element.querySelector('[href]')).toBeNull();
+    expect(element.querySelector('.hero-signin-link')).toBeNull();
   });
 
   it('falls back to the e-mail name when a member has no first name', () => {
