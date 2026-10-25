@@ -5,9 +5,9 @@
 
    1. "Go Anywhere. Even Where You've Never Been." — on widescreen, a single
       full-width panel with the editorial headline & copy on the left and the
-      standalone, full-size travel photographs from public/travel on the right
+      standalone, full-bleed travel photographs from public/travel on the right
       with smooth curved corners on all 4 corners (no frame border). On mobile,
-      the full-size curved-corner image sits cleanly above the copy.
+      the full-bleed curved-corner image sits cleanly above the copy.
    2. Three standalone white pill buttons ('Connect to NeverBeen Community',
       'Shop NeverBeen Merchandise' & 'Create My Vacation') floating
       independently in the studio seam without a wrapper container.
@@ -123,7 +123,7 @@
 
 /* ------------------------------------------------------------------- stage */
 /* Standalone picture with smooth curved corners on all 4 corners: no frame
-   border, no background mat, no sidebars — pure uncropped photography. */
+   border, no background mat, no sidebars — pure photography. */
 .stage {
   grid-area: stage;
   position: relative;
@@ -137,11 +137,12 @@
   box-shadow: 0 22px 48px -22px rgba(15, 23, 42, 0.22);
 }
 
-/* Exact native aspect ratios (1853 × 1309 travel photographs; 1200 × 896 banner
-   portraits) with no height clamping, so every photograph fills 100% of its
-   curved-corner bounds without any frame border or cropping. */
+/* Fixed stage bounds with no height clamping. Travel photographs arrive in
+   mixed aspect ratios and are scaled to cover below, so every slide fills
+   100% of the curved-corner container without letterboxing. Banner portraits
+   use their exact native 1200 × 896 aspect ratio. */
 .panel-travel .stage {
-  aspect-ratio: 1853 / 1309;
+  aspect-ratio: 16 / 9;
 }
 
 .panel-people .stage {
@@ -175,6 +176,14 @@
   object-fit: contain;
   object-position: center;
   user-select: none;
+}
+
+/* The first hero section shows travel photographs with different native
+   aspect ratios. Cover scales each one to fill the entire stage edge-to-edge,
+   keeping its proportions and centring any overflow instead of leaving blank
+   bands above, below or beside the photograph. */
+.panel-travel .frame .photo {
+  object-fit: cover;
 }
 
 /* -------------------------------------------------------------- panel copy */
