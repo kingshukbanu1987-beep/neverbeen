@@ -415,24 +415,13 @@ h2 {
 
 /* ------------------------------------------ hero Community sign-in slot */
 /* The sign-in itself is deferred on viewport (see hero.html) and paints
-   nothing: this transparent skeleton holds the small header line and the
-   Google button's footprint so the copy never jumps when the chunk arrives. */
+   nothing: this transparent skeleton holds the Google button's footprint so
+   the copy never jumps when the chunk arrives. */
 .hero-signin-placeholder {
   display: grid;
   justify-items: start;
-  gap: 0.65rem;
   margin-top: clamp(0.9rem, 1.5vw, 1.25rem);
   background: transparent;
-}
-
-.hero-signin-placeholder-line {
-  display: block;
-  width: 15rem;
-  max-width: 80%;
-  height: 0.7rem;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.07);
-  animation: placeholder-breathe 2.4s ease-in-out infinite alternate;
 }
 
 .hero-signin-placeholder-button {
@@ -561,7 +550,6 @@ h2 {
     transition: opacity 320ms linear;
   }
 
-  .hero-signin-placeholder-line,
   .hero-signin-placeholder-button {
     animation: none;
     opacity: 0.7;

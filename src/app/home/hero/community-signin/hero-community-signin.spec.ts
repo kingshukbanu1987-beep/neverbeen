@@ -18,7 +18,6 @@ describe('HeroCommunitySignIn', () => {
   };
 
   const defaults: Record<string, string> = {
-    communitySignInTitle: 'Sign in to Explore the NeverBeen Multiverse',
     communityWelcomeTitle: 'Welcome, {name}.',
   };
 
@@ -46,12 +45,12 @@ describe('HeroCommunitySignIn', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('shows only the small header line and the Google sign-in button to visitors', () => {
+  it('shows the Google sign-in button alone to visitors, with no header text', () => {
     const element = create();
 
-    expect(element.querySelector('.hero-signin-title')?.textContent?.trim()).toBe(
-      'Sign in to Explore the NeverBeen Multiverse',
-    );
+    // Nothing is written next to the button — no header line, no copy, no note.
+    expect(element.querySelector('.hero-signin-title')).toBeNull();
+    expect(element.querySelector('.hero-signin-link')).toBeNull();
 
     // The Google button comes from the shared Community sign-in card, in its
     // button-only variant: no dark card, no eyebrow, no extra copy or note.
@@ -59,12 +58,12 @@ describe('HeroCommunitySignIn', () => {
     expect(card).toBeTruthy();
     expect(card?.classList.contains('is-button')).toBe(true);
     expect(card?.querySelector('.community-auth-card')).toBeNull();
-    expect(card?.querySelector('button.google-sign-in')?.textContent).toContain(
+    expect(card?.querySelector('button.google-sign-in')?.textContent?.trim()).toBe(
       'Sign in with Google',
     );
 
     expect(element.querySelector('.hero-signin')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      'Sign in to Explore the NeverBeen Multiverse Sign in with Google',
+      'Sign in with Google',
     );
   });
 

@@ -568,19 +568,17 @@ are centred and cropped as needed instead of leaving blank bands around the slid
 
 At the top of the first hero panel — *Go Anywhere. Even Where You've Never Been* — and directly under
 its small texts (the eyebrow and the intro paragraph) sits the Community sign-in
-(`src/app/home/hero/community-signin`). It is deliberately minimal and paints nothing: a small header
-line and the Google button, on the page's own background.
+(`src/app/home/hero/community-signin`). It is nothing but the Google button: no header line, no copy,
+no card and no background — just the button on the page's own surface.
 
-- **Not signed in:** *“Sign in to Explore the NeverBeen Multiverse”* above the Google button. The
-  button is the same trusted Community flow the `/ai-models` pages use
-  (`app-community-sign-in-card`, `variant="button"`): OAuth redirect, the official Google button
-  fallback and the safe return path. Signing in returns the visitor to `/`.
-- **Signed in:** the same spot greets the member with *“Welcome, <first name>.”* and a single link
-  into the Community, instead of asking them to sign in.
+- **Not signed in:** the Google button alone. It is the same trusted Community flow the `/ai-models`
+  pages use (`app-community-sign-in-card`, `variant="button"`): OAuth redirect, the official Google
+  button fallback and the safe return path. Signing in returns the visitor to `/`.
+- **Signed in:** the button is replaced by *“Welcome, <first name>.”* and a single link into the
+  Community.
 
-Both lines are published from **Admin Console → Website Management → Hero banner**
-(`communitySignInTitle`, `communityWelcomeTitle`); use `{name}` in the welcome line to place the
-member's first name.
+The member welcome line is published from **Admin Console → Website Management → Hero banner**
+(`communityWelcomeTitle`); use `{name}` to place the member's first name.
 
 The sign-in reads `CommunityService` — a deliberately lazy runtime on this site — so the hero defers
 it with `@defer (on viewport)`. The Community code is its own chunk that loads as the top of the page

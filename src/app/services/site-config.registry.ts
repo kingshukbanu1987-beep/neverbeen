@@ -275,20 +275,12 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         maxLength: 400,
       },
       {
-        key: 'communitySignInTitle',
-        label: 'Community sign-in line (visitors)',
-        type: 'text',
-        default: 'Sign in to Explore the NeverBeen Multiverse',
-        maxLength: 80,
-        hint: 'The small line above the Google sign-in button at the top of the first hero panel.',
-      },
-      {
         key: 'communityWelcomeTitle',
-        label: 'Community sign-in line (signed in)',
+        label: 'Members: welcome line at the top of the hero',
         type: 'text',
         default: 'Welcome, {name}.',
         maxLength: 120,
-        hint: 'Replaces the sign-in line once a member is signed in. {name} becomes their first name.',
+        hint: 'Shown in place of the Google sign-in button once a member is signed in. {name} becomes their first name.',
       },
       { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {

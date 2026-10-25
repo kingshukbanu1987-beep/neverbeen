@@ -9,12 +9,11 @@ import { CommunitySignInCard } from '../../../shared/community-sign-in-card/comm
  * “Go Anywhere. Even Where You've Never Been” — placed directly under the small
  * texts (the eyebrow and the intro paragraph).
  *
- * It is deliberately minimal and paints nothing: a small header line and the
- * trusted Community Google button (the same flow the `/ai-models` pages use,
- * rendered through `app-community-sign-in-card`'s `button` variant).
+ * It is deliberately minimal: the trusted Community Google button, and nothing
+ * else — no header line, no copy, no surface (the same flow the `/ai-models`
+ * pages use, rendered through `app-community-sign-in-card`'s `button` variant).
  *
- * 1. **Visitor (not signed in)** — “Sign in to Explore the NeverBeen Multiverse”
- *    above the Google button.
+ * 1. **Visitor (not signed in)** — the Google button alone.
  * 2. **Member (signed in)** — “Welcome, <name>.” with a single link into the
  *    Community, so the same spot greets them instead of asking them to sign in.
  *
@@ -34,9 +33,6 @@ export class HeroCommunitySignIn {
   private readonly cms = inject(SiteConfigService);
 
   protected readonly signedIn = this.community.isAuthenticated;
-
-  /** Copy is published from Admin Console → Website Management → Hero banner. */
-  protected readonly title = computed(() => this.cms.text('home.hero', 'communitySignInTitle'));
 
   /** “Welcome, <name>.” — `{name}` in the published copy is replaced with the member's name. */
   protected readonly welcomeTitle = computed(() =>
