@@ -1,94 +1,15 @@
-<section class="gate" [class.gate-member]="signedIn()" aria-labelledby="home-community-title">
-  <div class="gate-ambience" aria-hidden="true">
-    <span class="orb orb-a"></span>
-    <span class="orb orb-b"></span>
-    <span class="orb orb-c"></span>
-    <span class="gate-grid"></span>
-  </div>
+<section class="gate" [class.gate-member]="signedIn()" aria-label="NeverBeen Community">
+  @if (signedIn()) {
+    <!-- ============================================================
+         Member state — a personal welcome into the Multiverse, with no
+         surface of its own: the section sits on the page background.
+         ============================================================ -->
+    <div class="gate-welcome">
+      <h2 class="gate-title">{{ welcomeTitle() }}</h2>
+      <p class="gate-welcome-note">{{ welcomeCopy() }}</p>
+    </div>
 
-  <div class="gate-copy">
-    <p class="gate-eyebrow">
-      <span class="gate-pulse" aria-hidden="true"></span>
-      @if (signedIn()) {
-        Signed in · NeverBeen Community
-      } @else {
-        NeverBeen Community
-      }
-    </p>
-
-    @if (signedIn()) {
-      <!-- ============================================================
-           Member state — a personal welcome into the Multiverse.
-           ============================================================ -->
-      <h2 id="home-community-title" class="gate-title">{{ welcomeTitle() }}</h2>
-      <p class="gate-lede">{{ welcomeCopy() }}</p>
-
-      <p class="gate-presence" [attr.data-status]="presence()">
-        <i aria-hidden="true"></i>
-        <span>{{ presenceLabel() }}</span>
-        <span class="gate-presence-sep" aria-hidden="true">/</span>
-        <span class="gate-presence-note">Visible to your circles</span>
-      </p>
-
-      <dl class="gate-stats">
-        @for (stat of stats(); track stat.id) {
-          <div class="gate-stat">
-            <dt>{{ stat.label }}</dt>
-            <dd>{{ stat.value }}</dd>
-          </div>
-        }
-      </dl>
-
-      <div class="gate-actions">
-        <a class="gate-btn gate-btn-primary" routerLink="/community">
-          Open the Community <span aria-hidden="true">↗</span>
-        </a>
-        <a class="gate-btn gate-btn-quiet" routerLink="/profile" fragment="journey">My Journey</a>
-      </div>
-    } @else {
-      <!-- ============================================================
-           Visitor state — the same Community sign-in the /ai-models
-           portfolio uses, framed as a doorway into the Multiverse.
-           ============================================================ -->
-      <h2 id="home-community-title" class="gate-title">{{ gateTitle() }}</h2>
-      <p class="gate-lede">{{ gateCopy() }}</p>
-
-      <ul class="gate-perks">
-        <li>
-          <span class="perk-mark" aria-hidden="true">✦</span>
-          <span><b>Keep your journey</b> — every story, photo and plan in one place.</span>
-        </li>
-        <li>
-          <span class="perk-mark" aria-hidden="true">◎</span>
-          <span
-            ><b>Join the circles</b> — travel companions who have been where you are going.</span
-          >
-        </li>
-        <li>
-          <span class="perk-mark" aria-hidden="true">✳</span>
-          <span
-            ><b>Sign the message book</b> — leave a note for the people of parallel worlds.</span
-          >
-        </li>
-      </ul>
-
-      @if (guestBrowsing()) {
-        <p class="gate-footnote">
-          <span aria-hidden="true">◍</span>
-          You are exploring as a guest. Signing in keeps your own journey — it never overwrites the
-          guest preview.
-        </p>
-      } @else {
-        <p class="gate-footnote">
-          <span aria-hidden="true">◍</span>
-          One NeverBeen account. Every world inside the Multiverse.
-        </p>
-      }
-    }
-  </div>
-
-  <div class="gate-panel">
-    @if (signedIn()) {
+    <div class="gate-panel">
       <!-- Passport-style member card: portrait, identity and shortcuts. -->
       <article class="passport" aria-label="Your NeverBeen member passport">
         <span class="passport-aurora" aria-hidden="true"></span>
@@ -161,21 +82,20 @@
           <span class="passport-sigil" aria-hidden="true">✳</span>
         </footer>
       </article>
-    } @else {
-      <!-- The dark Community sign-in card, lit from behind like a portal. -->
-      <div class="portal">
-        <span class="portal-halo" aria-hidden="true"></span>
-        <span class="portal-ring" aria-hidden="true"></span>
-        <div class="portal-card">
-          <app-community-sign-in-card
-            returnTo="/"
-            eyebrow="NeverBeen Community"
-            [title]="cardTitle()"
-            [copy]="cardCopy()"
-            note="Community sign-in only · Guest browsing stays read-only"
-          />
-        </div>
-      </div>
-    }
-  </div>
+    </div>
+  } @else {
+    <!-- ============================================================
+         Visitor state — only the same Community sign-in the /ai-models
+         pages use. No headline, no extra copy, no panel of our own.
+         ============================================================ -->
+    <div class="gate-panel gate-panel-solo">
+      <app-community-sign-in-card
+        returnTo="/"
+        eyebrow="NeverBeen Community"
+        [title]="cardTitle()"
+        [copy]="cardCopy()"
+        note="Community sign-in only · Guest browsing stays read-only"
+      />
+    </div>
+  }
 </section>

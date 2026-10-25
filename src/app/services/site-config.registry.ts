@@ -275,22 +275,6 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         maxLength: 400,
       },
       {
-        key: 'communityGateTitle',
-        label: 'Community gate headline (visitors)',
-        type: 'text',
-        default: 'Sign in. Step into the NeverBeen Multiverse.',
-        maxLength: 120,
-        hint: 'The panel directly under the portrait preview. Visitors see this line beside the Community sign-in.',
-      },
-      {
-        key: 'communityGateCopy',
-        label: 'Community gate paragraph (visitors)',
-        type: 'textarea',
-        default:
-          'One NeverBeen account keeps every journey, circle and message in the Multiverse together. Sign in with Google to take your place among the people who have never been.',
-        maxLength: 400,
-      },
-      {
         key: 'communityCardTitle',
         label: 'Sign-in card title',
         type: 'text',

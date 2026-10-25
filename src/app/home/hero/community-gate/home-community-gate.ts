@@ -4,24 +4,20 @@ import { CommunityService } from '../../../services/community.service';
 import { SiteConfigService } from '../../../services/site-config.service';
 import { CommunitySignInCard } from '../../../shared/community-sign-in-card/community-sign-in-card';
 
-interface GateStat {
-  id: string;
-  label: string;
-  value: number;
-}
-
 /**
  * The Community gate that closes the Home page's hero, directly under
  * “Meet the People. Even When They Don't Exists outside NeverBeen Multiverse”.
  *
+ * It paints no surface of its own: the section is transparent, so it sits
+ * directly on the home page's default background.
+ *
  * It has exactly two faces:
  *
- * 1. **Visitor (not signed in)** — the same trusted Google sign-in the
- *    `/ai-models` portfolio testimonial section uses (`app-community-sign-in-card`),
- *    set inside a luminous “portal” so the dark auth card reads as a doorway
- *    into the Multiverse rather than a form.
- * 2. **Member (signed in)** — a personal welcome panel: “Welcome, <name>.” with
- *    a passport-style member card (portrait, member ID, presence, quick links
+ * 1. **Visitor (not signed in)** — the same trusted Community Google sign-in the
+ *    `/ai-models` portfolio uses (`app-community-sign-in-card`), and nothing
+ *    else: no headline and no marketing copy around it.
+ * 2. **Member (signed in)** — a personal “Welcome, <name>.” with a
+ *    passport-style member card (portrait, member ID, presence, quick links
  *    into the Community and live unread counts).
  *
  * The Home hero is part of the eager initial bundle, while `CommunityService`
@@ -41,14 +37,11 @@ export class HomeCommunityGate {
   private readonly cms = inject(SiteConfigService);
 
   protected readonly signedIn = this.community.isAuthenticated;
-  protected readonly guestBrowsing = this.community.guestBrowsing;
 
   protected readonly unreadNotifications = this.community.unreadNotificationCount;
   protected readonly unreadChats = this.community.unreadChatCount;
 
-  /** Copy is published from Admin Console → Website Management → Hero banner. */
-  protected readonly gateTitle = computed(() => this.cms.text('home.hero', 'communityGateTitle'));
-  protected readonly gateCopy = computed(() => this.cms.text('home.hero', 'communityGateCopy'));
+  /** Card wording is published from Admin Console → Website Management → Hero banner. */
   protected readonly cardTitle = computed(() => this.cms.text('home.hero', 'communityCardTitle'));
   protected readonly cardCopy = computed(() => this.cms.text('home.hero', 'communityCardCopy'));
 
@@ -125,13 +118,6 @@ export class HomeCommunityGate {
     const status = this.presence();
     return status === 'Custom' ? this.community.profile()?.customStatusText || 'Online' : status;
   });
-
-  /** The signed-in member's live footprint in the Multiverse. */
-  protected readonly stats = computed<GateStat[]>(() => [
-    { id: 'journey', label: 'Journey posts', value: this.community.visibleJourneyPosts().length },
-    { id: 'circles', label: 'Circles joined', value: this.community.myCircles().length },
-    { id: 'connections', label: 'Connections', value: this.community.visibleCompanions().length },
-  ]);
 
   protected badgeText(count: number): string {
     return count > 99 ? '99+' : String(count);

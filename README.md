@@ -568,25 +568,25 @@ are centred and cropped as needed instead of leaving blank bands around the slid
 
 Directly under the portrait preview — *Meet the People. Even When They Don't Exists outside
 NeverBeen Multiverse* — the home hero closes with the NeverBeen Community gate
-(`src/app/home/hero/community-gate`). It has one face for each kind of visitor:
+(`src/app/home/hero/community-gate`). The section paints nothing of its own: it has **no background,
+border, glow or decoration**, so it sits directly on the home page's default background.
 
-- **Not signed in:** the same trusted Google sign-in the `/ai-models` portfolio offers
-  (`app-community-sign-in-card`, including the OAuth redirect, the official Google button fallback
-  and the safe return path). Signing in from the home page returns the visitor to `/`, where the
-  gate greets them by name.
+- **Not signed in:** only the same trusted Community Google sign-in the `/ai-models` portfolio
+  offers (`app-community-sign-in-card`, including the OAuth redirect, the official Google button
+  fallback and the safe return path) — no headline and no copy written around it. Signing in from
+  the home page returns the visitor to `/`, where the gate greets them by name.
 - **Signed in:** *Welcome, <first name>.* beside a passport-style member card — portrait (or
   initials), presence, member ID, member year, live unread notification and chat counts, and
   one-tap shortcuts to the profile, Journey, Message Book, notifications and messenger.
 
-The headline, the paragraph, the sign-in card wording and the signed-in welcome are published from
-**Admin Console → Website Management → Hero banner** (`communityGateTitle`, `communityGateCopy`,
-`communityCardTitle`, `communityCardCopy`, `communityWelcomeTitle`, `communityWelcomeCopy`). Use
-`{name}` in either welcome field to place the member's first name.
+The sign-in card wording and the signed-in welcome are published from **Admin Console → Website
+Management → Hero banner** (`communityCardTitle`, `communityCardCopy`, `communityWelcomeTitle`,
+`communityWelcomeCopy`). Use `{name}` in either welcome field to place the member's first name.
 
 The gate reads `CommunityService` — a deliberately lazy runtime on this site — so the hero defers it
 with `@defer (on viewport)`. The Community code is its own chunk that loads as the gate scrolls into
-view, and a height-reserving skeleton (`.community-gate-placeholder`) keeps the page from shifting
-while it arrives.
+view, and a transparent, height-reserving skeleton (`.community-gate-placeholder`) keeps the page
+from shifting while it arrives.
 
 ## The NeverBeen Multiverse Studio (home page slideshow)
 

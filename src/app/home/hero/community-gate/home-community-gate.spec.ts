@@ -10,35 +10,30 @@ describe('HomeCommunityGate', () => {
   const currentUser = signal<CurrentUser | null>(null);
   const profile = signal<Profile | null>(null);
   const signedIn = signal(false);
-  const guestBrowsing = signal(false);
   const unreadNotifications = signal(0);
   const unreadChats = signal(0);
-  const journeyPosts = signal<unknown[]>([]);
-  const circles = signal<unknown[]>([]);
-  const connections = signal<unknown[]>([]);
 
   const community = {
     currentUser,
     profile,
     isAuthenticated: signedIn,
-    guestBrowsing,
     unreadNotificationCount: unreadNotifications,
     unreadChatCount: unreadChats,
-    visibleJourneyPosts: journeyPosts,
-    myCircles: circles,
-    visibleCompanions: connections,
+  };
+
+  const defaults: Record<string, string> = {
+    communityCardTitle: 'Continue to NeverBeen Community',
+    communityCardCopy: 'Use the same Google account you use across NeverBeen.',
+    communityWelcomeTitle: 'Welcome, {name}.',
+    communityWelcomeCopy: 'You are home in the NeverBeen Multiverse, {name}.',
   };
 
   beforeEach(async () => {
     currentUser.set(null);
     profile.set(null);
     signedIn.set(false);
-    guestBrowsing.set(false);
     unreadNotifications.set(0);
     unreadChats.set(0);
-    journeyPosts.set([]);
-    circles.set([]);
-    connections.set([]);
 
     await TestBed.configureTestingModule({
       imports: [HomeCommunityGate],
@@ -53,28 +48,15 @@ describe('HomeCommunityGate', () => {
     }).compileComponents();
   });
 
-  const defaults: Record<string, string> = {
-    communityGateTitle: 'Sign in. Step into the NeverBeen Multiverse.',
-    communityGateCopy: 'One NeverBeen account keeps every journey, circle and message together.',
-    communityCardTitle: 'Continue to NeverBeen Community',
-    communityCardCopy: 'Use the same Google account you use across NeverBeen.',
-    communityWelcomeTitle: 'Welcome, {name}.',
-    communityWelcomeCopy: 'You are home in the NeverBeen Multiverse, {name}.',
-  };
-
   function create(): HTMLElement {
     const fixture = TestBed.createComponent(HomeCommunityGate);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('offers the same Community Google sign-in the AI model pages use to visitors', () => {
+  it('shows visitors only the same Community Google sign-in the AI model pages use', () => {
     const element = create();
-
-    expect(element.querySelector('h2')?.textContent?.trim()).toBe(
-      'Sign in. Step into the NeverBeen Multiverse.',
-    );
-    expect(element.querySelector('.gate-perks')?.textContent).toContain('Join the circles');
+    const section = element.querySelector<HTMLElement>('section.gate')!;
 
     const card = element.querySelector('app-community-sign-in-card');
     expect(card).toBeTruthy();
@@ -83,13 +65,21 @@ describe('HomeCommunityGate', () => {
     );
     expect(card?.textContent).toContain('Continue to NeverBeen Community');
 
+    // Nothing is written around the card: no headline, perks or footnote.
+    expect(element.querySelector('h2')).toBeNull();
+    expect(element.querySelector('.gate-perks')).toBeNull();
+    expect(element.querySelector('.gate-footnote')).toBeNull();
+    expect(element.querySelector('.gate-eyebrow')).toBeNull();
+
     // A visitor never sees the member passport.
     expect(element.querySelector('.passport')).toBeNull();
-    // The gate sits in its own section under the hero previews.
-    expect(element.querySelector('section.gate')).toBeTruthy();
+    // The section has no surface of its own — it uses the page background.
+    expect(getComputedStyle(section).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(getComputedStyle(section).borderTopWidth).toBe('0px');
+    expect(['none', '']).toContain(getComputedStyle(section).boxShadow);
   });
 
-  it('welcomes a signed-in member by name and swaps the sign-in card for the passport', () => {
+  it('welcomes a signed-in member by name beside the passport instead of the sign-in card', () => {
     signedIn.set(true);
     currentUser.set({
       id: 42,
@@ -114,15 +104,15 @@ describe('HomeCommunityGate', () => {
       gallery: [],
       commentCount: 0,
     });
-    journeyPosts.set([{}, {}, {}]);
-    circles.set([{}]);
-    connections.set([{}, {}]);
     unreadNotifications.set(3);
 
     const element = create();
 
     expect(element.querySelector('.gate')?.classList.contains('gate-member')).toBe(true);
     expect(element.querySelector('h2')?.textContent?.trim()).toBe('Welcome, Aisha.');
+    expect(element.querySelector('.gate-welcome-note')?.textContent?.trim()).toBe(
+      'You are home in the NeverBeen Multiverse, Aisha.',
+    );
 
     // No sign-in card for a member.
     expect(element.querySelector('app-community-sign-in-card')).toBeNull();
@@ -143,11 +133,6 @@ describe('HomeCommunityGate', () => {
     );
     expect(passportLinks).toContain('/profile');
     expect(passportLinks).toContain('/community/message-book');
-
-    const stats = Array.from(element.querySelectorAll('.gate-stat')).map((stat) =>
-      (stat.textContent ?? '').replace(/\s+/g, ' ').trim(),
-    );
-    expect(stats).toEqual(['Journey posts3', 'Circles joined1', 'Connections2']);
   });
 
   it('falls back to initials and the e-mail name when a member has no portrait or names', () => {
@@ -164,10 +149,5 @@ describe('HomeCommunityGate', () => {
     expect(element.querySelector('h2')?.textContent?.trim()).toBe('Welcome, Sam Traveller.');
     expect(element.querySelector('.passport-initials')?.textContent?.trim()).toBe('ST');
     expect(element.querySelector('.passport-id')?.textContent?.trim()).toBe('Pending');
-  });
-
-  it('tells a guest that signing in keeps their own journey', () => {
-    guestBrowsing.set(true);
-    expect(create().querySelector('.gate-footnote')?.textContent).toContain('exploring as a guest');
   });
 });
