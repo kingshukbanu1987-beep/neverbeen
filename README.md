@@ -564,6 +564,27 @@ the folder is empty the panel keeps the brochure's closing pages, so it is never
 photograph fills the 16:9 stage edge-to-edge with `object-fit: cover`; mixed source aspect ratios
 are centred and cropped as needed instead of leaving blank bands around the slide.
 
+## The Community sign-in at the top of the home page
+
+At the top of the first hero panel — *Go Anywhere. Even Where You've Never Been* — and directly under
+its small texts (the eyebrow and the intro paragraph) sits the Community sign-in
+(`src/app/home/hero/community-signin`). It is nothing but the Google button: no header line, no copy,
+no card and no background — just the button on the page's own surface.
+
+- **Not signed in:** the Google button alone. It is the same trusted Community flow the `/ai-models`
+  pages use (`app-community-sign-in-card`, `variant="button"`): OAuth redirect, the official Google
+  button fallback and the safe return path. Signing in returns the visitor to `/`.
+- **Signed in:** the button is replaced by *“Welcome, <first name>.”* and a single link into the
+  Community.
+
+The member welcome line is published from **Admin Console → Website Management → Hero banner**
+(`communityWelcomeTitle`); use `{name}` to place the member's first name.
+
+The sign-in reads `CommunityService` — a deliberately lazy runtime on this site — so the hero defers
+it with `@defer (on viewport)`. The Community code is its own chunk that loads as the top of the page
+renders, and a transparent, footprint-reserving skeleton (`.hero-signin-placeholder`) keeps the copy
+from shifting while it arrives.
+
 ## The NeverBeen Multiverse Studio (home page slideshow)
 
 Between the hero and **How It Works**, the home page plays the promotion memos: one photograph at a

@@ -41,6 +41,18 @@
         @if (lede()) {
           <p class="lede">{{ lede() }}</p>
         }
+
+        <!-- Community sign-in: the Google button only, directly under the small
+             texts. Deferred on viewport so the lazy CommunityService stays out
+             of the eager hero bundle; the transparent placeholder holds the
+             button's footprint. -->
+        @defer (on viewport) {
+          <app-hero-community-signin />
+        } @placeholder {
+          <div class="hero-signin-placeholder" aria-hidden="true">
+            <span class="hero-signin-placeholder-button"></span>
+          </div>
+        }
       </div>
 
       <div class="panel-footer" aria-hidden="true">

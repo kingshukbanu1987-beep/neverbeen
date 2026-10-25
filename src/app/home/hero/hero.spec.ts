@@ -1,6 +1,6 @@
 import { By } from '@angular/platform-browser';
 import { SiteConfigService } from '../../services/site-config.service';
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { RouterLink, provideRouter } from '@angular/router';
 import { Brochure } from '../brochure/brochure';
 import { Hero } from './hero';
@@ -355,6 +355,36 @@ describe('Hero', () => {
       'Shop NeverBeen Merchandise',
       'Create My Vacation',
     ]);
+  });
+
+  it('places the Community sign-in inside the first panel, right after its small texts', async () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const travel = element.querySelector<HTMLElement>('.panel-travel')!;
+    const lede = travel.querySelector<HTMLElement>('.lede')!;
+    const placeholder = travel.querySelector('.hero-signin-placeholder')!;
+
+    // The sign-in is deferred on viewport, so its footprint-reserving skeleton
+    // sits directly under the intro paragraph until the chunk arrives.
+    expect(placeholder).toBeTruthy();
+    expect(
+      lede.compareDocumentPosition(placeholder) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    const [signInBlock] = await fixture.getDeferBlocks();
+    await signInBlock.render(DeferBlockState.Complete);
+    fixture.detectChanges();
+
+    const signIn = travel.querySelector('app-hero-community-signin')!;
+    expect(signIn).toBeTruthy();
+    expect(lede.compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // It lives in the first panel only — never in the portrait panel — and the
+    // hero no longer ends with a separate sign-in section.
+    expect(
+      element.querySelector('.panel-people')?.querySelector('app-hero-community-signin'),
+    ).toBeNull();
+    expect(travel.lastElementChild?.querySelector('app-hero-community-signin')).toBeTruthy();
   });
 
   it('moves both previews every five seconds by default', () => {

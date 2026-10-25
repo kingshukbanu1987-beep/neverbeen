@@ -274,6 +274,14 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
           'What if their stories matter, even if their worlds are imaginary? Because a character doesn’t need to exist in our reality to leave a lasting impression on it.',
         maxLength: 400,
       },
+      {
+        key: 'communityWelcomeTitle',
+        label: 'Members: welcome line at the top of the hero',
+        type: 'text',
+        default: 'Welcome, {name}.',
+        maxLength: 120,
+        hint: 'Shown in place of the Google sign-in button once a member is signed in. {name} becomes their first name.',
+      },
       { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {
         key: 'interval',

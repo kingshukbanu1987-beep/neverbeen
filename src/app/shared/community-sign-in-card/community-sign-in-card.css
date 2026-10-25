@@ -4,6 +4,38 @@
   margin-inline: auto;
 }
 
+/* Button-only variant: no card surface, sized to its content. */
+:host(.is-button) {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.community-auth-inline {
+  display: grid;
+  justify-items: start;
+  gap: 0.7rem;
+}
+
+.community-auth-inline .google-sign-in {
+  width: auto;
+  min-height: 46px;
+  padding: 0.6rem 1.15rem;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  box-shadow: none;
+}
+
+.community-auth-inline .google-sign-in:hover:not(:disabled),
+.community-auth-inline .google-sign-in:focus-visible {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.community-auth-inline .auth-error {
+  margin: 0;
+}
+
 .community-auth-card {
   position: relative;
   overflow: hidden;

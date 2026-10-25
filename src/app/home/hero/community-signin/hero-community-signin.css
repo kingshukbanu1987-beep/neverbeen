@@ -1,0 +1,86 @@
+/* ============================================================================
+   Hero Community sign-in — the Google button that sits under the first hero
+   panel's small texts (a member sees their welcome line there instead).
+
+   Nothing is painted here: no background, border, shadow or panel. The block
+   borrows the home page's default background, and the Google button keeps the
+   shared `app-community-sign-in-card` styling.
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.hero-signin {
+  --signin-font: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+
+  display: grid;
+  justify-items: start;
+  margin-top: clamp(0.9rem, 1.5vw, 1.25rem);
+  background: transparent;
+}
+
+.hero-signin-title {
+  margin: 0;
+  color: #475569;
+  font-family: var(--signin-font);
+  font-size: clamp(0.82rem, 0.92vw, 0.92rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+/* The shared Google button, tuned for the light hero background: the same
+   button the /ai-models pages trust, no larger than it needs to be. */
+.hero-signin app-community-sign-in-card {
+  filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.1));
+}
+
+.hero-signin.is-member {
+  gap: 0.4rem;
+}
+
+.hero-signin.is-member .hero-signin-title {
+  color: #0b0d12;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.hero-signin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4f46e5;
+  font-family: var(--signin-font);
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.hero-signin-link:hover,
+.hero-signin-link:focus-visible {
+  color: #7c3aed;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.hero-signin-link:focus-visible {
+  outline: 2px solid var(--studio-accent, #5b5bf0);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .hero-signin {
+    margin-top: 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-signin-link {
+    transition: none;
+  }
+}

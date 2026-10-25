@@ -23,6 +23,7 @@ type GoogleButtonStep = Extract<
   templateUrl: './community-sign-in-card.html',
   styleUrl: './community-sign-in-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.is-button]': "variant() === 'button'" },
 })
 export class CommunitySignInCard {
   readonly returnTo = input.required<string>();
@@ -33,6 +34,12 @@ export class CommunitySignInCard {
   readonly note = input('Community sign-in only · Guest access cannot post testimonials');
   /** Lets image-backed flows reveal their backdrop while testimonial sign-in keeps its standard surface. */
   readonly translucent = input(false);
+  /**
+   * `card` (default) renders the full dark authentication card. `button` renders
+   * only the Google button — plus its manual fallback and error line — for hosts
+   * that already supply their own heading, copy and background.
+   */
+  readonly variant = input<'card' | 'button'>('card');
 
   private readonly service = inject(CommunityService);
   private readonly router = inject(Router);
