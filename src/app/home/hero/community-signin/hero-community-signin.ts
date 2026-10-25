@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { CommunityService } from '../../../services/community.service';
 import { SiteConfigService } from '../../../services/site-config.service';
 import { CommunitySignInCard } from '../../../shared/community-sign-in-card/community-sign-in-card';
@@ -14,8 +13,9 @@ import { CommunitySignInCard } from '../../../shared/community-sign-in-card/comm
  * pages use, rendered through `app-community-sign-in-card`'s `button` variant).
  *
  * 1. **Visitor (not signed in)** — the Google button alone.
- * 2. **Member (signed in)** — “Welcome, <name>.” with a single link into the
- *    Community, so the same spot greets them instead of asking them to sign in.
+ * 2. **Member (signed in)** — “Welcome, <name>.” with the plain-text line
+ *    “Step into the NeverBeen Multiverse” (non-interactive; it does not link to
+ *    the Community), so the same spot greets them instead of asking them to sign in.
  *
  * The hero is part of the eager initial bundle while `CommunityService` is
  * deliberately lazy, so `hero.html` defers this component on viewport: the
@@ -23,7 +23,7 @@ import { CommunitySignInCard } from '../../../shared/community-sign-in-card/comm
  */
 @Component({
   selector: 'app-hero-community-signin',
-  imports: [RouterLink, CommunitySignInCard],
+  imports: [CommunitySignInCard],
   templateUrl: './hero-community-signin.html',
   styleUrl: './hero-community-signin.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -574,8 +574,8 @@ no card and no background — just the button on the page's own surface.
 - **Not signed in:** the Google button alone. It is the same trusted Community flow the `/ai-models`
   pages use (`app-community-sign-in-card`, `variant="button"`): OAuth redirect, the official Google
   button fallback and the safe return path. Signing in returns the visitor to `/`.
-- **Signed in:** the button is replaced by *“Welcome, <first name>.”* and a single link into the
-  Community.
+- **Signed in:** the button is replaced by *“Welcome, <first name>.”* and the plain-text line
+  *“Step into the NeverBeen Multiverse”* (plain text only — it does not link to `/community`).
 
 The member welcome line is published from **Admin Console → Website Management → Hero banner**
 (`communityWelcomeTitle`); use `{name}` to place the member's first name.
