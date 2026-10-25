@@ -1,0 +1,13 @@
+<!-- Sits under the hero's small texts: one small header line, then the Google
+     button. No card, no panel, no copy around it. -->
+<div class="hero-signin" [class.is-member]="signedIn()">
+  @if (signedIn()) {
+    <p class="hero-signin-title">{{ welcomeTitle() }}</p>
+    <a class="hero-signin-link" routerLink="/community">
+      Step into the NeverBeen Multiverse <span aria-hidden="true">↗</span>
+    </a>
+  } @else {
+    <p class="hero-signin-title">{{ title() }}</p>
+    <app-community-sign-in-card variant="button" returnTo="/" />
+  }
+</div>

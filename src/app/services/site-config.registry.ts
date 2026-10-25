@@ -275,35 +275,20 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         maxLength: 400,
       },
       {
-        key: 'communityCardTitle',
-        label: 'Sign-in card title',
+        key: 'communitySignInTitle',
+        label: 'Community sign-in line (visitors)',
         type: 'text',
-        default: 'Continue to NeverBeen Community',
+        default: 'Sign in to Explore the NeverBeen Multiverse',
         maxLength: 80,
-      },
-      {
-        key: 'communityCardCopy',
-        label: 'Sign-in card paragraph',
-        type: 'textarea',
-        default:
-          'Use the same Google account you use across NeverBeen — one profile, every world.',
-        maxLength: 240,
+        hint: 'The small line above the Google sign-in button at the top of the first hero panel.',
       },
       {
         key: 'communityWelcomeTitle',
-        label: 'Community gate headline (signed in)',
+        label: 'Community sign-in line (signed in)',
         type: 'text',
         default: 'Welcome, {name}.',
         maxLength: 120,
-        hint: 'Shown once a member is signed in. {name} is replaced with their first name.',
-      },
-      {
-        key: 'communityWelcomeCopy',
-        label: 'Community gate paragraph (signed in)',
-        type: 'textarea',
-        default:
-          'You are home in the NeverBeen Multiverse. Your journeys, circles and the message book are exactly where you left them.',
-        maxLength: 400,
+        hint: 'Replaces the sign-in line once a member is signed in. {name} becomes their first name.',
       },
       { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {

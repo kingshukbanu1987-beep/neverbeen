@@ -357,27 +357,34 @@ describe('Hero', () => {
     ]);
   });
 
-  it('places the Community gate directly after the portrait preview, as the last panel of the hero', async () => {
+  it('places the Community sign-in inside the first panel, right after its small texts', async () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
-    const people = element.querySelector('.panel-people')!;
-    const placeholder = element.querySelector('.community-gate-placeholder')!;
+    const travel = element.querySelector<HTMLElement>('.panel-travel')!;
+    const lede = travel.querySelector<HTMLElement>('.lede')!;
+    const placeholder = travel.querySelector('.hero-signin-placeholder')!;
 
-    // The gate is deferred on viewport, so its height-reserving skeleton is what
-    // sits in the document until the visitor scrolls to it.
+    // The sign-in is deferred on viewport, so its footprint-reserving skeleton
+    // sits directly under the intro paragraph until the chunk arrives.
     expect(placeholder).toBeTruthy();
-    expect(people.compareDocumentPosition(placeholder) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(placeholder.nextElementSibling).toBeNull();
+    expect(
+      lede.compareDocumentPosition(placeholder) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
-    const [gateBlock] = await fixture.getDeferBlocks();
-    await gateBlock.render(DeferBlockState.Complete);
+    const [signInBlock] = await fixture.getDeferBlocks();
+    await signInBlock.render(DeferBlockState.Complete);
     fixture.detectChanges();
 
-    const gate = element.querySelector('app-home-community-gate')!;
-    expect(gate).toBeTruthy();
-    expect(people.compareDocumentPosition(gate) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // Nothing else follows it inside the hero: the gate closes the section.
-    expect(gate.nextElementSibling).toBeNull();
+    const signIn = travel.querySelector('app-hero-community-signin')!;
+    expect(signIn).toBeTruthy();
+    expect(lede.compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // It lives in the first panel only — never in the portrait panel — and the
+    // hero no longer ends with a separate sign-in section.
+    expect(
+      element.querySelector('.panel-people')?.querySelector('app-hero-community-signin'),
+    ).toBeNull();
+    expect(travel.lastElementChild?.querySelector('app-hero-community-signin')).toBeTruthy();
   });
 
   it('moves both previews every five seconds by default', () => {

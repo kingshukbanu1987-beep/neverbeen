@@ -41,6 +41,19 @@
         @if (lede()) {
           <p class="lede">{{ lede() }}</p>
         }
+
+        <!-- Community sign-in: a small header line and the Google button only,
+             directly under the small texts. Deferred on viewport so the lazy
+             CommunityService stays out of the eager hero bundle; the
+             transparent placeholder holds the button's footprint. -->
+        @defer (on viewport) {
+          <app-hero-community-signin />
+        } @placeholder {
+          <div class="hero-signin-placeholder" aria-hidden="true">
+            <span class="hero-signin-placeholder-line"></span>
+            <span class="hero-signin-placeholder-button"></span>
+          </div>
+        }
       </div>
 
       <div class="panel-footer" aria-hidden="true">
@@ -122,24 +135,4 @@
       </div>
     </div>
   </article>
-
-  <!-- ==================================================================
-       Sub-section 3 — the NeverBeen Community gate, directly under
-       "Meet the People. Even When They Don't Exists outside NeverBeen
-       Multiverse": the same Community sign-in the /ai-models pages use for
-       visitors, and a personal welcome with a member passport once signed in.
-
-       The gate paints no background of its own — it sits directly on the
-       page's default background. It reads CommunityService, which is kept out
-       of the eager initial bundle, so it is deferred on viewport and loads as
-       its own chunk just before it scrolls into view. The transparent
-       placeholder reserves its height so the page never shifts.
-       ================================================================== -->
-  @defer (on viewport) {
-    <app-home-community-gate />
-  } @placeholder {
-    <div class="community-gate-placeholder" aria-hidden="true">
-      <span class="placeholder-card"></span>
-    </div>
-  }
 </section>
