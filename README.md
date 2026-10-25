@@ -549,6 +549,19 @@ photographs to `public/collection` and they join the rotation automatically. The
 in `GALLERY_PHOTO_COUNT` (`src/app/home/gallery/gallery.ts`). Only the section copy stays editable in
 Admin Console → Website Management.
 
+## The hero travel preview (home page slideshow)
+
+The first panel of the home hero — *Go Anywhere. Even Where You've Never Been* — is a five-second
+cross-fade slideshow of every photograph in `public/travel`, mirroring the portrait preview in the
+second panel (which reads `public/banner`). Drop images in and run:
+
+```bash
+npm run generate:travel
+```
+
+(or let `npm start` / `npm run build` do it) to rewrite `src/app/home/hero/travel-images.ts`. While
+the folder is empty the panel keeps the brochure's closing pages, so it is never blank.
+
 ## The NeverBeen Multiverse Studio (home page slideshow)
 
 Between the hero and **How It Works**, the home page plays the promotion memos: one photograph at a

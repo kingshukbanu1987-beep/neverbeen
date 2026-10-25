@@ -10,7 +10,12 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SiteConfigService } from '../../services/site-config.service';
-import { HERO_BROCHURE_PREVIEW_SLIDES, HERO_PEOPLE_SLIDES, HeroSlide } from './hero-slides';
+import {
+  HERO_BROCHURE_PREVIEW_SLIDES,
+  HERO_PEOPLE_SLIDES,
+  HERO_TRAVEL_SLIDES,
+  HeroSlide,
+} from './hero-slides';
 
 const BUTTONS: Record<string, { path: string; fragment?: string; cls: string }> = {
   community: { path: '/community', cls: 'btn-ghost' },
@@ -30,9 +35,12 @@ export const HERO_SLIDE_INTERVAL_SECONDS = 5;
  * Three independent white pill call-to-action buttons float in the seam
  * between the two sections.
  *
- * Both previews cross-fade on their own every five seconds. They are purely
- * decorative: the stage is hidden from assistive technology, so a rotating
- * photograph never interrupts a screen reader.
+ * The first preview plays every photograph from `public/travel` (falling back
+ * to the brochure's closing pages until that folder has an image); the second
+ * plays every photograph from `public/banner`. Both cross-fade on their own
+ * every five seconds. They are purely decorative: the stage is hidden from
+ * assistive technology, so a rotating photograph never interrupts a screen
+ * reader.
  */
 @Component({
   selector: 'app-hero',
@@ -46,11 +54,15 @@ export class Hero {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly brochureSlides: readonly HeroSlide[] = HERO_BROCHURE_PREVIEW_SLIDES;
+  /** Every travel photograph from `public/travel`, or the brochure preview when
+   *  the travel folder is still empty so the panel is never blank. */
+  protected readonly travelSlides: readonly HeroSlide[] = HERO_TRAVEL_SLIDES.length
+    ? HERO_TRAVEL_SLIDES
+    : HERO_BROCHURE_PREVIEW_SLIDES;
   protected readonly peopleSlides: readonly HeroSlide[] = HERO_PEOPLE_SLIDES;
 
-  /** Which brochure page is on stage, and which banner portrait is on stage. */
-  protected readonly brochureIndex = signal(0);
+  /** Which travel photograph is on stage, and which banner portrait is on stage. */
+  protected readonly travelIndex = signal(0);
   protected readonly peopleIndex = signal(0);
 
   private readonly visible = signal(true);
@@ -111,8 +123,8 @@ export class Hero {
   }
 
   /** Only the active and the incoming photograph are mounted, per preview. */
-  protected isBrochureMounted(index: number): boolean {
-    return this.isCurrent(this.brochureSlides.length, this.brochureIndex(), index);
+  protected isTravelMounted(index: number): boolean {
+    return this.isCurrent(this.travelSlides.length, this.travelIndex(), index);
   }
 
   protected isPeopleMounted(index: number): boolean {
@@ -129,8 +141,12 @@ export class Hero {
   }
 
   private advance(): void {
-    this.brochureIndex.update((index) => (index + 1) % this.brochureSlides.length);
-    this.peopleIndex.update((index) => (index + 1) % this.peopleSlides.length);
+    this.travelIndex.update((index) =>
+      this.travelSlides.length ? (index + 1) % this.travelSlides.length : index,
+    );
+    this.peopleIndex.update((index) =>
+      this.peopleSlides.length ? (index + 1) % this.peopleSlides.length : index,
+    );
     this.preload();
   }
 
@@ -139,7 +155,7 @@ export class Hero {
     const view = this.document.defaultView;
     if (!view || typeof view.Image !== 'function') return;
     for (const [slides, active] of [
-      [this.brochureSlides, this.brochureIndex()],
+      [this.travelSlides, this.travelIndex()],
       [this.peopleSlides, this.peopleIndex()],
     ] as const) {
       const upcoming = slides[(active + 1) % slides.length];
