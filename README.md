@@ -560,7 +560,9 @@ npm run generate:travel
 ```
 
 (or let `npm start` / `npm run build` do it) to rewrite `src/app/home/hero/travel-images.ts`. While
-the folder is empty the panel keeps the brochure's closing pages, so it is never blank.
+the folder is empty the panel keeps the brochure's closing pages, so it is never blank. Each travel
+photograph fills the 16:9 stage edge-to-edge with `object-fit: cover`; mixed source aspect ratios
+are centred and cropped as needed instead of leaving blank bands around the slide.
 
 ## The NeverBeen Multiverse Studio (home page slideshow)
 

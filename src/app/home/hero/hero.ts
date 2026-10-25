@@ -30,8 +30,10 @@ export const HERO_SLIDE_INTERVAL_SECONDS = 5;
  * The top of the Home page — two full-width gallery panels under one roof.
  *
  * On widescreen, each section forms a single unified panel with the editorial
- * headline and copy on the left and the full-size, uncropped photograph stage
- * on the right; on mobile, the full-size image sits cleanly above the copy.
+ * headline and copy on the left and the full-bleed photograph stage on the
+ * right; on mobile, the image sits cleanly above the copy. Travel slides fill
+ * their stage with `object-fit: cover`, while banner portraits retain their
+ * native aspect ratio.
  * Three independent white pill call-to-action buttons float in the seam
  * between the two sections.
  *

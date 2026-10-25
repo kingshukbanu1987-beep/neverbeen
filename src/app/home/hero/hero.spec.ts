@@ -235,7 +235,7 @@ describe('Hero', () => {
     expect(element.querySelector('figcaption')).toBeNull();
   });
 
-  it('places the travel text on the left and the full-size travel photographs from public/travel on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
+  it('places the travel text on the left and the full-bleed travel photographs from public/travel on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
     const element: HTMLElement = create().nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
     expect(travel).toBeTruthy();
@@ -274,8 +274,13 @@ describe('Hero', () => {
     if (HERO_TRAVEL_SLIDES.length) {
       expect(sources.every((src) => src?.startsWith('/travel/'))).toBe(true);
     }
+    // Travel photographs have mixed aspect ratios, so each one must completely
+    // cover its stage rather than being letterboxed by object-fit: contain.
     for (const photo of photos) {
-      expect(getComputedStyle(photo).objectFit).toBe('contain');
+      const style = getComputedStyle(photo);
+      expect(style.width).toBe('100%');
+      expect(style.height).toBe('100%');
+      expect(style.objectFit).toBe('cover');
     }
   });
 
