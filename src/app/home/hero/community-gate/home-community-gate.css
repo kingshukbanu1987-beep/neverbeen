@@ -1,0 +1,850 @@
+/* ============================================================================
+   Community gate — the closing panel of the Home hero, placed directly under
+   “Meet the People. Even When They Don't Exists outside NeverBeen Multiverse”.
+
+   Two faces, one surface:
+   · Visitor → the trusted Community Google sign-in, lit inside a rotating
+     portal halo.
+   · Member  → a personal “Welcome, <name>.” deck beside a passport-style
+     member card with live Community shortcuts.
+   ========================================================================== */
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.gate {
+  --gate-font: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+  --gate-ink: #0b0d12;
+  --gate-muted: #475569;
+  --gate-accent: #5b5bf0;
+  --gate-violet: #a855f7;
+  --gate-peach: #ffb27a;
+
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(1.35rem, 3vw, 3.25rem);
+  width: 100%;
+  padding: clamp(1.35rem, 3vw, 2.9rem);
+  border: 1px solid rgba(91, 91, 240, 0.13);
+  border-radius: clamp(22px, 2.2vw, 32px);
+  overflow: hidden;
+  background:
+    radial-gradient(120% 130% at 0% 0%, rgba(91, 91, 240, 0.11) 0%, rgba(255, 255, 255, 0) 58%),
+    radial-gradient(
+      110% 120% at 100% 100%,
+      rgba(255, 178, 122, 0.16) 0%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(152deg, #ffffff 0%, #f6f6ff 52%, #fdf7f2 100%);
+  box-shadow:
+    0 24px 60px -30px rgba(15, 23, 42, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-sizing: border-box;
+}
+
+/* A hairline conic border that quietly travels around the panel. */
+.gate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 140deg,
+    rgba(91, 91, 240, 0.55),
+    rgba(168, 85, 247, 0.3),
+    rgba(255, 178, 122, 0.55),
+    rgba(91, 91, 240, 0.55)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.5;
+  pointer-events: none;
+  animation: gate-hue 22s linear infinite;
+}
+
+@keyframes gate-hue {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* -------------------------------------------------------------- ambience */
+.gate-ambience {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  animation: gate-drift 24s ease-in-out infinite alternate;
+}
+
+.orb-a {
+  top: -22%;
+  left: -6%;
+  width: 24rem;
+  height: 24rem;
+  background: radial-gradient(
+    circle at 40% 40%,
+    rgba(163, 158, 255, 0.95),
+    rgba(163, 158, 255, 0) 68%
+  );
+}
+
+.orb-b {
+  right: -8%;
+  bottom: -30%;
+  width: 22rem;
+  height: 22rem;
+  background: radial-gradient(
+    circle at 55% 45%,
+    rgba(255, 197, 160, 0.95),
+    rgba(255, 197, 160, 0) 68%
+  );
+  animation-delay: -9s;
+}
+
+.orb-c {
+  top: 22%;
+  right: 26%;
+  width: 14rem;
+  height: 14rem;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(226, 196, 255, 0.9),
+    rgba(226, 196, 255, 0) 70%
+  );
+  opacity: 0.4;
+  animation-delay: -15s;
+}
+
+@keyframes gate-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, -5%, 0) scale(1.12);
+  }
+}
+
+.gate-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(72% 68% at 22% 30%, #000 0%, transparent 82%);
+  opacity: 0.8;
+}
+
+/* ----------------------------------------------------------------- copy */
+.gate-copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+.gate-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 clamp(0.7rem, 1.15vw, 0.95rem);
+  padding: 0.34rem 0.85rem;
+  border: 1px solid rgba(91, 91, 240, 0.18);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(91, 91, 240, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%);
+  color: #4f46e5;
+  font-family: var(--gate-font);
+  font-size: clamp(0.64rem, 0.76vw, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.gate-pulse {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gate-accent);
+  box-shadow: 0 0 0 0 rgba(91, 91, 240, 0.5);
+  animation: gate-pulse 2.6s ease-out infinite;
+}
+
+@keyframes gate-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(91, 91, 240, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(91, 91, 240, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(91, 91, 240, 0);
+  }
+}
+
+.gate-title {
+  margin: 0;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(1.6rem, 2.45vw, 2.7rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.026em;
+  text-wrap: balance;
+  background: linear-gradient(102deg, #0b0d12 12%, #2b2f45 54%, #5b5bf0 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--gate-ink);
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .gate-title {
+    color: transparent;
+  }
+}
+
+.gate-lede {
+  max-width: 34rem;
+  margin: clamp(0.7rem, 1.2vw, 1rem) 0 0;
+  color: var(--gate-muted);
+  font-family: var(--gate-font);
+  font-size: clamp(0.9rem, 1vw, 1.02rem);
+  line-height: 1.65;
+}
+
+/* ------------------------------------------------ visitor benefit list */
+.gate-perks {
+  display: grid;
+  gap: 0.6rem;
+  margin: clamp(1rem, 1.8vw, 1.35rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gate-perks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  color: #3f4759;
+  font-family: var(--gate-font);
+  font-size: clamp(0.83rem, 0.92vw, 0.92rem);
+  line-height: 1.5;
+}
+
+.gate-perks li b {
+  color: var(--gate-ink);
+  font-weight: 700;
+}
+
+.perk-mark {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  margin-top: 0.06rem;
+  border: 1px solid rgba(91, 91, 240, 0.18);
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(91, 91, 240, 0.12), rgba(168, 85, 247, 0.06));
+  color: #4f46e5;
+  font-size: 0.76rem;
+  box-shadow: 0 6px 14px -8px rgba(91, 91, 240, 0.6);
+}
+
+.gate-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 32rem;
+  margin: clamp(1rem, 1.7vw, 1.3rem) 0 0;
+  padding-top: clamp(0.85rem, 1.4vw, 1.1rem);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  color: #6b7387;
+  font-family: var(--gate-font);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.gate-footnote span {
+  color: var(--gate-accent);
+  font-size: 0.72rem;
+}
+
+/* ------------------------------------------------------- member details */
+.gate-presence {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: clamp(0.9rem, 1.5vw, 1.2rem) 0 0;
+  padding: 0.38rem 0.85rem;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.02));
+  color: #0f766e;
+  font-family: var(--gate-font);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gate-presence i,
+.passport-presence i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+}
+
+.gate-presence[data-status='Busy'] i,
+.passport-presence[data-status='Busy'] i {
+  background: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+.gate-presence[data-status="Don't Disturb"] i,
+.passport-presence[data-status="Don't Disturb"] i {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+}
+
+.gate-presence[data-status='Away'] i,
+.passport-presence[data-status='Away'] i {
+  background: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.gate-presence[data-status='Inactive'] i,
+.passport-presence[data-status='Inactive'] i {
+  background: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2);
+}
+
+.gate-presence-sep {
+  color: rgba(15, 23, 42, 0.25);
+  font-weight: 400;
+}
+
+.gate-presence-note {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.gate-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: clamp(1rem, 1.8vw, 1.35rem) 0 0;
+}
+
+.gate-stat {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 24px -20px rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.gate-stat dt {
+  color: #667085;
+  font-family: var(--gate-font);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.gate-stat dd {
+  margin: 0.25rem 0 0;
+  color: var(--gate-ink);
+  font-family: var(--gate-font);
+  font-size: clamp(1.25rem, 1.7vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- buttons */
+.gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: clamp(1.1rem, 1.9vw, 1.5rem);
+}
+
+.gate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 50px;
+  padding: 0.8rem 1.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.13);
+  background: #ffffff;
+  color: var(--gate-ink);
+  font-family: var(--gate-font);
+  font-size: 0.95rem;
+  text-decoration: none;
+  box-shadow: 0 12px 28px -18px rgba(15, 23, 42, 0.5);
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.gate-btn:hover,
+.gate-btn:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--gate-ink);
+  box-shadow: 0 18px 36px -18px rgba(15, 23, 42, 0.55);
+}
+
+.gate-btn-primary {
+  border-color: transparent;
+  background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 52%, #a855f7 100%);
+  color: #ffffff;
+  box-shadow: 0 16px 34px -16px rgba(79, 70, 229, 0.75);
+}
+
+.gate-btn-primary:hover,
+.gate-btn-primary:focus-visible {
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 22px 44px -18px rgba(79, 70, 229, 0.8);
+}
+
+.gate-btn-quiet {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.gate-btn:focus-visible {
+  outline: 2px solid var(--gate-accent);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------- visitor portal */
+.gate-panel {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.portal {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: clamp(0.85rem, 1.8vw, 1.5rem);
+  border-radius: 30px;
+  isolation: isolate;
+}
+
+.portal-halo {
+  position: absolute;
+  inset: -6% -4%;
+  z-index: 0;
+  border-radius: 34px;
+  background:
+    radial-gradient(60% 60% at 50% 20%, rgba(124, 58, 237, 0.35), transparent 70%),
+    radial-gradient(70% 60% at 50% 100%, rgba(255, 138, 101, 0.28), transparent 72%);
+  filter: blur(18px);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.portal-ring {
+  position: absolute;
+  inset: -2%;
+  z-index: 0;
+  border-radius: 34px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(124, 58, 237, 0.55) 46deg,
+    rgba(255, 255, 255, 0) 110deg,
+    transparent 220deg,
+    rgba(255, 168, 122, 0.45) 292deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1.5px;
+  opacity: 0.75;
+  pointer-events: none;
+  animation: portal-spin 14s linear infinite;
+}
+
+@keyframes portal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.portal-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  transform: translateZ(0);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.portal-card:hover {
+  transform: translateY(-3px);
+}
+
+/* `app-community-sign-in-card` is the exact component the /ai-models pages use;
+   it stays dark on purpose so the doorway reads as a different, deeper world. */
+.portal-card app-community-sign-in-card {
+  display: block;
+  filter: drop-shadow(0 26px 44px rgba(21, 14, 35, 0.42));
+}
+
+/* ------------------------------------------------------ member passport */
+.passport {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  padding: clamp(1.2rem, 2vw, 1.65rem);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 26px;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f7f0f4;
+  background:
+    radial-gradient(110% 90% at 100% 0%, rgba(168, 85, 247, 0.28), transparent 58%),
+    radial-gradient(90% 80% at 0% 100%, rgba(255, 138, 101, 0.2), transparent 60%),
+    linear-gradient(152deg, #1a1425 0%, #221933 54%, #140f1d 100%);
+  box-shadow:
+    0 30px 60px -28px rgba(24, 16, 40, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.passport-aurora {
+  position: absolute;
+  inset: -30% -20% auto;
+  height: 70%;
+  z-index: 0;
+  background: radial-gradient(60% 60% at 30% 40%, rgba(124, 58, 237, 0.45), transparent 70%);
+  filter: blur(30px);
+  animation: gate-drift 20s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.passport-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.passport-avatar {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: clamp(3.6rem, 6vw, 4.4rem);
+  height: clamp(3.6rem, 6vw, 4.4rem);
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(145deg, #3a2c52, #211830);
+}
+
+.passport-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.passport-initials {
+  font-family: var(--gate-font);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f3e7ff;
+}
+
+.passport-avatar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 2px;
+  background: conic-gradient(from 200deg, #a855f7, #ff9d6e, #f7d774, #a855f7);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: portal-spin 12s linear infinite reverse;
+}
+
+.passport-identity {
+  min-width: 0;
+}
+
+.passport-kicker {
+  margin: 0 0 0.2rem;
+  color: rgba(247, 240, 244, 0.55);
+  font-family: var(--gate-font);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.passport-identity h3 {
+  margin: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(1.25rem, 1.9vw, 1.55rem);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.passport-presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  margin: 0.4rem 0 0;
+  color: rgba(247, 240, 244, 0.68);
+  font-family: var(--gate-font);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.passport-meta {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0.6rem;
+  margin: 1.1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.passport-meta dt {
+  color: rgba(247, 240, 244, 0.45);
+  font-family: var(--gate-font);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.passport-meta dd {
+  margin: 0.28rem 0 0;
+  color: rgba(247, 240, 244, 0.92);
+  font-family: var(--gate-font);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.passport-id {
+  letter-spacing: 0.12em;
+}
+
+.passport-links {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+}
+
+.passport-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(247, 240, 244, 0.86);
+  font-family: var(--gate-font);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.passport-links a:hover,
+.passport-links a:focus-visible {
+  border-color: rgba(168, 85, 247, 0.55);
+  background: rgba(168, 85, 247, 0.14);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+.passport-links a:focus-visible {
+  outline: 2px solid #c084fc;
+  outline-offset: 2px;
+}
+
+.link-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #d8b4fe;
+  font-size: 0.7rem;
+}
+
+.link-badge {
+  margin-left: auto;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #f472b6, #a855f7);
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 14px -6px rgba(244, 114, 182, 0.8);
+}
+
+.passport-foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(247, 240, 244, 0.42);
+  font-family: var(--gate-font);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.passport-sigil {
+  color: #e9b85f;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+}
+
+/* -------------------------------------------------------------- responsive */
+@media (max-width: 980px) {
+  .gate {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.15rem, 3vw, 1.75rem);
+  }
+
+  .gate-panel {
+    justify-items: stretch;
+  }
+
+  .passport {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .gate {
+    padding: 1.15rem;
+    border-radius: 22px;
+  }
+
+  .gate-title {
+    font-size: clamp(1.5rem, 6.4vw, 2rem);
+  }
+
+  .gate-stats {
+    gap: 0.45rem;
+  }
+
+  .gate-stat {
+    padding: 0.6rem 0.55rem;
+  }
+
+  .gate-actions {
+    gap: 0.55rem;
+  }
+
+  .gate-btn {
+    flex: 1 1 100%;
+  }
+
+  .portal {
+    padding: 0.35rem;
+    border-radius: 24px;
+  }
+
+  .portal-card app-community-sign-in-card {
+    filter: none;
+  }
+
+  .passport {
+    border-radius: 22px;
+  }
+
+  .passport-links a {
+    padding: 0.55rem 0.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate::before,
+  .orb,
+  .passport-aurora,
+  .portal-ring,
+  .passport-avatar-ring,
+  .gate-pulse {
+    animation: none;
+  }
+
+  .gate-btn,
+  .portal-card,
+  .passport-links a {
+    transition: none;
+  }
+}

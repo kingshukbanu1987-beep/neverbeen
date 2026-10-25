@@ -122,4 +122,29 @@
       </div>
     </div>
   </article>
+
+  <!-- ==================================================================
+       Sub-section 3 — the NeverBeen Community gate, directly under
+       "Meet the People. Even When They Don't Exists outside NeverBeen
+       Multiverse": the same Community sign-in the /ai-models pages use for
+       visitors, and a personal welcome with a member passport once signed in.
+
+       Deferred on viewport: the gate reads CommunityService, which is kept
+       out of the eager initial bundle, so it loads as its own chunk just
+       before it scrolls into view. The placeholder reserves its height so
+       the page never shifts.
+       ================================================================== -->
+  @defer (on viewport) {
+    <app-home-community-gate />
+  } @placeholder {
+    <div class="community-gate-placeholder" aria-hidden="true">
+      <span class="placeholder-orb"></span>
+      <span class="placeholder-copy">
+        <span class="placeholder-line short"></span>
+        <span class="placeholder-line tall"></span>
+        <span class="placeholder-line"></span>
+      </span>
+      <span class="placeholder-card"></span>
+    </div>
+  }
 </section>

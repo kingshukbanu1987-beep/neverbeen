@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SiteConfigService } from '../../services/site-config.service';
+import { HomeCommunityGate } from './community-gate/home-community-gate';
 import {
   HERO_BROCHURE_PREVIEW_SLIDES,
   HERO_PEOPLE_SLIDES,
@@ -46,7 +47,7 @@ export const HERO_SLIDE_INTERVAL_SECONDS = 5;
  */
 @Component({
   selector: 'app-hero',
-  imports: [RouterLink],
+  imports: [RouterLink, HomeCommunityGate],
   templateUrl: './hero.html',
   styleUrls: ['../collection-button.css', './hero.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -413,6 +413,82 @@ h2 {
   outline-offset: 3px;
 }
 
+/* ------------------------------------------- community gate placeholder */
+/* The gate itself is deferred on viewport (see hero.html). This skeleton holds
+   its exact footprint so the page never jumps when the chunk arrives. */
+.community-gate-placeholder {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(1.35rem, 3vw, 3.25rem);
+  width: 100%;
+  min-height: clamp(19rem, 27vw, 26rem);
+  padding: clamp(1.35rem, 3vw, 2.9rem);
+  overflow: hidden;
+  border: 1px solid rgba(91, 91, 240, 0.1);
+  border-radius: clamp(22px, 2.2vw, 32px);
+  background: linear-gradient(152deg, #ffffff 0%, #f6f6ff 52%, #fdf7f2 100%);
+  box-sizing: border-box;
+}
+
+.placeholder-orb {
+  position: absolute;
+  top: -20%;
+  left: -4%;
+  width: 20rem;
+  height: 20rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(163, 158, 255, 0.4), transparent 68%);
+  filter: blur(60px);
+}
+
+.placeholder-copy {
+  position: relative;
+  display: grid;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.placeholder-line {
+  display: block;
+  width: 82%;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.07), rgba(15, 23, 42, 0.03));
+  animation: placeholder-breathe 2.4s ease-in-out infinite alternate;
+}
+
+.placeholder-line.short {
+  width: 34%;
+  height: 0.55rem;
+}
+
+.placeholder-line.tall {
+  width: 88%;
+  height: 1.9rem;
+  border-radius: 12px;
+}
+
+.placeholder-card {
+  display: block;
+  min-height: clamp(13rem, 18vw, 17rem);
+  border-radius: 26px;
+  background: linear-gradient(150deg, #1a1425 0%, #221933 54%, #140f1d 100%);
+  opacity: 0.14;
+  animation: placeholder-breathe 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes placeholder-breathe {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* ------------------------------------------------------------------ mobile */
 /* Mobile screen view: stacked vertically with the standalone curved-corner
    image on top and the text deck directly below it. */
@@ -425,6 +501,14 @@ h2 {
     gap: 0;
     border-radius: clamp(18px, 4.6vw, 24px);
     background: #ffffff;
+  }
+
+  .community-gate-placeholder {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.15rem;
+    min-height: 30rem;
+    padding: 1.15rem;
+    border-radius: clamp(18px, 4.6vw, 24px);
   }
 
   .stage {
@@ -515,6 +599,12 @@ h2 {
   .frame,
   .frame.on {
     transition: opacity 320ms linear;
+  }
+
+  .placeholder-line,
+  .placeholder-card {
+    animation: none;
+    opacity: 0.7;
   }
 
   .dots span {

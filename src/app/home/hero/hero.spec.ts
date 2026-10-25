@@ -1,6 +1,6 @@
 import { By } from '@angular/platform-browser';
 import { SiteConfigService } from '../../services/site-config.service';
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { RouterLink, provideRouter } from '@angular/router';
 import { Brochure } from '../brochure/brochure';
 import { Hero } from './hero';
@@ -355,6 +355,29 @@ describe('Hero', () => {
       'Shop NeverBeen Merchandise',
       'Create My Vacation',
     ]);
+  });
+
+  it('places the Community gate directly after the portrait preview, as the last panel of the hero', async () => {
+    const fixture = create();
+    const element: HTMLElement = fixture.nativeElement;
+    const people = element.querySelector('.panel-people')!;
+    const placeholder = element.querySelector('.community-gate-placeholder')!;
+
+    // The gate is deferred on viewport, so its height-reserving skeleton is what
+    // sits in the document until the visitor scrolls to it.
+    expect(placeholder).toBeTruthy();
+    expect(people.compareDocumentPosition(placeholder) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(placeholder.nextElementSibling).toBeNull();
+
+    const [gateBlock] = await fixture.getDeferBlocks();
+    await gateBlock.render(DeferBlockState.Complete);
+    fixture.detectChanges();
+
+    const gate = element.querySelector('app-home-community-gate')!;
+    expect(gate).toBeTruthy();
+    expect(people.compareDocumentPosition(gate) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // Nothing else follows it inside the hero: the gate closes the section.
+    expect(gate.nextElementSibling).toBeNull();
   });
 
   it('moves both previews every five seconds by default', () => {

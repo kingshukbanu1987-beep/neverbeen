@@ -274,6 +274,53 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
           'What if their stories matter, even if their worlds are imaginary? Because a character doesn’t need to exist in our reality to leave a lasting impression on it.',
         maxLength: 400,
       },
+      {
+        key: 'communityGateTitle',
+        label: 'Community gate headline (visitors)',
+        type: 'text',
+        default: 'Sign in. Step into the NeverBeen Multiverse.',
+        maxLength: 120,
+        hint: 'The panel directly under the portrait preview. Visitors see this line beside the Community sign-in.',
+      },
+      {
+        key: 'communityGateCopy',
+        label: 'Community gate paragraph (visitors)',
+        type: 'textarea',
+        default:
+          'One NeverBeen account keeps every journey, circle and message in the Multiverse together. Sign in with Google to take your place among the people who have never been.',
+        maxLength: 400,
+      },
+      {
+        key: 'communityCardTitle',
+        label: 'Sign-in card title',
+        type: 'text',
+        default: 'Continue to NeverBeen Community',
+        maxLength: 80,
+      },
+      {
+        key: 'communityCardCopy',
+        label: 'Sign-in card paragraph',
+        type: 'textarea',
+        default:
+          'Use the same Google account you use across NeverBeen — one profile, every world.',
+        maxLength: 240,
+      },
+      {
+        key: 'communityWelcomeTitle',
+        label: 'Community gate headline (signed in)',
+        type: 'text',
+        default: 'Welcome, {name}.',
+        maxLength: 120,
+        hint: 'Shown once a member is signed in. {name} is replaced with their first name.',
+      },
+      {
+        key: 'communityWelcomeCopy',
+        label: 'Community gate paragraph (signed in)',
+        type: 'textarea',
+        default:
+          'You are home in the NeverBeen Multiverse. Your journeys, circles and the message book are exactly where you left them.',
+        maxLength: 400,
+      },
       { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {
         key: 'interval',
