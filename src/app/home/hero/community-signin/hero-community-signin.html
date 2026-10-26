@@ -1,19 +1,19 @@
-<!-- Sits under the hero's small texts: the Google button and nothing else — no
-     header line, no card, no panel, no copy around it. A signed-in member sees
-     “Welcome” in the same style as “Go Anywhere. Even Where You've Never Been”
-     two spaces and their name in Calibri purple, in the same spot instead. -->
+<!-- Sits underneath the first hero panel's picture stage: the Google button and
+     nothing else — no header line, no card, no panel, no copy around it. A
+     signed-in member sees “Welcome” in the same style as
+     “Go Anywhere. Even Where You've Never Been”, two spaces and their name in
+     Calibri purple, in the same spot instead. -->
 <div class="hero-signin" [class.is-member]="signedIn()">
   @if (signedIn()) {
     <p class="hero-signin-title">
-      <span class="hero-signin-greeting">Welcome</span><span class="hero-signin-gap">{{ greetingGap }}</span><span
-        class="hero-signin-name"
-        >{{ memberName() }}</span
-      >
+      <span class="hero-signin-greeting">Welcome</span
+      ><span class="hero-signin-gap">{{ greetingGap }}</span
+      ><span class="hero-signin-name">{{ memberName() }}</span>
     </p>
-    <p class="hero-signin-subtitle"
-      >Explore the NeverBeen Multiverse and Interact with our NeverBeen AI Models
-      and Shop NeverBeen Merchandise from our exclusive NeverBeen Store</p
-    >
+    <p class="hero-signin-subtitle">
+      Explore the NeverBeen Multiverse and Interact with our NeverBeen AI Models and Shop NeverBeen
+      Merchandise from our exclusive NeverBeen Store
+    </p>
   } @else {
     <app-community-sign-in-card variant="button" returnTo="/" />
   }

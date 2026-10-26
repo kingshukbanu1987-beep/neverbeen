@@ -10,12 +10,22 @@
 
   <!-- ==================================================================
        Sub-section 1 — "Go Anywhere. Even Where You've Never Been."
-       Unified full-width panel: editorial copy on the left and the standalone,
-       full-bleed photographs from public/travel with curved corners on all 4
-       corners on the right on widescreen; stacked with image above copy on
-       mobile.
+       Unified full-width white panel: the eyebrow badge, headline and small
+       intro text sit at the top above the full-width, curved-corner travel
+       photographs from public/travel, with Community sign-in / member greeting
+       and slide progress underneath the picture panel.
        ================================================================== -->
   <article class="panel panel-travel" aria-labelledby="hero-title">
+    <div class="panel-travel-header">
+      @if (eyebrow()) {
+        <p class="eyebrow">{{ eyebrow() }}</p>
+      }
+      <h1 id="hero-title">{{ title() }}</h1>
+      @if (lede()) {
+        <p class="lede">{{ lede() }}</p>
+      }
+    </div>
+
     <div class="stage" aria-hidden="true">
       @for (slide of travelSlides; track slide.src; let i = $index) {
         @if (isTravelMounted(i)) {
@@ -32,28 +42,18 @@
       }
     </div>
 
-    <div class="panel-copy">
-      <div class="copy-body">
-        @if (eyebrow()) {
-          <p class="eyebrow">{{ eyebrow() }}</p>
-        }
-        <h1 id="hero-title">{{ title() }}</h1>
-        @if (lede()) {
-          <p class="lede">{{ lede() }}</p>
-        }
-
-        <!-- Community sign-in: the Google button only, directly under the small
-             texts. Deferred on viewport so the lazy CommunityService stays out
-             of the eager hero bundle; the transparent placeholder holds the
-             button's footprint. -->
-        @defer (on viewport) {
-          <app-hero-community-signin />
-        } @placeholder {
-          <div class="hero-signin-placeholder" aria-hidden="true">
-            <span class="hero-signin-placeholder-button"></span>
-          </div>
-        }
-      </div>
+    <div class="panel-travel-below">
+      <!-- Community sign-in: the Google button only (or the signed-in Welcome
+           greeting), placed directly underneath the picture panel. Deferred on
+           viewport so the lazy CommunityService stays out of the eager hero
+           bundle; the transparent placeholder holds the button's footprint. -->
+      @defer (on viewport) {
+        <app-hero-community-signin />
+      } @placeholder {
+        <div class="hero-signin-placeholder" aria-hidden="true">
+          <span class="hero-signin-placeholder-button"></span>
+        </div>
+      }
 
       <div class="panel-footer" aria-hidden="true">
         <div class="dots">

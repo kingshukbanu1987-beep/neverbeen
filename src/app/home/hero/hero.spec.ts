@@ -293,34 +293,49 @@ describe('Hero', () => {
     }
   });
 
-  it('places the travel text on the left and the full-bleed travel photographs from public/travel on the right in one widescreen panel, while keeping image-above-copy order for mobile', () => {
+  it('places the travel headline and small text above the full-width travel picture panel inside one white card', () => {
     const element: HTMLElement = create().nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
     expect(travel).toBeTruthy();
 
+    const header = travel.querySelector<HTMLElement>('.panel-travel-header')!;
+    const eyebrow = header.querySelector<HTMLElement>('.eyebrow')!;
+    const heading = header.querySelector<HTMLElement>('h1#hero-title')!;
+    const lede = header.querySelector<HTMLElement>('.lede')!;
     const stage = travel.querySelector<HTMLElement>('.stage')!;
-    const copy = travel.querySelector<HTMLElement>('.panel-copy')!;
-    expect(getComputedStyle(travel).display).toBe('grid');
-    expect(getComputedStyle(travel).gridTemplateAreas).toContain('copy stage');
-    expect(getComputedStyle(copy).gridArea).toBe('copy');
-    expect(getComputedStyle(stage).gridArea).toBe('stage');
+    const below = travel.querySelector<HTMLElement>('.panel-travel-below')!;
+
+    expect(header).toBeTruthy();
+    expect(eyebrow).toBeTruthy();
+    expect(heading).toBeTruthy();
+    expect(lede).toBeTruthy();
+    expect(stage).toBeTruthy();
+    expect(below).toBeTruthy();
+
+    expect(getComputedStyle(travel).display).toBe('flex');
+    expect(getComputedStyle(travel).flexDirection).toBe('column');
     expect(getComputedStyle(travel).width).toBe('100%');
     expect(getComputedStyle(travel).maxWidth).toBe('none');
     expect(getComputedStyle(travel).borderTopWidth).toBe('0px');
     expect(getComputedStyle(stage).position).toBe('relative');
+    expect(getComputedStyle(stage).width).toBe('100%');
     expect(getComputedStyle(stage).borderTopWidth).toBe('0px');
     expect(['rgba(0, 0, 0, 0)', 'transparent']).toContain(getComputedStyle(stage).backgroundColor);
     expect(getComputedStyle(stage).borderRadius).not.toBe('0px');
-    expect(stage.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    expect(
+      eyebrow.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(heading.compareDocumentPosition(lede) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(header.compareDocumentPosition(stage) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(lede.compareDocumentPosition(stage) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(stage.compareDocumentPosition(below) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
     expect(travel.querySelector('.veil')).toBeNull();
     expect(travel.querySelector('.wash')).toBeNull();
 
-    expect(travel.querySelector('h1')?.textContent?.trim()).toBe(
-      "Go Anywhere. Even Where You've Never Been",
-    );
-    expect(travel.querySelector('.lede')?.textContent).toContain(
-      'Create stunning AI vacation photos of yourself',
-    );
+    expect(heading.textContent?.trim()).toBe("Go Anywhere. Even Where You've Never Been");
+    expect(lede.textContent).toContain('Create stunning AI vacation photos of yourself');
 
     const photos = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo'));
     const sources = photos.map((img) => img.getAttribute('src'));
@@ -395,18 +410,24 @@ describe('Hero', () => {
     ]);
   });
 
-  it('places the Community sign-in inside the first panel, right after its small texts', async () => {
+  it('places the Community sign-in inside the first panel, underneath the picture panel', async () => {
     const fixture = create();
     const element: HTMLElement = fixture.nativeElement;
     const travel = element.querySelector<HTMLElement>('.panel-travel')!;
     const lede = travel.querySelector<HTMLElement>('.lede')!;
+    const stage = travel.querySelector<HTMLElement>('.stage')!;
+    const footer = travel.querySelector<HTMLElement>('.panel-footer')!;
     const placeholder = travel.querySelector('.hero-signin-placeholder')!;
 
     // The sign-in is deferred on viewport, so its footprint-reserving skeleton
-    // sits directly under the intro paragraph until the chunk arrives.
+    // sits directly underneath the picture stage until the chunk arrives.
     expect(placeholder).toBeTruthy();
+    expect(lede.compareDocumentPosition(stage) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(
-      lede.compareDocumentPosition(placeholder) & Node.DOCUMENT_POSITION_FOLLOWING,
+      stage.compareDocumentPosition(placeholder) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      placeholder.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
 
     const [signInBlock] = await fixture.getDeferBlocks();
@@ -415,7 +436,8 @@ describe('Hero', () => {
 
     const signIn = travel.querySelector('app-hero-community-signin')!;
     expect(signIn).toBeTruthy();
-    expect(lede.compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(stage.compareDocumentPosition(signIn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(signIn.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     // It lives in the first panel only — never in the portrait panel — and the
     // hero no longer ends with a separate sign-in section.

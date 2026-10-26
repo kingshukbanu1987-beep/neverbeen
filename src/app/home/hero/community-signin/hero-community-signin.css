@@ -1,8 +1,9 @@
 /* ============================================================================
-   Hero Community sign-in — the Google button that sits under the first hero
-   panel's small texts (a signed-in member sees “Welcome” in the exact display
-   style of “Go Anywhere. Even Where You've Never Been”, then two spaces, then
-   their name in big Calibri brand purple, with the Explore line under it).
+   Hero Community sign-in — the Google button that sits underneath the first
+   hero panel's picture stage (a signed-in member sees “Welcome” in the exact
+   display style of “Go Anywhere. Even Where You've Never Been”, then two
+   spaces, then their name in big Calibri brand purple, with the Explore line
+   under it).
 
    Nothing is painted here: no background, border, shadow or panel. The block
    borrows the home page's default background, and the Google button keeps the
@@ -19,7 +20,7 @@
 
   display: grid;
   justify-items: start;
-  margin-top: clamp(0.9rem, 1.5vw, 1.25rem);
+  margin-top: 0;
   background: transparent;
 }
 
@@ -95,10 +96,6 @@
 }
 
 @media (max-width: 640px) {
-  .hero-signin {
-    margin-top: 0.85rem;
-  }
-
   .hero-signin-greeting {
     font-size: clamp(1.85rem, 8.2vw, 2.5rem);
   }

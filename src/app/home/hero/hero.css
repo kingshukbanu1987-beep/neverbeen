@@ -1,13 +1,14 @@
 /* ============================================================================
-   The top of the Home page — Ultra-modern Full-Width Split Showcase
+   The top of the Home page — Ultra-modern Full-Width Showcase
    A luminous studio porcelain backdrop frames two full-screen-width unified
    panels and three independent floating white call-to-action pills:
 
-   1. "Go Anywhere. Even Where You've Never Been." — on widescreen, a single
-      full-width panel with the editorial headline & copy on the left and the
-      standalone, full-bleed travel photographs from public/travel on the right
-      with smooth curved corners on all 4 corners (no frame border). On mobile,
-      the full-bleed curved-corner image sits cleanly above the copy.
+   1. "Go Anywhere. Even Where You've Never Been." — a single full-width white
+      panel with the eyebrow badge, editorial headline & small intro text at the
+      top above the standalone, full-bleed travel photographs from public/travel
+      (smooth curved corners on all 4 corners, no frame border), and the
+      Community sign-in / member greeting + slide progress underneath the
+      picture panel on every screen size.
    2. Three standalone white pill buttons ('Connect to NeverBeen Community',
       'Shop NeverBeen Merchandise' & 'Create My Vacation') floating
       independently in the studio seam without a wrapper container.
@@ -98,8 +99,10 @@
 }
 
 /* ------------------------------------------------------------------ panels */
-/* Unified full-width showcase panel: borderless studio surface holding the
-   editorial copy on the left and the standalone curved-corner picture on the right. */
+/* Unified full-width showcase panel: borderless studio surface. The portrait
+   section uses a widescreen split grid (copy left, picture right), while the
+   top travel section stacks vertically inside the same rounded white card so
+   the headline & small text appear above the full-width picture panel. */
 .panel {
   position: relative;
   z-index: 1;
@@ -118,6 +121,34 @@
     radial-gradient(90% 85% at 0% 0%, rgba(91, 91, 240, 0.045) 0%, rgba(255, 255, 255, 0) 64%),
     #ffffff;
   box-shadow: 0 20px 52px -24px rgba(15, 23, 42, 0.12);
+  box-sizing: border-box;
+}
+
+.panel.panel-travel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(1.15rem, 2vw, 1.6rem);
+}
+
+.panel-travel-header {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-width: 0;
+  padding: clamp(0.45rem, 0.9vw, 0.8rem) clamp(0.5rem, 1.1vw, 1rem) 0;
+  box-sizing: border-box;
+}
+
+.panel-travel-below {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.95rem, 1.5vw, 1.25rem);
+  width: 100%;
+  min-width: 0;
+  padding: 0 clamp(0.5rem, 1.1vw, 1rem) clamp(0.25rem, 0.6vw, 0.5rem);
   box-sizing: border-box;
 }
 
@@ -278,6 +309,10 @@ h2 {
   color: var(--studio-muted);
 }
 
+.panel-travel-header .lede {
+  max-width: 58rem;
+}
+
 .people-actions {
   display: flex;
   flex-wrap: wrap;
@@ -434,12 +469,12 @@ h2 {
 
 /* ------------------------------------------ hero Community sign-in slot */
 /* The sign-in itself is deferred on viewport (see hero.html) and paints
-   nothing: this transparent skeleton holds the Google button's footprint so
-   the copy never jumps when the chunk arrives. */
+   nothing: this transparent skeleton holds the Google button's footprint
+   underneath the picture panel so nothing jumps when the chunk arrives. */
 .hero-signin-placeholder {
   display: grid;
   justify-items: start;
-  margin-top: clamp(0.9rem, 1.5vw, 1.25rem);
+  margin-top: 0;
   background: transparent;
 }
 
@@ -462,10 +497,13 @@ h2 {
 }
 
 /* ------------------------------------------------------------------ mobile */
-/* Mobile screen view: stacked vertically with the standalone curved-corner
-   image on top and the text deck directly below it. */
+/* Mobile screen view: stacked vertically inside each rounded white card.
+   In the first panel, the headline & small text stay above the picture and
+   Community sign-in sits underneath it; in the second panel, the portrait
+   image sits on top with its text deck below. */
 @media (max-width: 900px) {
-  .panel {
+  .panel,
+  .panel.panel-travel {
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -475,8 +513,14 @@ h2 {
     background: #ffffff;
   }
 
-  .hero-signin-placeholder {
-    margin-top: 0.85rem;
+  .panel-travel-header {
+    padding: clamp(0.95rem, 3.4vw, 1.35rem) clamp(0.75rem, 3.2vw, 1.35rem)
+      clamp(1rem, 3.4vw, 1.35rem);
+  }
+
+  .panel-travel-below {
+    padding: clamp(1rem, 3.4vw, 1.35rem) clamp(0.75rem, 3.2vw, 1.35rem) clamp(0.85rem, 3vw, 1.25rem);
+    gap: clamp(0.95rem, 3vw, 1.25rem);
   }
 
   .stage {
@@ -512,6 +556,10 @@ h2 {
 
   .panel-footer {
     margin-top: clamp(1rem, 3.2vw, 1.35rem);
+  }
+
+  .panel-travel-below .panel-footer {
+    margin-top: 0;
   }
 }
 
