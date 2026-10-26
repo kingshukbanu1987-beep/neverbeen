@@ -280,7 +280,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         type: 'text',
         default: '{name}',
         maxLength: 120,
-        hint: 'Shown in place of the Google sign-in button once a member is signed in. {name} becomes their first name; it is set large, in Calibri, with no period at the end.',
+        hint: 'Rendered after the fixed black “Welcome ” greeting that always leads the signed-in line. {name} becomes their first name; it is set large, in rgb(101, 57, 129), in Calibri, with no period at the end.',
       },
       { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {

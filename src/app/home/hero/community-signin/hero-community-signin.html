@@ -1,10 +1,19 @@
 <!-- Sits under the hero's small texts: the Google button and nothing else — no
      header line, no card, no panel, no copy around it. A signed-in member sees
-     their name, large and plain, in the same spot instead. -->
+     a fixed black “Welcome ” followed by their name, large and plain, in the
+     same spot instead. -->
 <div class="hero-signin" [class.is-member]="signedIn()">
   @if (signedIn()) {
-    <p class="hero-signin-title">{{ memberName() }}</p>
-    <p class="hero-signin-subtitle">Explore the NeverBeen Multiverse</p>
+    <p class="hero-signin-title">
+      <span class="hero-signin-greeting">Welcome </span><span
+        class="hero-signin-name"
+        >{{ memberName() }}</span
+      >
+    </p>
+    <p class="hero-signin-subtitle"
+      >Explore the NeverBeen Multiverse and Interact with our NeverBeen AI Models
+      and Shop NeverBeen Merchandise from our exclusive NeverBeen Store</p
+    >
   } @else {
     <app-community-sign-in-card variant="button" returnTo="/" />
   }

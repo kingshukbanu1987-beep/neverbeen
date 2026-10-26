@@ -87,11 +87,17 @@ describe('HeroCommunitySignIn', () => {
     expect(element.querySelector('.hero-signin')?.classList.contains('is-member')).toBe(true);
     expect(element.querySelector('app-community-sign-in-card')).toBeNull();
 
-    // The name alone — no “Welcome,” prefix, no period at the end.
+    // “Welcome ” then the name — no period at the end.
     const title = element.querySelector<HTMLElement>('.hero-signin-title');
     expect(title).toBeTruthy();
-    expect(title?.textContent?.trim()).toBe('Aisha');
+    expect(title?.textContent?.trim()).toBe('Welcome Aisha');
     expect(title?.textContent?.trim().endsWith('.')).toBe(false);
+
+    // The fixed black “Welcome ” greeting leads the member's name.
+    const greeting = element.querySelector<HTMLElement>('.hero-signin-greeting');
+    const name = element.querySelector<HTMLElement>('.hero-signin-name');
+    expect(greeting?.textContent?.trim()).toBe('Welcome');
+    expect(name?.textContent?.trim()).toBe('Aisha');
 
     // Big, Calibri, plain text (the name is the loudest line in the block).
     const titleStyle = getComputedStyle(title!);
@@ -99,10 +105,27 @@ describe('HeroCommunitySignIn', () => {
     const nameSize = fontSizeInPx(titleStyle.fontSize);
     expect(nameSize).toBeGreaterThanOrEqual(32);
 
+    // “Welcome ” is black and the name is the brand purple.
+    const greetingStyle = getComputedStyle(greeting!);
+    expect(greetingStyle.color).toBe('rgb(11, 13, 18)');
+    const nameStyle = getComputedStyle(name!);
+    expect(nameStyle.color).toBe('rgb(101, 57, 129)');
+    // Neither span declares a font-size of its own, so both render at the
+    // title's size. jsdom leaves inherited font-size unresolved ("" / "inherit"),
+    // which is equivalent here.
+    const spanSize = (value: string): number => {
+      if (!value || value === 'inherit' || value === 'normal') return nameSize;
+      return fontSizeInPx(value);
+    };
+    expect(spanSize(greetingStyle.fontSize)).toBe(nameSize);
+    expect(spanSize(nameStyle.fontSize)).toBe(nameSize);
+
     const subtitle = element.querySelector('.hero-signin-subtitle');
     expect(subtitle).toBeTruthy();
     expect(subtitle?.tagName).toBe('P');
-    expect(subtitle?.textContent?.trim()).toBe('Explore the NeverBeen Multiverse');
+    expect(subtitle?.textContent?.trim()).toBe(
+      'Explore the NeverBeen Multiverse and Interact with our NeverBeen AI Models and Shop NeverBeen Merchandise from our exclusive NeverBeen Store',
+    );
 
     // The Explore line stays small next to the name.
     expect(fontSizeInPx(getComputedStyle(subtitle!).fontSize)).toBeLessThan(nameSize);
@@ -122,12 +145,12 @@ describe('HeroCommunitySignIn', () => {
       status: 'Active',
       profileComplete: true,
     });
-    defaults['communityWelcomeTitle'] = 'Welcome, {name}.';
+    defaults['communityWelcomeTitle'] = '{name}.';
 
     try {
       const element = create();
       expect(element.querySelector('.hero-signin-title')?.textContent?.trim()).toBe(
-        'Welcome, Aisha',
+        'Welcome Aisha',
       );
     } finally {
       defaults['communityWelcomeTitle'] = '{name}';
@@ -143,7 +166,9 @@ describe('HeroCommunitySignIn', () => {
       profileComplete: false,
     });
 
-    expect(create().querySelector('.hero-signin-title')?.textContent?.trim()).toBe('Sam Traveller');
+    expect(create().querySelector('.hero-signin-name')?.textContent?.trim()).toBe(
+      'Sam Traveller',
+    );
   });
 });
 
