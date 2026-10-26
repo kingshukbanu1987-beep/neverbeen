@@ -87,10 +87,16 @@ describe('HeroCommunitySignIn', () => {
     expect(element.querySelector('.hero-signin')?.classList.contains('is-member')).toBe(true);
     expect(element.querySelector('app-community-sign-in-card')).toBeNull();
 
-    // “Welcome ” then the name — no period at the end.
+    // “Welcome  ” then the name — two spaces between them, no period at the end.
     const title = element.querySelector<HTMLElement>('.hero-signin-title');
     expect(title).toBeTruthy();
-    expect(title?.textContent?.trim()).toBe('Welcome Aisha');
+    expect(title?.textContent?.trim()).toBe('Welcome  Aisha');
+    expect(title?.textContent?.trim().startsWith('Welcome  A')).toBe(true);
+
+    // The gap keeps both spaces rendered (HTML would otherwise collapse them).
+    const gap = element.querySelector<HTMLElement>('.hero-signin-gap');
+    expect(gap?.textContent).toBe('  ');
+    expect(getComputedStyle(gap!).whiteSpace).toBe('pre-wrap');
     expect(title?.textContent?.trim().endsWith('.')).toBe(false);
 
     // “Welcome” matches the exact display style of “Go Anywhere. Even Where You've Never Been”,
@@ -148,7 +154,7 @@ describe('HeroCommunitySignIn', () => {
     try {
       const element = create();
       expect(element.querySelector('.hero-signin-title')?.textContent?.trim()).toBe(
-        'Welcome Aisha',
+        'Welcome  Aisha',
       );
     } finally {
       defaults['communityWelcomeTitle'] = '{name}';
