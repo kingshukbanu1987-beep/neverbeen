@@ -13,19 +13,21 @@
       "audience": "Unisex",
       "price": 1299,
       "compareAtPrice": 1799,
-      "colors": [
-        "Studio navy",
-        "Ivory"
-      ],
-      "sizes": [
-        "750 ml"
-      ],
+      "colors": ["Studio navy", "Ivory"],
+      "sizes": ["750 ml"],
       "material": "Double-wall 18/8 stainless steel, copper-lined",
       "badge": "Bestseller",
       "rating": 4.9,
       "reviews": 534,
       "description": "Twenty-four hours cold, twelve hours hot. The 750 ml bottle has a leak-proof twist cap, a wide mouth for ice and a powder-coated navy body.",
       "image": "NB-BT-001.jpg",
+      "campaign": {
+        "model": "Fiadh Dara",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Fiadh Dara in a clean white studio campaign.",
+        "profile": "/ai-models/fiadh-dara",
+        "image": "NB-BT-001-fiadh-dara.jpg"
+      },
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,
@@ -41,13 +43,8 @@
       "audience": "Unisex",
       "price": 999,
       "compareAtPrice": 1399,
-      "colors": [
-        "Steel",
-        "Navy"
-      ],
-      "sizes": [
-        "500 ml"
-      ],
+      "colors": ["Steel", "Navy"],
+      "sizes": ["500 ml"],
       "material": "Vacuum-insulated stainless steel with sliding lid",
       "rating": 4.7,
       "reviews": 318,
@@ -68,13 +65,8 @@
       "audience": "Unisex",
       "price": 749,
       "compareAtPrice": 999,
-      "colors": [
-        "Mint",
-        "Navy"
-      ],
-      "sizes": [
-        "1 L"
-      ],
+      "colors": ["Mint", "Navy"],
+      "sizes": ["1 L"],
       "material": "BPA-free Tritan with silicone straw",
       "badge": "New",
       "rating": 4.5,

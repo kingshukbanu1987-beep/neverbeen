@@ -32,6 +32,12 @@ export class Footer {
     const path = this.currentUrl().split(/[?#]/)[0];
     return path === '/ai-models' || path.startsWith('/ai-models/');
   });
+  /** The merchandise storefront shares the AI model studio's plum footer. */
+  protected readonly isMerchandise = computed(() => {
+    const path = this.currentUrl().split(/[?#]/)[0];
+    return path === '/merchandise' || path.startsWith('/merchandise/');
+  });
+  protected readonly isStudioChrome = computed(() => this.isAiModels() || this.isMerchandise());
   protected readonly year = new Date().getFullYear();
   protected readonly tagline = computed(() => this.cms.text('global.footer', 'tagline'));
   protected readonly copyright = computed(() => this.cms.text('global.footer', 'copyright'));

@@ -26,8 +26,10 @@ const DEFAULT_ADDRESS: CheckoutAddress = {
   postalCode: '',
 };
 
-type ShopView = 'shop' | 'cart' | 'checkout' | 'payment';
+type ShopView = 'shop' | 'product' | 'cart' | 'checkout' | 'payment';
+type ShopReturnView = Exclude<ShopView, 'product'>;
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
+type DetailImageMode = 'campaign' | 'product';
 
 @Component({
   selector: 'app-merchandise',
@@ -41,6 +43,7 @@ export class Merchandise {
   private readonly catalogue = inject(MerchandiseCatalogService);
 
   protected readonly view = signal<ShopView>('shop');
+  protected readonly productReturnView = signal<ShopReturnView>('shop');
   protected readonly categories = this.catalogue.categories;
   protected readonly products = this.catalogue.products;
   protected readonly loading = this.catalogue.loading;
@@ -52,10 +55,8 @@ export class Merchandise {
   protected readonly sort = signal<SortOption>('featured');
   protected readonly maximumPrice = signal(3500);
   protected readonly minimumRating = signal(0);
-  protected readonly quickView = signal<MerchandiseProduct | null>(null);
-  protected readonly zoomed = signal(false);
-  protected readonly selectedSize = signal('');
-  protected readonly selectedColor = signal('');
+  protected readonly activeProduct = signal<MerchandiseProduct | null>(null);
+  protected readonly detailImageMode = signal<DetailImageMode>('campaign');
   protected readonly signInGate = signal(false);
   protected readonly cart = signal<MerchandiseCartItem[]>(this.readCart());
   protected readonly toast = signal('');
@@ -63,6 +64,8 @@ export class Merchandise {
   protected readonly paymentMethod = signal<'gpay' | 'phonepe'>('gpay');
   protected readonly paymentNotice = signal('');
   protected readonly address = signal<CheckoutAddress>({ ...DEFAULT_ADDRESS });
+  protected readonly selectedSize = signal('');
+  protected readonly selectedColor = signal('');
 
   protected readonly signedIn = computed(
     () => this.community.isAuthenticated() && !this.community.guestBrowsing(),
@@ -94,6 +97,35 @@ export class Merchandise {
     this.cartLines().reduce((sum, line) => sum + line.lineTotal, 0),
   );
   protected readonly charges = computed(() => merchandisePaymentBreakdown(this.subtotal()));
+  protected readonly featuredProduct = computed(
+    () => this.products().find((product) => product.campaign) ?? this.products()[0] ?? null,
+  );
+  protected readonly viewLabel = computed(() => {
+    switch (this.view()) {
+      case 'product':
+        return 'Product detail';
+      case 'cart':
+        return 'Your bag';
+      case 'checkout':
+        return 'Delivery details';
+      case 'payment':
+        return 'Secure checkout';
+      default:
+        return 'The collection';
+    }
+  });
+  protected readonly productBackLabel = computed(() => {
+    switch (this.productReturnView()) {
+      case 'cart':
+        return 'Back to bag';
+      case 'checkout':
+        return 'Back to address';
+      case 'payment':
+        return 'Back to payment';
+      default:
+        return 'Back to collection';
+    }
+  });
   protected readonly visibleProducts = computed(() => {
     const search = this.search().trim().toLocaleLowerCase();
     const category = this.currentCategory();
@@ -105,7 +137,7 @@ export class Merchandise {
       const matchesAudience =
         audience === 'All' || product.audience.toLocaleLowerCase() === audience.toLocaleLowerCase();
       const searchable =
-        `${product.name} ${product.description} ${product.category.title} ${product.audience} ${product.material}`.toLocaleLowerCase();
+        `${product.name} ${product.description} ${product.category.title} ${product.audience} ${product.material} ${product.campaign?.model ?? ''}`.toLocaleLowerCase();
       return (
         matchesCategory &&
         matchesAudience &&
@@ -125,8 +157,9 @@ export class Merchandise {
         return matching.sort((a, b) => b.id.localeCompare(a.id));
       default:
         return matching.sort((a, b) => {
+          const campaign = Number(!!b.campaign) - Number(!!a.campaign);
           const badge = Number(!!b.badge) - Number(!!a.badge);
-          return badge || b.rating - a.rating || b.reviews - a.reviews;
+          return campaign || badge || b.rating - a.rating || b.reviews - a.reviews;
         });
     }
   });
@@ -150,6 +183,32 @@ export class Merchandise {
 
   protected categoryCount(slug: string): number {
     return this.products().filter((product) => product.category.slug === slug).length;
+  }
+
+  protected coverImage(product: MerchandiseProduct): string {
+    return product.campaign?.image ?? product.image;
+  }
+
+  protected coverAlt(product: MerchandiseProduct): string {
+    return product.campaign
+      ? `${product.name}, presented by NeverBeen Premium model ${product.campaign.model}`
+      : `${product.name} — NeverBeen merchandise`;
+  }
+
+  protected detailImage(product: MerchandiseProduct): string {
+    return this.detailImageMode() === 'campaign' && product.campaign
+      ? product.campaign.image
+      : product.image;
+  }
+
+  protected detailAlt(product: MerchandiseProduct): string {
+    return this.detailImageMode() === 'campaign' && product.campaign
+      ? `${product.campaign.model} holding the ${product.name} in a white studio`
+      : `${product.name} — product view`;
+  }
+
+  protected setDetailImage(mode: DetailImageMode): void {
+    this.detailImageMode.set(mode);
   }
 
   protected setCategory(value: string): void {
@@ -181,15 +240,20 @@ export class Merchandise {
   }
 
   protected openProduct(product: MerchandiseProduct): void {
-    this.quickView.set(product);
+    const currentView = this.view();
+    if (currentView !== 'product') this.productReturnView.set(currentView);
+    this.activeProduct.set(product);
     this.selectedSize.set(product.sizes[0] ?? 'One size');
     this.selectedColor.set(product.colors[0] ?? '');
-    this.zoomed.set(false);
+    this.detailImageMode.set(product.campaign ? 'campaign' : 'product');
+    this.view.set('product');
+    this.scrollToTop();
   }
 
   protected closeProduct(): void {
-    this.quickView.set(null);
-    this.zoomed.set(false);
+    this.activeProduct.set(null);
+    this.view.set(this.productReturnView());
+    this.scrollToTop();
   }
 
   protected chooseSize(size: string): void {
@@ -201,7 +265,7 @@ export class Merchandise {
   }
 
   protected addCurrentProduct(): void {
-    const product = this.quickView();
+    const product = this.activeProduct();
     if (!product) return;
     this.addToCart(product, this.selectedSize(), this.selectedColor());
   }
@@ -234,16 +298,17 @@ export class Merchandise {
       return [...items, item];
     });
     this.persistCart();
-    this.quickView.set(null);
     this.showToast(`${product.name} added to your bag`);
   }
 
   protected openCart(): void {
+    this.activeProduct.set(null);
     this.view.set('cart');
     this.scrollToTop();
   }
 
   protected continueShopping(): void {
+    this.activeProduct.set(null);
     this.view.set('shop');
     this.scrollToTop();
   }
@@ -305,6 +370,11 @@ export class Merchandise {
     if (!this.addressIsValid()) return;
     this.paymentNotice.set('');
     this.view.set('payment');
+    this.scrollToTop();
+  }
+
+  protected backToAddress(): void {
+    this.view.set('checkout');
     this.scrollToTop();
   }
 

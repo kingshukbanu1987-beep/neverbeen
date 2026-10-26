@@ -276,6 +276,31 @@ describe('Navbar', () => {
     expect(getComputedStyle(header).backgroundColor).toBe('rgb(255, 255, 255)');
   });
 
+  it('gives Merchandise the same plum chrome as the AI model studio', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    const header = element.querySelector('header.nav') as HTMLElement;
+    const menuButton = element.querySelector('button.menu') as HTMLButtonElement;
+    const siteNav = element.querySelector('nav#site-nav') as HTMLElement;
+
+    component['currentUrl'].set('/merchandise');
+    fixture.detectChanges();
+
+    expect(component['isMerchandise']()).toBe(true);
+    expect(component['isStudioChrome']()).toBe(true);
+    expect(header.classList.contains('ai-models-nav')).toBe(true);
+    expect(header.classList.contains('merchandise-nav')).toBe(true);
+    expect(getComputedStyle(header).backgroundColor).toBe('rgb(55, 38, 66)');
+    expect(getComputedStyle(menuButton).backgroundColor).toBe('rgb(55, 38, 66)');
+    expect(getComputedStyle(siteNav).backgroundColor).toBe('rgb(55, 38, 66)');
+
+    component['currentUrl'].set('/');
+    fixture.detectChanges();
+    expect(component['isMerchandise']()).toBe(false);
+    expect(header.classList.contains('merchandise-nav')).toBe(false);
+  });
+
   it('keeps the full website header on the Community sign-in page', () => {
     const fixture = create();
     const component = fixture.componentInstance;

@@ -1,3 +1,5 @@
+import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
+import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import {
   INDIA_STATES,
   MERCHANDISE_CATEGORIES,
@@ -78,5 +80,39 @@ describe('Merchandise checkout data', () => {
       cgst: 90,
       total: 1230,
     });
+  });
+
+  it('attaches Fiadh Dara to the Insulated Steel Bottle campaign', () => {
+    const campaign = bottleCatalogue.items['NB-BT-001'].campaign;
+
+    expect(campaign).toMatchObject({
+      model: 'Fiadh Dara',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/fiadh-dara',
+      image: 'NB-BT-001-fiadh-dara.jpg',
+    });
+  });
+
+  it('resolves the Premium model campaign photo from its catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () =>
+          url.includes('Water-Bottles-and-Tumblers') ? bottleCatalogue : { items: {} },
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const bottle = service.products().find((product) => product.id === 'NB-BT-001');
+      expect(bottle?.campaign?.model).toBe('Fiadh Dara');
+      expect(bottle?.campaign?.image).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara.jpg',
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

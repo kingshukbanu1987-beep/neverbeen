@@ -45,6 +45,17 @@
   outline-color: rgb(150 120 182);
 }
 
+/* A fine lavender seam ties the merchandise storefront to its white / violet page. */
+.nav.merchandise-nav {
+  box-shadow: inset 0 -2px 0 rgb(216 198 240 / 58%);
+}
+
+.nav.merchandise-nav nav#site-nav a.active {
+  text-decoration: underline;
+  text-decoration-color: rgb(216 198 240 / 80%);
+  text-underline-offset: 0.45rem;
+}
+
 .bar {
   display: flex;
   align-items: center;
@@ -357,6 +368,44 @@ a:has(use[href='#nb-icon-live']) .icon {
 
 .menu.is-open .line:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
+}
+
+/*
+ * The merchandise storefront has a long global menu. Between tablet landscape and
+ * small desktop widths the inline links would push the document wider than the
+ * viewport, so use the same collapsible menu a little earlier on this route.
+ */
+@media (min-width: 861px) and (max-width: 1280px) {
+  .nav.merchandise-nav .menu {
+    display: flex;
+    order: 4;
+  }
+
+  .nav.merchandise-nav .theme-slot {
+    margin-left: auto;
+  }
+
+  .nav.merchandise-nav nav#site-nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--nav-bar-h);
+    z-index: 21;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem 1.25rem 1.4rem;
+    background: rgb(55, 38, 66);
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
+  }
+
+  .nav.merchandise-nav nav#site-nav.open {
+    display: flex;
+  }
+
+  .nav.merchandise-nav .icon {
+    display: block;
+  }
 }
 
 @media (max-width: 860px) {
