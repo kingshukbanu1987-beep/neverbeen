@@ -30,14 +30,14 @@ export const HERO_SLIDE_INTERVAL_SECONDS = 5;
 /**
  * The top of the Home page — two full-width gallery panels under one roof.
  *
- * Inside the first unified white panel ("Go Anywhere. Even Where You've Never
- * Been"), the eyebrow badge, editorial headline and small intro text sit above
- * the full-width photograph stage, with Community sign-in / member greeting
- * and slide progress underneath the picture panel on every screen size. The
- * second panel keeps its widescreen split layout (editorial copy on the left,
- * portrait stage on the right; image above copy on mobile). Travel slides fill
- * their stage with `object-fit: cover`, while banner portraits retain their
- * native aspect ratio.
+ * Inside the first unified white panel ("Imagine Yourself Anywhere, Even Where
+ * You’ve Never Been"), the eyebrow badge, editorial headline and small intro
+ * text sit above the full-width photograph stage, with Community sign-in /
+ * member greeting and slide progress underneath the picture panel on every
+ * screen size. The second panel keeps its widescreen split layout (editorial
+ * copy on the left, portrait stage on the right; image above copy on mobile).
+ * Travel slides fill their stage with `object-fit: cover`, while banner
+ * portraits retain their native aspect ratio.
  * Three independent white pill call-to-action buttons float in the seam
  * between the two sections.
  *

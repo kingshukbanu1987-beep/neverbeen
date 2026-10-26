@@ -99,7 +99,7 @@ describe('HeroCommunitySignIn', () => {
     expect(getComputedStyle(gap!).whiteSpace).toBe('pre-wrap');
     expect(title?.textContent?.trim().endsWith('.')).toBe(false);
 
-    // “Welcome” matches the exact display style of “Go Anywhere. Even Where You've Never Been”,
+    // “Welcome” matches the exact display style of “Imagine Yourself Anywhere, Even Where You’ve Never Been”,
     // while the member's username keeps its unchanged Calibri brand-purple style.
     const greeting = element.querySelector<HTMLElement>('.hero-signin-greeting');
     const name = element.querySelector<HTMLElement>('.hero-signin-name');

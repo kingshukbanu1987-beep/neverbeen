@@ -718,7 +718,7 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
-  it('teases her Premium Content blurred and watermarked, scattered through the grid', async () => {
+  it('teases her Premium Content locked and blurred — with no text over the frame — scattered through the grid', async () => {
     const profile = withPhotos(20);
     profile.premiumPhotos = Array.from({ length: 6 }, (_, index) => ({
       src: `/NeverBeenModels/TestStudioModel/PremiumContent/frame-${index + 1}.jpg`,
@@ -738,11 +738,13 @@ describe('AiModelPortfolioPage', () => {
         expect(tiles[position + 1]?.classList.contains('premium-teaser-tile')).toBe(false);
       }
 
-      // Every teaser carries the diagonal watermark and never opens the lightbox.
+      // Every teaser is locked and blurred — and carries no diagonal (or any other) text over
+      // the photograph. It never opens the lightbox.
       for (const tile of tiles.filter((tile) => tile.classList.contains('premium-teaser-tile'))) {
-        expect(tile.textContent).toContain('Premium Content');
-        expect(tile.textContent).toContain('Only available in Paid Premium Chat');
+        expect(tile.textContent?.trim()).toBe('');
+        expect(tile.querySelector('.premium-teaser-mark')).toBeNull();
         expect(tile.querySelector('button')).toBeNull();
+        expect(tile.querySelector('.premium-teaser-lock')).toBeTruthy();
         expect(tile.querySelector('img')?.getAttribute('src')).toContain('PremiumContent');
       }
 

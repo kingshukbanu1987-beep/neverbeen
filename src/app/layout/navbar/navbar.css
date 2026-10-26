@@ -354,7 +354,6 @@ a:has(use[href='#nb-icon-live']) .icon {
 
 .account-device-eyebrow,
 .account-device-field-label,
-.account-device-ip > span,
 .account-device-place small {
   color: #8a7b9d;
   font-size: 0.55rem;
@@ -406,30 +405,6 @@ a:has(use[href='#nb-icon-live']) .icon {
   color: #76698a;
   font-size: 0.66rem;
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.account-device-ip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  margin-top: 0.5rem;
-  padding: 0.44rem 0.58rem;
-  border: 1px solid rgba(150, 120, 182, 0.19);
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.74);
-}
-
-.account-device-ip b {
-  min-width: 0;
-  overflow: hidden;
-  color: #493762;
-  font-family: 'Calibri', 'Segoe UI', ui-monospace, monospace;
-  font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

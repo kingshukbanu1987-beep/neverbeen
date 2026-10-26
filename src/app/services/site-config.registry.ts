@@ -248,13 +248,14 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
       'The first thing visitors see: the headline and intro copy above every photograph from public/travel inside a full-width card, the independent call-to-action buttons, then the full-size portrait preview from public/banner.',
     previewPath: '/',
     fields: [
-      { key: 'eyebrow', label: 'Eyebrow', type: 'text', default: 'Travel photography, imagined', maxLength: 60 },
-      { key: 'title', label: 'Headline', type: 'text', default: "Go Anywhere. Even Where You've Never Been", maxLength: 120 },
+      { key: 'eyebrow', label: 'Eyebrow', type: 'text', default: 'Your imagination. Your Multiverse', maxLength: 60 },
+      { key: 'title', label: 'Headline', type: 'text', default: 'Imagine Yourself Anywhere, Even Where You’ve Never Been', maxLength: 120 },
       {
         key: 'lede',
         label: 'Intro paragraph',
         type: 'textarea',
-        default: "Create stunning AI vacation photos of yourself in the world's most beautiful destinations. Nobody will know or detect that the places you have never been.",
+        default:
+          'No flights. No passports. No Immigration. No VISA. No Bank Statement. Just you, your imagination, and the world’s most incredible Destinations inside NeverBeen Multiverse. Yes, there is a Parallel Universe within you — a world of endless possibilities, boundless imagination, and dreams beyond reality. Explore it now',
         maxLength: 400,
       },
       { key: 'buttons', label: 'Call-to-action buttons', type: 'items', default: items(HERO_BUTTONS), labelEditable: true },
@@ -262,14 +263,14 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         key: 'peopleEyebrow',
         label: 'Portrait preview eyebrow',
         type: 'text',
-        default: 'NeverBeen AI Models, imagined',
+        default: 'The Unwritten Souls, Who Never Were',
         maxLength: 60,
       },
       {
         key: 'peopleTitle',
         label: 'Portrait preview headline',
         type: 'text',
-        default: "Meet the People. Even When They Don't Exists outside NeverBeen Multiverse",
+        default: 'Meet the Souls Hidden between the Dimensions of Multiverse',
         maxLength: 140,
       },
       {
@@ -277,7 +278,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         label: 'Portrait preview paragraph',
         type: 'textarea',
         default:
-          'What if their stories matter, even if their worlds are imaginary? Because a character doesn’t need to exist in our reality to leave a lasting impression on it.',
+          'Not every world needs to exist biologically to be real. Not every character needs to be real to matter. What truly matters is the connection between souls, because a character doesn’t need to exist in our reality to leave a lasting impression on us',
         maxLength: 400,
       },
       {

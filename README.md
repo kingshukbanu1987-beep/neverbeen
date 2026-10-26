@@ -278,9 +278,9 @@ full-screen viewer with its close button top right and a download to the visitor
 floating glass dock at the bottom middle of the screen leads back. Outside the chat the frames
 appear only as locked teasers: four of them, scattered at random (never side by side, and on the
 portfolio grid never in the last, View All slot) through the portfolio's photograph section at an
-85% gaussian blur, and through the first rows of the View All mosaic at 75% — each under the same
-diagonal watermark, **Premium Content** in bold red with *Only available in Paid Premium Chat*
-underneath. In the `/ai-models` directory every Premium-plan model wears a
+85% gaussian blur, and through the first rows of the View All mosaic at 75% — each locked and
+blurred behind its quiet corner lock badge, with no text written over the photograph at all. In
+the `/ai-models` directory every Premium-plan model wears a
 **✦ NeverBeen Premium Model** hallmark beside her Live Chat button — an obsidian seal edged and
 lettered in champagne gold, the brand word in white with the tier in brushed-gold capitals and a
 slow sheen of light crossing it. The premium
@@ -551,8 +551,8 @@ Admin Console → Website Management.
 
 ## The hero travel preview (home page slideshow)
 
-The first panel of the home hero — *Go Anywhere. Even Where You've Never Been* — is a five-second
-cross-fade slideshow of every photograph in `public/travel`, mirroring the portrait preview in the
+The first panel of the home hero — *Imagine Yourself Anywhere, Even Where You’ve Never Been* — is a
+five-second cross-fade slideshow of every photograph in `public/travel`, mirroring the portrait preview in the
 second panel (which reads `public/banner`). Drop images in and run:
 
 ```bash
@@ -566,8 +566,8 @@ are centred and cropped as needed instead of leaving blank bands around the slid
 
 ## The Community sign-in at the top of the home page
 
-Inside the first hero panel — *Go Anywhere. Even Where You've Never Been* — the eyebrow badge,
-headline and intro paragraph sit above the full-width travel picture panel, and directly underneath
+Inside the first hero panel — *Imagine Yourself Anywhere, Even Where You’ve Never Been* — the eyebrow
+badge, headline and intro paragraph sit above the full-width travel picture panel, and directly underneath
 the picture panel sits the Community sign-in (`src/app/home/hero/community-signin`). It is nothing
 but the Google button: no header line, no copy, no card and no background — just the button on the
 panel's surface.

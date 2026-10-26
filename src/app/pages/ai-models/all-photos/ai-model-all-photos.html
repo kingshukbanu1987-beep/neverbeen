@@ -94,8 +94,9 @@
             @for (tile of tiles(); track tile.photo.src; let index = $index) {
               <div class="mosaic-cell" [style]="tile.style">
                 @if (tile.premium) {
-                  <!-- A locked Premium Content frame: 75% blur under the diagonal watermark, its
-                       complete photograph only in a paid Premium Live Chat. -->
+                  <!-- A locked Premium Content frame: 75% blur and the quiet lock badge, with no
+                       text over the photograph — the complete frame only in a paid Premium Live
+                       Chat. -->
                   <div class="mosaic-tile mosaic-premium-tile">
                     <app-premium-photo-teaser
                       [photo]="tile.photo"

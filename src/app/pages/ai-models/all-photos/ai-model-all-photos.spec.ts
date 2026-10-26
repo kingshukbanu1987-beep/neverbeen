@@ -106,10 +106,15 @@ describe('AiModelAllPhotosPage', () => {
         expect(positions).not.toContain(position + 1);
       }
 
-      // Every locked frame carries the watermark and never opens the viewer.
+      // Every locked frame stays blurred under its lock badge with no text over the photograph,
+      // and never opens the viewer.
       for (const cell of premiumCells) {
-        expect(cell.textContent).toContain('Premium Content');
-        expect(cell.textContent).toContain('Only available in Paid Premium Chat');
+        expect(cell.querySelector('.premium-teaser-mark')).toBeNull();
+        expect(cell.querySelector('.premium-teaser-lock')).toBeTruthy();
+        expect(cell.querySelector('.premium-teaser')?.getAttribute('aria-label')).toContain(
+          'Paid Premium Chat',
+        );
+        expect(cell.textContent?.trim()).toBe('');
         expect(cell.querySelector('button')).toBeNull();
       }
 
