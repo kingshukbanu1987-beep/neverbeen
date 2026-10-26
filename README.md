@@ -574,11 +574,13 @@ no card and no background — just the button on the page's own surface.
 - **Not signed in:** the Google button alone. It is the same trusted Community flow the `/ai-models`
   pages use (`app-community-sign-in-card`, `variant="button"`): OAuth redirect, the official Google
   button fallback and the safe return path. Signing in returns the visitor to `/`.
-- **Signed in:** the button is replaced by *“Welcome, <first name>.”* and the plain-text line
-  *“Step into the NeverBeen Multiverse”* (plain text only — it does not link to `/community`).
+- **Signed in:** the button is replaced by the member's name in a big Calibri line — no “Welcome,”
+  prefix and no period at the end — followed by the plain-text line
+  *“Explore the NeverBeen Multiverse”* (plain text only — it does not link to `/community`).
 
-The member welcome line is published from **Admin Console → Website Management → Hero banner**
-(`communityWelcomeTitle`); use `{name}` to place the member's first name.
+The member name line is published from **Admin Console → Website Management → Hero banner**
+(`communityWelcomeTitle`); use `{name}` to place the member's first name (the shipped copy is just
+`{name}`, and any trailing period is dropped at render time).
 
 The sign-in reads `CommunityService` — a deliberately lazy runtime on this site — so the hero defers
 it with `@defer (on viewport)`. The Community code is its own chunk that loads as the top of the page

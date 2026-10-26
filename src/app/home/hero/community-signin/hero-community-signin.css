@@ -1,6 +1,7 @@
 /* ============================================================================
    Hero Community sign-in — the Google button that sits under the first hero
-   panel's small texts (a member sees their welcome line there instead).
+   panel's small texts (a signed-in member sees their name there instead, big
+   and plain, with the line “Explore the NeverBeen Multiverse” under it).
 
    Nothing is painted here: no background, border, shadow or panel. The block
    borrows the home page's default background, and the Google button keeps the
@@ -34,17 +35,22 @@
 .hero-signin-title {
   margin: 0;
   color: #0b0d12;
-  font-family: var(--serif, Georgia, serif);
-  font-size: clamp(1rem, 1.25vw, 1.2rem);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.4;
+  font-family: var(--signin-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+  /* The member's name is the biggest line in this block: Calibri, heavy and
+     tight. The first value is the plain fallback; clamp() scales it. */
+  font-size: 2.9rem;
+  font-size: clamp(2.1rem, 2.9vw, 2.9rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-wrap: balance;
 }
 
 .hero-signin-subtitle {
   margin: 0;
   color: var(--studio-muted, #475569);
-  font-family: var(--signin-font);
+  font-family: var(--signin-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+  font-size: 0.92rem;
   font-size: clamp(0.84rem, 0.92vw, 0.92rem);
   font-weight: 400;
   line-height: 1.45;
