@@ -90,7 +90,7 @@ describe('Navbar', () => {
     expect(signIn.querySelector('svg.icon use')?.getAttribute('href')).toBe('#nb-icon-sign-in');
   });
 
-  it('changes the end-of-menu option after Feedback to Log out when logged in, and logs out of Community on click', async () => {
+  it('shows the ultra-modern account option when logged in and logs out from its drop-down', async () => {
     const community = TestBed.inject(CommunityService);
     openDemoAccount(community, 'active_member');
     const fixture = create();
@@ -99,26 +99,80 @@ describe('Navbar', () => {
 
     try {
       const element: HTMLElement = fixture.nativeElement;
-      const linksBefore = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav#site-nav a'));
-      const labelsBefore = linksBefore.map((link) => link.textContent?.trim());
+      const navLabels = () =>
+        Array.from(element.querySelectorAll<HTMLAnchorElement>('nav#site-nav a')).map((link) =>
+          link.textContent?.trim(),
+        );
 
+      // The plain "Log out" text option is gone; the end of the menu holds the avatar chip
+      // (and the same option sits after the hamburger for mobile screens).
       expect(community.isAuthenticated()).toBe(true);
-      expect(labelsBefore.at(-1)).toBe('Log out');
-      expect(labelsBefore.indexOf('Log out')).toBe(labelsBefore.indexOf('Feedback') + 1);
-      expect(labelsBefore).not.toContain('Sign In');
-      expect(linksBefore.at(-1)?.querySelector('svg.icon use')?.getAttribute('href')).toBe(
-        '#nb-icon-log-out',
-      );
+      expect(navLabels()).not.toContain('Log out');
+      expect(navLabels()).not.toContain('Sign In');
+      const inNav = element.querySelector('.account-menu[data-variant="innav"]') as HTMLElement;
+      const inBar = element.querySelector('.account-menu[data-variant="inbar"]') as HTMLElement;
+      expect(inNav).toBeTruthy();
+      expect(inBar).toBeTruthy();
 
-      await fixture.componentInstance.onCommunityAuth(new MouseEvent('click', { cancelable: true }));
+      const chip = inNav.querySelector<HTMLButtonElement>('.account-chip')!;
+      expect(chip).toBeTruthy();
+      expect(chip.getAttribute('aria-expanded')).toBe('false');
+      expect(chip.querySelector('.account-chip-avatar img, .account-chip-initial')).toBeTruthy();
+
+      // The drop-down opens with three rows: identity (read-only), manage account, log out.
+      const dropdown = inNav.querySelector<HTMLElement>('.account-dropdown')!;
+      expect(dropdown.getAttribute('aria-hidden')).toBe('true');
+
+      chip.click();
+      fixture.detectChanges();
+      expect(fixture.componentInstance['accountMenuOpen']()).toBe(true);
+      expect(chip.getAttribute('aria-expanded')).toBe('true');
+      expect(dropdown.getAttribute('aria-hidden')).toBe('false');
+
+      const rows = Array.from(dropdown.querySelectorAll<HTMLElement>('.account-row'));
+      expect(rows.length).toBe(3);
+
+      // Row 1 — read-only identity: photo, full name, e-mail and the NeverBeen User ID.
+      const identity = rows[0];
+      expect(identity.classList.contains('account-identity')).toBe(true);
+      expect(identity.querySelector('.account-photo img, .account-photo-initial')).toBeTruthy();
+      expect(identity.querySelector('.account-name')?.textContent?.trim()).toBe('Kingshuk');
+      expect(identity.querySelector('.account-email')?.textContent?.trim()).toBe(
+        'kingshuk.founder@neverbeen.example',
+      );
+      expect(identity.querySelector('.account-uid')?.textContent).toContain('89201534010000000001');
+
+      // Row 2 — opens the "Manage your NeverBeen Account" page.
+      expect(rows[1].querySelector('.account-action-label')?.textContent?.trim()).toBe(
+        'Manage your NeverBeen Account',
+      );
+      expect(rows[1].querySelector('.account-brand')).toBeTruthy();
+
+      // Row 3 — the Log Out action.
+      expect(rows[2].classList.contains('account-logout')).toBe(true);
+      expect(rows[2].querySelector('.account-action-label')?.textContent?.trim()).toBe('Log Out');
+
+      // Row 2 routes to the account page and closes the drop-down.
+      const router = TestBed.inject(Router);
+      const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      rows[1].click();
+      fixture.detectChanges();
+      expect(navSpy).toHaveBeenCalledWith(['/account']);
+      expect(fixture.componentInstance['accountMenuOpen']()).toBe(false);
+      navSpy.mockRestore();
+
+      // Row 3 logs the member out: only the plain Sign In option is left, with no drop-down.
+      chip.click();
+      fixture.detectChanges();
+      rows[2].click();
+      await new Promise((resolve) => setTimeout(resolve, 40));
       TestBed.flushEffects();
       fixture.detectChanges();
 
       expect(community.isAuthenticated()).toBe(false);
-      const labelsAfter = Array.from(
-        element.querySelectorAll<HTMLAnchorElement>('nav#site-nav a'),
-      ).map((link) => link.textContent?.trim());
-      expect(labelsAfter.at(-1)).toBe('Sign In');
+      expect(element.querySelector('.account-menu')).toBeNull();
+      expect(element.querySelector('.account-dropdown')).toBeNull();
+      expect(navLabels().at(-1)).toBe('Sign In');
     } finally {
       community.logout();
     }
@@ -166,7 +220,9 @@ describe('Navbar', () => {
     fixture.detectChanges();
 
     try {
-      await fixture.componentInstance.onCommunityAuth(new MouseEvent('click', { cancelable: true }));
+      await fixture.componentInstance.onCommunityAuth(
+        new MouseEvent('click', { cancelable: true }),
+      );
 
       expect(checkApiSpy).toHaveBeenCalledWith(true);
       expect(googleSpy).toHaveBeenCalled();

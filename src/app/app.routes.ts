@@ -99,6 +99,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/community/profile/profile').then((m) => m.CommunityProfile),
   },
+  {
+    // "Manage your NeverBeen Account" — edit the member's profile picture, country,
+    // state, city and profession (the identity details stay read-only on the page).
+    path: 'account',
+    loadComponent: () => import('./pages/account/account').then((m) => m.AccountSettingsPage),
+  },
   // OAuth callback registered with Google / Facebook / Microsoft (and with the Web API's
   // `OAuth:FrontendRedirectUri`): the provider appends `?code=…&state=<provider>` here.
   {

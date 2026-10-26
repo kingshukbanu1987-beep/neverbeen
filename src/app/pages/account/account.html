@@ -1,0 +1,323 @@
+<main class="account-page">
+  <div class="account-glow" aria-hidden="true"></div>
+
+  <div class="container account-shell">
+    <nav class="account-topnav" aria-label="Account navigation">
+      <a routerLink="/" class="back-link"><span aria-hidden="true">←</span> Back to home</a>
+      <span class="account-label">NeverBeen <i aria-hidden="true">/</i> Account</span>
+    </nav>
+
+    <!-- Profile header — the same identity card language as the model profile page. -->
+    <section class="account-header" aria-labelledby="account-title">
+      <span class="header-scrim" aria-hidden="true"></span>
+
+      <div class="header-topline">
+        <span>Member account</span>
+        <span>Settings <i aria-hidden="true">·</i> Profile</span>
+      </div>
+
+      <div class="header-body">
+        <div class="identity-row">
+          <div class="avatar-ring">
+            <span class="avatar">
+              @if (photoPreview()) {
+                <img [src]="photoPreview()" [alt]="fullName() + ' — profile photograph'" />
+              } @else {
+                <span class="avatar-initial" aria-hidden="true">{{ initial() }}</span>
+              }
+            </span>
+            <span class="avatar-badge" aria-hidden="true">NB</span>
+            <label class="photo-overlay-btn" for="accountPhoto" title="Change profile picture">
+              <svg
+                viewBox="0 0 24 24"
+                class="photo-icon"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path
+                  d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                ></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <span class="photo-overlay-label">Change photo</span>
+            </label>
+            <input
+              type="file"
+              id="accountPhoto"
+              accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+              class="hidden-file-input"
+              (change)="onPhotoSelected($event)"
+            />
+          </div>
+
+          <div class="identity-copy">
+            <p class="eyebrow">Manage your NeverBeen Account</p>
+            <h1 id="account-title">{{ fullName() }}</h1>
+            <p class="handle-line">
+              <span class="handle">{{ email() }}</span>
+              <span class="uid-chip">
+                NeverBeen User ID <b>{{ uniqueId() }}</b>
+              </span>
+            </p>
+            @if (photoProcessing()) {
+              <p class="photo-status" role="status">Optimizing your new profile picture…</p>
+            }
+            @if (photoError()) {
+              <p class="field-error-msg" role="alert">{{ photoError() }}</p>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <form [formGroup]="form" (ngSubmit)="update()" class="account-form" novalidate>
+      <div class="account-grid">
+        <!-- Editable details: profile picture (above), country, state, city, profession. -->
+        <section class="settings-card" aria-labelledby="editable-title">
+          <header class="card-head">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <div class="card-head-copy">
+              <p class="card-eyebrow">Editable</p>
+              <h2 id="editable-title">Profile details</h2>
+            </div>
+          </header>
+          <p class="card-note">
+            Update your profile picture, country, state, city and profession — then choose
+            <b>Update</b> to save.
+          </p>
+
+          <div class="field-grid">
+            <div class="field-box">
+              <label for="ac-country">Country <span class="req">*</span></label>
+              <select
+                id="ac-country"
+                formControlName="country"
+                (change)="onCountryChange()"
+                [class.invalid]="form.get('country')?.invalid && form.get('country')?.touched"
+              >
+                <option value="" disabled>Select Country</option>
+                @for (c of countryOptions(); track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+              @if (form.get('country')?.invalid && form.get('country')?.touched) {
+                <span class="field-error-msg"
+                  >Country is mandatory. Please select your country.</span
+                >
+              }
+            </div>
+
+            <div class="field-box">
+              <label for="ac-state">State</label>
+              <select
+                id="ac-state"
+                formControlName="state"
+                (change)="onStateChange()"
+                [attr.disabled]="statesList().length === 0 ? '' : null"
+              >
+                <option value="" disabled>
+                  {{ statesList().length === 0 ? 'No states for this country' : 'Select State' }}
+                </option>
+                @for (s of statesList(); track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
+              @if (statesList().length === 0) {
+                <span class="field-hint-msg">Choose a country first.</span>
+              }
+            </div>
+
+            <div class="field-box">
+              <label for="ac-city">City</label>
+              <select
+                id="ac-city"
+                formControlName="city"
+                [attr.disabled]="citiesList().length === 0 ? '' : null"
+              >
+                <option value="" disabled>
+                  {{ citiesList().length === 0 ? 'No cities available' : 'Select City' }}
+                </option>
+                @for (ct of citiesList(); track ct) {
+                  <option [value]="ct">{{ ct }}</option>
+                }
+              </select>
+              @if (citiesList().length === 0) {
+                <span class="field-hint-msg">Choose a state first.</span>
+              }
+            </div>
+
+            <div class="field-box">
+              <label for="ac-profession">Profession</label>
+              <select id="ac-profession" formControlName="profession">
+                <option value="" disabled>Select Profession</option>
+                @for (p of professionOptions(); track p) {
+                  <option [value]="p">{{ p }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Read-only identity details. -->
+        <section class="settings-card locked-card" aria-labelledby="locked-title">
+          <header class="card-head">
+            <span class="card-icon card-icon-lock" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <div class="card-head-copy">
+              <p class="card-eyebrow">Read-only</p>
+              <h2 id="locked-title">Identity details</h2>
+            </div>
+          </header>
+          <p class="card-note">
+            Your name, surname, NeverBeen User ID, e-mail, gender and date of birth identify your
+            account and cannot be edited.
+          </p>
+
+          <div class="field-grid">
+            <div class="field-box is-locked">
+              <label for="ac-name">Name</label>
+              <div class="locked-control">
+                <input id="ac-name" type="text" formControlName="name" readonly />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="lock-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="field-box is-locked">
+              <label for="ac-surname">Surname</label>
+              <div class="locked-control">
+                <input id="ac-surname" type="text" formControlName="surname" readonly />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="lock-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="field-box is-locked full-span">
+              <label for="ac-uid">NeverBeen User ID</label>
+              <div class="locked-control">
+                <input id="ac-uid" type="text" formControlName="uniqueId" readonly />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="lock-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="field-box is-locked full-span">
+              <label for="ac-email">Email</label>
+              <div class="locked-control">
+                <input id="ac-email" type="email" formControlName="email" readonly />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="lock-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="field-box is-locked">
+              <label for="ac-gender">Gender</label>
+              <div class="locked-control">
+                <input id="ac-gender" type="text" formControlName="gender" readonly />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="lock-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+
+            <div class="field-box is-locked">
+              <label for="ac-dob">Date of Birth</label>
+              <div class="locked-control">
+                <input id="ac-dob" type="date" formControlName="dateOfBirth" readonly />
+                <svg
+                  viewBox="0 0 24 24"
+                  class="lock-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      @if (saveError()) {
+        <p class="form-alert form-alert-error" role="alert">{{ saveError() }}</p>
+      }
+      @if (savedNotice()) {
+        <p class="form-alert form-alert-success" role="status">{{ savedNotice() }}</p>
+      }
+
+      <div class="action-bar">
+        <button type="submit" class="btn-update" [disabled]="saving() || photoProcessing()">
+          @if (saving()) {
+            Saving…
+          } @else {
+            Update
+          }
+        </button>
+        <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+      </div>
+    </form>
+
+    <footer class="account-footer">
+      <a routerLink="/"><span aria-hidden="true">←</span> Back to home</a>
+      <span>NeverBeen <i aria-hidden="true">·</i> Account settings</span>
+    </footer>
+  </div>
+</main>
