@@ -1,8 +1,8 @@
 /* ============================================================================
    Hero Community sign-in — the Google button that sits under the first hero
    panel's small texts (a signed-in member sees “Welcome” in the exact display
-   style of “Go Anywhere. Even Where You've Never Been” followed by their name
-   in big Calibri brand purple, with the Explore line under it).
+   style of “Go Anywhere. Even Where You've Never Been”, then two spaces, then
+   their name in big Calibri brand purple, with the Explore line under it).
 
    Nothing is painted here: no background, border, shadow or panel. The block
    borrows the home page's default background, and the Google button keeps the
@@ -37,6 +37,13 @@
   margin: 0;
   line-height: 1.04;
   text-wrap: balance;
+}
+
+/* Two real spaces between “Welcome” and the username: HTML would collapse a run
+   of spaces down to one, so the gap keeps both of them. `pre-wrap` (not `pre`)
+   preserves them while still letting the line break there on narrow screens. */
+.hero-signin-gap {
+  white-space: pre-wrap;
 }
 
 /* “Welcome” matches the exact display style of “Go Anywhere. Even Where You've Never Been”. */

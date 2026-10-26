@@ -286,7 +286,7 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
         type: 'text',
         default: '{name}',
         maxLength: 120,
-        hint: 'Rendered after the fixed “Welcome ” greeting (set in the hero headline style) that always leads the signed-in line. {name} becomes their first name; it is set large, in rgb(101, 57, 129), in Calibri, with no period at the end.',
+        hint: 'Rendered two spaces after the fixed “Welcome” greeting (set in the hero headline style) that always leads the signed-in line. {name} becomes their first name; it is set large, in rgb(101, 57, 129), in Calibri, with no period at the end.',
       },
       { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {
