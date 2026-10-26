@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Navbar } from './navbar';
 import { routes } from '../../app.routes';
 import { CommunityBadgeService } from '../../services/community-badge.service';
@@ -9,6 +9,7 @@ import {
   setCookie,
   TOKEN_KEY,
 } from '../../services/community.service';
+import { openDemoAccount } from '../../services/community-demo.testing';
 import { SiteTabService } from '../../services/site-tab.service';
 import { ActiveChatBox, Companion, NotificationItem } from '../../models/community';
 
@@ -67,19 +68,119 @@ describe('Navbar', () => {
     return Array.from(create().nativeElement.querySelectorAll('nav a')) as HTMLAnchorElement[];
   }
 
-  it('places the Audience link directly after the How option', () => {
+  it('removes the How option from the menu and places Audience directly after Home', () => {
     const labels = navLinks().map((link) => link.textContent?.trim());
 
-    expect(labels.indexOf('Audience')).toBe(labels.indexOf('How') + 1);
+    expect(labels).not.toContain('How');
+    expect(labels.indexOf('Audience')).toBe(labels.indexOf('Home') + 1);
   });
 
-  it('labels the how-it-works option "How" and still points at the section', () => {
-    const links = navLinks();
-    const how = links.find((link) => link.textContent?.trim() === 'How');
+  it('places Sign In at the end of the menu after Feedback when not logged in to the Community', () => {
+    const community = TestBed.inject(CommunityService);
+    community.logout();
+    TestBed.flushEffects();
 
-    expect(how).toBeDefined();
-    expect(how!.getAttribute('href')).toBe('/#how-it-works');
-    expect(how!.querySelector('svg.icon use')?.getAttribute('href')).toBe('#nb-icon-cog');
+    const links = navLinks();
+    const labels = links.map((link) => link.textContent?.trim());
+    const signIn = links.at(-1)!;
+
+    expect(labels.at(-1)).toBe('Sign In');
+    expect(labels.indexOf('Sign In')).toBe(labels.indexOf('Feedback') + 1);
+    expect(labels).not.toContain('Log out');
+    expect(signIn.querySelector('svg.icon use')?.getAttribute('href')).toBe('#nb-icon-sign-in');
+  });
+
+  it('changes the end-of-menu option after Feedback to Log out when logged in, and logs out of Community on click', async () => {
+    const community = TestBed.inject(CommunityService);
+    openDemoAccount(community, 'active_member');
+    const fixture = create();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    try {
+      const element: HTMLElement = fixture.nativeElement;
+      const linksBefore = Array.from(element.querySelectorAll<HTMLAnchorElement>('nav#site-nav a'));
+      const labelsBefore = linksBefore.map((link) => link.textContent?.trim());
+
+      expect(community.isAuthenticated()).toBe(true);
+      expect(labelsBefore.at(-1)).toBe('Log out');
+      expect(labelsBefore.indexOf('Log out')).toBe(labelsBefore.indexOf('Feedback') + 1);
+      expect(labelsBefore).not.toContain('Sign In');
+      expect(linksBefore.at(-1)?.querySelector('svg.icon use')?.getAttribute('href')).toBe(
+        '#nb-icon-log-out',
+      );
+
+      await fixture.componentInstance.onCommunityAuth(new MouseEvent('click', { cancelable: true }));
+      TestBed.flushEffects();
+      fixture.detectChanges();
+
+      expect(community.isAuthenticated()).toBe(false);
+      const labelsAfter = Array.from(
+        element.querySelectorAll<HTMLAnchorElement>('nav#site-nav a'),
+      ).map((link) => link.textContent?.trim());
+      expect(labelsAfter.at(-1)).toBe('Sign In');
+    } finally {
+      community.logout();
+    }
+  });
+
+  it('triggers the Google sign-in flow when clicking Sign In in the menu while signed out', async () => {
+    const community = TestBed.inject(CommunityService);
+    community.logout();
+    const checkApiSpy = vi.spyOn(community, 'checkApiOnline').mockResolvedValue(false);
+    const googleSpy = vi.spyOn(community, 'signInWithGoogle').mockResolvedValue({
+      step: 'identity',
+      identity: {
+        sub: 'google-sub-123',
+        email: 'aisha@example.com',
+        emailVerified: true,
+        name: 'Aisha Rahman',
+        givenName: 'Aisha',
+        familyName: 'Rahman',
+        picture: '',
+      },
+    });
+    const completeSpy = vi.spyOn(community, 'completeGoogleSignIn').mockReturnValue({
+      token: 'jwt_test_google_token',
+      tokenType: 'Bearer',
+      expiresIn: 86400,
+      isNewUser: false,
+      profileComplete: true,
+      message: 'Signed in',
+      user: {
+        id: 42,
+        firstName: 'Aisha',
+        lastName: 'Rahman',
+        fullName: 'Aisha Rahman',
+        email: 'aisha@example.com',
+        status: 'Active',
+        profileComplete: true,
+      },
+    });
+    const router = TestBed.inject(Router);
+    const navByUrlSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    const fixture = create();
+    fixture.componentInstance['currentUrl'].set('/');
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    try {
+      await fixture.componentInstance.onCommunityAuth(new MouseEvent('click', { cancelable: true }));
+
+      expect(checkApiSpy).toHaveBeenCalledWith(true);
+      expect(googleSpy).toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'aisha@example.com', givenName: 'Aisha' }),
+      );
+      expect(navByUrlSpy).toHaveBeenCalledWith('/');
+    } finally {
+      checkApiSpy.mockRestore();
+      googleSpy.mockRestore();
+      completeSpy.mockRestore();
+      navByUrlSpy.mockRestore();
+      community.logout();
+    }
   });
 
   it('points the Merchandise link at the store and gives it a shopping bag icon', () => {

@@ -90,6 +90,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/storyline/storyline').then((m) => m.StorylinePage),
   },
   {
+    path: 'multiverse-studio',
+    loadComponent: () =>
+      import('./pages/multiverse-studio/multiverse-studio').then((m) => m.MultiverseStudioPage),
+  },
+  {
     path: 'profile',
     loadComponent: () =>
       import('./pages/community/profile/profile').then((m) => m.CommunityProfile),

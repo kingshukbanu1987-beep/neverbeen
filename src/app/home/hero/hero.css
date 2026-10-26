@@ -207,16 +207,6 @@
   padding-bottom: clamp(1rem, 1.8vw, 1.5rem);
 }
 
-.panel-people .copy-body::before {
-  content: '';
-  display: block;
-  width: 2.5rem;
-  height: 3px;
-  margin-bottom: clamp(0.8rem, 1.3vw, 1.05rem);
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--studio-accent) 0%, #a855f7 100%);
-}
-
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -286,6 +276,35 @@ h2 {
   font-size: clamp(0.94rem, 1.05vw, 1.08rem);
   line-height: 1.66;
   color: var(--studio-muted);
+}
+
+.people-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: clamp(1rem, 1.6vw, 1.25rem);
+}
+
+/* "Meet the NeverBeen AI Models" wears the lavender of the AI Models directory: rgb(150, 120, 182). */
+.btn-ai-models {
+  border-color: rgb(150 120 182 / 55%);
+  background: rgb(150 120 182);
+  color: #fff;
+  font-family: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  box-shadow: 0 14px 30px -18px rgb(88 58 128 / 70%);
+}
+
+.btn-ai-models:hover,
+.btn-ai-models:focus-visible {
+  background: #8569a8;
+  color: #fff;
+}
+
+.btn-ai-models:focus-visible {
+  outline: 2px solid rgb(150 120 182);
+  outline-offset: 3px;
 }
 
 /* Editorial footer row: morphing slide pills on the left, studio index on the right. */
@@ -475,10 +494,6 @@ h2 {
     padding-bottom: 0;
   }
 
-  .panel-people .copy-body::before {
-    display: none;
-  }
-
   h1 {
     max-width: 54rem;
     font-size: clamp(1.85rem, 6.2vw, 2.6rem);
@@ -538,7 +553,8 @@ h2 {
   }
 
   .actions .btn,
-  .actions .btn.btn-ghost {
+  .actions .btn.btn-ghost,
+  .people-actions .btn {
     width: 100%;
     flex: 0 0 auto;
   }

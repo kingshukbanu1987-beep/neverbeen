@@ -73,6 +73,7 @@ export class Hero {
   protected readonly eyebrow = computed(() => this.cms.text('home.hero', 'eyebrow'));
   protected readonly title = computed(() => this.cms.text('home.hero', 'title'));
   protected readonly lede = computed(() => this.cms.text('home.hero', 'lede'));
+  protected readonly peopleEyebrow = computed(() => this.cms.text('home.hero', 'peopleEyebrow'));
   protected readonly peopleTitle = computed(() => this.cms.text('home.hero', 'peopleTitle'));
   protected readonly peopleCopy = computed(() => this.cms.text('home.hero', 'peopleCopy'));
 

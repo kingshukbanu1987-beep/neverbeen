@@ -37,7 +37,14 @@ export class Footer {
     const path = this.currentUrl().split(/[?#]/)[0];
     return path === '/merchandise' || path.startsWith('/merchandise/');
   });
-  protected readonly isStudioChrome = computed(() => this.isAiModels() || this.isMerchandise());
+  /** The Multiverse Studio promotion gallery shares the View All studio footer. */
+  protected readonly isMultiverseStudio = computed(() => {
+    const path = this.currentUrl().split(/[?#]/)[0];
+    return path === '/multiverse-studio' || path.startsWith('/multiverse-studio/');
+  });
+  protected readonly isStudioChrome = computed(
+    () => this.isAiModels() || this.isMerchandise() || this.isMultiverseStudio(),
+  );
   protected readonly year = new Date().getFullYear();
   protected readonly tagline = computed(() => this.cms.text('global.footer', 'tagline'));
   protected readonly copyright = computed(() => this.cms.text('global.footer', 'copyright'));

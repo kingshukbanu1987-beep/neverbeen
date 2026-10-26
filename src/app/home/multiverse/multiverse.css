@@ -123,22 +123,49 @@
   margin-top: 1.15rem;
 }
 
-/* "NeverBeen AI Models" wears the lavender of the AI Models directory: rgb(150, 120, 182). */
-.btn-ai-models {
-  border-color: rgb(150 120 182 / 55%);
-  background: rgb(150 120 182);
-  color: #fff;
-  box-shadow: 0 14px 30px -18px rgb(88 58 128 / 70%);
+/* "Explore the NeverBeen Multiverse Studio" matches the "Create My Vacation" white pill style. */
+.intro .actions .btn,
+.intro .actions .btn.btn-ghost {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0.85rem 1.7rem;
+  border: 1px solid rgba(15, 23, 42, 0.13);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: var(--home-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 12px 28px -12px rgba(15, 23, 42, 0.16);
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.2s ease;
 }
 
-.btn-ai-models:hover,
-.btn-ai-models:focus-visible {
-  background: #8569a8;
-  color: #fff;
+.intro .actions .btn:hover,
+.intro .actions .btn:focus-visible,
+.intro .actions .btn.btn-ghost:hover,
+.intro .actions .btn.btn-ghost:focus-visible {
+  transform: translateY(-2px);
+  background: #ffffff;
+  border-color: var(--ink);
+  color: var(--ink);
+  box-shadow:
+    0 4px 10px rgba(15, 23, 42, 0.06),
+    0 18px 36px -12px rgba(15, 23, 42, 0.22);
 }
 
-.btn-ai-models:focus-visible {
-  outline: 2px solid rgb(150 120 182);
+.intro .actions .btn:focus-visible {
+  outline: 2px solid var(--studio-accent);
   outline-offset: 3px;
 }
 

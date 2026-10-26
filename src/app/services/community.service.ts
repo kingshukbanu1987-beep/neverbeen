@@ -952,10 +952,14 @@ export class CommunityService {
   });
 
   // Keep the root CommunityBadgeService (read by the always-mounted site navbar) in
-  // step with the live unread counts — so the navbar never has to import this service.
+  // step with the live unread counts and sign-in state — so the navbar never has to import this service.
   private readonly badgeBridge = inject(CommunityBadgeService);
   private readonly badgeSync = effect(() => {
-    this.badgeBridge.sync(this.unreadNotificationCount(), this.unreadChatCount());
+    this.badgeBridge.sync(
+      this.unreadNotificationCount(),
+      this.unreadChatCount(),
+      this.isAuthenticated(),
+    );
   });
 
   /** Circles the signed-in member belongs to (admin or member). */

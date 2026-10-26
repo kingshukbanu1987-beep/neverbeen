@@ -95,11 +95,49 @@ describe('Hero', () => {
     expect(labels).not.toContain('Explore the NeverBeen Brochure');
     expect(labels).not.toContain('The Storyline of Parallel Universe');
     expect(labels).not.toContain('Read the Stories of Parallel Universe');
-    expect(element.querySelector('a[href="/ai-models"]')).toBeNull();
+    expect(element.querySelector('.actions a[href="/ai-models"]')).toBeNull();
     expect(element.querySelector('a[href="/founder"]')).toBeNull();
     expect(element.querySelector('a[href="/collection"]')).toBeNull();
     expect(element.querySelector('a[href="/documentation"]')).toBeNull();
     expect(element.querySelector('a[href="/storyline-of-parallel-universe"]')).toBeNull();
+  });
+
+  it('places Meet the NeverBeen AI Models in the Meet the People section right after the description text', () => {
+    const element: HTMLElement = create().nativeElement;
+    const people = element.querySelector<HTMLElement>('.panel-people')!;
+    const lede = people.querySelector<HTMLElement>('.lede')!;
+    const peopleActions = people.querySelector<HTMLElement>('.people-actions')!;
+    const aiModels = peopleActions.querySelector<HTMLAnchorElement>('a.btn.btn-ai-models')!;
+
+    expect(lede).toBeTruthy();
+    expect(lede.nextElementSibling).toBe(peopleActions);
+    expect(aiModels).toBeTruthy();
+    expect(aiModels.textContent?.trim()).toBe('Meet the NeverBeen AI Models');
+    expect(aiModels.getAttribute('href')).toBe('/ai-models');
+    expect(aiModels.getAttribute('target')).toBeNull();
+    expect(getComputedStyle(aiModels).backgroundColor).toBe('rgb(150, 120, 182)');
+    expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
+  });
+
+  it('shows the NeverBeen AI Models, imagined eyebrow in the Meet the People section matching Travel photography, imagined', () => {
+    const element: HTMLElement = create().nativeElement;
+    const travelEyebrow = element.querySelector<HTMLElement>('.panel-travel .eyebrow')!;
+    const people = element.querySelector<HTMLElement>('.panel-people')!;
+    const peopleEyebrow = people.querySelector<HTMLElement>('.eyebrow')!;
+    const peopleHeading = people.querySelector<HTMLElement>('h2#hero-people-title')!;
+
+    expect(travelEyebrow.textContent?.trim()).toBe('Travel photography, imagined');
+    expect(peopleEyebrow).toBeTruthy();
+    expect(peopleEyebrow.textContent?.trim()).toBe('NeverBeen AI Models, imagined');
+    expect(peopleEyebrow.nextElementSibling).toBe(peopleHeading);
+    expect(getComputedStyle(peopleEyebrow).fontSize).toBe(getComputedStyle(travelEyebrow).fontSize);
+    expect(getComputedStyle(peopleEyebrow).fontWeight).toBe(
+      getComputedStyle(travelEyebrow).fontWeight,
+    );
+    expect(getComputedStyle(peopleEyebrow).color).toBe(getComputedStyle(travelEyebrow).color);
+    expect(getComputedStyle(peopleEyebrow).borderRadius).toBe(
+      getComputedStyle(travelEyebrow).borderRadius,
+    );
   });
 
   it('places Know the Founder in the Founder section just below the founder description', () => {

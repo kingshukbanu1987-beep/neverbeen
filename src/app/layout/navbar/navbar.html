@@ -132,8 +132,35 @@
             {{ link.label }}
           </a>
         }
+        <a
+          href="#community-auth"
+          class="community-auth-link"
+          [attr.aria-busy]="isSigningIn() ? 'true' : null"
+          (click)="onCommunityAuth($event)"
+        >
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use
+              [attr.href]="isCommunitySignedIn() ? '#nb-icon-log-out' : '#nb-icon-sign-in'"
+            ></use>
+          </svg>
+          {{ isCommunitySignedIn() ? 'Log out' : 'Sign In' }}
+        </a>
       </nav>
     </div>
+
+    @if (googleManualStep()) {
+      <div class="nav-google-manual container" role="region" aria-label="Continue with Google">
+        <p class="nav-google-copy">Choose the Google account you use for NeverBeen.</p>
+        <div #googleOfficialHost class="nav-google-host"></div>
+        <button type="button" class="nav-google-cancel" (click)="cancelGoogleSignIn()">
+          Cancel
+        </button>
+      </div>
+    }
+
+    @if (authErrorMessage()) {
+      <p class="nav-auth-error container" role="alert">{{ authErrorMessage() }}</p>
+    }
   }
 
   <!-- Line-icon sprite for the menu options (stroke only, so the icons are transparent). -->
@@ -350,6 +377,32 @@
       stroke-linejoin="round"
     >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </symbol>
+    <symbol
+      id="nb-icon-log-out"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline>
+      <line x1="21" y1="12" x2="9" y2="12"></line>
+    </symbol>
+    <symbol
+      id="nb-icon-sign-in"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="8.5" cy="7" r="4"></circle>
+      <polyline points="17 11 19 13 23 9"></polyline>
     </symbol>
   </svg>
 </header>

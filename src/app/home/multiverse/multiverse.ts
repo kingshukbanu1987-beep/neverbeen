@@ -30,7 +30,7 @@ export const MEMO_INTERVAL_SECONDS = 5;
 @Component({
   selector: 'app-multiverse',
   templateUrl: './multiverse.html',
-  styleUrl: './multiverse.css',
+  styleUrls: ['../collection-button.css', './multiverse.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Multiverse implements OnDestroy {

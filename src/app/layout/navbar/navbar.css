@@ -169,6 +169,43 @@ a:has(use[href='#nb-icon-live']) .icon {
   color: var(--ink) !important;
 }
 
+.community-auth-link {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-google-manual {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding-block: 0.65rem 0.85rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.nav-google-copy {
+  margin: 0;
+}
+
+.nav-google-cancel {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.nav-auth-error {
+  margin: 0;
+  padding-block: 0.45rem 0.65rem;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
 /* Small black line icon to the left of each menu option (shown in the collapsed menu). */
 .icon {
   display: none;

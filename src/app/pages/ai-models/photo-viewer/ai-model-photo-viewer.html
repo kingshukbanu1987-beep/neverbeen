@@ -12,7 +12,7 @@
         <b>{{ frameNumber() }}</b> / {{ totalNumber() }}
       </span>
       <span class="lightbox-title">
-        {{ modelName() }}<i aria-hidden="true">·</i>{{ modelHandle() }}
+        {{ modelName() }}@if (modelHandle()) {<i aria-hidden="true">·</i>{{ modelHandle() }}}
       </span>
       <span class="lightbox-actions">
         @if (allowAlbumNavigation()) {
