@@ -87,6 +87,84 @@ describe('AccountSettingsPage', () => {
     navigateSpy.mockRestore();
   });
 
+  // Regression: "changing profile picture not getting saved" from this page.
+  it('saves a changed profile picture when Update is chosen', async () => {
+    const service = TestBed.inject(CommunityService);
+    openDemoAccount(service, 'active_member');
+    const fixture = create();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+    const before = service.profile()?.profilePhotoUrl;
+
+    const file = new File([new Uint8Array([1, 2, 3, 4, 5])], 'new-picture.jpg', {
+      type: 'image/jpeg',
+    });
+    await component['onPhotoSelected']({
+      target: { files: [file], value: '' },
+    } as unknown as Event);
+    expect(component['photoError']()).toBeNull();
+    expect(component['selectedFile']()).toBeTruthy();
+
+    await component['update']();
+
+    // The new picture is stored on the member's profile + session user, the preview
+    // shows the saved picture and the page confirms the save.
+    expect(service.profile()?.profilePhotoUrl).toBeTruthy();
+    expect(service.profile()?.profilePhotoUrl).not.toBe(before);
+    expect(service.currentUser()?.profilePhotoUrl).toBe(service.profile()?.profilePhotoUrl);
+    expect(component['photoPreview']()).toBe(service.profile()?.profilePhotoUrl);
+    expect(component['selectedFile']()).toBeNull();
+    expect(component['saveError']()).toBeNull();
+    expect(component['savedNotice']()).toContain('updated');
+  });
+
+  it('reports a failed picture upload instead of claiming the account was updated', async () => {
+    const service = TestBed.inject(CommunityService);
+    openDemoAccount(service, 'active_member');
+    const uploadSpy = vi
+      .spyOn(service, 'uploadProfilePhoto')
+      .mockRejectedValue(new Error('Your new profile picture could not be saved: offline'));
+    const fixture = create();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+
+    const file = new File([new Uint8Array([7, 7, 7])], 'new-picture.jpg', { type: 'image/jpeg' });
+    await component['onPhotoSelected']({
+      target: { files: [file], value: '' },
+    } as unknown as Event);
+    await component['update']();
+
+    expect(uploadSpy).toHaveBeenCalled();
+    expect(component['savedNotice']()).toBeNull();
+    expect(component['saveError']()).toContain('could not be saved');
+    // The chosen file is kept, so choosing Update again retries the same picture.
+    expect(component['selectedFile']()).toBeTruthy();
+    uploadSpy.mockRestore();
+  });
+
+  it('says why nothing was saved when Update is blocked by the missing country', async () => {
+    const service = TestBed.inject(CommunityService);
+    openDemoAccount(service, 'active_member');
+    const uploadSpy = vi.spyOn(service, 'uploadProfilePhoto');
+    const fixture = create();
+    await fixture.whenStable();
+    const component = fixture.componentInstance;
+
+    const file = new File([new Uint8Array([3, 3, 3])], 'new-picture.jpg', { type: 'image/jpeg' });
+    await component['onPhotoSelected']({
+      target: { files: [file], value: '' },
+    } as unknown as Event);
+    component['form'].get('country')?.setValue('');
+
+    await component['update']();
+
+    // No silent no-op: the member is told the picture has not been saved yet.
+    expect(uploadSpy).not.toHaveBeenCalled();
+    expect(component['saveError']()).toContain('have not been saved yet');
+    expect(component['selectedFile']()).toBeTruthy();
+    uploadSpy.mockRestore();
+  });
+
   it('sends a visitor without a session back to the home page', async () => {
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);

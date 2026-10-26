@@ -1237,6 +1237,49 @@ export class CommunityService {
     return url.startsWith('/') ? `${this.apiUrl}${url}` : url;
   }
 
+  /**
+   * Adds a fresh `v` version query to a member's API-served profile / cover photo URL.
+   *
+   * The Web API always serves those photographs from the same stable address
+   * (`/api/profile/{id}/photo`), so after a successful upload the "new" URL is
+   * byte-identical to the old one: the browser keeps showing the photograph it already
+   * loaded for that address (same-document image cache) and the member sees their old
+   * picture come back — the change looks unsaved. A version that changes on every upload
+   * makes the address change too, so every `<img>` (account preview, navbar chip,
+   * community profile) really fetches the new photograph. Data URLs and external
+   * (e.g. Google) pictures need no version and are left untouched.
+   */
+  private versionedApiPhotoUrl(
+    url?: string | null,
+    version: string | number = Date.now(),
+  ): string | undefined {
+    if (!url) return undefined;
+    if (!/\/api\/profile\/\d+\/(photo|cover)(\?|$)/.test(url)) return url;
+    const queryStart = url.indexOf('?');
+    const path = queryStart === -1 ? url : url.slice(0, queryStart);
+    const kept = (queryStart === -1 ? [] : url.slice(queryStart + 1).split('&')).filter(
+      (pair) => pair && !pair.startsWith('v='),
+    );
+    return `${path}?${[...kept, `v=${version}`].join('&')}`;
+  }
+
+  /**
+   * Keeps the `v` version of `previous` on `url` while both point at the same API photo,
+   * so a later profile answer from the API (which always sends the unversioned address)
+   * cannot resurrect the browser's cached copy of the previous photograph mid-session.
+   */
+  private carryApiPhotoVersion(
+    url?: string | null,
+    previous?: string | null,
+  ): string | undefined {
+    if (!url) return undefined;
+    if (!previous) return url;
+    const strip = (value: string): string => value.split('?', 1)[0];
+    if (strip(url) !== strip(previous)) return url;
+    const version = /[?&]v=([^&]+)/.exec(previous)?.[1];
+    return version ? this.versionedApiPhotoUrl(url, version) : url;
+  }
+
   /** Case- and diacritic-insensitive key used to match city/country names between datasets. */
   private static nameKey(name: string): string {
     return name
@@ -2021,8 +2064,17 @@ export class CommunityService {
       aboutMe: dto.aboutMe ?? fallback?.aboutMe,
       profession: dto.profession ?? fallback?.profession ?? 'Traveler',
       status: dto.status || 'Active',
-      profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? fallback?.profilePhotoUrl,
-      coverPhotoUrl: this.absoluteApiUrl(dto.coverPhotoUrl) ?? fallback?.coverPhotoUrl,
+      // Keep the upload version (`?v=…`) of the current photo address: the API always
+      // answers with the bare stable URL, and dropping back to it mid-session would let
+      // the browser show the cached previous photograph again (see versionedApiPhotoUrl).
+      profilePhotoUrl: this.carryApiPhotoVersion(
+        this.absoluteApiUrl(dto.profilePhotoUrl) ?? fallback?.profilePhotoUrl,
+        fallback?.profilePhotoUrl,
+      ),
+      coverPhotoUrl: this.carryApiPhotoVersion(
+        this.absoluteApiUrl(dto.coverPhotoUrl) ?? fallback?.coverPhotoUrl,
+        fallback?.coverPhotoUrl,
+      ),
       externalProfilePictureUrl:
         dto.externalProfilePictureUrl ?? fallback?.externalProfilePictureUrl,
       createdAtUtc: dto.createdAtUtc || fallback?.createdAtUtc || new Date().toISOString(),
@@ -3359,15 +3411,46 @@ export class CommunityService {
     // Signed-in members upload to the Web API (PUT /api/profile/photo, multipart):
     // the photograph is stored on the member row and served from /api/profile/{id}/photo.
     if (this.apiLive) {
-      const dto = await this.uploadProfilePhotoToApi('PUT', '/api/profile/photo', file);
+      const { dto, error } = await this.uploadProfilePhotoToApi('PUT', '/api/profile/photo', file);
       if (dto) {
         const saved = this.profileFromApi(dto, this.profile() ?? undefined);
+        // The API serves the new photograph from the *same* stable address as the old
+        // one, so version the URL the app keeps: every avatar on screen must fetch (and
+        // therefore show) the photograph that was just saved, not the cached previous one.
+        saved.profilePhotoUrl = this.versionedApiPhotoUrl(
+          saved.profilePhotoUrl ?? this.profile()?.profilePhotoUrl,
+        );
         this.profile.set(saved);
         this.currentUser.update((u) => (u ? { ...u, profilePhotoUrl: saved.profilePhotoUrl } : null));
         this.saveJson(PROFILE_KEY, saved);
         this.saveJson(USER_KEY, this.currentUser());
         return saved.profilePhotoUrl ?? '';
       }
+      if (!error) {
+        // The API accepted the upload but answered without a profile (e.g. 204): reload
+        // the stored profile so the app keeps the address the API now serves, versioned
+        // like any other fresh upload.
+        const reloaded = await this.refreshProfileFromApi();
+        const current = reloaded ?? this.profile();
+        if (current?.profilePhotoUrl) {
+          const versioned = this.versionedApiPhotoUrl(current.profilePhotoUrl);
+          this.profile.set({ ...current, profilePhotoUrl: versioned });
+          this.currentUser.update((u) => (u ? { ...u, profilePhotoUrl: versioned } : null));
+          this.saveJson(PROFILE_KEY, this.profile());
+          this.saveJson(USER_KEY, this.currentUser());
+          return versioned ?? '';
+        }
+      }
+      // A real member's photograph only counts as saved once the Web API has stored it.
+      // Never degrade to a browser-only copy here: the UI would show the new picture and
+      // report success while the database still held the old one (it "reverts" on the
+      // next sign-in / device). Throwing lets the caller show the failure and keep the
+      // selected file ready to retry.
+      throw new Error(
+        error
+          ? `Your new profile picture could not be saved: ${error}`
+          : 'Your new profile picture could not be saved. Please try again.',
+      );
     }
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -3383,14 +3466,19 @@ export class CommunityService {
     });
   }
 
-  /** Multipart photograph upload against the API; returns the fresh profile. */
+  /**
+   * Multipart photograph upload against the API. Answers with the fresh profile, or
+   * says why the upload failed (the API's own message when it gave one) so a failed
+   * save is never mistaken for a successful one. `dto` and `error` are both null only
+   * when the API accepted the upload but returned no body.
+   */
   private async uploadProfilePhotoToApi(
     method: 'PUT' | 'POST',
     path: string,
     file: File,
     caption?: string,
-  ): Promise<ApiProfileDto | null> {
-    if (!this.http || !this.apiLive) return null;
+  ): Promise<{ dto: ApiProfileDto | null; error: string | null }> {
+    if (!this.http || !this.apiLive) return { dto: null, error: 'Sign in to save this.' };
     const url = this.apiEndpoint(path);
     const form = new FormData();
     form.append('photo', file);
@@ -3404,11 +3492,11 @@ export class CommunityService {
         ),
       );
       this.apiOnline.set(true);
-      return data;
+      return { dto: data ?? null, error: null };
     } catch (error) {
       if (this.isNetworkError(error)) this.apiOnline.set(false);
       this.logApiFailure(`${method} ${path}`, url, error);
-      return null;
+      return { dto: null, error: this.apiErrorMessage(error, 'The photograph could not be uploaded') };
     }
   }
 
@@ -3421,6 +3509,11 @@ export class CommunityService {
       const dto = await this.uploadCoverPhotoToApi(file);
       if (dto) {
         const saved = this.profileFromApi(dto, this.profile() ?? undefined);
+        // Same stable-address versioning as the profile photograph, so the new cover
+        // replaces the browser's cached previous one on screen.
+        saved.coverPhotoUrl = this.versionedApiPhotoUrl(
+          saved.coverPhotoUrl ?? this.profile()?.coverPhotoUrl,
+        );
         this.profile.set(saved);
         this.currentUser.update((u) => (u ? { ...u, coverPhotoUrl: saved.coverPhotoUrl } : null));
         this.saveJson(PROFILE_KEY, saved);

@@ -110,6 +110,20 @@ export class AccountSettingsPage implements OnInit {
     if (!this.hasSession()) void this.router.navigate(['/']);
   });
 
+  /** True once the member's stored details have been put into the form. */
+  private profilePopulated = false;
+
+  /**
+   * The member's profile can still be on its way from the Web API when this page opens
+   * (a fresh browser with only the auth cookie starts that reload in the service). The
+   * form is populated as soon as the profile arrives — otherwise the page would stay
+   * empty, the required Country would block every Update, and a newly chosen profile
+   * picture could never be saved from here.
+   */
+  private readonly lateProfile = effect(() => {
+    if (this.service.profile() && !this.profilePopulated) this.populateFromProfile();
+  });
+
   /** A usable session: the signed-in member, or a real (non-preview) auth cookie. */
   private hasSession(): boolean {
     if (this.service.isAuthenticated()) return true;
@@ -123,19 +137,35 @@ export class AccountSettingsPage implements OnInit {
       return;
     }
 
-    this.populateIdentity();
-
-    const p = this.service.profile();
-    const country = p?.countryName || p?.country || '';
-    const state = p?.state || '';
-    const city = p?.cityName || p?.city || '';
-    this.form.patchValue({ country, state, city, profession: p?.profession || '' });
-    this.initCascade(country, state, city);
-    this.photoPreview.set(p?.profilePhotoUrl || this.service.currentUser()?.profilePhotoUrl || '');
+    this.populateFromProfile();
 
     // The Web API owns the option lists a member may pick from (it validates the
     // submitted values), so refresh countries and professions from it.
     await Promise.all([this.service.loadCountries(), this.service.loadProfessions()]);
+  }
+
+  /**
+   * Puts the member's stored identity + editable details into the form (and their current
+   * photograph into the header preview). Fields the member has already filled in are never
+   * overwritten, and a freshly chosen photograph preview is never replaced.
+   */
+  private populateFromProfile(): void {
+    this.populateIdentity();
+
+    const p = this.service.profile();
+    if (!p) return;
+    this.profilePopulated = true;
+
+    const current = this.form.getRawValue();
+    const country = current.country || p.countryName || p.country || '';
+    const state = current.state || p.state || '';
+    const city = current.city || p.cityName || p.city || '';
+    const profession = current.profession || p.profession || '';
+    this.form.patchValue({ country, state, city, profession });
+    this.initCascade(country, state, city);
+    if (!this.selectedFile()) {
+      this.photoPreview.set(p.profilePhotoUrl || this.service.currentUser()?.profilePhotoUrl || '');
+    }
     void this.loadApiCities(country);
   }
 
@@ -292,12 +322,25 @@ export class AccountSettingsPage implements OnInit {
     this.saveError.set(null);
     this.savedNotice.set(null);
 
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
+    if (!this.service.profile()) {
+      // The profile may simply not have arrived from the Web API yet: ask for it once
+      // more (and fill the form from it) instead of refusing to save.
+      await this.service.refreshProfileFromApi();
+      if (this.service.profile() && !this.profilePopulated) this.populateFromProfile();
     }
     if (!this.service.profile()) {
-      this.saveError.set('Your profile is still loading. Please try again in a moment.');
+      this.saveError.set(
+        'Your profile could not be loaded, so nothing — including a new profile picture — has been saved yet. Please try again in a moment.',
+      );
+      return;
+    }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      // Say so out loud: returning silently here left a member who had only changed
+      // their profile picture believing it had been saved when it never left the page.
+      this.saveError.set(
+        'Please select your country first — your changes, including a new profile picture, have not been saved yet.',
+      );
       return;
     }
     if (this.photoProcessing()) return;
