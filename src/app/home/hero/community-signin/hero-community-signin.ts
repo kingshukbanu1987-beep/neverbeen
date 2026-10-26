@@ -5,8 +5,8 @@ import { CommunitySignInCard } from '../../../shared/community-sign-in-card/comm
 
 /**
  * The Community sign-in inside the home hero's first panel —
- * “Go Anywhere. Even Where You've Never Been” — placed directly underneath the
- * full-width picture stage.
+ * “Imagine Yourself Anywhere, Even Where You’ve Never Been” — placed directly
+ * underneath the full-width picture stage.
  *
  * It is deliberately minimal: the trusted Community Google button, and nothing
  * else — no header line, no copy, no surface (the same flow the `/ai-models`

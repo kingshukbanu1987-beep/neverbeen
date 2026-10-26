@@ -8,6 +8,15 @@ import { Owner } from '../owner/owner';
 import { StorylineSection } from '../storyline/storyline-section';
 import { HERO_BROCHURE_PREVIEW_SLIDES, HERO_TRAVEL_SLIDES } from './hero-slides';
 
+const TRAVEL_EYEBROW = 'YOUR IMAGINATION. YOUR MULTIVERSE';
+const TRAVEL_TITLE = 'Imagine Yourself Anywhere, Even Where You’ve Never Been';
+const TRAVEL_LEDE =
+  'No flights. No passports. No Immigration. No VISA. No Bank Statement. Just you, your imagination, and the world’s most incredible Destinations inside NeverBeen Multiverse. Yes, there is a Parallel Universe within you — a world of endless possibilities, boundless imagination, and dreams beyond reality. Explore it now';
+const SOULS_EYEBROW = 'THE UNWRITTEN SOULS, WHO NEVER WERE';
+const SOULS_TITLE = 'Meet the Souls Hidden between the Dimensions of Multiverse';
+const SOULS_COPY =
+  'Not every world needs to exist biologically to be real. Not every character needs to be real to matter. What truly matters is the connection between souls, because a character doesn’t need to exist in our reality to leave a lasting impression on us';
+
 describe('Hero', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -29,6 +38,17 @@ describe('Hero', () => {
   function labelsOf(element: HTMLElement): string[] {
     return buttonsOf(element).map((link) => link.textContent?.trim() ?? '');
   }
+
+  it('ships the requested home hero copy as the published CMS defaults', () => {
+    const cms = TestBed.inject(SiteConfigService);
+
+    expect(cms.text('home.hero', 'eyebrow')).toBe(TRAVEL_EYEBROW);
+    expect(cms.text('home.hero', 'title')).toBe(TRAVEL_TITLE);
+    expect(cms.text('home.hero', 'lede')).toBe(TRAVEL_LEDE);
+    expect(cms.text('home.hero', 'peopleEyebrow')).toBe(SOULS_EYEBROW);
+    expect(cms.text('home.hero', 'peopleTitle')).toBe(SOULS_TITLE);
+    expect(cms.text('home.hero', 'peopleCopy')).toBe(SOULS_COPY);
+  });
 
   it('places Connect to NeverBeen Community first as an independent white pill button', () => {
     const element: HTMLElement = create().nativeElement;
@@ -102,7 +122,7 @@ describe('Hero', () => {
     expect(element.querySelector('a[href="/storyline-of-parallel-universe"]')).toBeNull();
   });
 
-  it('places Meet the NeverBeen AI Models in the Meet the People section right after the description text', () => {
+  it('places Meet the NeverBeen AI Models in the hidden-souls section right after the description text', () => {
     const element: HTMLElement = create().nativeElement;
     const people = element.querySelector<HTMLElement>('.panel-people')!;
     const lede = people.querySelector<HTMLElement>('.lede')!;
@@ -119,16 +139,16 @@ describe('Hero', () => {
     expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('shows the NeverBeen AI Models, imagined eyebrow in the Meet the People section matching Travel photography, imagined', () => {
+  it('shows the requested uppercase eyebrows in both home hero sections', () => {
     const element: HTMLElement = create().nativeElement;
     const travelEyebrow = element.querySelector<HTMLElement>('.panel-travel .eyebrow')!;
     const people = element.querySelector<HTMLElement>('.panel-people')!;
     const peopleEyebrow = people.querySelector<HTMLElement>('.eyebrow')!;
     const peopleHeading = people.querySelector<HTMLElement>('h2#hero-people-title')!;
 
-    expect(travelEyebrow.textContent?.trim()).toBe('Travel photography, imagined');
+    expect(travelEyebrow.textContent?.trim()).toBe(TRAVEL_EYEBROW);
     expect(peopleEyebrow).toBeTruthy();
-    expect(peopleEyebrow.textContent?.trim()).toBe('NeverBeen AI Models, imagined');
+    expect(peopleEyebrow.textContent?.trim()).toBe(SOULS_EYEBROW);
     expect(peopleEyebrow.nextElementSibling).toBe(peopleHeading);
     expect(getComputedStyle(peopleEyebrow).fontSize).toBe(getComputedStyle(travelEyebrow).fontSize);
     expect(getComputedStyle(peopleEyebrow).fontWeight).toBe(
@@ -334,8 +354,8 @@ describe('Hero', () => {
     expect(travel.querySelector('.veil')).toBeNull();
     expect(travel.querySelector('.wash')).toBeNull();
 
-    expect(heading.textContent?.trim()).toBe("Go Anywhere. Even Where You've Never Been");
-    expect(lede.textContent).toContain('Create stunning AI vacation photos of yourself');
+    expect(heading.textContent?.trim()).toBe(TRAVEL_TITLE);
+    expect(lede.textContent?.trim()).toBe(TRAVEL_LEDE);
 
     const photos = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo'));
     const sources = photos.map((img) => img.getAttribute('src'));
@@ -380,11 +400,9 @@ describe('Hero', () => {
     expect(people.querySelector('.wash')).toBeNull();
 
     expect(people.querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      "Meet the People. Even When They Don't Exists outside NeverBeen Multiverse",
+      SOULS_TITLE,
     );
-    expect(people.querySelector('.lede')?.textContent).toContain(
-      'What if their stories matter, even if their worlds are imaginary?',
-    );
+    expect(people.querySelector('.lede')?.textContent?.trim()).toBe(SOULS_COPY);
 
     const photos = Array.from(people.querySelectorAll<HTMLImageElement>('img.photo'));
     const sources = photos.map((img) => img.getAttribute('src'));

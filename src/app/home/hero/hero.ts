@@ -30,7 +30,7 @@ export const HERO_SLIDE_INTERVAL_SECONDS = 5;
 /**
  * The top of the Home page — two full-width gallery panels under one roof.
  *
- * Inside the first unified white panel ("Go Anywhere. Even Where You've Never
+ * Inside the first unified white panel ("Imagine Yourself Anywhere, Even Where You’ve Never
  * Been"), the eyebrow badge, editorial headline and small intro text sit above
  * the full-width photograph stage, with Community sign-in / member greeting
  * and slide progress underneath the picture panel on every screen size. The

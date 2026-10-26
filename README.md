@@ -551,9 +551,9 @@ Admin Console → Website Management.
 
 ## The hero travel preview (home page slideshow)
 
-The first panel of the home hero — *Go Anywhere. Even Where You've Never Been* — is a five-second
-cross-fade slideshow of every photograph in `public/travel`, mirroring the portrait preview in the
-second panel (which reads `public/banner`). Drop images in and run:
+The first panel of the home hero — *Imagine Yourself Anywhere, Even Where You’ve Never Been* —
+is a five-second cross-fade slideshow of every photograph in `public/travel`, mirroring the
+portrait preview in the second panel (which reads `public/banner`). Drop images in and run:
 
 ```bash
 npm run generate:travel
@@ -566,8 +566,9 @@ are centred and cropped as needed instead of leaving blank bands around the slid
 
 ## The Community sign-in at the top of the home page
 
-Inside the first hero panel — *Go Anywhere. Even Where You've Never Been* — the eyebrow badge,
-headline and intro paragraph sit above the full-width travel picture panel, and directly underneath
+Inside the first hero panel — *Imagine Yourself Anywhere, Even Where You’ve Never Been* — the
+eyebrow badge, headline and intro paragraph sit above the full-width travel picture panel, and
+directly underneath
 the picture panel sits the Community sign-in (`src/app/home/hero/community-signin`). It is nothing
 but the Google button: no header line, no copy, no card and no background — just the button on the
 panel's surface.

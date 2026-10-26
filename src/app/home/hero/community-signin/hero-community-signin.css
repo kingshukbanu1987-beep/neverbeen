@@ -1,7 +1,7 @@
 /* ============================================================================
    Hero Community sign-in — the Google button that sits underneath the first
    hero panel's picture stage (a signed-in member sees “Welcome” in the exact
-   display style of “Go Anywhere. Even Where You've Never Been”, then two
+   display style of “Imagine Yourself Anywhere, Even Where You’ve Never Been”, then two
    spaces, then their name in big Calibri brand purple, with the Explore line
    under it).
 
@@ -47,7 +47,8 @@
   white-space: pre-wrap;
 }
 
-/* “Welcome” matches the exact display style of “Go Anywhere. Even Where You've Never Been”. */
+/* “Welcome” matches the exact display style of
+   “Imagine Yourself Anywhere, Even Where You’ve Never Been”. */
 .hero-signin-greeting {
   font-family: var(--serif);
   font-size: 3.3rem;
