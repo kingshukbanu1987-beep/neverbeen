@@ -178,6 +178,34 @@ describe('Navbar', () => {
     }
   });
 
+  it('shows a newly uploaded profile photo in the menu immediately, without navigation', async () => {
+    const community = TestBed.inject(CommunityService);
+    openDemoAccount(community, 'active_member');
+    const fixture = create();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    const chipImg = () =>
+      fixture.nativeElement.querySelector('.account-chip-avatar img') as HTMLImageElement | null;
+
+    const before = chipImg()?.getAttribute('src') ?? '';
+    expect(before).toBeTruthy();
+
+    // "Manage your NeverBeen Account" → Update: the service stores the new photograph…
+    const photo = new File([new Uint8Array([1, 2, 3, 4])], 'avatar.jpg', { type: 'image/jpeg' });
+    const uploaded = await community.uploadProfilePhoto(photo);
+
+    // …and the very same page's menu avatar shows it at once — no navigation to refresh
+    // the snapshot, no account drop-down open. (Regression: the chip kept the old photo.)
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    const after = chipImg()?.getAttribute('src') ?? '';
+    expect(uploaded).toBeTruthy();
+    expect(after).toBe(uploaded);
+    expect(after).not.toBe(before);
+  });
+
   it('triggers the Google sign-in flow when clicking Sign In in the menu while signed out', async () => {
     const community = TestBed.inject(CommunityService);
     community.logout();

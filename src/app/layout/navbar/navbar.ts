@@ -180,11 +180,17 @@ export class Navbar {
    */
   private readonly accountRevision = signal(0);
 
-  /** The signed-in member as shown in the account chip and drop-down (null while signed out). */
+  /**
+   * The signed-in member as shown in the account chip and drop-down (null while signed out).
+   * Re-read on navigation and on `profileRevision` — bumped by CommunityService the moment
+   * a profile photo / detail is saved — so a new picture shows in the menu immediately,
+   * without waiting for the account drop-down to be opened.
+   */
   protected readonly account = computed<AccountSnapshot | null>(() => {
     if (!this.isCommunitySignedIn()) return null;
     this.accountRevision();
     this.currentUrl();
+    this.badges.profileRevision();
     return readAccountSnapshot();
   });
 

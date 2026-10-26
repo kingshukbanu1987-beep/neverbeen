@@ -81,6 +81,15 @@ import {
 export const TOKEN_KEY = 'neverbeen_auth_token';
 export const USER_KEY = 'neverbeen_current_user';
 export const PROFILE_KEY = 'neverbeen_user_profile';
+/**
+ * Persisted cache-buster stamped on the member's profile photograph URL (`?v=…`).
+ * The Web API always serves the photograph from the same address
+ * (`/api/profile/{id}/photo`), so without a version every `<img>` — the website
+ * menu's avatar included — kept showing the previous picture after a re-upload.
+ * Each upload stores a fresh version here; it survives reloads so the cache-busted
+ * URL is rebuilt consistently from the API as well.
+ */
+export const PHOTO_VERSION_KEY = 'neverbeen_photo_version';
 /** localStorage flag: a visitor is exploring the Community without an account. */
 export const GUEST_KEY = 'neverbeen_guest_browsing';
 export const COMMENTS_KEY = 'neverbeen_comments';
@@ -316,6 +325,27 @@ export function splitFullName(fullName?: string | null): { firstName: string; la
   const words = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
   return { firstName: words[0] ?? '', lastName: words.slice(1).join(' ') };
 }
+
+/**
+ * Appends (or refreshes) a `?v=` cache-buster on a photograph URL, so a re-uploaded
+ * photograph gets a new address and every `<img>` (the website menu's avatar included)
+ * drops its cached copy and shows the new picture immediately. `data:` / `blob:`
+ * previews are returned unchanged — they are already unique per upload.
+ */
+export function withPhotoVersion(url: string, version: string): string {
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  const hashIndex = url.indexOf('#');
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : '';
+  const withoutHash = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const queryIndex = withoutHash.indexOf('?');
+  const base = queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
+  const params = new URLSearchParams(queryIndex >= 0 ? withoutHash.slice(queryIndex + 1) : '');
+  params.set('v', version);
+  return `${base}?${params.toString()}${hash}`;
+}
+
+/** Keeps photo cache-busters unique even for uploads inside the same millisecond. */
+let photoVersionCounter = 0;
 
 /**
  * Token of the make-believe “active member” account of the seeded demo community (the one
@@ -2021,7 +2051,11 @@ export class CommunityService {
       aboutMe: dto.aboutMe ?? fallback?.aboutMe,
       profession: dto.profession ?? fallback?.profession ?? 'Traveler',
       status: dto.status || 'Active',
-      profilePhotoUrl: this.absoluteApiUrl(dto.profilePhotoUrl) ?? fallback?.profilePhotoUrl,
+      // Stamped with the persisted photo cache-buster, so a later API reload keeps the
+      // cache-busted address instead of falling back to the browser's stale cached copy.
+      profilePhotoUrl: this.versionedPhotoUrl(
+        this.absoluteApiUrl(dto.profilePhotoUrl) ?? fallback?.profilePhotoUrl,
+      ),
       coverPhotoUrl: this.absoluteApiUrl(dto.coverPhotoUrl) ?? fallback?.coverPhotoUrl,
       externalProfilePictureUrl:
         dto.externalProfilePictureUrl ?? fallback?.externalProfilePictureUrl,
@@ -3257,6 +3291,8 @@ export class CommunityService {
         : null,
     );
     this.saveJson(USER_KEY, this.currentUser());
+    // The navbar's account menu shows the member's name — refresh it right away.
+    this.badgeBridge.bumpProfileRevision();
 
     // Signed-in members persist every detail on the Web API (PUT /api/profile); the
     // API's answer is the truth and replaces the optimistic profile when it arrives.
@@ -3280,6 +3316,7 @@ export class CommunityService {
             : null,
         );
         this.saveJson(USER_KEY, this.currentUser());
+        this.badgeBridge.bumpProfileRevision();
         return saved;
       }
     }
@@ -3353,6 +3390,36 @@ export class CommunityService {
     return compressCommunityImage(file, this.MAX_IMAGE_SIZE_BYTES);
   }
 
+  /** The photo cache-buster this browser last wrote (null before the first upload). */
+  private photoVersion(): string | null {
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      return localStorage.getItem(PHOTO_VERSION_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Stores a fresh photo cache-buster and returns it — called once per profile photo upload. */
+  private bumpPhotoVersion(): string {
+    const version = `${Date.now().toString(36)}-${(++photoVersionCounter).toString(36)}`;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(PHOTO_VERSION_KEY, version);
+      } catch {
+        /* ignore storage quota errors — the in-memory URL stays usable */
+      }
+    }
+    return version;
+  }
+
+  /** Applies the current cache-buster to a photograph URL (unchanged before the first upload). */
+  private versionedPhotoUrl(url?: string | null): string | undefined {
+    if (!url) return undefined;
+    const version = this.photoVersion();
+    return version ? withPhotoVersion(url, version) : url;
+  }
+
   async uploadProfilePhoto(file: File): Promise<string> {
     file = await this.prepareCommunityPhoto(file);
     if (!this.storageAllows(file.size)) throw new Error(this.storageBlockMessage() || 'Storage limit reached.');
@@ -3361,11 +3428,17 @@ export class CommunityService {
     if (this.apiLive) {
       const dto = await this.uploadProfilePhotoToApi('PUT', '/api/profile/photo', file);
       if (dto) {
+        // A fresh cache-buster changes the photo URL itself with every upload, so the
+        // website menu's avatar (and every other <img>) shows the new picture at once.
+        this.bumpPhotoVersion();
         const saved = this.profileFromApi(dto, this.profile() ?? undefined);
         this.profile.set(saved);
         this.currentUser.update((u) => (u ? { ...u, profilePhotoUrl: saved.profilePhotoUrl } : null));
         this.saveJson(PROFILE_KEY, saved);
         this.saveJson(USER_KEY, this.currentUser());
+        // The always-mounted navbar re-reads the menu identity immediately — no
+        // navigation or account-menu open needed to see the new photograph.
+        this.badgeBridge.bumpProfileRevision();
         return saved.profilePhotoUrl ?? '';
       }
     }
@@ -3377,6 +3450,9 @@ export class CommunityService {
         this.currentUser.update((u) => (u ? { ...u, profilePhotoUrl: photoUrl } : null));
         this.saveJson(PROFILE_KEY, this.profile());
         this.saveJson(USER_KEY, this.currentUser());
+        // Data-URL photographs are unique per upload; still nudge the navbar so the
+        // menu avatar switches without waiting for a navigation.
+        this.badgeBridge.bumpProfileRevision();
         resolve(photoUrl);
       };
       reader.readAsDataURL(file);
