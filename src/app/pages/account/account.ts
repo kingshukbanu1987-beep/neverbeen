@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -39,7 +39,7 @@ function nameKey(name: string): string {
   templateUrl: './account.html',
   styleUrl: './account.css',
 })
-export class AccountSettingsPage implements OnInit {
+export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
   protected readonly service = inject(CommunityService);
   private readonly fb = inject(FormBuilder);
   protected readonly router = inject(Router);
@@ -51,6 +51,30 @@ export class AccountSettingsPage implements OnInit {
   protected readonly photoProcessing = signal(false);
   protected readonly photoPreview = signal('');
   private readonly selectedFile = signal<File | null>(null);
+  
+  // Image cropping state
+  protected readonly showCropper = signal(false);
+  protected readonly cropping = signal(false);
+  protected readonly cropX = signal(0);
+  protected readonly cropY = signal(0);
+  protected readonly cropWidth = signal(200);
+  protected readonly cropHeight = signal(200);
+  private cropAspectRatio = 1; // Profile pictures are square
+  private isDragging = false;
+  private isResizing = false;
+  private resizeDirection: 'nw' | 'ne' | 'sw' | 'se' | null = null;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private cropStartX = 0;
+  private cropStartY = 0;
+  private cropStartWidth = 0;
+  private cropStartHeight = 0;
+  private imageWidth = 0;
+  private imageHeight = 0;
+  
+  @ViewChild('cropperCanvas') cropperCanvas!: ElementRef<HTMLCanvasElement>;
+  private canvasCtx: CanvasRenderingContext2D | null = null;
+  private imageElement: HTMLImageElement | null = null;
 
   /** Cascading dropdown options — children are rebuilt and cleared when a parent changes. */
   protected readonly statesList = signal<string[]>([]);
@@ -115,6 +139,29 @@ export class AccountSettingsPage implements OnInit {
     if (this.service.isAuthenticated()) return true;
     const token = getCookie(TOKEN_KEY);
     return !!token && !isDemoSessionToken(token);
+  }
+
+  ngAfterViewInit(): void {
+    // Cleanup mouse event listeners when component is destroyed
+    // Handled in ngOnDestroy
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup any pending event listeners
+    document.removeEventListener('mousemove', this.handleDrag);
+    document.removeEventListener('mouseup', this.stopDrag);
+    document.removeEventListener('mousemove', this.handleResize);
+    document.removeEventListener('mouseup', this.stopResize);
+    
+    // Cleanup image object URL if any
+    if (this.imageElement) {
+      this.imageElement.src = '';
+      this.imageElement.onload = null;
+      this.imageElement.onerror = null;
+      this.imageElement = null;
+    }
+    
+    this.canvasCtx = null;
   }
 
   async ngOnInit(): Promise<void> {
@@ -269,10 +316,14 @@ export class AccountSettingsPage implements OnInit {
 
     this.photoError.set(null);
     this.photoProcessing.set(true);
+    
     try {
+      // First, prepare the image for preview
       const file = await this.service.prepareCommunityPhoto(source);
       this.selectedFile.set(file);
-      this.photoPreview.set(await readImageAsDataUrl(file));
+      
+      // Show the cropper with the selected image
+      await this.openCropper(file);
     } catch (error) {
       this.selectedFile.set(null);
       this.photoError.set(
@@ -280,6 +331,281 @@ export class AccountSettingsPage implements OnInit {
       );
     } finally {
       this.photoProcessing.set(false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Image Cropping
+  // ---------------------------------------------------------------------------------------------
+
+  private async openCropper(file: File): Promise<void> {
+    this.showCropper.set(true);
+    
+    // Load the image
+    const img = new Image();
+    this.imageElement = img;
+    
+    const imageUrl = URL.createObjectURL(file);
+    img.src = imageUrl;
+    
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Failed to load image'));
+    });
+    
+    this.imageWidth = img.width;
+    this.imageHeight = img.height;
+    
+    // Initialize canvas and draw image
+    const canvas = this.cropperCanvas.nativeElement;
+    this.canvasCtx = canvas.getContext('2d')!;
+    
+    // Set canvas size to match image (or scaled down if too large)
+    const maxCanvasSize = 800;
+    const scale = Math.min(1, maxCanvasSize / Math.max(img.width, img.height));
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    
+    this.canvasCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    // Initialize crop selection (centered square, 80% of smaller dimension)
+    const minDim = Math.min(canvas.width, canvas.height);
+    const cropSize = Math.min(minDim * 0.8, 300);
+    
+    this.cropWidth.set(cropSize);
+    this.cropHeight.set(cropSize);
+    this.cropX.set((canvas.width - cropSize) / 2);
+    this.cropY.set((canvas.height - cropSize) / 2);
+    
+    // Clean up object URL
+    URL.revokeObjectURL(imageUrl);
+  }
+
+  protected closeCropper(): void {
+    this.showCropper.set(false);
+    
+    // Cleanup event listeners
+    if (this.isDragging) {
+      document.removeEventListener('mousemove', this.handleDrag);
+      document.removeEventListener('mouseup', this.stopDrag);
+      this.isDragging = false;
+    }
+    if (this.isResizing) {
+      document.removeEventListener('mousemove', this.handleResize);
+      document.removeEventListener('mouseup', this.stopResize);
+      this.isResizing = false;
+      this.resizeDirection = null;
+    }
+    
+    // Cleanup image
+    if (this.imageElement) {
+      this.imageElement.src = '';
+      this.imageElement.onload = null;
+      this.imageElement.onerror = null;
+      this.imageElement = null;
+    }
+    
+    this.canvasCtx = null;
+    this.selectedFile.set(null);
+    this.cropping.set(false);
+  }
+
+  protected startDrag(event: MouseEvent): void {
+    event.preventDefault();
+    this.isDragging = true;
+    this.dragStartX = event.clientX;
+    this.dragStartY = event.clientY;
+    this.cropStartX = this.cropX();
+    this.cropStartY = this.cropY();
+    
+    // Add event listeners for dragging
+    document.addEventListener('mousemove', this.handleDrag);
+    document.addEventListener('mouseup', this.stopDrag);
+  }
+
+  private handleDrag = (event: MouseEvent): void => {
+    if (!this.isDragging) return;
+    
+    const dx = event.clientX - this.dragStartX;
+    const dy = event.clientY - this.dragStartY;
+    
+    let newX = this.cropStartX + dx;
+    let newY = this.cropStartY + dy;
+    
+    // Constrain to canvas bounds
+    newX = Math.max(0, Math.min(newX, this.cropperCanvas.nativeElement.width - this.cropWidth()));
+    newY = Math.max(0, Math.min(newY, this.cropperCanvas.nativeElement.height - this.cropHeight()));
+    
+    this.cropX.set(newX);
+    this.cropY.set(newY);
+  };
+
+  private stopDrag = (event: MouseEvent): void => {
+    this.isDragging = false;
+    document.removeEventListener('mousemove', this.handleDrag);
+    document.removeEventListener('mouseup', this.stopDrag);
+  };
+
+  protected startResize(event: MouseEvent, direction: 'nw' | 'ne' | 'sw' | 'se'): void {
+    event.preventDefault();
+    this.isResizing = true;
+    this.resizeDirection = direction;
+    this.dragStartX = event.clientX;
+    this.dragStartY = event.clientY;
+    this.cropStartX = this.cropX();
+    this.cropStartY = this.cropY();
+    this.cropStartWidth = this.cropWidth();
+    this.cropStartHeight = this.cropHeight();
+    
+    document.addEventListener('mousemove', this.handleResize);
+    document.addEventListener('mouseup', this.stopResize);
+  }
+
+  private handleResize = (event: MouseEvent): void => {
+    if (!this.isResizing || !this.resizeDirection) return;
+    
+    const dx = event.clientX - this.dragStartX;
+    const dy = event.clientY - this.dragStartY;
+    
+    let newX = this.cropStartX;
+    let newY = this.cropStartY;
+    let newWidth = this.cropStartWidth;
+    let newHeight = this.cropStartHeight;
+    
+    // Maintain aspect ratio
+    const aspectRatio = this.cropAspectRatio;
+    
+    switch (this.resizeDirection) {
+      case 'nw':
+        newX = this.cropStartX + dx;
+        newY = this.cropStartY + dy;
+        newWidth = this.cropStartWidth - dx;
+        newHeight = this.cropStartHeight - dy;
+        // Maintain aspect ratio from opposite corner
+        if (newWidth / newHeight > aspectRatio) {
+          newHeight = newWidth / aspectRatio;
+        } else {
+          newWidth = newHeight * aspectRatio;
+        }
+        break;
+      case 'ne':
+        newY = this.cropStartY + dy;
+        newWidth = this.cropStartWidth + dx;
+        newHeight = this.cropStartHeight - dy;
+        if (newWidth / newHeight > aspectRatio) {
+          newHeight = newWidth / aspectRatio;
+        } else {
+          newWidth = newHeight * aspectRatio;
+        }
+        break;
+      case 'sw':
+        newX = this.cropStartX + dx;
+        newWidth = this.cropStartWidth - dx;
+        newHeight = this.cropStartHeight + dy;
+        if (newWidth / newHeight > aspectRatio) {
+          newHeight = newWidth / aspectRatio;
+        } else {
+          newWidth = newHeight * aspectRatio;
+        }
+        break;
+      case 'se':
+        newWidth = this.cropStartWidth + dx;
+        newHeight = this.cropStartHeight + dy;
+        if (newWidth / newHeight > aspectRatio) {
+          newHeight = newWidth / aspectRatio;
+        } else {
+          newWidth = newHeight * aspectRatio;
+        }
+        break;
+    }
+    
+    // Constrain to minimum size and canvas bounds
+    const minSize = 50;
+    newWidth = Math.max(minSize, Math.min(newWidth, this.cropperCanvas.nativeElement.width));
+    newHeight = Math.max(minSize, Math.min(newHeight, this.cropperCanvas.nativeElement.height));
+    
+    // Adjust position to keep within bounds
+    newX = Math.max(0, Math.min(newX, this.cropperCanvas.nativeElement.width - newWidth));
+    newY = Math.max(0, Math.min(newY, this.cropperCanvas.nativeElement.height - newHeight));
+    
+    this.cropX.set(newX);
+    this.cropY.set(newY);
+    this.cropWidth.set(newWidth);
+    this.cropHeight.set(newHeight);
+  };
+
+  private stopResize = (event: MouseEvent): void => {
+    this.isResizing = false;
+    this.resizeDirection = null;
+    document.removeEventListener('mousemove', this.handleResize);
+    document.removeEventListener('mouseup', this.stopResize);
+  };
+
+  protected async applyCrop(): Promise<void> {
+    if (!this.canvasCtx || !this.imageElement) return;
+    
+    this.cropping.set(true);
+    
+    try {
+      const canvas = this.cropperCanvas.nativeElement;
+      const ctx = this.canvasCtx;
+      
+      // Create a new canvas for the cropped image
+      const croppedCanvas = document.createElement('canvas');
+      const croppedCtx = croppedCanvas.getContext('2d')!;
+      
+      // Calculate the scale factor (canvas may be scaled from original image)
+      const scaleX = canvas.width / this.imageWidth;
+      const scaleY = canvas.height / this.imageHeight;
+      
+      // Draw the cropped portion from the original image
+      const sourceX = (this.cropX() / scaleX);
+      const sourceY = (this.cropY() / scaleY);
+      const sourceWidth = (this.cropWidth() / scaleX);
+      const sourceHeight = (this.cropHeight() / scaleY);
+      
+      // Set the cropped canvas to the selection size
+      croppedCanvas.width = this.cropWidth();
+      croppedCanvas.height = this.cropHeight();
+      
+      // Draw the scaled and cropped image
+      croppedCtx.drawImage(
+        this.imageElement,
+        sourceX, sourceY, sourceWidth, sourceHeight,
+        0, 0, this.cropWidth(), this.cropHeight()
+      );
+      
+      // Convert to blob
+      const blob = await new Promise<Blob | null>((resolve) => {
+        croppedCanvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92);
+      });
+      
+      if (!blob) {
+        throw new Error('Failed to create cropped image');
+      }
+      
+      // Create a file from the blob
+      const croppedFile = new File(
+        [blob],
+        this.selectedFile()?.name || 'profile-photo.jpg',
+        { type: 'image/jpeg', lastModified: Date.now() }
+      );
+      
+      // Now process the cropped file through the existing pipeline
+      const file = await this.service.prepareCommunityPhoto(croppedFile);
+      this.selectedFile.set(file);
+      this.photoPreview.set(await readImageAsDataUrl(file));
+      
+      // Close the cropper
+      this.closeCropper();
+      
+    } catch (error) {
+      this.photoError.set(
+        error instanceof Error ? error.message : 'Failed to crop the image. Please try again.'
+      );
+      this.closeCropper();
+    } finally {
+      this.cropping.set(false);
     }
   }
 
