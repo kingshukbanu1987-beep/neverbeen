@@ -1,4 +1,16 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, computed, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  ChangeDetectorRef,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -43,6 +55,7 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
   protected readonly service = inject(CommunityService);
   private readonly fb = inject(FormBuilder);
   protected readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   protected readonly saving = signal(false);
   protected readonly savedNotice = signal<string | null>(null);
@@ -51,17 +64,25 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
   protected readonly photoProcessing = signal(false);
   protected readonly photoPreview = signal('');
   private readonly selectedFile = signal<File | null>(null);
-  
-  // Image cropping state
+
+  // Image cropping & zoom state
   protected readonly showCropper = signal(false);
   protected readonly cropping = signal(false);
   protected readonly cropX = signal(0);
   protected readonly cropY = signal(0);
   protected readonly cropWidth = signal(200);
   protected readonly cropHeight = signal(200);
-  private cropAspectRatio = 1; // Profile pictures are square
+  protected readonly cropZoom = signal(1);
+  protected readonly zoomPercent = computed(() => Math.round(this.cropZoom() * 100));
+  protected readonly minZoom = 1;
+  protected readonly maxZoom = 3;
+  protected readonly zoomStep = 0.1;
+
+  private imageOffsetX = 0;
+  private imageOffsetY = 0;
   private isDragging = false;
   private isResizing = false;
+  private isPanningImage = false;
   private resizeDirection: 'nw' | 'ne' | 'sw' | 'se' | null = null;
   private dragStartX = 0;
   private dragStartY = 0;
@@ -69,9 +90,13 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
   private cropStartY = 0;
   private cropStartWidth = 0;
   private cropStartHeight = 0;
+  private panStartOffsetX = 0;
+  private panStartOffsetY = 0;
+  private pinchStartDistance = 0;
+  private pinchStartZoom = 1;
   private imageWidth = 0;
   private imageHeight = 0;
-  
+
   @ViewChild('cropperCanvas') cropperCanvas!: ElementRef<HTMLCanvasElement>;
   private canvasCtx: CanvasRenderingContext2D | null = null;
   private imageElement: HTMLImageElement | null = null;
@@ -147,12 +172,8 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Cleanup any pending event listeners
-    document.removeEventListener('mousemove', this.handleDrag);
-    document.removeEventListener('mouseup', this.stopDrag);
-    document.removeEventListener('mousemove', this.handleResize);
-    document.removeEventListener('mouseup', this.stopResize);
-    
+    this.removeInteractionListeners();
+
     // Cleanup image object URL if any
     if (this.imageElement) {
       this.imageElement.src = '';
@@ -160,7 +181,7 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
       this.imageElement.onerror = null;
       this.imageElement = null;
     }
-    
+
     this.canvasCtx = null;
   }
 
@@ -335,68 +356,220 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ---------------------------------------------------------------------------------------------
-  // Image Cropping
+  // Image Cropping & Zoom
   // ---------------------------------------------------------------------------------------------
 
   private async openCropper(file: File): Promise<void> {
     this.showCropper.set(true);
-    
+    this.cropZoom.set(1);
+    this.imageOffsetX = 0;
+    this.imageOffsetY = 0;
+    this.cdr.detectChanges();
+
     // Load the image
     const img = new Image();
     this.imageElement = img;
-    
+
     const imageUrl = URL.createObjectURL(file);
-    img.src = imageUrl;
-    
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error('Failed to load image'));
-    });
-    
-    this.imageWidth = img.width;
-    this.imageHeight = img.height;
-    
-    // Initialize canvas and draw image
-    const canvas = this.cropperCanvas.nativeElement;
-    this.canvasCtx = canvas.getContext('2d')!;
-    
-    // Set canvas size to match image (or scaled down if too large)
-    const maxCanvasSize = 800;
-    const scale = Math.min(1, maxCanvasSize / Math.max(img.width, img.height));
-    canvas.width = img.width * scale;
-    canvas.height = img.height * scale;
-    
-    this.canvasCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-    // Initialize crop selection (centered square, 80% of smaller dimension)
-    const minDim = Math.min(canvas.width, canvas.height);
-    const cropSize = Math.min(minDim * 0.8, 300);
-    
-    this.cropWidth.set(cropSize);
-    this.cropHeight.set(cropSize);
-    this.cropX.set((canvas.width - cropSize) / 2);
-    this.cropY.set((canvas.height - cropSize) / 2);
-    
-    // Clean up object URL
-    URL.revokeObjectURL(imageUrl);
+    try {
+      img.src = imageUrl;
+
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('Failed to load image'));
+      });
+
+      this.imageWidth = img.naturalWidth || img.width || 400;
+      this.imageHeight = img.naturalHeight || img.height || 400;
+
+      // Ensure the modal canvas element is rendered
+      this.cdr.detectChanges();
+      const canvas = this.cropperCanvas?.nativeElement;
+      if (!canvas) {
+        throw new Error('Cropper canvas could not be initialized.');
+      }
+      this.canvasCtx = canvas.getContext('2d');
+
+      // Fit canvas inside modal bounds while preserving aspect ratio (1:1 CSS-to-canvas pixels)
+      const viewportW = typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1024;
+      const viewportH = typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 768;
+      const maxCanvasWidth = Math.max(240, Math.min(560, viewportW - 96));
+      const maxCanvasHeight = Math.max(240, Math.min(440, Math.floor(viewportH * 0.52)));
+      const scale = Math.min(
+        1,
+        maxCanvasWidth / this.imageWidth,
+        maxCanvasHeight / this.imageHeight,
+      );
+
+      canvas.width = Math.max(100, Math.round(this.imageWidth * scale));
+      canvas.height = Math.max(100, Math.round(this.imageHeight * scale));
+      canvas.style.width = `${canvas.width}px`;
+      canvas.style.height = `${canvas.height}px`;
+
+      this.resetCropAndZoom();
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
   }
 
-  protected closeCropper(): void {
+  /** Renders the source image onto the cropper canvas at the current zoom and pan offset. */
+  private renderCanvas(): void {
+    const canvas = this.cropperCanvas?.nativeElement;
+    const ctx = this.canvasCtx ?? canvas?.getContext('2d') ?? null;
+    const img = this.imageElement;
+    if (!canvas || !ctx || !img) return;
+    this.canvasCtx = ctx;
+
+    const zoom = this.cropZoom();
+    const drawW = canvas.width * zoom;
+    const drawH = canvas.height * zoom;
+
+    this.clampImageOffset(zoom);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      this.imageWidth,
+      this.imageHeight,
+      this.imageOffsetX,
+      this.imageOffsetY,
+      drawW,
+      drawH,
+    );
+  }
+
+  /** Keeps the zoomed image covering the entire cropper canvas with no empty gaps. */
+  private clampImageOffset(zoom = this.cropZoom()): void {
+    const canvas = this.cropperCanvas?.nativeElement;
+    if (!canvas) return;
+    const minOffsetX = canvas.width * (1 - zoom);
+    const minOffsetY = canvas.height * (1 - zoom);
+    this.imageOffsetX = Math.max(minOffsetX, Math.min(0, this.imageOffsetX));
+    this.imageOffsetY = Math.max(minOffsetY, Math.min(0, this.imageOffsetY));
+  }
+
+  /** Resets zoom to 100%, image offset to origin, and centers the square crop selection. */
+  protected resetCropAndZoom(): void {
+    const canvas = this.cropperCanvas?.nativeElement;
+    if (!canvas) return;
+
+    this.cropZoom.set(1);
+    this.imageOffsetX = 0;
+    this.imageOffsetY = 0;
+
+    const minDim = Math.min(canvas.width, canvas.height);
+    const minCrop = Math.min(50, minDim);
+    const cropSize = Math.max(minCrop, Math.round(Math.min(minDim * 0.8, 300)));
+
+    this.cropWidth.set(cropSize);
+    this.cropHeight.set(cropSize);
+    this.cropX.set(Math.round((canvas.width - cropSize) / 2));
+    this.cropY.set(Math.round((canvas.height - cropSize) / 2));
+
+    this.renderCanvas();
+  }
+
+  /**
+   * Sets the zoom level (clamped between minZoom and maxZoom) around a focus point on the canvas
+   * (defaults to the center of the current crop selection so the framed subject stays centered).
+   */
+  protected setZoom(nextZoom: number, focusX?: number, focusY?: number): void {
+    const canvas = this.cropperCanvas?.nativeElement;
+    const clampedZoom = Math.max(
+      this.minZoom,
+      Math.min(this.maxZoom, Number.isFinite(nextZoom) ? Math.round(nextZoom * 100) / 100 : 1),
+    );
+    const prevZoom = this.cropZoom();
+
+    if (canvas && prevZoom > 0) {
+      const cx = focusX ?? this.cropX() + this.cropWidth() / 2;
+      const cy = focusY ?? this.cropY() + this.cropHeight() / 2;
+
+      const relX = (cx - this.imageOffsetX) / prevZoom;
+      const relY = (cy - this.imageOffsetY) / prevZoom;
+
+      this.imageOffsetX = cx - relX * clampedZoom;
+      this.imageOffsetY = cy - relY * clampedZoom;
+    }
+
+    this.cropZoom.set(clampedZoom);
+    this.clampImageOffset(clampedZoom);
+    this.renderCanvas();
+  }
+
+  protected zoomIn(): void {
+    this.setZoom(this.cropZoom() + this.zoomStep);
+  }
+
+  protected zoomOut(): void {
+    this.setZoom(this.cropZoom() - this.zoomStep);
+  }
+
+  protected onZoomSliderInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value);
+    if (!Number.isNaN(value)) {
+      this.setZoom(value);
+    }
+  }
+
+  protected onCropperWheel(event: WheelEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const canvas = this.cropperCanvas?.nativeElement;
+    let focusX: number | undefined;
+    let focusY: number | undefined;
+
+    if (canvas && event.clientX && event.clientY) {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        focusX = Math.max(0, Math.min(canvas.width, (event.clientX - rect.left) * scaleX));
+        focusY = Math.max(0, Math.min(canvas.height, (event.clientY - rect.top) * scaleY));
+      }
+    }
+
+    const direction = event.deltaY < 0 ? 1 : event.deltaY > 0 ? -1 : 0;
+    if (direction === 0) return;
+
+    const step = event.ctrlKey ? 0.08 : this.zoomStep;
+    this.setZoom(this.cropZoom() + direction * step, focusX, focusY);
+  }
+
+  private removeInteractionListeners(): void {
+    document.removeEventListener('mousemove', this.handleDrag);
+    document.removeEventListener('mouseup', this.stopDrag);
+    document.removeEventListener('touchmove', this.handleTouchDrag);
+    document.removeEventListener('touchend', this.stopDrag);
+    document.removeEventListener('touchcancel', this.stopDrag);
+
+    document.removeEventListener('mousemove', this.handleResize);
+    document.removeEventListener('mouseup', this.stopResize);
+    document.removeEventListener('touchmove', this.handleTouchResize);
+    document.removeEventListener('touchend', this.stopResize);
+    document.removeEventListener('touchcancel', this.stopResize);
+
+    document.removeEventListener('mousemove', this.handleImagePan);
+    document.removeEventListener('mouseup', this.stopImagePan);
+    document.removeEventListener('touchmove', this.handleTouchImagePan);
+    document.removeEventListener('touchend', this.stopImagePan);
+    document.removeEventListener('touchcancel', this.stopImagePan);
+
+    this.isDragging = false;
+    this.isResizing = false;
+    this.isPanningImage = false;
+    this.resizeDirection = null;
+    this.pinchStartDistance = 0;
+  }
+
+  protected closeCropper(keepSelectedFile = false): void {
     this.showCropper.set(false);
-    
-    // Cleanup event listeners
-    if (this.isDragging) {
-      document.removeEventListener('mousemove', this.handleDrag);
-      document.removeEventListener('mouseup', this.stopDrag);
-      this.isDragging = false;
-    }
-    if (this.isResizing) {
-      document.removeEventListener('mousemove', this.handleResize);
-      document.removeEventListener('mouseup', this.stopResize);
-      this.isResizing = false;
-      this.resizeDirection = null;
-    }
-    
+    this.removeInteractionListeners();
+
     // Cleanup image
     if (this.imageElement) {
       this.imageElement.src = '';
@@ -404,50 +577,202 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
       this.imageElement.onerror = null;
       this.imageElement = null;
     }
-    
+
     this.canvasCtx = null;
-    this.selectedFile.set(null);
+    if (!keepSelectedFile) {
+      this.selectedFile.set(null);
+    }
     this.cropping.set(false);
   }
 
+  /** Converts screen CSS pixel deltas into canvas pixel deltas if CSS scales the canvas. */
+  private getCanvasPointerScale(): { scaleX: number; scaleY: number } {
+    const canvas = this.cropperCanvas?.nativeElement;
+    if (!canvas) return { scaleX: 1, scaleY: 1 };
+    const rect = canvas.getBoundingClientRect();
+    return {
+      scaleX: rect.width > 0 ? canvas.width / rect.width : 1,
+      scaleY: rect.height > 0 ? canvas.height / rect.height : 1,
+    };
+  }
+
   protected startDrag(event: MouseEvent): void {
+    if (this.isResizing) return;
     event.preventDefault();
+    event.stopPropagation();
     this.isDragging = true;
     this.dragStartX = event.clientX;
     this.dragStartY = event.clientY;
     this.cropStartX = this.cropX();
     this.cropStartY = this.cropY();
-    
-    // Add event listeners for dragging
+
     document.addEventListener('mousemove', this.handleDrag);
     document.addEventListener('mouseup', this.stopDrag);
   }
 
-  private handleDrag = (event: MouseEvent): void => {
-    if (!this.isDragging) return;
-    
-    const dx = event.clientX - this.dragStartX;
-    const dy = event.clientY - this.dragStartY;
-    
-    let newX = this.cropStartX + dx;
-    let newY = this.cropStartY + dy;
-    
-    // Constrain to canvas bounds
-    newX = Math.max(0, Math.min(newX, this.cropperCanvas.nativeElement.width - this.cropWidth()));
-    newY = Math.max(0, Math.min(newY, this.cropperCanvas.nativeElement.height - this.cropHeight()));
-    
+  protected startTouchDrag(event: TouchEvent): void {
+    if (this.isResizing) return;
+    if (event.touches.length === 2) {
+      this.startPinch(event);
+      return;
+    }
+    if (event.touches.length !== 1) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const touch = event.touches[0];
+    this.isDragging = true;
+    this.dragStartX = touch.clientX;
+    this.dragStartY = touch.clientY;
+    this.cropStartX = this.cropX();
+    this.cropStartY = this.cropY();
+
+    document.addEventListener('touchmove', this.handleTouchDrag, { passive: false });
+    document.addEventListener('touchend', this.stopDrag);
+    document.addEventListener('touchcancel', this.stopDrag);
+  }
+
+  private updateDragPosition(clientX: number, clientY: number): void {
+    const canvas = this.cropperCanvas?.nativeElement;
+    if (!this.isDragging || !canvas) return;
+
+    const { scaleX, scaleY } = this.getCanvasPointerScale();
+    const dx = (clientX - this.dragStartX) * scaleX;
+    const dy = (clientY - this.dragStartY) * scaleY;
+
+    const maxX = Math.max(0, canvas.width - this.cropWidth());
+    const maxY = Math.max(0, canvas.height - this.cropHeight());
+
+    const newX = Math.max(0, Math.min(this.cropStartX + dx, maxX));
+    const newY = Math.max(0, Math.min(this.cropStartY + dy, maxY));
+
     this.cropX.set(newX);
     this.cropY.set(newY);
+  }
+
+  private handleDrag = (event: MouseEvent): void => {
+    this.updateDragPosition(event.clientX, event.clientY);
   };
 
-  private stopDrag = (event: MouseEvent): void => {
+  private handleTouchDrag = (event: TouchEvent): void => {
+    if (event.touches.length === 2) {
+      this.handlePinchMove(event);
+      return;
+    }
+    if (!this.isDragging || event.touches.length !== 1) return;
+    event.preventDefault();
+    const touch = event.touches[0];
+    this.updateDragPosition(touch.clientX, touch.clientY);
+  };
+
+  private stopDrag = (): void => {
     this.isDragging = false;
+    this.pinchStartDistance = 0;
     document.removeEventListener('mousemove', this.handleDrag);
     document.removeEventListener('mouseup', this.stopDrag);
+    document.removeEventListener('touchmove', this.handleTouchDrag);
+    document.removeEventListener('touchend', this.stopDrag);
+    document.removeEventListener('touchcancel', this.stopDrag);
   };
+
+  /** Dragging on the canvas outside the crop circle pans the zoomed image. */
+  protected startCanvasPan(event: MouseEvent): void {
+    if (this.isDragging || this.isResizing || this.cropZoom() <= 1) return;
+    event.preventDefault();
+    this.isPanningImage = true;
+    this.dragStartX = event.clientX;
+    this.dragStartY = event.clientY;
+    this.panStartOffsetX = this.imageOffsetX;
+    this.panStartOffsetY = this.imageOffsetY;
+
+    document.addEventListener('mousemove', this.handleImagePan);
+    document.addEventListener('mouseup', this.stopImagePan);
+  }
+
+  protected startCanvasTouch(event: TouchEvent): void {
+    if (event.touches.length === 2) {
+      this.startPinch(event);
+      document.addEventListener('touchmove', this.handleTouchImagePan, { passive: false });
+      document.addEventListener('touchend', this.stopImagePan);
+      document.addEventListener('touchcancel', this.stopImagePan);
+      return;
+    }
+    if (this.isDragging || this.isResizing || this.cropZoom() <= 1 || event.touches.length !== 1) {
+      return;
+    }
+    event.preventDefault();
+    const touch = event.touches[0];
+    this.isPanningImage = true;
+    this.dragStartX = touch.clientX;
+    this.dragStartY = touch.clientY;
+    this.panStartOffsetX = this.imageOffsetX;
+    this.panStartOffsetY = this.imageOffsetY;
+
+    document.addEventListener('touchmove', this.handleTouchImagePan, { passive: false });
+    document.addEventListener('touchend', this.stopImagePan);
+    document.addEventListener('touchcancel', this.stopImagePan);
+  }
+
+  private handleImagePan = (event: MouseEvent): void => {
+    if (!this.isPanningImage) return;
+    const { scaleX, scaleY } = this.getCanvasPointerScale();
+    this.imageOffsetX = this.panStartOffsetX + (event.clientX - this.dragStartX) * scaleX;
+    this.imageOffsetY = this.panStartOffsetY + (event.clientY - this.dragStartY) * scaleY;
+    this.clampImageOffset();
+    this.renderCanvas();
+  };
+
+  private handleTouchImagePan = (event: TouchEvent): void => {
+    if (event.touches.length === 2) {
+      this.handlePinchMove(event);
+      return;
+    }
+    if (!this.isPanningImage || event.touches.length !== 1) return;
+    event.preventDefault();
+    const touch = event.touches[0];
+    const { scaleX, scaleY } = this.getCanvasPointerScale();
+    this.imageOffsetX = this.panStartOffsetX + (touch.clientX - this.dragStartX) * scaleX;
+    this.imageOffsetY = this.panStartOffsetY + (touch.clientY - this.dragStartY) * scaleY;
+    this.clampImageOffset();
+    this.renderCanvas();
+  };
+
+  private stopImagePan = (): void => {
+    this.isPanningImage = false;
+    this.pinchStartDistance = 0;
+    document.removeEventListener('mousemove', this.handleImagePan);
+    document.removeEventListener('mouseup', this.stopImagePan);
+    document.removeEventListener('touchmove', this.handleTouchImagePan);
+    document.removeEventListener('touchend', this.stopImagePan);
+    document.removeEventListener('touchcancel', this.stopImagePan);
+  };
+
+  private startPinch(event: TouchEvent): void {
+    if (event.touches.length !== 2) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    this.isPanningImage = false;
+    const dx = event.touches[0].clientX - event.touches[1].clientX;
+    const dy = event.touches[0].clientY - event.touches[1].clientY;
+    this.pinchStartDistance = Math.hypot(dx, dy);
+    this.pinchStartZoom = this.cropZoom();
+  }
+
+  private handlePinchMove(event: TouchEvent): void {
+    if (event.touches.length !== 2 || this.pinchStartDistance <= 0) return;
+    event.preventDefault();
+    const dx = event.touches[0].clientX - event.touches[1].clientX;
+    const dy = event.touches[0].clientY - event.touches[1].clientY;
+    const distance = Math.hypot(dx, dy);
+    const ratio = distance / this.pinchStartDistance;
+    this.setZoom(this.pinchStartZoom * ratio);
+  }
 
   protected startResize(event: MouseEvent, direction: 'nw' | 'ne' | 'sw' | 'se'): void {
     event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
     this.isResizing = true;
     this.resizeDirection = direction;
     this.dragStartX = event.clientX;
@@ -456,154 +781,208 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
     this.cropStartY = this.cropY();
     this.cropStartWidth = this.cropWidth();
     this.cropStartHeight = this.cropHeight();
-    
+
     document.addEventListener('mousemove', this.handleResize);
     document.addEventListener('mouseup', this.stopResize);
   }
 
-  private handleResize = (event: MouseEvent): void => {
-    if (!this.isResizing || !this.resizeDirection) return;
-    
-    const dx = event.clientX - this.dragStartX;
-    const dy = event.clientY - this.dragStartY;
-    
+  protected startTouchResize(event: TouchEvent, direction: 'nw' | 'ne' | 'sw' | 'se'): void {
+    if (event.touches.length !== 1) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const touch = event.touches[0];
+    this.isDragging = false;
+    this.isResizing = true;
+    this.resizeDirection = direction;
+    this.dragStartX = touch.clientX;
+    this.dragStartY = touch.clientY;
+    this.cropStartX = this.cropX();
+    this.cropStartY = this.cropY();
+    this.cropStartWidth = this.cropWidth();
+    this.cropStartHeight = this.cropHeight();
+
+    document.addEventListener('touchmove', this.handleTouchResize, { passive: false });
+    document.addEventListener('touchend', this.stopResize);
+    document.addEventListener('touchcancel', this.stopResize);
+  }
+
+  private updateResizeSelection(clientX: number, clientY: number): void {
+    const canvas = this.cropperCanvas?.nativeElement;
+    if (!this.isResizing || !this.resizeDirection || !canvas) return;
+
+    const { scaleX, scaleY } = this.getCanvasPointerScale();
+    const dx = (clientX - this.dragStartX) * scaleX;
+    const dy = (clientY - this.dragStartY) * scaleY;
+
+    const canvasW = canvas.width;
+    const canvasH = canvas.height;
+    const minSize = Math.min(50, Math.min(canvasW, canvasH));
+
     let newX = this.cropStartX;
     let newY = this.cropStartY;
-    let newWidth = this.cropStartWidth;
-    let newHeight = this.cropStartHeight;
-    
-    // Maintain aspect ratio
-    const aspectRatio = this.cropAspectRatio;
-    
+    let size = this.cropStartWidth;
+
     switch (this.resizeDirection) {
-      case 'nw':
-        newX = this.cropStartX + dx;
-        newY = this.cropStartY + dy;
-        newWidth = this.cropStartWidth - dx;
-        newHeight = this.cropStartHeight - dy;
-        // Maintain aspect ratio from opposite corner
-        if (newWidth / newHeight > aspectRatio) {
-          newHeight = newWidth / aspectRatio;
-        } else {
-          newWidth = newHeight * aspectRatio;
-        }
+      case 'se': {
+        const anchorX = this.cropStartX;
+        const anchorY = this.cropStartY;
+        const delta = Math.abs(dx) >= Math.abs(dy) ? dx : dy;
+        const maxSize = Math.min(canvasW - anchorX, canvasH - anchorY);
+        size = Math.max(minSize, Math.min(this.cropStartWidth + delta, maxSize));
+        newX = anchorX;
+        newY = anchorY;
         break;
-      case 'ne':
-        newY = this.cropStartY + dy;
-        newWidth = this.cropStartWidth + dx;
-        newHeight = this.cropStartHeight - dy;
-        if (newWidth / newHeight > aspectRatio) {
-          newHeight = newWidth / aspectRatio;
-        } else {
-          newWidth = newHeight * aspectRatio;
-        }
+      }
+      case 'nw': {
+        const anchorX = this.cropStartX + this.cropStartWidth;
+        const anchorY = this.cropStartY + this.cropStartHeight;
+        const delta = Math.abs(dx) >= Math.abs(dy) ? -dx : -dy;
+        const maxSize = Math.min(anchorX, anchorY);
+        size = Math.max(minSize, Math.min(this.cropStartWidth + delta, maxSize));
+        newX = anchorX - size;
+        newY = anchorY - size;
         break;
-      case 'sw':
-        newX = this.cropStartX + dx;
-        newWidth = this.cropStartWidth - dx;
-        newHeight = this.cropStartHeight + dy;
-        if (newWidth / newHeight > aspectRatio) {
-          newHeight = newWidth / aspectRatio;
-        } else {
-          newWidth = newHeight * aspectRatio;
-        }
+      }
+      case 'ne': {
+        const anchorX = this.cropStartX;
+        const anchorY = this.cropStartY + this.cropStartHeight;
+        const delta = Math.abs(dx) >= Math.abs(dy) ? dx : -dy;
+        const maxSize = Math.min(canvasW - anchorX, anchorY);
+        size = Math.max(minSize, Math.min(this.cropStartWidth + delta, maxSize));
+        newX = anchorX;
+        newY = anchorY - size;
         break;
-      case 'se':
-        newWidth = this.cropStartWidth + dx;
-        newHeight = this.cropStartHeight + dy;
-        if (newWidth / newHeight > aspectRatio) {
-          newHeight = newWidth / aspectRatio;
-        } else {
-          newWidth = newHeight * aspectRatio;
-        }
+      }
+      case 'sw': {
+        const anchorX = this.cropStartX + this.cropStartWidth;
+        const anchorY = this.cropStartY;
+        const delta = Math.abs(dx) >= Math.abs(dy) ? -dx : dy;
+        const maxSize = Math.min(anchorX, canvasH - anchorY);
+        size = Math.max(minSize, Math.min(this.cropStartWidth + delta, maxSize));
+        newX = anchorX - size;
+        newY = anchorY;
         break;
+      }
     }
-    
-    // Constrain to minimum size and canvas bounds
-    const minSize = 50;
-    newWidth = Math.max(minSize, Math.min(newWidth, this.cropperCanvas.nativeElement.width));
-    newHeight = Math.max(minSize, Math.min(newHeight, this.cropperCanvas.nativeElement.height));
-    
-    // Adjust position to keep within bounds
-    newX = Math.max(0, Math.min(newX, this.cropperCanvas.nativeElement.width - newWidth));
-    newY = Math.max(0, Math.min(newY, this.cropperCanvas.nativeElement.height - newHeight));
-    
+
     this.cropX.set(newX);
     this.cropY.set(newY);
-    this.cropWidth.set(newWidth);
-    this.cropHeight.set(newHeight);
+    this.cropWidth.set(size);
+    this.cropHeight.set(size);
+  }
+
+  private handleResize = (event: MouseEvent): void => {
+    this.updateResizeSelection(event.clientX, event.clientY);
   };
 
-  private stopResize = (event: MouseEvent): void => {
+  private handleTouchResize = (event: TouchEvent): void => {
+    if (!this.isResizing || event.touches.length !== 1) return;
+    event.preventDefault();
+    const touch = event.touches[0];
+    this.updateResizeSelection(touch.clientX, touch.clientY);
+  };
+
+  private stopResize = (): void => {
     this.isResizing = false;
     this.resizeDirection = null;
     document.removeEventListener('mousemove', this.handleResize);
     document.removeEventListener('mouseup', this.stopResize);
+    document.removeEventListener('touchmove', this.handleTouchResize);
+    document.removeEventListener('touchend', this.stopResize);
+    document.removeEventListener('touchcancel', this.stopResize);
   };
 
   protected async applyCrop(): Promise<void> {
-    if (!this.canvasCtx || !this.imageElement) return;
-    
+    const canvas = this.cropperCanvas?.nativeElement;
+    if (!canvas || !this.imageElement) return;
+
     this.cropping.set(true);
-    
+
     try {
-      const canvas = this.cropperCanvas.nativeElement;
-      const ctx = this.canvasCtx;
-      
-      // Create a new canvas for the cropped image
       const croppedCanvas = document.createElement('canvas');
-      const croppedCtx = croppedCanvas.getContext('2d')!;
-      
-      // Calculate the scale factor (canvas may be scaled from original image)
-      const scaleX = canvas.width / this.imageWidth;
-      const scaleY = canvas.height / this.imageHeight;
-      
-      // Draw the cropped portion from the original image
-      const sourceX = (this.cropX() / scaleX);
-      const sourceY = (this.cropY() / scaleY);
-      const sourceWidth = (this.cropWidth() / scaleX);
-      const sourceHeight = (this.cropHeight() / scaleY);
-      
-      // Set the cropped canvas to the selection size
-      croppedCanvas.width = this.cropWidth();
-      croppedCanvas.height = this.cropHeight();
-      
-      // Draw the scaled and cropped image
+      const croppedCtx = croppedCanvas.getContext('2d');
+      if (!croppedCtx) {
+        throw new Error('Failed to create cropped image');
+      }
+
+      const zoom = this.cropZoom();
+      const scaledCanvasW = canvas.width * zoom;
+      const scaledCanvasH = canvas.height * zoom;
+
+      // Map the crop selection & zoom/pan state back to the full-resolution source image
+      const rawSourceX = ((this.cropX() - this.imageOffsetX) / scaledCanvasW) * this.imageWidth;
+      const rawSourceY = ((this.cropY() - this.imageOffsetY) / scaledCanvasH) * this.imageHeight;
+      const rawSourceW = (this.cropWidth() / scaledCanvasW) * this.imageWidth;
+      const rawSourceH = (this.cropHeight() / scaledCanvasH) * this.imageHeight;
+
+      const sourceX = Math.max(0, Math.min(this.imageWidth - 1, rawSourceX));
+      const sourceY = Math.max(0, Math.min(this.imageHeight - 1, rawSourceY));
+      const sourceWidth = Math.max(1, Math.min(this.imageWidth - sourceX, rawSourceW));
+      const sourceHeight = Math.max(1, Math.min(this.imageHeight - sourceY, rawSourceH));
+
+      const outputSize = Math.max(
+        Math.round(this.cropWidth()),
+        Math.min(800, Math.round(Math.max(sourceWidth, sourceHeight))),
+      );
+      croppedCanvas.width = outputSize;
+      croppedCanvas.height = outputSize;
+
       croppedCtx.drawImage(
         this.imageElement,
-        sourceX, sourceY, sourceWidth, sourceHeight,
-        0, 0, this.cropWidth(), this.cropHeight()
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        outputSize,
+        outputSize,
       );
-      
-      // Convert to blob
-      const blob = await new Promise<Blob | null>((resolve) => {
-        croppedCanvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92);
+
+      // Convert to blob (with dataURL fallback for headless test environments)
+      let blob = await new Promise<Blob | null>((resolve) => {
+        if (typeof croppedCanvas.toBlob === 'function') {
+          croppedCanvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92);
+        } else {
+          resolve(null);
+        }
       });
-      
+
+      if (!blob && typeof croppedCanvas.toDataURL === 'function') {
+        const dataUrl = croppedCanvas.toDataURL('image/jpeg', 0.92);
+        const commaIdx = dataUrl.indexOf(',');
+        if (commaIdx !== -1) {
+          const base64 = dataUrl.slice(commaIdx + 1);
+          const binary = atob(base64);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+          }
+          blob = new Blob([bytes], { type: 'image/jpeg' });
+        }
+      }
+
       if (!blob) {
         throw new Error('Failed to create cropped image');
       }
-      
-      // Create a file from the blob
-      const croppedFile = new File(
-        [blob],
-        this.selectedFile()?.name || 'profile-photo.jpg',
-        { type: 'image/jpeg', lastModified: Date.now() }
-      );
-      
-      // Now process the cropped file through the existing pipeline
+
+      const croppedFile = new File([blob], this.selectedFile()?.name || 'profile-photo.jpg', {
+        type: 'image/jpeg',
+        lastModified: Date.now(),
+      });
+
+      // Process the cropped file through the community photo optimization pipeline
       const file = await this.service.prepareCommunityPhoto(croppedFile);
       this.selectedFile.set(file);
       this.photoPreview.set(await readImageAsDataUrl(file));
-      
-      // Close the cropper
-      this.closeCropper();
-      
+
+      // Close the cropper while preserving the cropped selectedFile for Update
+      this.closeCropper(true);
     } catch (error) {
       this.photoError.set(
-        error instanceof Error ? error.message : 'Failed to crop the image. Please try again.'
+        error instanceof Error ? error.message : 'Failed to crop the image. Please try again.',
       );
-      this.closeCropper();
+      this.closeCropper(false);
     } finally {
       this.cropping.set(false);
     }

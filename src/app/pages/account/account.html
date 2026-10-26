@@ -55,35 +55,111 @@
           <!-- Image Cropping Modal -->
           @if (showCropper()) {
             <div class="cropper-modal-overlay" (click)="closeCropper()">
-              <div class="cropper-modal" (click)="$event.stopPropagation()">
+              <div class="cropper-modal" role="dialog" aria-modal="true" aria-labelledby="cropper-title" (click)="$event.stopPropagation()">
                 <header class="cropper-header">
-                  <h3>Crop your photo</h3>
-                  <p class="cropper-hint">Select the area you want to use as your profile picture</p>
+                  <h3 id="cropper-title">Crop your photo</h3>
+                  <p class="cropper-hint">Drag to reposition, use the corner handles or zoom controls to frame your profile picture</p>
                 </header>
-                
+
                 <div class="cropper-container">
-                  <div class="cropper-wrapper">
-                    <canvas #cropperCanvas class="cropper-canvas"></canvas>
-                    <div 
+                  <div
+                    class="cropper-wrapper"
+                    [class.is-zoomed]="cropZoom() > 1"
+                    (wheel)="onCropperWheel($event)"
+                  >
+                    <canvas
+                      #cropperCanvas
+                      class="cropper-canvas"
+                      (mousedown)="startCanvasPan($event)"
+                      (touchstart)="startCanvasTouch($event)"
+                    ></canvas>
+                    <div
                       class="cropper-selection"
                       [style.width.px]="cropWidth()"
                       [style.height.px]="cropHeight()"
                       [style.left.px]="cropX()"
                       [style.top.px]="cropY()"
                       (mousedown)="startDrag($event)"
+                      (touchstart)="startTouchDrag($event)"
                     >
                       <div class="cropper-selection-border"></div>
-                      <div class="cropper-selection-handle nw" (mousedown)="startResize($event, 'nw')"></div>
-                      <div class="cropper-selection-handle ne" (mousedown)="startResize($event, 'ne')"></div>
-                      <div class="cropper-selection-handle sw" (mousedown)="startResize($event, 'sw')"></div>
-                      <div class="cropper-selection-handle se" (mousedown)="startResize($event, 'se')"></div>
+                      <div
+                        class="cropper-selection-handle nw"
+                        role="slider"
+                        aria-label="Resize top-left corner"
+                        (mousedown)="startResize($event, 'nw')"
+                        (touchstart)="startTouchResize($event, 'nw')"
+                      ></div>
+                      <div
+                        class="cropper-selection-handle ne"
+                        role="slider"
+                        aria-label="Resize top-right corner"
+                        (mousedown)="startResize($event, 'ne')"
+                        (touchstart)="startTouchResize($event, 'ne')"
+                      ></div>
+                      <div
+                        class="cropper-selection-handle sw"
+                        role="slider"
+                        aria-label="Resize bottom-left corner"
+                        (mousedown)="startResize($event, 'sw')"
+                        (touchstart)="startTouchResize($event, 'sw')"
+                      ></div>
+                      <div
+                        class="cropper-selection-handle se"
+                        role="slider"
+                        aria-label="Resize bottom-right corner"
+                        (mousedown)="startResize($event, 'se')"
+                        (touchstart)="startTouchResize($event, 'se')"
+                      ></div>
                     </div>
                   </div>
                 </div>
-                
+
+                <div class="cropper-zoom-bar" aria-label="Crop zoom controls">
+                  <button
+                    type="button"
+                    class="btn-zoom-step btn-zoom-out"
+                    aria-label="Zoom out"
+                    title="Zoom out"
+                    [disabled]="cropZoom() <= minZoom"
+                    (click)="zoomOut()"
+                  >
+                    <span aria-hidden="true">−</span>
+                  </button>
+                  <input
+                    type="range"
+                    class="cropper-zoom-slider"
+                    aria-label="Zoom level"
+                    [min]="minZoom"
+                    [max]="maxZoom"
+                    step="0.01"
+                    [value]="cropZoom()"
+                    (input)="onZoomSliderInput($event)"
+                  />
+                  <button
+                    type="button"
+                    class="btn-zoom-step btn-zoom-in"
+                    aria-label="Zoom in"
+                    title="Zoom in"
+                    [disabled]="cropZoom() >= maxZoom"
+                    (click)="zoomIn()"
+                  >
+                    <span aria-hidden="true">+</span>
+                  </button>
+                  <span class="cropper-zoom-value" aria-live="polite">{{ zoomPercent() }}%</span>
+                  <button
+                    type="button"
+                    class="btn-zoom-reset"
+                    aria-label="Reset crop and zoom"
+                    (click)="resetCropAndZoom()"
+                  >
+                    Reset
+                  </button>
+                </div>
+
                 <div class="cropper-actions">
                   <button type="button" class="btn-crop-cancel" (click)="closeCropper()">Cancel</button>
-                  <button type="button" class="btn-crop-apply" (click)="applyCrop()">
+                  <button type="button" class="btn-crop-apply" [disabled]="cropping()" (click)="applyCrop()">
                     @if (cropping()) {
                       Processing…
                     } @else {
