@@ -2,17 +2,24 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  EnvironmentInjector,
+  Injector,
   afterNextRender,
   computed,
   inject,
+  runInInjectionContext,
   signal,
+  viewChild,
 } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgOptimizedImage } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { SiteConfigService } from '../../services/site-config.service';
 import { CommunityBadgeService } from '../../services/community-badge.service';
+import { SiteTabService } from '../../services/site-tab.service';
+import { rememberCommunityReturnPath, takeCommunityReturnPath } from '../../shared/community-return-path';
 import { CommunitySearchBox } from '../community-search/community-search-box';
+import type { CommunityService } from '../../services/community.service';
 
 interface NavLink {
   id: string;
@@ -20,6 +27,39 @@ interface NavLink {
   path: string;
   fragment: string | undefined;
   icon: string;
+}
+
+interface GoogleButtonStep {
+  step: 'show_google_button';
+  render: (host: HTMLElement) => void;
+}
+
+const TOKEN_COOKIE = 'neverbeen_auth_token';
+const DEMO_TOKEN = 'jwt_default_active_token';
+const USER_STORAGE_KEY = 'neverbeen_current_user';
+const PROFILE_STORAGE_KEY = 'neverbeen_user_profile';
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function hasCommunityAuthCookie(): boolean {
+  const token = readCookie(TOKEN_COOKIE);
+  return !!token && token !== DEMO_TOKEN;
+}
+
+function hasSavedCommunitySession(): boolean {
+  if (!hasCommunityAuthCookie()) return false;
+  try {
+    return (
+      typeof localStorage !== 'undefined' &&
+      !!(localStorage.getItem(USER_STORAGE_KEY) || localStorage.getItem(PROFILE_STORAGE_KEY))
+    );
+  } catch {
+    return false;
+  }
 }
 
 function initialNavbarUrl(routerUrl: string): string {
@@ -40,8 +80,16 @@ export class Navbar {
   private readonly router = inject(Router);
   private readonly cms = inject(SiteConfigService);
   private readonly badges = inject(CommunityBadgeService);
+  private readonly siteTab = inject(SiteTabService);
+  private readonly envInjector = inject(EnvironmentInjector);
+  private readonly injector = inject(Injector);
+  private readonly googleHost = viewChild<ElementRef<HTMLElement>>('googleOfficialHost');
+
   protected readonly open = signal(false);
   protected readonly currentUrl = signal(initialNavbarUrl(this.router.url));
+  protected readonly isSigningIn = signal(false);
+  protected readonly googleManualStep = signal<GoogleButtonStep | null>(null);
+  protected readonly authErrorMessage = signal<string | null>(null);
 
   /**
    * Community header badges: unread notifications / unread chats. Read from the
@@ -50,6 +98,16 @@ export class Navbar {
    */
   protected readonly unreadNotifications = this.badges.unreadNotifications;
   protected readonly unreadChats = this.badges.unreadChats;
+
+  /**
+   * Whether the visitor is currently signed in to the NeverBeen Community.
+   * Uses the live signal synced by CommunityService when loaded, falling back to
+   * the persisted auth cookie + stored member record before the lazy chunk loads.
+   */
+  protected readonly isCommunitySignedIn = computed(() => {
+    const synced = this.badges.signedIn();
+    return synced !== null ? synced : hasSavedCommunitySession();
+  });
 
   protected badgeText(count: number): string {
     return count > 99 ? '99+' : String(count);
@@ -62,6 +120,9 @@ export class Navbar {
     const host = inject(ElementRef<HTMLElement>);
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
+      if (this.badges.signedIn() === null && hasCommunityAuthCookie()) {
+        void this.getCommunityService();
+      }
       const header = (host.nativeElement as HTMLElement).querySelector<HTMLElement>('.nav');
       if (!header || typeof ResizeObserver === 'undefined') return;
       const root = document.documentElement;
@@ -103,13 +164,21 @@ export class Navbar {
     /^\/?merchandise(?:\/|\?|#|$)/.test(this.currentUrl()),
   );
 
-  /** Both studio experiences get the same compact site chrome. */
-  protected readonly isStudioChrome = computed(() => this.isAiModels() || this.isMerchandise());
+  /** The Multiverse Studio promotion gallery shares the View All studio chrome. */
+  protected readonly isMultiverseStudio = computed(() =>
+    /^\/?multiverse-studio(?:\/|\?|#|$)/.test(this.currentUrl()),
+  );
+
+  /** Studio experiences get the same compact site chrome. */
+  protected readonly isStudioChrome = computed(
+    () => this.isAiModels() || this.isMerchandise() || this.isMultiverseStudio(),
+  );
 
   /**
-   * Compact header (smaller bar + 50% logo) on the Community, AI Models, Merchandise, member
-   * profiles and the whole Admin Console, so as much of the working area as possible is visible.
-   * The Community sign-in page keeps the full-size website header.
+   * Compact header (smaller bar + 50% logo) on the Community, AI Models, Merchandise,
+   * Multiverse Studio, member profiles and the whole Admin Console, so as much of the
+   * working area as possible is visible. The Community sign-in page keeps the full-size
+   * website header.
    */
   protected readonly isCompactLogo = computed(() => {
     const url = this.currentUrl();
@@ -135,7 +204,6 @@ export class Navbar {
       fragment: undefined as string | undefined,
       icon: 'home',
     },
-    { id: 'how', label: 'How', path: '/', fragment: 'how-it-works', icon: 'cog' },
     { id: 'audience', label: 'Audience', path: '/audience', fragment: undefined, icon: 'users' },
     {
       id: 'collection',
@@ -190,5 +258,97 @@ export class Navbar {
 
   close(): void {
     this.open.set(false);
+  }
+
+  async onCommunityAuth(event: Event): Promise<void> {
+    event.preventDefault();
+    this.close();
+
+    if (this.isCommunitySignedIn()) {
+      const service = await this.getCommunityService();
+      service.logout();
+      this.badges.signedIn.set(false);
+      this.siteTab.sync();
+      return;
+    }
+
+    await this.signInWithGoogle();
+  }
+
+  async cancelGoogleSignIn(): Promise<void> {
+    this.googleManualStep.set(null);
+    const service = await this.getCommunityService();
+    service.cancelGoogleIdentity();
+    takeCommunityReturnPath();
+  }
+
+  private async signInWithGoogle(): Promise<void> {
+    if (this.isSigningIn() || this.googleManualStep()) return;
+
+    this.authErrorMessage.set(null);
+    this.isSigningIn.set(true);
+    rememberCommunityReturnPath(this.currentUrl() || '/');
+
+    try {
+      const service = await this.getCommunityService();
+      if ((await service.checkApiOnline(true)) && service.startOAuthRedirect('google')) {
+        return;
+      }
+
+      const step = await service.signInWithGoogle();
+      if (step.step === 'identity') {
+        const result = service.completeGoogleSignIn(step.identity);
+        this.navigateAfterSignIn(result.profileComplete);
+        return;
+      }
+
+      if (step.step === 'show_google_button') {
+        const identityPromise = service.awaitGoogleIdentity();
+        this.googleManualStep.set(step);
+        this.isSigningIn.set(false);
+        afterNextRender(
+          () => {
+            const host = this.googleHost()?.nativeElement;
+            if (host) step.render(host);
+          },
+          { injector: this.injector },
+        );
+
+        const identity = await identityPromise;
+        this.googleManualStep.set(null);
+        if (!identity) return;
+        this.isSigningIn.set(true);
+        const result = service.completeGoogleSignIn(identity);
+        this.navigateAfterSignIn(result.profileComplete);
+        return;
+      }
+
+      const result = await service.loginWithOAuth('google');
+      this.navigateAfterSignIn(result.profileComplete);
+    } catch (error) {
+      this.authErrorMessage.set(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Google sign-in could not be completed. Please try again.',
+      );
+      takeCommunityReturnPath();
+    } finally {
+      this.isSigningIn.set(false);
+    }
+  }
+
+  private navigateAfterSignIn(profileComplete: boolean): void {
+    if (!profileComplete) {
+      void this.router.navigate(['/community/register']);
+      return;
+    }
+    void this.router.navigateByUrl(takeCommunityReturnPath() ?? '/community/profile');
+  }
+
+  private async getCommunityService(): Promise<CommunityService> {
+    const { CommunityService: CommunityServiceToken } = await import(
+      '../../services/community.service'
+    );
+    return runInInjectionContext(this.envInjector, () => inject(CommunityServiceToken));
   }
 }

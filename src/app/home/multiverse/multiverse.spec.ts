@@ -146,7 +146,7 @@ describe('The NeverBeen Multiverse Studio slideshow', () => {
     fixture.destroy();
   });
 
-  it('places the Meet the NeverBeen AI Models button in the Multiverse Studio intro just below the description in the AI Models lavender', () => {
+  it('places Explore the NeverBeen Multiverse Studio in the Multiverse Studio intro with the Create My Vacation white pill style, and removes Meet the NeverBeen AI Models from this section', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: SiteConfigService, useValue: config() }],
     });
@@ -157,18 +157,24 @@ describe('The NeverBeen Multiverse Studio slideshow', () => {
     const intro = element.querySelector<HTMLElement>('header.intro')!;
     const lede = intro.querySelector<HTMLElement>('.lede')!;
     const actions = intro.querySelector<HTMLElement>('.actions')!;
-    const aiModels = actions.querySelector<HTMLAnchorElement>('a.btn.btn-ai-models')!;
+    const exploreBtn = actions.querySelector<HTMLAnchorElement>('a.btn.btn-ghost')!;
 
     expect(intro).toBeTruthy();
     expect(lede).toBeTruthy();
     expect(lede.nextElementSibling).toBe(actions);
-    expect(aiModels).toBeTruthy();
-    expect(aiModels.textContent?.trim()).toBe('Meet the NeverBeen AI Models');
-    expect(aiModels.getAttribute('href')).toBe('/ai-models');
-    expect(aiModels.getAttribute('target')).toBeNull();
-    expect(aiModels.classList.contains('btn-ai-models')).toBe(true);
-    expect(getComputedStyle(aiModels).backgroundColor).toBe('rgb(150, 120, 182)');
-    expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
+    expect(element.querySelector('a[href="/ai-models"]')).toBeNull();
+    expect(actions.textContent).not.toContain('Meet the NeverBeen AI Models');
+
+    expect(exploreBtn).toBeTruthy();
+    expect(exploreBtn.textContent?.trim()).toBe('Explore the NeverBeen Multiverse Studio');
+    expect(exploreBtn.getAttribute('href')).toBe('/multiverse-studio');
+    expect(exploreBtn.getAttribute('target')).toBeNull();
+    expect(exploreBtn.classList.contains('btn-ghost')).toBe(true);
+    expect(getComputedStyle(exploreBtn).backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(getComputedStyle(exploreBtn).color).toBe('var(--ink)');
+    expect(getComputedStyle(exploreBtn).fontFamily).toContain('Calibri');
+    expect(getComputedStyle(exploreBtn).fontSize).toBe('1rem');
+    expect(getComputedStyle(exploreBtn).borderRadius).toBe('999px');
 
     fixture.destroy();
   });

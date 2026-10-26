@@ -66,4 +66,19 @@ describe('Footer', () => {
     expect(footer.classList.contains('merchandise-footer')).toBe(true);
     expect(getComputedStyle(footer).backgroundColor).toBe('rgb(55, 38, 66)');
   });
+
+  it('shares the studio plum footer with the Multiverse Studio promotion gallery', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const footer = fixture.nativeElement.querySelector('footer#site-footer') as HTMLElement;
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl('/multiverse-studio');
+    fixture.detectChanges();
+
+    expect(component['isMultiverseStudio']()).toBe(true);
+    expect(component['isStudioChrome']()).toBe(true);
+    expect(footer.classList.contains('ai-models-footer')).toBe(true);
+    expect(getComputedStyle(footer).backgroundColor).toBe('rgb(55, 38, 66)');
+  });
 });

@@ -93,32 +93,30 @@ describe('HeroCommunitySignIn', () => {
     expect(title?.textContent?.trim()).toBe('Welcome Aisha');
     expect(title?.textContent?.trim().endsWith('.')).toBe(false);
 
-    // The fixed black “Welcome ” greeting leads the member's name.
+    // “Welcome” matches the exact display style of “Go Anywhere. Even Where You've Never Been”,
+    // while the member's username keeps its unchanged Calibri brand-purple style.
     const greeting = element.querySelector<HTMLElement>('.hero-signin-greeting');
     const name = element.querySelector<HTMLElement>('.hero-signin-name');
     expect(greeting?.textContent?.trim()).toBe('Welcome');
     expect(name?.textContent?.trim()).toBe('Aisha');
 
-    // Big, Calibri, plain text (the name is the loudest line in the block).
-    const titleStyle = getComputedStyle(title!);
-    expect(titleStyle.fontFamily).toContain('Calibri');
-    const nameSize = fontSizeInPx(titleStyle.fontSize);
-    expect(nameSize).toBeGreaterThanOrEqual(32);
-
-    // “Welcome ” is black and the name is the brand purple.
     const greetingStyle = getComputedStyle(greeting!);
-    expect(greetingStyle.color).toBe('rgb(11, 13, 18)');
+    expect(greetingStyle.fontFamily).toContain('var(--serif)');
+    expect(greetingStyle.fontWeight).toBe('500');
+    expect(greetingStyle.lineHeight).toBe('1.04');
+    expect(greetingStyle.letterSpacing).toBe('-0.028em');
+    expect(greetingStyle.backgroundImage).toContain(
+      'linear-gradient(102deg, rgb(11, 13, 18) 10%, rgb(38, 44, 63) 56%, rgb(91, 91, 240) 98%)',
+    );
+
     const nameStyle = getComputedStyle(name!);
+    expect(nameStyle.fontFamily).toContain('Calibri');
     expect(nameStyle.color).toBe('rgb(101, 57, 129)');
-    // Neither span declares a font-size of its own, so both render at the
-    // title's size. jsdom leaves inherited font-size unresolved ("" / "inherit"),
-    // which is equivalent here.
-    const spanSize = (value: string): number => {
-      if (!value || value === 'inherit' || value === 'normal') return nameSize;
-      return fontSizeInPx(value);
-    };
-    expect(spanSize(greetingStyle.fontSize)).toBe(nameSize);
-    expect(spanSize(nameStyle.fontSize)).toBe(nameSize);
+    expect(nameStyle.fontWeight).toBe('600');
+    expect(nameStyle.letterSpacing).toBe('-0.02em');
+    expect(nameStyle.lineHeight).toBe('1.02');
+    const nameSize = fontSizeInPx(nameStyle.fontSize);
+    expect(nameSize).toBeGreaterThanOrEqual(32);
 
     const subtitle = element.querySelector('.hero-signin-subtitle');
     expect(subtitle).toBeTruthy();

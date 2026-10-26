@@ -17,9 +17,14 @@ export class CommunityBadgeService {
   readonly unreadNotifications = signal(-1);
   /** Chats that still hold at least one unread companion message (messenger icon badge); -1 until synced. */
   readonly unreadChats = signal(-1);
+  /** Whether a member is signed in to the Community; null until CommunityService syncs. */
+  readonly signedIn = signal<boolean | null>(null);
 
-  sync(unreadNotifications: number, unreadChats: number): void {
+  sync(unreadNotifications: number, unreadChats: number, signedIn?: boolean): void {
     this.unreadNotifications.set(unreadNotifications);
     this.unreadChats.set(unreadChats);
+    if (signedIn !== undefined) {
+      this.signedIn.set(signedIn);
+    }
   }
 }

@@ -116,10 +116,16 @@
 
     <div class="panel-copy">
       <div class="copy-body">
+        @if (peopleEyebrow()) {
+          <p class="eyebrow">{{ peopleEyebrow() }}</p>
+        }
         <h2 id="hero-people-title">{{ peopleTitle() }}</h2>
         @if (peopleCopy()) {
           <p class="lede">{{ peopleCopy() }}</p>
         }
+        <div class="people-actions">
+          <a href="/ai-models" class="btn btn-ai-models">Meet the NeverBeen AI Models</a>
+        </div>
       </div>
 
       <div class="panel-footer" aria-hidden="true">

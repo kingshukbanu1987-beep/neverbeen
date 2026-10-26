@@ -1,9 +1,8 @@
 /* ============================================================================
    Hero Community sign-in — the Google button that sits under the first hero
-   panel's small texts (a signed-in member sees a fixed black “Welcome ”
-   greeting followed by their name there instead, big and plain, with the line
-   “Explore the NeverBeen Multiverse and Interact with our NeverBeen AI Models
-   and Shop NeverBeen Merchandise from our exclusive NeverBeen Store” under it).
+   panel's small texts (a signed-in member sees “Welcome” in the exact display
+   style of “Go Anywhere. Even Where You've Never Been” followed by their name
+   in big Calibri brand purple, with the Explore line under it).
 
    Nothing is painted here: no background, border, shadow or panel. The block
    borrows the home page's default background, and the Google button keeps the
@@ -36,23 +35,39 @@
 
 .hero-signin-title {
   margin: 0;
-  /* The member's name carries the brand purple; the fixed “Welcome ” greeting
-     ahead of it stays black. Both share this font size. */
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+/* “Welcome” matches the exact display style of “Go Anywhere. Even Where You've Never Been”. */
+.hero-signin-greeting {
+  font-family: var(--serif);
+  font-size: 3.3rem;
+  font-size: clamp(1.85rem, 2.95vw, 3.3rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  color: var(--studio-ink, #0b0d12);
+  background: linear-gradient(102deg, #0b0d12 10%, #262c3f 56%, #5b5bf0 98%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .hero-signin-greeting {
+    color: transparent;
+  }
+}
+
+/* The member's username keeps its unchanged Calibri brand-purple style. */
+.hero-signin-name {
   color: rgb(101, 57, 129);
   font-family: var(--signin-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
-  /* The member's name is the biggest line in this block: Calibri, heavy and
-     tight. The first value is the plain fallback; clamp() scales it. */
   font-size: 2.9rem;
   font-size: clamp(2.1rem, 2.9vw, 2.9rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.02;
-  text-wrap: balance;
-}
-
-/* The fixed “Welcome ” greeting: black, the same size as the member's name. */
-.hero-signin-greeting {
-  color: #0b0d12;
 }
 
 .hero-signin-subtitle {
@@ -65,8 +80,19 @@
   line-height: 1.45;
 }
 
+@media (max-width: 900px) {
+  .hero-signin-greeting {
+    font-size: clamp(1.85rem, 6.2vw, 2.6rem);
+    line-height: 1.04;
+  }
+}
+
 @media (max-width: 640px) {
   .hero-signin {
     margin-top: 0.85rem;
+  }
+
+  .hero-signin-greeting {
+    font-size: clamp(1.85rem, 8.2vw, 2.5rem);
   }
 }
