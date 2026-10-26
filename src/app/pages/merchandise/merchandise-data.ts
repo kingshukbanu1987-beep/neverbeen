@@ -37,6 +37,18 @@ export const MERCHANDISE_CATEGORIES: readonly MerchandiseCategory[] = [
   { folder: 'Phone-Cases', slug: 'phone-cases', title: 'Phone Cases' },
 ];
 
+/**
+ * A Premium NeverBeen model campaign for one product. `image` is resolved to its public
+ * catalogue path by MerchandiseCatalogService; catalogue JSON stores only the file name.
+ */
+export interface MerchandiseModelCampaign {
+  model: string;
+  label: string;
+  note: string;
+  profile: string;
+  image: string;
+}
+
 export interface MerchandiseProduct {
   id: string;
   name: string;
@@ -51,12 +63,18 @@ export interface MerchandiseProduct {
   reviews: number;
   description: string;
   image: string;
+  campaign?: MerchandiseModelCampaign;
   currency: 'INR';
   inStock: boolean;
   deliveryWorkingDays: number;
   highlights: string[];
   category: MerchandiseCategory;
 }
+
+export type MerchandiseProductFile = Omit<MerchandiseProduct, 'category' | 'image' | 'campaign'> & {
+  image: string;
+  campaign?: Omit<MerchandiseModelCampaign, 'image'> & { image: string };
+};
 
 export interface MerchandiseCategoryFile {
   category: string;
@@ -66,7 +84,7 @@ export interface MerchandiseCategoryFile {
   description: string;
   deliveryWorkingDays: number;
   currency: 'INR';
-  items: Record<string, Omit<MerchandiseProduct, 'category' | 'image'> & { image: string }>;
+  items: Record<string, MerchandiseProductFile>;
 }
 
 export interface MerchandiseCartItem {

@@ -50,4 +50,20 @@ describe('Footer', () => {
     expect(footer.classList.contains('ai-models-footer')).toBe(false);
     expect(getComputedStyle(footer).backgroundColor).not.toBe('rgb(55, 38, 66)');
   });
+
+  it('shares the AI Models plum footer with the Merchandise storefront', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const footer = fixture.nativeElement.querySelector('footer#site-footer') as HTMLElement;
+    const router = TestBed.inject(Router);
+
+    await router.navigateByUrl('/merchandise');
+    fixture.detectChanges();
+
+    expect(component['isMerchandise']()).toBe(true);
+    expect(component['isStudioChrome']()).toBe(true);
+    expect(footer.classList.contains('ai-models-footer')).toBe(true);
+    expect(footer.classList.contains('merchandise-footer')).toBe(true);
+    expect(getComputedStyle(footer).backgroundColor).toBe('rgb(55, 38, 66)');
+  });
 });

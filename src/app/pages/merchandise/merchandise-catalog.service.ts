@@ -32,12 +32,23 @@ export class MerchandiseCatalogService {
           );
         }
         const file = (await response.json()) as MerchandiseCategoryFile;
-        return Object.entries(file.items).map(([id, item]): MerchandiseProduct => ({
-          ...item,
-          id,
-          image: `/Merchandise/${category.folder}/${encodeURIComponent(item.image)}`,
-          category,
-        }));
+        return Object.entries(file.items).map(([id, item]): MerchandiseProduct => {
+          const { campaign, ...productFields } = item;
+          return {
+            ...productFields,
+            id,
+            image: `/Merchandise/${category.folder}/${encodeURIComponent(item.image)}`,
+            ...(campaign
+              ? {
+                  campaign: {
+                    ...campaign,
+                    image: `/Merchandise/${category.folder}/${encodeURIComponent(campaign.image)}`,
+                  },
+                }
+              : {}),
+            category,
+          };
+        });
       }),
     )
       .then((groups) => {

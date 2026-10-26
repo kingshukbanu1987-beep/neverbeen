@@ -95,15 +95,27 @@ export class Navbar {
   );
 
   /**
-   * Compact header (smaller bar + 50% logo) on the Community, AI Models, member profiles and the whole
-   * Admin Console, so as much of the working area as possible is visible. The Community
-   * sign-in page keeps the full-size website header.
+   * Merchandise uses the same plum site chrome as the AI model studio. Its in-page
+   * storefront is white and lavender, so the shared header and footer stay visually tied
+   * to the model directory rather than introducing a second brand palette.
+   */
+  protected readonly isMerchandise = computed(() =>
+    /^\/?merchandise(?:\/|\?|#|$)/.test(this.currentUrl()),
+  );
+
+  /** Both studio experiences get the same compact site chrome. */
+  protected readonly isStudioChrome = computed(() => this.isAiModels() || this.isMerchandise());
+
+  /**
+   * Compact header (smaller bar + 50% logo) on the Community, AI Models, Merchandise, member
+   * profiles and the whole Admin Console, so as much of the working area as possible is visible.
+   * The Community sign-in page keeps the full-size website header.
    */
   protected readonly isCompactLogo = computed(() => {
     const url = this.currentUrl();
     return (
       !this.isCommunitySignIn() &&
-      (this.isAiModels() ||
+      (this.isStudioChrome() ||
         url.includes('/community') ||
         url.includes('/profile') ||
         /^\/admin(\/|\?|#|$)/.test(url))

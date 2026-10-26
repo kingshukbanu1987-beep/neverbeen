@@ -1,7 +1,8 @@
 <header
   class="nav"
   [class.community-nav]="isCommunity()"
-  [class.ai-models-nav]="isAiModels()"
+  [class.ai-models-nav]="isStudioChrome()"
+  [class.merchandise-nav]="isMerchandise()"
   [class.compact-nav]="!isCommunity() && isCompactLogo()"
 >
   @if (isCommunity()) {
@@ -11,7 +12,12 @@
          Icon shortcuts on the left of the theme dropdown (top right).
          ============================================================ -->
     <div class="bar ch-bar">
-      <a routerLink="/" class="ch-brand" (click)="close()" aria-label="Back to the NeverBeen website">
+      <a
+        routerLink="/"
+        class="ch-brand"
+        (click)="close()"
+        aria-label="Back to the NeverBeen website"
+      >
         NeverBeen
       </a>
 
@@ -40,8 +46,14 @@
           [routerLink]="['/profile']"
           [fragment]="'notifications'"
           class="ch-link"
-          [attr.aria-label]="'Notifications page' + (unreadNotifications() > 0 ? ', ' + unreadNotifications() + ' unread' : '')"
-          [title]="'Notifications' + (unreadNotifications() > 0 ? ' (' + badgeText(unreadNotifications()) + ')' : '')"
+          [attr.aria-label]="
+            'Notifications page' +
+            (unreadNotifications() > 0 ? ', ' + unreadNotifications() + ' unread' : '')
+          "
+          [title]="
+            'Notifications' +
+            (unreadNotifications() > 0 ? ' (' + badgeText(unreadNotifications()) + ')' : '')
+          "
         >
           <svg class="ch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <use href="#nb-icon-bell"></use>
@@ -54,7 +66,12 @@
           [routerLink]="['/profile']"
           [fragment]="'messenger'"
           class="ch-link"
-          [attr.aria-label]="'Messenger page' + (unreadChats() > 0 ? ', ' + unreadChats() + ' unread chat' + (unreadChats() > 1 ? 's' : '') : '')"
+          [attr.aria-label]="
+            'Messenger page' +
+            (unreadChats() > 0
+              ? ', ' + unreadChats() + ' unread chat' + (unreadChats() > 1 ? 's' : '')
+              : '')
+          "
           [title]="'Messenger' + (unreadChats() > 0 ? ' (' + badgeText(unreadChats()) + ')' : '')"
         >
           <svg class="ch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -70,8 +87,21 @@
     </div>
   } @else {
     <div class="bar container" [class.compact-bar]="isCompactLogo()">
-      <a routerLink="/" class="logo" [class.compact-logo]="isCompactLogo()" (click)="close()" aria-label="NeverBeen home">
-        <img ngSrc="/neverbeen-logo.png" [class.compact-logo]="isCompactLogo()" width="150" height="75" alt="NeverBeen" priority />
+      <a
+        routerLink="/"
+        class="logo"
+        [class.compact-logo]="isCompactLogo()"
+        (click)="close()"
+        aria-label="NeverBeen home"
+      >
+        <img
+          ngSrc="/neverbeen-logo.png"
+          [class.compact-logo]="isCompactLogo()"
+          width="150"
+          height="75"
+          alt="NeverBeen"
+          priority
+        />
       </a>
       <button
         type="button"
@@ -108,80 +138,217 @@
 
   <!-- Line-icon sprite for the menu options (stroke only, so the icons are transparent). -->
   <svg class="icon-sprite" aria-hidden="true" focusable="false">
-    <symbol id="nb-icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-home"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
       <polyline points="9 22 9 12 15 12 15 22"></polyline>
     </symbol>
-    <symbol id="nb-icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-bell"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
     </symbol>
-    <symbol id="nb-icon-cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-cog"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <circle cx="12" cy="12" r="3"></circle>
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      <path
+        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+      ></path>
     </symbol>
-    <symbol id="nb-icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-users"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
       <circle cx="9" cy="7" r="4"></circle>
       <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
     </symbol>
-    <symbol id="nb-icon-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-image"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
       <circle cx="8.5" cy="8.5" r="1.5"></circle>
       <polyline points="21 15 16 10 5 21"></polyline>
     </symbol>
     <symbol id="nb-icon-map-pin" viewBox="0 0 24 24">
-      <image href="https://pngimg.com/uploads/gps/gps_PNG38.png" x="0" y="0" width="24" height="24" preserveAspectRatio="xMidYMid meet" />
-      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" style="display: none;"></path>
-      <circle cx="12" cy="10" r="3" style="display: none;"></circle>
+      <image
+        href="https://pngimg.com/uploads/gps/gps_PNG38.png"
+        x="0"
+        y="0"
+        width="24"
+        height="24"
+        preserveAspectRatio="xMidYMid meet"
+      />
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" style="display: none"></path>
+      <circle cx="12" cy="10" r="3" style="display: none"></circle>
     </symbol>
-    <symbol id="nb-icon-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+    <symbol
+      id="nb-icon-tag"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path
+        d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+      ></path>
       <line x1="7" y1="7" x2="7.01" y2="7"></line>
     </symbol>
-    <symbol id="nb-icon-shopping-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-shopping-bag"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M5 8h14l1 13H4L5 8Z"></path>
       <path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
     </symbol>
-    <symbol id="nb-icon-help-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-help-circle"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <circle cx="12" cy="12" r="10"></circle>
       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
       <line x1="12" y1="17" x2="12.01" y2="17"></line>
     </symbol>
-    <symbol id="nb-icon-log-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-log-in"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
       <polyline points="10 17 15 12 10 7"></polyline>
       <line x1="15" y1="12" x2="3" y2="12"></line>
     </symbol>
-    <symbol id="nb-icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-user"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
       <circle cx="12" cy="7" r="4"></circle>
     </symbol>
-    <symbol id="nb-icon-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-mail"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
       <polyline points="22,6 12,13 2,6"></polyline>
     </symbol>
-    <symbol id="nb-icon-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-globe"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="2" y1="12" x2="22" y2="12"></line>
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+      <path
+        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+      ></path>
     </symbol>
     <symbol id="nb-icon-live" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" fill="none" stroke="#25d366" stroke-width="2" opacity="0.35">
-        <animate attributeName="r" values="8;12;8" dur="1.8s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="8;12;8" dur="1.8s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.5;0;0.5" dur="1.8s" repeatCount="indefinite" />
       </circle>
-      <circle cx="12" cy="12" r="8" fill="rgba(37,211,102,0.18)" stroke="#25d366" stroke-width="1.4" opacity="0.6">
-        <animate attributeName="r" values="6;9;6" dur="1.8s" begin="0.3s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.6;0.1;0.6" dur="1.8s" begin="0.3s" repeatCount="indefinite"/>
+      <circle
+        cx="12"
+        cy="12"
+        r="8"
+        fill="rgba(37,211,102,0.18)"
+        stroke="#25d366"
+        stroke-width="1.4"
+        opacity="0.6"
+      >
+        <animate
+          attributeName="r"
+          values="6;9;6"
+          dur="1.8s"
+          begin="0.3s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0.6;0.1;0.6"
+          dur="1.8s"
+          begin="0.3s"
+          repeatCount="indefinite"
+        />
       </circle>
       <circle cx="12" cy="12" r="5" fill="#25d366">
-        <animate attributeName="r" values="4.6;5.4;4.6" dur="1.2s" repeatCount="indefinite"/>
+        <animate attributeName="r" values="4.6;5.4;4.6" dur="1.2s" repeatCount="indefinite" />
       </circle>
-      <circle cx="12" cy="12" r="2.3" fill="#ffffff"/>
+      <circle cx="12" cy="12" r="2.3" fill="#ffffff" />
     </symbol>
-    <symbol id="nb-icon-message-square" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <symbol
+      id="nb-icon-message-square"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </symbol>
   </svg>

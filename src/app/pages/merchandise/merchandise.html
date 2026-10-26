@@ -1,670 +1,583 @@
-<main class="merchandise-page" aria-labelledby="shop-title">
-  <div class="store-shell">
-    <header class="store-header">
-      <a class="store-brand" routerLink="/" aria-label="NeverBeen home">
-        <img
-          src="/neverbeen-logo-report.png"
-          width="560"
-          height="201"
-          alt="NeverBeen — your dream vacation, without taking the flight"
-        />
-      </a>
-      <div class="store-header-note">
-        <span class="live-dot" aria-hidden="true"></span>
-        <span>NEVERBEEN GOODS</span>
-        <span class="header-divider">/</span>
-        <span>INDIA EDITION</span>
-      </div>
-      <button
-        class="bag-trigger"
-        type="button"
-        (click)="openCart()"
-        [attr.aria-label]="'Open shopping bag, ' + cartCount() + ' items'"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          aria-hidden="true"
-        >
-          <path d="M5.5 8.5h13l1 12h-15l1-12Z" stroke-linejoin="round" />
-          <path d="M9 9V6a3 3 0 0 1 6 0v3" stroke-linecap="round" />
-        </svg>
-        <span>Bag</span>
-        <span class="bag-count">{{ cartCount() }}</span>
-      </button>
-    </header>
+<div class="merchandise-page" [attr.data-view]="view()">
+  <span class="page-glow page-glow-one" aria-hidden="true"></span>
+  <span class="page-glow page-glow-two" aria-hidden="true"></span>
 
-    @if (view() === 'shop') {
-      <section class="store-hero" aria-labelledby="shop-title">
-        <div class="hero-copy">
-          <p class="overline">
-            <span>THE NEVERBEEN GOODS EDITION</span><i aria-hidden="true"></i> DROP 01
-          </p>
-          <h1 id="shop-title">Shop NeverBeen <em>Merchandise</em></h1>
-          <p class="hero-lede">
-            Carry a little NeverBeen wherever you go. Thoughtful everyday pieces, finished with our
-            signature mark.
-          </p>
-          <div class="hero-notes">
-            <span><b>01</b> Studio-made details</span>
-            <span><b>02</b> Ships across India</span>
-            <span><b>03</b> Delivered in 15 working days</span>
-          </div>
-          <a class="hero-scroll" href="#shop-products"
-            ><span>Explore the collection</span><span aria-hidden="true">↓</span></a
-          >
-        </div>
-        <div
-          class="hero-product-stage"
-          aria-label="A selection from the NeverBeen merchandise collection"
+  <!-- The global plum navbar and footer are shared with /ai-models. This slim rail is
+       only the storefront's local navigation and bag control, not a second site header. -->
+  <div class="store-rail">
+    <div class="shell rail-inner">
+      <nav class="rail-crumb" aria-label="Breadcrumb">
+        <a routerLink="/">NeverBeen</a>
+        <span aria-hidden="true">/</span>
+        <span>Goods</span>
+        <span aria-hidden="true">/</span>
+        <strong>{{ viewLabel() }}</strong>
+      </nav>
+      <div class="rail-actions">
+        @if (view() !== 'shop') {
+          <button type="button" class="rail-collection" (click)="continueShopping()">
+            Collection
+          </button>
+        }
+        <button
+          type="button"
+          class="bag-button"
+          (click)="openCart()"
+          [attr.aria-label]="'Open shopping bag, ' + cartCount() + ' items'"
         >
-          @if (products().length) {
-            @for (product of products().slice(0, 3); track product.id; let i = $index) {
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            aria-hidden="true"
+          >
+            <path d="M5.5 8.5h13l1 12h-15l1-12Z" stroke-linejoin="round" />
+            <path d="M9 9V6a3 3 0 0 1 6 0v3" stroke-linecap="round" />
+          </svg>
+          <span>Bag</span>
+          <b>{{ cartCount() }}</b>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (view() === 'shop') {
+    <section class="hero shell" aria-labelledby="shop-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><i aria-hidden="true"></i> THE {{ currentYear }} NEVERBEEN GOODS EDIT</p>
+        <h1 id="shop-title">Everyday objects, <em>beautifully imagined.</em></h1>
+        <p class="hero-lede">
+          A considered collection of travel-ready essentials, presented by the Premium NeverBeen
+          models. Clean studio imagery, quiet details and pieces made to go further.
+        </p>
+        <div class="hero-actions">
+          <button type="button" class="primary-button" (click)="scrollToCollection()">
+            Explore the collection <span aria-hidden="true">↓</span>
+          </button>
+          @if (featuredProduct(); as featured) {
+            <button type="button" class="ghost-button" (click)="openProduct(featured)">
+              View the featured piece
+            </button>
+          }
+        </div>
+        <dl class="hero-stats" aria-label="Collection facts">
+          <div>
+            <dt>{{ products().length }}</dt>
+            <dd>curated pieces</dd>
+          </div>
+          <div>
+            <dt>{{ categories.length }}</dt>
+            <dd>categories</dd>
+          </div>
+          <div>
+            <dt>15</dt>
+            <dd>working days delivery</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="hero-visual">
+        @if (featuredProduct(); as featured) {
+          <button
+            type="button"
+            class="hero-image-card"
+            (click)="openProduct(featured)"
+            [attr.aria-label]="'View ' + featured.name"
+          >
+            <img [src]="coverImage(featured)" [alt]="coverAlt(featured)" decoding="async" />
+            <span class="hero-image-shine" aria-hidden="true"></span>
+          </button>
+          <div class="hero-feature-card">
+            <span class="feature-kicker">
+              @if (featured.campaign; as campaign) {
+                {{ campaign.label }} / {{ campaign.model }}
+              } @else {
+                Featured piece
+              }
+            </span>
+            <strong>{{ featured.name }}</strong>
+            <span class="feature-price">{{ money(featured.price) }}</span>
+            <button type="button" (click)="openProduct(featured)">
+              View piece <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <span class="hero-orbit" aria-hidden="true">NB<br />GOODS</span>
+        } @else {
+          <div class="hero-placeholder" aria-hidden="true"><span>NB</span></div>
+        }
+      </div>
+    </section>
+
+    <ul class="assurance-grid shell" aria-label="Store essentials">
+      <li>
+        <span aria-hidden="true">✳</span>
+        <div>
+          <b>Model-led campaigns</b><small>Premium NeverBeen models in a white studio.</small>
+        </div>
+      </li>
+      <li>
+        <span aria-hidden="true">⌖</span>
+        <div>
+          <b>Considered details</b><small>Useful everyday pieces with the NeverBeen mark.</small>
+        </div>
+      </li>
+      <li>
+        <span aria-hidden="true">↗</span>
+        <div>
+          <b>Delivered across India</b><small>Estimated delivery in 15 working days.</small>
+        </div>
+      </li>
+    </ul>
+
+    <section class="catalogue shell" id="shop-products" aria-labelledby="collection-title">
+      <header class="section-head">
+        <div>
+          <p class="eyebrow">PORTFOLIO INDEX / {{ currentYear }}</p>
+          <h2 id="collection-title">Find your <em>favourite.</em></h2>
+        </div>
+        <p class="section-intro">
+          Browse by category, refine by price and rating, then open a piece for the complete studio
+          view.
+        </p>
+      </header>
+
+      <nav class="category-nav" aria-label="Shop by category">
+        <button
+          type="button"
+          [class.is-active]="currentCategory() === 'all'"
+          [attr.aria-pressed]="currentCategory() === 'all'"
+          (click)="setCategory('all')"
+        >
+          Everything <span>{{ products().length }}</span>
+        </button>
+        @for (category of categories; track category.slug) {
+          <button
+            type="button"
+            [class.is-active]="currentCategory() === category.slug"
+            [attr.aria-pressed]="currentCategory() === category.slug"
+            (click)="setCategory(category.slug)"
+          >
+            {{ category.title }} <span>{{ categoryCount(category.slug) }}</span>
+          </button>
+        }
+      </nav>
+
+      <div class="filter-panel" aria-label="Product filters and sorting">
+        <label class="search-field">
+          <span class="visually-hidden">Search merchandise</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <circle cx="10.8" cy="10.8" r="6.8" />
+            <path d="m16 16 4.5 4.5" stroke-linecap="round" />
+          </svg>
+          <input
+            type="search"
+            placeholder="Search pieces or models"
+            [value]="search()"
+            (input)="setSearch($event)"
+            autocomplete="off"
+          />
+        </label>
+        <label class="filter-field">
+          <span>For</span>
+          <select [value]="audience()" (change)="setAudienceFromEvent($event)">
+            <option>All</option>
+            <option>Women</option>
+            <option>Men</option>
+            <option>Boys</option>
+            <option>Girls</option>
+            <option>Kids</option>
+            <option>Unisex</option>
+          </select>
+        </label>
+        <label class="filter-field price-field">
+          <span
+            >Up to <b>{{ money(maximumPrice()) }}</b></span
+          >
+          <input
+            type="range"
+            min="250"
+            max="3500"
+            step="50"
+            [value]="maximumPrice()"
+            (input)="setMaximumPrice($event)"
+          />
+        </label>
+        <label class="filter-field">
+          <span>Rating</span>
+          <select [value]="minimumRating()" (change)="setMinimumRating($event)">
+            <option value="0">Any rating</option>
+            <option value="4">4+ stars</option>
+            <option value="4.5">4.5+ stars</option>
+          </select>
+        </label>
+        <label class="filter-field">
+          <span>Sort</span>
+          <select [value]="sort()" (change)="setSort($event)">
+            <option value="featured">Featured</option>
+            <option value="newest">Newest</option>
+            <option value="price-low">Price: low to high</option>
+            <option value="price-high">Price: high to low</option>
+            <option value="rating">Top rated</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="results-row">
+        <span
+          ><b>{{ visibleProducts().length }}</b> pieces in view</span
+        >
+        @if (
+          currentCategory() !== 'all' ||
+          search() ||
+          audience() !== 'All' ||
+          maximumPrice() < 3500 ||
+          minimumRating() > 0
+        ) {
+          <button type="button" (click)="clearFilters()">
+            Clear filters <span aria-hidden="true">×</span>
+          </button>
+        }
+      </div>
+
+      @if (loading()) {
+        <div class="state-card loading-state" role="status" aria-live="polite">
+          <span class="state-icon" aria-hidden="true"><i></i></span>
+          <h3>Opening the studio shelves</h3>
+          <p>Finding the little things that go a long way.</p>
+        </div>
+      } @else if (catalogueError()) {
+        <div class="state-card error-state" role="alert">
+          <span class="state-icon" aria-hidden="true">!</span>
+          <h3>The collection is taking a moment.</h3>
+          <p>{{ catalogueError() }}</p>
+          <button type="button" class="primary-button" (click)="retryLoad()">Try again</button>
+        </div>
+      } @else if (visibleProducts().length) {
+        <div class="product-grid">
+          @for (product of visibleProducts(); track product.id) {
+            <article class="product-card" [class.has-campaign]="product.campaign">
               <button
                 type="button"
-                class="hero-product-card"
-                [class.hero-product-card-main]="i === 0"
+                class="product-media"
                 (click)="openProduct(product)"
-                [attr.aria-label]="'Quick view ' + product.name"
+                [attr.aria-label]="'View ' + product.name"
               >
                 <img
-                  [src]="product.image"
-                  [alt]="product.name"
-                  [loading]="i === 0 ? 'eager' : 'lazy'"
+                  [src]="coverImage(product)"
+                  [alt]="coverAlt(product)"
+                  loading="lazy"
+                  decoding="async"
                 />
-                @if (i === 0) {
-                  <span class="hero-image-label"
-                    ><span>NEVERBEEN / STUDIO 01</span><b>{{ product.name }}</b></span
-                  >
+                <span class="media-tint" aria-hidden="true"></span>
+                @if (product.badge) {
+                  <span class="product-badge">{{ product.badge }}</span>
                 }
+                @if (productDiscount(product)) {
+                  <span class="discount-badge">−{{ productDiscount(product) }}%</span>
+                }
+                @if (product.campaign; as campaign) {
+                  <span class="model-chip">✦ {{ campaign.model }}</span>
+                }
+                <span class="view-pill">View piece <span aria-hidden="true">↗</span></span>
               </button>
-            }
-          } @else {
-            <div class="hero-product-placeholder"><span>NB</span><i></i></div>
-          }
-          <div class="hero-stage-stamp">
-            <span>NB</span><small>GO<br />FAR</small>
-          </div>
-          <span class="stage-caption">ESSENTIALS FOR EVERYWHERE</span>
-        </div>
-      </section>
-
-      <div class="promise-strip" aria-label="Store information">
-        <div>
-          <span class="promise-icon">✳</span
-          ><span><b>Made for the curious</b><small>Small details, considered well</small></span>
-        </div>
-        <div>
-          <span class="promise-icon">⌖</span
-          ><span><b>India, for now</b><small>Shipping to Indian addresses</small></span>
-        </div>
-        <div>
-          <span class="promise-icon">↗</span
-          ><span><b>15 working days</b><small>Delivery from order booking</small></span>
-        </div>
-      </div>
-
-      <section class="catalogue-section" id="shop-products" aria-labelledby="collection-heading">
-        <div class="collection-heading-row">
-          <div>
-            <p class="overline overline-muted">THE GOODS</p>
-            <h2 id="collection-heading">Made to <em>go places.</em></h2>
-          </div>
-          <p class="collection-intro">The NeverBeen mark, in the things that travel with you.</p>
-        </div>
-
-        <nav class="category-nav" aria-label="Shop by category">
-          <button
-            type="button"
-            [class.is-active]="currentCategory() === 'all'"
-            [attr.aria-pressed]="currentCategory() === 'all'"
-            (click)="setCategory('all')"
-          >
-            Everything <span>{{ products().length }}</span>
-          </button>
-          @for (category of categories; track category.slug) {
-            <button
-              type="button"
-              [class.is-active]="currentCategory() === category.slug"
-              [attr.aria-pressed]="currentCategory() === category.slug"
-              (click)="setCategory(category.slug)"
-            >
-              {{ category.title }} <span>{{ categoryCount(category.slug) }}</span>
-            </button>
-          }
-        </nav>
-
-        <div class="filter-panel" aria-label="Product filters and sorting">
-          <label class="search-box">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              aria-hidden="true"
-            >
-              <circle cx="10.8" cy="10.8" r="6.8" />
-              <path d="m16 16 4.5 4.5" stroke-linecap="round" />
-            </svg>
-            <input
-              type="search"
-              placeholder="Search the collection"
-              [value]="search()"
-              (input)="setSearch($event)"
-              aria-label="Search merchandise"
-            />
-          </label>
-          <div class="filter-control">
-            <label for="audience-filter">For</label>
-            <select
-              id="audience-filter"
-              [value]="audience()"
-              (change)="setAudienceFromEvent($event)"
-            >
-              <option>All</option>
-              <option>Women</option>
-              <option>Men</option>
-              <option>Boys</option>
-              <option>Girls</option>
-              <option>Kids</option>
-              <option>Unisex</option>
-            </select>
-          </div>
-          <div class="filter-control price-filter">
-            <label for="max-price"
-              >Up to <span>{{ money(maximumPrice()) }}</span></label
-            >
-            <input
-              id="max-price"
-              type="range"
-              min="250"
-              max="3500"
-              step="50"
-              [value]="maximumPrice()"
-              (input)="setMaximumPrice($event)"
-            />
-          </div>
-          <div class="filter-control">
-            <label for="rating-filter">Rating</label>
-            <select
-              id="rating-filter"
-              [value]="minimumRating()"
-              (change)="setMinimumRating($event)"
-            >
-              <option value="0">Any rating</option>
-              <option value="4">4+ stars</option>
-              <option value="4.5">4.5+ stars</option>
-            </select>
-          </div>
-          <div class="filter-control sort-control">
-            <label for="sort-products">Sort by</label>
-            <select id="sort-products" [value]="sort()" (change)="setSort($event)">
-              <option value="featured">Featured</option>
-              <option value="newest">Newest</option>
-              <option value="price-low">Price: low to high</option>
-              <option value="price-high">Price: high to low</option>
-              <option value="rating">Top rated</option>
-            </select>
-          </div>
-        </div>
-        <div class="results-line">
-          <span
-            ><b>{{ visibleProducts().length }}</b> pieces in the collection</span
-          >
-          @if (
-            currentCategory() !== 'all' ||
-            search() ||
-            audience() !== 'All' ||
-            maximumPrice() < 3500 ||
-            minimumRating() > 0
-          ) {
-            <button type="button" class="clear-filter" (click)="clearFilters()">
-              Clear filters <span aria-hidden="true">×</span>
-            </button>
-          }
-        </div>
-
-        @if (loading()) {
-          <div class="loading-state" role="status" aria-live="polite">
-            <span class="loading-orbit"><i></i></span><b>Opening the studio shelves</b
-            ><span>Finding the little things that go a long way.</span>
-          </div>
-        } @else if (catalogueError()) {
-          <div class="empty-state error-state" role="alert">
-            <span class="empty-mark">!</span>
-            <h3>The collection is taking a moment.</h3>
-            <p>{{ catalogueError() }}</p>
-            <button type="button" class="button-dark" (click)="retryLoad()">Try again</button>
-          </div>
-        } @else if (visibleProducts().length) {
-          <div class="product-grid">
-            @for (product of visibleProducts(); track product.id) {
-              <article class="product-card">
-                <button
-                  class="product-photo"
-                  type="button"
-                  (click)="openProduct(product)"
-                  [attr.aria-label]="'View ' + product.name"
-                >
-                  <img
-                    [src]="product.image"
-                    [alt]="product.name + ' — NeverBeen merchandise'"
-                    loading="lazy"
-                  />
-                  @if (product.badge) {
-                    <span class="product-badge" [class.badge-new]="product.badge === 'New'">{{
-                      product.badge
-                    }}</span>
-                  }
-                  @if (productDiscount(product)) {
-                    <span class="discount-badge">−{{ productDiscount(product) }}%</span>
-                  }
-                  <span class="photo-action"
-                    ><svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.7"
-                      aria-hidden="true"
-                    >
-                      <circle cx="10.8" cy="10.8" r="6.8" />
-                      <path d="m16 16 4.5 4.5" stroke-linecap="round" />
-                      <path d="M10.8 7.8v6m-3-3h6" stroke-linecap="round" />
-                    </svg>
-                    Quick view</span
+              <div class="product-info">
+                <div class="product-meta">
+                  <span>{{ product.category.title }}</span>
+                  <span class="rating"
+                    ><i aria-hidden="true">★</i> {{ product.rating.toFixed(1) }}</span
                   >
-                </button>
-                <div class="product-copy">
-                  <div class="product-meta">
-                    <span>{{ product.category.title }}</span
-                    ><span class="rating"
-                      ><i aria-hidden="true">★</i> {{ product.rating.toFixed(1) }}
-                      <small>({{ product.reviews }})</small></span
-                    >
-                  </div>
-                  <button type="button" class="product-name" (click)="openProduct(product)">
-                    {{ product.name }}
-                  </button>
-                  <p class="product-audience">
-                    {{ product.audience }} <span>·</span> {{ product.material }}
-                  </p>
-                  <div class="product-bottom">
-                    <div class="product-prices">
-                      <b>{{ money(product.price) }}</b>
-                      @if (product.compareAtPrice) {
-                        <del>{{ money(product.compareAtPrice) }}</del>
-                      }
-                    </div>
-                    <button
-                      type="button"
-                      class="add-icon"
-                      (click)="openProduct(product)"
-                      [attr.aria-label]="'Choose options for ' + product.name"
-                    >
-                      <span aria-hidden="true">+</span>
-                    </button>
-                  </div>
                 </div>
-              </article>
-            }
-          </div>
-        } @else {
-          <div class="empty-state">
-            <span class="empty-mark">⌕</span>
-            <h3>No pieces found.</h3>
-            <p>Try a different search or loosen a filter to see what turns up.</p>
-            <button type="button" class="button-dark" (click)="clearFilters()">
-              Reset the filters
-            </button>
-          </div>
-        }
-      </section>
-
-      <section class="story-card" aria-label="About NeverBeen merchandise">
-        <div class="story-mark">
-          <img
-            src="/neverbeen-logo-report.png"
-            width="560"
-            height="201"
-            alt="NeverBeen"
-            loading="lazy"
-          />
-        </div>
-        <div class="story-copy">
-          <p class="overline">A LITTLE BIT OF EVERYWHERE</p>
-          <h2>For wherever<br /><em>you’re going.</em></h2>
-          <p>
-            Designed around the NeverBeen spirit — curious, considered, always ready to go. Pick
-            your everyday favourite and make it yours.
-          </p>
-          <button
-            type="button"
-            class="text-link"
-            (click)="setCategory('all'); scrollToCollection()"
-          >
-            Browse the collection <span aria-hidden="true">↗</span>
-          </button>
-        </div>
-        <span class="story-index">NB / 001—012</span>
-      </section>
-
-      <footer class="store-footer">
-        <span>© {{ currentYear }} NeverBeen Goods</span
-        ><span>Made for the places you’ve never been.</span
-        ><a routerLink="/">Back to NeverBeen <span aria-hidden="true">↗</span></a>
-      </footer>
-    } @else if (view() === 'cart') {
-      <section class="flow-page" aria-labelledby="cart-title">
-        <div class="flow-topline">
-          <button type="button" class="back-link" (click)="continueShopping()">
-            <span aria-hidden="true">←</span> Continue shopping</button
-          ><span>NEVERBEEN / YOUR BAG</span>
-        </div>
-        <div class="flow-heading">
-          <div>
-            <p class="overline overline-muted">YOUR PICKS, ALL TOGETHER</p>
-            <h1 id="cart-title">Your <em>bag.</em></h1>
-          </div>
-          <span class="flow-count"
-            >{{ cartCount() }} {{ cartCount() === 1 ? 'piece' : 'pieces' }}</span
-          >
-        </div>
-        @if (cartLines().length) {
-          <div class="cart-layout">
-            <div class="cart-lines">
-              @for (line of cartLines(); track line.productId + line.size + line.color) {
-                <article class="cart-line">
+                <button type="button" class="product-name" (click)="openProduct(product)">
+                  {{ product.name }}
+                </button>
+                <p class="product-subtitle">{{ product.audience }} · {{ product.material }}</p>
+                <div class="product-bottom">
+                  <div class="product-prices">
+                    <b>{{ money(product.price) }}</b>
+                    @if (product.compareAtPrice) {
+                      <del>{{ money(product.compareAtPrice) }}</del>
+                    }
+                  </div>
                   <button
                     type="button"
-                    class="cart-image"
-                    (click)="openProduct(line.product)"
-                    [attr.aria-label]="'View ' + line.product.name"
+                    class="add-icon"
+                    (click)="openProduct(product)"
+                    [attr.aria-label]="'Choose options for ' + product.name"
                   >
-                    <img [src]="line.product.image" [alt]="line.product.name" loading="lazy" />
+                    <span aria-hidden="true">+</span>
                   </button>
-                  <div class="cart-item-copy">
-                    <p class="overline overline-muted">{{ line.product.category.title }}</p>
-                    <h2>{{ line.product.name }}</h2>
-                    <p class="cart-options">{{ line.color }} <span>·</span> {{ line.size }}</p>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="state-card">
+          <span class="state-icon" aria-hidden="true">⌕</span>
+          <h3>No pieces found.</h3>
+          <p>Try a different search or loosen a filter to see what turns up.</p>
+          <button type="button" class="primary-button" (click)="clearFilters()">
+            Reset the filters
+          </button>
+        </div>
+      }
+    </section>
+
+    @if (featuredProduct(); as featured) {
+      @if (featured.campaign; as campaign) {
+        <section class="model-story shell" aria-labelledby="model-story-title">
+          <div class="model-story-copy">
+            <p class="eyebrow">THE FACE OF THIS EDIT</p>
+            <h2 id="model-story-title">
+              <em>{{ campaign.model }}</em> makes it real.
+            </h2>
+            <p>{{ campaign.note }}</p>
+            <div class="model-story-actions">
+              <a [routerLink]="campaign.profile" class="primary-button">
+                Meet the model <span aria-hidden="true">↗</span>
+              </a>
+              <button type="button" class="ghost-button" (click)="openProduct(featured)">
+                Shop the piece
+              </button>
+            </div>
+          </div>
+          <div class="model-story-image">
+            <img
+              [src]="campaign.image"
+              [alt]="campaign.model + ' with ' + featured.name"
+              loading="lazy"
+            />
+            <span>{{ campaign.label }}</span>
+          </div>
+        </section>
+      }
+    }
+  } @else if (view() === 'product') {
+    @if (activeProduct(); as product) {
+      <article class="detail-page shell">
+        <button type="button" class="back-link" (click)="closeProduct()">
+          <span aria-hidden="true">←</span> {{ productBackLabel() }}
+        </button>
+
+        <div class="detail-layout">
+          <section class="detail-gallery" aria-label="Product photography">
+            <div class="detail-main-image">
+              <img [src]="detailImage(product)" [alt]="detailAlt(product)" decoding="async" />
+              @if (product.campaign; as campaign) {
+                <span class="image-stamp">NB / {{ campaign.label }}</span>
+              }
+            </div>
+            @if (product.campaign; as campaign) {
+              <div class="thumbnail-row" aria-label="Choose product image">
+                <button
+                  type="button"
+                  [class.is-active]="detailImageMode() === 'campaign'"
+                  [attr.aria-pressed]="detailImageMode() === 'campaign'"
+                  (click)="setDetailImage('campaign')"
+                >
+                  <img [src]="campaign.image" [alt]="campaign.model + ' holding ' + product.name" />
+                  <span>With {{ campaign.model }}</span>
+                </button>
+                <button
+                  type="button"
+                  [class.is-active]="detailImageMode() === 'product'"
+                  [attr.aria-pressed]="detailImageMode() === 'product'"
+                  (click)="setDetailImage('product')"
+                >
+                  <img [src]="product.image" [alt]="product.name + ' product only'" />
+                  <span>Product only</span>
+                </button>
+              </div>
+            }
+          </section>
+
+          <section class="detail-panel" aria-labelledby="product-title">
+            <p class="eyebrow">{{ product.category.title }} / {{ product.audience }}</p>
+            <h1 id="product-title">{{ product.name }}</h1>
+            <div class="detail-rating">
+              <span aria-hidden="true">★★★★★</span>
+              <b>{{ product.rating.toFixed(1) }}</b>
+              <small>{{ product.reviews }} reviews</small>
+            </div>
+            <div class="detail-price">
+              <b>{{ money(product.price) }}</b>
+              @if (product.compareAtPrice) {
+                <del>{{ money(product.compareAtPrice) }}</del>
+              }
+              @if (productDiscount(product)) {
+                <span>{{ productDiscount(product) }}% off</span>
+              }
+            </div>
+            <p class="detail-description">{{ product.description }}</p>
+
+            @if (product.campaign; as campaign) {
+              <aside class="model-feature" aria-label="Premium model campaign">
+                <span class="model-feature-mark" aria-hidden="true">✦</span>
+                <div>
+                  <p>{{ campaign.label }}</p>
+                  <b>{{ campaign.model }}</b>
+                  <small>{{ campaign.note }}</small>
+                </div>
+                <a
+                  [routerLink]="campaign.profile"
+                  aria-label="View the portfolio of {{ campaign.model }}"
+                >
+                  Portfolio <span aria-hidden="true">↗</span>
+                </a>
+              </aside>
+            }
+
+            <div class="option-group">
+              <div class="option-heading">
+                <b>Colour</b><span>{{ selectedColor() }}</span>
+              </div>
+              <div class="swatch-list">
+                @for (color of product.colors; track color) {
+                  <button
+                    type="button"
+                    [class.is-selected]="selectedColor() === color"
+                    [style.--swatch]="swatch(color)"
+                    (click)="chooseColor(color)"
+                    [attr.aria-label]="'Choose ' + color"
+                    [attr.aria-pressed]="selectedColor() === color"
+                  >
+                    <i aria-hidden="true"></i>{{ color }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="option-group">
+              <div class="option-heading">
+                <b>Size / fit</b><span>{{ selectedSize() }}</span>
+              </div>
+              <div class="size-list">
+                @for (size of product.sizes; track size) {
+                  <button
+                    type="button"
+                    [class.is-selected]="selectedSize() === size"
+                    (click)="chooseSize(size)"
+                    [attr.aria-pressed]="selectedSize() === size"
+                  >
+                    {{ size }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <button type="button" class="primary-button add-to-bag" (click)="addCurrentProduct()">
+              Add to bag <span>{{ money(product.price) }}</span>
+            </button>
+            <p class="delivery-line">
+              <span aria-hidden="true">↗</span> {{ deliveryLabel }} from order booking · around
+              {{ estimatedDelivery }}
+            </p>
+            <ul class="product-highlights">
+              @for (highlight of product.highlights; track highlight) {
+                <li><i aria-hidden="true">✓</i>{{ highlight }}</li>
+              }
+            </ul>
+          </section>
+        </div>
+      </article>
+    } @else {
+      <div class="state-card flow-state shell">
+        <span class="state-icon" aria-hidden="true">⌕</span>
+        <h3>This piece is not available.</h3>
+        <p>Return to the collection to choose another piece.</p>
+        <button type="button" class="primary-button" (click)="continueShopping()">
+          Browse the collection
+        </button>
+      </div>
+    }
+  } @else if (view() === 'cart') {
+    <section class="flow-page shell" aria-labelledby="cart-title">
+      <button type="button" class="back-link" (click)="continueShopping()">
+        <span aria-hidden="true">←</span> Continue shopping
+      </button>
+      <div class="checkout-steps" aria-label="Checkout steps">
+        <span class="step-current"><i>1</i> Bag</span>
+        <span><i>2</i> Address</span>
+        <span><i>3</i> Payment</span>
+      </div>
+      <header class="flow-head">
+        <div>
+          <p class="eyebrow">YOUR PICKS, ALL TOGETHER</p>
+          <h1 id="cart-title">Your <em>bag.</em></h1>
+        </div>
+        <span class="flow-count"
+          >{{ cartCount() }} {{ cartCount() === 1 ? 'piece' : 'pieces' }}</span
+        >
+      </header>
+
+      @if (cartLines().length) {
+        <div class="flow-layout">
+          <div class="cart-list">
+            @for (line of cartLines(); track line.productId + line.size + line.color) {
+              <article class="cart-line">
+                <button
+                  type="button"
+                  class="cart-thumb"
+                  (click)="openProduct(line.product)"
+                  [attr.aria-label]="'View ' + line.product.name"
+                >
+                  <img
+                    [src]="coverImage(line.product)"
+                    [alt]="coverAlt(line.product)"
+                    loading="lazy"
+                  />
+                </button>
+                <div class="cart-line-body">
+                  <p class="eyebrow">{{ line.product.category.title }}</p>
+                  <h2>{{ line.product.name }}</h2>
+                  <p class="cart-options">{{ line.color }} <span>·</span> {{ line.size }}</p>
+                  @if (line.product.campaign; as campaign) {
+                    <span class="cart-model-note"
+                      >✦ {{ campaign.label }} / {{ campaign.model }}</span
+                    >
+                  }
+                  <div class="cart-line-controls">
+                    <div
+                      class="quantity-control"
+                      [attr.aria-label]="'Quantity for ' + line.product.name"
+                    >
+                      <button
+                        type="button"
+                        (click)="changeQuantity(line, -1)"
+                        [attr.aria-label]="'Remove one ' + line.product.name"
+                      >
+                        −
+                      </button>
+                      <span>{{ line.quantity }}</span>
+                      <button
+                        type="button"
+                        (click)="changeQuantity(line, 1)"
+                        [disabled]="line.quantity >= 10"
+                        [attr.aria-label]="'Add one ' + line.product.name"
+                      >
+                        +
+                      </button>
+                    </div>
                     <button type="button" class="remove-link" (click)="removeLine(line)">
                       Remove
                     </button>
                   </div>
-                  <div
-                    class="quantity-control"
-                    [attr.aria-label]="'Quantity for ' + line.product.name"
-                  >
-                    <button
-                      type="button"
-                      (click)="changeQuantity(line, -1)"
-                      [attr.aria-label]="'Remove one ' + line.product.name"
-                    >
-                      −</button
-                    ><span>{{ line.quantity }}</span
-                    ><button
-                      type="button"
-                      (click)="changeQuantity(line, 1)"
-                      [disabled]="line.quantity >= 10"
-                      [attr.aria-label]="'Add one ' + line.product.name"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <b class="line-price">{{ money(line.lineTotal) }}</b>
-                </article>
-              }
-            </div>
-            <aside class="order-summary">
-              <p class="overline overline-muted">THE NUMBERS</p>
-              <h2>Order summary</h2>
-              <div class="summary-lines">
-                <div>
-                  <span>Items subtotal</span><b>{{ money(charges().subtotal) }}</b>
                 </div>
-                <div>
-                  <span>Service tax · 5%</span><b>{{ money(charges().serviceTax) }}</b>
-                </div>
-                <div>
-                  <span>SGST · 9%</span><b>{{ money(charges().sgst) }}</b>
-                </div>
-                <div>
-                  <span>CGST · 9%</span><b>{{ money(charges().cgst) }}</b>
-                </div>
-                <div class="summary-total">
-                  <span>Estimated total <small>INR · estimated taxes</small></span
-                  ><b>{{ money(charges().total) }}</b>
-                </div>
-              </div>
-              <p class="summary-note">
-                <span aria-hidden="true">⌖</span> Delivery in 15 working days from booking. Final
-                delivery charges and taxes will be confirmed when NeverBeen activates checkout.
-              </p>
-              <button type="button" class="button-dark button-wide" (click)="beginCheckout()">
-                Continue to address <span aria-hidden="true">→</span>
-              </button>
-              @if (!signedIn()) {
-                <p class="summary-auth-note">Community sign in is required to continue.</p>
-              }
-              <div class="secure-note">
-                <span aria-hidden="true">◈</span> Your details stay with the NeverBeen Community
-              </div>
-            </aside>
+                <b class="line-price">{{ money(line.lineTotal) }}</b>
+              </article>
+            }
           </div>
-        } @else {
-          <div class="empty-state cart-empty">
-            <span class="empty-mark">⌑</span>
-            <h3>Your bag is taking a little break.</h3>
-            <p>Find a piece you love and it will be waiting here.</p>
-            <button type="button" class="button-dark" (click)="continueShopping()">
-              Explore the collection <span aria-hidden="true">→</span>
-            </button>
-          </div>
-        }
-      </section>
-      <footer class="store-footer">
-        <span>© {{ currentYear }} NeverBeen Goods</span
-        ><span>Made for the places you’ve never been.</span
-        ><a routerLink="/">Back to NeverBeen <span aria-hidden="true">↗</span></a>
-      </footer>
-    } @else if (view() === 'checkout') {
-      <section class="flow-page" aria-labelledby="checkout-title">
-        <div class="flow-topline">
-          <button type="button" class="back-link" (click)="backToCart()">
-            <span aria-hidden="true">←</span> Back to bag</button
-          ><span>NEVERBEEN / DELIVERY DETAILS</span>
-        </div>
-        <div class="checkout-steps" aria-label="Checkout steps">
-          <span class="step-done"><i>1</i> Bag</span
-          ><span class="step-current"><i>2</i> Address</span><span><i>3</i> Payment</span>
-        </div>
-        <div class="flow-heading">
-          <div>
-            <p class="overline overline-muted">DELIVERED WITH CARE</p>
-            <h1 id="checkout-title">Delivery <em>details.</em></h1>
-          </div>
-          <span class="india-only"><span aria-hidden="true">⌖</span> Shipping within India</span>
-        </div>
-        <div class="checkout-layout">
-          <section class="address-card" aria-label="Shipping address">
-            <div class="card-title-row">
-              <div>
-                <p class="overline overline-muted">01 / WHO’S RECEIVING?</p>
-                <h2>Shipping address</h2>
-              </div>
-              <span class="community-chip"><i aria-hidden="true"></i> Community member</span>
-            </div>
-            <div class="form-grid">
-              <div class="field-wrap" [class.has-error]="addressError('name')">
-                <label for="ship-name">Full name <span>FROM YOUR COMMUNITY PROFILE</span></label
-                ><input
-                  id="ship-name"
-                  type="text"
-                  [value]="memberName()"
-                  readonly
-                  autocomplete="name"
-                  aria-readonly="true"
-                  [attr.aria-invalid]="addressError('name') ? 'true' : null"
-                />
-                @if (addressError('name')) {
-                  <small class="field-error" role="alert">{{ addressError('name') }}</small>
-                }
-              </div>
-              <div class="field-wrap" [class.has-error]="addressError('email')">
-                <label for="ship-email"
-                  >Email address <span>FROM YOUR COMMUNITY PROFILE</span></label
-                ><input
-                  id="ship-email"
-                  type="email"
-                  [value]="memberEmail()"
-                  readonly
-                  autocomplete="email"
-                  aria-readonly="true"
-                  [attr.aria-invalid]="addressError('email') ? 'true' : null"
-                />
-                @if (addressError('email')) {
-                  <small class="field-error" role="alert">{{ addressError('email') }}</small>
-                }
-              </div>
-              <div class="field-wrap field-full" [class.has-error]="addressError('phone')">
-                <label for="ship-phone">Mobile number <em>*</em></label>
-                <div class="phone-wrap">
-                  <span class="country-code">🇮🇳 +91</span
-                  ><input
-                    id="ship-phone"
-                    type="tel"
-                    inputmode="tel"
-                    autocomplete="tel-national"
-                    maxlength="16"
-                    placeholder="98765 43210"
-                    [value]="address().phone"
-                    (input)="onAddressInput('phone', $event)"
-                    [attr.aria-invalid]="addressError('phone') ? 'true' : null"
-                    aria-describedby="phone-hint"
-                  />
-                </div>
-                @if (addressError('phone')) {
-                  <small class="field-error" role="alert">{{ addressError('phone') }}</small>
-                }
-                <small id="phone-hint" class="field-hint"
-                  >A valid Indian mobile number is required for delivery updates.</small
-                >
-              </div>
-              <div class="field-wrap field-full" [class.has-error]="addressError('line1')">
-                <label for="ship-line1">House / flat, street address <em>*</em></label
-                ><input
-                  id="ship-line1"
-                  type="text"
-                  autocomplete="address-line1"
-                  maxlength="180"
-                  placeholder="Apartment, building, street and area"
-                  [value]="address().line1"
-                  (input)="onAddressInput('line1', $event)"
-                  [attr.aria-invalid]="addressError('line1') ? 'true' : null"
-                />
-                @if (addressError('line1')) {
-                  <small class="field-error" role="alert">{{ addressError('line1') }}</small>
-                }
-              </div>
-              <div class="field-wrap field-full">
-                <label for="ship-line2">Landmark <span>OPTIONAL</span></label
-                ><input
-                  id="ship-line2"
-                  type="text"
-                  autocomplete="address-line2"
-                  maxlength="120"
-                  placeholder="Near a landmark, if useful"
-                  [value]="address().line2"
-                  (input)="onAddressInput('line2', $event)"
-                />
-              </div>
-              <div class="field-wrap" [class.has-error]="addressError('city')">
-                <label for="ship-city">City / town <em>*</em></label
-                ><input
-                  id="ship-city"
-                  type="text"
-                  autocomplete="address-level2"
-                  maxlength="80"
-                  placeholder="Your city"
-                  [value]="address().city"
-                  (input)="onAddressInput('city', $event)"
-                  [attr.aria-invalid]="addressError('city') ? 'true' : null"
-                />
-                @if (addressError('city')) {
-                  <small class="field-error" role="alert">{{ addressError('city') }}</small>
-                }
-              </div>
-              <div class="field-wrap" [class.has-error]="addressError('state')">
-                <label for="ship-state">State / union territory <em>*</em></label
-                ><select
-                  id="ship-state"
-                  autocomplete="address-level1"
-                  [value]="address().state"
-                  (change)="onAddressInput('state', $event)"
-                  [attr.aria-invalid]="addressError('state') ? 'true' : null"
-                >
-                  <option value="">Choose your state</option>
-                  @for (state of states; track state) {
-                    <option [value]="state">{{ state }}</option>
-                  }
-                </select>
-                @if (addressError('state')) {
-                  <small class="field-error" role="alert">{{ addressError('state') }}</small>
-                }
-              </div>
-              <div class="field-wrap" [class.has-error]="addressError('postalCode')">
-                <label for="ship-pin">PIN code <em>*</em></label
-                ><input
-                  id="ship-pin"
-                  type="text"
-                  inputmode="numeric"
-                  autocomplete="postal-code"
-                  maxlength="6"
-                  placeholder="6-digit PIN"
-                  [value]="address().postalCode"
-                  (input)="onAddressInput('postalCode', $event)"
-                  [attr.aria-invalid]="addressError('postalCode') ? 'true' : null"
-                />
-                @if (addressError('postalCode')) {
-                  <small class="field-error" role="alert">{{ addressError('postalCode') }}</small>
-                }
-              </div>
-              <div class="field-wrap">
-                <label for="ship-country">Country</label>
-                <div class="locked-country">
-                  <span aria-hidden="true">🇮🇳</span
-                  ><input
-                    id="ship-country"
-                    type="text"
-                    value="India"
-                    readonly
-                    aria-readonly="true"
-                  /><span>Only</span>
-                </div>
-                <small class="field-hint">For now, merchandise ships within India only.</small>
-              </div>
-            </div>
-            <div class="address-validation-note">
-              <span aria-hidden="true">◈</span
-              ><span
-                >We validate an Indian mobile number, state and PIN before you can continue.</span
-              >
-            </div>
-          </section>
-          <aside class="order-summary checkout-summary">
-            <p class="overline overline-muted">YOUR ORDER</p>
-            <h2>{{ cartCount() }} {{ cartCount() === 1 ? 'piece' : 'pieces' }}</h2>
-            <div class="mini-lines">
-              @for (line of cartLines(); track line.productId + line.size + line.color) {
-                <div class="mini-line">
-                  <img [src]="line.product.image" [alt]="line.product.name" loading="lazy" /><span
-                    ><b>{{ line.product.name }}</b
-                    ><small>{{ line.quantity }} × {{ line.size }} · {{ line.color }}</small></span
-                  ><strong>{{ money(line.lineTotal) }}</strong>
-                </div>
-              }
-            </div>
+
+          <aside class="summary-card" aria-labelledby="cart-summary-title">
+            <p class="eyebrow">THE NUMBERS</p>
+            <h2 id="cart-summary-title">Order summary</h2>
             <div class="summary-lines">
               <div>
                 <span>Items subtotal</span><b>{{ money(charges().subtotal) }}</b>
@@ -679,307 +592,419 @@
                 <span>CGST · 9%</span><b>{{ money(charges().cgst) }}</b>
               </div>
               <div class="summary-total">
-                <span>Estimated total <small>INR · before final delivery charges</small></span
-                ><b>{{ money(charges().total) }}</b>
+                <span>Estimated total <small>INR · estimated taxes</small></span>
+                <b>{{ money(charges().total) }}</b>
               </div>
             </div>
-            <div class="delivery-card">
-              <span class="delivery-calendar" aria-hidden="true">↗</span
-              ><span
-                ><b>Estimated delivery</b
-                ><small
-                  >{{ deliveryLabel }} from booking · around {{ estimatedDelivery }}</small
-                ></span
-              >
-            </div>
-            <button type="button" class="button-dark button-wide" (click)="continueToPayment()">
-              Continue to payment <span aria-hidden="true">→</span>
-            </button>
-            <p class="summary-footnote">
-              The PIN and India-only address are checked before payment.
+            <p class="summary-note">
+              <span aria-hidden="true">⌖</span> Delivery in {{ deliveryLabel }} from booking. Final
+              delivery charges and taxes are confirmed when live checkout is enabled.
             </p>
+            <button type="button" class="primary-button button-wide" (click)="beginCheckout()">
+              Continue to address <span aria-hidden="true">→</span>
+            </button>
+            @if (!signedIn()) {
+              <p class="summary-auth-note">Community sign in is required to continue.</p>
+            }
+            <div class="secure-note">
+              <span aria-hidden="true">◈</span> Your details stay with the NeverBeen Community
+            </div>
           </aside>
         </div>
-      </section>
-      <footer class="store-footer">
-        <span>© {{ currentYear }} NeverBeen Goods</span
-        ><span>Made for the places you’ve never been.</span
-        ><a routerLink="/">Back to NeverBeen <span aria-hidden="true">↗</span></a>
-      </footer>
-    } @else {
-      <section class="flow-page" aria-labelledby="payment-title">
-        <div class="flow-topline">
-          <button type="button" class="back-link" (click)="view.set('checkout')">
-            <span aria-hidden="true">←</span> Back to address</button
-          ><span>NEVERBEEN / SECURE CHECKOUT</span>
+      } @else {
+        <div class="state-card flow-state">
+          <span class="state-icon" aria-hidden="true">⌑</span>
+          <h3>Your bag is taking a little break.</h3>
+          <p>Find a piece you love and it will be waiting here.</p>
+          <button type="button" class="primary-button" (click)="continueShopping()">
+            Explore the collection <span aria-hidden="true">→</span>
+          </button>
         </div>
-        <div class="checkout-steps" aria-label="Checkout steps">
-          <span class="step-done"><i>1</i> Bag</span><span class="step-done"><i>2</i> Address</span
-          ><span class="step-current"><i>3</i> Payment</span>
+      }
+    </section>
+  } @else if (view() === 'checkout') {
+    <section class="flow-page shell" aria-labelledby="checkout-title">
+      <button type="button" class="back-link" (click)="backToCart()">
+        <span aria-hidden="true">←</span> Back to bag
+      </button>
+      <div class="checkout-steps" aria-label="Checkout steps">
+        <span class="step-done"><i>1</i> Bag</span>
+        <span class="step-current"><i>2</i> Address</span>
+        <span><i>3</i> Payment</span>
+      </div>
+      <header class="flow-head">
+        <div>
+          <p class="eyebrow">DELIVERED WITH CARE</p>
+          <h1 id="checkout-title">Delivery <em>details.</em></h1>
         </div>
-        <div class="flow-heading">
-          <div>
-            <p class="overline overline-muted">THE LAST LITTLE STEP</p>
-            <h1 id="payment-title">Payment <em>details.</em></h1>
+        <span class="flow-pill"><span aria-hidden="true">⌖</span> Shipping within India</span>
+      </header>
+
+      <div class="flow-layout">
+        <section class="form-card" aria-labelledby="address-title">
+          <div class="card-title-row">
+            <div>
+              <p class="eyebrow">01 / WHO'S RECEIVING?</p>
+              <h2 id="address-title">Shipping address</h2>
+            </div>
+            <span class="community-chip"><i aria-hidden="true"></i> Community member</span>
           </div>
-          <span class="preview-pill"><i></i> PAYMENT PREVIEW</span>
-        </div>
-        <div class="payment-preview-banner">
-          <span class="preview-lock" aria-hidden="true">◈</span>
-          <p>
-            <b>Payment UI preview</b
-            ><span
-              >Choose Google Pay or PhonePe below. Live merchant payment and order confirmation are
-              not enabled yet — no payment will be taken.</span
-            >
-          </p>
-          <span class="preview-pill-small">NO CHARGE</span>
-        </div>
-        <div class="payment-layout">
-          <section class="payment-card" aria-label="Payment method">
-            <div class="card-title-row">
-              <div>
-                <p class="overline overline-muted">01 / UPI PAYMENT</p>
-                <h2>Choose your payment app</h2>
+
+          <div class="form-grid">
+            <div class="field-wrap" [class.has-error]="addressError('name')">
+              <label for="ship-name">Full name <span>FROM YOUR COMMUNITY PROFILE</span></label>
+              <input
+                id="ship-name"
+                type="text"
+                [value]="memberName()"
+                readonly
+                autocomplete="name"
+                aria-readonly="true"
+                [attr.aria-invalid]="addressError('name') ? 'true' : null"
+              />
+              @if (addressError('name')) {
+                <small class="field-error" role="alert">{{ addressError('name') }}</small>
+              }
+            </div>
+            <div class="field-wrap" [class.has-error]="addressError('email')">
+              <label for="ship-email">Email address <span>FROM YOUR COMMUNITY PROFILE</span></label>
+              <input
+                id="ship-email"
+                type="email"
+                [value]="memberEmail()"
+                readonly
+                autocomplete="email"
+                aria-readonly="true"
+                [attr.aria-invalid]="addressError('email') ? 'true' : null"
+              />
+              @if (addressError('email')) {
+                <small class="field-error" role="alert">{{ addressError('email') }}</small>
+              }
+            </div>
+            <div class="field-wrap field-full" [class.has-error]="addressError('phone')">
+              <label for="ship-phone">Mobile number <em>*</em></label>
+              <div class="phone-wrap">
+                <span class="country-code">🇮🇳 +91</span>
+                <input
+                  id="ship-phone"
+                  type="tel"
+                  inputmode="tel"
+                  autocomplete="tel-national"
+                  maxlength="16"
+                  placeholder="98765 43210"
+                  [value]="address().phone"
+                  (input)="onAddressInput('phone', $event)"
+                  [attr.aria-invalid]="addressError('phone') ? 'true' : null"
+                  aria-describedby="phone-hint"
+                />
               </div>
-              <span class="upi-mark">UPI</span>
-            </div>
-            <p class="payment-intro">
-              A familiar, secure checkout experience — select your preferred UPI app to preview the
-              payment step.
-            </p>
-            <div class="payment-methods" role="radiogroup" aria-label="Choose payment app">
-              <button
-                type="button"
-                class="payment-method"
-                role="radio"
-                [attr.aria-checked]="paymentMethod() === 'gpay'"
-                [class.is-selected]="paymentMethod() === 'gpay'"
-                (click)="selectPayment('gpay')"
+              @if (addressError('phone')) {
+                <small class="field-error" role="alert">{{ addressError('phone') }}</small>
+              }
+              <small id="phone-hint" class="field-hint"
+                >A valid Indian mobile number is required for delivery updates.</small
               >
-                <span class="method-logo"><img src="/payment-icons/google-pay.svg" alt="" /></span
-                ><span class="method-copy"><b>Google Pay</b><small>Pay with GPay · UPI</small></span
-                ><span class="radio-dot" aria-hidden="true"></span>
-              </button>
-              <button
-                type="button"
-                class="payment-method"
-                role="radio"
-                [attr.aria-checked]="paymentMethod() === 'phonepe'"
-                [class.is-selected]="paymentMethod() === 'phonepe'"
-                (click)="selectPayment('phonepe')"
-              >
-                <span class="method-logo phonepe-logo"
-                  ><img src="/payment-icons/phonepe.svg" alt="" /></span
-                ><span class="method-copy"><b>PhonePe</b><small>Pay with PhonePe · UPI</small></span
-                ><span class="radio-dot" aria-hidden="true"></span>
-              </button>
             </div>
-            @if (paymentNotice()) {
-              <div class="payment-notice" role="status">
-                <span aria-hidden="true">ⓘ</span>
-                <p>{{ paymentNotice() }}</p>
+            <div class="field-wrap field-full" [class.has-error]="addressError('line1')">
+              <label for="ship-line1">House / flat, street address <em>*</em></label>
+              <input
+                id="ship-line1"
+                type="text"
+                autocomplete="address-line1"
+                maxlength="180"
+                placeholder="Apartment, building, street and area"
+                [value]="address().line1"
+                (input)="onAddressInput('line1', $event)"
+                [attr.aria-invalid]="addressError('line1') ? 'true' : null"
+              />
+              @if (addressError('line1')) {
+                <small class="field-error" role="alert">{{ addressError('line1') }}</small>
+              }
+            </div>
+            <div class="field-wrap field-full">
+              <label for="ship-line2">Landmark <span>OPTIONAL</span></label>
+              <input
+                id="ship-line2"
+                type="text"
+                autocomplete="address-line2"
+                maxlength="120"
+                placeholder="Near a landmark, if useful"
+                [value]="address().line2"
+                (input)="onAddressInput('line2', $event)"
+              />
+            </div>
+            <div class="field-wrap" [class.has-error]="addressError('city')">
+              <label for="ship-city">City / town <em>*</em></label>
+              <input
+                id="ship-city"
+                type="text"
+                autocomplete="address-level2"
+                maxlength="80"
+                placeholder="Your city"
+                [value]="address().city"
+                (input)="onAddressInput('city', $event)"
+                [attr.aria-invalid]="addressError('city') ? 'true' : null"
+              />
+              @if (addressError('city')) {
+                <small class="field-error" role="alert">{{ addressError('city') }}</small>
+              }
+            </div>
+            <div class="field-wrap" [class.has-error]="addressError('state')">
+              <label for="ship-state">State / union territory <em>*</em></label>
+              <select
+                id="ship-state"
+                autocomplete="address-level1"
+                [value]="address().state"
+                (change)="onAddressInput('state', $event)"
+                [attr.aria-invalid]="addressError('state') ? 'true' : null"
+              >
+                <option value="">Choose your state</option>
+                @for (state of states; track state) {
+                  <option [value]="state">{{ state }}</option>
+                }
+              </select>
+              @if (addressError('state')) {
+                <small class="field-error" role="alert">{{ addressError('state') }}</small>
+              }
+            </div>
+            <div class="field-wrap" [class.has-error]="addressError('postalCode')">
+              <label for="ship-pin">PIN code <em>*</em></label>
+              <input
+                id="ship-pin"
+                type="text"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                maxlength="6"
+                placeholder="6-digit PIN"
+                [value]="address().postalCode"
+                (input)="onAddressInput('postalCode', $event)"
+                [attr.aria-invalid]="addressError('postalCode') ? 'true' : null"
+              />
+              @if (addressError('postalCode')) {
+                <small class="field-error" role="alert">{{ addressError('postalCode') }}</small>
+              }
+            </div>
+            <div class="field-wrap">
+              <label for="ship-country">Country</label>
+              <div class="locked-country">
+                <span aria-hidden="true">🇮🇳</span>
+                <input id="ship-country" type="text" value="India" readonly aria-readonly="true" />
+                <span>Only</span>
+              </div>
+              <small class="field-hint">For now, merchandise ships within India only.</small>
+            </div>
+          </div>
+          <div class="validation-note">
+            <span aria-hidden="true">◈</span>
+            <span>We validate an Indian mobile number, state and PIN before you can continue.</span>
+          </div>
+        </section>
+
+        <aside class="summary-card" aria-labelledby="checkout-summary-title">
+          <p class="eyebrow">YOUR ORDER</p>
+          <h2 id="checkout-summary-title">
+            {{ cartCount() }} {{ cartCount() === 1 ? 'piece' : 'pieces' }}
+          </h2>
+          <div class="mini-lines">
+            @for (line of cartLines(); track line.productId + line.size + line.color) {
+              <div class="mini-line">
+                <img [src]="coverImage(line.product)" [alt]="line.product.name" loading="lazy" />
+                <span>
+                  <b>{{ line.product.name }}</b>
+                  <small>{{ line.quantity }} × {{ line.size }} · {{ line.color }}</small>
+                </span>
+                <strong>{{ money(line.lineTotal) }}</strong>
               </div>
             }
+          </div>
+          <div class="summary-lines">
+            <div>
+              <span>Items subtotal</span><b>{{ money(charges().subtotal) }}</b>
+            </div>
+            <div>
+              <span>Service tax · 5%</span><b>{{ money(charges().serviceTax) }}</b>
+            </div>
+            <div>
+              <span>SGST · 9%</span><b>{{ money(charges().sgst) }}</b>
+            </div>
+            <div>
+              <span>CGST · 9%</span><b>{{ money(charges().cgst) }}</b>
+            </div>
+            <div class="summary-total">
+              <span>Estimated total <small>INR · before final delivery charges</small></span>
+              <b>{{ money(charges().total) }}</b>
+            </div>
+          </div>
+          <div class="delivery-card">
+            <span aria-hidden="true">↗</span>
+            <span
+              ><b>Estimated delivery</b
+              ><small
+                >{{ deliveryLabel }} from booking · around {{ estimatedDelivery }}</small
+              ></span
+            >
+          </div>
+          <button type="button" class="primary-button button-wide" (click)="continueToPayment()">
+            Continue to payment <span aria-hidden="true">→</span>
+          </button>
+          <p class="summary-footnote">The PIN and India-only address are checked before payment.</p>
+        </aside>
+      </div>
+    </section>
+  } @else {
+    <section class="flow-page shell" aria-labelledby="payment-title">
+      <button type="button" class="back-link" (click)="backToAddress()">
+        <span aria-hidden="true">←</span> Back to address
+      </button>
+      <div class="checkout-steps" aria-label="Checkout steps">
+        <span class="step-done"><i>1</i> Bag</span>
+        <span class="step-done"><i>2</i> Address</span>
+        <span class="step-current"><i>3</i> Payment</span>
+      </div>
+      <header class="flow-head">
+        <div>
+          <p class="eyebrow">THE LAST LITTLE STEP</p>
+          <h1 id="payment-title">Payment <em>details.</em></h1>
+        </div>
+        <span class="flow-pill"><i aria-hidden="true"></i> PAYMENT PREVIEW</span>
+      </header>
+
+      <div class="payment-preview-banner">
+        <span aria-hidden="true">◈</span>
+        <p>
+          <b>Payment UI preview</b>
+          <span
+            >Choose Google Pay or PhonePe below. Live merchant payment and order confirmation are
+            not enabled yet — no payment will be taken.</span
+          >
+        </p>
+        <span>NO CHARGE</span>
+      </div>
+
+      <div class="flow-layout">
+        <section class="form-card payment-card" aria-labelledby="payment-method-title">
+          <div class="card-title-row">
+            <div>
+              <p class="eyebrow">01 / UPI PAYMENT</p>
+              <h2 id="payment-method-title">Choose your payment app</h2>
+            </div>
+            <span class="upi-mark">UPI</span>
+          </div>
+          <p class="payment-intro">
+            A familiar, secure checkout experience — select your preferred UPI app to preview the
+            payment step.
+          </p>
+          <div class="payment-methods" role="radiogroup" aria-label="Choose payment app">
             <button
               type="button"
-              class="button-dark button-wide pay-button"
-              (click)="paymentSetupNotice()"
+              class="payment-method"
+              role="radio"
+              [attr.aria-checked]="paymentMethod() === 'gpay'"
+              [class.is-selected]="paymentMethod() === 'gpay'"
+              (click)="selectPayment('gpay')"
             >
-              Continue with {{ paymentMethod() === 'gpay' ? 'Google Pay' : 'PhonePe' }}
-              <span aria-hidden="true">→</span>
+              <span class="method-logo"><img src="/payment-icons/google-pay.svg" alt="" /></span>
+              <span class="method-copy"><b>Google Pay</b><small>Pay with GPay · UPI</small></span>
+              <span class="radio-dot" aria-hidden="true"></span>
             </button>
-            <div class="payment-assurance">
-              <span aria-hidden="true">◈</span
-              ><span
-                >Secure UPI payment<br /><small
-                  >Your bank details are never stored by NeverBeen.</small
-                ></span
-              >
-            </div>
-            <p class="payment-footnote">
-              For a live checkout, NeverBeen will connect a verified merchant account and
-              server-side payment confirmation. This preview does not open a payment app.
-            </p>
-          </section>
-          <aside class="order-summary payment-summary-card">
-            <p class="overline overline-muted">02 / ORDER SUMMARY</p>
-            <h2>Almost yours.</h2>
-            <div class="mini-lines">
-              @for (line of cartLines(); track line.productId + line.size + line.color) {
-                <div class="mini-line">
-                  <img [src]="line.product.image" [alt]="line.product.name" loading="lazy" /><span
-                    ><b>{{ line.product.name }}</b
-                    ><small>{{ line.quantity }} × {{ line.size }} · {{ line.color }}</small></span
-                  ><strong>{{ money(line.lineTotal) }}</strong>
-                </div>
-              }
-            </div>
-            <div class="shipping-address-preview">
-              <span class="address-pin" aria-hidden="true">⌖</span
-              ><span
-                ><b>Delivering to</b
-                ><small
-                  >{{ memberName() }} · {{ address().city }}, {{ address().state }}
-                  {{ address().postalCode }}</small
-                ><small>{{ address().phone }}</small></span
-              ><button type="button" (click)="view.set('checkout')">Edit</button>
-            </div>
-            <div class="summary-lines">
-              <div>
-                <span>Items subtotal</span><b>{{ money(charges().subtotal) }}</b>
-              </div>
-              <div>
-                <span>Service tax · 5%</span><b>{{ money(charges().serviceTax) }}</b>
-              </div>
-              <div>
-                <span>SGST · 9%</span><b>{{ money(charges().sgst) }}</b>
-              </div>
-              <div>
-                <span>CGST · 9%</span><b>{{ money(charges().cgst) }}</b>
-              </div>
-              <div class="summary-total">
-                <span>Estimated total <small>INR · taxes estimated</small></span
-                ><b>{{ money(charges().total) }}</b>
-              </div>
-            </div>
-            <div class="delivery-card">
-              <span class="delivery-calendar" aria-hidden="true">↗</span
-              ><span
-                ><b>Delivery in 15 working days</b
-                ><small>Estimate from your order booking date.</small></span
-              >
-            </div>
-          </aside>
-        </div>
-      </section>
-      <footer class="store-footer">
-        <span>© {{ currentYear }} NeverBeen Goods</span
-        ><span>Made for the places you’ve never been.</span
-        ><a routerLink="/">Back to NeverBeen <span aria-hidden="true">↗</span></a>
-      </footer>
-    }
-  </div>
-
-  @if (quickView(); as product) {
-    <div class="dialog-scrim" role="presentation" (click)="closeProduct()">
-      <section
-        class="quick-view"
-        role="dialog"
-        aria-modal="true"
-        [attr.aria-label]="product.name + ' quick view'"
-        (click)="$event.stopPropagation()"
-      >
-        <button
-          type="button"
-          class="dialog-close"
-          aria-label="Close product details"
-          (click)="closeProduct()"
-        >
-          ×
-        </button>
-        <div class="quick-photo-wrap">
-          <button
-            type="button"
-            class="quick-photo"
-            [class.is-zoomed]="zoomed()"
-            (click)="zoomed.set(!zoomed())"
-            [attr.aria-label]="zoomed() ? 'Zoom out product photo' : 'Zoom product photo'"
-          >
-            <img [src]="product.image" [alt]="product.name + ' — NeverBeen merchandise'" /><span
-              class="zoom-hint"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                aria-hidden="true"
-              >
-                <circle cx="10.8" cy="10.8" r="6.8" />
-                <path d="m16 16 4.5 4.5" stroke-linecap="round" />
-                <path d="M10.8 7.8v6m-3-3h6" stroke-linecap="round" /></svg
-              >{{ zoomed() ? 'Click to zoom out' : 'Click image to zoom' }}</span
-            ></button
-          ><span class="quick-image-index">NB / {{ product.id }}</span>
-        </div>
-        <div class="quick-details">
-          <p class="overline overline-muted">
-            {{ product.category.title }} <span>·</span> {{ product.audience }}
-          </p>
-          <h2>{{ product.name }}</h2>
-          <div class="quick-rating">
-            <span aria-hidden="true">★★★★★</span><b>{{ product.rating.toFixed(1) }}</b
-            ><small>{{ product.reviews }} reviews</small>
+            <button
+              type="button"
+              class="payment-method"
+              role="radio"
+              [attr.aria-checked]="paymentMethod() === 'phonepe'"
+              [class.is-selected]="paymentMethod() === 'phonepe'"
+              (click)="selectPayment('phonepe')"
+            >
+              <span class="method-logo phonepe-logo"
+                ><img src="/payment-icons/phonepe.svg" alt=""
+              /></span>
+              <span class="method-copy"><b>PhonePe</b><small>Pay with PhonePe · UPI</small></span>
+              <span class="radio-dot" aria-hidden="true"></span>
+            </button>
           </div>
-          <div class="quick-price">
-            <b>{{ money(product.price) }}</b>
-            @if (product.compareAtPrice) {
-              <del>{{ money(product.compareAtPrice) }}</del>
-            }
-            @if (productDiscount(product)) {
-              <span>{{ productDiscount(product) }}% off</span>
-            }
-          </div>
-          <p class="quick-description">{{ product.description }}</p>
-          <div class="option-group">
-            <div class="option-heading">
-              <b>Colour</b><span>{{ selectedColor() }}</span>
+          @if (paymentNotice()) {
+            <div class="payment-notice" role="status">
+              <span aria-hidden="true">ⓘ</span>
+              <p>{{ paymentNotice() }}</p>
             </div>
-            <div class="swatch-list">
-              @for (color of product.colors; track color) {
-                <button
-                  type="button"
-                  class="swatch-choice"
-                  [class.is-selected]="selectedColor() === color"
-                  [style.--swatch]="swatch(color)"
-                  (click)="chooseColor(color)"
-                  [attr.aria-label]="'Choose ' + color"
-                  [attr.aria-pressed]="selectedColor() === color"
-                >
-                  <i></i>{{ color }}
-                </button>
-              }
-            </div>
-          </div>
-          <div class="option-group">
-            <div class="option-heading">
-              <b>Size / fit</b><span>{{ selectedSize() }}</span>
-            </div>
-            <div class="size-list">
-              @for (size of product.sizes; track size) {
-                <button
-                  type="button"
-                  [class.is-selected]="selectedSize() === size"
-                  (click)="chooseSize(size)"
-                  [attr.aria-pressed]="selectedSize() === size"
-                >
-                  {{ size }}
-                </button>
-              }
-            </div>
-          </div>
-          <button
-            type="button"
-            class="button-dark button-wide quick-add"
-            (click)="addCurrentProduct()"
-          >
-            Add to bag <span>{{ money(product.price) }}</span>
+          }
+          <button type="button" class="primary-button button-wide" (click)="paymentSetupNotice()">
+            Continue with {{ paymentMethod() === 'gpay' ? 'Google Pay' : 'PhonePe' }}
+            <span aria-hidden="true">→</span>
           </button>
-          <p class="quick-delivery">
-            <span aria-hidden="true">↗</span> Delivery in 15 working days from order booking
+          <div class="payment-assurance">
+            <span aria-hidden="true">◈</span>
+            <span
+              >Secure UPI payment<br /><small
+                >Your bank details are never stored by NeverBeen.</small
+              ></span
+            >
+          </div>
+          <p class="payment-footnote">
+            For a live checkout, NeverBeen will connect a verified merchant account and server-side
+            payment confirmation. This preview does not open a payment app.
           </p>
-          <ul class="product-highlights">
-            @for (highlight of product.highlights; track highlight) {
-              <li><i aria-hidden="true">✓</i>{{ highlight }}</li>
+        </section>
+
+        <aside class="summary-card payment-summary" aria-labelledby="payment-summary-title">
+          <p class="eyebrow">02 / ORDER SUMMARY</p>
+          <h2 id="payment-summary-title">Almost yours.</h2>
+          <div class="mini-lines">
+            @for (line of cartLines(); track line.productId + line.size + line.color) {
+              <div class="mini-line">
+                <img [src]="coverImage(line.product)" [alt]="line.product.name" loading="lazy" />
+                <span>
+                  <b>{{ line.product.name }}</b>
+                  <small>{{ line.quantity }} × {{ line.size }} · {{ line.color }}</small>
+                </span>
+                <strong>{{ money(line.lineTotal) }}</strong>
+              </div>
             }
-          </ul>
-        </div>
-      </section>
-    </div>
+          </div>
+          <div class="shipping-address-preview">
+            <span aria-hidden="true">⌖</span>
+            <span>
+              <b>Delivering to</b>
+              <small
+                >{{ memberName() }} · {{ address().city }}, {{ address().state }}
+                {{ address().postalCode }}</small
+              >
+              <small>{{ address().phone }}</small>
+            </span>
+            <button type="button" (click)="backToAddress()">Edit</button>
+          </div>
+          <div class="summary-lines">
+            <div>
+              <span>Items subtotal</span><b>{{ money(charges().subtotal) }}</b>
+            </div>
+            <div>
+              <span>Service tax · 5%</span><b>{{ money(charges().serviceTax) }}</b>
+            </div>
+            <div>
+              <span>SGST · 9%</span><b>{{ money(charges().sgst) }}</b>
+            </div>
+            <div>
+              <span>CGST · 9%</span><b>{{ money(charges().cgst) }}</b>
+            </div>
+            <div class="summary-total">
+              <span>Estimated total <small>INR · taxes estimated</small></span>
+              <b>{{ money(charges().total) }}</b>
+            </div>
+          </div>
+          <div class="delivery-card">
+            <span aria-hidden="true">↗</span>
+            <span
+              ><b>Delivery in {{ deliveryLabel }}</b
+              ><small>Estimate from your order booking date.</small></span
+            >
+          </div>
+        </aside>
+      </div>
+    </section>
   }
 
   @if (signInGate()) {
-    <div class="dialog-scrim sign-in-scrim" role="presentation" (click)="closeSignInGate()">
+    <div class="dialog-scrim" role="presentation" (click)="closeSignInGate()">
       <section
         class="sign-in-gate"
         role="dialog"
@@ -993,19 +1018,26 @@
           aria-label="Close sign-in prompt"
           (click)="closeSignInGate()"
         >
-          ×</button
-        ><span class="gate-icon" aria-hidden="true">NB</span>
-        <p class="overline overline-muted">A COMMUNITY BAG</p>
+          ×
+        </button>
+        <span class="gate-icon" aria-hidden="true">NB</span>
+        <p class="eyebrow">A COMMUNITY BAG</p>
         <h2 id="sign-in-title">Your pieces are waiting.</h2>
         <p>
           Sign in to the NeverBeen Community to add merchandise to your bag and keep your details
           together for checkout.
         </p>
-        <a class="button-dark button-wide" routerLink="/community" (click)="rememberSignInReturn()"
-          >Sign in to Community <span aria-hidden="true">→</span></a
-        ><a class="gate-register" routerLink="/community/register" (click)="rememberSignInReturn()"
-          >New to NeverBeen? Create an account</a
-        ><button type="button" class="gate-continue" (click)="closeSignInGate()">
+        <a
+          class="primary-button button-wide"
+          routerLink="/community"
+          (click)="rememberSignInReturn()"
+        >
+          Sign in to Community <span aria-hidden="true">→</span>
+        </a>
+        <a class="gate-register" routerLink="/community/register" (click)="rememberSignInReturn()">
+          New to NeverBeen? Create an account
+        </a>
+        <button type="button" class="gate-continue" (click)="closeSignInGate()">
           Continue browsing
         </button>
       </section>
@@ -1014,8 +1046,9 @@
 
   @if (toast()) {
     <div class="toast-message" role="status" aria-live="polite">
-      <span aria-hidden="true">✓</span>{{ toast()
-      }}<button type="button" aria-label="Dismiss message" (click)="toast.set('')">×</button>
+      <span aria-hidden="true">✓</span>
+      <p>{{ toast() }}</p>
+      <button type="button" aria-label="Dismiss message" (click)="toast.set('')">×</button>
     </div>
   }
-</main>
+</div>
