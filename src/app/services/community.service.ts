@@ -992,6 +992,16 @@ export class CommunityService {
     );
   });
 
+  /**
+   * The website menu's current-device row reads the persisted device cache. Bump a tiny
+   * root bridge whenever device registration or IP geolocation changes it, so the row
+   * refreshes live without making the eager navbar depend on this service's lazy chunk.
+   */
+  private readonly deviceMenuSync = effect(() => {
+    this.devices();
+    this.badgeBridge.bumpDeviceRevision();
+  });
+
   /** Circles the signed-in member belongs to (admin or member). */
   readonly myCircles = computed(() => {
     const me = this.currentUser()?.id ?? this.profile()?.id ?? 1;

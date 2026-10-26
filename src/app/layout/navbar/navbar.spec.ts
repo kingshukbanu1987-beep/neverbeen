@@ -119,7 +119,7 @@ describe('Navbar', () => {
       expect(chip.getAttribute('aria-expanded')).toBe('false');
       expect(chip.querySelector('.account-chip-avatar img, .account-chip-initial')).toBeTruthy();
 
-      // The drop-down opens with three rows: identity (read-only), manage account, log out.
+      // The drop-down opens with four rows: identity, current device, manage account, log out.
       const dropdown = inNav.querySelector<HTMLElement>('.account-dropdown')!;
       expect(dropdown.getAttribute('aria-hidden')).toBe('true');
 
@@ -130,7 +130,7 @@ describe('Navbar', () => {
       expect(dropdown.getAttribute('aria-hidden')).toBe('false');
 
       const rows = Array.from(dropdown.querySelectorAll<HTMLElement>('.account-row'));
-      expect(rows.length).toBe(3);
+      expect(rows.length).toBe(4);
 
       // Row 1 — read-only identity: photo, full name, e-mail and the NeverBeen User ID.
       const identity = rows[0];
@@ -142,29 +142,38 @@ describe('Navbar', () => {
       );
       expect(identity.querySelector('.account-uid')?.textContent).toContain('89201534010000000001');
 
-      // Row 2 — opens the "Manage your NeverBeen Account" page.
-      expect(rows[1].querySelector('.account-action-label')?.textContent?.trim()).toBe(
+      // Row 2 — read-only current-device information with a transparent device icon.
+      expect(rows[1].classList.contains('account-device')).toBe(true);
+      expect(rows[1].textContent).toContain('Current Device');
+      expect(rows[1].textContent).toContain('Full Device Name');
+      expect(rows[1].textContent).toContain('IP Address');
+      expect(rows[1].textContent).toContain('City');
+      expect(rows[1].textContent).toContain('Country');
+      expect(rows[1].querySelector('.account-device-icon')?.getAttribute('fill')).toBe('none');
+
+      // Row 3 — opens the "Manage your NeverBeen Account" page.
+      expect(rows[2].querySelector('.account-action-label')?.textContent?.trim()).toBe(
         'Manage your NeverBeen Account',
       );
-      expect(rows[1].querySelector('.account-brand')).toBeTruthy();
+      expect(rows[2].querySelector('.account-brand')).toBeTruthy();
 
-      // Row 3 — the Log Out action.
-      expect(rows[2].classList.contains('account-logout')).toBe(true);
-      expect(rows[2].querySelector('.account-action-label')?.textContent?.trim()).toBe('Log Out');
+      // Row 4 — the Log Out action.
+      expect(rows[3].classList.contains('account-logout')).toBe(true);
+      expect(rows[3].querySelector('.account-action-label')?.textContent?.trim()).toBe('Log Out');
 
-      // Row 2 routes to the account page and closes the drop-down.
+      // Row 3 routes to the account page and closes the drop-down.
       const router = TestBed.inject(Router);
       const navSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
-      rows[1].click();
+      rows[2].click();
       fixture.detectChanges();
       expect(navSpy).toHaveBeenCalledWith(['/account']);
       expect(fixture.componentInstance['accountMenuOpen']()).toBe(false);
       navSpy.mockRestore();
 
-      // Row 3 logs the member out: only the plain Sign In option is left, with no drop-down.
+      // Row 4 logs the member out: only the plain Sign In option is left, with no drop-down.
       chip.click();
       fixture.detectChanges();
-      rows[2].click();
+      rows[3].click();
       await new Promise((resolve) => setTimeout(resolve, 40));
       TestBed.flushEffects();
       fixture.detectChanges();
@@ -174,6 +183,82 @@ describe('Navbar', () => {
       expect(element.querySelector('.account-dropdown')).toBeNull();
       expect(navLabels().at(-1)).toBe('Sign In');
     } finally {
+      community.logout();
+    }
+  });
+
+  it('shows the current device name, IP address, city and country above Manage Account', () => {
+    const community = TestBed.inject(CommunityService);
+    openDemoAccount(community, 'active_member');
+    TestBed.flushEffects();
+
+    const user = JSON.parse(localStorage.getItem('neverbeen_current_user') ?? '{}') as {
+      id?: number | string;
+    };
+    const device = {
+      id: 'device-menu-current',
+      name: 'Samsung Galaxy S24 Ultra · Chrome',
+      model: 'Samsung Galaxy S24 Ultra',
+      type: 'Phone',
+      os: 'Android 14',
+      browser: 'Chrome',
+      ipAddress: '203.0.113.42',
+      location: 'George Town, Penang, Malaysia',
+      city: 'George Town',
+      country: 'Malaysia',
+      isCurrent: true,
+      isActive: true,
+      blocked: false,
+    };
+    const deviceIdKeys = [`neverbeen_device_id:${user.id ?? ''}`, 'neverbeen_device_id:anonymous'];
+    const previous = {
+      devices: localStorage.getItem('neverbeen_devices'),
+      ids: deviceIdKeys.map((key) => localStorage.getItem(key)),
+    };
+    localStorage.setItem('neverbeen_devices', JSON.stringify([device]));
+    for (const key of deviceIdKeys) localStorage.setItem(key, device.id);
+
+    const fixture = create();
+    TestBed.flushEffects();
+    fixture.detectChanges();
+
+    try {
+      const inNav = fixture.nativeElement.querySelector(
+        '.account-menu[data-variant="innav"]',
+      ) as HTMLElement;
+      inNav.querySelector<HTMLButtonElement>('.account-chip')!.click();
+      fixture.detectChanges();
+
+      const rows = Array.from(
+        inNav.querySelectorAll<HTMLElement>('.account-dropdown > .account-row'),
+      );
+      const deviceRow = inNav.querySelector<HTMLElement>('.account-device')!;
+      const deviceIndex = rows.findIndex((row) => row.classList.contains('account-device'));
+      const manageIndex = rows.findIndex((row) =>
+        row.textContent?.includes('Manage your NeverBeen Account'),
+      );
+
+      expect(deviceIndex).toBe(manageIndex - 1);
+      expect(deviceRow.querySelector('.account-device-name')?.textContent?.trim()).toBe(
+        'Samsung Galaxy S24 Ultra · Chrome',
+      );
+      expect(deviceRow.querySelector('.account-device-specs')?.textContent).toContain('Android 14');
+      expect(deviceRow.querySelector('.account-device-ip b')?.textContent?.trim()).toBe(
+        '203.0.113.42',
+      );
+      const places = Array.from(
+        deviceRow.querySelectorAll<HTMLElement>('.account-device-place b'),
+      ).map((place) => place.textContent?.trim());
+      expect(places).toEqual(['George Town', 'Malaysia']);
+      expect(deviceRow.querySelector('.account-device-icon')?.getAttribute('fill')).toBe('none');
+    } finally {
+      if (previous.devices === null) localStorage.removeItem('neverbeen_devices');
+      else localStorage.setItem('neverbeen_devices', previous.devices);
+      deviceIdKeys.forEach((key, index) => {
+        const value = previous.ids[index];
+        if (value === null) localStorage.removeItem(key);
+        else localStorage.setItem(key, value);
+      });
       community.logout();
     }
   });
@@ -459,6 +544,30 @@ describe('Navbar', () => {
     expect(component['isAiModels']()).toBe(false);
     expect(header.classList.contains('ai-models-nav')).toBe(false);
     expect(getComputedStyle(header).backgroundColor).toBe('rgb(255, 255, 255)');
+  });
+
+  it('gives Manage Your NeverBeen Account the AI Models compact plum header', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const element: HTMLElement = fixture.nativeElement;
+    const header = element.querySelector('header.nav') as HTMLElement;
+
+    for (const url of ['/account', '/account?updated=1', '/account#profile']) {
+      component['currentUrl'].set(url);
+      fixture.detectChanges();
+
+      expect(component['isAccountSettings']()).toBe(true);
+      expect(component['isStudioChrome']()).toBe(true);
+      expect(component['isCompactLogo']()).toBe(true);
+      expect(header.classList.contains('ai-models-nav')).toBe(true);
+      expect(header.classList.contains('compact-nav')).toBe(true);
+      expect(getComputedStyle(header).backgroundColor).toBe('rgb(55, 38, 66)');
+    }
+
+    component['currentUrl'].set('/');
+    fixture.detectChanges();
+    expect(component['isAccountSettings']()).toBe(false);
+    expect(header.classList.contains('ai-models-nav')).toBe(false);
   });
 
   it('gives Merchandise the same plum chrome as the AI model studio', () => {

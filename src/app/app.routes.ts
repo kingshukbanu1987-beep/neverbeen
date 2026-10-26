@@ -101,7 +101,7 @@ export const routes: Routes = [
   },
   {
     // "Manage your NeverBeen Account" — edit the member's profile picture, country,
-    // state, city and profession (the identity details stay read-only on the page).
+    // state, city and profession (the identity details stay fixed on the page).
     path: 'account',
     loadComponent: () => import('./pages/account/account').then((m) => m.AccountSettingsPage),
   },

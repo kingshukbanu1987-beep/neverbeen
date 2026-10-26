@@ -37,8 +37,23 @@ describe('AccountSettingsPage', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     const element: HTMLElement = fixture.nativeElement;
+    const pageText = (element.textContent ?? '').toLowerCase();
 
-    // Identity details — read-only on this page.
+    // The two cards show only their title + fields; the explanatory copy is gone.
+    expect(pageText).not.toContain(
+      'update your profile picture, country, state, city and profession',
+    );
+    expect(pageText).not.toContain('editable');
+    expect(pageText).not.toContain('read-only');
+    expect(pageText).not.toContain('your name, surname, neverbeen user id, e-mail');
+    expect(element.querySelector('.card-eyebrow')).toBeNull();
+    expect(element.querySelector('.card-note')).toBeNull();
+
+    // The AI Models studio's top rail and directory-style in-page footer.
+    expect(element.querySelector('.studio-bar')).toBeTruthy();
+    expect(element.querySelector('.directory-footer')).toBeTruthy();
+
+    // Identity details — fixed on this page.
     for (const id of ['#ac-name', '#ac-surname', '#ac-uid', '#ac-email', '#ac-gender', '#ac-dob']) {
       const input = element.querySelector<HTMLInputElement>(id);
       expect(input, id).toBeTruthy();
@@ -253,10 +268,8 @@ describe('AccountSettingsPage', () => {
       expect(parseFloat(selection.style.height)).toBe(initialHeight - 40);
 
       // Resize from NW corner handle inward (dx = +20, dy = +20): bottom-right stays anchored
-      const beforeRight =
-        parseFloat(selection.style.left) + parseFloat(selection.style.width);
-      const beforeBottom =
-        parseFloat(selection.style.top) + parseFloat(selection.style.height);
+      const beforeRight = parseFloat(selection.style.left) + parseFloat(selection.style.width);
+      const beforeBottom = parseFloat(selection.style.top) + parseFloat(selection.style.height);
 
       nwHandle.dispatchEvent(
         new MouseEvent('mousedown', { clientX: 100, clientY: 100, bubbles: true }),
@@ -275,9 +288,7 @@ describe('AccountSettingsPage', () => {
     it('preserves the cropped file after Apply crop and uploads it on Update', async () => {
       const service = TestBed.inject(CommunityService);
       openDemoAccount(service, 'active_member');
-      const updateProfileSpy = vi
-        .spyOn(service, 'updateProfile')
-        .mockResolvedValue({} as never);
+      const updateProfileSpy = vi.spyOn(service, 'updateProfile').mockResolvedValue({} as never);
       const uploadPhotoSpy = vi
         .spyOn(service, 'uploadProfilePhoto')
         .mockResolvedValue('https://neverbeen.example/cropped-avatar.jpg');

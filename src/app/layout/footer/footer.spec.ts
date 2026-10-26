@@ -51,6 +51,28 @@ describe('Footer', () => {
     expect(getComputedStyle(footer).backgroundColor).not.toBe('rgb(55, 38, 66)');
   });
 
+  it('shares the AI Models plum footer with Manage Your NeverBeen Account', async () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    const footer = fixture.nativeElement.querySelector('footer#site-footer') as HTMLElement;
+    const router = TestBed.inject(Router);
+
+    for (const url of ['/account', '/account?updated=1', '/account#profile']) {
+      await router.navigateByUrl(url);
+      fixture.detectChanges();
+
+      expect(component['isAccountSettings']()).toBe(true);
+      expect(component['isStudioChrome']()).toBe(true);
+      expect(footer.classList.contains('ai-models-footer')).toBe(true);
+      expect(getComputedStyle(footer).backgroundColor).toBe('rgb(55, 38, 66)');
+    }
+
+    await router.navigateByUrl('/');
+    fixture.detectChanges();
+    expect(component['isAccountSettings']()).toBe(false);
+    expect(footer.classList.contains('ai-models-footer')).toBe(false);
+  });
+
   it('shares the AI Models plum footer with the Merchandise storefront', async () => {
     const fixture = create();
     const component = fixture.componentInstance;

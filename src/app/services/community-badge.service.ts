@@ -28,6 +28,13 @@ export class CommunityBadgeService {
    */
   readonly profileRevision = signal(0);
 
+  /**
+   * Bumped when the lazy CommunityService updates the current device's IP address or
+   * login location. The navbar's read-only device row then re-reads the account-scoped
+   * device cache without pulling the full community service into the initial bundle.
+   */
+  readonly deviceRevision = signal(0);
+
   sync(unreadNotifications: number, unreadChats: number, signedIn?: boolean): void {
     this.unreadNotifications.set(unreadNotifications);
     this.unreadChats.set(unreadChats);
@@ -39,5 +46,10 @@ export class CommunityBadgeService {
   /** CommunityService calls this after the member's photo or profile details were saved. */
   bumpProfileRevision(): void {
     this.profileRevision.update((revision) => revision + 1);
+  }
+
+  /** CommunityService calls this after device / IP-geolocation details are persisted. */
+  bumpDeviceRevision(): void {
+    this.deviceRevision.update((revision) => revision + 1);
   }
 }

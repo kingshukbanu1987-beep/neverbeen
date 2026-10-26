@@ -62,7 +62,83 @@
 
         <span class="account-separator" aria-hidden="true"></span>
 
-        <!-- Row 2 — opens the "Manage your NeverBeen Account" page. -->
+        <!-- Row 2 — read-only current-device, IP and login location details. -->
+        @if (currentDevice(); as device) {
+          <div
+            class="account-row account-device current-device-row"
+            role="group"
+            aria-label="Current Device details"
+          >
+            <svg
+              class="account-device-icon device-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <rect x="3" y="4" width="18" height="13" rx="2.2"></rect>
+              <path d="M8 21h8"></path>
+              <path d="M12 17v4"></path>
+              <circle cx="12" cy="10.5" r="2.4"></circle>
+            </svg>
+
+            <div class="account-device-copy">
+              <div class="account-device-topline">
+                <span class="account-device-eyebrow">Current Device</span>
+                <span class="account-device-session"><i aria-hidden="true"></i> This session</span>
+              </div>
+
+              <span class="account-device-field-label">Full Device Name</span>
+              <strong class="account-device-name device-name" [title]="device.name">{{
+                device.name
+              }}</strong>
+              <span class="account-device-specs">{{ device.specs }}</span>
+
+              <div
+                class="account-device-ip device-ip-address"
+                [attr.aria-label]="'IP Address ' + device.ipAddress"
+              >
+                <span>IP Address</span>
+                <b>{{ device.ipAddress }}</b>
+              </div>
+
+              <div
+                class="account-device-location device-login-location"
+                [attr.aria-label]="'Logged in from ' + device.location"
+              >
+                <svg
+                  class="account-device-pin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path>
+                  <circle cx="12" cy="10" r="2.6"></circle>
+                </svg>
+                <span class="account-device-place account-device-city">
+                  <small>City</small>
+                  <b>{{ device.city }}</b>
+                </span>
+                <span class="account-device-place-rule" aria-hidden="true"></span>
+                <span class="account-device-place account-device-country">
+                  <small>Country</small>
+                  <b>{{ device.country }}</b>
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <span class="account-separator" aria-hidden="true"></span>
+
+        <!-- Row 3 — opens the "Manage your NeverBeen Account" page. -->
         <button
           type="button"
           class="account-row account-action"
@@ -90,7 +166,7 @@
 
         <span class="account-separator" aria-hidden="true"></span>
 
-        <!-- Row 3 — log out of the NeverBeen community. -->
+        <!-- Row 4 — log out of the NeverBeen community. -->
         <button
           type="button"
           class="account-row account-action account-logout"

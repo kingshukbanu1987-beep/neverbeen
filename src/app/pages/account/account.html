@@ -2,9 +2,11 @@
   <div class="account-glow" aria-hidden="true"></div>
 
   <div class="container account-shell">
-    <nav class="account-topnav" aria-label="Account navigation">
-      <a routerLink="/" class="back-link"><span aria-hidden="true">←</span> Back to home</a>
-      <span class="account-label">NeverBeen <i aria-hidden="true">/</i> Account</span>
+    <nav class="studio-bar account-topnav" aria-label="Account navigation">
+      <a routerLink="/" class="back-link" aria-label="Back to the NeverBeen homepage">
+        <span aria-hidden="true">←</span> NeverBeen
+      </a>
+      <p class="studio-label account-label">Account settings</p>
     </nav>
 
     <!-- Profile header — the same identity card language as the model profile page. -->
@@ -17,7 +19,7 @@
       </div>
 
       <div class="header-body">
-          <div class="identity-row">
+        <div class="identity-row">
           <div class="avatar-ring">
             <span class="avatar">
               @if (photoPreview()) {
@@ -55,10 +57,19 @@
           <!-- Image Cropping Modal -->
           @if (showCropper()) {
             <div class="cropper-modal-overlay" (click)="closeCropper()">
-              <div class="cropper-modal" role="dialog" aria-modal="true" aria-labelledby="cropper-title" (click)="$event.stopPropagation()">
+              <div
+                class="cropper-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="cropper-title"
+                (click)="$event.stopPropagation()"
+              >
                 <header class="cropper-header">
                   <h3 id="cropper-title">Crop your photo</h3>
-                  <p class="cropper-hint">Drag to reposition, use the corner handles or zoom controls to frame your profile picture</p>
+                  <p class="cropper-hint">
+                    Drag to reposition, use the corner handles or zoom controls to frame your
+                    profile picture
+                  </p>
                 </header>
 
                 <div class="cropper-container">
@@ -158,8 +169,15 @@
                 </div>
 
                 <div class="cropper-actions">
-                  <button type="button" class="btn-crop-cancel" (click)="closeCropper()">Cancel</button>
-                  <button type="button" class="btn-crop-apply" [disabled]="cropping()" (click)="applyCrop()">
+                  <button type="button" class="btn-crop-cancel" (click)="closeCropper()">
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-crop-apply"
+                    [disabled]="cropping()"
+                    (click)="applyCrop()"
+                  >
                     @if (cropping()) {
                       Processing…
                     } @else {
@@ -193,7 +211,7 @@
 
     <form [formGroup]="form" (ngSubmit)="update()" class="account-form" novalidate>
       <div class="account-grid">
-        <!-- Editable details: profile picture (above), country, state, city, profession. -->
+        <!-- Member-controlled details: profile picture (above), country, state, city, profession. -->
         <section class="settings-card" aria-labelledby="editable-title">
           <header class="card-head">
             <span class="card-icon" aria-hidden="true">
@@ -203,14 +221,9 @@
               </svg>
             </span>
             <div class="card-head-copy">
-              <p class="card-eyebrow">Editable</p>
               <h2 id="editable-title">Profile details</h2>
             </div>
           </header>
-          <p class="card-note">
-            Update your profile picture, country, state, city and profession — then choose
-            <b>Update</b> to save.
-          </p>
 
           <div class="field-grid">
             <div class="field-box">
@@ -284,7 +297,7 @@
           </div>
         </section>
 
-        <!-- Read-only identity details. -->
+        <!-- Fixed identity details. -->
         <section class="settings-card locked-card" aria-labelledby="locked-title">
           <header class="card-head">
             <span class="card-icon card-icon-lock" aria-hidden="true">
@@ -294,14 +307,9 @@
               </svg>
             </span>
             <div class="card-head-copy">
-              <p class="card-eyebrow">Read-only</p>
               <h2 id="locked-title">Identity details</h2>
             </div>
           </header>
-          <p class="card-note">
-            Your name, surname, NeverBeen User ID, e-mail, gender and date of birth identify your
-            account and cannot be edited.
-          </p>
 
           <div class="field-grid">
             <div class="field-box is-locked">
@@ -434,9 +442,9 @@
       </div>
     </form>
 
-    <footer class="account-footer">
-      <a routerLink="/"><span aria-hidden="true">←</span> Back to home</a>
-      <span>NeverBeen <i aria-hidden="true">·</i> Account settings</span>
+    <footer class="directory-footer account-footer">
+      <span>NEVERBEEN / ACCOUNT SETTINGS</span>
+      <span>Private by design <b aria-hidden="true">✳</b></span>
     </footer>
   </div>
 </main>

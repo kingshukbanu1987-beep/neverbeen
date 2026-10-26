@@ -50,10 +50,39 @@ interface GoogleButtonStep {
   render: (host: HTMLElement) => void;
 }
 
+/** The subset of the persisted LoginDevice record shown by the account menu. */
+interface StoredLoginDevice {
+  id?: string;
+  name?: string;
+  model?: string;
+  type?: string;
+  os?: string;
+  browser?: string;
+  ipAddress?: string;
+  location?: string;
+  country?: string;
+  city?: string;
+  locality?: string;
+  isCurrent?: boolean;
+  blocked?: boolean;
+}
+
+interface CurrentDeviceSnapshot {
+  name: string;
+  specs: string;
+  ipAddress: string;
+  city: string;
+  country: string;
+  location: string;
+}
+
 const TOKEN_COOKIE = 'neverbeen_auth_token';
 const DEMO_TOKEN = 'jwt_default_active_token';
 const USER_STORAGE_KEY = 'neverbeen_current_user';
 const PROFILE_STORAGE_KEY = 'neverbeen_user_profile';
+const DEVICES_STORAGE_KEY = 'neverbeen_devices';
+const DEVICE_ID_STORAGE_PREFIX = 'neverbeen_device_id';
+const NOT_AVAILABLE = 'Not available';
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -86,6 +115,135 @@ function readStoredJson<T>(key: string): T | null {
   } catch {
     return null;
   }
+}
+
+function cleanText(value: unknown): string {
+  return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+}
+
+function joinUnique(parts: string[]): string {
+  const seen = new Set<string>();
+  return parts
+    .map(cleanText)
+    .filter((part) => {
+      const key = part.toLowerCase();
+      if (!part || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .join(' · ');
+}
+
+function readStorageText(key: string): string {
+  try {
+    return typeof localStorage === 'undefined' ? '' : (localStorage.getItem(key) ?? '').trim();
+  } catch {
+    return '';
+  }
+}
+
+/** Device ids are account-scoped; prefer this session's id over an older isCurrent flag. */
+function currentBrowserDeviceIds(): string[] {
+  const user = readStoredJson<Partial<CurrentUser>>(USER_STORAGE_KEY);
+  const profile = readStoredJson<Partial<Profile>>(PROFILE_STORAGE_KEY);
+  const accountIds = [user?.id, profile?.id, 'anonymous']
+    .filter((id): id is number | string => id !== undefined && id !== null)
+    .map((id) => readStorageText(`${DEVICE_ID_STORAGE_PREFIX}:${id}`));
+  return accountIds.filter(Boolean);
+}
+
+/** Older device records only have a free-form "City, Region, Country" location string. */
+function legacyLocationParts(location: string): { city: string; country: string } {
+  const parts = location
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length < 2) return { city: '', country: parts[0] ?? '' };
+  return { city: parts[0], country: parts.at(-1) ?? '' };
+}
+
+/** Best browser-only fallback before CommunityService has registered this device. */
+function browserDeviceFallback(): CurrentDeviceSnapshot {
+  const nav = typeof navigator === 'undefined' ? null : navigator;
+  const ua = nav?.userAgent ?? '';
+  const platform = nav?.platform ?? '';
+  const hardware = /iPhone/i.test(ua)
+    ? 'iPhone'
+    : /iPad/i.test(ua)
+      ? 'iPad'
+      : /Android/i.test(ua)
+        ? 'Android device'
+        : /Mac/i.test(`${ua} ${platform}`)
+          ? 'MacBook'
+          : /Windows/i.test(`${ua} ${platform}`)
+            ? 'Windows PC'
+            : /CrOS/i.test(ua)
+              ? 'Chromebook'
+              : 'This device';
+  const browser = /Edg\//i.test(ua)
+    ? 'Edge'
+    : /OPR\//i.test(ua)
+      ? 'Opera'
+      : /Firefox\//i.test(ua)
+        ? 'Firefox'
+        : /Chrome\/|CriOS\//i.test(ua)
+          ? 'Chrome'
+          : /Safari\//i.test(ua)
+            ? 'Safari'
+            : 'Browser';
+  const os = /iPhone|iPad/i.test(ua)
+    ? 'iOS / iPadOS'
+    : /Android/i.test(ua)
+      ? 'Android'
+      : /Mac/i.test(`${ua} ${platform}`)
+        ? 'macOS'
+        : /Windows/i.test(`${ua} ${platform}`)
+          ? 'Windows'
+          : /CrOS/i.test(ua)
+            ? 'ChromeOS'
+            : '';
+  return {
+    name: joinUnique([hardware, browser]),
+    specs: joinUnique([hardware, os, browser]),
+    ipAddress: NOT_AVAILABLE,
+    city: NOT_AVAILABLE,
+    country: NOT_AVAILABLE,
+    location: NOT_AVAILABLE,
+  };
+}
+
+/**
+ * Read-only current-device details for the account drop-down. The community service
+ * registers this browser and persists the API's IP / geolocation answer under this key;
+ * reading it here keeps the always-mounted navbar independent of the lazy community chunk.
+ */
+function readCurrentDeviceSnapshot(): CurrentDeviceSnapshot {
+  const fallback = browserDeviceFallback();
+  const stored = readStoredJson<StoredLoginDevice[]>(DEVICES_STORAGE_KEY);
+  const devices = Array.isArray(stored) ? stored : [];
+  const browserIds = new Set(currentBrowserDeviceIds());
+  const device =
+    devices.find((entry) => !!entry.id && browserIds.has(entry.id)) ??
+    devices.find((entry) => entry.isCurrent && !entry.blocked) ??
+    devices.find((entry) => !entry.blocked) ??
+    devices[0];
+  if (!device) return fallback;
+
+  const legacy = legacyLocationParts(cleanText(device.location));
+  const city = cleanText(device.city) || legacy.city || NOT_AVAILABLE;
+  const country = cleanText(device.country) || legacy.country || NOT_AVAILABLE;
+  const ipAddress = cleanText(device.ipAddress) || NOT_AVAILABLE;
+  const locationParts = [city, country].filter((part) => part !== NOT_AVAILABLE);
+  const name = cleanText(device.name) || joinUnique([device.model ?? '', device.browser ?? '']);
+
+  return {
+    name: name || fallback.name,
+    specs: joinUnique([device.type ?? '', device.os ?? '', device.browser ?? '']) || fallback.specs,
+    ipAddress,
+    city,
+    country,
+    location: locationParts.join(', ') || cleanText(device.location) || NOT_AVAILABLE,
+  };
 }
 
 /**
@@ -194,6 +352,19 @@ export class Navbar {
     return readAccountSnapshot();
   });
 
+  /**
+   * Read-only current-device details (full name, IP, login city and country). The device
+   * revision is bumped by CommunityService after its API / geolocation lookup, while
+   * accountRevision re-reads the cache each time the drop-down is opened.
+   */
+  protected readonly currentDevice = computed<CurrentDeviceSnapshot>(() => {
+    this.isCommunitySignedIn();
+    this.accountRevision();
+    this.currentUrl();
+    this.badges.deviceRevision();
+    return readCurrentDeviceSnapshot();
+  });
+
   protected badgeText(count: number): string {
     return count > 99 ? '99+' : String(count);
   }
@@ -261,6 +432,11 @@ export class Navbar {
     /^\/?ai-models(?:\/|\?|#|$)/.test(this.currentUrl()),
   );
 
+  /** Manage Your NeverBeen Account uses the AI Models studio's compact plum site chrome. */
+  protected readonly isAccountSettings = computed(() =>
+    /^\/?account(?:\/|\?|#|$)/.test(this.currentUrl()),
+  );
+
   /**
    * Merchandise uses the same plum site chrome as the AI model studio. Its in-page
    * storefront is white and lavender, so the shared header and footer stay visually tied
@@ -275,16 +451,20 @@ export class Navbar {
     /^\/?multiverse-studio(?:\/|\?|#|$)/.test(this.currentUrl()),
   );
 
-  /** Studio experiences get the same compact site chrome. */
+  /** Studio experiences — and the account page — get the same compact site chrome. */
   protected readonly isStudioChrome = computed(
-    () => this.isAiModels() || this.isMerchandise() || this.isMultiverseStudio(),
+    () =>
+      this.isAiModels() ||
+      this.isAccountSettings() ||
+      this.isMerchandise() ||
+      this.isMultiverseStudio(),
   );
 
   /**
-   * Compact header (smaller bar + 50% logo) on the Community, AI Models, Merchandise,
-   * Multiverse Studio, member profiles and the whole Admin Console, so as much of the
-   * working area as possible is visible. The Community sign-in page keeps the full-size
-   * website header.
+   * Compact header (smaller bar + 50% logo) on the Community, AI Models, Account,
+   * Merchandise, Multiverse Studio, member profiles and the whole Admin Console, so as
+   * much of the working area as possible is visible. The Community sign-in page keeps
+   * the full-size website header.
    */
   protected readonly isCompactLogo = computed(() => {
     const url = this.currentUrl();
