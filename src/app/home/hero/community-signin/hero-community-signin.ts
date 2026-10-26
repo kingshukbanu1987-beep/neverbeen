@@ -13,9 +13,10 @@ import { CommunitySignInCard } from '../../../shared/community-sign-in-card/comm
  * pages use, rendered through `app-community-sign-in-card`'s `button` variant).
  *
  * 1. **Visitor (not signed in)** — the Google button alone.
- * 2. **Member (signed in)** — “Welcome, <name>.” with the plain-text line
- *    “Step into the NeverBeen Multiverse” (non-interactive; it does not link to
- *    the Community), so the same spot greets them instead of asking them to sign in.
+ * 2. **Member (signed in)** — the member's name in a big Calibri line (no
+ *    period at the end), followed by the plain-text line “Explore the
+ *    NeverBeen Multiverse” (non-interactive; it does not link to the
+ *    Community), so the same spot greets them instead of asking them to sign in.
  *
  * The hero is part of the eager initial bundle while `CommunityService` is
  * deliberately lazy, so `hero.html` defers this component on viewport: the
@@ -34,10 +35,14 @@ export class HeroCommunitySignIn {
 
   protected readonly signedIn = this.community.isAuthenticated;
 
-  /** “Welcome, <name>.” — `{name}` in the published copy is replaced with the member's name. */
-  protected readonly welcomeTitle = computed(() =>
-    fillName(this.cms.text('home.hero', 'communityWelcomeTitle'), this.displayName()),
-  );
+  /** The member's name as the big line: `{name}` in the published copy is replaced, and any trailing period is dropped. */
+  protected readonly memberName = computed(() => {
+    const published = fillName(
+      this.cms.text('home.hero', 'communityWelcomeTitle'),
+      this.displayName(),
+    );
+    return published.trim().replace(/[\s.,!;:]+$/, '') || this.displayName();
+  });
 
   /** The name used in the greeting: first name whenever the member has one. */
   protected readonly displayName = computed(() => {

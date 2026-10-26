@@ -276,11 +276,11 @@ export const CMS_COMPONENTS: CmsComponentDef[] = [
       },
       {
         key: 'communityWelcomeTitle',
-        label: 'Members: welcome line at the top of the hero',
+        label: 'Members: name line at the top of the hero',
         type: 'text',
-        default: 'Welcome, {name}.',
+        default: '{name}',
         maxLength: 120,
-        hint: 'Shown in place of the Google sign-in button once a member is signed in. {name} becomes their first name.',
+        hint: 'Shown in place of the Google sign-in button once a member is signed in. {name} becomes their first name; it is set large, in Calibri, with no period at the end.',
       },
       { key: 'autoplay', label: 'Change the preview photographs automatically', type: 'toggle', default: true },
       {

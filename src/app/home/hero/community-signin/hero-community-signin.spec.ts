@@ -18,7 +18,7 @@ describe('HeroCommunitySignIn', () => {
   };
 
   const defaults: Record<string, string> = {
-    communityWelcomeTitle: 'Welcome, {name}.',
+    communityWelcomeTitle: '{name}',
   };
 
   beforeEach(async () => {
@@ -68,7 +68,7 @@ describe('HeroCommunitySignIn', () => {
     );
   });
 
-  it('replaces the sign-in with a personal welcome and plain-text subtitle that does not link to the community', () => {
+  it('replaces the sign-in with the member name, set large, above the plain-text Explore line', () => {
     signedIn.set(true);
     currentUser.set({
       id: 42,
@@ -85,20 +85,53 @@ describe('HeroCommunitySignIn', () => {
     const element = create();
 
     expect(element.querySelector('.hero-signin')?.classList.contains('is-member')).toBe(true);
-    expect(element.querySelector('.hero-signin-title')?.textContent?.trim()).toBe(
-      'Welcome, Aisha.',
-    );
     expect(element.querySelector('app-community-sign-in-card')).toBeNull();
+
+    // The name alone — no “Welcome,” prefix, no period at the end.
+    const title = element.querySelector<HTMLElement>('.hero-signin-title');
+    expect(title).toBeTruthy();
+    expect(title?.textContent?.trim()).toBe('Aisha');
+    expect(title?.textContent?.trim().endsWith('.')).toBe(false);
+
+    // Big, Calibri, plain text (the name is the loudest line in the block).
+    const titleStyle = getComputedStyle(title!);
+    expect(titleStyle.fontFamily).toContain('Calibri');
+    const nameSize = fontSizeInPx(titleStyle.fontSize);
+    expect(nameSize).toBeGreaterThanOrEqual(32);
 
     const subtitle = element.querySelector('.hero-signin-subtitle');
     expect(subtitle).toBeTruthy();
     expect(subtitle?.tagName).toBe('P');
-    expect(subtitle?.textContent?.trim()).toBe('Step into the NeverBeen Multiverse');
+    expect(subtitle?.textContent?.trim()).toBe('Explore the NeverBeen Multiverse');
+
+    // The Explore line stays small next to the name.
+    expect(fontSizeInPx(getComputedStyle(subtitle!).fontSize)).toBeLessThan(nameSize);
 
     // Plain text only — never an anchor or navigation trigger to /community.
     expect(element.querySelector('a')).toBeNull();
     expect(element.querySelector('[href]')).toBeNull();
     expect(element.querySelector('.hero-signin-link')).toBeNull();
+  });
+
+  it('drops a trailing period left in published copy so the name never ends with one', () => {
+    signedIn.set(true);
+    currentUser.set({
+      id: 42,
+      firstName: 'Aisha',
+      email: 'aisha@example.com',
+      status: 'Active',
+      profileComplete: true,
+    });
+    defaults['communityWelcomeTitle'] = 'Welcome, {name}.';
+
+    try {
+      const element = create();
+      expect(element.querySelector('.hero-signin-title')?.textContent?.trim()).toBe(
+        'Welcome, Aisha',
+      );
+    } finally {
+      defaults['communityWelcomeTitle'] = '{name}';
+    }
   });
 
   it('falls back to the e-mail name when a member has no first name', () => {
@@ -110,8 +143,13 @@ describe('HeroCommunitySignIn', () => {
       profileComplete: false,
     });
 
-    expect(create().querySelector('.hero-signin-title')?.textContent?.trim()).toBe(
-      'Welcome, Sam Traveller.',
-    );
+    expect(create().querySelector('.hero-signin-title')?.textContent?.trim()).toBe('Sam Traveller');
   });
 });
+
+/** Resolves a declared font-size ("2.9rem" / "46px") to pixels for comparison. */
+function fontSizeInPx(value: string): number {
+  const size = parseFloat(value);
+  if (!Number.isFinite(size)) return 0;
+  return value.trim().endsWith('rem') ? size * 16 : size;
+}
