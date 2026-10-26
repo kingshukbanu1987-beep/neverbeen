@@ -32,6 +32,11 @@ export class Footer {
     const path = this.currentUrl().split(/[?#]/)[0];
     return path === '/ai-models' || path.startsWith('/ai-models/');
   });
+  /** Manage Your NeverBeen Account shares the AI model studio's plum footer. */
+  protected readonly isAccountSettings = computed(() => {
+    const path = this.currentUrl().split(/[?#]/)[0];
+    return path === '/account' || path.startsWith('/account/');
+  });
   /** The merchandise storefront shares the AI model studio's plum footer. */
   protected readonly isMerchandise = computed(() => {
     const path = this.currentUrl().split(/[?#]/)[0];
@@ -43,7 +48,11 @@ export class Footer {
     return path === '/multiverse-studio' || path.startsWith('/multiverse-studio/');
   });
   protected readonly isStudioChrome = computed(
-    () => this.isAiModels() || this.isMerchandise() || this.isMultiverseStudio(),
+    () =>
+      this.isAiModels() ||
+      this.isAccountSettings() ||
+      this.isMerchandise() ||
+      this.isMultiverseStudio(),
   );
   protected readonly year = new Date().getFullYear();
   protected readonly tagline = computed(() => this.cms.text('global.footer', 'tagline'));

@@ -38,11 +38,11 @@ function nameKey(name: string): string {
 }
 
 /**
- * "Manage your NeverBeen Account" — the ultra-modern account page opened from the
+ * "Manage your NeverBeen Account" — the studio-styled account page opened from the
  * website menu's account drop-down.
  *
- * Editable: profile picture, country, state, city and profession.
- * Read-only: name, surname, NeverBeen User ID, e-mail, gender and date of birth.
+ * Member-controlled: profile picture, country, state, city and profession.
+ * Fixed identity: name, surname, NeverBeen User ID, e-mail, gender and date of birth.
  * Update saves the changes; Cancel returns to the home page.
  */
 @Component({
@@ -109,7 +109,7 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Identity details — name, surname, NeverBeen User ID, e-mail, gender and date of
-   * birth — are permanently disabled: they identify the member and are never edited here.
+   * birth — are permanently disabled: they identify the member and stay fixed here.
    */
   protected readonly form = this.fb.group({
     name: [{ value: '', disabled: true }],
@@ -153,7 +153,7 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Signing out while the page is open (the account drop-down is reachable from the
-   * website header here too) returns the visitor to the home page.
+   * AI Models-style website header here too) returns the visitor to the home page.
    */
   private readonly sessionGuard = effect(() => {
     if (!this.hasSession()) void this.router.navigate(['/']);
@@ -337,12 +337,12 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
 
     this.photoError.set(null);
     this.photoProcessing.set(true);
-    
+
     try {
       // First, prepare the image for preview
       const file = await this.service.prepareCommunityPhoto(source);
       this.selectedFile.set(file);
-      
+
       // Show the cropper with the selected image
       await this.openCropper(file);
     } catch (error) {
@@ -391,8 +391,10 @@ export class AccountSettingsPage implements OnInit, AfterViewInit, OnDestroy {
       this.canvasCtx = canvas.getContext('2d');
 
       // Fit canvas inside modal bounds while preserving aspect ratio (1:1 CSS-to-canvas pixels)
-      const viewportW = typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1024;
-      const viewportH = typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 768;
+      const viewportW =
+        typeof window !== 'undefined' && window.innerWidth ? window.innerWidth : 1024;
+      const viewportH =
+        typeof window !== 'undefined' && window.innerHeight ? window.innerHeight : 768;
       const maxCanvasWidth = Math.max(240, Math.min(560, viewportW - 96));
       const maxCanvasHeight = Math.max(240, Math.min(440, Math.floor(viewportH * 0.52)));
       const scale = Math.min(

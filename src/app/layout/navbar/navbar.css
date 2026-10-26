@@ -267,7 +267,7 @@ a:has(use[href='#nb-icon-live']) .icon {
   z-index: 40;
   top: calc(100% + 10px);
   right: 0;
-  width: min(330px, calc(100vw - 2rem));
+  width: min(372px, calc(100vw - 2rem));
   padding: 0.45rem;
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -310,6 +310,187 @@ a:has(use[href='#nb-icon-live']) .icon {
     radial-gradient(ellipse at 0% 0%, rgba(150, 120, 182, 0.14), transparent 62%),
     linear-gradient(180deg, #fbfaff, #f6f3fb);
   border: 1px solid rgba(150, 120, 182, 0.16);
+}
+
+/* Row 2 — a glassy, read-only telemetry card for the current device. */
+.account-device {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 0.72rem;
+  padding: 0.82rem 0.78rem 0.76rem;
+  border: 1px solid rgba(150, 120, 182, 0.2);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(150, 120, 182, 0.18), transparent 58%),
+    linear-gradient(145deg, rgba(251, 250, 255, 0.96), rgba(244, 240, 251, 0.9));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 16px 34px -28px rgba(88, 58, 128, 0.75);
+}
+
+/* The icon has no fill or chip behind it — just a transparent stroked device outline. */
+.account-device-icon {
+  width: 29px;
+  height: 29px;
+  align-self: start;
+  margin-top: 0.15rem;
+  background: transparent;
+  color: #6f539a;
+  fill: none;
+  filter: drop-shadow(0 4px 7px rgba(111, 83, 154, 0.16));
+}
+
+.account-device-copy {
+  display: block;
+  min-width: 0;
+}
+
+.account-device-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.38rem;
+}
+
+.account-device-eyebrow,
+.account-device-field-label,
+.account-device-ip > span,
+.account-device-place small {
+  color: #8a7b9d;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.account-device-session {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #247a4f;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.account-device-session i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #25a465;
+  box-shadow: 0 0 0 3px rgba(37, 164, 101, 0.12);
+  animation: account-device-pulse 2.2s ease-in-out infinite;
+}
+
+.account-device-field-label {
+  display: block;
+  margin-bottom: 0.08rem;
+}
+
+.account-device-name {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #2a1f3d;
+  font-size: 0.83rem;
+  font-weight: 750;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+
+.account-device-specs {
+  display: block;
+  margin-top: 0.12rem;
+  overflow: hidden;
+  color: #76698a;
+  font-size: 0.66rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-device-ip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+  padding: 0.44rem 0.58rem;
+  border: 1px solid rgba(150, 120, 182, 0.19);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.account-device-ip b {
+  min-width: 0;
+  overflow: hidden;
+  color: #493762;
+  font-family: 'Calibri', 'Segoe UI', ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-device-location {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 1px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.46rem;
+  margin-top: 0.44rem;
+  padding: 0.46rem 0.55rem;
+  border: 1px solid rgba(150, 120, 182, 0.15);
+  border-radius: 11px;
+  background: linear-gradient(100deg, rgba(150, 120, 182, 0.08), rgba(150, 120, 182, 0.025));
+}
+
+.account-device-pin {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  background: transparent;
+  color: #7c5ca9;
+  fill: none;
+}
+
+.account-device-place {
+  display: block;
+  min-width: 0;
+}
+
+.account-device-place small {
+  display: block;
+  font-size: 0.48rem;
+  letter-spacing: 0.1em;
+}
+
+.account-device-place b {
+  display: block;
+  overflow: hidden;
+  color: #45355e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-device-place-rule {
+  width: 1px;
+  height: 27px;
+  background: rgba(150, 120, 182, 0.22);
+}
+
+@keyframes account-device-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(37, 164, 101, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(37, 164, 101, 0.05);
+  }
 }
 
 .account-photo {
@@ -393,7 +574,7 @@ a:has(use[href='#nb-icon-live']) .icon {
   background: var(--line);
 }
 
-/* Rows 2 & 3 — the actionable options. */
+/* Rows 3 & 4 — the actionable options. */
 .account-action {
   display: flex;
   align-items: center;
@@ -825,5 +1006,9 @@ a:has(use[href='#nb-icon-live']) .icon {
 @media (prefers-reduced-motion: reduce) {
   .line {
     transition: none;
+  }
+
+  .account-device-session i {
+    animation: none;
   }
 }
