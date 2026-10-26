@@ -12,13 +12,17 @@ import {
   viewChild,
 } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { SiteConfigService } from '../../services/site-config.service';
 import { CommunityBadgeService } from '../../services/community-badge.service';
 import { SiteTabService } from '../../services/site-tab.service';
-import { rememberCommunityReturnPath, takeCommunityReturnPath } from '../../shared/community-return-path';
+import {
+  rememberCommunityReturnPath,
+  takeCommunityReturnPath,
+} from '../../shared/community-return-path';
 import { CommunitySearchBox } from '../community-search/community-search-box';
+import { generate20DigitUid, type CurrentUser, type Profile } from '../../models/community';
 import type { CommunityService } from '../../services/community.service';
 
 interface NavLink {
@@ -27,6 +31,18 @@ interface NavLink {
   path: string;
   fragment: string | undefined;
   icon: string;
+}
+
+/**
+ * Identity shown in the ultra-modern account menu (avatar chip + drop-down) that
+ * replaces the plain "Log out" option in the website menu.
+ */
+interface AccountSnapshot {
+  fullName: string;
+  email: string;
+  uniqueId: string;
+  photoUrl: string;
+  initial: string;
 }
 
 interface GoogleButtonStep {
@@ -62,6 +78,48 @@ function hasSavedCommunitySession(): boolean {
   }
 }
 
+function readStoredJson<T>(key: string): T | null {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Snapshot of the signed-in member (photo, full name, e-mail, NeverBeen User ID) for the
+ * account menu — read straight from the session this browser stored, so the always-mounted
+ * navbar never has to pull the heavyweight community chunk just to draw the option.
+ */
+function readAccountSnapshot(): AccountSnapshot | null {
+  const user = readStoredJson<Partial<CurrentUser>>(USER_STORAGE_KEY);
+  const profile = readStoredJson<Partial<Profile>>(PROFILE_STORAGE_KEY);
+  if (!user && !profile) return null;
+
+  const fullName = (
+    user?.fullName ||
+    profile?.fullName ||
+    [user?.firstName || profile?.firstName, user?.lastName || profile?.lastName]
+      .filter(Boolean)
+      .join(' ') ||
+    ''
+  ).trim();
+  const email = (user?.email || profile?.email || '').trim();
+  if (!fullName && !email) return null;
+
+  const id = user?.id ?? profile?.id;
+  const uniqueId = (
+    user?.uniqueId ||
+    profile?.uniqueId ||
+    (id ? generate20DigitUid(id) : '')
+  ).trim();
+  const photoUrl = user?.profilePhotoUrl || profile?.profilePhotoUrl || '';
+  const initial = (fullName || email || '?').charAt(0).toUpperCase() || '?';
+  return { fullName, email, uniqueId, photoUrl, initial };
+}
+
 function initialNavbarUrl(routerUrl: string): string {
   if (routerUrl && routerUrl !== '/') return routerUrl;
   if (typeof location !== 'undefined' && location.pathname && location.pathname !== '/') {
@@ -72,7 +130,7 @@ function initialNavbarUrl(routerUrl: string): string {
 
 @Component({
   selector: 'app-navbar',
-  imports: [NgOptimizedImage, RouterLink, RouterLinkActive, CommunitySearchBox],
+  imports: [NgOptimizedImage, RouterLink, RouterLinkActive, CommunitySearchBox, NgTemplateOutlet],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
 })
@@ -109,6 +167,27 @@ export class Navbar {
     return synced !== null ? synced : hasSavedCommunitySession();
   });
 
+  // ---------------------------------------------------------------------------------------------
+  // Ultra-modern account menu (avatar chip + drop-down) — replaces the plain "Log out" option.
+  // ---------------------------------------------------------------------------------------------
+
+  /** Whether the account drop-down opened from the menu option is visible. */
+  protected readonly accountMenuOpen = signal(false);
+
+  /**
+   * Bumped whenever the menu option is opened so the snapshot (photo / name after a
+   * profile edit) is re-read from the stored session, on top of the navigation refresh.
+   */
+  private readonly accountRevision = signal(0);
+
+  /** The signed-in member as shown in the account chip and drop-down (null while signed out). */
+  protected readonly account = computed<AccountSnapshot | null>(() => {
+    if (!this.isCommunitySignedIn()) return null;
+    this.accountRevision();
+    this.currentUrl();
+    return readAccountSnapshot();
+  });
+
   protected badgeText(count: number): string {
     return count > 99 ? '99+' : String(count);
   }
@@ -130,13 +209,34 @@ export class Navbar {
       update();
       const observer = new ResizeObserver(update);
       observer.observe(header);
-      destroyRef.onDestroy(() => observer.disconnect());
+
+      // The account drop-down closes when the visitor clicks anywhere else or presses Escape.
+      const onDocumentClick = (event: MouseEvent) => {
+        if (!this.accountMenuOpen()) return;
+        const target = event.target instanceof Element ? event.target : null;
+        if (!target?.closest('.account-menu')) this.accountMenuOpen.set(false);
+      };
+      const onDocumentKeydown = (event: KeyboardEvent) => {
+        if (event.key !== 'Escape') return;
+        this.accountMenuOpen.set(false);
+        this.open.set(false);
+      };
+      document.addEventListener('click', onDocumentClick);
+      document.addEventListener('keydown', onDocumentKeydown);
+
+      destroyRef.onDestroy(() => {
+        observer.disconnect();
+        document.removeEventListener('click', onDocumentClick);
+        document.removeEventListener('keydown', onDocumentKeydown);
+      });
     });
 
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.currentUrl.set(event.urlAfterRedirects || event.url);
+        // Leaving the page the drop-down was opened on also closes it.
+        this.accountMenuOpen.set(false);
       });
   }
 
@@ -265,14 +365,40 @@ export class Navbar {
     this.close();
 
     if (this.isCommunitySignedIn()) {
-      const service = await this.getCommunityService();
-      service.logout();
-      this.badges.signedIn.set(false);
-      this.siteTab.sync();
+      await this.logout();
       return;
     }
 
     await this.signInWithGoogle();
+  }
+
+  /** Opens / closes the account drop-down attached to the menu option. */
+  toggleAccountMenu(event?: Event): void {
+    event?.stopPropagation();
+    this.accountMenuOpen.update((open) => !open);
+    // Re-read the stored profile (photo / name) every time the option is opened.
+    this.accountRevision.update((revision) => revision + 1);
+  }
+
+  closeAccountMenu(): void {
+    this.accountMenuOpen.set(false);
+  }
+
+  /** "Manage your NeverBeen Account" row — opens the account details page. */
+  manageAccount(): void {
+    this.closeAccountMenu();
+    this.close();
+    void this.router.navigate(['/account']);
+  }
+
+  /** The drop-down's Log Out row — ends the community session. */
+  async logout(): Promise<void> {
+    this.closeAccountMenu();
+    this.close();
+    const service = await this.getCommunityService();
+    service.logout();
+    this.badges.signedIn.set(false);
+    this.siteTab.sync();
   }
 
   async cancelGoogleSignIn(): Promise<void> {
@@ -346,9 +472,8 @@ export class Navbar {
   }
 
   private async getCommunityService(): Promise<CommunityService> {
-    const { CommunityService: CommunityServiceToken } = await import(
-      '../../services/community.service'
-    );
+    const { CommunityService: CommunityServiceToken } =
+      await import('../../services/community.service');
     return runInInjectionContext(this.envInjector, () => inject(CommunityServiceToken));
   }
 }

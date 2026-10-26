@@ -5,6 +5,107 @@
   [class.merchandise-nav]="isMerchandise()"
   [class.compact-nav]="!isCommunity() && isCompactLogo()"
 >
+  <!-- ============================================================
+       Ultra-modern account menu (replaces the plain "Log out" option).
+       Rendered twice from one template: inside the menu on desktop and
+       right after the hamburger (three dashes) on mobile screens.
+       ============================================================ -->
+  <ng-template #accountMenuTemplate let-variant="variant">
+    <div class="account-menu" [attr.data-variant]="variant" [class.is-open]="accountMenuOpen()">
+      <button
+        type="button"
+        class="account-chip"
+        [attr.aria-expanded]="accountMenuOpen()"
+        aria-haspopup="true"
+        [attr.aria-controls]="'account-dropdown-' + variant"
+        [attr.aria-label]="
+          'Account menu' + (account()?.fullName ? ' for ' + account()!.fullName : '')
+        "
+        title="Account menu"
+        (click)="toggleAccountMenu($event)"
+      >
+        <span class="account-chip-avatar" aria-hidden="true">
+          @if (account()?.photoUrl) {
+            <img [src]="account()!.photoUrl" alt="" width="30" height="30" />
+          } @else {
+            <span class="account-chip-initial">{{ account()?.initial }}</span>
+          }
+        </span>
+        <svg class="account-chip-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <use href="#nb-icon-chevron-down"></use>
+        </svg>
+      </button>
+
+      <div
+        [attr.id]="'account-dropdown-' + variant"
+        class="account-dropdown"
+        role="menu"
+        [attr.aria-hidden]="!accountMenuOpen()"
+      >
+        <!-- Row 1 — the member's identity: read-only, clicking it does nothing. -->
+        <div class="account-row account-identity" role="presentation">
+          <span class="account-photo">
+            @if (account()?.photoUrl) {
+              <img [src]="account()!.photoUrl" alt="" width="56" height="56" />
+            } @else {
+              <span class="account-photo-initial">{{ account()?.initial }}</span>
+            }
+          </span>
+          <span class="account-identity-copy">
+            <strong class="account-name">{{ account()?.fullName }}</strong>
+            <span class="account-email">{{ account()?.email }}</span>
+            <span class="account-uid">
+              NeverBeen User ID <b>{{ account()?.uniqueId }}</b>
+            </span>
+          </span>
+        </div>
+
+        <span class="account-separator" aria-hidden="true"></span>
+
+        <!-- Row 2 — opens the "Manage your NeverBeen Account" page. -->
+        <button
+          type="button"
+          class="account-row account-action"
+          role="menuitem"
+          (click)="manageAccount()"
+        >
+          <img
+            class="account-brand"
+            src="/neverbeen-logo.png"
+            alt=""
+            width="58"
+            height="16"
+            decoding="async"
+          />
+          <span class="account-action-label">Manage your NeverBeen Account</span>
+          <svg
+            class="account-action-arrow"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <use href="#nb-icon-arrow-right"></use>
+          </svg>
+        </button>
+
+        <span class="account-separator" aria-hidden="true"></span>
+
+        <!-- Row 3 — log out of the NeverBeen community. -->
+        <button
+          type="button"
+          class="account-row account-action account-logout"
+          role="menuitem"
+          (click)="logout()"
+        >
+          <svg class="account-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="#nb-icon-log-out"></use>
+          </svg>
+          <span class="account-action-label">Log Out</span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
   @if (isCommunity()) {
     <!-- ============================================================
          Community header (Community pages only).
@@ -116,6 +217,14 @@
         <span class="line"></span>
         <span class="line"></span>
       </button>
+      <!-- Mobile screens: the account option is not part of the main menu — it sits
+           right after the hamburger (three parallel dashes) in the bar. -->
+      @if (isCommunitySignedIn()) {
+        <ng-container
+          [ngTemplateOutlet]="accountMenuTemplate"
+          [ngTemplateOutletContext]="{ variant: 'inbar' }"
+        />
+      }
       <nav id="site-nav" [class.open]="open()">
         @for (link of links(); track link.id) {
           <a
@@ -132,19 +241,25 @@
             {{ link.label }}
           </a>
         }
-        <a
-          href="#community-auth"
-          class="community-auth-link"
-          [attr.aria-busy]="isSigningIn() ? 'true' : null"
-          (click)="onCommunityAuth($event)"
-        >
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <use
-              [attr.href]="isCommunitySignedIn() ? '#nb-icon-log-out' : '#nb-icon-sign-in'"
-            ></use>
-          </svg>
-          {{ isCommunitySignedIn() ? 'Log out' : 'Sign In' }}
-        </a>
+        @if (isCommunitySignedIn()) {
+          <!-- Ultra-modern account option at the end of the menu (desktop screens). -->
+          <ng-container
+            [ngTemplateOutlet]="accountMenuTemplate"
+            [ngTemplateOutletContext]="{ variant: 'innav' }"
+          />
+        } @else {
+          <a
+            href="#community-auth"
+            class="community-auth-link"
+            [attr.aria-busy]="isSigningIn() ? 'true' : null"
+            (click)="onCommunityAuth($event)"
+          >
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <use href="#nb-icon-sign-in"></use>
+            </svg>
+            Sign In
+          </a>
+        }
       </nav>
     </div>
 
@@ -390,6 +505,29 @@
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
       <polyline points="16 17 21 12 16 7"></polyline>
       <line x1="21" y1="12" x2="9" y2="12"></line>
+    </symbol>
+    <symbol
+      id="nb-icon-chevron-down"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </symbol>
+    <symbol
+      id="nb-icon-arrow-right"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+      <polyline points="12 5 19 12 12 19"></polyline>
     </symbol>
     <symbol
       id="nb-icon-sign-in"
