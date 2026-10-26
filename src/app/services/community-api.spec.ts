@@ -294,6 +294,64 @@ describe('CommunityService — NeverBeen Web API integration', () => {
     expect(service.profile()?.settings.theme).toBe('dark');
   });
 
+  it('uploads the profile photo through PUT /api/profile/photo and versions its URL so every avatar refreshes', async () => {
+    service.token.set('jwt.token.value');
+    service.currentUser.set({
+      id: 7,
+      firstName: 'Elena',
+      lastName: 'Rostova',
+      fullName: 'Elena Rostova',
+      email: 'elena.rostova@example.com',
+      status: 'Active',
+      profileComplete: true,
+      profilePhotoUrl: `${API}/api/profile/7/photo`,
+    });
+
+    const photoDto = {
+      id: 7,
+      fullName: 'Elena Rostova',
+      email: 'elena.rostova@example.com',
+      status: 'Active',
+      // The Web API always serves the photograph from the same address.
+      profilePhotoUrl: '/api/profile/7/photo',
+      createdAtUtc: '2026-01-01T00:00:00Z',
+      settings: { theme: 'light' },
+      gallery: [],
+      commentCount: 0,
+    };
+
+    const first = service.uploadProfilePhoto(
+      new File([new Uint8Array([1, 2, 3])], 'elena.jpg', { type: 'image/jpeg' }),
+    );
+    await tick();
+
+    const upload = httpMock.expectOne(`${API}/api/profile/photo`);
+    expect(upload.request.method).toBe('PUT');
+    expect(upload.request.headers.get('Authorization')).toBe('Bearer jwt.token.value');
+    upload.flush(photoDto);
+
+    const photoUrl = await first;
+
+    // The stored URL carries a fresh cache-buster, so a re-upload changes the <img> src
+    // and the website menu's avatar can never keep showing the previous photograph.
+    expect(photoUrl).toContain('/api/profile/7/photo?v=');
+    expect(service.profile()?.profilePhotoUrl).toBe(photoUrl);
+    expect(service.currentUser()?.profilePhotoUrl).toBe(photoUrl);
+    const stored = JSON.parse(localStorage.getItem(PROFILE_KEY) ?? '{}');
+    expect(stored.profilePhotoUrl).toBe(photoUrl);
+
+    // A second upload always gets a different address — even in the same millisecond.
+    const second = service.uploadProfilePhoto(
+      new File([new Uint8Array([5, 6, 7])], 'elena-2.jpg', { type: 'image/jpeg' }),
+    );
+    await tick();
+    httpMock.expectOne(`${API}/api/profile/photo`).flush(photoDto);
+    const photoUrl2 = await second;
+
+    expect(photoUrl2).toContain('/api/profile/7/photo?v=');
+    expect(photoUrl2).not.toBe(photoUrl);
+  });
+
   it('keeps the account in this browser and names the API address when it is unreachable', async () => {
     const pending = service.createNeverbeenAccount(account);
     await tick();
