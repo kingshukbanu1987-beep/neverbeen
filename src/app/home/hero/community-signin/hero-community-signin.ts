@@ -4,9 +4,9 @@ import { SiteConfigService } from '../../../services/site-config.service';
 import { CommunitySignInCard } from '../../../shared/community-sign-in-card/community-sign-in-card';
 
 /**
- * The Community sign-in at the top of the home hero's first panel —
- * “Go Anywhere. Even Where You've Never Been” — placed directly under the small
- * texts (the eyebrow and the intro paragraph).
+ * The Community sign-in inside the home hero's first panel —
+ * “Go Anywhere. Even Where You've Never Been” — placed directly underneath the
+ * full-width picture stage.
  *
  * It is deliberately minimal: the trusted Community Google button, and nothing
  * else — no header line, no copy, no surface (the same flow the `/ai-models`

@@ -566,10 +566,11 @@ are centred and cropped as needed instead of leaving blank bands around the slid
 
 ## The Community sign-in at the top of the home page
 
-At the top of the first hero panel — *Go Anywhere. Even Where You've Never Been* — and directly under
-its small texts (the eyebrow and the intro paragraph) sits the Community sign-in
-(`src/app/home/hero/community-signin`). It is nothing but the Google button: no header line, no copy,
-no card and no background — just the button on the page's own surface.
+Inside the first hero panel — *Go Anywhere. Even Where You've Never Been* — the eyebrow badge,
+headline and intro paragraph sit above the full-width travel picture panel, and directly underneath
+the picture panel sits the Community sign-in (`src/app/home/hero/community-signin`). It is nothing
+but the Google button: no header line, no copy, no card and no background — just the button on the
+panel's surface.
 
 - **Not signed in:** the Google button alone. It is the same trusted Community flow the `/ai-models`
   pages use (`app-community-sign-in-card`, `variant="button"`): OAuth redirect, the official Google
