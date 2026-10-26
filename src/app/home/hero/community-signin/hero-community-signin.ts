@@ -13,10 +13,12 @@ import { CommunitySignInCard } from '../../../shared/community-sign-in-card/comm
  * pages use, rendered through `app-community-sign-in-card`'s `button` variant).
  *
  * 1. **Visitor (not signed in)** — the Google button alone.
- * 2. **Member (signed in)** — the member's name in a big Calibri line (no
- *    period at the end), followed by the plain-text line “Explore the
- *    NeverBeen Multiverse” (non-interactive; it does not link to the
- *    Community), so the same spot greets them instead of asking them to sign in.
+ * 2. **Member (signed in)** — a fixed black “Welcome ” greeting followed by the
+ *    member's name in a big Calibri line (no period at the end), followed by the
+ *    plain-text line “Explore the NeverBeen Multiverse and Interact with our
+ *    NeverBeen AI Models and Shop NeverBeen Merchandise from our exclusive
+ *    NeverBeen Store” (non-interactive; it does not link to the Community), so
+ *    the same spot greets them instead of asking them to sign in.
  *
  * The hero is part of the eager initial bundle while `CommunityService` is
  * deliberately lazy, so `hero.html` defers this component on viewport: the

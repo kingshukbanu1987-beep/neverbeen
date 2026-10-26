@@ -1,7 +1,9 @@
 /* ============================================================================
    Hero Community sign-in — the Google button that sits under the first hero
-   panel's small texts (a signed-in member sees their name there instead, big
-   and plain, with the line “Explore the NeverBeen Multiverse” under it).
+   panel's small texts (a signed-in member sees a fixed black “Welcome ”
+   greeting followed by their name there instead, big and plain, with the line
+   “Explore the NeverBeen Multiverse and Interact with our NeverBeen AI Models
+   and Shop NeverBeen Merchandise from our exclusive NeverBeen Store” under it).
 
    Nothing is painted here: no background, border, shadow or panel. The block
    borrows the home page's default background, and the Google button keeps the
@@ -34,7 +36,9 @@
 
 .hero-signin-title {
   margin: 0;
-  color: #0b0d12;
+  /* The member's name carries the brand purple; the fixed “Welcome ” greeting
+     ahead of it stays black. Both share this font size. */
+  color: rgb(101, 57, 129);
   font-family: var(--signin-font, 'Calibri', 'Segoe UI', 'Trebuchet MS', system-ui, sans-serif);
   /* The member's name is the biggest line in this block: Calibri, heavy and
      tight. The first value is the plain fallback; clamp() scales it. */
@@ -44,6 +48,11 @@
   letter-spacing: -0.02em;
   line-height: 1.02;
   text-wrap: balance;
+}
+
+/* The fixed “Welcome ” greeting: black, the same size as the member's name. */
+.hero-signin-greeting {
+  color: #0b0d12;
 }
 
 .hero-signin-subtitle {
