@@ -52,7 +52,7 @@
   }
 }
 
-/* A soft studio veil that keeps the watermark legible over any photograph. */
+/* A soft studio veil that keeps a locked frame reading as a deliberate, quiet teaser. */
 .premium-teaser-veil {
   position: absolute;
   inset: 0;
@@ -60,52 +60,6 @@
     radial-gradient(120% 120% at 50% 46%, rgb(255 255 255 / 20%), transparent 55%),
     linear-gradient(160deg, rgb(10 6 14 / 10%), rgb(10 6 14 / 34%));
   pointer-events: none;
-}
-
-/*
- * The diagonal watermark: from the lower left corner up to the upper right, rotated counter
- * clockwise so the line of words ascends. It is sized in container-query units, so the mark
- * scales with the tile — the same design reads as one clean band on every tile size.
- */
-.premium-teaser-mark {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  width: 150%;
-  justify-items: center;
-  gap: 0.4em;
-  transform: translate(-50%, -50%) rotate(-31deg);
-  pointer-events: none;
-}
-
-.premium-teaser-title {
-  color: #ee1c2e;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  font-size: clamp(11px, 10.5cqw, 56px);
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  text-align: center;
-  text-transform: uppercase;
-  text-wrap: balance;
-  text-shadow:
-    0 0 1px rgb(255 255 255 / 65%),
-    0 2px 14px rgb(255 255 255 / 35%);
-}
-
-.premium-teaser-sub {
-  color: #0a0a0a;
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  font-size: clamp(7px, 3.6cqw, 19px);
-  font-style: normal;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  line-height: 1.25;
-  text-align: center;
-  text-transform: uppercase;
-  text-wrap: balance;
-  text-shadow: 0 0 6px rgb(255 255 255 / 85%);
 }
 
 /* The quiet lock badge in the corner — the one affordance of a locked tile. */

@@ -119,16 +119,18 @@ describe('Hero', () => {
     expect(getComputedStyle(aiModels).color).toBe('rgb(255, 255, 255)');
   });
 
-  it('shows the NeverBeen AI Models, imagined eyebrow in the Meet the People section matching Travel photography, imagined', () => {
+  it('shows the Unwritten Souls eyebrow in the portrait preview matching Your imagination. Your Multiverse', () => {
     const element: HTMLElement = create().nativeElement;
     const travelEyebrow = element.querySelector<HTMLElement>('.panel-travel .eyebrow')!;
     const people = element.querySelector<HTMLElement>('.panel-people')!;
     const peopleEyebrow = people.querySelector<HTMLElement>('.eyebrow')!;
     const peopleHeading = people.querySelector<HTMLElement>('h2#hero-people-title')!;
 
-    expect(travelEyebrow.textContent?.trim()).toBe('Travel photography, imagined');
+    expect(travelEyebrow.textContent?.trim()).toBe('Your imagination. Your Multiverse');
+    // The badge is set in all capitals by the stylesheet, never by shouting in the copy.
+    expect(getComputedStyle(travelEyebrow).textTransform).toBe('uppercase');
     expect(peopleEyebrow).toBeTruthy();
-    expect(peopleEyebrow.textContent?.trim()).toBe('NeverBeen AI Models, imagined');
+    expect(peopleEyebrow.textContent?.trim()).toBe('The Unwritten Souls, Who Never Were');
     expect(peopleEyebrow.nextElementSibling).toBe(peopleHeading);
     expect(getComputedStyle(peopleEyebrow).fontSize).toBe(getComputedStyle(travelEyebrow).fontSize);
     expect(getComputedStyle(peopleEyebrow).fontWeight).toBe(
@@ -334,8 +336,10 @@ describe('Hero', () => {
     expect(travel.querySelector('.veil')).toBeNull();
     expect(travel.querySelector('.wash')).toBeNull();
 
-    expect(heading.textContent?.trim()).toBe("Go Anywhere. Even Where You've Never Been");
-    expect(lede.textContent).toContain('Create stunning AI vacation photos of yourself');
+    expect(heading.textContent?.trim()).toBe(
+      'Imagine Yourself Anywhere, Even Where You’ve Never Been',
+    );
+    expect(lede.textContent).toContain('No flights. No passports. No Immigration. No VISA.');
 
     const photos = Array.from(travel.querySelectorAll<HTMLImageElement>('img.photo'));
     const sources = photos.map((img) => img.getAttribute('src'));
@@ -380,10 +384,10 @@ describe('Hero', () => {
     expect(people.querySelector('.wash')).toBeNull();
 
     expect(people.querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      "Meet the People. Even When They Don't Exists outside NeverBeen Multiverse",
+      'Meet the Souls Hidden between the Dimensions of Multiverse',
     );
     expect(people.querySelector('.lede')?.textContent).toContain(
-      'What if their stories matter, even if their worlds are imaginary?',
+      'Not every world needs to exist biologically to be real.',
     );
 
     const photos = Array.from(people.querySelectorAll<HTMLImageElement>('img.photo'));

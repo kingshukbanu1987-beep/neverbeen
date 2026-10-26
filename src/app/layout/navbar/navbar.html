@@ -62,7 +62,8 @@
 
         <span class="account-separator" aria-hidden="true"></span>
 
-        <!-- Row 2 — read-only current-device, IP and login location details. -->
+        <!-- Row 2 — read-only current-device and login location details. The
+             device's IP address is deliberately not shown anywhere in the menu. -->
         @if (currentDevice(); as device) {
           <div
             class="account-row account-device current-device-row"
@@ -97,14 +98,6 @@
                 device.name
               }}</strong>
               <span class="account-device-specs">{{ device.specs }}</span>
-
-              <div
-                class="account-device-ip device-ip-address"
-                [attr.aria-label]="'IP Address ' + device.ipAddress"
-              >
-                <span>IP Address</span>
-                <b>{{ device.ipAddress }}</b>
-              </div>
 
               <div
                 class="account-device-location device-login-location"

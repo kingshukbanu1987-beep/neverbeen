@@ -1242,7 +1242,7 @@
   pointer-events: auto;
 }
 
-/* A locked Premium Content frame: soft white/lavender veil under the diagonal watermark. */
+/* A locked Premium Content frame: soft white/lavender veil, with no text over the photograph. */
 .premium-teaser-tile > app-premium-photo-teaser {
   position: absolute;
   inset: 0;
@@ -2519,7 +2519,7 @@ app-model-media-engagement .eng-item:focus-visible {
   outline-color: var(--studio-accent);
 }
 
-/* Light veil and watermark for locked Premium Content frames. */
+/* Light veil for locked Premium Content frames. */
 app-premium-photo-teaser .premium-teaser {
   background: var(--studio-surface-raised);
 }
@@ -2528,18 +2528,6 @@ app-premium-photo-teaser .premium-teaser-veil {
   background:
     radial-gradient(120% 120% at 50% 46%, rgb(255 255 255 / 70%), transparent 55%),
     linear-gradient(160deg, rgb(150 120 182 / 10%), rgb(150 120 182 / 22%));
-}
-
-app-premium-photo-teaser .premium-teaser-title {
-  color: var(--studio-accent-deep);
-  text-shadow:
-    0 0 1px #ffffff,
-    0 2px 14px rgb(255 255 255 / 70%);
-}
-
-app-premium-photo-teaser .premium-teaser-sub {
-  color: var(--studio-plum);
-  text-shadow: 0 0 6px #ffffff;
 }
 
 app-premium-photo-teaser .premium-teaser-lock {

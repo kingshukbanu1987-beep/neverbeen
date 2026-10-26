@@ -142,11 +142,13 @@ describe('Navbar', () => {
       );
       expect(identity.querySelector('.account-uid')?.textContent).toContain('89201534010000000001');
 
-      // Row 2 — read-only current-device information with a transparent device icon.
+      // Row 2 — read-only current-device information with a transparent device icon. The
+      // device's IP address is never shown in the menu.
       expect(rows[1].classList.contains('account-device')).toBe(true);
       expect(rows[1].textContent).toContain('Current Device');
       expect(rows[1].textContent).toContain('Full Device Name');
-      expect(rows[1].textContent).toContain('IP Address');
+      expect(rows[1].textContent).not.toContain('IP Address');
+      expect(rows[1].querySelector('.account-device-ip')).toBeNull();
       expect(rows[1].textContent).toContain('City');
       expect(rows[1].textContent).toContain('Country');
       expect(rows[1].querySelector('.account-device-icon')?.getAttribute('fill')).toBe('none');
@@ -187,7 +189,7 @@ describe('Navbar', () => {
     }
   });
 
-  it('shows the current device name, IP address, city and country above Manage Account', () => {
+  it('shows the current device name, city and country above Manage Account — never its IP address', () => {
     const community = TestBed.inject(CommunityService);
     openDemoAccount(community, 'active_member');
     TestBed.flushEffects();
@@ -243,9 +245,10 @@ describe('Navbar', () => {
         'Samsung Galaxy S24 Ultra · Chrome',
       );
       expect(deviceRow.querySelector('.account-device-specs')?.textContent).toContain('Android 14');
-      expect(deviceRow.querySelector('.account-device-ip b')?.textContent?.trim()).toBe(
-        '203.0.113.42',
-      );
+      // The IP address of the current device is deliberately hidden from the menu.
+      expect(deviceRow.querySelector('.account-device-ip')).toBeNull();
+      expect(deviceRow.textContent).not.toContain('IP Address');
+      expect(deviceRow.textContent).not.toContain('203.0.113.42');
       const places = Array.from(
         deviceRow.querySelectorAll<HTMLElement>('.account-device-place b'),
       ).map((place) => place.textContent?.trim());

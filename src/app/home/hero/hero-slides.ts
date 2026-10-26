@@ -5,12 +5,13 @@ import { TRAVEL_IMAGE_SOURCES } from './travel-images';
  * The two automatic previews that sit behind the top of the Home page.
  *
  * 1. `HERO_TRAVEL_SLIDES` — every photograph dropped into `public/travel`,
- *    shown as the first preview: "Go Anywhere. Even Where You've Never Been."
+ *    shown as the first preview: "Imagine Yourself Anywhere, Even Where You’ve
+ *    Never Been."
  *    Re-run `npm run generate:travel` whenever the travel folder changes.
  *
  * 2. `HERO_PEOPLE_SLIDES` — every photograph dropped into `public/banner`,
- *    shown as the second preview: "Meet the People. Even When They Don't
- *    Exists outside NeverBeen Multiverse".
+ *    shown as the second preview: "Meet the Souls Hidden between the
+ *    Dimensions of Multiverse".
  *
  * Both lists drive a five-second cross-fade slideshow.
  */

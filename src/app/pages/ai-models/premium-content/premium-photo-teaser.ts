@@ -11,9 +11,8 @@ export type PremiumTeaserVariant = 'portfolio' | 'album';
 
 /**
  * One locked Premium Content photograph, shown as a teaser: the frame is hidden behind a heavy
- * gaussian blur and carries the studio's diagonal watermark — "Premium Content" in bold red with
- * "Only available in Paid Premium Chat" in small black letters under it, the whole block running
- * from the lower left up to the upper right of the tile.
+ * gaussian blur and carries only the quiet lock badge in its corner — no words are written over
+ * the photograph, so the tile stays clean and uncluttered on every page.
  *
  * The teaser never opens the photograph: the complete frame is only ever seen on the Premium
  * Content page of a paid Premium Live Chat.
