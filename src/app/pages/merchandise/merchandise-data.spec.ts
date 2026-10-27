@@ -334,6 +334,60 @@ describe('Merchandise checkout data', () => {
     }
   });
 
+  it('attaches Nour El-Sherif to the Studio Navy Mug campaign without replacing its product image', () => {
+    const mug = mugCatalogue.items['NB-MC-002'];
+
+    expect(mug.name).toBe('Studio Navy Mug · 350 ml');
+    expect(mug.image).toBe('NB-MC-002.jpg');
+    expect(mug.price).toBe(549);
+    expect(mug.compareAtPrice).toBe(749);
+    expect(mug.colors).toEqual(['Studio navy']);
+    expect(mug.sizes).toEqual(['350 ml']);
+    expect(mug.campaign).toMatchObject({
+      model: 'Nour El-Sherif',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/nour-el-sherif',
+      image: 'NB-MC-002-nour-el-sherif-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(mug.campaign.gallery).toEqual(
+      Array.from(
+        { length: 8 },
+        (_, index) => `NB-MC-002-nour-el-sherif-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Nour El-Sherif’s Studio Navy Mug campaign photos from the correct catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Mugs-and-Coasters') ? mugCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const mug = service.products().find((product) => product.id === 'NB-MC-002');
+      expect(mug?.campaign?.model).toBe('Nour El-Sherif');
+      expect(mug?.image).toBe('/Merchandise/Mugs-and-Coasters/NB-MC-002.jpg');
+      expect(mug?.campaign?.image).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-002-nour-el-sherif-01.jpg',
+      );
+      expect(mug?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 8 },
+          (_, index) =>
+            `/Merchandise/Mugs-and-Coasters/NB-MC-002-nour-el-sherif-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('resolves the Premium model campaign photo from its catalogue folder', async () => {
     vi.stubGlobal('fetch', (url: string) =>
       Promise.resolve({

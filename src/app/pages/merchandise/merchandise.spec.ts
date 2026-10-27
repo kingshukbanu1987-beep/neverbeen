@@ -182,6 +182,88 @@ describe('Merchandise model campaigns', () => {
     }
   });
 
+  it('shows Nour El-Sherif’s Studio Navy Mug campaign and retains the original product image', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Mugs-and-Coasters') ? mugCatalogue : { items: {} }),
+      }),
+    );
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    try {
+      const catalogue = new MerchandiseCatalogService();
+      await catalogue.load();
+      await TestBed.configureTestingModule({
+        imports: [Merchandise],
+        providers: [
+          provideRouter([]),
+          { provide: MerchandiseCatalogService, useValue: catalogue },
+          {
+            provide: CommunityService,
+            useValue: {
+              currentUser: signal(null),
+              isAuthenticated: signal(false),
+              guestBrowsing: signal(false),
+            },
+          },
+        ],
+      }).compileComponents();
+
+      const fixture = TestBed.createComponent(Merchandise);
+      fixture.detectChanges();
+      const root: HTMLElement = fixture.nativeElement;
+      const card = root.querySelector<HTMLButtonElement>(
+        '.product-media[aria-label="View Studio Navy Mug · 350 ml"]',
+      );
+      expect(card?.querySelector('img')?.getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-002-nour-el-sherif-01.jpg',
+      );
+
+      card!.click();
+      fixture.detectChanges();
+
+      const mainImage = root.querySelector<HTMLImageElement>('.detail-main-image img');
+      expect(mainImage?.getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-002-nour-el-sherif-02.jpg',
+      );
+      expect(mainImage?.alt).toBe(
+        'Nour El-Sherif presenting the Studio Navy Mug · 350 ml in a white studio — look 1',
+      );
+      expect(mainImage?.classList.contains('detail-image-contain')).toBe(true);
+      expect(window.getComputedStyle(mainImage!).objectFit).toBe('contain');
+
+      const thumbnails = [...root.querySelectorAll<HTMLImageElement>('.thumbnail-row img')];
+      expect(thumbnails).toHaveLength(9);
+      expect(thumbnails.slice(0, 8).map((image) => image.getAttribute('src'))).toEqual(
+        Array.from(
+          { length: 8 },
+          (_, index) =>
+            `/Merchandise/Mugs-and-Coasters/NB-MC-002-nour-el-sherif-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+      expect(thumbnails[8].getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-002.jpg',
+      );
+      expect(
+        root
+          .querySelector('a[aria-label="View the portfolio of Nour El-Sherif"]')
+          ?.getAttribute('href'),
+      ).toBe('/ai-models/nour-el-sherif');
+
+      root.querySelectorAll<HTMLButtonElement>('.thumbnail-row button')[8].click();
+      fixture.detectChanges();
+      expect(root.querySelector('.detail-main-image img')?.getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-002.jpg',
+      );
+      fixture.destroy();
+    } finally {
+      TestBed.resetTestingModule();
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  });
+
   it('shows the tote and backpack galleries without changing the default crop for other campaigns', async () => {
     vi.stubGlobal('fetch', (url: string) =>
       Promise.resolve({
