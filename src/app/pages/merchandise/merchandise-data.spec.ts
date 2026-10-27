@@ -409,8 +409,46 @@ describe('Merchandise checkout data', () => {
       expect(bottle?.campaign?.gallery?.[0]).toBe(
         '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara-02.jpg',
       );
+
+      const tritanBottle = service.products().find((product) => product.id === 'NB-BT-003');
+      expect(tritanBottle?.campaign?.model).toBe('Farah Al-Shaar');
+      expect(tritanBottle?.image).toBe('/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003.jpg');
+      expect(tritanBottle?.campaign?.image).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003-farah-al-shaar-01.jpg',
+      );
+      expect(tritanBottle?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 8 },
+          (_, index) =>
+            `/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it('attaches Farah Al-Shaar to the Tritan Sports Bottle campaign without replacing its product image', () => {
+    const bottle = bottleCatalogue.items['NB-BT-003'];
+
+    expect(bottle.name).toBe('Tritan Sports Bottle · 1 L');
+    expect(bottle.image).toBe('NB-BT-003.jpg');
+    expect(bottle.price).toBe(749);
+    expect(bottle.compareAtPrice).toBe(999);
+    expect(bottle.colors).toEqual(['Mint', 'Navy']);
+    expect(bottle.sizes).toEqual(['1 L']);
+    expect(bottle.campaign).toMatchObject({
+      model: 'Farah Al-Shaar',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/farah-al-shaar',
+      image: 'NB-BT-003-farah-al-shaar-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(bottle.campaign.gallery).toEqual(
+      Array.from(
+        { length: 8 },
+        (_, index) => `NB-BT-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
   });
 });

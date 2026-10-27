@@ -5,6 +5,7 @@ import hoodieCatalogue from '../../../../public/Merchandise/Hoodies-and-Sweatshi
 import mugCatalogue from '../../../../public/Merchandise/Mugs-and-Coasters/Mugs-and-Coasters.json';
 import toteCatalogue from '../../../../public/Merchandise/Tote-Bags-and-Backpacks/Tote-Bags-and-Backpacks.json';
 import teeCatalogue from '../../../../public/Merchandise/T-Shirts/T-Shirts.json';
+import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
 import { CommunityService } from '../../services/community.service';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import { Merchandise } from './merchandise';
@@ -393,6 +394,89 @@ describe('Merchandise model campaigns', () => {
       const hoodieImage = root.querySelector<HTMLImageElement>('.detail-main-image img');
       expect(hoodieImage?.classList.contains('detail-image-contain')).toBe(false);
       expect(window.getComputedStyle(hoodieImage!).objectFit).toBe('cover');
+      fixture.destroy();
+    } finally {
+      TestBed.resetTestingModule();
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('shows Farah Al-Shaar’s Tritan Sports Bottle campaign and retains the original product image', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () =>
+          url.includes('Water-Bottles-and-Tumblers') ? bottleCatalogue : { items: {} },
+      }),
+    );
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    try {
+      const catalogue = new MerchandiseCatalogService();
+      await catalogue.load();
+      await TestBed.configureTestingModule({
+        imports: [Merchandise],
+        providers: [
+          provideRouter([]),
+          { provide: MerchandiseCatalogService, useValue: catalogue },
+          {
+            provide: CommunityService,
+            useValue: {
+              currentUser: signal(null),
+              isAuthenticated: signal(false),
+              guestBrowsing: signal(false),
+            },
+          },
+        ],
+      }).compileComponents();
+
+      const fixture = TestBed.createComponent(Merchandise);
+      fixture.detectChanges();
+      const root: HTMLElement = fixture.nativeElement;
+      const card = root.querySelector<HTMLButtonElement>(
+        '.product-media[aria-label="View Tritan Sports Bottle · 1 L"]',
+      );
+      expect(card?.querySelector('img')?.getAttribute('src')).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003-farah-al-shaar-01.jpg',
+      );
+
+      card!.click();
+      fixture.detectChanges();
+
+      const mainImage = root.querySelector<HTMLImageElement>('.detail-main-image img');
+      expect(mainImage?.getAttribute('src')).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003-farah-al-shaar-02.jpg',
+      );
+      expect(mainImage?.alt).toBe(
+        'Farah Al-Shaar presenting the Tritan Sports Bottle · 1 L in a white studio — look 1',
+      );
+      expect(mainImage?.classList.contains('detail-image-contain')).toBe(true);
+      expect(window.getComputedStyle(mainImage!).objectFit).toBe('contain');
+
+      const thumbnails = [...root.querySelectorAll<HTMLImageElement>('.thumbnail-row img')];
+      expect(thumbnails).toHaveLength(9);
+      expect(thumbnails.slice(0, 8).map((image) => image.getAttribute('src'))).toEqual(
+        Array.from(
+          { length: 8 },
+          (_, index) =>
+            `/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+      expect(thumbnails[8].getAttribute('src')).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003.jpg',
+      );
+      expect(
+        root
+          .querySelector('a[aria-label="View the portfolio of Farah Al-Shaar"]')
+          ?.getAttribute('href'),
+      ).toBe('/ai-models/farah-al-shaar');
+
+      root.querySelectorAll<HTMLButtonElement>('.thumbnail-row button')[8].click();
+      fixture.detectChanges();
+      expect(root.querySelector('.detail-main-image img')?.getAttribute('src')).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-003.jpg',
+      );
       fixture.destroy();
     } finally {
       TestBed.resetTestingModule();
