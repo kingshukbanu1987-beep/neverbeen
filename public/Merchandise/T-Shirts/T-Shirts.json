@@ -134,7 +134,25 @@
         "160 GSM cotton jersey, A-line fit",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Nour El-Sherif",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Nour El-Sherif in a clean white studio campaign.",
+        "profile": "/ai-models/nour-el-sherif",
+        "image": "NB-TS-004-nour-el-sherif-01.jpg",
+        "gallery": [
+          "NB-TS-004-nour-el-sherif-02.jpg",
+          "NB-TS-004-nour-el-sherif-03.jpg",
+          "NB-TS-004-nour-el-sherif-04.jpg",
+          "NB-TS-004-nour-el-sherif-05.jpg",
+          "NB-TS-004-nour-el-sherif-06.jpg",
+          "NB-TS-004-nour-el-sherif-07.jpg",
+          "NB-TS-004-nour-el-sherif-08.jpg",
+          "NB-TS-004-nour-el-sherif-09.jpg",
+          "NB-TS-004-nour-el-sherif-10.jpg"
+        ]
+      }
     },
     "NB-TS-005": {
       "id": "NB-TS-005",

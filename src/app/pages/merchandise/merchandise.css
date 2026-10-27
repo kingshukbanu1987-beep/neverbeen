@@ -1265,6 +1265,37 @@ h2 em {
   font-weight: 700;
 }
 
+.thumbnail-row.is-multi {
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: 0.5rem;
+}
+
+.thumbnail-row.is-multi button {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-items: start;
+  gap: 0.35rem;
+  padding: 0.4rem 0.3rem;
+}
+
+.thumbnail-row.is-multi img {
+  width: 100%;
+  height: 88px;
+  border-radius: 10px;
+}
+
+.thumbnail-row.is-multi span {
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
+}
+
 .detail-panel {
   border: 1px solid var(--nb-line);
   border-radius: 30px;
