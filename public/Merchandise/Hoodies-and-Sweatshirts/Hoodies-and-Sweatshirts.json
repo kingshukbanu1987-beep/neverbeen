@@ -64,12 +64,30 @@
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,
-      "highlights": [
-        "340 GSM brushed fleece, cropped cut",
-        "Printed with the NeverBeen wordmark",
-        "Dispatched from India in 2 working days"
+    "highlights": [
+      "340 GSM brushed fleece, cropped cut",
+      "Printed with the NeverBeen wordmark",
+      "Dispatched from India in 2 working days"
+    ],
+    "campaign": {
+      "model": "Priyanka Chatterjee",
+      "label": "Premium Model Edit",
+      "note": "Presented by NeverBeen Premium model Priyanka Chatterjee in a clean white studio campaign.",
+      "profile": "/ai-models/priyanka-chatterjee",
+      "image": "NB-HS-002-priyanka-chatterjee-01.jpg",
+      "gallery": [
+        "NB-HS-002-priyanka-chatterjee-02.jpg",
+        "NB-HS-002-priyanka-chatterjee-03.jpg",
+        "NB-HS-002-priyanka-chatterjee-04.jpg",
+        "NB-HS-002-priyanka-chatterjee-05.jpg",
+        "NB-HS-002-priyanka-chatterjee-06.jpg",
+        "NB-HS-002-priyanka-chatterjee-07.jpg",
+        "NB-HS-002-priyanka-chatterjee-08.jpg",
+        "NB-HS-002-priyanka-chatterjee-09.jpg",
+        "NB-HS-002-priyanka-chatterjee-10.jpg"
       ]
-    },
+    }
+  },
     "NB-HS-003": {
       "id": "NB-HS-003",
       "name": "Unisex Crew Sweatshirt",
