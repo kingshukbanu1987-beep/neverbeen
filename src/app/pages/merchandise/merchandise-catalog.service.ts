@@ -43,6 +43,14 @@ export class MerchandiseCatalogService {
                   campaign: {
                     ...campaign,
                     image: `/Merchandise/${category.folder}/${encodeURIComponent(campaign.image)}`,
+                    ...(campaign.gallery?.length
+                      ? {
+                          gallery: campaign.gallery.map(
+                            (name) =>
+                              `/Merchandise/${category.folder}/${encodeURIComponent(name)}`,
+                          ),
+                        }
+                      : {}),
                   },
                 }
               : {}),

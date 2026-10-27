@@ -374,28 +374,20 @@
                 <span class="image-stamp">NB / {{ campaign.label }}</span>
               }
             </div>
-            @if (product.campaign; as campaign) {
-              <div class="thumbnail-row" aria-label="Choose product image">
+            <div class="thumbnail-row" aria-label="Choose product image">
+              @for (frame of detailFrames(product); track frame.src; let frameIndex = $index) {
                 <button
                   type="button"
-                  [class.is-active]="detailImageMode() === 'campaign'"
-                  [attr.aria-pressed]="detailImageMode() === 'campaign'"
-                  (click)="setDetailImage('campaign')"
+                  [class.is-active]="detailFrame() === frameIndex"
+                  [attr.aria-pressed]="detailFrame() === frameIndex"
+                  [attr.aria-label]="frame.label"
+                  (click)="setDetailFrame(frameIndex)"
                 >
-                  <img [src]="campaign.image" [alt]="campaign.model + ' holding ' + product.name" />
-                  <span>With {{ campaign.model }}</span>
+                  <img [src]="frame.src" [alt]="frame.alt" loading="lazy" decoding="async" />
+                  <span>{{ frame.label }}</span>
                 </button>
-                <button
-                  type="button"
-                  [class.is-active]="detailImageMode() === 'product'"
-                  [attr.aria-pressed]="detailImageMode() === 'product'"
-                  (click)="setDetailImage('product')"
-                >
-                  <img [src]="product.image" [alt]="product.name + ' product only'" />
-                  <span>Product only</span>
-                </button>
-              </div>
-            }
+              }
+            </div>
           </section>
 
           <section class="detail-panel" aria-labelledby="product-title">

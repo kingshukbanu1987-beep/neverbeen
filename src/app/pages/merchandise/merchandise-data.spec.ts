@@ -1,4 +1,5 @@
 import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
+import tshirtCatalogue from '../../../../public/Merchandise/T-Shirts/T-Shirts.json';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import {
   INDIA_STATES,
@@ -93,6 +94,29 @@ describe('Merchandise checkout data', () => {
     });
   });
 
+  it('attaches Nour El-Sherif and a ten-frame campaign to the Girls Cloud Nine Tee', () => {
+    const campaign = tshirtCatalogue.items['NB-TS-004'].campaign;
+
+    expect(campaign).toMatchObject({
+      model: 'Nour El-Sherif',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/nour-el-sherif',
+      image: 'NB-TS-004-nour-el-sherif-01.jpg',
+    });
+    expect(campaign?.gallery).toHaveLength(9);
+    expect(campaign?.gallery).toEqual([
+      'NB-TS-004-nour-el-sherif-02.jpg',
+      'NB-TS-004-nour-el-sherif-03.jpg',
+      'NB-TS-004-nour-el-sherif-04.jpg',
+      'NB-TS-004-nour-el-sherif-05.jpg',
+      'NB-TS-004-nour-el-sherif-06.jpg',
+      'NB-TS-004-nour-el-sherif-07.jpg',
+      'NB-TS-004-nour-el-sherif-08.jpg',
+      'NB-TS-004-nour-el-sherif-09.jpg',
+      'NB-TS-004-nour-el-sherif-10.jpg',
+    ]);
+  });
+
   it('resolves the Premium model campaign photo from its catalogue folder', async () => {
     vi.stubGlobal('fetch', (url: string) =>
       Promise.resolve({
@@ -111,6 +135,36 @@ describe('Merchandise checkout data', () => {
       expect(bottle?.campaign?.image).toBe(
         '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara.jpg',
       );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('resolves the Cloud Nine Tee campaign cover and gallery from the T-Shirts folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('T-Shirts') ? tshirtCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const tee = service.products().find((product) => product.id === 'NB-TS-004');
+      expect(tee?.campaign?.model).toBe('Nour El-Sherif');
+      expect(tee?.campaign?.image).toBe(
+        '/Merchandise/T-Shirts/NB-TS-004-nour-el-sherif-01.jpg',
+      );
+      expect(tee?.campaign?.gallery).toHaveLength(9);
+      expect(tee?.campaign?.gallery?.[0]).toBe(
+        '/Merchandise/T-Shirts/NB-TS-004-nour-el-sherif-02.jpg',
+      );
+      expect(tee?.campaign?.gallery?.[8]).toBe(
+        '/Merchandise/T-Shirts/NB-TS-004-nour-el-sherif-10.jpg',
+      );
+      expect(tee?.image).toBe('/Merchandise/T-Shirts/NB-TS-004.jpg');
     } finally {
       vi.unstubAllGlobals();
     }

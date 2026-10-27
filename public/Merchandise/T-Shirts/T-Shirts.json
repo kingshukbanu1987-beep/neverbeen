@@ -127,6 +127,24 @@
       "reviews": 203,
       "description": "A cloud-soft rose tee with a slightly flared hem. Printed with a water-based ink that feels like nothing on the skin.",
       "image": "NB-TS-004.jpg",
+      "campaign": {
+        "model": "Nour El-Sherif",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Nour El-Sherif in a clean white studio campaign — ten frames showing how the Cloud Nine Tee moves, sits and swings.",
+        "profile": "/ai-models/nour-el-sherif",
+        "image": "NB-TS-004-nour-el-sherif-01.jpg",
+        "gallery": [
+          "NB-TS-004-nour-el-sherif-02.jpg",
+          "NB-TS-004-nour-el-sherif-03.jpg",
+          "NB-TS-004-nour-el-sherif-04.jpg",
+          "NB-TS-004-nour-el-sherif-05.jpg",
+          "NB-TS-004-nour-el-sherif-06.jpg",
+          "NB-TS-004-nour-el-sherif-07.jpg",
+          "NB-TS-004-nour-el-sherif-08.jpg",
+          "NB-TS-004-nour-el-sherif-09.jpg",
+          "NB-TS-004-nour-el-sherif-10.jpg"
+        ]
+      },
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,

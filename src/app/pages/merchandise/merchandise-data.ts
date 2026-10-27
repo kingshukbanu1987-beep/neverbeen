@@ -46,7 +46,10 @@ export interface MerchandiseModelCampaign {
   label: string;
   note: string;
   profile: string;
+  /** Cover frame, also used as the product card photo when a campaign exists. */
   image: string;
+  /** Additional campaign frames shown in the product detail gallery, after the cover. */
+  gallery?: string[];
 }
 
 export interface MerchandiseProduct {

@@ -29,7 +29,12 @@ const DEFAULT_ADDRESS: CheckoutAddress = {
 type ShopView = 'shop' | 'product' | 'cart' | 'checkout' | 'payment';
 type ShopReturnView = Exclude<ShopView, 'product'>;
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
-type DetailImageMode = 'campaign' | 'product';
+
+interface DetailFrame {
+  src: string;
+  label: string;
+  alt: string;
+}
 
 @Component({
   selector: 'app-merchandise',
@@ -56,7 +61,7 @@ export class Merchandise {
   protected readonly maximumPrice = signal(3500);
   protected readonly minimumRating = signal(0);
   protected readonly activeProduct = signal<MerchandiseProduct | null>(null);
-  protected readonly detailImageMode = signal<DetailImageMode>('campaign');
+  protected readonly detailFrame = signal(0);
   protected readonly signInGate = signal(false);
   protected readonly cart = signal<MerchandiseCartItem[]>(this.readCart());
   protected readonly toast = signal('');
@@ -195,20 +200,50 @@ export class Merchandise {
       : `${product.name} — NeverBeen merchandise`;
   }
 
+  /**
+   * Every frame available on the product detail page: the campaign cover and gallery
+   * shots of the model wearing the piece, followed by the standalone product photo.
+   */
+  protected detailFrames(product: MerchandiseProduct): DetailFrame[] {
+    const frames: DetailFrame[] = [];
+    if (product.campaign) {
+      const { model, image, gallery } = product.campaign;
+      frames.push({
+        src: image,
+        label: 'Look 1',
+        alt: `${model} wearing the ${product.name}, cover look, in a white studio`,
+      });
+      gallery?.forEach((src, index) => {
+        frames.push({
+          src,
+          label: `Look ${index + 2}`,
+          alt: `${model} wearing the ${product.name}, look ${index + 2}, in a white studio`,
+        });
+      });
+    }
+    frames.push({
+      src: product.image,
+      label: product.campaign ? 'Product only' : 'Product view',
+      alt: `${product.name} — product view`,
+    });
+    return frames;
+  }
+
   protected detailImage(product: MerchandiseProduct): string {
-    return this.detailImageMode() === 'campaign' && product.campaign
-      ? product.campaign.image
-      : product.image;
+    const frames = this.detailFrames(product);
+    return frames[Math.min(this.detailFrame(), frames.length - 1)]?.src ?? product.image;
   }
 
   protected detailAlt(product: MerchandiseProduct): string {
-    return this.detailImageMode() === 'campaign' && product.campaign
-      ? `${product.campaign.model} holding the ${product.name} in a white studio`
-      : `${product.name} — product view`;
+    const frames = this.detailFrames(product);
+    return (
+      frames[Math.min(this.detailFrame(), frames.length - 1)]?.alt ??
+      `${product.name} — product view`
+    );
   }
 
-  protected setDetailImage(mode: DetailImageMode): void {
-    this.detailImageMode.set(mode);
+  protected setDetailFrame(index: number): void {
+    this.detailFrame.set(index);
   }
 
   protected setCategory(value: string): void {
@@ -245,7 +280,7 @@ export class Merchandise {
     this.activeProduct.set(product);
     this.selectedSize.set(product.sizes[0] ?? 'One size');
     this.selectedColor.set(product.colors[0] ?? '');
-    this.detailImageMode.set(product.campaign ? 'campaign' : 'product');
+    this.detailFrame.set(0);
     this.view.set('product');
     this.scrollToTop();
   }
