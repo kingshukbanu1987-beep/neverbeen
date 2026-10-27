@@ -60,8 +60,8 @@
   },
     "NB-TS-002": {
       "id": "NB-TS-002",
-      "name": "Men's Passport Tee",
-      "audience": "Men",
+      "name": "Girl's Passport Tee",
+      "audience": "Girls",
       "price": 949,
       "compareAtPrice": 1349,
       "colors": [
@@ -89,7 +89,26 @@
         "200 GSM ring-spun cotton, classic fit",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Tasneem Al-Rifai",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Tasneem Al-Rifai in a clean white studio campaign.",
+        "profile": "/ai-models/tasneem-al-rifai",
+        "image": "NB-TS-002-tasneem-al-rifai-01.jpg",
+        "detailImageFit": "contain",
+        "gallery": [
+          "NB-TS-002-tasneem-al-rifai-02.jpg",
+          "NB-TS-002-tasneem-al-rifai-03.jpg",
+          "NB-TS-002-tasneem-al-rifai-04.jpg",
+          "NB-TS-002-tasneem-al-rifai-05.jpg",
+          "NB-TS-002-tasneem-al-rifai-06.jpg",
+          "NB-TS-002-tasneem-al-rifai-07.jpg",
+          "NB-TS-002-tasneem-al-rifai-08.jpg",
+          "NB-TS-002-tasneem-al-rifai-09.jpg",
+          "NB-TS-002-tasneem-al-rifai-10.jpg"
+        ]
+      }
     },
     "NB-TS-003": {
       "id": "NB-TS-003",

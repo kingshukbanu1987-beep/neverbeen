@@ -1,6 +1,7 @@
 import hoodieCatalogue from '../../../../public/Merchandise/Hoodies-and-Sweatshirts/Hoodies-and-Sweatshirts.json';
 import mugCatalogue from '../../../../public/Merchandise/Mugs-and-Coasters/Mugs-and-Coasters.json';
 import toteCatalogue from '../../../../public/Merchandise/Tote-Bags-and-Backpacks/Tote-Bags-and-Backpacks.json';
+import teeCatalogue from '../../../../public/Merchandise/T-Shirts/T-Shirts.json';
 import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import {
@@ -83,6 +84,61 @@ describe('Merchandise checkout data', () => {
       cgst: 90,
       total: 1230,
     });
+  });
+
+  it('renames the Passport Tee and attaches Tasneem Al-Rifai’s campaign without changing its product details', () => {
+    const tee = teeCatalogue.items['NB-TS-002'];
+
+    expect(tee.name).toBe("Girl's Passport Tee");
+    expect(tee.audience).toBe('Girls');
+    expect(tee.image).toBe('NB-TS-002.jpg');
+    expect(tee.price).toBe(949);
+    expect(tee.compareAtPrice).toBe(1349);
+    expect(tee.colors).toEqual(['Studio navy', 'Graphite', 'Forest']);
+    expect(tee.sizes).toEqual(['S', 'M', 'L', 'XL', 'XXL']);
+    expect(tee.material).toBe('200 GSM ring-spun cotton, classic fit');
+    expect(tee.campaign).toMatchObject({
+      model: 'Tasneem Al-Rifai',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/tasneem-al-rifai',
+      image: 'NB-TS-002-tasneem-al-rifai-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(tee.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-TS-002-tasneem-al-rifai-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Tasneem’s Passport Tee photos from the T-Shirts catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('T-Shirts') ? teeCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const tee = service.products().find((product) => product.id === 'NB-TS-002');
+      expect(tee?.name).toBe("Girl's Passport Tee");
+      expect(tee?.audience).toBe('Girls');
+      expect(tee?.image).toBe('/Merchandise/T-Shirts/NB-TS-002.jpg');
+      expect(tee?.campaign?.image).toBe('/Merchandise/T-Shirts/NB-TS-002-tasneem-al-rifai-01.jpg');
+      expect(tee?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/T-Shirts/NB-TS-002-tasneem-al-rifai-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('attaches Fiadh Dara to the Insulated Steel Bottle campaign', () => {
