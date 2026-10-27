@@ -165,7 +165,27 @@ describe('Merchandise checkout data', () => {
     );
   });
 
-  it('resolves Alisha’s tote campaign photos from the correct catalogue folder', async () => {
+  it('attaches Farah Al-Shaar to the Laptop Backpack campaign without replacing its product image', () => {
+    const backpack = toteCatalogue.items['NB-TB-003'];
+
+    expect(backpack.name).toBe('Laptop Backpack · 24 L');
+    expect(backpack.image).toBe('NB-TB-003.jpg');
+    expect(backpack.campaign).toMatchObject({
+      model: 'Farah Al-Shaar',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/farah-al-shaar',
+      image: 'NB-TB-003-farah-al-shaar-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(backpack.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-TB-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Alisha’s tote and Farah’s backpack photos from the correct catalogue folder', async () => {
     vi.stubGlobal('fetch', (url: string) =>
       Promise.resolve({
         ok: true,
@@ -188,6 +208,20 @@ describe('Merchandise checkout data', () => {
       );
       expect(tote?.campaign?.gallery?.[8]).toBe(
         '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-10.jpg',
+      );
+
+      const backpack = service.products().find((product) => product.id === 'NB-TB-003');
+      expect(backpack?.campaign?.model).toBe('Farah Al-Shaar');
+      expect(backpack?.image).toBe('/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003.jpg');
+      expect(backpack?.campaign?.image).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003-farah-al-shaar-01.jpg',
+      );
+      expect(backpack?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
       );
     } finally {
       vi.unstubAllGlobals();

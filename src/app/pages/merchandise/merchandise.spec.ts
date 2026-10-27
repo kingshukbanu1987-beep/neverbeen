@@ -91,7 +91,7 @@ describe('Merchandise model campaigns', () => {
     }
   });
 
-  it('shows the full tote gallery without changing the default crop for other campaigns', async () => {
+  it('shows the tote and backpack galleries without changing the default crop for other campaigns', async () => {
     vi.stubGlobal('fetch', (url: string) =>
       Promise.resolve({
         ok: true,
@@ -164,6 +164,49 @@ describe('Merchandise model campaigns', () => {
       fixture.detectChanges();
       expect(root.querySelector('.detail-main-image img')?.getAttribute('src')).toBe(
         '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001.jpg',
+      );
+
+      root.querySelector<HTMLButtonElement>('.back-link')!.click();
+      fixture.detectChanges();
+      const backpackCard = root.querySelector<HTMLButtonElement>(
+        '.product-media[aria-label="View Laptop Backpack · 24 L"]',
+      );
+      expect(backpackCard?.querySelector('img')?.getAttribute('src')).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003-farah-al-shaar-01.jpg',
+      );
+      backpackCard!.click();
+      fixture.detectChanges();
+
+      const backpackImage = root.querySelector<HTMLImageElement>('.detail-main-image img');
+      expect(backpackImage?.getAttribute('src')).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003-farah-al-shaar-02.jpg',
+      );
+      expect(backpackImage?.alt).toBe(
+        'Farah Al-Shaar presenting the Laptop Backpack · 24 L in a white studio — look 1',
+      );
+      expect(backpackImage?.classList.contains('detail-image-contain')).toBe(true);
+      expect(window.getComputedStyle(backpackImage!).objectFit).toBe('contain');
+      const backpackThumbnails = [...root.querySelectorAll<HTMLImageElement>('.thumbnail-row img')];
+      expect(backpackThumbnails).toHaveLength(10);
+      expect(backpackThumbnails.slice(0, 9).map((image) => image.getAttribute('src'))).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+      expect(backpackThumbnails[9].getAttribute('src')).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003.jpg',
+      );
+      expect(
+        root
+          .querySelector('a[aria-label="View the portfolio of Farah Al-Shaar"]')
+          ?.getAttribute('href'),
+      ).toBe('/ai-models/farah-al-shaar');
+      root.querySelectorAll<HTMLButtonElement>('.thumbnail-row button')[9].click();
+      fixture.detectChanges();
+      expect(root.querySelector('.detail-main-image img')?.getAttribute('src')).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003.jpg',
       );
 
       root.querySelector<HTMLButtonElement>('.back-link')!.click();
