@@ -34,12 +34,30 @@
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,
-      "highlights": [
-        "180 GSM combed cotton, relaxed fit",
-        "Printed with the NeverBeen wordmark",
-        "Dispatched from India in 2 working days"
+    "highlights": [
+      "180 GSM combed cotton, relaxed fit",
+      "Printed with the NeverBeen wordmark",
+      "Dispatched from India in 2 working days"
+    ],
+    "campaign": {
+      "model": "Ziba Nazrin",
+      "label": "Premium Model Edit",
+      "note": "Presented by NeverBeen Premium model Ziba Nazrin in a clean white studio campaign.",
+      "profile": "/ai-models/ziba-nazrin",
+      "image": "NB-TS-001-ziba-nazrin-01.jpg",
+      "gallery": [
+        "NB-TS-001-ziba-nazrin-02.jpg",
+        "NB-TS-001-ziba-nazrin-03.jpg",
+        "NB-TS-001-ziba-nazrin-04.jpg",
+        "NB-TS-001-ziba-nazrin-05.jpg",
+        "NB-TS-001-ziba-nazrin-06.jpg",
+        "NB-TS-001-ziba-nazrin-07.jpg",
+        "NB-TS-001-ziba-nazrin-08.jpg",
+        "NB-TS-001-ziba-nazrin-09.jpg",
+        "NB-TS-001-ziba-nazrin-10.jpg"
       ]
-    },
+    }
+  },
     "NB-TS-002": {
       "id": "NB-TS-002",
       "name": "Men's Passport Tee",
