@@ -133,7 +133,25 @@
         "400 GSM fleece, YKK zip",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Maeve Anahita",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Maeve Anahita in a clean white studio campaign.",
+        "profile": "/ai-models/maeve-anahita",
+        "image": "NB-HS-004-maeve-anahita-01.jpg",
+        "gallery": [
+          "NB-HS-004-maeve-anahita-02.jpg",
+          "NB-HS-004-maeve-anahita-03.jpg",
+          "NB-HS-004-maeve-anahita-04.jpg",
+          "NB-HS-004-maeve-anahita-05.jpg",
+          "NB-HS-004-maeve-anahita-06.jpg",
+          "NB-HS-004-maeve-anahita-07.jpg",
+          "NB-HS-004-maeve-anahita-08.jpg",
+          "NB-HS-004-maeve-anahita-09.jpg",
+          "NB-HS-004-maeve-anahita-10.jpg"
+        ]
+      }
     }
   }
 }
