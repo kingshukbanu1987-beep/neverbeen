@@ -2,12 +2,95 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import hoodieCatalogue from '../../../../public/Merchandise/Hoodies-and-Sweatshirts/Hoodies-and-Sweatshirts.json';
+import mugCatalogue from '../../../../public/Merchandise/Mugs-and-Coasters/Mugs-and-Coasters.json';
 import toteCatalogue from '../../../../public/Merchandise/Tote-Bags-and-Backpacks/Tote-Bags-and-Backpacks.json';
 import { CommunityService } from '../../services/community.service';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import { Merchandise } from './merchandise';
 
 describe('Merchandise model campaigns', () => {
+  it('shows Aoife’s mug campaign and retains the original product image', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Mugs-and-Coasters') ? mugCatalogue : { items: {} }),
+      }),
+    );
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+    try {
+      const catalogue = new MerchandiseCatalogService();
+      await catalogue.load();
+      await TestBed.configureTestingModule({
+        imports: [Merchandise],
+        providers: [
+          provideRouter([]),
+          { provide: MerchandiseCatalogService, useValue: catalogue },
+          {
+            provide: CommunityService,
+            useValue: {
+              currentUser: signal(null),
+              isAuthenticated: signal(false),
+              guestBrowsing: signal(false),
+            },
+          },
+        ],
+      }).compileComponents();
+
+      const fixture = TestBed.createComponent(Merchandise);
+      fixture.detectChanges();
+      const root: HTMLElement = fixture.nativeElement;
+      const card = root.querySelector<HTMLButtonElement>(
+        '.product-media[aria-label="View Ceramic Mug · 350 ml"]',
+      );
+      expect(card?.querySelector('img')?.getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-001-aoife-pahlavi-01.jpg',
+      );
+
+      card!.click();
+      fixture.detectChanges();
+
+      const mainImage = root.querySelector<HTMLImageElement>('.detail-main-image img');
+      expect(mainImage?.getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-001-aoife-pahlavi-02.jpg',
+      );
+      expect(mainImage?.alt).toBe(
+        'Aoife Pahlavi presenting the Ceramic Mug · 350 ml in a white studio — look 1',
+      );
+      expect(mainImage?.classList.contains('detail-image-contain')).toBe(true);
+      expect(window.getComputedStyle(mainImage!).objectFit).toBe('contain');
+
+      const thumbnails = [...root.querySelectorAll<HTMLImageElement>('.thumbnail-row img')];
+      expect(thumbnails).toHaveLength(10);
+      expect(thumbnails.slice(0, 9).map((image) => image.getAttribute('src'))).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/Mugs-and-Coasters/NB-MC-001-aoife-pahlavi-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+      expect(thumbnails[9].getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-001.jpg',
+      );
+      expect(
+        root
+          .querySelector('a[aria-label="View the portfolio of Aoife Pahlavi"]')
+          ?.getAttribute('href'),
+      ).toBe('/ai-models/aoife-pahlavi');
+
+      root.querySelectorAll<HTMLButtonElement>('.thumbnail-row button')[9].click();
+      fixture.detectChanges();
+      expect(root.querySelector('.detail-main-image img')?.getAttribute('src')).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-001.jpg',
+      );
+      fixture.destroy();
+    } finally {
+      TestBed.resetTestingModule();
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  });
+
   it('shows the full tote gallery without changing the default crop for other campaigns', async () => {
     vi.stubGlobal('fetch', (url: string) =>
       Promise.resolve({

@@ -1,4 +1,5 @@
 import hoodieCatalogue from '../../../../public/Merchandise/Hoodies-and-Sweatshirts/Hoodies-and-Sweatshirts.json';
+import mugCatalogue from '../../../../public/Merchandise/Mugs-and-Coasters/Mugs-and-Coasters.json';
 import toteCatalogue from '../../../../public/Merchandise/Tote-Bags-and-Backpacks/Tote-Bags-and-Backpacks.json';
 import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
@@ -109,8 +110,9 @@ describe('Merchandise checkout data', () => {
       image: 'NB-HS-001-nour-el-sherif-01.jpg',
     });
     expect(hoodie.campaign.gallery).toEqual(
-      Array.from({ length: 9 }, (_, index) =>
-        `NB-HS-001-nour-el-sherif-${String(index + 2).padStart(2, '0')}.jpg`,
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-HS-001-nour-el-sherif-${String(index + 2).padStart(2, '0')}.jpg`,
       ),
     );
   });
@@ -119,7 +121,8 @@ describe('Merchandise checkout data', () => {
     vi.stubGlobal('fetch', (url: string) =>
       Promise.resolve({
         ok: true,
-        json: async () => (url.includes('Hoodies-and-Sweatshirts') ? hoodieCatalogue : { items: {} }),
+        json: async () =>
+          url.includes('Hoodies-and-Sweatshirts') ? hoodieCatalogue : { items: {} },
       }),
     );
 
@@ -155,8 +158,9 @@ describe('Merchandise checkout data', () => {
       detailImageFit: 'contain',
     });
     expect(tote.campaign.gallery).toEqual(
-      Array.from({ length: 9 }, (_, index) =>
-        `NB-TB-001-alisha-bhattacharya-${String(index + 2).padStart(2, '0')}.jpg`,
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-TB-001-alisha-bhattacharya-${String(index + 2).padStart(2, '0')}.jpg`,
       ),
     );
   });
@@ -184,6 +188,56 @@ describe('Merchandise checkout data', () => {
       );
       expect(tote?.campaign?.gallery?.[8]).toBe(
         '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-10.jpg',
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('attaches Aoife Pahlavi to the Ceramic Mug campaign without replacing its product image', () => {
+    const mug = mugCatalogue.items['NB-MC-001'];
+
+    expect(mug.name).toBe('Ceramic Mug · 350 ml');
+    expect(mug.image).toBe('NB-MC-001.jpg');
+    expect(mug.campaign).toMatchObject({
+      model: 'Aoife Pahlavi',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/aoife-pahlavi',
+      image: 'NB-MC-001-aoife-pahlavi-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(mug.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-MC-001-aoife-pahlavi-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Aoife’s mug campaign photos from the correct catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Mugs-and-Coasters') ? mugCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const mug = service.products().find((product) => product.id === 'NB-MC-001');
+      expect(mug?.campaign?.model).toBe('Aoife Pahlavi');
+      expect(mug?.image).toBe('/Merchandise/Mugs-and-Coasters/NB-MC-001.jpg');
+      expect(mug?.campaign?.image).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-001-aoife-pahlavi-01.jpg',
+      );
+      expect(mug?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/Mugs-and-Coasters/NB-MC-001-aoife-pahlavi-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
       );
     } finally {
       vi.unstubAllGlobals();

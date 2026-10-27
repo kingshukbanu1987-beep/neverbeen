@@ -33,7 +33,26 @@
         "Stoneware, matte glaze",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Aoife Pahlavi",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Aoife Pahlavi in a white studio, styled from her album.",
+        "profile": "/ai-models/aoife-pahlavi",
+        "image": "NB-MC-001-aoife-pahlavi-01.jpg",
+        "detailImageFit": "contain",
+        "gallery": [
+          "NB-MC-001-aoife-pahlavi-02.jpg",
+          "NB-MC-001-aoife-pahlavi-03.jpg",
+          "NB-MC-001-aoife-pahlavi-04.jpg",
+          "NB-MC-001-aoife-pahlavi-05.jpg",
+          "NB-MC-001-aoife-pahlavi-06.jpg",
+          "NB-MC-001-aoife-pahlavi-07.jpg",
+          "NB-MC-001-aoife-pahlavi-08.jpg",
+          "NB-MC-001-aoife-pahlavi-09.jpg",
+          "NB-MC-001-aoife-pahlavi-10.jpg"
+        ]
+      }
     },
     "NB-MC-002": {
       "id": "NB-MC-002",
