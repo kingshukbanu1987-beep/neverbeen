@@ -1,3 +1,4 @@
+import hoodieCatalogue from '../../../../public/Merchandise/Hoodies-and-Sweatshirts/Hoodies-and-Sweatshirts.json';
 import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import {
@@ -92,6 +93,52 @@ describe('Merchandise checkout data', () => {
       image: 'NB-BT-001-fiadh-dara-01.jpg',
     });
     expect(campaign?.gallery?.length).toBe(9);
+  });
+
+  it('renames the oversized hoodie and attaches Nour El-Sherif’s campaign', () => {
+    const hoodie = hoodieCatalogue.items['NB-HS-001'];
+
+    expect(hoodie.name).toBe("Women's Oversized Hoodie");
+    expect(hoodie.audience).toBe('Women');
+    expect(hoodie.image).toBe('NB-HS-001.jpg');
+    expect(hoodie.campaign).toMatchObject({
+      model: 'Nour El-Sherif',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/nour-el-sherif',
+      image: 'NB-HS-001-nour-el-sherif-01.jpg',
+    });
+    expect(hoodie.campaign.gallery).toEqual(
+      Array.from({ length: 9 }, (_, index) =>
+        `NB-HS-001-nour-el-sherif-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves the oversized hoodie campaign photos from its catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Hoodies-and-Sweatshirts') ? hoodieCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const hoodie = service.products().find((product) => product.id === 'NB-HS-001');
+      expect(hoodie?.name).toBe("Women's Oversized Hoodie");
+      expect(hoodie?.audience).toBe('Women');
+      expect(hoodie?.image).toBe('/Merchandise/Hoodies-and-Sweatshirts/NB-HS-001.jpg');
+      expect(hoodie?.campaign?.image).toBe(
+        '/Merchandise/Hoodies-and-Sweatshirts/NB-HS-001-nour-el-sherif-01.jpg',
+      );
+      expect(hoodie?.campaign?.gallery?.[8]).toBe(
+        '/Merchandise/Hoodies-and-Sweatshirts/NB-HS-001-nour-el-sherif-10.jpg',
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('resolves the Premium model campaign photo from its catalogue folder', async () => {

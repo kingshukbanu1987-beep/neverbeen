@@ -9,8 +9,8 @@
   "items": {
     "NB-HS-001": {
       "id": "NB-HS-001",
-      "name": "Men's Oversized Hoodie",
-      "audience": "Men",
+      "name": "Women's Oversized Hoodie",
+      "audience": "Women",
       "price": 1999,
       "compareAtPrice": 2599,
       "colors": [
@@ -37,7 +37,25 @@
         "380 GSM brushed-back cotton fleece",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Nour El-Sherif",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Nour El-Sherif in a clean white studio campaign.",
+        "profile": "/ai-models/nour-el-sherif",
+        "image": "NB-HS-001-nour-el-sherif-01.jpg",
+        "gallery": [
+          "NB-HS-001-nour-el-sherif-02.jpg",
+          "NB-HS-001-nour-el-sherif-03.jpg",
+          "NB-HS-001-nour-el-sherif-04.jpg",
+          "NB-HS-001-nour-el-sherif-05.jpg",
+          "NB-HS-001-nour-el-sherif-06.jpg",
+          "NB-HS-001-nour-el-sherif-07.jpg",
+          "NB-HS-001-nour-el-sherif-08.jpg",
+          "NB-HS-001-nour-el-sherif-09.jpg",
+          "NB-HS-001-nour-el-sherif-10.jpg"
+        ]
+      }
     },
     "NB-HS-002": {
       "id": "NB-HS-002",
