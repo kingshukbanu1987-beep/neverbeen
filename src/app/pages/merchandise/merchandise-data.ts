@@ -50,6 +50,8 @@ export interface MerchandiseModelCampaign {
   profile: string;
   image: string;
   gallery?: string[];
+  /** Preserve the full detail image when cropping would hide the product. Defaults to cover. */
+  detailImageFit?: 'cover' | 'contain';
 }
 
 export interface MerchandiseProduct {

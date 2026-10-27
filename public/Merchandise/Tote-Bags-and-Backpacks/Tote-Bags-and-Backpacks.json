@@ -33,7 +33,26 @@
         "12 oz cotton canvas, reinforced base",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Alisha Bhattacharya",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Alisha Bhattacharya in a clean white studio campaign.",
+        "profile": "/ai-models/alisha-bhattacharya",
+        "image": "NB-TB-001-alisha-bhattacharya-01.jpg",
+        "detailImageFit": "contain",
+        "gallery": [
+          "NB-TB-001-alisha-bhattacharya-02.jpg",
+          "NB-TB-001-alisha-bhattacharya-03.jpg",
+          "NB-TB-001-alisha-bhattacharya-04.jpg",
+          "NB-TB-001-alisha-bhattacharya-05.jpg",
+          "NB-TB-001-alisha-bhattacharya-06.jpg",
+          "NB-TB-001-alisha-bhattacharya-07.jpg",
+          "NB-TB-001-alisha-bhattacharya-08.jpg",
+          "NB-TB-001-alisha-bhattacharya-09.jpg",
+          "NB-TB-001-alisha-bhattacharya-10.jpg"
+        ]
+      }
     },
     "NB-TB-002": {
       "id": "NB-TB-002",

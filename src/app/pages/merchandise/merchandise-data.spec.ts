@@ -1,4 +1,5 @@
 import hoodieCatalogue from '../../../../public/Merchandise/Hoodies-and-Sweatshirts/Hoodies-and-Sweatshirts.json';
+import toteCatalogue from '../../../../public/Merchandise/Tote-Bags-and-Backpacks/Tote-Bags-and-Backpacks.json';
 import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import {
@@ -135,6 +136,54 @@ describe('Merchandise checkout data', () => {
       );
       expect(hoodie?.campaign?.gallery?.[8]).toBe(
         '/Merchandise/Hoodies-and-Sweatshirts/NB-HS-001-nour-el-sherif-10.jpg',
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('attaches Alisha Bhattacharya to the Heavy Canvas Tote campaign', () => {
+    const tote = toteCatalogue.items['NB-TB-001'];
+
+    expect(tote.name).toBe('Heavy Canvas Tote');
+    expect(tote.image).toBe('NB-TB-001.jpg');
+    expect(tote.campaign).toMatchObject({
+      model: 'Alisha Bhattacharya',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/alisha-bhattacharya',
+      image: 'NB-TB-001-alisha-bhattacharya-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(tote.campaign.gallery).toEqual(
+      Array.from({ length: 9 }, (_, index) =>
+        `NB-TB-001-alisha-bhattacharya-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Alisha’s tote campaign photos from the correct catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Tote-Bags-and-Backpacks') ? toteCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const tote = service.products().find((product) => product.id === 'NB-TB-001');
+      expect(tote?.campaign?.model).toBe('Alisha Bhattacharya');
+      expect(tote?.image).toBe('/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001.jpg');
+      expect(tote?.campaign?.image).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-01.jpg',
+      );
+      expect(tote?.campaign?.gallery?.[0]).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-02.jpg',
+      );
+      expect(tote?.campaign?.gallery?.[8]).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-10.jpg',
       );
     } finally {
       vi.unstubAllGlobals();

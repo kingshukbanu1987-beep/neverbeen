@@ -218,7 +218,7 @@ export class Merchandise {
       (campaign.gallery ?? [campaign.image]).forEach((src, index) => {
         images.push({
           src,
-          alt: `${campaign.model} wearing the ${product.name} in a white studio — look ${
+          alt: `${campaign.model} presenting the ${product.name} in a white studio — look ${
             index + 1
           }`,
           label: `With ${campaign.model} · ${index + 1}`,

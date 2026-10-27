@@ -1206,6 +1206,12 @@ h2 em {
   object-position: center 15%;
 }
 
+.detail-main-image img.detail-image-contain {
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
+}
+
 .image-stamp {
   position: absolute;
   top: 1rem;
