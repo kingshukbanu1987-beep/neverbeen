@@ -78,7 +78,25 @@
         "Stoneware, satin glaze",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Nour El-Sherif",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Nour El-Sherif in a white studio, styled from her album.",
+        "profile": "/ai-models/nour-el-sherif",
+        "image": "NB-MC-002-nour-el-sherif-01.jpg",
+        "detailImageFit": "contain",
+        "gallery": [
+          "NB-MC-002-nour-el-sherif-02.jpg",
+          "NB-MC-002-nour-el-sherif-03.jpg",
+          "NB-MC-002-nour-el-sherif-04.jpg",
+          "NB-MC-002-nour-el-sherif-05.jpg",
+          "NB-MC-002-nour-el-sherif-06.jpg",
+          "NB-MC-002-nour-el-sherif-07.jpg",
+          "NB-MC-002-nour-el-sherif-08.jpg",
+          "NB-MC-002-nour-el-sherif-09.jpg"
+        ]
+      }
     },
     "NB-MC-003": {
       "id": "NB-MC-003",

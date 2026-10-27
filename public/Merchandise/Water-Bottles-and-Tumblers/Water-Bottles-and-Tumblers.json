@@ -91,7 +91,25 @@
         "BPA-free Tritan with silicone straw",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Farah Al-Shaar",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Farah Al-Shaar in a white studio, styled from her album.",
+        "profile": "/ai-models/farah-al-shaar",
+        "image": "NB-BT-003-farah-al-shaar-01.jpg",
+        "detailImageFit": "contain",
+        "gallery": [
+          "NB-BT-003-farah-al-shaar-02.jpg",
+          "NB-BT-003-farah-al-shaar-03.jpg",
+          "NB-BT-003-farah-al-shaar-04.jpg",
+          "NB-BT-003-farah-al-shaar-05.jpg",
+          "NB-BT-003-farah-al-shaar-06.jpg",
+          "NB-BT-003-farah-al-shaar-07.jpg",
+          "NB-BT-003-farah-al-shaar-08.jpg",
+          "NB-BT-003-farah-al-shaar-09.jpg"
+        ]
+      }
     }
   }
 }
