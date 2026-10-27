@@ -21,13 +21,24 @@
       "reviews": 534,
       "description": "Twenty-four hours cold, twelve hours hot. The 750 ml bottle has a leak-proof twist cap, a wide mouth for ice and a powder-coated navy body.",
       "image": "NB-BT-001.jpg",
-      "campaign": {
-        "model": "Fiadh Dara",
-        "label": "Premium Model Edit",
-        "note": "Presented by NeverBeen Premium model Fiadh Dara in a clean white studio campaign.",
-        "profile": "/ai-models/fiadh-dara",
-        "image": "NB-BT-001-fiadh-dara.jpg"
-      },
+    "campaign": {
+      "model": "Fiadh Dara",
+      "label": "Premium Model Edit",
+      "note": "Presented by NeverBeen Premium model Fiadh Dara in a clean white studio campaign.",
+      "profile": "/ai-models/fiadh-dara",
+      "image": "NB-BT-001-fiadh-dara-01.jpg",
+      "gallery": [
+        "NB-BT-001-fiadh-dara-02.jpg",
+        "NB-BT-001-fiadh-dara-03.jpg",
+        "NB-BT-001-fiadh-dara-04.jpg",
+        "NB-BT-001-fiadh-dara-05.jpg",
+        "NB-BT-001-fiadh-dara-06.jpg",
+        "NB-BT-001-fiadh-dara-07.jpg",
+        "NB-BT-001-fiadh-dara-08.jpg",
+        "NB-BT-001-fiadh-dara-09.jpg",
+        "NB-BT-001-fiadh-dara-10.jpg"
+      ]
+    },
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,

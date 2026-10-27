@@ -32,17 +32,22 @@ export class MerchandiseCatalogService {
           );
         }
         const file = (await response.json()) as MerchandiseCategoryFile;
+        const resolveFile = (fileName: string) =>
+          `/Merchandise/${category.folder}/${encodeURIComponent(fileName)}`;
         return Object.entries(file.items).map(([id, item]): MerchandiseProduct => {
           const { campaign, ...productFields } = item;
           return {
             ...productFields,
             id,
-            image: `/Merchandise/${category.folder}/${encodeURIComponent(item.image)}`,
+            image: resolveFile(item.image),
             ...(campaign
               ? {
                   campaign: {
                     ...campaign,
-                    image: `/Merchandise/${category.folder}/${encodeURIComponent(campaign.image)}`,
+                    image: resolveFile(campaign.image),
+                    ...(campaign.gallery
+                      ? { gallery: campaign.gallery.map(resolveFile) }
+                      : {}),
                   },
                 }
               : {}),

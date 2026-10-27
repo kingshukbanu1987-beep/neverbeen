@@ -38,8 +38,10 @@ export const MERCHANDISE_CATEGORIES: readonly MerchandiseCategory[] = [
 ];
 
 /**
- * A Premium NeverBeen model campaign for one product. `image` is resolved to its public
- * catalogue path by MerchandiseCatalogService; catalogue JSON stores only the file name.
+ * A Premium NeverBeen model campaign for one product. `image` is the campaign cover shown on
+ * the product card; `gallery` lists the extra campaign photographs shown in the product
+ * detail gallery next to the plain product photo. Both are resolved to public catalogue paths
+ * by MerchandiseCatalogService; the catalogue JSON stores only the file names.
  */
 export interface MerchandiseModelCampaign {
   model: string;
@@ -47,6 +49,9 @@ export interface MerchandiseModelCampaign {
   note: string;
   profile: string;
   image: string;
+  gallery?: string[];
+  /** Preserve the full detail image when cropping would hide the product. Defaults to cover. */
+  detailImageFit?: 'cover' | 'contain';
 }
 
 export interface MerchandiseProduct {

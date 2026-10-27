@@ -34,16 +34,34 @@
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,
-      "highlights": [
-        "180 GSM combed cotton, relaxed fit",
-        "Printed with the NeverBeen wordmark",
-        "Dispatched from India in 2 working days"
+    "highlights": [
+      "180 GSM combed cotton, relaxed fit",
+      "Printed with the NeverBeen wordmark",
+      "Dispatched from India in 2 working days"
+    ],
+    "campaign": {
+      "model": "Ziba Nazrin",
+      "label": "Premium Model Edit",
+      "note": "Presented by NeverBeen Premium model Ziba Nazrin in a clean white studio campaign.",
+      "profile": "/ai-models/ziba-nazrin",
+      "image": "NB-TS-001-ziba-nazrin-01.jpg",
+      "gallery": [
+        "NB-TS-001-ziba-nazrin-02.jpg",
+        "NB-TS-001-ziba-nazrin-03.jpg",
+        "NB-TS-001-ziba-nazrin-04.jpg",
+        "NB-TS-001-ziba-nazrin-05.jpg",
+        "NB-TS-001-ziba-nazrin-06.jpg",
+        "NB-TS-001-ziba-nazrin-07.jpg",
+        "NB-TS-001-ziba-nazrin-08.jpg",
+        "NB-TS-001-ziba-nazrin-09.jpg",
+        "NB-TS-001-ziba-nazrin-10.jpg"
       ]
-    },
+    }
+  },
     "NB-TS-002": {
       "id": "NB-TS-002",
-      "name": "Men's Passport Tee",
-      "audience": "Men",
+      "name": "Girl's Passport Tee",
+      "audience": "Girls",
       "price": 949,
       "compareAtPrice": 1349,
       "colors": [
@@ -71,7 +89,26 @@
         "200 GSM ring-spun cotton, classic fit",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Tasneem Al-Rifai",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Tasneem Al-Rifai in a clean white studio campaign.",
+        "profile": "/ai-models/tasneem-al-rifai",
+        "image": "NB-TS-002-tasneem-al-rifai-01.jpg",
+        "detailImageFit": "contain",
+        "gallery": [
+          "NB-TS-002-tasneem-al-rifai-02.jpg",
+          "NB-TS-002-tasneem-al-rifai-03.jpg",
+          "NB-TS-002-tasneem-al-rifai-04.jpg",
+          "NB-TS-002-tasneem-al-rifai-05.jpg",
+          "NB-TS-002-tasneem-al-rifai-06.jpg",
+          "NB-TS-002-tasneem-al-rifai-07.jpg",
+          "NB-TS-002-tasneem-al-rifai-08.jpg",
+          "NB-TS-002-tasneem-al-rifai-09.jpg",
+          "NB-TS-002-tasneem-al-rifai-10.jpg"
+        ]
+      }
     },
     "NB-TS-003": {
       "id": "NB-TS-003",
@@ -134,7 +171,25 @@
         "160 GSM cotton jersey, A-line fit",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Nour El-Sherif",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Nour El-Sherif in a clean white studio campaign.",
+        "profile": "/ai-models/nour-el-sherif",
+        "image": "NB-TS-004-nour-el-sherif-01.jpg",
+        "gallery": [
+          "NB-TS-004-nour-el-sherif-02.jpg",
+          "NB-TS-004-nour-el-sherif-03.jpg",
+          "NB-TS-004-nour-el-sherif-04.jpg",
+          "NB-TS-004-nour-el-sherif-05.jpg",
+          "NB-TS-004-nour-el-sherif-06.jpg",
+          "NB-TS-004-nour-el-sherif-07.jpg",
+          "NB-TS-004-nour-el-sherif-08.jpg",
+          "NB-TS-004-nour-el-sherif-09.jpg",
+          "NB-TS-004-nour-el-sherif-10.jpg"
+        ]
+      }
     },
     "NB-TS-005": {
       "id": "NB-TS-005",

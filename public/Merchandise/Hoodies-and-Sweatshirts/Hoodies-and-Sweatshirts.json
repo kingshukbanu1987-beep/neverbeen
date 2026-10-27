@@ -9,8 +9,8 @@
   "items": {
     "NB-HS-001": {
       "id": "NB-HS-001",
-      "name": "Men's Oversized Hoodie",
-      "audience": "Men",
+      "name": "Women's Oversized Hoodie",
+      "audience": "Women",
       "price": 1999,
       "compareAtPrice": 2599,
       "colors": [
@@ -37,7 +37,25 @@
         "380 GSM brushed-back cotton fleece",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Nour El-Sherif",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Nour El-Sherif in a clean white studio campaign.",
+        "profile": "/ai-models/nour-el-sherif",
+        "image": "NB-HS-001-nour-el-sherif-01.jpg",
+        "gallery": [
+          "NB-HS-001-nour-el-sherif-02.jpg",
+          "NB-HS-001-nour-el-sherif-03.jpg",
+          "NB-HS-001-nour-el-sherif-04.jpg",
+          "NB-HS-001-nour-el-sherif-05.jpg",
+          "NB-HS-001-nour-el-sherif-06.jpg",
+          "NB-HS-001-nour-el-sherif-07.jpg",
+          "NB-HS-001-nour-el-sherif-08.jpg",
+          "NB-HS-001-nour-el-sherif-09.jpg",
+          "NB-HS-001-nour-el-sherif-10.jpg"
+        ]
+      }
     },
     "NB-HS-002": {
       "id": "NB-HS-002",
@@ -64,12 +82,30 @@
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,
-      "highlights": [
-        "340 GSM brushed fleece, cropped cut",
-        "Printed with the NeverBeen wordmark",
-        "Dispatched from India in 2 working days"
+    "highlights": [
+      "340 GSM brushed fleece, cropped cut",
+      "Printed with the NeverBeen wordmark",
+      "Dispatched from India in 2 working days"
+    ],
+    "campaign": {
+      "model": "Priyanka Chatterjee",
+      "label": "Premium Model Edit",
+      "note": "Presented by NeverBeen Premium model Priyanka Chatterjee in a clean white studio campaign.",
+      "profile": "/ai-models/priyanka-chatterjee",
+      "image": "NB-HS-002-priyanka-chatterjee-01.jpg",
+      "gallery": [
+        "NB-HS-002-priyanka-chatterjee-02.jpg",
+        "NB-HS-002-priyanka-chatterjee-03.jpg",
+        "NB-HS-002-priyanka-chatterjee-04.jpg",
+        "NB-HS-002-priyanka-chatterjee-05.jpg",
+        "NB-HS-002-priyanka-chatterjee-06.jpg",
+        "NB-HS-002-priyanka-chatterjee-07.jpg",
+        "NB-HS-002-priyanka-chatterjee-08.jpg",
+        "NB-HS-002-priyanka-chatterjee-09.jpg",
+        "NB-HS-002-priyanka-chatterjee-10.jpg"
       ]
-    },
+    }
+  },
     "NB-HS-003": {
       "id": "NB-HS-003",
       "name": "Unisex Crew Sweatshirt",
@@ -97,12 +133,30 @@
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,
-      "highlights": [
-        "360 GSM loopback cotton, ribbed trims",
-        "Printed with the NeverBeen wordmark",
-        "Dispatched from India in 2 working days"
+    "highlights": [
+      "360 GSM loopback cotton, ribbed trims",
+      "Printed with the NeverBeen wordmark",
+      "Dispatched from India in 2 working days"
+    ],
+    "campaign": {
+      "model": "Nourhan Durrani",
+      "label": "Premium Model Edit",
+      "note": "Presented by NeverBeen Premium model Nourhan Durrani in a clean white studio campaign.",
+      "profile": "/ai-models/nourhan-durrani",
+      "image": "NB-HS-003-nourhan-durrani-01.jpg",
+      "gallery": [
+        "NB-HS-003-nourhan-durrani-02.jpg",
+        "NB-HS-003-nourhan-durrani-03.jpg",
+        "NB-HS-003-nourhan-durrani-04.jpg",
+        "NB-HS-003-nourhan-durrani-05.jpg",
+        "NB-HS-003-nourhan-durrani-06.jpg",
+        "NB-HS-003-nourhan-durrani-07.jpg",
+        "NB-HS-003-nourhan-durrani-08.jpg",
+        "NB-HS-003-nourhan-durrani-09.jpg",
+        "NB-HS-003-nourhan-durrani-10.jpg"
       ]
-    },
+    }
+  },
     "NB-HS-004": {
       "id": "NB-HS-004",
       "name": "Zip-Through Hoodie",
@@ -133,7 +187,25 @@
         "400 GSM fleece, YKK zip",
         "Printed with the NeverBeen wordmark",
         "Dispatched from India in 2 working days"
-      ]
+      ],
+      "campaign": {
+        "model": "Maeve Anahita",
+        "label": "Premium Model Edit",
+        "note": "Presented by NeverBeen Premium model Maeve Anahita in a clean white studio campaign.",
+        "profile": "/ai-models/maeve-anahita",
+        "image": "NB-HS-004-maeve-anahita-01.jpg",
+        "gallery": [
+          "NB-HS-004-maeve-anahita-02.jpg",
+          "NB-HS-004-maeve-anahita-03.jpg",
+          "NB-HS-004-maeve-anahita-04.jpg",
+          "NB-HS-004-maeve-anahita-05.jpg",
+          "NB-HS-004-maeve-anahita-06.jpg",
+          "NB-HS-004-maeve-anahita-07.jpg",
+          "NB-HS-004-maeve-anahita-08.jpg",
+          "NB-HS-004-maeve-anahita-09.jpg",
+          "NB-HS-004-maeve-anahita-10.jpg"
+        ]
+      }
     }
   }
 }

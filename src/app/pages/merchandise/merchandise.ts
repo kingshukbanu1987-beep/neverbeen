@@ -29,7 +29,7 @@ const DEFAULT_ADDRESS: CheckoutAddress = {
 type ShopView = 'shop' | 'product' | 'cart' | 'checkout' | 'payment';
 type ShopReturnView = Exclude<ShopView, 'product'>;
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'rating' | 'newest';
-type DetailImageMode = 'campaign' | 'product';
+type DetailImage = { src: string; alt: string; label: string };
 
 @Component({
   selector: 'app-merchandise',
@@ -56,7 +56,8 @@ export class Merchandise {
   protected readonly maximumPrice = signal(3500);
   protected readonly minimumRating = signal(0);
   protected readonly activeProduct = signal<MerchandiseProduct | null>(null);
-  protected readonly detailImageMode = signal<DetailImageMode>('campaign');
+  protected readonly detailImageIndex = signal(0);
+  protected readonly detailImages = computed(() => this.buildDetailImages(this.activeProduct()));
   protected readonly signInGate = signal(false);
   protected readonly cart = signal<MerchandiseCartItem[]>(this.readCart());
   protected readonly toast = signal('');
@@ -196,19 +197,40 @@ export class Merchandise {
   }
 
   protected detailImage(product: MerchandiseProduct): string {
-    return this.detailImageMode() === 'campaign' && product.campaign
-      ? product.campaign.image
-      : product.image;
+    const images = this.detailImages();
+    return images[this.detailImageIndex()]?.src ?? product.image;
   }
 
   protected detailAlt(product: MerchandiseProduct): string {
-    return this.detailImageMode() === 'campaign' && product.campaign
-      ? `${product.campaign.model} holding the ${product.name} in a white studio`
-      : `${product.name} — product view`;
+    const images = this.detailImages();
+    return images[this.detailImageIndex()]?.alt ?? `${product.name} — product view`;
   }
 
-  protected setDetailImage(mode: DetailImageMode): void {
-    this.detailImageMode.set(mode);
+  protected setDetailImage(index: number): void {
+    this.detailImageIndex.set(index);
+  }
+
+  private buildDetailImages(product: MerchandiseProduct | null): DetailImage[] {
+    if (!product) return [];
+    const images: DetailImage[] = [];
+    const campaign = product.campaign;
+    if (campaign) {
+      (campaign.gallery ?? [campaign.image]).forEach((src, index) => {
+        images.push({
+          src,
+          alt: `${campaign.model} presenting the ${product.name} in a white studio — look ${
+            index + 1
+          }`,
+          label: `With ${campaign.model} · ${index + 1}`,
+        });
+      });
+    }
+    images.push({
+      src: product.image,
+      alt: `${product.name} — product only`,
+      label: 'Product only',
+    });
+    return images;
   }
 
   protected setCategory(value: string): void {
@@ -245,7 +267,7 @@ export class Merchandise {
     this.activeProduct.set(product);
     this.selectedSize.set(product.sizes[0] ?? 'One size');
     this.selectedColor.set(product.colors[0] ?? '');
-    this.detailImageMode.set(product.campaign ? 'campaign' : 'product');
+    this.detailImageIndex.set(0);
     this.view.set('product');
     this.scrollToTop();
   }

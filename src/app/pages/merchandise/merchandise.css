@@ -1206,6 +1206,12 @@ h2 em {
   object-position: center 15%;
 }
 
+.detail-main-image img.detail-image-contain {
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
+}
+
 .image-stamp {
   position: absolute;
   top: 1rem;
@@ -1263,6 +1269,37 @@ h2 em {
   color: var(--nb-muted);
   font-size: 0.75rem;
   font-weight: 700;
+}
+
+.thumbnail-row.is-multi {
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: 0.5rem;
+}
+
+.thumbnail-row.is-multi button {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-items: start;
+  gap: 0.35rem;
+  padding: 0.4rem 0.3rem;
+}
+
+.thumbnail-row.is-multi img {
+  width: 100%;
+  height: 88px;
+  border-radius: 10px;
+}
+
+.thumbnail-row.is-multi span {
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .detail-panel {

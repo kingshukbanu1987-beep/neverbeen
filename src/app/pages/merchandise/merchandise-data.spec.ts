@@ -1,3 +1,7 @@
+import hoodieCatalogue from '../../../../public/Merchandise/Hoodies-and-Sweatshirts/Hoodies-and-Sweatshirts.json';
+import mugCatalogue from '../../../../public/Merchandise/Mugs-and-Coasters/Mugs-and-Coasters.json';
+import toteCatalogue from '../../../../public/Merchandise/Tote-Bags-and-Backpacks/Tote-Bags-and-Backpacks.json';
+import teeCatalogue from '../../../../public/Merchandise/T-Shirts/T-Shirts.json';
 import bottleCatalogue from '../../../../public/Merchandise/Water-Bottles-and-Tumblers/Water-Bottles-and-Tumblers.json';
 import { MerchandiseCatalogService } from './merchandise-catalog.service';
 import {
@@ -82,6 +86,61 @@ describe('Merchandise checkout data', () => {
     });
   });
 
+  it('renames the Passport Tee and attaches Tasneem Al-Rifai’s campaign without changing its product details', () => {
+    const tee = teeCatalogue.items['NB-TS-002'];
+
+    expect(tee.name).toBe("Girl's Passport Tee");
+    expect(tee.audience).toBe('Girls');
+    expect(tee.image).toBe('NB-TS-002.jpg');
+    expect(tee.price).toBe(949);
+    expect(tee.compareAtPrice).toBe(1349);
+    expect(tee.colors).toEqual(['Studio navy', 'Graphite', 'Forest']);
+    expect(tee.sizes).toEqual(['S', 'M', 'L', 'XL', 'XXL']);
+    expect(tee.material).toBe('200 GSM ring-spun cotton, classic fit');
+    expect(tee.campaign).toMatchObject({
+      model: 'Tasneem Al-Rifai',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/tasneem-al-rifai',
+      image: 'NB-TS-002-tasneem-al-rifai-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(tee.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-TS-002-tasneem-al-rifai-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Tasneem’s Passport Tee photos from the T-Shirts catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('T-Shirts') ? teeCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const tee = service.products().find((product) => product.id === 'NB-TS-002');
+      expect(tee?.name).toBe("Girl's Passport Tee");
+      expect(tee?.audience).toBe('Girls');
+      expect(tee?.image).toBe('/Merchandise/T-Shirts/NB-TS-002.jpg');
+      expect(tee?.campaign?.image).toBe('/Merchandise/T-Shirts/NB-TS-002-tasneem-al-rifai-01.jpg');
+      expect(tee?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/T-Shirts/NB-TS-002-tasneem-al-rifai-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('attaches Fiadh Dara to the Insulated Steel Bottle campaign', () => {
     const campaign = bottleCatalogue.items['NB-BT-001'].campaign;
 
@@ -89,8 +148,190 @@ describe('Merchandise checkout data', () => {
       model: 'Fiadh Dara',
       label: 'Premium Model Edit',
       profile: '/ai-models/fiadh-dara',
-      image: 'NB-BT-001-fiadh-dara.jpg',
+      image: 'NB-BT-001-fiadh-dara-01.jpg',
     });
+    expect(campaign?.gallery?.length).toBe(9);
+  });
+
+  it('renames the oversized hoodie and attaches Nour El-Sherif’s campaign', () => {
+    const hoodie = hoodieCatalogue.items['NB-HS-001'];
+
+    expect(hoodie.name).toBe("Women's Oversized Hoodie");
+    expect(hoodie.audience).toBe('Women');
+    expect(hoodie.image).toBe('NB-HS-001.jpg');
+    expect(hoodie.campaign).toMatchObject({
+      model: 'Nour El-Sherif',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/nour-el-sherif',
+      image: 'NB-HS-001-nour-el-sherif-01.jpg',
+    });
+    expect(hoodie.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-HS-001-nour-el-sherif-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves the oversized hoodie campaign photos from its catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () =>
+          url.includes('Hoodies-and-Sweatshirts') ? hoodieCatalogue : { items: {} },
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const hoodie = service.products().find((product) => product.id === 'NB-HS-001');
+      expect(hoodie?.name).toBe("Women's Oversized Hoodie");
+      expect(hoodie?.audience).toBe('Women');
+      expect(hoodie?.image).toBe('/Merchandise/Hoodies-and-Sweatshirts/NB-HS-001.jpg');
+      expect(hoodie?.campaign?.image).toBe(
+        '/Merchandise/Hoodies-and-Sweatshirts/NB-HS-001-nour-el-sherif-01.jpg',
+      );
+      expect(hoodie?.campaign?.gallery?.[8]).toBe(
+        '/Merchandise/Hoodies-and-Sweatshirts/NB-HS-001-nour-el-sherif-10.jpg',
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('attaches Alisha Bhattacharya to the Heavy Canvas Tote campaign', () => {
+    const tote = toteCatalogue.items['NB-TB-001'];
+
+    expect(tote.name).toBe('Heavy Canvas Tote');
+    expect(tote.image).toBe('NB-TB-001.jpg');
+    expect(tote.campaign).toMatchObject({
+      model: 'Alisha Bhattacharya',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/alisha-bhattacharya',
+      image: 'NB-TB-001-alisha-bhattacharya-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(tote.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-TB-001-alisha-bhattacharya-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('attaches Farah Al-Shaar to the Laptop Backpack campaign without replacing its product image', () => {
+    const backpack = toteCatalogue.items['NB-TB-003'];
+
+    expect(backpack.name).toBe('Laptop Backpack · 24 L');
+    expect(backpack.image).toBe('NB-TB-003.jpg');
+    expect(backpack.campaign).toMatchObject({
+      model: 'Farah Al-Shaar',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/farah-al-shaar',
+      image: 'NB-TB-003-farah-al-shaar-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(backpack.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-TB-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Alisha’s tote and Farah’s backpack photos from the correct catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Tote-Bags-and-Backpacks') ? toteCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const tote = service.products().find((product) => product.id === 'NB-TB-001');
+      expect(tote?.campaign?.model).toBe('Alisha Bhattacharya');
+      expect(tote?.image).toBe('/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001.jpg');
+      expect(tote?.campaign?.image).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-01.jpg',
+      );
+      expect(tote?.campaign?.gallery?.[0]).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-02.jpg',
+      );
+      expect(tote?.campaign?.gallery?.[8]).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-001-alisha-bhattacharya-10.jpg',
+      );
+
+      const backpack = service.products().find((product) => product.id === 'NB-TB-003');
+      expect(backpack?.campaign?.model).toBe('Farah Al-Shaar');
+      expect(backpack?.image).toBe('/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003.jpg');
+      expect(backpack?.campaign?.image).toBe(
+        '/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003-farah-al-shaar-01.jpg',
+      );
+      expect(backpack?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/Tote-Bags-and-Backpacks/NB-TB-003-farah-al-shaar-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('attaches Aoife Pahlavi to the Ceramic Mug campaign without replacing its product image', () => {
+    const mug = mugCatalogue.items['NB-MC-001'];
+
+    expect(mug.name).toBe('Ceramic Mug · 350 ml');
+    expect(mug.image).toBe('NB-MC-001.jpg');
+    expect(mug.campaign).toMatchObject({
+      model: 'Aoife Pahlavi',
+      label: 'Premium Model Edit',
+      profile: '/ai-models/aoife-pahlavi',
+      image: 'NB-MC-001-aoife-pahlavi-01.jpg',
+      detailImageFit: 'contain',
+    });
+    expect(mug.campaign.gallery).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `NB-MC-001-aoife-pahlavi-${String(index + 2).padStart(2, '0')}.jpg`,
+      ),
+    );
+  });
+
+  it('resolves Aoife’s mug campaign photos from the correct catalogue folder', async () => {
+    vi.stubGlobal('fetch', (url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () => (url.includes('Mugs-and-Coasters') ? mugCatalogue : { items: {} }),
+      }),
+    );
+
+    try {
+      const service = new MerchandiseCatalogService();
+      await service.load();
+
+      const mug = service.products().find((product) => product.id === 'NB-MC-001');
+      expect(mug?.campaign?.model).toBe('Aoife Pahlavi');
+      expect(mug?.image).toBe('/Merchandise/Mugs-and-Coasters/NB-MC-001.jpg');
+      expect(mug?.campaign?.image).toBe(
+        '/Merchandise/Mugs-and-Coasters/NB-MC-001-aoife-pahlavi-01.jpg',
+      );
+      expect(mug?.campaign?.gallery).toEqual(
+        Array.from(
+          { length: 9 },
+          (_, index) =>
+            `/Merchandise/Mugs-and-Coasters/NB-MC-001-aoife-pahlavi-${String(index + 2).padStart(2, '0')}.jpg`,
+        ),
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('resolves the Premium model campaign photo from its catalogue folder', async () => {
@@ -109,7 +350,10 @@ describe('Merchandise checkout data', () => {
       const bottle = service.products().find((product) => product.id === 'NB-BT-001');
       expect(bottle?.campaign?.model).toBe('Fiadh Dara');
       expect(bottle?.campaign?.image).toBe(
-        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara.jpg',
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara-01.jpg',
+      );
+      expect(bottle?.campaign?.gallery?.[0]).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara-02.jpg',
       );
     } finally {
       vi.unstubAllGlobals();

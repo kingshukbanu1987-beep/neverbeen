@@ -369,31 +369,33 @@
         <div class="detail-layout">
           <section class="detail-gallery" aria-label="Product photography">
             <div class="detail-main-image">
-              <img [src]="detailImage(product)" [alt]="detailAlt(product)" decoding="async" />
+              <img
+                [src]="detailImage(product)"
+                [alt]="detailAlt(product)"
+                [class.detail-image-contain]="product.campaign?.detailImageFit === 'contain'"
+                decoding="async"
+              />
               @if (product.campaign; as campaign) {
                 <span class="image-stamp">NB / {{ campaign.label }}</span>
               }
             </div>
-            @if (product.campaign; as campaign) {
-              <div class="thumbnail-row" aria-label="Choose product image">
-                <button
-                  type="button"
-                  [class.is-active]="detailImageMode() === 'campaign'"
-                  [attr.aria-pressed]="detailImageMode() === 'campaign'"
-                  (click)="setDetailImage('campaign')"
-                >
-                  <img [src]="campaign.image" [alt]="campaign.model + ' holding ' + product.name" />
-                  <span>With {{ campaign.model }}</span>
-                </button>
-                <button
-                  type="button"
-                  [class.is-active]="detailImageMode() === 'product'"
-                  [attr.aria-pressed]="detailImageMode() === 'product'"
-                  (click)="setDetailImage('product')"
-                >
-                  <img [src]="product.image" [alt]="product.name + ' product only'" />
-                  <span>Product only</span>
-                </button>
+            @if (detailImages().length > 1) {
+              <div
+                class="thumbnail-row"
+                [class.is-multi]="detailImages().length > 2"
+                aria-label="Choose product image"
+              >
+                @for (image of detailImages(); track $index; let i = $index) {
+                  <button
+                    type="button"
+                    [class.is-active]="detailImageIndex() === i"
+                    [attr.aria-pressed]="detailImageIndex() === i"
+                    (click)="setDetailImage(i)"
+                  >
+                    <img [src]="image.src" [alt]="image.alt" />
+                    <span>{{ image.label }}</span>
+                  </button>
+                }
               </div>
             }
           </section>
