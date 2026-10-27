@@ -97,12 +97,30 @@
       "currency": "INR",
       "inStock": true,
       "deliveryWorkingDays": 15,
-      "highlights": [
-        "360 GSM loopback cotton, ribbed trims",
-        "Printed with the NeverBeen wordmark",
-        "Dispatched from India in 2 working days"
+    "highlights": [
+      "360 GSM loopback cotton, ribbed trims",
+      "Printed with the NeverBeen wordmark",
+      "Dispatched from India in 2 working days"
+    ],
+    "campaign": {
+      "model": "Nourhan Durrani",
+      "label": "Premium Model Edit",
+      "note": "Presented by NeverBeen Premium model Nourhan Durrani in a clean white studio campaign.",
+      "profile": "/ai-models/nourhan-durrani",
+      "image": "NB-HS-003-nourhan-durrani-01.jpg",
+      "gallery": [
+        "NB-HS-003-nourhan-durrani-02.jpg",
+        "NB-HS-003-nourhan-durrani-03.jpg",
+        "NB-HS-003-nourhan-durrani-04.jpg",
+        "NB-HS-003-nourhan-durrani-05.jpg",
+        "NB-HS-003-nourhan-durrani-06.jpg",
+        "NB-HS-003-nourhan-durrani-07.jpg",
+        "NB-HS-003-nourhan-durrani-08.jpg",
+        "NB-HS-003-nourhan-durrani-09.jpg",
+        "NB-HS-003-nourhan-durrani-10.jpg"
       ]
-    },
+    }
+  },
     "NB-HS-004": {
       "id": "NB-HS-004",
       "name": "Zip-Through Hoodie",
