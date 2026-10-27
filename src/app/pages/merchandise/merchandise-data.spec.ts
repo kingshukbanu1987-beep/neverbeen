@@ -89,8 +89,9 @@ describe('Merchandise checkout data', () => {
       model: 'Fiadh Dara',
       label: 'Premium Model Edit',
       profile: '/ai-models/fiadh-dara',
-      image: 'NB-BT-001-fiadh-dara.jpg',
+      image: 'NB-BT-001-fiadh-dara-01.jpg',
     });
+    expect(campaign?.gallery?.length).toBe(9);
   });
 
   it('resolves the Premium model campaign photo from its catalogue folder', async () => {
@@ -109,7 +110,10 @@ describe('Merchandise checkout data', () => {
       const bottle = service.products().find((product) => product.id === 'NB-BT-001');
       expect(bottle?.campaign?.model).toBe('Fiadh Dara');
       expect(bottle?.campaign?.image).toBe(
-        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara.jpg',
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara-01.jpg',
+      );
+      expect(bottle?.campaign?.gallery?.[0]).toBe(
+        '/Merchandise/Water-Bottles-and-Tumblers/NB-BT-001-fiadh-dara-02.jpg',
       );
     } finally {
       vi.unstubAllGlobals();
