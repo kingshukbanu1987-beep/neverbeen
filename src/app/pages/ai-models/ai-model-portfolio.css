@@ -24,6 +24,18 @@
   --studio-glass-line: rgb(255 255 255 / 70%);
   --chat-green: #74c476;
 
+  /* The cover-block theme: the model's cover photograph is drawn at 95% opacity as the
+     full-bleed background of the profile block, and every detail and the profile picture are
+     drawn over it in frosted glass and white ink. */
+  --cover-ink: #f8f5ff;
+  --cover-ink-soft: rgb(255 255 255 / 84%);
+  --cover-ink-faint: rgb(255 255 255 / 56%);
+  --cover-glass: rgb(17 11 26 / 44%);
+  --cover-glass-strong: rgb(13 8 20 / 58%);
+  --cover-glass-line: rgb(255 255 255 / 13%);
+  --cover-glass-line-soft: rgb(255 255 255 / 8%);
+  --cover-accent-soft: #cbb6f5;
+
   background: var(--studio-bg);
   color: var(--studio-text);
   font-family: var(--page-font);
@@ -129,17 +141,22 @@
 
 /* ---------------------------------------------------------------- profile header */
 
+/* The cover block: the model's cover photograph — the single image of her `cover/` folder — is
+   drawn at 95% opacity as the full-bleed background of the whole block. The dark scrims keep the
+   type readable; the frosted-glass panels and the white ink carry every detail and the profile
+   picture above the photograph. */
+
 .profile-header {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   margin-top: 2rem;
-  border: 1px solid var(--studio-line);
+  border: 1px solid var(--cover-glass-line);
   border-radius: 30px;
-  background: var(--studio-surface);
+  background: #0d0813;
   box-shadow:
-    0 1px 2px rgb(52 34 80 / 5%),
-    0 24px 60px -46px rgb(58 38 90 / 30%);
+    0 1px 2px rgb(0 0 0 / 30%),
+    0 30px 80px -40px rgb(0 0 0 / 55%);
 }
 
 .header-backdrop {
@@ -149,10 +166,23 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 28%;
-  filter: blur(56px) saturate(1.2) brightness(0.96);
-  opacity: 0.55;
+  object-position: center 30%;
+  /* The cover image itself: 95% opacity, full strength, a slow breath of scale. */
+  opacity: 0.95;
+  filter: saturate(1.06) contrast(1.02);
   pointer-events: none;
+  transform: scale(1.05);
+  animation: cover-breathe 26s ease-in-out infinite alternate;
+}
+
+@keyframes cover-breathe {
+  from {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: scale(1.1) translate3d(0, -1.4%, 0);
+  }
 }
 
 .header-scrim {
@@ -160,8 +190,14 @@
   z-index: -1;
   inset: 0;
   background:
-    radial-gradient(ellipse at 12% 8%, rgb(150 120 182 / 16%), transparent 46%),
-    linear-gradient(180deg, #ffffff 0%, #faf8fd 72%);
+    /* Top band: the topline always reads. */
+    linear-gradient(180deg, rgb(10 6 18 / 72%), rgb(10 6 18 / 26%) 24%, transparent 52%),
+    /* Deep base: the stats strip and the footer of the block. */
+    linear-gradient(0deg, rgb(8 5 14 / 92%), transparent 64%),
+    /* Left wash: the identity column keeps its contrast. */
+    linear-gradient(100deg, rgb(12 8 20 / 58%), transparent 58%),
+    /* Soft vignette into the corners. */
+    radial-gradient(ellipse 95% 85% at 88% 38%, transparent 42%, rgb(6 4 10 / 50%) 100%);
 }
 
 .header-topline {
@@ -170,15 +206,16 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.35rem clamp(1.3rem, 4vw, 3.2rem) 0;
-  color: var(--studio-faint);
+  color: var(--cover-ink-faint);
   font-size: 0.57rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  text-shadow: 0 1px 20px rgb(0 0 0 / 60%);
 }
 
 .header-topline i {
-  color: var(--studio-accent);
+  color: var(--cover-accent-soft);
   font-style: normal;
 }
 
@@ -193,6 +230,24 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: clamp(1.4rem, 4vw, 3rem);
   align-items: center;
+}
+
+/* The frosted-glass panel the identity copy lives in — every detail over the photograph. */
+.identity-panel {
+  position: relative;
+  min-width: 0;
+  align-self: center;
+  border-radius: 26px;
+  padding: clamp(1.05rem, 2.6vw, 1.6rem);
+  background:
+    radial-gradient(120% 150% at 0% 0%, rgb(255 255 255 / 7%), transparent 55%),
+    linear-gradient(150deg, var(--cover-glass), rgb(12 8 18 / 32%));
+  border: 1px solid var(--cover-glass-line);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 9%),
+    0 30px 70px -34px rgb(0 0 0 / 70%);
+  backdrop-filter: blur(30px) saturate(1.25);
+  -webkit-backdrop-filter: blur(30px) saturate(1.25);
 }
 
 .avatar-ring {
@@ -251,7 +306,7 @@
 
 .eyebrow {
   margin: 0;
-  color: var(--studio-accent-deep);
+  color: var(--cover-accent-soft);
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -265,7 +320,8 @@
   font-weight: 600;
   letter-spacing: -0.055em;
   line-height: 0.95;
-  color: var(--studio-plum);
+  color: var(--cover-ink);
+  text-shadow: 0 3px 34px rgb(0 0 0 / 45%);
   overflow-wrap: anywhere;
 }
 
@@ -278,10 +334,11 @@
 }
 
 .handle {
-  color: var(--studio-accent-deep);
+  color: var(--cover-ink);
   font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.02em;
+  text-shadow: 0 1px 16px rgb(0 0 0 / 40%);
 }
 
 .availability {
@@ -289,13 +346,14 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.36rem 0.7rem 0.36rem 0.55rem;
-  border: 1px solid var(--studio-line-strong);
+  border: 1px solid var(--cover-glass-line);
   border-radius: 999px;
-  background: #ffffff;
-  color: var(--studio-muted);
+  background: rgb(255 255 255 / 10%);
+  color: var(--cover-ink-soft);
   font-size: 0.63rem;
   font-weight: 650;
   letter-spacing: 0.05em;
+  backdrop-filter: blur(12px);
 }
 
 .availability i {
@@ -309,9 +367,10 @@
 .profile-bio {
   max-width: 620px;
   margin: 1.15rem 0 0;
-  color: var(--studio-muted);
+  color: var(--cover-ink-soft);
   font-size: 0.95rem;
   line-height: 1.8;
+  text-shadow: 0 1px 18px rgb(0 0 0 / 35%);
 }
 
 .tag-list {
@@ -325,20 +384,21 @@
 
 .tag-list li {
   padding: 0.42rem 0.78rem;
-  border: 1px solid var(--studio-line);
+  border: 1px solid var(--cover-glass-line);
   border-radius: 999px;
-  background: var(--studio-glass);
-  color: var(--studio-text);
+  background: rgb(255 255 255 / 8%);
+  color: #f2ecfb;
   font-size: 0.66rem;
   font-weight: 650;
   letter-spacing: 0.09em;
   text-transform: uppercase;
+  backdrop-filter: blur(12px);
 }
 
 .tag-list li::before {
   content: '#';
   margin-right: 0.22rem;
-  color: var(--studio-accent);
+  color: var(--cover-accent-soft);
 }
 
 /* Live Chat — the real-time chat with the model, in the studio's green (#74C476), standing right
@@ -437,12 +497,16 @@
 @keyframes card-chat-dot-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgb(255 255 255 / 80%), 0 0 8px 1px rgb(255 255 255 / 60%);
+    box-shadow:
+      0 0 0 0 rgb(255 255 255 / 80%),
+      0 0 8px 1px rgb(255 255 255 / 60%);
   }
 
   70%,
   100% {
-    box-shadow: 0 0 0 0.42rem rgb(255 255 255 / 0%), 0 0 8px 1px rgb(255 255 255 / 0%);
+    box-shadow:
+      0 0 0 0.42rem rgb(255 255 255 / 0%),
+      0 0 8px 1px rgb(255 255 255 / 0%);
   }
 }
 
@@ -519,29 +583,30 @@
   align-items: center;
   gap: 0.42rem;
   margin-left: 0.42rem;
-  color: var(--studio-plum);
+  color: var(--cover-ink);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.015em;
   text-decoration: none;
+  text-shadow: 0 1px 16px rgb(0 0 0 / 40%);
   transition:
     color 180ms ease,
     transform 180ms ease;
 }
 
 .biography-link span {
-  color: var(--studio-accent);
+  color: var(--cover-accent-soft);
   font-size: 0.86rem;
 }
 
 .biography-link:hover,
 .biography-link:focus-visible {
-  color: var(--studio-accent-deep);
+  color: #ffffff;
   transform: translateX(2px);
 }
 
 .biography-link:focus-visible {
-  outline: 2px solid var(--studio-accent);
+  outline: 2px solid var(--cover-accent-soft);
   outline-offset: 4px;
 }
 
@@ -550,45 +615,54 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.72rem 1.25rem;
-  border: 1px solid var(--studio-line);
+  border: 1px solid var(--cover-glass-line);
   border-radius: 999px;
-  background: #ffffff;
-  color: var(--studio-muted);
+  background: rgb(255 255 255 / 9%);
+  color: var(--cover-ink-soft);
   font-family: inherit;
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   cursor: pointer;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition:
     border-color 180ms ease,
     background 180ms ease,
     color 180ms ease,
-    transform 180ms ease;
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .action-button:hover,
 .action-button:focus-visible {
-  border-color: var(--studio-accent-mid);
-  background: var(--studio-accent-soft);
-  color: var(--studio-accent-deep);
+  border-color: rgb(255 255 255 / 26%);
+  background: rgb(255 255 255 / 16%);
+  color: #ffffff;
   transform: translateY(-1px);
+  box-shadow: 0 16px 34px -18px rgb(0 0 0 / 65%);
 }
 
 .action-button:focus-visible {
-  outline: 2px solid var(--studio-accent);
+  outline: 2px solid var(--cover-accent-soft);
   outline-offset: 3px;
 }
 
 .action-primary {
   border-color: transparent;
-  background: linear-gradient(120deg, #6f539a, #9678b6);
+  background: linear-gradient(120deg, #6f539a, #9678b6 60%, #c3a6e8);
   color: #ffffff;
-  box-shadow: 0 14px 34px rgb(111 83 154 / 28%);
+  box-shadow:
+    0 16px 38px rgb(111 83 154 / 45%),
+    inset 0 1px 0 rgb(255 255 255 / 26%);
 }
 
 .action-primary:hover,
 .action-primary:focus-visible {
-  background: linear-gradient(120deg, #8168a8, #a88ec2);
+  background: linear-gradient(120deg, #8168a8, #b193d0 60%, #cfb9f0);
+  box-shadow:
+    0 20px 46px rgb(111 83 154 / 55%),
+    inset 0 1px 0 rgb(255 255 255 / 30%);
 }
 
 .action-rent span {
@@ -597,20 +671,20 @@
 
 .action-rent.is-unavailable,
 .action-rent:disabled {
-  border-color: rgb(239 90 106 / 35%);
-  background: rgb(239 90 106 / 10%);
+  border-color: rgb(239 90 106 / 52%);
+  background: rgb(239 90 106 / 20%);
   box-shadow: none;
-  color: #f0b6bd;
+  color: #ffc8d2;
   cursor: not-allowed;
-  opacity: 0.85;
-  filter: grayscale(0.25);
+  opacity: 0.9;
+  filter: grayscale(0.2);
 }
 
 .action-rent.is-unavailable:hover,
 .action-rent:disabled:hover {
-  border-color: rgb(239 90 106 / 35%);
-  background: rgb(239 90 106 / 10%);
-  color: #f0b6bd;
+  border-color: rgb(239 90 106 / 52%);
+  background: rgb(239 90 106 / 20%);
+  color: #ffc8d2;
   transform: none;
 }
 
@@ -623,68 +697,74 @@
 }
 
 .action-watch-portfolio {
-  border-color: var(--studio-accent-soft);
-  background: #ffffff;
-  color: var(--studio-plum);
+  border-color: var(--cover-glass-line);
+  background: rgb(255 255 255 / 8%);
+  color: #efe7ff;
 }
 
 .action-watch-portfolio span {
-  color: var(--studio-accent);
+  color: var(--cover-accent-soft);
   font-size: 0.82rem;
 }
 
 .action-watch-portfolio:hover,
 .action-watch-portfolio:focus-visible {
-  border-color: var(--studio-accent);
-  background: var(--studio-accent-soft);
-  color: var(--studio-accent-deep);
+  border-color: rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 16%);
+  color: #ffffff;
 }
 
 .action-download-portfolio {
-  border-color: rgb(168 121 68 / 28%);
-  background: #ffffff;
-  color: rgb(120 82 45);
+  border-color: rgb(227 176 98 / 42%);
+  background: rgb(227 176 98 / 12%);
+  color: #ffe6bd;
 }
 
 .action-download-portfolio span {
-  color: rgb(168 121 68);
+  color: #f2c772;
   font-size: 0.92rem;
 }
 
 .action-download-portfolio:hover,
 .action-download-portfolio:focus-visible {
-  border-color: rgb(168 121 68);
-  background: rgb(168 121 68 / 10%);
-  color: rgb(94 67 36);
+  border-color: rgb(227 176 98 / 66%);
+  background: rgb(227 176 98 / 20%);
+  color: #fff4dd;
 }
 
 .action-download-portfolio.is-missing {
-  border-color: var(--studio-line);
-  background: #ffffff;
-  color: var(--studio-muted);
+  border-color: var(--cover-glass-line);
+  background: rgb(255 255 255 / 8%);
+  color: var(--cover-ink-faint);
 }
 
 .action-download-portfolio.is-missing span {
-  color: var(--studio-faint);
+  color: var(--cover-ink-faint);
 }
 
+/* The stats strip: one frosted-glass card per fact, floating over the photograph. */
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
   gap: 1px;
   margin: 0;
-  border-block: 1px solid var(--studio-line);
-  background: var(--studio-line);
+  border-block: 1px solid var(--cover-glass-line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--cover-glass-line);
+  box-shadow: 0 24px 60px -30px rgb(0 0 0 / 60%);
 }
 
 .profile-stats div {
   min-height: 88px;
   padding: 1.05rem 1.2rem 0.9rem;
-  background: #ffffff;
+  background: rgb(255 255 255 / 5%);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
 }
 
 .profile-stats dt {
-  color: var(--studio-muted);
+  color: var(--cover-ink-faint);
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -693,7 +773,7 @@
 
 .profile-stats dd {
   margin: 0.4rem 0 0;
-  color: var(--studio-text);
+  color: var(--cover-ink);
   font-family: var(--numeric-font);
   font-size: 1.3rem;
   font-weight: 800;
@@ -701,6 +781,7 @@
   line-height: 1.15;
   letter-spacing: -0.03em;
   overflow-wrap: anywhere;
+  text-shadow: 0 2px 20px rgb(0 0 0 / 40%);
 }
 
 .profile-stats dd.num {
@@ -713,21 +794,22 @@
   align-items: center;
   gap: 0.4rem;
   margin: 1.1rem 0 0;
-  color: var(--studio-muted);
+  color: var(--cover-ink-soft);
   font-size: 0.76rem;
+  text-shadow: 0 1px 16px rgb(0 0 0 / 40%);
 }
 
 .rate-hint span {
-  color: var(--studio-accent);
+  color: var(--cover-accent-soft);
 }
 
 .rate-hint b {
-  color: var(--studio-text);
+  color: var(--cover-ink);
   font-weight: 700;
 }
 
 .rate-hint i {
-  color: var(--studio-faint);
+  color: var(--cover-ink-faint);
   font-style: normal;
 }
 
@@ -738,11 +820,13 @@
   max-width: 680px;
   margin: 0;
   padding: 0.75rem 0.9rem;
-  border-left: 2px solid rgb(150 120 182 / 66%);
-  background: rgb(150 120 182 / 7%);
-  color: var(--studio-muted);
+  border-left: 2px solid rgb(150 120 182 / 72%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 7%);
+  color: var(--cover-ink-soft);
   font-size: 0.68rem;
   line-height: 1.6;
+  backdrop-filter: blur(14px);
 }
 
 .illustrative-note span {
@@ -752,9 +836,9 @@
   flex: 0 0 auto;
   margin-top: 0.1rem;
   place-items: center;
-  border: 1px solid rgb(150 120 182 / 45%);
+  border: 1px solid rgb(255 255 255 / 40%);
   border-radius: 50%;
-  background: var(--studio-accent);
+  background: #8e78b0;
   color: #fff;
   font-size: 0.6rem;
   font-weight: 700;
@@ -2076,9 +2160,7 @@
   padding: 0.5rem 0.95rem;
   border: 1px solid var(--studio-line);
   border-radius: 17px;
-  background:
-    linear-gradient(110deg, rgb(255 255 255 / 92%), rgb(255 255 255 / 80%)),
-    #ffffff;
+  background: linear-gradient(110deg, rgb(255 255 255 / 92%), rgb(255 255 255 / 80%)), #ffffff;
   box-shadow:
     0 12px 28px rgb(52 34 80 / 6%),
     inset 0 1px 0 #fff;
@@ -2535,84 +2617,88 @@ app-premium-photo-teaser .premium-teaser-lock {
   color: var(--studio-plum);
 }
 
-/* Light theme for the model's highlight circles on this page. */
+/* The highlights rail sits over the cover photograph: its own dark glass theme is kept, tuned to
+   the cover-block ink so the circles read against the photograph. */
 app-model-highlights .highlights-section {
-  border-color: var(--studio-line);
+  border-color: var(--cover-glass-line);
   background:
-    radial-gradient(120% 170% at 0% -30%, rgb(150 120 182 / 12%), transparent 58%),
-    radial-gradient(90% 140% at 100% 130%, rgb(111 83 154 / 10%), transparent 60%),
-    linear-gradient(150deg, #ffffff, #faf8fd);
+    radial-gradient(120% 170% at 0% -30%, rgb(150 120 182 / 22%), transparent 58%),
+    radial-gradient(90% 140% at 100% 130%, rgb(111 83 154 / 24%), transparent 60%),
+    linear-gradient(150deg, rgb(255 255 255 / 6.5%), rgb(255 255 255 / 1.6%));
   box-shadow:
-    inset 0 1px 0 #ffffff,
-    0 24px 60px rgb(58 38 90 / 10%);
+    inset 0 1px 0 rgb(255 255 255 / 9%),
+    0 24px 60px -28px rgb(0 0 0 / 70%);
+  backdrop-filter: blur(26px) saturate(1.3);
+  -webkit-backdrop-filter: blur(26px) saturate(1.3);
 }
 
 app-model-highlights .highlights-section::before {
   background: linear-gradient(
     138deg,
-    rgb(150 120 182 / 45%),
-    rgb(111 83 154 / 55%) 38%,
-    transparent 72%
+    rgb(255 173 208 / 55%),
+    rgb(255 255 255 / 6%) 32%,
+    rgb(255 255 255 / 0%) 62%,
+    rgb(239 106 165 / 45%)
   );
 }
 
 app-model-highlights .highlights-section::after {
-  background: radial-gradient(circle, rgb(150 120 182 / 16%), transparent 70%);
+  background: radial-gradient(circle, rgb(239 106 165 / 24%), transparent 70%);
 }
 
 app-model-highlights .highlights-heading h2 {
-  color: var(--studio-plum);
+  color: var(--cover-ink);
 }
 
 app-model-highlights .highlights-count {
-  color: var(--studio-muted);
+  color: var(--cover-ink-faint);
 }
 
 app-model-highlights .highlights-count b {
-  color: var(--studio-accent-deep);
+  color: #fbe4ef;
 }
 
 app-model-highlights .highlight-arrow {
-  border-color: var(--studio-line-strong);
-  background: #ffffff;
-  color: var(--studio-text);
-  box-shadow: 0 4px 16px rgb(52 34 80 / 8%);
+  border-color: var(--cover-glass-line);
+  background: rgb(255 255 255 / 8%);
+  color: var(--cover-ink);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
 }
 
 app-model-highlights .highlight-arrow:hover:not(:disabled),
 app-model-highlights .highlight-arrow:focus-visible {
-  border-color: var(--studio-accent-mid);
-  background: var(--studio-accent-soft);
-  color: var(--studio-accent-deep);
-  box-shadow: 0 6px 20px rgb(150 120 182 / 18%);
+  border-color: rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 16%);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgb(239 106 165 / 26%);
 }
 
 app-model-highlights .highlight-arrow:focus-visible {
-  outline-color: var(--studio-accent);
+  outline-color: #f7a8d0;
 }
 
 app-model-highlights .highlights-track.has-back::before {
-  background: linear-gradient(90deg, #ffffff 8%, transparent);
+  background: linear-gradient(90deg, rgb(17 11 26 / 60%) 8%, transparent);
 }
 
 app-model-highlights .highlights-track.has-forward::after {
-  background: linear-gradient(270deg, #ffffff 8%, transparent);
+  background: linear-gradient(270deg, rgb(17 11 26 / 60%) 8%, transparent);
 }
 
 app-model-highlights .highlights-rail {
-  scrollbar-color: rgb(150 120 182 / 70%) #ffffff;
+  scrollbar-color: rgb(239 106 165 / 70%) rgb(255 255 255 / 6%);
 }
 
 app-model-highlights .highlights-rail::-webkit-scrollbar-track {
-  background: #ffffff;
+  background: rgb(255 255 255 / 4%);
 }
 
 app-model-highlights .highlights-rail::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #6f539a, #9678b6 55%, #b79fd4);
+  background: linear-gradient(90deg, #6f539a, #d18bb4 55%, #f2a9cd);
 }
 
 app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(90deg, #8168a8, #a88ec2 55%, #c3addd);
+  background: linear-gradient(90deg, #8168a8, #e0a2c6 55%, #f7bdd8);
 }
 
 /* ----------------------------------------------------------- numeric faces */
@@ -2627,9 +2713,9 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
 /* -------------------------------------------------------- availability states */
 
 .availability.is-available {
-  border-color: rgb(79 211 138 / 38%);
-  background: rgb(79 211 138 / 10%);
-  color: #2d6a4f;
+  border-color: rgb(79 211 138 / 48%);
+  background: rgb(61 220 151 / 18%);
+  color: #c9f7da;
 }
 
 .availability.is-available i {
@@ -2638,9 +2724,9 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
 }
 
 .availability.is-unavailable {
-  border-color: rgb(239 90 106 / 42%);
-  background: rgb(239 90 106 / 12%);
-  color: #9a343f;
+  border-color: rgb(239 90 106 / 55%);
+  background: rgb(239 90 106 / 20%);
+  color: #ffc8d2;
 }
 
 .availability.is-unavailable i {
@@ -2649,9 +2735,9 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
 }
 
 .availability.is-future {
-  border-color: rgb(242 184 75 / 40%);
-  background: rgb(242 184 75 / 10%);
-  color: #8a6d2b;
+  border-color: rgb(242 184 75 / 50%);
+  background: rgb(242 184 75 / 18%);
+  color: #ffe9b8;
 }
 
 .availability.is-future i {

@@ -10,8 +10,16 @@
 
     @if (model(); as profile) {
       <section class="profile-header" aria-labelledby="portfolio-title">
-        @if (profile.cover) {
-          <img class="header-backdrop" [src]="profile.cover" alt="" aria-hidden="true" />
+        <!-- The portfolio cover image — the single image of the model's `cover/` folder — drawn at
+             95% opacity as the full-bleed background of the whole block. Every detail and the
+             profile picture float above it. -->
+        @if (profile.coverImage || profile.cover) {
+          <img
+            class="header-backdrop"
+            [src]="profile.coverImage || profile.cover"
+            alt=""
+            aria-hidden="true"
+          />
         }
         <span class="header-scrim" aria-hidden="true"></span>
 
@@ -37,121 +45,126 @@
               <span class="avatar-badge" aria-hidden="true">NB</span>
             </div>
 
-            <div class="identity-copy">
-              <p class="eyebrow model-location">{{ modelLocation(profile) }}</p>
-              <h1 id="portfolio-title">
-                {{ profile.name }}
-                <app-model-verified-tick [slug]="profile.slug" />
-              </h1>
+            <!-- The glass panel that keeps every detail readable over the photographic cover. -->
+            <div class="identity-panel">
+              <div class="identity-copy">
+                <p class="eyebrow model-location">{{ modelLocation(profile) }}</p>
+                <h1 id="portfolio-title">
+                  {{ profile.name }}
+                  <app-model-verified-tick [slug]="profile.slug" />
+                </h1>
 
-              <!-- E — the Live Chat button, right under her name where it cannot be missed: a quiet
+                <!-- E — the Live Chat button, right under her name where it cannot be missed: a quiet
                    pill, 1.7× smaller than the two-and-a-half-times button it was on her own page,
                    with a light moving through it. -->
-              <div class="chat-cta">
-                <button
-                  #chatButton
-                  type="button"
-                  class="action-button action-chat is-hero"
-                  [attr.aria-label]="'Chat live with ' + profile.name"
-                  (click)="openChat()"
-                >
-                  <span class="card-chat-dot" aria-hidden="true"></span>
-                  Live Chat
-                </button>
-              </div>
-
-              <p class="handle-line">
-                <span class="handle">{{ profile.handle }}</span>
-                <span
-                  class="availability"
-                  [class.is-available]="availabilityState() === 'available'"
-                  [class.is-unavailable]="availabilityState() === 'unavailable'"
-                  [class.is-future]="availabilityState() === 'future'"
-                  ><i aria-hidden="true"></i>{{ availabilityLabel() }}</span
-                >
-              </p>
-
-              <p class="profile-bio">
-                {{ profile.bio || 'A short introduction to this model is on its way.' }}
-              </p>
-
-              @if (profile.tags.length > 0) {
-                <ul class="tag-list" aria-label="Portfolio tags">
-                  @for (tag of profile.tags; track tag) {
-                    <li>{{ tag }}</li>
-                  }
-                </ul>
-              }
-
-              <!-- Highlights sit exactly where the brief asks: just before Read full Biography. -->
-              @if (profile.highlights && profile.highlights.length > 0) {
-                <app-model-highlights [model]="profile" />
-              }
-
-              <div class="profile-actions">
-                <div class="rent-action-stack">
-                  <a [routerLink]="['/ai-models', profile.slug, 'biography']" class="biography-link"
-                    ><span aria-hidden="true">↗</span> Read full Biography</a
-                  >
+                <div class="chat-cta">
                   <button
-                    #rentButton
+                    #chatButton
                     type="button"
-                    class="action-button action-primary action-rent"
-                    [class.is-unavailable]="!bookable()"
-                    [disabled]="!bookable()"
-                    [attr.aria-disabled]="!bookable()"
-                    [attr.title]="bookable() ? null : profile.name + ' is currently unavailable'"
-                    (click)="openBooking()"
+                    class="action-button action-chat is-hero"
+                    [attr.aria-label]="'Chat live with ' + profile.name"
+                    (click)="openChat()"
                   >
-                    @if (bookable()) {
-                      <span aria-hidden="true">✦</span> Rent Me
-                    } @else {
-                      <span aria-hidden="true">⦸</span> Sorry, I'm Not Available
-                    }
+                    <span class="card-chat-dot" aria-hidden="true"></span>
+                    Live Chat
                   </button>
                 </div>
-                <button type="button" class="action-button" (click)="shareProfile(profile)">
-                  <span aria-hidden="true">↗</span> {{ shareLabel() }}
-                </button>
-                <div
-                  class="portfolio-document-actions"
-                  role="group"
-                  aria-label="Model portfolio document"
-                >
-                  <button
-                    type="button"
-                    class="action-button action-watch-portfolio"
-                    [attr.aria-label]="'Watch the portfolio document of ' + profile.name"
-                    (click)="watchPortfolio(profile)"
-                  >
-                    <span aria-hidden="true">▶</span> Watch Portfolio
-                  </button>
-                  <button
-                    type="button"
-                    class="action-button action-download-portfolio"
-                    [class.is-missing]="!portfolioDocument()"
-                    [attr.aria-label]="
-                      portfolioDocument()
-                        ? 'Download the portfolio document of ' + profile.name
-                        : 'No portfolio document available for ' + profile.name
-                    "
-                    (click)="downloadPortfolio(profile)"
-                  >
-                    <span aria-hidden="true">⤓</span> Download Portfolio
-                  </button>
-                </div>
-              </div>
 
-              @if (ratePerPhoto() > 0) {
-                <p class="rate-hint">
-                  <span aria-hidden="true">✳</span> From
-                  <b>₹{{ ratePerPhoto().toLocaleString('en-IN') }}</b> per photograph
-                  <i
-                    >— <span class="num">10</span> photographs minimum, up to
-                    <span class="num">100</span> or a custom order</i
+                <p class="handle-line">
+                  <span class="handle">{{ profile.handle }}</span>
+                  <span
+                    class="availability"
+                    [class.is-available]="availabilityState() === 'available'"
+                    [class.is-unavailable]="availabilityState() === 'unavailable'"
+                    [class.is-future]="availabilityState() === 'future'"
+                    ><i aria-hidden="true"></i>{{ availabilityLabel() }}</span
                   >
                 </p>
-              }
+
+                <p class="profile-bio">
+                  {{ profile.bio || 'A short introduction to this model is on its way.' }}
+                </p>
+
+                @if (profile.tags.length > 0) {
+                  <ul class="tag-list" aria-label="Portfolio tags">
+                    @for (tag of profile.tags; track tag) {
+                      <li>{{ tag }}</li>
+                    }
+                  </ul>
+                }
+
+                <!-- Highlights sit exactly where the brief asks: just before Read full Biography. -->
+                @if (profile.highlights && profile.highlights.length > 0) {
+                  <app-model-highlights [model]="profile" />
+                }
+
+                <div class="profile-actions">
+                  <div class="rent-action-stack">
+                    <a
+                      [routerLink]="['/ai-models', profile.slug, 'biography']"
+                      class="biography-link"
+                      ><span aria-hidden="true">↗</span> Read full Biography</a
+                    >
+                    <button
+                      #rentButton
+                      type="button"
+                      class="action-button action-primary action-rent"
+                      [class.is-unavailable]="!bookable()"
+                      [disabled]="!bookable()"
+                      [attr.aria-disabled]="!bookable()"
+                      [attr.title]="bookable() ? null : profile.name + ' is currently unavailable'"
+                      (click)="openBooking()"
+                    >
+                      @if (bookable()) {
+                        <span aria-hidden="true">✦</span> Rent Me
+                      } @else {
+                        <span aria-hidden="true">⦸</span> Sorry, I'm Not Available
+                      }
+                    </button>
+                  </div>
+                  <button type="button" class="action-button" (click)="shareProfile(profile)">
+                    <span aria-hidden="true">↗</span> {{ shareLabel() }}
+                  </button>
+                  <div
+                    class="portfolio-document-actions"
+                    role="group"
+                    aria-label="Model portfolio document"
+                  >
+                    <button
+                      type="button"
+                      class="action-button action-watch-portfolio"
+                      [attr.aria-label]="'Watch the portfolio document of ' + profile.name"
+                      (click)="watchPortfolio(profile)"
+                    >
+                      <span aria-hidden="true">▶</span> Watch Portfolio
+                    </button>
+                    <button
+                      type="button"
+                      class="action-button action-download-portfolio"
+                      [class.is-missing]="!portfolioDocument()"
+                      [attr.aria-label]="
+                        portfolioDocument()
+                          ? 'Download the portfolio document of ' + profile.name
+                          : 'No portfolio document available for ' + profile.name
+                      "
+                      (click)="downloadPortfolio(profile)"
+                    >
+                      <span aria-hidden="true">⤓</span> Download Portfolio
+                    </button>
+                  </div>
+                </div>
+
+                @if (ratePerPhoto() > 0) {
+                  <p class="rate-hint">
+                    <span aria-hidden="true">✳</span> From
+                    <b>₹{{ ratePerPhoto().toLocaleString('en-IN') }}</b> per photograph
+                    <i
+                      >— <span class="num">10</span> photographs minimum, up to
+                      <span class="num">100</span> or a custom order</i
+                    >
+                  </p>
+                }
+              </div>
             </div>
           </div>
 
