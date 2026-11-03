@@ -9,9 +9,9 @@
  *
  * The portfolio's cover image lives in the album's own `cover/` sub-folder
  * (`public/NeverBeenModels/<ModelNameNoSpaces>/cover/`). It holds exactly one image — the
- * model's cover — which is shown at 95% opacity as the full-bleed background of the portfolio
- * page's profile block, with every detail and the profile picture drawn over it. Images in the
- * folder never enter the portfolio grid. A `coverImage` field of the album's `profile.json`
+ * model's cover — which is shown whole at 98% opacity in a dedicated widescreen cover stage
+ * above the complete profile dossier. Compact screens keep it as the profile block's backdrop.
+ * Images in the folder never enter the portfolio grid. A `coverImage` field of the album's `profile.json`
  * (a file name or path inside the album) overrides the folder when one is present.
  *
  * The videos of the same model live in the album's own video sub-folder,
@@ -83,9 +83,9 @@ const highlightsFolderName = 'highlights';
 
 /**
  * The album sub-folder that holds the model's portfolio cover image. It carries exactly one
- * image, the model's cover, which is drawn as the 95%-opacity full-bleed background of the
- * portfolio page's profile block. The folder is matched without regard to case, so `cover/` and
- * `Cover/` both work.
+ * image, the model's cover, shown whole at 98% opacity in the widescreen cover stage and used
+ * as the full-bleed profile backdrop on compact screens. The folder is matched without regard to
+ * case, so `cover/` and `Cover/` both work.
  */
 const coverFolderName = 'cover';
 
@@ -129,8 +129,8 @@ function listImages(directory) {
  * Biography, Portfolio, Highlights, cover and PremiumContent images belong to their own views and
  * must never leak into the portfolio grid: `Biography/` holds the fictional memory images,
  * `Portfolio/` holds the generated portfolio document and its assets, `Highlights/` holds the
- * story frames of the highlights rail, `cover/` holds the portfolio page's cover image (drawn at
- * 95% opacity as the profile block's background, never as a grid post), `personality/` holds the
+ * story frames of the highlights rail, `cover/` holds the portfolio page's cover image (shown at
+ * 98% opacity in the widescreen cover stage, never as a grid post), `personality/` holds the
  * model's static character database (`characterdatabase.json`) for Live Chat, and
  * `PremiumContent/` holds the photographs only the paid Premium Live Chat may show — they travel
  * in their own `premiumPhotos` list, never inside the public grid.
@@ -1000,9 +1000,9 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
     name,
     cover,
     /**
-     * The portfolio page's cover image — the single image of the album's `cover/` folder. It is
-     * drawn at 95% opacity as the full-bleed background of the profile block; every detail and the
-     * profile picture sit over it. Falls back to the avatar `cover` when the folder is absent.
+     * The portfolio page's cover image — the single image of the album's `cover/` folder. On
+     * widescreen it is shown whole at 98% opacity above the complete profile dossier; compact
+     * screens keep it as the full-bleed profile backdrop. Falls back to avatar `cover` when absent.
      */
     coverImage,
     album: folderName,
@@ -1416,10 +1416,10 @@ export interface AiModelProfile {
   /** Cover/avatar photograph used by the directory and portfolio header. */
   cover: string;
   /**
-   * The portfolio page's cover image — the single image of the album's \`cover/\` sub-folder. It is
-   * drawn at 95% opacity as the full-bleed background of the profile block, with every detail and
-   * the profile picture over it. Falls back to \`cover\` when the folder carries no image; optional
-   * so hand-built profiles stay valid.
+   * The portfolio page's cover image — the single image of the album's \`cover/\` sub-folder. On
+   * widescreen it is shown whole at 98% opacity in a dedicated cover stage above the complete
+   * profile dossier; compact screens use it as the profile block's full-bleed background. Falls
+   * back to \`cover\` when the folder carries no image; optional so hand-built profiles stay valid.
    */
   coverImage?: string;
   /** Album folder inside public/NeverBeenModels. */

@@ -13,8 +13,9 @@ placeholder until images are dropped into the album folder.
    after the model with no spaces (for example `NourhanDurrani`). Every image in the folder becomes
    a frame in the Instagram-style portfolio grid; the first image (or the one named `cover.*`) is
    used as the cover and portfolio avatar. A separate `cover/` sub-folder inside the album holds the
-   model's portfolio cover image — exactly one image, drawn at 95% opacity as the full-bleed
-   background of the portfolio page's profile block.
+   model's portfolio cover image — exactly one image, shown whole at 98% opacity in the
+   widescreen cover stage above the complete profile dossier; compact screens use it as the
+   profile block's full-bleed background.
 2. Optionally add `<album>/profile.json` for model-specific details:
 
 ```json

@@ -10,25 +10,47 @@
 
     @if (model(); as profile) {
       <section class="profile-header" aria-labelledby="portfolio-title">
-        <!-- The portfolio cover image — the single image of the model's `cover/` folder — drawn at
-             95% opacity as the full-bleed background of the whole block. Every detail and the
-             profile picture float above it. -->
-        @if (profile.coverImage || profile.cover) {
-          <img
-            class="header-backdrop"
-            [src]="profile.coverImage || profile.cover"
-            alt=""
-            aria-hidden="true"
-          />
-        }
-        <span class="header-scrim" aria-hidden="true"></span>
+        <!-- On widescreen the cover gets its own cinematic stage: the complete photograph is shown
+             at 98% opacity and every detail sits below it in a wide profile dossier. Compact
+             screens keep the photograph as the full-bleed backdrop of the profile block. -->
+        <div class="cover-stage">
+          @if (profile.coverImage || profile.cover) {
+            <img
+              class="header-backdrop-aura"
+              [src]="profile.coverImage || profile.cover"
+              alt=""
+              aria-hidden="true"
+            />
+            <img
+              class="header-backdrop"
+              [src]="profile.coverImage || profile.cover"
+              alt=""
+              aria-hidden="true"
+              fetchpriority="high"
+              decoding="async"
+            />
+          }
+          <span class="header-scrim" aria-hidden="true"></span>
 
-        <div class="header-topline">
-          <span>NB / DIGITAL TALENT</span>
-          <span>PORTFOLIO <i aria-hidden="true">·</i> PROFILE</span>
+          <div class="header-topline">
+            <span>NB / DIGITAL TALENT</span>
+            <span>PORTFOLIO <i aria-hidden="true">·</i> PROFILE</span>
+          </div>
+
+          <div class="cover-caption" aria-hidden="true">
+            <span class="cover-caption-index">01 / COVER FRAME</span>
+            <span class="cover-caption-rule"></span>
+            <span>ORIGINAL FRAME <i>·</i> FULL VIEW</span>
+          </div>
         </div>
 
         <div class="header-body">
+          <div class="header-deck-label" aria-hidden="true">
+            <span>PROFILE DOSSIER</span>
+            <i></i>
+            <span>ALL DETAILS · WIDE VIEW</span>
+          </div>
+
           <div class="identity-row">
             <div class="avatar-ring">
               <span class="avatar">
@@ -45,7 +67,7 @@
               <span class="avatar-badge" aria-hidden="true">NB</span>
             </div>
 
-            <!-- The glass panel that keeps every detail readable over the photographic cover. -->
+            <!-- The glass dossier keeps every detail together below the cover photograph. -->
             <div class="identity-panel">
               <div class="identity-copy">
                 <p class="eyebrow model-location">{{ modelLocation(profile) }}</p>

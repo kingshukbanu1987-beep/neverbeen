@@ -179,10 +179,10 @@ export interface AiModelProfile {
   /** Cover/avatar photograph used by the directory and portfolio header. */
   cover: string;
   /**
-   * The portfolio page's cover image — the single image of the album's `cover/` sub-folder. It is
-   * drawn at 95% opacity as the full-bleed background of the profile block, with every detail and
-   * the profile picture over it. Falls back to `cover` when the folder carries no image; optional
-   * so hand-built profiles stay valid.
+   * The portfolio page's cover image — the single image of the album's `cover/` sub-folder. On
+   * widescreen it is shown whole at 98% opacity in a dedicated cover stage above the complete
+   * profile dossier; compact screens use it as the profile block's full-bleed background. Falls
+   * back to `cover` when the folder carries no image; optional so hand-built profiles stay valid.
    */
   coverImage?: string;
   /** Album folder inside public/NeverBeenModels. */
@@ -2048,7 +2048,7 @@ export const aiModelProfiles: AiModelProfile[] = [
     slug: 'alisha-bhattacharya',
     name: 'Alisha Bhattacharya',
     cover: '/NeverBeenModels/AlishaBhattacharya/Alisha%20Bhattacharya.jpg',
-    coverImage: '/NeverBeenModels/AlishaBhattacharya/cover/cover.jpg',
+    coverImage: '/NeverBeenModels/AlishaBhattacharya/cover/cover.png',
     album: 'AlishaBhattacharya',
     previewMusic: '/NeverBeenModels/AlishaBhattacharya/Alisha%20Bhattacharya.mp3',
     location: 'Darjeeling, India',
