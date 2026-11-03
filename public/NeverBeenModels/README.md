@@ -12,6 +12,9 @@ public/NeverBeenModels/
     Nourhan Durrani.png     ← cover photograph, also used as the portfolio avatar
     editorial-01.jpg        ← additional frames, shown in the grid in album order
     editorial-02.jpg
+    cover/                  ← the portfolio page's cover image — exactly one image inside
+      cover.png             ← drawn at 95% opacity as the full-bleed background of the
+                              profile block, with every detail and the profile picture over it
     video/                  ← video clips, shown in the reel under the personal details
       reel-01.mp4
       poster-01.jpg         ← optional poster frame for a clip (see below)
@@ -51,6 +54,20 @@ public/NeverBeenModels/
 3. Optional: keep the cover portrait named exactly as listed in `data/ai-models/profiles.json`
    (for example `Nourhan Durrani.png`), or name it `cover.*`, or point at it with the `cover` field
    of the folder's `profile.json`.
+
+## The portfolio cover image
+
+Every album folder carries a `cover/` sub-folder holding **exactly one image** — the model's
+cover. It is drawn at 95% opacity as the full-bleed background of the model's portfolio page
+profile block, with every detail and the profile picture floating over it in frosted glass.
+
+- Drop one image into `cover/` — `jpg`, `jpeg`, `png`, `webp`, `avif` and `gif` are supported.
+  A file named `cover.*` is the obvious choice; any single image in the folder works.
+- The cover image never enters the Instagram-style grid: it belongs to the page background alone.
+- A model without a `cover/` folder falls back to her avatar cover photograph, so the block always
+  opens on a photographic background.
+- A `coverImage` field of the folder's `profile.json` (a file name or path inside the album)
+  overrides the folder when one is present.
 
 Photographs are recorded cover first, then in natural filename order. Set `photos` in `profile.json`
 to choose that order, and use `captions` to give a frame its own caption. The portfolio page shuffles

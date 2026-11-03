@@ -58,3 +58,49 @@ test('model manifest keeps hidden directory profiles, exact-name preview MP3s an
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('the album cover folder becomes the portfolio cover image and never enters the grid', () => {
+  const root = mkdtempSync(join(tmpdir(), 'neverbeen-cover-'));
+  try {
+    mkdirSync(join(root, 'scripts'), { recursive: true });
+    copyFileSync(
+      new URL('./generate-ai-models.mjs', import.meta.url),
+      join(root, 'scripts/generate-ai-models.mjs'),
+    );
+    const album = join(root, 'public/NeverBeenModels/CoverModel');
+    mkdirSync(join(album, 'cover'), { recursive: true });
+    mkdirSync(join(root, 'data/ai-models'), { recursive: true });
+    writeFileSync(join(album, 'Cover Model.jpg'), 'fixture');
+    writeFileSync(join(album, 'second-frame.jpg'), 'fixture');
+    writeFileSync(join(album, 'cover/cover.png'), 'fixture');
+    const generate = () => {
+      execFileSync(process.execPath, [join(root, 'scripts/generate-ai-models.mjs')], {
+        stdio: 'pipe',
+      });
+      return readFileSync(join(root, 'src/app/pages/ai-models/ai-model-data.ts'), 'utf8');
+    };
+    const profile = () =>
+      JSON.parse(
+        generate()
+          .split('export const aiModelProfiles: AiModelProfile[] = ')[1]
+          .trim()
+          .replace(/;$/, '')
+          .replace(/,\s*\]$/, ']'),
+      )[0];
+
+    // The cover folder's single image becomes the portfolio cover image…
+    assert.equal(profile().coverImage, '/NeverBeenModels/CoverModel/cover/cover.png');
+    // …the avatar cover stays the album's own portrait…
+    assert.equal(profile().cover, '/NeverBeenModels/CoverModel/Cover%20Model.jpg');
+    // …and the cover image never appears as a grid photograph.
+    assert.deepEqual(
+      profile().photos.map((photo) => photo.src),
+      [
+        '/NeverBeenModels/CoverModel/Cover%20Model.jpg',
+        '/NeverBeenModels/CoverModel/second-frame.jpg',
+      ],
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

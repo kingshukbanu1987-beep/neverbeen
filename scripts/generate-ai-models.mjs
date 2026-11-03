@@ -7,6 +7,13 @@
  * `cover.*`, or the `cover` field of the album's `profile.json`) becomes the portfolio
  * avatar/cover, and every image in the folder becomes a post in the Instagram-style grid.
  *
+ * The portfolio's cover image lives in the album's own `cover/` sub-folder
+ * (`public/NeverBeenModels/<ModelNameNoSpaces>/cover/`). It holds exactly one image — the
+ * model's cover — which is shown at 95% opacity as the full-bleed background of the portfolio
+ * page's profile block, with every detail and the profile picture drawn over it. Images in the
+ * folder never enter the portfolio grid. A `coverImage` field of the album's `profile.json`
+ * (a file name or path inside the album) overrides the folder when one is present.
+ *
  * The videos of the same model live in the album's own video sub-folder,
  * `public/NeverBeenModels/<ModelNameNoSpaces>/video/`. Every clip dropped in there appears in
  * the portfolio's video reel, just below the model's personal details, and plays in the
@@ -74,6 +81,14 @@ const audioExtensions = new Map([
  */
 const highlightsFolderName = 'highlights';
 
+/**
+ * The album sub-folder that holds the model's portfolio cover image. It carries exactly one
+ * image, the model's cover, which is drawn as the 95%-opacity full-bleed background of the
+ * portfolio page's profile block. The folder is matched without regard to case, so `cover/` and
+ * `Cover/` both work.
+ */
+const coverFolderName = 'cover';
+
 function isImage(fileName) {
   return imageExtensions.has(extname(fileName).toLowerCase());
 }
@@ -111,13 +126,14 @@ function listImages(directory) {
 }
 
 /**
- * Biography, Portfolio, Highlights and PremiumContent images belong to their own views and must
- * never leak into the portfolio grid: `Biography/` holds the fictional memory images,
+ * Biography, Portfolio, Highlights, cover and PremiumContent images belong to their own views and
+ * must never leak into the portfolio grid: `Biography/` holds the fictional memory images,
  * `Portfolio/` holds the generated portfolio document and its assets, `Highlights/` holds the
- * story frames of the highlights rail, `personality/` holds the model's static character database
- * (`characterdatabase.json`) for Live Chat, and `PremiumContent/` holds the photographs only the
- * paid Premium Live Chat may show — they travel in their own `premiumPhotos` list, never inside
- * the public grid.
+ * story frames of the highlights rail, `cover/` holds the portfolio page's cover image (drawn at
+ * 95% opacity as the profile block's background, never as a grid post), `personality/` holds the
+ * model's static character database (`characterdatabase.json`) for Live Chat, and
+ * `PremiumContent/` holds the photographs only the paid Premium Live Chat may show — they travel
+ * in their own `premiumPhotos` list, never inside the public grid.
  */
 function listAlbumImages(albumDir) {
   return naturalSort(
@@ -128,9 +144,25 @@ function listAlbumImages(albumDir) {
         firstDirectory !== 'portfolio' &&
         firstDirectory !== 'personality' &&
         firstDirectory !== 'premiumcontent' &&
+        firstDirectory !== coverFolderName &&
         firstDirectory !== highlightsFolderName
       );
     }),
+  );
+}
+
+/**
+ * The single cover image of the album's `cover/` sub-folder — the model's cover. The folder holds
+ * exactly one image; a file literally named `cover.*` wins over the others, and when the folder
+ * carries no image at all the function returns null so the profile falls back to its avatar cover.
+ */
+function albumCoverImage(albumDir) {
+  const coverDir = join(albumDir, coverFolderName);
+  const files = naturalSort(listImages(coverDir));
+  if (files.length === 0) return null;
+  return (
+    files.find((imagePath) => imageStem(imagePath.split(sep).pop()).toLowerCase() === 'cover') ??
+    files[0]
   );
 }
 
@@ -956,10 +988,23 @@ function buildAlbumProfile({ folderName, profileData, usedSlugs, fallbackCover =
   }));
   const cover = coverCandidate ? publicUrl(coverCandidate) : '';
 
+  // The portfolio page's cover image: the album's `cover/` folder (one image — the model's cover),
+  // or the album's `coverImage` field when one is given. A model without either borrows its
+  // avatar cover, so the profile block always opens on a photographic background.
+  const coverImageCandidate =
+    resolveInside(albumDir, merged.coverImage) ?? albumCoverImage(albumDir) ?? null;
+  const coverImage = coverImageCandidate ? publicUrl(coverImageCandidate) : cover;
+
   return {
     slug,
     name,
     cover,
+    /**
+     * The portfolio page's cover image — the single image of the album's `cover/` folder. It is
+     * drawn at 95% opacity as the full-bleed background of the profile block; every detail and the
+     * profile picture sit over it. Falls back to the avatar `cover` when the folder is absent.
+     */
+    coverImage,
     album: folderName,
     ...(previewMusic ? { previewMusic } : {}),
     location: text(merged.location),
@@ -1033,6 +1078,8 @@ function buildFlatProfile({ name, coverPath, rawProfile, usedSlugs, extraPhotos 
     slug,
     name,
     cover: coverPath ? publicUrl(coverPath) : '',
+    /** Flat (legacy) profiles have no album folder, so their cover photo doubles as the cover image. */
+    coverImage: coverPath ? publicUrl(coverPath) : '',
     album: '',
     location: text(profile.location),
     age: text(profile.age),
@@ -1368,6 +1415,13 @@ export interface AiModelProfile {
   name: string;
   /** Cover/avatar photograph used by the directory and portfolio header. */
   cover: string;
+  /**
+   * The portfolio page's cover image — the single image of the album's \`cover/\` sub-folder. It is
+   * drawn at 95% opacity as the full-bleed background of the profile block, with every detail and
+   * the profile picture over it. Falls back to \`cover\` when the folder carries no image; optional
+   * so hand-built profiles stay valid.
+   */
+  coverImage?: string;
   /** Album folder inside public/NeverBeenModels. */
   album: string;
   /** Optional exact-name <model name>.mp3 in the album root, for the cinematic preview. */
