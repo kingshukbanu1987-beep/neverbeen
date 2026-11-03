@@ -180,9 +180,10 @@ export interface AiModelProfile {
   cover: string;
   /**
    * The portfolio page's cover image — the single image of the album's `cover/` sub-folder. On
-   * widescreen it is shown whole at 98% opacity in a dedicated cover stage above the complete
-   * profile dossier; compact screens use it as the profile block's full-bleed background. Falls
-   * back to `cover` when the folder carries no image; optional so hand-built profiles stay valid.
+   * widescreen it is shown whole at 98% opacity in the same hero as the profile picture, with the
+   * complete details sub-block beneath that portrait. Compact screens use it as the full-bleed
+   * profile backdrop. Falls back to `cover` when the folder carries no image; optional so
+   * hand-built profiles stay valid.
    */
   coverImage?: string;
   /** Album folder inside public/NeverBeenModels. */

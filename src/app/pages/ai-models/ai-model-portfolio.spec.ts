@@ -178,7 +178,7 @@ describe('AiModelPortfolioPage', () => {
     }
   });
 
-  it('places the complete profile dossier below a dedicated cover stage', async () => {
+  it('keeps cover and profile picture in one hero with details below the profile picture', async () => {
     const profile = withPhotos(2, 1);
     profile.coverImage = '/NeverBeenModels/TestStudioModel/cover/cover.jpg';
     const harness = await openPortfolio(profile.slug);
@@ -187,24 +187,28 @@ describe('AiModelPortfolioPage', () => {
     try {
       const header = element.querySelector<HTMLElement>('.profile-header')!;
       const stage = header.querySelector<HTMLElement>('.cover-stage')!;
-      const dossier = header.querySelector<HTMLElement>('.header-body')!;
+      const body = header.querySelector<HTMLElement>('.header-body')!;
+      const identity = body.querySelector<HTMLElement>('.identity-row')!;
+      const avatar = identity.querySelector<HTMLElement>('.avatar-ring')!;
+      const details = identity.querySelector<HTMLElement>('.identity-panel')!;
 
-      expect(stage).not.toBeNull();
-      expect(dossier).not.toBeNull();
-      // The cover owns the first block; the name and every detail follow it in the DOM.
-      expect(
-        stage.compareDocumentPosition(dossier) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
+      // The cover photograph and profile picture belong to the same profile header.
+      expect(stage.parentElement).toBe(header);
+      expect(avatar.closest('.profile-header')).toBe(header);
       expect(stage.querySelector('.header-backdrop')?.getAttribute('src')).toBe(profile.coverImage);
       expect(stage.querySelector('.header-backdrop-aura')?.getAttribute('src')).toBe(
         profile.coverImage,
       );
 
-      expect(dossier.querySelector('#portfolio-title')?.textContent).toContain(profile.name);
-      expect(dossier.querySelector('.profile-bio')?.textContent).toContain(profile.bio);
-      expect(dossier.querySelector('.profile-actions')).not.toBeNull();
-      expect(dossier.querySelectorAll('.profile-stats dt').length).toBeGreaterThanOrEqual(10);
-      expect(dossier.querySelector('.header-deck-label')?.textContent).toContain('ALL DETAILS');
+      // The details sub-block follows the profile picture rather than sitting beside it.
+      expect(
+        avatar.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(details.querySelector('#portfolio-title')?.textContent).toContain(profile.name);
+      expect(details.querySelector('.profile-bio')?.textContent).toContain(profile.bio);
+      expect(details.querySelector('.profile-actions')).not.toBeNull();
+      expect(body.querySelectorAll('.profile-stats dt').length).toBeGreaterThanOrEqual(10);
+      expect(body.querySelector('.header-deck-label')?.textContent).toContain('ALL DETAILS');
     } finally {
       release(profile);
     }

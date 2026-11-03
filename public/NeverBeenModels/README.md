@@ -13,8 +13,9 @@ public/NeverBeenModels/
     editorial-01.jpg        ← additional frames, shown in the grid in album order
     editorial-02.jpg
     cover/                  ← the portfolio page's cover image — exactly one image inside
-      cover.png             ← shown whole at 98% opacity in the widescreen cover stage;
-                              compact screens use it as the full-bleed profile backdrop
+      cover.png             ← shown whole at 98% opacity beside the profile picture in the
+                              widescreen hero; compact screens use it as the full-bleed
+                              profile backdrop
     video/                  ← video clips, shown in the reel under the personal details
       reel-01.mp4
       poster-01.jpg         ← optional poster frame for a clip (see below)
@@ -58,9 +59,9 @@ public/NeverBeenModels/
 ## The portfolio cover image
 
 Every album folder carries a `cover/` sub-folder holding **exactly one image** — the model's
-cover. On widescreen the whole frame is shown at 98% opacity in a dedicated cover stage,
-with every detail below it in one wide frosted-glass profile dossier. Compact screens keep the
-photograph as the profile block's full-bleed backdrop.
+cover. On widescreen the whole frame is shown at 98% opacity beside the profile picture in one
+shared hero, with the complete details sub-block directly beneath that portrait. Compact screens
+keep the photograph as the profile block's full-bleed backdrop.
 
 - Drop one image into `cover/` — `jpg`, `jpeg`, `png`, `webp`, `avif` and `gif` are supported.
   A file named `cover.*` is the obvious choice; any single image in the folder works.

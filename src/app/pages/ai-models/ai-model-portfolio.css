@@ -24,9 +24,9 @@
   --studio-glass-line: rgb(255 255 255 / 70%);
   --chat-green: #74c476;
 
-  /* The cover-block theme: on widescreen the photograph owns a cinematic stage at 98% opacity
-     and the complete profile dossier sits below it. Compact screens keep the full-bleed cover,
-     with frosted glass and white ink carrying the details. */
+  /* The cover-block theme: on widescreen the 98%-opacity cover photograph and the profile picture
+     share one hero, with the complete details panel stacked below the profile picture. Compact
+     screens keep the full-bleed cover and the original frosted-glass details. */
   --cover-opacity: 0.98;
   --cover-ink: #f8f5ff;
   --cover-ink-soft: rgb(255 255 255 / 84%);
@@ -142,10 +142,10 @@
 
 /* ---------------------------------------------------------------- profile header */
 
-/* The cover block: on widescreen the model's portrait gets a dedicated, uncropped 98%-opacity
-   stage above a wide glass dossier. On compact screens the wrapper dissolves with
-   `display: contents`, so the same photograph remains the full-bleed background behind the
-   original frosted-glass profile block. */
+/* The cover block: on widescreen the model's full cover photograph and profile picture live in
+   the same hero, while the details sub-block is stacked directly beneath the profile picture. On
+   compact screens the wrapper dissolves with `display: contents`, so the photograph remains the
+   full-bleed background behind the original frosted-glass profile block. */
 
 .profile-header {
   position: relative;
@@ -160,7 +160,7 @@
     0 30px 80px -40px rgb(0 0 0 / 55%);
 }
 
-/* Compact layout: the cover stage contributes its children directly to the old header block. */
+/* Compact layout: the cover stage contributes its children directly to the full header block. */
 .cover-stage {
   display: contents;
 }
@@ -244,7 +244,7 @@
   align-items: center;
 }
 
-/* The frosted-glass panel the identity copy lives in — every detail in one readable dossier. */
+/* The frosted-glass panel the identity copy lives in — every detail in one readable sub-block. */
 .identity-panel {
   position: relative;
   min-width: 0;
@@ -754,7 +754,7 @@
   color: var(--cover-ink-faint);
 }
 
-/* The stats strip: one frosted-glass card per fact, spanning the width of the dossier. */
+/* The stats strip: one frosted-glass card per fact, spanning the width of the hero. */
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
@@ -2898,12 +2898,11 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   }
 }
 
-/* ------------------------------------------- widescreen cover + profile dossier */
+/* ------------------------------------------- widescreen shared profile hero */
 
-/* At desktop widths the portrait is no longer a cropped backdrop: a full, sharp 98%-opacity
-   frame floats on a blurred echo of itself inside a cinematic stage. The complete name, bio,
-   actions, Highlights and every physical detail then occupy a deliberately wide glass deck
-   underneath, leaving the cover photograph entirely visible. */
+/* At desktop widths the cover photograph and the profile picture stay in one continuous hero.
+   The full cover frame is shown at 98% opacity on the right; the avatar is stacked above the
+   complete details panel on the left, and one wide stats rail spans the bottom of the block. */
 @media (min-width: 1024px) {
   .profile-header {
     border-color: rgb(255 255 255 / 14%);
@@ -2913,46 +2912,19 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   }
 
   .cover-stage {
-    position: relative;
+    position: absolute;
     z-index: 0;
+    inset: 0;
     isolation: isolate;
     display: grid;
-    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    grid-template: minmax(0, 1fr) / minmax(0, 56%) minmax(0, 44%);
     place-items: center;
-    height: clamp(26rem, 58vh, 40rem);
-    padding: clamp(3.2rem, 5vw, 4.6rem) clamp(1.5rem, 4.5vw, 4rem);
+    padding: clamp(2.4rem, 4vw, 3.4rem) clamp(1.5rem, 4vw, 3.2rem);
     overflow: hidden;
     background:
-      radial-gradient(ellipse 55% 75% at 50% 42%, rgb(160 126 204 / 24%), transparent 72%),
-      radial-gradient(ellipse 46% 70% at 85% 88%, rgb(239 106 165 / 14%), transparent 74%),
+      radial-gradient(ellipse 55% 75% at 78% 42%, rgb(160 126 204 / 24%), transparent 72%),
+      radial-gradient(ellipse 46% 70% at 92% 88%, rgb(239 106 165 / 14%), transparent 74%),
       linear-gradient(160deg, #0d0916, #141022 52%, #090711);
-  }
-
-  /* Fine corner brackets and an almost invisible technical grid frame the portrait. */
-  .cover-stage::before,
-  .cover-stage::after {
-    content: '';
-    position: absolute;
-    z-index: 3;
-    bottom: 3.35rem;
-    width: 2.6rem;
-    height: 2.6rem;
-    opacity: 0.6;
-    pointer-events: none;
-  }
-
-  .cover-stage::before {
-    left: clamp(1.5rem, 4.5vw, 4rem);
-    border-left: 1px solid rgb(203 182 245 / 58%);
-    border-bottom: 1px solid rgb(203 182 245 / 58%);
-    border-bottom-left-radius: 14px;
-  }
-
-  .cover-stage::after {
-    right: clamp(1.5rem, 4.5vw, 4rem);
-    border-right: 1px solid rgb(239 106 165 / 52%);
-    border-bottom: 1px solid rgb(239 106 165 / 52%);
-    border-bottom-right-radius: 14px;
   }
 
   .header-backdrop-aura {
@@ -2973,13 +2945,14 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   }
 
   .header-backdrop {
+    grid-column: 2;
+    grid-row: 1;
     position: relative;
     z-index: 1;
-    grid-area: 1 / 1;
     inset: auto;
-    width: min(100%, 68rem);
+    width: 100%;
     height: 100%;
-    max-width: 100%;
+    max-width: none;
     object-fit: contain;
     object-position: center;
     opacity: var(--cover-opacity);
@@ -2989,16 +2962,24 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   }
 
   .header-scrim {
+    position: absolute;
     z-index: 2;
+    inset: 0;
     background:
       linear-gradient(
-        180deg,
-        rgb(8 5 14 / 46%),
-        transparent 20%,
-        transparent 78%,
-        rgb(8 5 14 / 52%)
+        90deg,
+        rgb(8 5 14 / 94%) 0%,
+        rgb(8 5 14 / 84%) 38%,
+        rgb(8 5 14 / 24%) 62%,
+        rgb(8 5 14 / 6%) 100%
       ),
-      radial-gradient(ellipse 72% 90% at 50% 48%, transparent 48%, rgb(6 4 10 / 34%) 100%);
+      linear-gradient(
+        180deg,
+        rgb(8 5 14 / 52%),
+        transparent 24%,
+        transparent 72%,
+        rgb(8 5 14 / 58%)
+      );
     pointer-events: none;
   }
 
@@ -3007,11 +2988,11 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(rgb(255 255 255 / 6%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(255 255 255 / 6%) 1px, transparent 1px);
+      linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
     background-size: 72px 72px;
-    mask-image: radial-gradient(ellipse 78% 70% at 50% 50%, transparent 34%, #000 100%);
-    -webkit-mask-image: radial-gradient(ellipse 78% 70% at 50% 50%, transparent 34%, #000 100%);
+    mask-image: radial-gradient(ellipse 78% 70% at 50% 50%, transparent 32%, #000 100%);
+    -webkit-mask-image: radial-gradient(ellipse 78% 70% at 50% 50%, transparent 32%, #000 100%);
     opacity: 0.42;
   }
 
@@ -3019,7 +3000,7 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
     position: absolute;
     z-index: 3;
     inset: 0 0 auto;
-    padding: 1.4rem clamp(1.5rem, 4.5vw, 3.8rem) 0;
+    padding: 1.4rem clamp(1.5rem, 4vw, 3.2rem) 0;
   }
 
   .header-topline span {
@@ -3035,9 +3016,10 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   .cover-caption {
     position: absolute;
     z-index: 3;
-    right: clamp(1.5rem, 4.5vw, 4rem);
-    bottom: 1.35rem;
-    left: clamp(1.5rem, 4.5vw, 4rem);
+    top: clamp(4.8rem, 7vw, 6.2rem);
+    right: clamp(1.5rem, 4vw, 3.2rem);
+    bottom: auto;
+    left: 56%;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -3081,45 +3063,37 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
     position: relative;
     z-index: 1;
     isolation: isolate;
-    gap: clamp(1.35rem, 2.2vw, 2rem);
-    padding: clamp(1.8rem, 3.4vw, 2.8rem) clamp(1.5rem, 4vw, 3.2rem) clamp(2rem, 4vw, 3rem);
-    border-top: 1px solid rgb(255 255 255 / 12%);
-    background:
-      radial-gradient(ellipse 70% 100% at 0% 0%, rgb(150 120 182 / 16%), transparent 68%),
-      radial-gradient(ellipse 60% 100% at 100% 100%, rgb(239 106 165 / 10%), transparent 68%),
-      linear-gradient(160deg, #151020, #0b0812 56%, #120d1b);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+    display: grid;
+    grid-template-columns: minmax(0, 56%) minmax(0, 44%);
+    grid-template-areas:
+      'label cover'
+      'identity cover'
+      'stats stats'
+      'note note';
+    align-content: start;
+    gap: clamp(1.1rem, 2vw, 1.8rem) clamp(1.5rem, 4vw, 3rem);
+    padding: clamp(5rem, 7vw, 7rem) clamp(1.5rem, 4vw, 3.2rem) clamp(2rem, 4vw, 3rem);
+    border-top: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
+  /* A fine luminous seam separates the details column from the full cover portrait. */
   .header-body::before {
     content: '';
     position: absolute;
-    z-index: 1;
-    top: -1px;
-    right: clamp(1.5rem, 4vw, 3.2rem);
-    left: clamp(1.5rem, 4vw, 3.2rem);
-    height: 1px;
+    z-index: 0;
+    top: clamp(4.5rem, 6.5vw, 6.5rem);
+    bottom: clamp(2rem, 4vw, 3rem);
+    left: 56%;
+    width: 1px;
     background: linear-gradient(
-      90deg,
+      180deg,
       transparent,
-      rgb(203 182 245 / 72%),
-      rgb(239 106 165 / 58%),
+      rgb(203 182 245 / 46%) 28%,
+      rgb(239 106 165 / 34%) 72%,
       transparent
     );
-  }
-
-  .header-body::after {
-    content: '';
-    position: absolute;
-    z-index: 0;
-    inset: 0;
-    background-image:
-      linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
-    background-size: 64px 64px;
-    mask-image: linear-gradient(180deg, transparent, #000 30%, #000 76%, transparent);
-    -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%, #000 76%, transparent);
-    pointer-events: none;
   }
 
   .header-body > * {
@@ -3128,6 +3102,7 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   }
 
   .header-deck-label {
+    grid-area: label;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -3153,24 +3128,29 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
     color: var(--cover-accent-soft);
   }
 
+  /* The correction: the profile picture comes first, and the whole details sub-block follows
+     beneath it — never beside it — while the cover photograph stays in this same hero. */
   .identity-row {
-    grid-template-columns: clamp(220px, 21vw, 290px) minmax(0, 1fr);
-    gap: clamp(1.6rem, 3vw, 2.8rem);
+    grid-area: identity;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: clamp(1.1rem, 2vw, 1.7rem);
     align-items: start;
   }
 
   .avatar-ring {
-    width: 100%;
+    width: clamp(180px, 16vw, 230px);
   }
 
   .identity-panel {
+    width: 100%;
     align-self: stretch;
-    padding: clamp(1.3rem, 2.5vw, 2.1rem);
+    padding: clamp(1.25rem, 2.3vw, 2rem);
     border: 1px solid rgb(255 255 255 / 15%);
     border-radius: 28px;
     background:
       radial-gradient(100% 150% at 0% 0%, rgb(203 182 245 / 13%), transparent 55%),
-      linear-gradient(145deg, rgb(255 255 255 / 9%), rgb(255 255 255 / 3%));
+      linear-gradient(145deg, rgb(17 11 26 / 76%), rgb(12 8 18 / 58%));
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 10%),
       0 30px 80px -40px rgb(0 0 0 / 78%);
@@ -3179,25 +3159,26 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   }
 
   .identity-copy h1 {
-    font-size: clamp(3.2rem, 4.6vw, 4.8rem);
+    font-size: clamp(2.8rem, 3.7vw, 4.1rem);
     text-wrap: balance;
   }
 
   .profile-bio {
-    max-width: 72ch;
+    max-width: 62ch;
   }
 
   .profile-stats {
+    grid-area: stats;
     grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
     border: 1px solid var(--cover-glass-line);
     border-radius: 22px;
-    background: rgb(255 255 255 / 5%);
+    background: rgb(10 7 16 / 52%);
     box-shadow: 0 28px 70px -38px rgb(0 0 0 / 72%);
   }
 
   .profile-stats div {
-    min-height: 96px;
-    padding: 1.1rem 1rem 0.95rem;
+    min-height: 92px;
+    padding: 1.05rem 1rem 0.9rem;
     background: linear-gradient(160deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 2%));
   }
 
@@ -3210,8 +3191,9 @@ app-model-highlights .highlights-rail::-webkit-scrollbar-thumb:hover {
   }
 
   .illustrative-note {
+    grid-area: note;
     max-width: none;
-    background: rgb(255 255 255 / 5.5%);
+    background: rgb(10 7 16 / 52%);
   }
 }
 

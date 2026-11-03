@@ -10,9 +10,9 @@
 
     @if (model(); as profile) {
       <section class="profile-header" aria-labelledby="portfolio-title">
-        <!-- On widescreen the cover gets its own cinematic stage: the complete photograph is shown
-             at 98% opacity and every detail sits below it in a wide profile dossier. Compact
-             screens keep the photograph as the full-bleed backdrop of the profile block. -->
+        <!-- On widescreen the full cover photograph and the profile picture share this one hero at
+             98% opacity. The complete details sub-block is stacked directly below the profile
+             picture. Compact screens keep the photograph as the full-bleed backdrop. -->
         <div class="cover-stage">
           @if (profile.coverImage || profile.cover) {
             <img
@@ -48,7 +48,7 @@
           <div class="header-deck-label" aria-hidden="true">
             <span>PROFILE DOSSIER</span>
             <i></i>
-            <span>ALL DETAILS · WIDE VIEW</span>
+            <span>ALL DETAILS · BELOW PORTRAIT</span>
           </div>
 
           <div class="identity-row">
@@ -67,7 +67,7 @@
               <span class="avatar-badge" aria-hidden="true">NB</span>
             </div>
 
-            <!-- The glass dossier keeps every detail together below the cover photograph. -->
+            <!-- The glass sub-block keeps every detail together below the profile picture. -->
             <div class="identity-panel">
               <div class="identity-copy">
                 <p class="eyebrow model-location">{{ modelLocation(profile) }}</p>
